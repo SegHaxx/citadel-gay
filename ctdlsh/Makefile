@@ -1,4 +1,4 @@
-OBJS := datetime.o export.o main.o passwd.o shutdown.o sockets.o who.o
+OBJS := datetime.o export.o main.o passwd.o shutdown.o sockets.o who.o config.o
 
 CFLAGS := -ggdb
 
