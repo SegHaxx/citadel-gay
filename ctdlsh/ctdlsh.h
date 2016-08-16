@@ -6,7 +6,6 @@
  * you under the terms of the GNU General Public License version 3.
  */
 
-#include <config.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <stdio.h>
