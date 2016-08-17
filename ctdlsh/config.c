@@ -27,10 +27,41 @@ int show_full_config(int server_socket) {
 			*p = 0;
 		}
 		printf("%-30s = %s\n", buf, val);
-		
 	}
 
 	return(cmdret_ok);
+}
+
+
+int show_single_config(int server_socket, char *keyname) {
+	char buf[1024];
+
+	sock_printf(server_socket, "CONF getval|%s\n", keyname);
+        sock_getln(server_socket, buf, sizeof buf);
+	if (buf[0] == '2') {
+		char *v = &buf[4];
+		char *t = NULL;
+		while(t = strrchr(v, '|'), t!=NULL) t[0]=0;
+		printf("%-30s = %s\n", keyname, v);
+		return(cmdret_ok);
+	}
+	else {
+		printf("\n");
+		return(cmdret_error);
+	}
+}
+
+
+int set_single_config(int server_socket, char *keyname, char *val) {
+	char buf[1024];
+
+	sock_printf(server_socket, "CONF putval|%s|%s\n", keyname, val);
+        sock_getln(server_socket, buf, sizeof buf);
+	if (buf[0] != '2') {
+		printf("%s\n", buf);
+		return(cmdret_error);
+	}
+	return(show_single_config(server_socket, keyname));
 }
 
 
@@ -38,16 +69,29 @@ int cmd_config(int server_socket, char *cmdbuf) {
 
 	char buf[4096];
 	strncpy(buf, cmdbuf, sizeof buf);
-	char *p = strchr(buf, ' ');
-	if (p == NULL) {
+	char *k = strchr(buf, ' ');
+	if (k == NULL) {
 		return show_full_config(server_socket);
 	}
 
-	while (p[0]==' ') ++p;
+	while (k[0]==' ') ++k;
 
-	if (strlen(p) == 0) {
+	if (strlen(k) == 0) {
 		return show_full_config(server_socket);
 	}
 
-        return(cmdret_error);
+	char *v = strchr(k, ' ');
+	if (v == NULL) {
+		return show_single_config(server_socket, k);
+	}
+
+	v[0] = 0;
+	++v;
+	while (v[0]==' ') ++v;
+
+	if (strlen(v) == 0) {
+		return show_single_config(server_socket, k);
+	}
+
+	return set_single_config(server_socket, k, v);
 }
