@@ -1,10 +1,11 @@
 OBJS := datetime.o export.o main.o passwd.o shutdown.o sockets.o who.o config.o
 
 CFLAGS := -ggdb
+LDFLAGS :=
 
 # link
 ctdlsh: $(OBJS)
-	gcc $(OBJS) -lreadline -o ctdlsh
+	gcc $(OBJS) $(LDFLAGS) -lreadline -o ctdlsh
 
 # pull in dependency info for *existing* .o files
 -include $(OBJS:.o=.d)
@@ -17,3 +18,8 @@ ctdlsh: $(OBJS)
 # remove compilation products
 clean:
 	rm -f ctdlsh *.o *.d
+
+distclean: clean
+
+install: ctdlsh
+	echo Not yet
