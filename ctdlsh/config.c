@@ -80,6 +80,14 @@ int cmd_config(int server_socket, char *cmdbuf) {
 		return show_full_config(server_socket);
 	}
 
+	if (k[0] == '?') {
+		printf("config                 Print values of all configuration keys\n");
+		printf("config ?               Display this message\n");
+		printf("config [key]           Print value of configuration key 'key'\n");
+		printf("config [key] [value]   Set configuration key 'key' to 'value'\n");
+		return(cmdret_ok);
+	}
+
 	char *v = strchr(k, ' ');
 	if (v == NULL) {
 		return show_single_config(server_socket, k);
