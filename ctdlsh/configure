@@ -5,8 +5,13 @@ echo
 echo Running the configure script to create config.mk
 echo
 
+CFLAGS='-ggdb'
+LDFLAGS=''
+
 (
-	echo 'CFLAGS := -ggdb'
-	echo 'LDFLAGS :='
+	echo "CFLAGS := ${CFLAGS}"
+	echo "LDFLAGS := ${LDFLAGS}"
 ) >config.mk
 
+cat config.mk
+echo
