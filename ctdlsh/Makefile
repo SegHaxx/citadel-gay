@@ -1,10 +1,9 @@
+include config.mk
+
 OBJS := datetime.o export.o main.o passwd.o shutdown.o sockets.o who.o config.o
 
-CFLAGS := -ggdb
-LDFLAGS :=
-
 # link
-ctdlsh: $(OBJS)
+ctdlsh: $(OBJS) config.mk
 	gcc $(OBJS) $(LDFLAGS) -lreadline -o ctdlsh
 
 # pull in dependency info for *existing* .o files
@@ -15,11 +14,14 @@ ctdlsh: $(OBJS)
 	gcc -c $(CFLAGS) $*.c -o $*.o
 	gcc -MM $(CFLAGS) $*.c > $*.d
 
-# remove compilation products
+config.mk:
+	./configure
+
 clean:
 	rm -f ctdlsh *.o *.d
 
 distclean: clean
+	rm -f config.mk
 
 install: ctdlsh
 	echo Not yet

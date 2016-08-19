@@ -1,0 +1,12 @@
+#!/bin/sh
+
+echo 
+echo 
+echo Running the configure script to create config.mk
+echo
+
+(
+	echo 'CFLAGS := -ggdb'
+	echo 'LDFLAGS :='
+) >config.mk
+
