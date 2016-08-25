@@ -15,7 +15,7 @@ ctdlsh: $(OBJS) config.mk
 
 # compile and generate dependency info
 %.o: %.c
-	gcc -c $(CFLAGS) $*.c -o $*.o
+	gcc -c $(CFLAGS) -DCTDLDIR=\"$(CTDLDIR)\" $*.c -o $*.o
 	gcc -MM $(CFLAGS) $*.c > $*.d
 
 config.mk:
@@ -28,4 +28,7 @@ distclean: clean
 	rm -f config.mk
 
 install: ctdlsh
-	echo Not yet
+	install ctdlsh $(BINDIR)/ctdlsh
+
+uninstall:
+	rm -vf $(BINDIR)/ctdlsh

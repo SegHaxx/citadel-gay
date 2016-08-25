@@ -170,6 +170,7 @@ int main(int argc, char **argv)
 
 	sock_getln(server_socket, buf, sizeof buf);
 	if (buf[0] == '2') {
+		printf("Connected: %s\n", buf);
 		do_main_loop(server_socket);
 	}
 
