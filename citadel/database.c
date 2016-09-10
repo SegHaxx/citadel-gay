@@ -34,16 +34,14 @@
 #ifdef HAVE_DB_H
 #include <db.h>
 #elif defined(HAVE_DB4_DB_H)
-#include <db4/db.h>
+#include <db5/db.h>
 #else
-#error Neither <db.h> nor <db4/db.h> was found by configure. Install db4-devel.
+#error Neither <db.h> nor <db5/db.h> was found by configure. Install db5-devel.
 #endif
 
-
-#if DB_VERSION_MAJOR < 4 || DB_VERSION_MINOR < 1
-#error Citadel requires Berkeley DB v4.1 or newer.  Please upgrade.
+#if DB_VERSION_MAJOR < 5
+#error Citadel requires Berkeley DB v5.0 or newer.  Please upgrade.
 #endif
-
 
 #include <libcitadel.h>
 
@@ -51,7 +49,6 @@
 #include "control.h"
 #include "citserver.h"
 #include "config.h"
-
 
 static DB *dbp[MAXCDB];		/* One DB handle for each Citadel database */
 static DB_ENV *dbenv;		/* The DB environment (global) */
@@ -281,9 +278,7 @@ void open_databases(void)
 	dbenv->set_paniccall(dbenv, dbpanic);
 	dbenv->set_errcall(dbenv, cdb_verbose_err);
 	dbenv->set_errpfx(dbenv, "ctdl");
-#if (DB_VERSION_MAJOR > 4) || ( (DB_VERSION_MAJOR == 4) && (DB_VERSION_MINOR >= 3) )
 	dbenv->set_msgcall(dbenv, cdb_verbose_log);
-#endif
 	dbenv->set_verbose(dbenv, DB_VERB_DEADLOCK, 1);
 	dbenv->set_verbose(dbenv, DB_VERB_RECOVERY, 1);
 

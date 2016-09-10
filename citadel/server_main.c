@@ -14,6 +14,7 @@
 #include <stdio.h>
 #include <sys/types.h>
 #include <grp.h>
+#include <sys/file.h>
 #include <libcitadel.h>
 
 #include "citserver.h"
@@ -33,6 +34,42 @@ const char *CitadelServiceTCP="citadel-TCP";
 
 
 void go_threading(void);
+
+
+
+/*
+ * Create or remove a lock file, so we only have one Citadel Server running at a time.
+ */
+void ctdl_lockfile(int yo) {
+	static char lockfilename[SIZ];
+	static FILE *fp;
+
+
+	if (yo) {
+		syslog(LOG_DEBUG, "Creating lockfile");
+		snprintf(lockfilename, sizeof lockfilename, "%s/citadel.lock", ctdl_run_dir);
+		fp = fopen(lockfilename, "w");
+		if (!fp) {
+			syslog(LOG_ERR, "Cannot open or create %s", lockfilename);
+			exit(CTDLEXIT_DB);
+		}
+		if (flock(fileno(fp), (LOCK_EX|LOCK_NB)) != 0) {
+			syslog(LOG_ERR, "Cannot lock %s , is another citserver running?", lockfilename);
+			exit(CTDLEXIT_DB);
+		}
+		return;
+	}
+
+	syslog(LOG_DEBUG, "Removing lockfile");
+	unlink(lockfilename);
+	flock(fileno(fp), LOCK_UN);
+	fclose(fp);
+}
+
+
+
+
+
 
 /*
  * Here's where it all begins.
@@ -232,6 +269,8 @@ int main(int argc, char **argv)
 
 #endif
 
+	ctdl_lockfile(1);
+
 	/* Initialize... */
 	init_sysdep();
 
@@ -362,6 +401,7 @@ int main(int argc, char **argv)
 
 	go_threading();
 	
-	master_cleanup(exit_signal);
-	return(0);
+	int exit_code = master_cleanup(exit_signal);
+	ctdl_lockfile(0);
+	return(exit_code);
 }

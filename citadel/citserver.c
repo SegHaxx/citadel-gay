@@ -185,9 +185,9 @@ void master_startup(void) {
 
 
 /*
- * Cleanup routine to be called when the server is shutting down.
+ * Cleanup routine to be called when the server is shutting down.  Returns the needed exit code.
  */
-void master_cleanup(int exitcode) {
+int master_cleanup(int exitcode) {
 	struct CleanupFunctionHook *fcn;
 	static int already_cleaning_up = 0;
 
@@ -225,11 +225,13 @@ void master_cleanup(int exitcode) {
 	syslog(LOG_NOTICE, "citserver: Exiting with status %d\n", exitcode);
 	fflush(stdout); fflush(stderr);
 	
-	if (restart_server != 0)
-		exit(1);
-	if ((running_as_daemon != 0) && ((exitcode == 0) ))
+	if (restart_server != 0) {
+		exitcode = 1;
+	}
+	else if ((running_as_daemon != 0) && ((exitcode == 0) )) {
 		exitcode = CTDLEXIT_SHUTDOWN;
-	exit(exitcode);
+	}
+	return(exitcode);
 }
 
 
