@@ -3,7 +3,7 @@
  * by Nathan Bryant, March 1999
  * updated by Trey van Riper, June 2005
  *
- * Copyright (c) 1999-2009 by the citadel.org team
+ * Copyright (c) 1999-2016 by the citadel.org team
  *
  * This program is open source software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 3.
@@ -91,6 +91,10 @@ static int conv(int num_msg, const struct pam_message **msg,
 
 int validate_password(uid_t uid, const char *pass)
 {
+	if (pass == NULL) {
+		return(0);
+	}
+
 #ifdef HAVE_PAM_START
 	struct pam_conv pc;
 	struct appdata data;
@@ -105,7 +109,8 @@ int validate_password(uid_t uid, const char *pass)
 	struct passwd *pw;
 	int retval = 0;
 
-	if ((pw = getpwuid(uid)) == NULL) {
+	pw = getpwuid(uid);
+	if (pw == NULL) {
 		return retval;
 	}
 
@@ -115,30 +120,36 @@ int validate_password(uid_t uid, const char *pass)
 	int flags = PAM_DATA_SILENT;
 #else
 	int flags = 0;
-#endif /* PAM_DATA_SILENT */
+#endif
 
 	pc.conv = conv;
 	pc.appdata_ptr = &data;
 	data.name = pw->pw_name;
 	data.pw = pass;
 	if (pam_start("citadel", pw->pw_name, &pc, &ph) != PAM_SUCCESS)
-		return retval;
+		return(0);
 
-	if ((i = pam_authenticate(ph, flags)) == PAM_SUCCESS)
-		if ((i = pam_acct_mgmt(ph, flags)) == PAM_SUCCESS)
+	if ((i = pam_authenticate(ph, flags)) == PAM_SUCCESS) {
+		if ((i = pam_acct_mgmt(ph, flags)) == PAM_SUCCESS) {
 			retval = -1;
+		}
+	}
 
 	pam_end(ph, i | flags);
 #else
 	crypted_pwd = pw->pw_passwd;
 
 #ifdef HAVE_GETSPNAM
-	if ((sp = getspnam(pw->pw_name)) != NULL)
+	if (pw == NULL) return(0);
+	if (pw->pw_name == NULL) return(0);
+	if ((sp = getspnam(pw->pw_name)) != NULL) {
 		crypted_pwd = sp->sp_pwdp;
+	}
 #endif
 
-	if (!strcmp(crypt(pass, crypted_pwd), crypted_pwd))
+	if (!strcmp(crypt(pass, crypted_pwd), crypted_pwd)) {
 		retval = -1;
+	}
 #endif				/* HAVE_PAM_START */
 
 	return retval;
