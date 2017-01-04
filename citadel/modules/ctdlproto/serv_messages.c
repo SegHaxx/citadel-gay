@@ -1,7 +1,7 @@
 /*
  * represent messages to the citadel clients
  *
- * Copyright (c) 1987-2015 by the citadel.org team
+ * Copyright (c) 1987-2017 by the citadel.org team
  *
  * This program is open source software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3.
@@ -43,18 +43,33 @@ void headers_listing(long msgnum, void *userdata)
 
 	msg = CtdlFetchMessage(msgnum, 0, 1);
 	if (msg == NULL) {
-		cprintf("%ld|0|||||\n", msgnum);
+		cprintf("%ld|0|||||||\n", msgnum);
 		return;
 	}
 
-	cprintf("%ld|%s|%s|%s|%s|%s|\n",
+	// output all fields except the references hash
+	cprintf("%ld|%s|%s|%s|%s|%s|%d|",
 		msgnum,
 		(!CM_IsEmpty(msg, eTimestamp) ? msg->cm_fields[eTimestamp] : "0"),
 		(!CM_IsEmpty(msg, eAuthor) ? msg->cm_fields[eAuthor] : ""),
 		(!CM_IsEmpty(msg, eNodeName) ? msg->cm_fields[eNodeName] : ""),
 		(!CM_IsEmpty(msg, erFc822Addr) ? msg->cm_fields[erFc822Addr] : ""),
-		(!CM_IsEmpty(msg, eMsgSubject) ? msg->cm_fields[eMsgSubject] : "")
+		(!CM_IsEmpty(msg, eMsgSubject) ? msg->cm_fields[eMsgSubject] : ""),
+		(!CM_IsEmpty(msg, emessageId) ? HashLittle(msg->cm_fields[emessageId],strlen(msg->cm_fields[emessageId])) : 0)
 	);
+
+	// output the references hash (yes it's ok that we're trashing the source buffer by doing this)
+	if (!CM_IsEmpty(msg, eWeferences)) {
+		char *token;
+		char *rest = msg->cm_fields[eWeferences];
+		char *prev = rest;
+		while((token = strtok_r(rest, "|", &rest))) {
+			cprintf("%d%s", HashLittle(token,rest-prev-(*rest==0?0:1)), (*rest==0?"":","));
+			prev = rest;
+		}
+	}
+
+	cprintf("|\n");
 	CM_Free(msg);
 }
 
