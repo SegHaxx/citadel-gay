@@ -48,6 +48,17 @@ void headers_listing(long msgnum, void *userdata)
 		return;
 	}
 
+	// change all vertical bars in the subject to hyphens so it doesn't screw up the protocol
+	if (!CM_IsEmpty(msg, eMsgSubject)) {
+		char *p;
+		for (p=msg->cm_fields[eMsgSubject]; *p; p++) {
+			printf("%c\n", *p);
+			if (*p == '|') {
+				*p = '-';
+			}
+		}
+	}
+
 	// output all fields except the references hash
 	cprintf("%ld|%s|%s|%s|%s|%s",
 		msgnum,
@@ -58,7 +69,7 @@ void headers_listing(long msgnum, void *userdata)
 		(!CM_IsEmpty(msg, eMsgSubject) ? msg->cm_fields[eMsgSubject] : "")
 	);
 
-	if (output_mode == MSG_HDRS_THREADS) {
+	if (output_mode == MSG_HDRS_THREADS) {		// field view with thread hashes
 
 		// output the references hash
 		cprintf ("|%d|", 
@@ -76,10 +87,13 @@ void headers_listing(long msgnum, void *userdata)
 			}
 		}
 	
-		cprintf("|");
+		cprintf("|\n");
 	}
 
-	cprintf("\n");
+	else {						// field view with no threads, subject extends out forever
+		cprintf("\n");
+	}
+
 	CM_Free(msg);
 }
 
