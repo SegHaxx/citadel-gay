@@ -52,7 +52,6 @@ void headers_listing(long msgnum, void *userdata)
 	if (!CM_IsEmpty(msg, eMsgSubject)) {
 		char *p;
 		for (p=msg->cm_fields[eMsgSubject]; *p; p++) {
-			printf("%c\n", *p);
 			if (*p == '|') {
 				*p = '-';
 			}
