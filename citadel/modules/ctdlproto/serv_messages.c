@@ -40,6 +40,7 @@ void simple_listing(long msgnum, void *userdata)
 void headers_listing(long msgnum, void *userdata)
 {
 	struct CtdlMessage *msg;
+	int output_mode =  *(int *)userdata;
 
 	msg = CtdlFetchMessage(msgnum, 0, 1);
 	if (msg == NULL) {
@@ -48,28 +49,37 @@ void headers_listing(long msgnum, void *userdata)
 	}
 
 	// output all fields except the references hash
-	cprintf("%ld|%s|%s|%s|%s|%s|%d|",
+	cprintf("%ld|%s|%s|%s|%s|%s",
 		msgnum,
 		(!CM_IsEmpty(msg, eTimestamp) ? msg->cm_fields[eTimestamp] : "0"),
 		(!CM_IsEmpty(msg, eAuthor) ? msg->cm_fields[eAuthor] : ""),
 		(!CM_IsEmpty(msg, eNodeName) ? msg->cm_fields[eNodeName] : ""),
 		(!CM_IsEmpty(msg, erFc822Addr) ? msg->cm_fields[erFc822Addr] : ""),
-		(!CM_IsEmpty(msg, eMsgSubject) ? msg->cm_fields[eMsgSubject] : ""),
-		(!CM_IsEmpty(msg, emessageId) ? HashLittle(msg->cm_fields[emessageId],strlen(msg->cm_fields[emessageId])) : 0)
+		(!CM_IsEmpty(msg, eMsgSubject) ? msg->cm_fields[eMsgSubject] : "")
 	);
 
-	// output the references hash (yes it's ok that we're trashing the source buffer by doing this)
-	if (!CM_IsEmpty(msg, eWeferences)) {
-		char *token;
-		char *rest = msg->cm_fields[eWeferences];
-		char *prev = rest;
-		while((token = strtok_r(rest, "|", &rest))) {
-			cprintf("%d%s", HashLittle(token,rest-prev-(*rest==0?0:1)), (*rest==0?"":","));
-			prev = rest;
+	if (output_mode == MSG_HDRS_THREADS) {
+
+		// output the references hash
+		cprintf ("|%d|", 
+			(!CM_IsEmpty(msg, emessageId) ? HashLittle(msg->cm_fields[emessageId],strlen(msg->cm_fields[emessageId])) : 0)
+		);
+	
+		// output the references hash (yes it's ok that we're trashing the source buffer by doing this)
+		if (!CM_IsEmpty(msg, eWeferences)) {
+			char *token;
+			char *rest = msg->cm_fields[eWeferences];
+			char *prev = rest;
+			while((token = strtok_r(rest, "|", &rest))) {
+				cprintf("%d%s", HashLittle(token,rest-prev-(*rest==0?0:1)), (*rest==0?"":","));
+				prev = rest;
+			}
 		}
+	
+		cprintf("|");
 	}
 
-	cprintf("|\n");
+	cprintf("\n");
 	CM_Free(msg);
 }
 
@@ -157,22 +167,23 @@ void cmd_msgs(char *cmdbuf)
 	cm_ref = extract_int(cmdbuf, 1);
 	extract_token(search_string, cmdbuf, 1, '|', sizeof search_string);
 	with_template = extract_int(cmdbuf, 2);
-	switch (extract_int(cmdbuf, 3))
-	{
-	default:
-	case MSG_HDRS_BRIEF:
-		CallBack = simple_listing;
-		break;
-	case MSG_HDRS_ALL:
-		CallBack = headers_listing;
-		break;
-	case MSG_HDRS_EUID:
-		CallBack = headers_euid;
-		break;
-	case MSG_HDRS_BRIEFFILTER:
-		with_template = 2;
-		CallBack = headers_brief_filter;
-		break;
+	int output_mode = extract_int(cmdbuf, 3);
+	switch (output_mode) {
+		default:
+		case MSG_HDRS_BRIEF:
+			CallBack = simple_listing;
+			break;
+		case MSG_HDRS_ALL:
+		case MSG_HDRS_THREADS:
+			CallBack = headers_listing;
+			break;
+		case MSG_HDRS_EUID:
+			CallBack = headers_euid;
+			break;
+		case MSG_HDRS_BRIEFFILTER:
+			with_template = 2;
+			CallBack = headers_brief_filter;
+			break;
 	}
 
 	strcat(which, "   ");
@@ -255,7 +266,7 @@ void cmd_msgs(char *cmdbuf)
 				   NULL,
 				   template,
 				   CallBack,
-				   NULL);
+				   &output_mode);
 		if (template != NULL) CM_Free(template);
 	}
 	else {
