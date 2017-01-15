@@ -841,7 +841,7 @@ void edit_value(int curr)
 		break;
 	
 	case eUID:
-
+		ctdluid = getconf_int("c_ctdluid");
 		if (setup_type == UI_SILENT)
 		{		
 			if (default_value) {
