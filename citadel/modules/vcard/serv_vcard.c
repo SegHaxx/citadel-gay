@@ -2,7 +2,7 @@
  * A server-side module for Citadel which supports address book information
  * using the standard vCard format.
  * 
- * Copyright (c) 1999-2016 by the citadel.org team
+ * Copyright (c) 1999-2017 by the citadel.org team
  *
  * This program is open source software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3.
@@ -1534,7 +1534,7 @@ CTDL_MODULE_INIT(vcard)
 		CtdlRegisterFixedOutputHook("text/x-vcard", vcard_fixed_output);
 		CtdlRegisterFixedOutputHook("text/vcard", vcard_fixed_output);
 
-		/* Create the Global ADdress Book room if necessary */
+		/* Create the Global Address Book room if necessary */
 		CtdlCreateRoom(ADDRESS_BOOK_ROOM, 3, "", 0, 1, 0, VIEW_ADDRESSBOOK);
 
 		/* Set expiration policy to manual; otherwise objects will be lost! */
@@ -1550,7 +1550,7 @@ CTDL_MODULE_INIT(vcard)
 			 * purged.
 			 *
 			 * FIXME this no longer works
-			 */
+			 *
 			assoc_file_name(filename, sizeof filename, &qr, ctdl_netcfg_dir);
 			fp = fopen(filename, "a");
 			if (fp != NULL) {
@@ -1568,6 +1568,7 @@ CTDL_MODULE_INIT(vcard)
 				syslog(LOG_ERR, "Cannot create %s: %s", filename, strerror(errno));
 			}
 		}
+			 */
 
 		/* for postfix tcpdict */
 		CtdlRegisterServiceHook(CtdlGetConfigInt("c_pftcpdict_port"),	/* Postfix */
