@@ -1510,9 +1510,9 @@ const char *CitadelServiceDICT_TCP="DICT_TCP";
 CTDL_MODULE_INIT(vcard)
 {
 	struct ctdlroom qr;
-	char filename[256];
-	FILE *fp;
-	int rv = 0;
+	//char filename[256];
+	//FILE *fp;
+	//int rv = 0;
 
 	if (!threading)
 	{
@@ -1551,24 +1551,24 @@ CTDL_MODULE_INIT(vcard)
 			 *
 			 * FIXME this no longer works
 			 *
-			assoc_file_name(filename, sizeof filename, &qr, ctdl_netcfg_dir);
-			fp = fopen(filename, "a");
-			if (fp != NULL) {
-				fclose(fp);
-				rv = chown(filename, CTDLUID, (-1));
-				if (rv == -1) {
-					syslog(LOG_ERR, "Failed to adjust ownership of %s: %s", filename, strerror(errno));
-				}
-				rv = chmod(filename, 0600);
-				if (rv == -1) {
-					syslog(LOG_ERR, "Failed to adjust ownership of %s: %s", filename, strerror(errno));
-				}
-			}
-			else {
-				syslog(LOG_ERR, "Cannot create %s: %s", filename, strerror(errno));
-			}
-		}
 			 */
+			//assoc_file_name(filename, sizeof filename, &qr, ctdl_netcfg_dir);
+			//fp = fopen(filename, "a");
+			//if (fp != NULL) {
+				//fclose(fp);
+				//rv = chown(filename, CTDLUID, (-1));
+				//if (rv == -1) {
+					//syslog(LOG_ERR, "Failed to adjust ownership of %s: %s", filename, strerror(errno));
+				//}
+				//rv = chmod(filename, 0600);
+				//if (rv == -1) {
+					//syslog(LOG_ERR, "Failed to adjust ownership of %s: %s", filename, strerror(errno));
+				//}
+			//}
+			//else {
+				//syslog(LOG_ERR, "Cannot create %s: %s", filename, strerror(errno));
+			//}
+		}
 
 		/* for postfix tcpdict */
 		CtdlRegisterServiceHook(CtdlGetConfigInt("c_pftcpdict_port"),	/* Postfix */
