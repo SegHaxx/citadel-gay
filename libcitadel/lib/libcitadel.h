@@ -1,7 +1,7 @@
 /*
  * Header file for libcitadel
  *
- * Copyright (c) 1987-2016 by the citadel.org team
+ * Copyright (c) 1987-2017 by the citadel.org team
  *
  * This program is open source software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3.
@@ -28,7 +28,7 @@
 #include <sys/types.h>
 #include <netinet/in.h>
 
-#define LIBCITADEL_VERSION_NUMBER	903
+#define LIBCITADEL_VERSION_NUMBER	904
 
 /*
  * Here's a bunch of stupid magic to make the MIME parser portable.
@@ -353,6 +353,7 @@ int StrBufDestroyStreamContext(eStreamType type, vStreamT **Stream, const char *
 int StrBufStreamTranscode(eStreamType type, IOBuffer *Target, IOBuffer *In, const char* pIn, long pInLen, vStreamT *Stream, int LastChunk, const char **Err);
 
 int StrBufDecodeBase64(StrBuf *Buf);
+void StrBufDecodeQP(StrBuf *Buf);
 int StrBufDecodeBase64To(const StrBuf *BufIn, StrBuf *BufOut);
 int StrBufDecodeHex(StrBuf *Buf);
 StrBuf *StrBufRFC2047encodeMessage(const StrBuf *EncodeMe);

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1987-2013 by the citadel.org team
+ * Copyright (c) 1987-2017 by the citadel.org team
  *
  * This program is open source software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -5622,3 +5622,44 @@ void StrBufStripSlashes(StrBuf *Dir, int RemoveTrailingSlash)
 }
 
 
+/*
+ * Decode a quoted-printable encoded StrBuf buffer "in place"
+ * This is possible because the decoded will always be shorter than the encoded
+ * so we don't have to worry about the buffer being to small.
+ */
+void StrBufDecodeQP(StrBuf *Buf)
+{
+	if (!Buf) {				// sanity check #1
+		return;
+	}
+
+	int source_len = StrLength(Buf);
+	if (source_len < 1) {			// sanity check #2
+		return;
+	}
+
+	int spos = 0;				// source position
+	int tpos = 0;				// target position
+
+	while (spos < source_len) {
+		if (!strncmp(&Buf->buf[spos], "=\r\n", 3)) {
+			spos += 3;
+		}
+		else if (!strncmp(&Buf->buf[spos], "=\n", 2)) {
+			spos += 2;
+		}
+		else if (Buf->buf[spos] == '=') {
+			++spos;
+			int ch;
+			sscanf(&Buf->buf[spos], "%02x", &ch);
+			Buf->buf[tpos++] = ch;
+			spos +=2;
+		}
+		else {
+			Buf->buf[tpos++] = Buf->buf[spos++];
+		}
+	}
+
+	Buf->buf[tpos] = 0;
+	Buf->BufUsed = tpos;
+}
