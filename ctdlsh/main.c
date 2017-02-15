@@ -1,5 +1,5 @@
 /*
- * (c) 2009-2012 by Art Cancro and citadel.org
+ * (c) 2009-2017 by Art Cancro and citadel.org
  * This program is released under the terms of the GNU General Public License v3.
  */
 
@@ -83,6 +83,18 @@ char **ctdlsh_completion(const char *text, int start, int end) {
 }
 
 
+int do_one_command(int server_socket, char *cmd) {
+	int i;
+	int ret;
+	for (i=0; commands[i].func != NULL; ++i) {
+		if (!strncasecmp(cmd, commands[i].name, strlen(commands[i].name))) {
+			ret = (*commands[i].func) (server_socket, cmd);
+		}
+	}
+	return ret;
+}
+
+
 void do_main_loop(int server_socket) {
 	char *cmd = NULL;
 	char prompt[1024];
@@ -114,12 +126,13 @@ void do_main_loop(int server_socket) {
 
 		if ((cmd) && (*cmd)) {
 			add_history(cmd);
+			ret = do_one_command(server_socket, cmd);
 
-			for (i=0; commands[i].func != NULL; ++i) {
-				if (!strncasecmp(cmd, commands[i].name, strlen(commands[i].name))) {
-					ret = (*commands[i].func) (server_socket, cmd);
-				}
-			}
+			//for (i=0; commands[i].func != NULL; ++i) {
+				//if (!strncasecmp(cmd, commands[i].name, strlen(commands[i].name))) {
+					//ret = (*commands[i].func) (server_socket, cmd);
+				//}
+			//}
 
 		}
 
@@ -135,33 +148,33 @@ int main(int argc, char **argv)
 {
 	int server_socket = 0;
 	char buf[1024];
-	int c;
+	int i;
 	char *ctdldir = CTDLDIR;
+	char cmd[1024] = { 0 } ;
+	int exitcode = 0;
 
-	printf("\nCitadel administration shell (c) 2009-2016 by citadel.org\n"
-		"This is open source software made available to you under the terms\n"
-		"of the GNU General Public License v3.  All other rights reserved.\n"
-	);
-
-	opterr = 0;
-	while ((c = getopt (argc, argv, "h:")) != -1) {
-		switch(c) {
-		case 'h':
-			ctdldir = optarg;
-			break;
-		case '?':
-			if (optopt == 'h') {
-				fprintf(stderr, "Option -%c requires an argument\n", optopt);
+	for (i=1; i<argc; ++i) {
+		if (!strcmp(argv[i], "-h")) {
+			ctdldir = argv[++i];
+		}
+		else {
+			if (strlen(cmd) > 0) {
+				strcat(cmd, " ");
 			}
-			else {
-				fprintf(stderr, "Unknown option '-%c'\n", optopt);
-				fprintf(stderr, "usage: %s [-h citadel_dir]\n", argv[0]);
-			}
-			exit(1);
+			strcat(cmd, argv[i]);
 		}
 	}
 
-	printf("Trying %s...\n", ctdldir);
+	int is_interactive = ((strlen(cmd) == 0) ? 1 : 0);
+
+	if (is_interactive) {
+		printf("\nCitadel administration shell (c) 2009-2017 by citadel.org\n"
+			"This is open source software made available to you under the terms\n"
+			"of the GNU General Public License v3.  All other rights reserved.\n"
+		);
+		printf("Trying %s...\n", ctdldir);
+	}
+
 	sprintf(buf, "%s/citadel-admin.socket", ctdldir);
 	server_socket = uds_connectsock(buf);
 	if (server_socket < 0) {
@@ -170,13 +183,20 @@ int main(int argc, char **argv)
 
 	sock_getln(server_socket, buf, sizeof buf);
 	if (buf[0] == '2') {
-		printf("Connected: %s\n", buf);
-		do_main_loop(server_socket);
+		if (is_interactive) {
+			printf("Connected: %s\n", buf);
+			do_main_loop(server_socket);
+		}
+		else {
+			exitcode = do_one_command(server_socket, cmd);
+		}
 	}
 
 	sock_puts(server_socket, "QUIT");
 	sock_getln(server_socket, buf, sizeof buf);
-	printf("%s\n", buf);
+	if (is_interactive) {
+		printf("%s\n", buf);
+	}
 	close(server_socket);
-	exit(0);
+	exit(exitcode);
 }
