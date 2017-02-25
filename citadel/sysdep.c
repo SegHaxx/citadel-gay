@@ -2,12 +2,9 @@
  * Citadel "system dependent" stuff.
  *
  * Here's where we (hopefully) have most parts of the Citadel server that
- * would need to be altered to run the server in a non-POSIX environment.
- * 
- * If we ever port to a different platform and either have multiple
- * variants of this file or simply load it up with #ifdefs.
+ * might need tweaking when run on different operating system variants.
  *
- * Copyright (c) 1987-2015 by the citadel.org team
+ * Copyright (c) 1987-2017 by the citadel.org team
  *
  * This program is open source software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 3.
@@ -264,35 +261,27 @@ int ctdl_uds_server(char *sockpath, int queue_len, char *errormessage)
 
 	s = socket(AF_UNIX, SOCK_STREAM, 0);
 	if (s < 0) {
-		snprintf(errormessage, SIZ, 
-			 "citserver: Can't create a socket: %s",
-			 strerror(errno));
+		snprintf(errormessage, SIZ, "citserver: Can't create a socket: %s", strerror(errno));
 		syslog(LOG_EMERG, "%s", errormessage);
 		return(-1);
 	}
 
 	if (bind(s, (struct sockaddr *)&addr, sizeof(addr)) < 0) {
-		snprintf(errormessage, SIZ, 
-			 "citserver: Can't bind: %s",
-			 strerror(errno));
+		snprintf(errormessage, SIZ, "citserver: Can't bind: %s", strerror(errno));
 		syslog(LOG_EMERG, "%s", errormessage);
 		return(-1);
 	}
 
 	/* set to nonblock - we need this for some obscure situations */
 	if (fcntl(s, F_SETFL, O_NONBLOCK) < 0) {
-		snprintf(errormessage, SIZ, 
-			 "citserver: Can't set socket to non-blocking: %s",
-			 strerror(errno));
+		snprintf(errormessage, SIZ, "citserver: Can't set socket to non-blocking: %s", strerror(errno));
 		syslog(LOG_EMERG, "%s", errormessage);
 		close(s);
 		return(-1);
 	}
 
 	if (listen(s, actual_queue_len) < 0) {
-		snprintf(errormessage, SIZ, 
-			 "citserver: Can't listen: %s",
-			 strerror(errno));
+		snprintf(errormessage, SIZ, "citserver: Can't listen: %s", strerror(errno));
 		syslog(LOG_EMERG, "%s", errormessage);
 		return(-1);
 	}
@@ -538,8 +527,7 @@ int client_read_blob(StrBuf *Target, int bytes, int timeout)
 			cit_backtrace();
 			exit(1);
 		}
-		fprintf(fd, "Reading BLOB: BufSize: %d ",
-			bytes);
+		fprintf(fd, "Reading BLOB: BufSize: %d ", bytes);
 		rv = fwrite(ChrPtr(Target), StrLength(Target), 1, fd);
 		fprintf(fd, "]\n");
 		
@@ -559,12 +547,9 @@ int client_read_blob(StrBuf *Target, int bytes, int timeout)
 			cit_backtrace();
 			exit(1);
 		}
-		fprintf(fd, "Read: %d BufContent: [",
-			StrLength(Target));
+		fprintf(fd, "Read: %d BufContent: [", StrLength(Target));
 		rv = fwrite(ChrPtr(Target), StrLength(Target), 1, fd);
 		fprintf(fd, "]\n");
-		
-		
 		fclose(fd);
 #endif
 	}
@@ -588,8 +573,6 @@ int client_read_blob(StrBuf *Target, int bytes, int timeout)
 			bytes);
 		rv = fwrite(ChrPtr(Target), StrLength(Target), 1, fd);
 		fprintf(fd, "]\n");
-		
-			
 		fclose(fd);
 #endif
 		retval = StrBufReadBLOBBuffered(Target, 
@@ -599,7 +582,8 @@ int client_read_blob(StrBuf *Target, int bytes, int timeout)
 						1, 
 						bytes,
 						O_TERM,
-						&Error);
+						&Error
+		);
 		if (retval < 0) {
 			syslog(LOG_CRIT, "client_read_blob() failed: %s", Error);
 			client_close();
@@ -677,12 +661,9 @@ int client_read_random_blob(StrBuf *Target, int timeout)
 					StrLength(Target));
 				rv = fwrite(ChrPtr(Target), StrLength(Target), 1, fd);
 				fprintf(fd, "]\n");
-			
-			
 				fclose(fd);
 			}
 #endif
-	
 			return StrLength(Target);
 		}
 		return rc;
@@ -838,7 +819,8 @@ int CtdlClientGetLine(StrBuf *Target)
 						       &CCC->client_socket,
 						       5,
 						       1,
-						       &Error);
+						       &Error
+		);
 
 #ifdef BIGBAD_IODBG
                 pch = ChrPtr(CCC->RecvBuf.Buf);
@@ -928,10 +910,11 @@ void close_masters (void)
 			else
 				Text = "Closing";
 					
-			syslog(LOG_INFO, "%s %d listener on port %d\n",
+			syslog(LOG_INFO, "%s %d listener on port %d",
 			       Text,
 			       serviceptr->msock,
-			       serviceptr->tcp_port);
+			       serviceptr->tcp_port
+			);
 			serviceptr->tcp_port = 0;
 		}
 		
@@ -942,10 +925,11 @@ void close_masters (void)
 			else
 				Text = "Closing";
 
-			syslog(LOG_INFO, "%s %d listener on '%s'\n",
+			syslog(LOG_INFO, "%s %d listener on '%s'",
 			       Text,
 			       serviceptr->msock,
-			       serviceptr->sockpath);
+			       serviceptr->sockpath
+			);
 		}
 
                 if (serviceptr->msock != -1)
@@ -1368,9 +1352,7 @@ do_select:	force_purge = 0;
 					 * operations barf on FreeBSD.  Not a fatal error.
 					 */
 					if (fcntl(ssock, F_SETFL, 0) < 0) {
-						syslog(LOG_EMERG,
-							"citserver: Can't set socket to blocking: %s\n",
-							strerror(errno));
+						syslog(LOG_EMERG, "citserver: Can't set socket to blocking: %s", strerror(errno));
 					}
 
 					/* New context will be created already
