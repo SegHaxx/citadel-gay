@@ -247,6 +247,7 @@ void CtdlPutRoomLock(struct ctdlroom *qrbuf);
 typedef void (*ForEachRoomCallBack)(struct ctdlroom *EachRoom, void *out_data);
 void CtdlForEachRoom(ForEachRoomCallBack CB, void *in_data);
 typedef void (*ForEachRoomNetCfgCallBack)(struct ctdlroom *EachRoom, void *out_data, OneRoomNetCfg *OneRNCFG);
+char *LoadRoomNetConfigFile(long roomnum);
 void CtdlForEachNetCfgRoom(ForEachRoomNetCfgCallBack CB, void *in_data);
 void SaveChangedConfigs(void);
 void CtdlDeleteRoom(struct ctdlroom *qrbuf);

@@ -704,24 +704,24 @@ int PurgeUseTable(StrBuf *ErrMsg) {
 
 	syslog(LOG_DEBUG, "Purge use table: phase 1");
 	cdb_rewind(CDB_USETABLE);
-	while(cdbut = cdb_next_item(CDB_USETABLE), cdbut != NULL) {
-
-		/*
-		 * TODODRW: change this to create a new function time_t cdb_get_timestamp( struct cdbdata *)
-		 * this will release this file from the serv_network.h
-		 * Maybe it could be a macro that extracts and casts the reult
-		 */
+	while(cdbut = cdb_next_item(CDB_USETABLE), cdbut != NULL)
+	{
 		if (cdbut->len > sizeof(struct UseTable))
 			memcpy(&ut, cdbut->ptr, sizeof(struct UseTable));
-		else {
+		else
+		{
 			memset(&ut, 0, sizeof(struct UseTable));
 			memcpy(&ut, cdbut->ptr, cdbut->len);
 		}
 		cdb_free(cdbut);
 
-		if ( (time(NULL) - ut.ut_timestamp) > USETABLE_RETAIN ) {
+		syslog(LOG_DEBUG, "UT: [%s] at %s", ut.ut_msgid, asctime(localtime(&ut.ut_timestamp)));	// FIXME take this out ajc
+
+		if ( (time(NULL) - ut.ut_timestamp) > USETABLE_RETAIN )
+		{
 			uptr = (struct UPurgeList *) malloc(sizeof(struct UPurgeList));
-			if (uptr != NULL) {
+			if (uptr != NULL)
+			{
 				uptr->next = ul;
 				safestrncpy(uptr->up_key, ut.ut_msgid, sizeof uptr->up_key);
 				ul = uptr;
