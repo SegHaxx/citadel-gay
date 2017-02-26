@@ -301,20 +301,21 @@ void SaveRoomNetConfigFile(OneRoomNetCfg *OneRNCfg, long roomnum)
 	{
 		const CfgLineType *pCfg;
 		pCfg = GetCfgTypeByEnum(eCfg, CfgIt);
-		if (pCfg->IsSingleLine)
+		if (pCfg)
 		{
-			pCfg->Serializer(pCfg, OutBuffer, OneRNCfg, NULL);
-		}
-		else
-		{
-			RoomNetCfgLine *pName = OneRNCfg->NetConfigs[pCfg->C];
-			while (pName != NULL)
+			if (pCfg->IsSingleLine)
 			{
-				pCfg->Serializer(pCfg, OutBuffer, OneRNCfg, pName);
-				pName = pName->next;
+				pCfg->Serializer(pCfg, OutBuffer, OneRNCfg, NULL);
 			}
-			
-			
+			else
+			{
+				RoomNetCfgLine *pName = OneRNCfg->NetConfigs[pCfg->C];
+				while (pName != NULL)
+				{
+					pCfg->Serializer(pCfg, OutBuffer, OneRNCfg, pName);
+					pName = pName->next;
+				}
+			}
 		}
 
 	}

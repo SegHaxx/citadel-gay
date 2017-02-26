@@ -48,6 +48,7 @@
 #include "citadel_dirs.h"
 #include "md5.h"
 #include "context.h"
+#include "internet_addressing.h"
 
 struct rssroom {
 	struct rssroom *next;
@@ -65,23 +66,13 @@ struct rssparser {
 	struct CtdlMessage *msg;
 	char *link;
 	char *description;
+	char *item_id;
 	struct rssroom *rooms;
 };
 
 time_t last_run = 0L;
 struct CitContext rss_CC;
 struct rssurl *rsstodo = NULL;
-
-
-// This is what RSS probably looks like
-//
-//	<item>
-//		<title><![CDATA[Felicity flexes action chops]]></title>
-//		<link>http://video.foxnews.com/v/5336254459001/</link>
-//		<author>foxnewsonline@foxnews.com (Fox News Online)</author>
-//		<description />
-//		<pubDate>Sat, 25 Feb 2017 14:28:01 EST</pubDate>
-//	</item>
 
 
 // This handler is called whenever an XML tag opens.
@@ -135,62 +126,96 @@ void rss_end_element(void *data, const char *el)
 
 		if (r->msg != NULL) {				// Save the message to the rooms
 
-								// FIXME check the use table
+			// use the link as an item id if nothing else is available
+			if ((r->item_id == NULL) && (r->link != NULL)) {
+				r->item_id = strdup(r->link);
+			}
 
-			StrBuf *TheMessage = NewStrBuf();
-			StrBufAppendPrintf(TheMessage,
-				"Content-type: text/html\n\n"
-				"\n\n"
-				"<html><head></head><body>"
-			);
+			// check the use table
+			StrBuf *u = NewStrBuf();
+			StrBufAppendPrintf(u, "rss/%s", r->item_id);
+			time_t already_seen = CheckIfAlreadySeen("rss", u, time(NULL), 604800, eUpdate, 0, 0);
+			FreeStrBuf(&u);
+
+			if (already_seen == 0) {
+
+				// Compose the message text
+				StrBuf *TheMessage = NewStrBuf();
+				StrBufAppendPrintf(TheMessage,
+					"Content-type: text/html\n\n"
+					"\n\n"
+					"<html><head></head><body>"
+				);
+		
+				if (r->description != NULL) {
+					StrBufAppendPrintf(TheMessage, "%s<br><br>\r\n", r->description);
+					free(r->description);
+					r->description = NULL;
+				}
+		
+				if (r->link != NULL) {
+					StrBufAppendPrintf(TheMessage, "<a href=\"%s\">%s</a>\r\n", r->link, r->link);
+					free(r->link);
+					r->link = NULL;
+				}
 	
-			if (r->description != NULL) {
-				StrBufAppendPrintf(TheMessage, "%s<br><br>\r\n", r->description);
-				free(r->description);
-				r->description = NULL;
+				StrBufAppendPrintf(TheMessage, "</body></html>\r\n");
+				CM_SetField(r->msg, eMesageText, ChrPtr(TheMessage), StrLength(TheMessage));
+				FreeStrBuf(&TheMessage);
+	
+				if (CM_IsEmpty(r->msg, eAuthor)) {
+					CM_SetField(r->msg, eAuthor, HKEY("rss"));
+				}
+	
+				if (CM_IsEmpty(r->msg, eTimestamp)) {
+					CM_SetFieldLONG(r->msg, eTimestamp, time(NULL));
+				}
+	
+				// Save it to the room(s)
+				struct rssroom *rr = NULL;
+				long msgnum = (-1);
+				for (rr=r->rooms; rr!=NULL; rr=rr->next) {
+					if (rr == r->rooms) {
+						msgnum = CtdlSubmitMsg(r->msg, NULL, rr->room, 0);
+					}
+					else {
+						CtdlSaveMsgPointerInRoom(rr->room, msgnum, 0, NULL);
+					}
+					syslog(LOG_DEBUG, "Saved message %ld to %s", msgnum, rr->room);
+				}
+			}
+			else {
+				syslog(LOG_DEBUG, "%s was already seen %ld seconds ago", r->item_id, already_seen);
 			}
 	
-			if (r->link != NULL) {
-				StrBufAppendPrintf(TheMessage, "<a href=\"%s\">%s</a>\r\n", r->link, r->link);
-				free(r->link);
-				r->link = NULL;
-			}
-
-			StrBufAppendPrintf(TheMessage, "</body></html>\r\n");
-
-			syslog(LOG_DEBUG, "------------------\n%s\n------------------", ChrPtr(TheMessage));
-			FreeStrBuf(&TheMessage);
-
-
-
-			struct rssroom *rr;
-			for (rr=r->rooms; rr!=NULL; rr=rr->next) {
-				syslog(LOG_DEBUG, "Saving item %s to %s", r->link, rr->room);
-			}
 			CM_Free(r->msg);
 			r->msg = NULL;
 		}
 
-
-
+		if (r->item_id != NULL) {
+			free(r->item_id);
+			r->item_id = NULL;
+		}
 	}
 
 	else if (!strcasecmp(el, "title")) {			// item subject (rss and atom)
-		if ((r->msg != NULL) && (r->msg->cm_fields[eMsgSubject] == NULL)) {
-			r->msg->cm_fields[eMsgSubject] = strdup(ChrPtr(r->CData));
+		if ((r->msg != NULL) && (CM_IsEmpty(r->msg, eMsgSubject))) {
+			CM_SetField(r->msg, eMsgSubject, ChrPtr(r->CData), StrLength(r->CData));
 			striplt(r->msg->cm_fields[eMsgSubject]);
 		}
 	}
 
 	else if (!strcasecmp(el, "author")) {			// author of item (rss and maybe atom)
-		if ((r->msg != NULL) && (r->msg->cm_fields[eAuthor] == NULL)) {
-			r->msg->cm_fields[eAuthor] = strdup(ChrPtr(r->CData));
+		if ((r->msg != NULL) && (CM_IsEmpty(r->msg, eAuthor))) {
+			CM_SetField(r->msg, eAuthor, ChrPtr(r->CData), StrLength(r->CData));
 			striplt(r->msg->cm_fields[eAuthor]);
 		}
 	}
 
 	else if (!strcasecmp(el, "pubdate")) {			// date/time stamp (rss) Sat, 25 Feb 2017 14:28:01 EST
-		// FIXME parse it
+		if (CM_IsEmpty(r->msg, eTimestamp)) {
+			CM_SetFieldLONG(r->msg, eTimestamp, parsedate(ChrPtr(r->CData)));
+		}
 	}
 
 	else if (!strcasecmp(el, "updated")) {			// date/time stamp (atom) 2003-12-13T18:30:02Z
@@ -204,6 +229,18 @@ void rss_end_element(void *data, const char *el)
 		}
 		r->link = strdup(ChrPtr(r->CData));
 		striplt(r->link);
+	}
+
+	else if (
+		(!strcasecmp(el, "guid"))			// unique item id (rss)
+		|| (!strcasecmp(el, "id"))			// unique item id (atom)
+	) {
+		if (r->item_id != NULL) {
+			free(r->item_id);
+			r->item_id = NULL;
+		}
+		r->item_id = strdup(ChrPtr(r->CData));
+		striplt(r->item_id);
 	}
 
 	else if (
@@ -393,9 +430,9 @@ void rssclient_scan(void) {
 	/* Run no more than once every 15 minutes. */
 	if ((now - last_run) < 900) {
 		syslog(LOG_DEBUG,
-			      "Client: polling interval not yet reached; last run was %ldm%lds ago",
-			      ((now - last_run) / 60),
-			      ((now - last_run) % 60)
+			"Client: polling interval not yet reached; last run was %ldm%lds ago",
+			((now - last_run) / 60),
+			((now - last_run) % 60)
 		);
 		return;
 	}
