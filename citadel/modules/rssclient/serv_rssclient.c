@@ -119,6 +119,7 @@ void rss_end_element(void *data, const char *el)
 {
 	struct rssparser *r = (struct rssparser *)data;
 
+	syslog(LOG_DEBUG, "end: %s", el);
 	if (							// end of a new item(rss) or entry(atom)
 		(!strcasecmp(el, "entry"))
 		|| (!strcasecmp(el, "item"))
@@ -213,7 +214,7 @@ void rss_end_element(void *data, const char *el)
 	}
 
 	else if (!strcasecmp(el, "pubdate")) {			// date/time stamp (rss) Sat, 25 Feb 2017 14:28:01 EST
-		if (CM_IsEmpty(r->msg, eTimestamp)) {
+		if ((r->msg)&&(r->msg->cm_fields[eTimestamp]==NULL)) {
 			CM_SetFieldLONG(r->msg, eTimestamp, parsedate(ChrPtr(r->CData)));
 		}
 	}
@@ -284,7 +285,7 @@ void rss_parse_feed(StrBuf *Feed, struct rssroom *rooms)
 
 	memset(&r, 0, sizeof r);
 	r.rooms = rooms;
-	XML_Parser p = XML_ParserCreateNS("UTF-8", ':');
+	XML_Parser p = XML_ParserCreate("UTF-8");
 	XML_SetElementHandler(p, rss_start_element, rss_end_element);
 	XML_SetCharacterDataHandler(p, rss_handle_data);
 	XML_SetUserData(p, (void *)&r);
