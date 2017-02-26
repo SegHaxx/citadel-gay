@@ -60,9 +60,126 @@ struct rssurl {
 	struct rssroom *rooms;
 };
 
+struct rssparser {
+	StrBuf *CData;
+	struct CtdlMessage *msg;
+};
+
 time_t last_run = 0L;
 struct CitContext rss_CC;
 struct rssurl *rsstodo = NULL;
+
+
+// This is what RSS probably looks like
+//
+//	<item>
+//		<title><![CDATA[Felicity flexes action chops]]></title>
+//		<link>http://video.foxnews.com/v/5336254459001/</link>
+//		<author>foxnewsonline@foxnews.com (Fox News Online)</author>
+//		<description />
+//		<pubDate>Sat, 25 Feb 2017 14:28:01 EST</pubDate>
+//	</item>
+
+
+// This handler is called whenever an XML tag opens.
+//
+void rss_start_element(void *data, const char *el, const char **attribute)
+{
+	struct rssparser *r = (struct rssparser *)data;
+
+	if (
+		(!strcasecmp(el, "entry"))
+		|| (!strcasecmp(el, "item"))
+	) {
+		// this is the start of a new item(rss) or entry(atom)
+		if (r->msg != NULL) {
+			CM_Free(r->msg);
+			r->msg = NULL;
+		}
+		r->msg = malloc(sizeof(struct CtdlMessage));
+		memset(r->msg, 0, sizeof(struct CtdlMessage));
+		r->msg->cm_magic = CTDLMESSAGE_MAGIC;
+		r->msg->cm_anon_type = MES_NORMAL;
+		r->msg->cm_format_type = FMT_RFC822;
+	}
+}
+
+
+// This handler is called whenever an XML tag closes.
+//
+void rss_end_element(void *data, const char *el)
+{
+	struct rssparser *r = (struct rssparser *)data;
+
+	if (							// end of a new item(rss) or entry(atom)
+		(!strcasecmp(el, "entry"))
+		|| (!strcasecmp(el, "item"))
+	) {
+
+		// FIXME check the use table
+
+		if (r->msg != NULL) {
+			// FIXME WRITE IT TO THE ROOMS HERE, DUMMEH
+			CM_Free(r->msg);
+			r->msg = NULL;
+		}
+	}
+
+	else if (!strcasecmp(el, "title")) {			// item subject (rss and atom)
+		if ((r->msg != NULL) && (r->msg->cm_fields[eMsgSubject] == NULL)) {
+			r->msg->cm_fields[eMsgSubject] = strdup(ChrPtr(r->CData));
+		}
+	}
+
+	else if (!strcasecmp(el, "author")) {			// author of item (rss and maybe atom)
+		if ((r->msg != NULL) && (r->msg->cm_fields[eAuthor] == NULL)) {
+			r->msg->cm_fields[eAuthor] = strdup(ChrPtr(r->CData));
+		}
+	}
+
+	else if (!strcasecmp(el, "pubdate")) {			// date/time stamp (rss) Sat, 25 Feb 2017 14:28:01 EST
+		// FIXME parse it
+	}
+
+	else if (!strcasecmp(el, "updated")) {			// date/time stamp (atom) 2003-12-13T18:30:02Z
+		// FIXME parse it
+	}
+
+	if (r->CData != NULL) {
+		FreeStrBuf(&r->CData);
+		r->CData = NULL;
+	}
+}
+
+
+// This handler is called whenever data appears between opening and closing tags.
+//
+void rss_handle_data(void *data, const char *content, int length)
+{
+	struct rssparser *r = (struct rssparser *)data;
+
+	if (r->CData == NULL) {
+		r->CData = NewStrBuf();
+	}
+
+	StrBufAppendBufPlain(r->CData, content, length, 0);
+}
+
+
+// Feed has been downloaded, now parse it.
+//
+void rss_parse_feed(StrBuf *Feed)
+{
+	struct rssparser r;
+
+	memset(&r, 0, sizeof r);
+	XML_Parser p = XML_ParserCreateNS("UTF-8", ':');
+	XML_SetElementHandler(p, rss_start_element, rss_end_element);
+	XML_SetCharacterDataHandler(p, rss_handle_data);
+	XML_SetUserData(p, (void *)&r);
+	XML_Parse(p, ChrPtr(Feed), StrLength(Feed), XML_TRUE);
+	XML_ParserFree(p);
+}
 
 
 // Add a feed/room pair into the todo list
@@ -135,9 +252,9 @@ void rss_pull_one_feed(struct rssurl *url)
 	}
 	curl_easy_cleanup(curl);
 
-	// FIXME parse the feed, dummeh ... it's in ChrPtr(Downloaded)
+	rss_parse_feed(Downloaded);						// parse the feed
 
-	for (r=url->rooms; r!=NULL; r=r->next) {
+	for (r=url->rooms; r!=NULL; r=r->next) {				// we might move this somewhere else
 		syslog(LOG_DEBUG, "Saving item to %s", r->room);
 		// FIXME save to rooms
 	}
