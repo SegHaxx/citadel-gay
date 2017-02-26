@@ -48,7 +48,6 @@
 #include "citadel_dirs.h"
 #include "md5.h"
 #include "context.h"
-#include "rss_atom_parser.h"
 
 struct rssroom {
 	struct rssroom *next;
@@ -60,7 +59,6 @@ struct rssurl {
 	char *url;
 	struct rssroom *rooms;
 };
-
 
 time_t last_run = 0L;
 struct CitContext rss_CC;
