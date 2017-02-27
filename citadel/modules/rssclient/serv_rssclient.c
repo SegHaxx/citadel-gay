@@ -119,7 +119,6 @@ void rss_end_element(void *data, const char *el)
 {
 	struct rssparser *r = (struct rssparser *)data;
 
-	syslog(LOG_DEBUG, "end: %s", el);
 	if (							// end of a new item(rss) or entry(atom)
 		(!strcasecmp(el, "entry"))
 		|| (!strcasecmp(el, "item"))
@@ -220,7 +219,15 @@ void rss_end_element(void *data, const char *el)
 	}
 
 	else if (!strcasecmp(el, "updated")) {			// date/time stamp (atom) 2003-12-13T18:30:02Z
-		// FIXME parse it
+		if ((r->msg)&&(r->msg->cm_fields[eTimestamp]==NULL)) {
+			struct tm t;
+			char zulu;
+			memset(&t, 0, sizeof t);
+			sscanf(ChrPtr(r->CData), "%d-%d-%dT%d:%d:%d%c", &t.tm_year, &t.tm_mon, &t.tm_mday, &t.tm_hour, &t.tm_min, &t.tm_sec, &zulu);
+			t.tm_year -= 1900;
+			t.tm_mon -= 1;
+			CM_SetFieldLONG(r->msg, eTimestamp, mktime(&t));
+		}
 	}
 
 	else if (!strcasecmp(el, "link")) {			// link to story (rss)
