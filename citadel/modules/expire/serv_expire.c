@@ -3,7 +3,7 @@
  *
  * You might also see this module affectionately referred to as the DAP (the Dreaded Auto-Purger).
  *
- * Copyright (c) 1988-2015 by citadel.org (Art Cancro, Wilifried Goesgens, and others)
+ * Copyright (c) 1988-2017 by citadel.org (Art Cancro, Wilifried Goesgens, and others)
  *
  * This program is open source software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License as published
@@ -102,7 +102,6 @@ struct ValidUser {
 	long vu_usernum;
 };
 
-
 struct ctdlroomref {
 	struct ctdlroomref *next;
 	long msgnum;
@@ -175,7 +174,6 @@ void GatherPurgeMessages(struct ctdlroom *qrbuf, void *data) {
 		if (msglist != NULL) free(msglist);
 		return;
 	}
-
 
 	/* If the room is set to expire by count, do that */
 	if (epbuf.expire_mode == EXPIRE_NUMMSGS) {
@@ -327,7 +325,6 @@ void DoPurgeRooms(struct ctdlroom *qrbuf, void *data) {
 }
 
 
-
 int PurgeRooms(void) {
 	struct PurgeList *pptr;
 	int num_rooms_purged = 0;
@@ -336,7 +333,6 @@ int PurgeRooms(void) {
 	char *transcript = NULL;
 
 	syslog(LOG_DEBUG, "PurgeRooms() called");
-
 
 	/* Load up a table full of valid user numbers so we can delete
 	 * user-owned rooms for users who no longer exist */
@@ -351,7 +347,6 @@ int PurgeRooms(void) {
 		free(ValidUserList);
 		ValidUserList = vuptr;
 	}
-
 
 	transcript = malloc(SIZ);
 	strcpy(transcript, "The following rooms have been auto-purged:\n");
@@ -397,8 +392,6 @@ void do_uid_user_purge(struct ctdluser *us, void *data) {
 		++users_not_purged;
 	}
 }
-
-
 
 
 /*
@@ -512,7 +505,6 @@ void do_user_purge(struct ctdluser *us, void *data) {
 	}
 
 }
-
 
 
 int PurgeUsers(void) {
@@ -684,6 +676,7 @@ int PurgeVisits(void) {
 	return(purged);
 }
 
+
 /*
  * Purge the use table of old entries.
  *
@@ -715,8 +708,6 @@ int PurgeUseTable(StrBuf *ErrMsg) {
 		}
 		cdb_free(cdbut);
 
-		syslog(LOG_DEBUG, "UT: [%s] at %s", ut.ut_msgid, asctime(localtime(&ut.ut_timestamp)));	// FIXME take this out ajc
-
 		if ( (time(NULL) - ut.ut_timestamp) > USETABLE_RETAIN )
 		{
 			uptr = (struct UPurgeList *) malloc(sizeof(struct UPurgeList));
@@ -743,7 +734,6 @@ int PurgeUseTable(StrBuf *ErrMsg) {
 	syslog(LOG_DEBUG, "Purge use table: finished (purged %d records)", purged);
 	return(purged);
 }
-
 
 
 /*
@@ -800,7 +790,6 @@ int PurgeEuidIndexTable(void) {
 }
 
 
-
 /*
  * Purge OpenID assocations for missing users (theoretically this will never delete anything)
  */
@@ -846,9 +835,6 @@ int PurgeStaleOpenIDassociations(void) {
 	DeleteHash(&keys);
 	return num_deleted;
 }
-
-
-
 
 
 void purge_databases(void)
@@ -944,7 +930,6 @@ void cmd_tdap(char *argbuf) {
 	force_purge_now = 1;
 	cprintf("%d Manually initiating a purger run now.\n", CIT_OK);
 }
-
 
 
 CTDL_MODULE_INIT(expire)
