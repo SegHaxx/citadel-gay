@@ -1,7 +1,7 @@
 /* 
  * Server functions which perform operations on room objects.
  *
- * Copyright (c) 1987-2016 by the citadel.org team
+ * Copyright (c) 1987-2017 by the citadel.org team
  *
  * This program is open source software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 3.
@@ -37,6 +37,7 @@ int CtdlDoIHavePermissionToReadMessagesInThisRoom(void) {
 	}
 	return(om_ok);
 }
+
 
 /*
  * Check to see whether we have permission to post a message in the current
@@ -112,6 +113,7 @@ int CtdlDoIHavePermissionToPostInThisRoom(
 
 }
 
+
 /*
  * Check whether the current user has permission to delete messages from
  * the current room (returns 1 for yes, 0 for no)
@@ -122,6 +124,7 @@ int CtdlDoIHavePermissionToDeleteMessagesFromThisRoom(void) {
 	if (ra & UA_DELETEALLOWED) return(1);
 	return(0);
 }
+
 
 /*
  * Retrieve access control information for any user/room pair.
@@ -911,7 +914,7 @@ void CtdlUserGoto(char *where, int display_result, int transiently,
 	if (retnew != NULL) *retnew = new_messages;
 	if (retoldest != NULL) *retoldest = oldest_message;
 	if (retnewest != NULL) *retnewest = newest_message;
-	MSG_syslog(LOG_DEBUG, "<%s> %d new of %d total messages, oldest=%ld, newest=%ld",
+	syslog(LOG_DEBUG, "<%s> %d new of %d total messages, oldest=%ld, newest=%ld",
 		   CCC->room.QRname, new_messages, total_messages, oldest_message, newest_message
 	);
 
@@ -994,7 +997,7 @@ int CtdlRenameRoom(char *old_name, char *new_name, int new_floor) {
 	long owner = 0L;
 	char actual_old_name[ROOMNAMELEN];
 
-	MSG_syslog(LOG_DEBUG, "CtdlRenameRoom(%s, %s, %d)", old_name, new_name, new_floor);
+	syslog(LOG_DEBUG, "CtdlRenameRoom(%s, %s, %d)", old_name, new_name, new_floor);
 
 	if (new_floor >= 0) {
 		fl = CtdlGetCachedFloor(new_floor);
@@ -1083,11 +1086,11 @@ int CtdlRenameRoom(char *old_name, char *new_name, int new_floor) {
 		lgetfloor(&flbuf, old_floor);
 		--flbuf.f_ref_count;
 		lputfloor(&flbuf, old_floor);
-		MSG_syslog(LOG_DEBUG, "Reference count for floor %d is now %d", old_floor, flbuf.f_ref_count);
+		syslog(LOG_DEBUG, "Reference count for floor %d is now %d", old_floor, flbuf.f_ref_count);
 		lgetfloor(&flbuf, new_floor);
 		++flbuf.f_ref_count;
 		lputfloor(&flbuf, new_floor);
-		MSG_syslog(LOG_DEBUG, "Reference count for floor %d is now %d", new_floor, flbuf.f_ref_count);
+		syslog(LOG_DEBUG, "Reference count for floor %d is now %d", new_floor, flbuf.f_ref_count);
 	}
 
 	/* ...and everybody say "YATTA!" */	
@@ -1223,10 +1226,10 @@ unsigned CtdlCreateRoom(char *new_room_name,
 	struct floor flbuf;
 	visit vbuf;
 
-	MARK_syslog(LOG_DEBUG, "CtdlCreateRoom(name=%s, type=%d, view=%d)", new_room_name, new_room_type, new_room_view);
+	syslog(LOG_DEBUG, "CtdlCreateRoom(name=%s, type=%d, view=%d)", new_room_name, new_room_type, new_room_view);
 
 	if (CtdlGetRoom(&qrbuf, new_room_name) == 0) {
-		MARK_syslog(LOG_DEBUG, "Cannot create room <%s> - already exists", new_room_name);
+		syslog(LOG_DEBUG, "Cannot create room <%s> - already exists", new_room_name);
 		return(0);
 	}
 
