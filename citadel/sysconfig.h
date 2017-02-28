@@ -1,7 +1,16 @@
 /*
- * NOTE: this file is for client software tuning, not customization.  For
- * making changes to the behavior of the client, you want to edit citadel.rc,
- * not this file.
+ * Tuning of various parameters of the system.
+ * Normally you don't want to mess with any of this.
+ *
+ * Copyright (c) 1987-2017 by the citadel.org team
+ *
+ * This program is open source software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 3.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
  */
 
 /*
@@ -99,8 +108,8 @@
  * How long (in seconds) to retain message entries in the use table
  */
 #define USETABLE_RETAIN			864000L		/* 10 days */
-#define USETABLE_ANTIEXPIRE     	345600l         /*  4 days */
-#define USETABLE_ANTIEXPIRE_HIRES	 86400l         /*  1 day */
+#define USETABLE_ANTIEXPIRE     	345600L         /*  4 days */
+#define USETABLE_ANTIEXPIRE_HIRES	 86400L         /*  1 day */
 
 /*
  * The size of per-thread stacks.  If set too low, citserver will randomly crash.
