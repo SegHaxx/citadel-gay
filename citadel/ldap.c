@@ -2,7 +2,7 @@
  * These functions implement the portions of AUTHMODE_LDAP and AUTHMODE_LDAP_AD which
  * actually speak to the LDAP server.
  *
- * Copyright (c) 2011-2015 by the citadel.org development team.
+ * Copyright (c) 2011-2017 by the citadel.org development team.
  *
  * This program is open source software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 3.
@@ -25,9 +25,8 @@ int ctdl_require_ldap_version = 3;
 #include "config.h"
 
 #ifdef HAVE_LDAP
-#define LDAP_DEPRECATED 1 	/* Suppress libldap's warning that we are using deprecated API calls */
+#define LDAP_DEPRECATED 1 	// Suppress libldap's warning that we are using deprecated API calls
 #include <ldap.h>
-
 
 
 /*
@@ -41,18 +40,13 @@ int ctdl_ldap_initialize(LDAP **ld) {
 	snprintf(server_url, sizeof server_url, "ldap://%s:%d", CtdlGetConfigStr("c_ldap_host"), CtdlGetConfigInt("c_ldap_port"));
 	ret = ldap_initialize(ld, server_url);
 	if (ret != LDAP_SUCCESS) {
-		syslog(LOG_ALERT, "LDAP: Could not connect to %s : %s",
-			server_url,
-			strerror(errno)
-		);
+		syslog(LOG_ALERT, "LDAP: Could not connect to %s : %s", server_url, strerror(errno));
 		*ld = NULL;
 		return(errno);
 	}
 
 	return(ret);
 }
-
-
 
 
 /*
@@ -103,10 +97,12 @@ int CtdlTryUserLDAP(char *username,
 			snprintf(searchstring, sizeof(searchstring), "(sAMAccountName=%s)", username);
 	}
 	else {
-		if (lookup_based_on_username != 0)
+		if (lookup_based_on_username != 0) {
 			snprintf(searchstring, sizeof(searchstring), "(cn=%s)",username);
-		else
+		}
+		else {
 			snprintf(searchstring, sizeof(searchstring), "(&(objectclass=posixAccount)(uid=%s))", username);
+		}
 	}
 
 	syslog(LOG_DEBUG, "LDAP search: %s", searchstring);
@@ -243,6 +239,7 @@ int CtdlTryPasswordLDAP(char *user_dn, const char *password)
 	return(1);
 }
 
+
 //return !0 iff property changed.
 int vcard_set_props_iff_different(struct vCard *v,char *propname,int numvals, char **vals) {
 	int i;
@@ -276,6 +273,7 @@ int vcard_set_one_prop_iff_different(struct vCard *v,char *propname, char *newfm
 	free(newvalue);
 	return changed_something;
 }
+
 
 /*
  * Learn LDAP attributes and stuff them into the vCard.
@@ -340,23 +338,22 @@ int Ctdl_LDAP_to_vCard(char *ldap_dn, struct vCard *v)
 
 	syslog(LOG_DEBUG, "LDAP search: %s", ldap_dn);
 	(void) ldap_search_ext_s(
-		ldserver,				/* ld				*/
-		ldap_dn,				/* base				*/
-		LDAP_SCOPE_SUBTREE,		/* scope			*/
-		NULL,					/* filter			*/
-		attrs,					/* attrs (all attributes)	*/
-		0,						/* attrsonly (attrs + values)	*/
-		NULL,					/* serverctrls (none)		*/
-		NULL,					/* clientctrls (none)		*/
-		&tv,					/* timeout			*/
-		1,						/* sizelimit (1 result max)	*/
-		&search_result			/* res				*/
+		ldserver,				// ld
+		ldap_dn,				// base
+		LDAP_SCOPE_SUBTREE,			// scope
+		NULL,					// filter
+		attrs,					// attrs (all attributes)
+		0,					// attrsonly (attrs + values)
+		NULL,					// serverctrls (none)
+		NULL,					// clientctrls (none)
+		&tv,					// timeout
+		1,					// sizelimit (1 result max)
+		&search_result				// res
 	);
 	
 	/* Ignore the return value of ldap_search_ext_s().  Sometimes it returns an error even when
 	 * the search succeeds.  Instead, we check to see whether search_result is still NULL.
 	 */
-	 
 	if (search_result == NULL) {
 		syslog(LOG_DEBUG, "LDAP search: zero results were returned");
 		ldap_unbind(ldserver);
@@ -366,7 +363,6 @@ int Ctdl_LDAP_to_vCard(char *ldap_dn, struct vCard *v)
 	/* At this point we've got at least one result from our query.  If there are multiple
 	 * results, we still only look at the first one.
 	 */
-
 	entry = ldap_first_entry(ldserver, search_result);
 	if (entry) {
 		syslog(LOG_DEBUG, "LDAP search, got user details for vcard.");
