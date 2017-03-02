@@ -254,6 +254,7 @@ void rss_end_element(void *data, const char *el)
 	else if (
 		(!strcasecmp(el, "description"))		// message text (rss)
 		|| (!strcasecmp(el, "summary"))			// message text (atom)
+		|| (!strcasecmp(el, "content"))			// message text (atom)
 	) {
 		if (r->description != NULL) {
 			free(r->description);
