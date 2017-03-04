@@ -49,6 +49,7 @@
 #include "control.h"
 #include "citserver.h"
 #include "config.h"
+#pragma GCC diagnostic ignored "-Wcast-qual"
 
 static DB *dbp[MAXCDB];		/* One DB handle for each Citadel database */
 static DB_ENV *dbenv;		/* The DB environment (global) */
@@ -510,9 +511,7 @@ int cdb_store(int cdb, const void *ckey, int ckeylen, void *cdata, int cdatalen)
 	memset(&dkey, 0, sizeof(DBT));
 	memset(&ddata, 0, sizeof(DBT));
 	dkey.size = ckeylen;
-	/* no, we don't care for this error. */
-	dkey.data = ckey;
-
+	dkey.data = (void *)ckey;
 	ddata.size = cdatalen;
 	ddata.data = cdata;
 
@@ -657,8 +656,7 @@ struct cdbdata *cdb_fetch(int cdb, const void *key, int keylen)
 
 	memset(&dkey, 0, sizeof(DBT));
 	dkey.size = keylen;
-	/* no we don't care about this error. */
-	dkey.data = key;
+	dkey.data = (void *)key;
 
 	if (TSD->tid != NULL) {
 		memset(&dret, 0, sizeof(DBT));
@@ -871,8 +869,6 @@ void cdb_trunc(int cdb)
 	}
 }
 
-int SeentDebugEnabled = 0;
-
 time_t CheckIfAlreadySeen(const char *Facility,
 			  StrBuf *guid,
 			  time_t now,
@@ -980,16 +976,11 @@ void cmd_rsen(char *argbuf) {
 	}
 
 }
-void LogDebugEnableSeenEnable(const int n)
-{
-	SeentDebugEnabled = n;
-}
 
 CTDL_MODULE_INIT(database)
 {
 	if (!threading)
 	{
-		CtdlRegisterDebugFlagHook(HKEY("SeenDebug"), LogDebugEnableSeenEnable, &SeentDebugEnabled);
 		CtdlRegisterProtoHook(cmd_rsen, "RSEN", "manipulate Aggregators seen database");
 	}
 
