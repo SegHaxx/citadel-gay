@@ -101,22 +101,10 @@ enum {
 
 #define FDELIM '\\'
 
-extern int IMAPDebugEnabled;
-
 #define IMAP ((citimap *)CC->session_specific_data)
 #define CCCIMAP ((citimap *)CCC->session_specific_data)
 
 #define IMAPDBGLOG(LEVEL) if ((LEVEL != LOG_DEBUG) || (IMAPDebugEnabled != 0))
-#define CCCID CCC->cs_pid
-#define IMAP_syslog(LEVEL, FORMAT, ...)				\
-	IMAPDBGLOG(LEVEL) syslog(LEVEL,				\
-				 "IMAP %s CC[%d] " FORMAT,	\
-				 IOSTR, CCCID, __VA_ARGS__)
-
-#define IMAPM_syslog(LEVEL, FORMAT)				\
-	IMAPDBGLOG(LEVEL) syslog(LEVEL,				\
-				 "IMAP %s CC[%d] " FORMAT,	\
-				 IOSTR, CCCID)
 
 #define I_FLAG_NONE          (0)
 #define I_FLAG_LOGGED_IN  (1<<0)

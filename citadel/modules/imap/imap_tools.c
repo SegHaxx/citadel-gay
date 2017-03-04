@@ -1,7 +1,7 @@
 /*
  * Utility functions for the IMAP module.
  *
- * Copyright (c) 2001-2009 by the citadel.org team and others, except for
+ * Copyright (c) 2001-2017 by the citadel.org team and others, except for
  * most of the UTF7 and UTF8 handling code which was lifted from Evolution.
  *
  * This program is open source software; you can redistribute it and/or modify
@@ -221,7 +221,7 @@ static char* toimap(char* destp, char* destend, char* src)
 
 	*destp = 0;
 	string_init(&dest, destp, destend-destp);
-	/* IMAP_syslog(LOG_DEBUG, "toimap %s", src); */
+	/* syslog(LOG_DEBUG, "toimap %s", src); */
 
 	for (;;)
 	{
@@ -287,7 +287,7 @@ static char* toimap(char* destp, char* destend, char* src)
 
 	if (state == 1)
 		utf7_closeb64(&dest, v, i);
-	/* IMAP_syslog(LOG_DEBUG, "    -> %s", destp); */
+	/* syslog(LOG_DEBUG, "    -> %s", destp); */
 	return string_end(&dest);
 }
 
@@ -305,7 +305,7 @@ static char* fromimap(char* destp, char* destend, const char* src)
 
 	*destp = 0;
 	string_init(&dest, destp, destend-destp);
-	/* IMAP_syslog(LOG_DEBUG, "fromimap %s", src); */
+	/* syslog(LOG_DEBUG, "fromimap %s", src); */
 
 	do {
 		c = *p++;
@@ -363,7 +363,7 @@ static char* fromimap(char* destp, char* destend, const char* src)
 			}
 	} while (c != '\0');
 
-	/* IMAP_syslog(LOG_DEBUG, "      -> %s", destp); */
+	/* syslog(LOG_DEBUG, "      -> %s", destp); */
 	return string_end(&dest);
 }
 
@@ -606,7 +606,6 @@ long imap_mailboxname(char *buf, int bufsize, struct ctdlroom *qrbuf)
 
 int imap_roomname(char *rbuf, int bufsize, const char *foldername)
 {
-	struct CitContext *CCC = CC;
 	int levels;
 	char floorname[ROOMNAMELEN*2];
 	char roomname[ROOMNAMELEN];
@@ -683,7 +682,7 @@ int imap_roomname(char *rbuf, int bufsize, const char *foldername)
 	ret = (0 | IR_MAILBOX);
 
 exit:
-	IMAP_syslog(LOG_DEBUG, "(That translates to \"%s\")", rbuf);
+	syslog(LOG_DEBUG, "(That translates to \"%s\")", rbuf);
 	return(ret);
 }
 

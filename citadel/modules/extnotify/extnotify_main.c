@@ -174,7 +174,7 @@ eNotifyType extNotify_getConfigMessage(char *username,
 		num_msgs = cdbfr->len / sizeof(long);
 		cdb_free(cdbfr);
 	} else {
-		MARKM_syslog(LOG_DEBUG,
+		syslog(LOG_DEBUG,
 			     "extNotify_getConfigMessage: "
 			     "No config messages found");
 		return eNone;	/* No messages at all?  No further action. */
@@ -392,7 +392,7 @@ void do_extnotify_queue(void)
 	if (IsEmptyStr(CtdlGetConfigStr("c_pager_program")) &&
 	    IsEmptyStr(CtdlGetConfigStr("c_funambol_host")))
 	{
-		MARKM_syslog(LOG_DEBUG,
+		syslog(LOG_DEBUG,
 			     "No external notifiers configured on system/user");
 		return;
 	}
@@ -409,7 +409,7 @@ void do_extnotify_queue(void)
 	/*
 	 * Go ahead and run the queue
 	 */
-	MARKM_syslog(LOG_DEBUG, "serv_extnotify: processing notify queue");
+	syslog(LOG_DEBUG, "serv_extnotify: processing notify queue");
 
 	memset(&Ctx, 0, sizeof(NotifyContext));
 	if ((GetNotifyHosts(&Ctx) > 0) &&
@@ -426,7 +426,7 @@ void do_extnotify_queue(void)
 	}
 	CtdlForEachMessage(MSGS_ALL, 0L, NULL,
 			   SPOOLMIME, NULL, process_notify, &Ctx);
-	MARKM_syslog(LOG_DEBUG, "serv_extnotify: queue run completed");
+	syslog(LOG_DEBUG, "serv_extnotify: queue run completed");
 	doing_queue = 0;
 	if (Ctx.nNotifyHosts > 0)
 	{

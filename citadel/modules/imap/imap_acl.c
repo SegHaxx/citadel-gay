@@ -1,8 +1,7 @@
 /*
  * Functions which implement RFC2086 (and maybe RFC4314) (IMAP ACL extension)
  *
- *
- * Copyright (c) 2007-2011 by the citadel.org team
+ * Copyright (c) 2007-2017 by the citadel.org team
  *
  *  This program is open source software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by

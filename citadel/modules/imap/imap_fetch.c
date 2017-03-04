@@ -2,7 +2,7 @@
  * Implements the FETCH command in IMAP.
  * This is a good example of the protocol's gratuitous complexity.
  *
- * Copyright (c) 2001-2015 by the citadel.org team
+ * Copyright (c) 2001-2017 by the citadel.org team
  *
  * This program is open source software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -234,7 +234,7 @@ void imap_fetch_rfc822(long msgnum, const char *whichfmt) {
 		text_size = 0;
 	}
 
-	IMAP_syslog(LOG_DEBUG, 
+	syslog(LOG_DEBUG, 
 		    "RFC822: headers=" SIZE_T_FMT 
 		    ", text=" SIZE_T_FMT
 		    ", total=" SIZE_T_FMT,
@@ -278,12 +278,11 @@ void imap_load_part(char *name, char *filename, char *partnum, char *disp,
 		    void *content, char *cbtype, char *cbcharset, size_t length, char *encoding,
 		    char *cbid, void *cbuserdata)
 {
-	struct CitContext *CCC = CC;
 	char mimebuf2[SIZ];
 	StrBuf *desired_section;
 
 	desired_section = (StrBuf *)cbuserdata;
-	IMAP_syslog(LOG_DEBUG, "imap_load_part() looking for %s, found %s",
+	syslog(LOG_DEBUG, "imap_load_part() looking for %s, found %s",
 		    ChrPtr(desired_section),
 		    partnum
 		);
@@ -666,9 +665,7 @@ void imap_fetch_body(long msgnum, ConstStr item, int is_peek) {
 	if (strchr(ChrPtr(section), '[') != NULL) {
 		StrBufStripAllBut(section, '[', ']');
 	}
-	IMAP_syslog(LOG_DEBUG, "Section is: [%s]", 
-		    (StrLength(section) == 0) ? "(empty)" : ChrPtr(section)
-	);
+	syslog(LOG_DEBUG, "Section is: [%s]", (StrLength(section) == 0) ? "(empty)" : ChrPtr(section));
 
 	/* Burn the cache if we don't have the same section of the 
 	 * same message again.
@@ -700,7 +697,7 @@ void imap_fetch_body(long msgnum, ConstStr item, int is_peek) {
 		is_partial = 1;
 	}
 	if ( (is_partial == 1) && (StrLength(partial) > 0) ) {
-		IMAP_syslog(LOG_DEBUG, "Partial is <%s>", ChrPtr(partial));
+		syslog(LOG_DEBUG, "Partial is <%s>", ChrPtr(partial));
 	}
 
 	if (Imap->cached_body == NULL) {
@@ -1125,16 +1122,16 @@ void imap_do_fetch(citimap_command *Cmd) {
 /* debug output the parsed vector */
 	{
 		int i;
-		IMAP_syslog(LOG_DEBUG, "----- %ld params", Cmd->num_parms);
+		syslog(LOG_DEBUG, "----- %ld params", Cmd->num_parms);
 
 	for (i=0; i < Cmd->num_parms; i++) {
 		if (Cmd->Params[i].len != strlen(Cmd->Params[i].Key))
-			IMAP_syslog(LOG_DEBUG, "*********** %ld != %ld : %s",
+			syslog(LOG_DEBUG, "*********** %ld != %ld : %s",
 				    Cmd->Params[i].len, 
 				    strlen(Cmd->Params[i].Key),
 				    Cmd->Params[i].Key);
 		else
-			IMAP_syslog(LOG_DEBUG, "%ld : %s",
+			syslog(LOG_DEBUG, "%ld : %s",
 				    Cmd->Params[i].len, 
 				    Cmd->Params[i].Key);
 	}}
@@ -1457,7 +1454,7 @@ void imap_uidfetch(int num_parms, ConstStr *Params) {
 
 	MakeStringOf(Cmd.CmdBuf, 4);
 #if 0
-	IMAP_syslog(LOG_DEBUG, "-------%s--------", ChrPtr(Cmd.CmdBuf));
+	syslog(LOG_DEBUG, "-------%s--------", ChrPtr(Cmd.CmdBuf));
 #endif
 	num_items = imap_extract_data_items(&Cmd);
 	if (num_items < 1) {

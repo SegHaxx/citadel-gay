@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1987-2015 by the citadel.org team
+ * Copyright (c) 1987-2017 by the citadel.org team
  *
  * This program is open source software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -351,10 +351,10 @@ void imap_append(int num_parms, ConstStr *Params) {
 	client_getln(dummy, sizeof dummy);
 
 	/* Convert RFC822 newlines (CRLF) to Unix newlines (LF) */
-	IMAPM_syslog(LOG_DEBUG, "Converting CRLF to LF");
+	syslog(LOG_DEBUG, "Converting CRLF to LF");
 	StrBufToUnixLF(Imap->TransmittedMessage);
 
-	IMAPM_syslog(LOG_DEBUG, "Converting message format");
+	syslog(LOG_DEBUG, "Converting message format");
 	msg = convert_internet_message_buf(&Imap->TransmittedMessage);
 
 	ret = imap_grabroom(roomname, Params[2].Key, 1);
