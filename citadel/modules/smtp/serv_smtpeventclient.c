@@ -112,12 +112,10 @@ void SetSMTPState(AsyncIO *IO, smtpstate State)
 		memcpy(CCC->cs_clientname, SMTPStates[State].Key, SMTPStates[State].len + 1);
 }
 
-int SMTPClientDebugEnabled = 0;
 void DeleteSmtpOutMsg(void *v)
 {
 	SmtpOutMsg *Msg = v;
-	AsyncIO *IO = &Msg->IO;
-	EV_syslog(LOG_DEBUG, "%s Exit\n", __FUNCTION__);
+	syslog(LOG_DEBUG, "%s Exit\n", __FUNCTION__);
 
 	/* these are kept in our own space and free'd below */
 	Msg->IO.ConnectMe = NULL;
@@ -177,7 +175,7 @@ eNextState FinalizeMessageSend_DB(AsyncIO *IO)
 		Status = "Delivery failed temporarily; will retry later.";
 	}
 			
-	EVS_syslog(LOG_INFO,
+	syslog(LOG_INFO,
 		   "%s Time[%fs] Recipient <%s> @ <%s> (%s) Status message: %s\n",
 		   Status,
 		   Msg->IO.Now - Msg->IO.StartIO,
@@ -208,7 +206,7 @@ eNextState FinalizeMessageSend_DB(AsyncIO *IO)
 	 * Uncompleted delivery instructions remain, so delete the old
 	 * instructions and replace with the updated ones.
 	 */
-	EVS_syslog(LOG_DEBUG, "%ld", Msg->MyQItem->QueMsgID);
+	syslog(LOG_DEBUG, "%ld", Msg->MyQItem->QueMsgID);
 	CtdlDeleteMessages(SMTP_SPOOLOUT_ROOM, &Msg->MyQItem->QueMsgID, 1, "");
 	Msg->MyQItem->QueMsgID = -1;
 
@@ -227,7 +225,7 @@ eNextState FinalizeMessageSend_DB(AsyncIO *IO)
 		CM_SetField(msg, eMsgSubject, HKEY("QMSG"));
 		Msg->MyQItem->QueMsgID =
 			CtdlSubmitMsg(msg, NULL, SMTP_SPOOLOUT_ROOM, QP_EADDR);
-		EVS_syslog(LOG_DEBUG, "%ld", Msg->MyQItem->QueMsgID);
+		syslog(LOG_DEBUG, "%ld", Msg->MyQItem->QueMsgID);
 		CM_Free(msg);
 	}
 	else {
@@ -287,20 +285,20 @@ eNextState FailOneAttempt(AsyncIO *IO)
 	    !Msg->pCurrRelay->IsRelay &&
 	    Msg->MyQItem->HaveRelay)
 	{
-		EVS_syslog(LOG_DEBUG, "%s Aborting; last relay failed.\n", __FUNCTION__);
+		syslog(LOG_DEBUG, "%s Aborting; last relay failed.\n", __FUNCTION__);
 		return FinalizeMessageSend(Msg);
 	}
 
 	if (Msg->pCurrRelay == NULL) {
-		EVS_syslog(LOG_DEBUG, "%s Aborting\n", __FUNCTION__);
+		syslog(LOG_DEBUG, "%s Aborting\n", __FUNCTION__);
 		return FinalizeMessageSend(Msg);
 	}
 	if (Msg->pCurrRelay->IsIP) {
-		EVS_syslog(LOG_DEBUG, "%s connecting IP\n", __FUNCTION__);
+		syslog(LOG_DEBUG, "%s connecting IP\n", __FUNCTION__);
 		return mx_connect_ip(IO);
 	}
 	else {
-		EVS_syslog(LOG_DEBUG,
+		syslog(LOG_DEBUG,
 			   "%s resolving next MX Record\n",
 			   __FUNCTION__);
 		return get_one_mx_host_ip(IO);
@@ -334,7 +332,7 @@ void SetConnectStatus(AsyncIO *IO)
 	if (Msg->mx_host == NULL)
 		Msg->mx_host = "<no MX-Record>";
 
-	EVS_syslog(LOG_INFO,
+	syslog(LOG_INFO,
 		  "connecting to %s [%s]:%d ...\n",
 		  Msg->mx_host,
 		  buf,
@@ -357,7 +355,7 @@ eNextState mx_connect_ip(AsyncIO *IO)
 	SmtpOutMsg *Msg = IO->Data;
 	SetSMTPState(IO, eSTMPconnecting);
 
-	EVS_syslog(LOG_DEBUG, "%s(%s)\n", __FUNCTION__, (Msg->IsRelay)? "Relay":"Remote");
+	syslog(LOG_DEBUG, "%s(%s)\n", __FUNCTION__, (Msg->IsRelay)? "Relay":"Remote");
 
 	IO->ConnectMe = Msg->pCurrRelay;
 	Msg->State = eConnectMX;
@@ -378,7 +376,7 @@ eNextState get_one_mx_host_ip_done(AsyncIO *IO)
 	IO->ConnectMe = Msg->pCurrRelay;
 
 	QueryCbDone(IO);
-	EVS_syslog(LOG_DEBUG, "%s Time[%fs]\n",
+	syslog(LOG_DEBUG, "%s Time[%fs]\n",
 		   __FUNCTION__,
 		   IO->Now - IO->DNS.Start);
 
@@ -442,9 +440,9 @@ eNextState get_one_mx_host_ip(AsyncIO *IO)
 	 */
 	SetSMTPState(IO, (Msg->pCurrRelay->IPv6)?eSTMPalookup:eSTMPaaaalookup);
 
-	EVS_syslog(LOG_DEBUG, "%s\n", __FUNCTION__);
+	syslog(LOG_DEBUG, "%s\n", __FUNCTION__);
 
-	EVS_syslog(LOG_DEBUG,
+	syslog(LOG_DEBUG,
 		  "looking up %s-Record %s : %d ...\n",
 		  (Msg->pCurrRelay->IPv6)? "aaaa": "a",
 		  Msg->pCurrRelay->Host,
@@ -477,7 +475,7 @@ eNextState smtp_resolve_mx_record_done(AsyncIO *IO)
 
 	QueryCbDone(IO);
 
-	EVS_syslog(LOG_DEBUG, "%s Time[%fs]\n",
+	syslog(LOG_DEBUG, "%s Time[%fs]\n",
 		   __FUNCTION__,
 		   IO->Now - IO->DNS.Start);
 
@@ -559,7 +557,7 @@ eNextState resolve_mx_records(AsyncIO *IO)
 
 	SetSMTPState(IO, eSTMPmxlookup);
 
-	EVS_syslog(LOG_DEBUG, "%s\n", __FUNCTION__);
+	syslog(LOG_DEBUG, "%s\n", __FUNCTION__);
 	/* start resolving MX records here. */
 	if (!QueueQuery(ns_t_mx,
 			Msg->node,
@@ -625,11 +623,11 @@ void smtp_try_one_queue_entry(OneQueItem *MyQItem,
 {
 	SmtpOutMsg *Msg;
 
-	SMTPC_syslog(LOG_DEBUG, "%s\n", __FUNCTION__);
+	syslog(LOG_DEBUG, "%s\n", __FUNCTION__);
 
 	Msg = new_smtp_outmsg(MyQItem, MyQEntry, MsgCount);
 	if (Msg == NULL) {
-		SMTPC_syslog(LOG_DEBUG, "%s Failed to alocate message context.\n", __FUNCTION__);
+		syslog(LOG_DEBUG, "%s Failed to alocate message context.\n", __FUNCTION__);
 		if (KeepMsgText) 
 			FreeStrBuf (&MsgText);
 		return;
@@ -647,7 +645,7 @@ void smtp_try_one_queue_entry(OneQueItem *MyQItem,
 			sizeof(((CitContext *)
 				Msg->IO.CitContext)->cs_host));
 
-		SMTPC_syslog(LOG_DEBUG, "Starting: [%ld] <%s> CC <%d> \n",
+		syslog(LOG_DEBUG, "Starting: [%ld] <%s> CC <%d> \n",
 			     Msg->MyQItem->MessageID,
 			     ChrPtr(Msg->MyQEntry->Recipient),
 			     ((CitContext*)Msg->IO.CitContext)->cs_pid);
@@ -698,9 +696,8 @@ void smtp_try_one_queue_entry(OneQueItem *MyQItem,
 void SMTPSetTimeout(eNextState NextTCPState, SmtpOutMsg *Msg)
 {
 	double Timeout = 0.0;
-	AsyncIO *IO = &Msg->IO;
 
-	EVS_syslog(LOG_DEBUG, "%s\n", __FUNCTION__);
+	syslog(LOG_DEBUG, "%s\n", __FUNCTION__);
 
 	switch (NextTCPState) {
 	case eSendFile:
@@ -739,7 +736,7 @@ void SMTPSetTimeout(eNextState NextTCPState, SmtpOutMsg *Msg)
 }
 eNextState SMTP_C_DispatchReadDone(AsyncIO *IO)
 {
-	EVS_syslog(LOG_DEBUG, "%s\n", __FUNCTION__);
+	syslog(LOG_DEBUG, "%s\n", __FUNCTION__);
 	SmtpOutMsg *Msg = IO->Data;
 	eNextState rc;
 
@@ -753,7 +750,7 @@ eNextState SMTP_C_DispatchReadDone(AsyncIO *IO)
 }
 eNextState SMTP_C_DispatchWriteDone(AsyncIO *IO)
 {
-	EVS_syslog(LOG_DEBUG, "%s\n", __FUNCTION__);
+	syslog(LOG_DEBUG, "%s\n", __FUNCTION__);
 	SmtpOutMsg *Msg = IO->Data;
 	eNextState rc;
 
@@ -770,12 +767,12 @@ eNextState SMTP_C_Terminate(AsyncIO *IO)
 {
 	SmtpOutMsg *Msg = IO->Data;
 
-	EVS_syslog(LOG_DEBUG, "%s\n", __FUNCTION__);
+	syslog(LOG_DEBUG, "%s\n", __FUNCTION__);
 	return FinalizeMessageSend(Msg);
 }
 eNextState SMTP_C_TerminateDB(AsyncIO *IO)
 {
-	EVS_syslog(LOG_DEBUG, "%s\n", __FUNCTION__);
+	syslog(LOG_DEBUG, "%s\n", __FUNCTION__);
 	return Terminate(IO);
 }
 eNextState SMTP_C_Timeout(AsyncIO *IO)
@@ -783,7 +780,7 @@ eNextState SMTP_C_Timeout(AsyncIO *IO)
 	SmtpOutMsg *Msg = IO->Data;
 
 	Msg->MyQEntry->Status = 4;
-	EVS_syslog(LOG_DEBUG, "%s\n", __FUNCTION__);
+	syslog(LOG_DEBUG, "%s\n", __FUNCTION__);
 	StrBufPrintf(IO->ErrMsg, "Timeout: %s while talking to %s",
 		     ReadErrors[Msg->State].Key,
 		     Msg->mx_host);
@@ -797,7 +794,7 @@ eNextState SMTP_C_ConnFail(AsyncIO *IO)
 	SmtpOutMsg *Msg = IO->Data;
 
 	Msg->MyQEntry->Status = 4;
-	EVS_syslog(LOG_DEBUG, "%s\n", __FUNCTION__);
+	syslog(LOG_DEBUG, "%s\n", __FUNCTION__);
 	StrBufPrintf(IO->ErrMsg, "Connection failure: %s while talking to %s",
 		     ReadErrors[Msg->State].Key,
 		     Msg->mx_host);
@@ -808,12 +805,12 @@ eNextState SMTP_C_DNSFail(AsyncIO *IO)
 {
 	SmtpOutMsg *Msg = IO->Data;
 	Msg->MyQEntry->Status = 4;
-	EVS_syslog(LOG_DEBUG, "%s\n", __FUNCTION__);
+	syslog(LOG_DEBUG, "%s\n", __FUNCTION__);
 	return FailOneAttempt(IO);
 }
 eNextState SMTP_C_Shutdown(AsyncIO *IO)
 {
-	EVS_syslog(LOG_DEBUG, "%s\n", __FUNCTION__);
+	syslog(LOG_DEBUG, "%s\n", __FUNCTION__);
 	SmtpOutMsg *Msg = IO->Data;
 
 	switch (IO->NextState) {
@@ -886,14 +883,10 @@ eReadState SMTP_C_ReadServerStatus(AsyncIO *IO)
 	return Finished;
 }
 
-void LogDebugEnableSMTPClient(const int n)
-{
-	SMTPClientDebugEnabled = n;
-}
-
 CTDL_MODULE_INIT(smtp_eventclient)
 {
-	if (!threading)
-		CtdlRegisterDebugFlagHook(HKEY("smtpeventclient"), LogDebugEnableSMTPClient, &SMTPClientDebugEnabled);
+	if (!threading) {
+		// nothing here
+	}
 	return "smtpeventclient";
 }

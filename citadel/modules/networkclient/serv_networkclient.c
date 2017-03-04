@@ -2,7 +2,7 @@
  * This module handles shared rooms, inter-Citadel mail, and outbound
  * mailing list processing.
  *
- * Copyright (c) 2000-2015 by the citadel.org team
+ * Copyright (c) 2000-2017 by the citadel.org team
  *
  * This program is open source software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 3.
@@ -75,29 +75,6 @@ struct CitContext networker_client_CC;
 
 #define NODE ChrPtr(((AsyncNetworker*)IO->Data)->node)
 #define N ((AsyncNetworker*)IO->Data)->n
-
-int NetworkClientDebugEnabled = 0;
-
-#define NCDBGLOG(LEVEL) if ((LEVEL != LOG_DEBUG) || (NetworkClientDebugEnabled != 0))
-
-#define EVN_syslog(LEVEL, FORMAT, ...)					\
-	NCDBGLOG(LEVEL) syslog(LEVEL,					\
-			       "%s[%ld]CC[%d]NW[%s][%ld]" FORMAT,	\
-			       IOSTR, IO->ID, CCID, NODE, N, __VA_ARGS__)
-
-#define EVNM_syslog(LEVEL, FORMAT)					\
-	NCDBGLOG(LEVEL) syslog(LEVEL,					\
-			       "%s[%ld]CC[%d]NW[%s][%ld]" FORMAT,	\
-			       IOSTR, IO->ID, CCID, NODE, N)
-
-#define EVNCS_syslog(LEVEL, FORMAT, ...) \
-	NCDBGLOG(LEVEL) syslog(LEVEL, "%s[%ld]NW[%s][%ld]" FORMAT,	\
-			       IOSTR, IO->ID, NODE, N, __VA_ARGS__)
-
-#define EVNCSM_syslog(LEVEL, FORMAT) \
-	NCDBGLOG(LEVEL) syslog(LEVEL, "%s[%ld]NW[%s][%ld]" FORMAT,	\
-			       IOSTR, IO->ID, NODE, N)
-
 
 typedef enum _eNWCState {
 	eGreating,
@@ -190,17 +167,13 @@ void DeleteNetworker(void *vptr)
 	free(NW);
 }
 
-#define NWC_DBG_SEND() EVN_syslog(LOG_DEBUG, ": > %s", ChrPtr(NW->IO.SendBuf.Buf))
-#define NWC_DBG_READ() EVN_syslog(LOG_DEBUG, ": < %s\n", ChrPtr(NW->IO.IOBuf))
-#define NWC_OK (strncasecmp(ChrPtr(NW->IO.IOBuf), "+OK", 3) == 0)
-
 eNextState NWC_SendFailureMessage(AsyncIO *IO)
 {
 	AsyncNetworker *NW = IO->Data;
 	long lens[2];
 	const char *strs[2];
 
-	EVN_syslog(LOG_DEBUG, "NWC: %s\n", __FUNCTION__);
+	syslog(LOG_DEBUG, "NWC: %s\n", __FUNCTION__);
 
 	strs[0] = ChrPtr(NW->node);
 	lens[0] = StrLength(NW->node);
@@ -232,7 +205,6 @@ eNextState NWC_ReadGreeting(AsyncNetworker *NW)
 	char connected_to[SIZ];
 	AsyncIO *IO = &NW->IO;
 	SetNWCState(IO, eNWCVSGreating);
-	NWC_DBG_READ();
 	/* Read the server greeting */
 	/* Check that the remote is who we think it is and warn the Aide if not */
 	extract_token (connected_to, ChrPtr(NW->IO.IOBuf), 1, ' ', sizeof connected_to);
@@ -243,7 +215,7 @@ eNextState NWC_ReadGreeting(AsyncNetworker *NW)
 		StrBufPrintf(NW->IO.ErrMsg,
 			     "Connected to node \"%s\" but I was expecting to connect to node \"%s\".",
 			     connected_to, ChrPtr(NW->node));
-		EVN_syslog(LOG_ERR, "%s\n", ChrPtr(NW->IO.ErrMsg));
+		syslog(LOG_ERR, "%s\n", ChrPtr(NW->IO.ErrMsg));
 
 		return EventQueueDBOperation(IO, NWC_SendFailureMessage, 1);
 	}
@@ -258,14 +230,12 @@ eNextState NWC_SendAuth(AsyncNetworker *NW)
 	StrBufPrintf(NW->IO.SendBuf.Buf, "NETP %s|%s\n", 
 		     CtdlGetConfigStr("c_nodename"), 
 		     ChrPtr(NW->secret));
-	NWC_DBG_SEND();
 	return eSendReply;
 }
 
 eNextState NWC_ReadAuthReply(AsyncNetworker *NW)
 {
 	AsyncIO *IO = &NW->IO;
-	NWC_DBG_READ();
 	if (ChrPtr(NW->IO.IOBuf)[0] == '2')
 	{
 		return eSendReply;
@@ -280,14 +250,14 @@ eNextState NWC_ReadAuthReply(AsyncNetworker *NW)
 			     ChrPtr(NW->node), ChrPtr(NW->IO.IOBuf) + 4);
 		if (Error == 552) {
 			SetNWCState(IO, eNWCVSAuthFailNTT);
-			EVN_syslog(LOG_INFO,
+			syslog(LOG_INFO,
 				   "Already talking to %s; skipping this time.\n",
 				   ChrPtr(NW->node));
 			
 		}
 		else {
 			SetNWCState(IO, eNWCVSAuthFailNTT);
-			EVN_syslog(LOG_ERR, "%s\n", ChrPtr(NW->IO.ErrMsg));
+			syslog(LOG_ERR, "%s\n", ChrPtr(NW->IO.ErrMsg));
 			return EventQueueDBOperation(IO, NWC_SendFailureMessage, 1);
 		}
 		return eAbort;
@@ -316,7 +286,6 @@ eNextState NWC_SendNDOP(AsyncNetworker *NW)
 	StrBufStripSlashes(NW->tempFileName, 1);
 	/* We're talking to the correct node.  Now identify ourselves. */
 	StrBufPlain(NW->IO.SendBuf.Buf, HKEY("NDOP\n"));
-	NWC_DBG_SEND();
 	return eSendReply;
 }
 
@@ -324,7 +293,6 @@ eNextState NWC_ReadNDOPReply(AsyncNetworker *NW)
 {
 	AsyncIO *IO = &NW->IO;
 	int TotalSendSize;
-	NWC_DBG_READ();
 	if (ChrPtr(NW->IO.IOBuf)[0] == '2')
 	{
 		int LogLevel = LOG_DEBUG;
@@ -336,7 +304,7 @@ eNextState NWC_ReadNDOPReply(AsyncNetworker *NW)
 		if (TotalSendSize > 0)
 			LogLevel = LOG_INFO;
 
-		EVN_syslog(LogLevel,
+		syslog(LogLevel,
 			   "Expecting to transfer %d bytes to %s\n",
 			   TotalSendSize,
 			   ChrPtr(NW->tempFileName));
@@ -352,7 +320,7 @@ eNextState NWC_ReadNDOPReply(AsyncNetworker *NW)
 			if (fd < 0)
 			{
 				SetNWCState(IO, eNWCVSFail);
-				EVN_syslog(LOG_CRIT,
+				syslog(LOG_CRIT,
 				       "cannot open %s: %s\n", 
 				       ChrPtr(NW->tempFileName), 
 				       strerror(errno));
@@ -399,14 +367,12 @@ eNextState NWC_SendREAD(AsyncNetworker *NW)
 			      (NW->IO.IOB.TotalSendSize - NW->IO.IOB.TotalSentAlready))
 			);
 */
-		NWC_DBG_SEND();
 		return eSendReply;
 	}
 	else 
 	{
 		NW->State = eCLOS;
 		rc = NWC_DispatchWriteDone(&NW->IO);
-		NWC_DBG_SEND();
 
 		return rc;
 	}
@@ -415,7 +381,6 @@ eNextState NWC_SendREAD(AsyncNetworker *NW)
 eNextState NWC_ReadREADState(AsyncNetworker *NW)
 {
 	AsyncIO *IO = &NW->IO;
-	NWC_DBG_READ();
 	if (ChrPtr(NW->IO.IOBuf)[0] == '6')
 	{
 		NW->IO.IOB.ChunkSendRemain = 
@@ -429,8 +394,6 @@ eNextState NWC_ReadREADBlobDone(AsyncNetworker *NW);
 eNextState NWC_ReadREADBlob(AsyncNetworker *NW)
 {
 	eNextState rc;
-	AsyncIO *IO = &NW->IO;
-	NWC_DBG_READ();
 	if (NW->IO.IOB.TotalSendSize == NW->IO.IOB.TotalSentAlready)
 	{
 		NW->State ++;
@@ -438,14 +401,14 @@ eNextState NWC_ReadREADBlob(AsyncNetworker *NW)
 		FDIOBufferDelete(&NW->IO.IOB);
 
 		if (link(ChrPtr(NW->tempFileName), ChrPtr(NW->SpoolFileName)) != 0) {
-			EVN_syslog(LOG_ALERT, 
+			syslog(LOG_ALERT, 
 			       "Could not link %s to %s: %s\n",
 			       ChrPtr(NW->tempFileName), 
 			       ChrPtr(NW->SpoolFileName), 
 			       strerror(errno));
 		}
 		else {
-			EVN_syslog(LOG_INFO, 
+			syslog(LOG_INFO, 
 			       "moved %s to %s\n",
 			       ChrPtr(NW->tempFileName), 
 			       ChrPtr(NW->SpoolFileName));
@@ -466,7 +429,6 @@ eNextState NWC_ReadREADBlob(AsyncNetworker *NW)
 eNextState NWC_ReadREADBlobDone(AsyncNetworker *NW)
 {
 	eNextState rc;
-	AsyncIO *IO = &NW->IO;
 /* we don't have any data to debug print here. */
 	if (NW->IO.IOB.TotalSentAlready >= NW->IO.IOB.TotalSendSize)
 	{
@@ -474,14 +436,14 @@ eNextState NWC_ReadREADBlobDone(AsyncNetworker *NW)
 
 		FDIOBufferDelete(&NW->IO.IOB);
 		if (link(ChrPtr(NW->tempFileName), ChrPtr(NW->SpoolFileName)) != 0) {
-			EVN_syslog(LOG_ALERT, 
+			syslog(LOG_ALERT, 
 			       "Could not link %s to %s: %s\n",
 			       ChrPtr(NW->tempFileName), 
 			       ChrPtr(NW->SpoolFileName), 
 			       strerror(errno));
 		}
 		else {
-			EVN_syslog(LOG_INFO, 
+			syslog(LOG_INFO, 
 			       "moved %s to %s\n",
 			       ChrPtr(NW->tempFileName), 
 			       ChrPtr(NW->SpoolFileName));
@@ -503,14 +465,12 @@ eNextState NWC_SendCLOS(AsyncNetworker *NW)
 	AsyncIO *IO = &NW->IO;
 	SetNWCState(IO, eNWCVSNDOPDone);
 	StrBufPlain(NW->IO.SendBuf.Buf, HKEY("CLOS\n"));
-	NWC_DBG_SEND();
 	return eSendReply;
 }
 
 eNextState NWC_ReadCLOSReply(AsyncNetworker *NW)
 {
 	AsyncIO *IO = &NW->IO;
-	NWC_DBG_READ();
 	FDIOBufferDelete(&IO->IOB);
 	if (ChrPtr(NW->IO.IOBuf)[0] != '2')
 		return eTerminateConnection;
@@ -536,19 +496,18 @@ eNextState NWC_SendNUOP(AsyncNetworker *NW)
 	fd = open(ChrPtr(NW->SpoolFileName), O_EXCL|O_NONBLOCK|O_RDONLY);
 	if (fd < 0) {
 		if (errno != ENOENT) {
-			EVN_syslog(LOG_CRIT,
+			syslog(LOG_CRIT,
 			       "cannot open %s: %s\n", 
 			       ChrPtr(NW->SpoolFileName), 
 			       strerror(errno));
 		}
 		NW->State = eQUIT;
 		rc = NWC_SendQUIT(NW);
-		NWC_DBG_SEND();
 		return rc;
 	}
 
 	if (fstat(fd, &statbuf) == -1) {
-		EVN_syslog(LOG_CRIT, "FSTAT FAILED %s [%s]--\n", 
+		syslog(LOG_CRIT, "FSTAT FAILED %s [%s]--\n", 
 			   ChrPtr(NW->SpoolFileName), 
 			   strerror(errno));
 		if (fd > 0) close(fd);
@@ -556,17 +515,16 @@ eNextState NWC_SendNUOP(AsyncNetworker *NW)
 	}
 	TotalSendSize = statbuf.st_size;
 	if (TotalSendSize == 0) {
-		EVNM_syslog(LOG_DEBUG,
+		syslog(LOG_DEBUG,
 		       "Nothing to send.\n");
 		NW->State = eQUIT;
 		rc = NWC_SendQUIT(NW);
-		NWC_DBG_SEND();
 		if (fd > 0) close(fd);
 		return rc;
 	}
 	else
        	{
-		EVN_syslog(LOG_INFO,
+		syslog(LOG_INFO,
 			   "sending %s to %s\n", 
 			   ChrPtr(NW->SpoolFileName),
 			   ChrPtr(NW->node));
@@ -575,14 +533,12 @@ eNextState NWC_SendNUOP(AsyncNetworker *NW)
 	FDIOBufferInit(&NW->IO.IOB, &NW->IO.SendBuf, fd, TotalSendSize);
 
 	StrBufPlain(NW->IO.SendBuf.Buf, HKEY("NUOP\n"));
-	NWC_DBG_SEND();
 	return eSendReply;
 
 }
 eNextState NWC_ReadNUOPReply(AsyncNetworker *NW)
 {
 	AsyncIO *IO = &NW->IO;
-	NWC_DBG_READ();
 	if (ChrPtr(NW->IO.IOBuf)[0] != '2') {
 		FDIOBufferDelete(&IO->IOB);
 		return eAbort;
@@ -592,16 +548,13 @@ eNextState NWC_ReadNUOPReply(AsyncNetworker *NW)
 
 eNextState NWC_SendWRIT(AsyncNetworker *NW)
 {
-	AsyncIO *IO = &NW->IO;
 	StrBufPrintf(NW->IO.SendBuf.Buf, "WRIT "LOFF_T_FMT"\n", 
 		     NW->IO.IOB.TotalSendSize - NW->IO.IOB.TotalSentAlready);
-	NWC_DBG_SEND();
 	return eSendReply;
 }
 eNextState NWC_ReadWRITReply(AsyncNetworker *NW)
 {
 	AsyncIO *IO = &NW->IO;
-	NWC_DBG_READ();
 	if (ChrPtr(NW->IO.IOBuf)[0] != '7')
 	{
 		FDIOBufferDelete(&IO->IOB);
@@ -637,25 +590,22 @@ eNextState NWC_SendBlobDone(AsyncNetworker *NW)
 
 eNextState NWC_SendUCLS(AsyncNetworker *NW)
 {
-	AsyncIO *IO = &NW->IO;
 	StrBufPlain(NW->IO.SendBuf.Buf, HKEY("UCLS 1\n"));
-	NWC_DBG_SEND();
 	return eSendReply;
 
 }
 eNextState NWC_ReadUCLS(AsyncNetworker *NW)
 {
 	AsyncIO *IO = &NW->IO;
-	NWC_DBG_READ();
 
-	EVN_syslog(LOG_NOTICE,
+	syslog(LOG_NOTICE,
 		   "Sent %s [%ld] octets to <%s>\n",
 		   ChrPtr(NW->SpoolFileName),
 		   NW->IO.IOB.ChunkSize,
 		   ChrPtr(NW->node));
 
 	if (ChrPtr(NW->IO.IOBuf)[0] == '2') {
-		EVN_syslog(LOG_DEBUG, "Removing <%s>\n", ChrPtr(NW->SpoolFileName));
+		syslog(LOG_DEBUG, "Removing <%s>\n", ChrPtr(NW->SpoolFileName));
 		unlink(ChrPtr(NW->SpoolFileName));
 	}
 	FDIOBufferDelete(&IO->IOB);
@@ -665,18 +615,13 @@ eNextState NWC_ReadUCLS(AsyncNetworker *NW)
 
 eNextState NWC_SendQUIT(AsyncNetworker *NW)
 {
-	AsyncIO *IO = &NW->IO;
 	StrBufPlain(NW->IO.SendBuf.Buf, HKEY("QUIT\n"));
 
-	NWC_DBG_SEND();
 	return eSendReply;
 }
 
 eNextState NWC_ReadQUIT(AsyncNetworker *NW)
 {
-	AsyncIO *IO = &NW->IO;
-	NWC_DBG_READ();
-
 	return eAbort;
 }
 
@@ -745,8 +690,6 @@ const long NWC_ReadTimeouts[] = {
 };
 
 
-
-
 eNextState nwc_get_one_host_ip_done(AsyncIO *IO)
 {
 	AsyncNetworker *NW = IO->Data;
@@ -792,9 +735,9 @@ eNextState nwc_get_one_host_ip(AsyncIO *IO)
 	 * here we start with the lookup of one host.
 	 */ 
 
-	EVN_syslog(LOG_DEBUG, "NWC: %s\n", __FUNCTION__);
+	syslog(LOG_DEBUG, "NWC: %s\n", __FUNCTION__);
 
-	EVN_syslog(LOG_DEBUG, 
+	syslog(LOG_DEBUG, 
 		   "NWC client[%ld]: looking up %s-Record %s : %d ...\n", 
 		   NW->n, 
 		   (NW->IO.ConnectMe->IPv6)? "aaaa": "a",
@@ -852,7 +795,7 @@ void NWC_SetTimeout(eNextState NextTCPState, AsyncNetworker *NW)
 {
 	double Timeout = 0.0;
 
-	//EVN_syslog(LOG_DEBUG, "%s - %d\n", __FUNCTION__, NextTCPState);
+	//syslog(LOG_DEBUG, "%s - %d\n", __FUNCTION__, NextTCPState);
 
 	switch (NextTCPState) {
 	case eSendMore:
@@ -875,8 +818,7 @@ void NWC_SetTimeout(eNextState NextTCPState, AsyncNetworker *NW)
 		return;
 	}
 	if (Timeout > 0) {
-		AsyncIO *IO = &NW->IO;
-		EVN_syslog(LOG_DEBUG, 
+		syslog(LOG_DEBUG, 
 			   "%s - %d %f\n",
 			   __FUNCTION__,
 			   NextTCPState,
@@ -888,7 +830,7 @@ void NWC_SetTimeout(eNextState NextTCPState, AsyncNetworker *NW)
 
 eNextState NWC_DispatchReadDone(AsyncIO *IO)
 {
-	EVN_syslog(LOG_DEBUG, "%s\n", __FUNCTION__);
+	syslog(LOG_DEBUG, "%s\n", __FUNCTION__);
 	AsyncNetworker *NW = IO->Data;
 	eNextState rc;
 
@@ -906,7 +848,7 @@ eNextState NWC_DispatchReadDone(AsyncIO *IO)
 }
 eNextState NWC_DispatchWriteDone(AsyncIO *IO)
 {
-	EVN_syslog(LOG_DEBUG, "%s\n", __FUNCTION__);
+	syslog(LOG_DEBUG, "%s\n", __FUNCTION__);
 	AsyncNetworker *NW = IO->Data;
 	eNextState rc;
 
@@ -920,14 +862,14 @@ eNextState NWC_DispatchWriteDone(AsyncIO *IO)
 /*****************************************************************************/
 eNextState NWC_Terminate(AsyncIO *IO)
 {
-	EVN_syslog(LOG_DEBUG, "%s\n", __FUNCTION__);
+	syslog(LOG_DEBUG, "%s\n", __FUNCTION__);
 	FinalizeNetworker(IO);
 	return eAbort;
 }
 
 eNextState NWC_TerminateDB(AsyncIO *IO)
 {
-	EVN_syslog(LOG_DEBUG, "%s\n", __FUNCTION__);
+	syslog(LOG_DEBUG, "%s\n", __FUNCTION__);
 	FinalizeNetworker(IO);
 	return eAbort;
 }
@@ -935,7 +877,7 @@ eNextState NWC_TerminateDB(AsyncIO *IO)
 eNextState NWC_Timeout(AsyncIO *IO)
 {
 	AsyncNetworker *NW = IO->Data;
-	EVN_syslog(LOG_DEBUG, "%s\n", __FUNCTION__);
+	syslog(LOG_DEBUG, "%s\n", __FUNCTION__);
 
 	if (NW->IO.ErrMsg == NULL)
 		NW->IO.ErrMsg = NewStrBuf();
@@ -946,7 +888,7 @@ eNextState NWC_ConnFail(AsyncIO *IO)
 {
 	AsyncNetworker *NW = IO->Data;
 
-	EVN_syslog(LOG_DEBUG, "%s\n", __FUNCTION__);
+	syslog(LOG_DEBUG, "%s\n", __FUNCTION__);
 	if (NW->IO.ErrMsg == NULL)
 		NW->IO.ErrMsg = NewStrBuf();
 	StrBufPrintf(NW->IO.ErrMsg, "failed to connect %s \r\n", ChrPtr(NW->host));
@@ -957,7 +899,7 @@ eNextState NWC_DNSFail(AsyncIO *IO)
 {
 	AsyncNetworker *NW = IO->Data;
 
-	EVN_syslog(LOG_DEBUG, "%s\n", __FUNCTION__);
+	syslog(LOG_DEBUG, "%s\n", __FUNCTION__);
 	if (NW->IO.ErrMsg == NULL)
 		NW->IO.ErrMsg = NewStrBuf();
 	StrBufPrintf(NW->IO.ErrMsg, "failed to look up %s \r\n", ChrPtr(NW->host));
@@ -966,7 +908,7 @@ eNextState NWC_DNSFail(AsyncIO *IO)
 }
 eNextState NWC_Shutdown(AsyncIO *IO)
 {
-	EVN_syslog(LOG_DEBUG, "%s\n", __FUNCTION__);
+	syslog(LOG_DEBUG, "%s\n", __FUNCTION__);
 
 	FinalizeNetworker(IO);
 	return eAbort;
@@ -978,8 +920,8 @@ eNextState nwc_connect_ip(AsyncIO *IO)
 	AsyncNetworker *NW = IO->Data;
 
 	SetNWCState(&NW->IO, eNWCVSConnecting);
-	EVN_syslog(LOG_DEBUG, "%s\n", __FUNCTION__);
-	EVN_syslog(LOG_NOTICE, "Connecting to <%s> at %s:%s\n", 
+	syslog(LOG_DEBUG, "%s\n", __FUNCTION__);
+	syslog(LOG_NOTICE, "Connecting to <%s> at %s:%s\n", 
 		   ChrPtr(NW->node), 
 		   ChrPtr(NW->host),
 		   ChrPtr(NW->port));
@@ -1044,7 +986,7 @@ void network_poll_other_citadel_nodes(int full_poll, HashList *ignetcfg)
 	int poll = 0;
 	
 	if (GetCount(ignetcfg) ==0) {
-		MARKM_syslog(LOG_DEBUG, "network: no neighbor nodes are configured - not polling.\n");
+		syslog(LOG_DEBUG, "network: no neighbor nodes are configured - not polling.\n");
 		return;
 	}
 	become_session(&networker_client_CC);
@@ -1135,10 +1077,6 @@ void network_do_clientqueue(void)
 	DeleteHash(&working_ignetcfg);
 }
 
-void LogDebugEnableNetworkClient(const int n)
-{
-	NetworkClientDebugEnabled = n;
-}
 /*
  * Module entry point
  */
@@ -1147,9 +1085,7 @@ CTDL_MODULE_INIT(network_client)
 	if (!threading)
 	{
 		CtdlFillSystemContext(&networker_client_CC, "CitNetworker");
-		
 		CtdlRegisterSessionHook(network_do_clientqueue, EVT_TIMER, PRIO_SEND + 10);
-		CtdlRegisterDebugFlagHook(HKEY("networkclient"), LogDebugEnableNetworkClient, &NetworkClientDebugEnabled);
 
 	}
 	return "networkclient";

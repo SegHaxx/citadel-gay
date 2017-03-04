@@ -99,35 +99,6 @@ int smtp_resolve_recipients(SmtpOutMsg *SendMsg);
 #define N ((SmtpOutMsg*)IO->Data)->n
 #define DBGLOG(LEVEL) if ((LEVEL != LOG_DEBUG) || (SMTPClientDebugEnabled != 0))
 
-#define EVS_syslog(LEVEL, FORMAT, ...) \
-	DBGLOG(LEVEL) syslog(LEVEL,		  \
-	       "SMTPC:%s[%ld]CC[%d]S[%ld][%ld] " FORMAT, \
-	       IOSTR, IO->ID, CCID, QID, N, __VA_ARGS__)
-
-#define EVSM_syslog(LEVEL, FORMAT) \
-	DBGLOG(LEVEL) syslog(LEVEL, \
-	       "SMTPC:%s[%ld]CC[%d]S[%ld][%ld] " FORMAT, \
-	       IOSTR, IO->ID, CCID, QID, N)
-
-#define EVNCS_syslog(LEVEL, FORMAT, ...) \
-	DBGLOG(LEVEL) syslog(LEVEL, "SMTPC:%s[%ld]S[%ld][%ld] " FORMAT, \
-	       IOSTR, IO->ID, QID, N, __VA_ARGS__)
-
-#define EVNCSM_syslog(LEVEL, FORMAT) \
-	DBGLOG(LEVEL) syslog(LEVEL, "SMTPC:%s[%ld]S[%ld][%ld] " FORMAT, \
-	       IOSTR, IO->ID, QID, N)
-
-#define SMTPC_syslog(LEVEL, FORMAT, ...)	  \
-	DBGLOG(LEVEL) syslog(LEVEL,		  \
-			     "SMTPCQ: " FORMAT,	  \
-			     __VA_ARGS__)
-
-#define SMTPCM_syslog(LEVEL, FORMAT)		\
-	DBGLOG(LEVEL) syslog(LEVEL,		\
-			     "SMTPCQ: " FORMAT)
-
-
-
 typedef enum __smtpstate {
 	eSTMPmxlookup,
 	eSTMPevaluatenext,
