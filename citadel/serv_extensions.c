@@ -259,8 +259,8 @@ void LogPrintMessages(long err)
 	StrBufAppendBufPlain(Message, HKEY("\n\n"), 0);
 	StrBufAppendBufPlain(Message, CKEY(ErrGeneral[3]), 0);
 
-	MOD_syslog(LOG_EMERG, "%s", ChrPtr(Message));
-	MOD_syslog(LOG_EMERG, "%s", ErrSubject);
+	syslog(LOG_EMERG, "%s", ChrPtr(Message));
+	syslog(LOG_EMERG, "%s", ErrSubject);
 	quickie_message("Citadel", NULL, NULL, AIDEROOM, ChrPtr(Message), FMT_FIXED, ErrSubject);
 
 	FreeStrBuf(&Message);
@@ -386,7 +386,7 @@ void CtdlRegisterProtoHook(void (*handler) (char *), char *cmd, char *desc)
 	p->desc = desc;
 
 	Put(ProtoHookList, cmd, 4, p, NULL);
-	MOD_syslog(LOG_DEBUG, "Registered server command %s (%s)\n", cmd, desc);
+	syslog(LOG_DEBUG, "Registered server command %s (%s)\n", cmd, desc);
 }
 
 void CtdlDestroyProtoHooks(void)
@@ -407,7 +407,7 @@ void CtdlRegisterCleanupHook(void (*fcn_ptr) (void))
 	newfcn->h_function_pointer = fcn_ptr;
 	CleanupHookTable = newfcn;
 
-	MODM_syslog(LOG_DEBUG, "Registered a new cleanup function\n");
+	syslog(LOG_DEBUG, "Registered a new cleanup function\n");
 }
 
 
@@ -420,7 +420,7 @@ void CtdlUnregisterCleanupHook(void (*fcn_ptr) (void))
 	{
 		if (fcn_ptr == cur->h_function_pointer)
 		{
-			MODM_syslog(LOG_DEBUG, "Unregistered cleanup function\n");
+			syslog(LOG_DEBUG, "Unregistered cleanup function\n");
 			p = cur->next;
 
 			free(cur);
@@ -447,7 +447,7 @@ void CtdlDestroyCleanupHooks(void)
 	cur = CleanupHookTable;
 	while (cur != NULL)
 	{
-		MODM_syslog(LOG_DEBUG, "Destroyed cleanup function\n");
+		syslog(LOG_DEBUG, "Destroyed cleanup function\n");
 		p = cur->next;
 		free(cur);
 		cur = p;
@@ -466,7 +466,7 @@ void CtdlRegisterEVCleanupHook(void (*fcn_ptr) (void))
 	newfcn->h_function_pointer = fcn_ptr;
 	EVCleanupHookTable = newfcn;
 
-	MODM_syslog(LOG_DEBUG, "Registered a new cleanup function\n");
+	syslog(LOG_DEBUG, "Registered a new cleanup function\n");
 }
 
 
@@ -479,7 +479,7 @@ void CtdlUnregisterEVCleanupHook(void (*fcn_ptr) (void))
 	{
 		if (fcn_ptr == cur->h_function_pointer)
 		{
-			MODM_syslog(LOG_DEBUG, "Unregistered cleanup function\n");
+			syslog(LOG_DEBUG, "Unregistered cleanup function\n");
 			p = cur->next;
 
 			free(cur);
@@ -506,7 +506,7 @@ void CtdlDestroyEVCleanupHooks(void)
 	cur = EVCleanupHookTable;
 	while (cur != NULL)
 	{
-		MODM_syslog(LOG_DEBUG, "Destroyed cleanup function\n");
+		syslog(LOG_DEBUG, "Destroyed cleanup function\n");
 		p = cur->next;
 		cur->h_function_pointer();
 		free(cur);
@@ -535,7 +535,7 @@ void CtdlRegisterTDAPVetoHook(int (*fcn_ptr) (StrBuf*), int EventType, int Prior
 	newfcn->next = *pfcn;
 	*pfcn = newfcn;
 	
-	MOD_syslog(LOG_DEBUG, "Registered a new TDAP Veto function (type %d Priority %d)\n",
+	syslog(LOG_DEBUG, "Registered a new TDAP Veto function (type %d Priority %d)\n",
 		   EventType, Priority);
 }
 
@@ -549,7 +549,7 @@ void CtdlUnregisterTDAPVetoHook(int (*fcn_ptr) (StrBuf*), int EventType)
 		if ((fcn_ptr == cur->h_function_pointer) &&
 		    (EventType == cur->eventtype))
 		{
-			MOD_syslog(LOG_DEBUG, "Unregistered TDAP Veto function (type %d)\n",
+			syslog(LOG_DEBUG, "Unregistered TDAP Veto function (type %d)\n",
 				   EventType);
 			p = cur->next;
 
@@ -576,7 +576,7 @@ void CtdlDestroyTDAPVetoHooks(void)
 	cur = TDAPVetoHookTable;
 	while (cur != NULL)
 	{
-		MODM_syslog(LOG_DEBUG, "Destroyed TDAP Veto function\n");
+		syslog(LOG_DEBUG, "Destroyed TDAP Veto function\n");
 		p = cur->next;
 		free(cur);
 		cur = p;
@@ -605,7 +605,7 @@ void CtdlRegisterSessionHook(void (*fcn_ptr) (void), int EventType, int Priority
 	newfcn->next = *pfcn;
 	*pfcn = newfcn;
 	
-	MOD_syslog(LOG_DEBUG, "Registered a new session function (type %d Priority %d)\n",
+	syslog(LOG_DEBUG, "Registered a new session function (type %d Priority %d)\n",
 		   EventType, Priority);
 }
 
@@ -619,7 +619,7 @@ void CtdlUnregisterSessionHook(void (*fcn_ptr) (void), int EventType)
 		if ((fcn_ptr == cur->h_function_pointer) &&
 		    (EventType == cur->eventtype))
 		{
-			MOD_syslog(LOG_DEBUG, "Unregistered session function (type %d)\n",
+			syslog(LOG_DEBUG, "Unregistered session function (type %d)\n",
 				   EventType);
 			p = cur->next;
 
@@ -646,7 +646,7 @@ void CtdlDestroySessionHooks(void)
 	cur = SessionHookTable;
 	while (cur != NULL)
 	{
-		MODM_syslog(LOG_DEBUG, "Destroyed session function\n");
+		syslog(LOG_DEBUG, "Destroyed session function\n");
 		p = cur->next;
 		free(cur);
 		cur = p;
@@ -667,7 +667,7 @@ void CtdlRegisterUserHook(void (*fcn_ptr) (ctdluser *), int EventType)
 	newfcn->eventtype = EventType;
 	UserHookTable = newfcn;
 
-	MOD_syslog(LOG_DEBUG, "Registered a new user function (type %d)\n",
+	syslog(LOG_DEBUG, "Registered a new user function (type %d)\n",
 		   EventType);
 }
 
@@ -681,7 +681,7 @@ void CtdlUnregisterUserHook(void (*fcn_ptr) (struct ctdluser *), int EventType)
 		if ((fcn_ptr == cur->h_function_pointer) &&
 		    (EventType == cur->eventtype))
 		{
-			MOD_syslog(LOG_DEBUG, "Unregistered user function (type %d)\n",
+			syslog(LOG_DEBUG, "Unregistered user function (type %d)\n",
 				   EventType);
 			p = cur->next;
 
@@ -708,7 +708,7 @@ void CtdlDestroyUserHooks(void)
 	cur = UserHookTable;
 	while (cur != NULL)
 	{
-		MODM_syslog(LOG_DEBUG, "Destroyed user function \n");
+		syslog(LOG_DEBUG, "Destroyed user function \n");
 		p = cur->next;
 		free(cur);
 		cur = p;
@@ -730,7 +730,7 @@ void CtdlRegisterMessageHook(int (*handler)(struct CtdlMessage *, recptypes *),
 	newfcn->eventtype = EventType;
 	MessageHookTable = newfcn;
 
-	MOD_syslog(LOG_DEBUG, "Registered a new message function (type %d)\n",
+	syslog(LOG_DEBUG, "Registered a new message function (type %d)\n",
 		   EventType);
 }
 
@@ -745,7 +745,7 @@ void CtdlUnregisterMessageHook(int (*handler)(struct CtdlMessage *, recptypes *)
 		if ((handler == cur->h_function_pointer) &&
 		    (EventType == cur->eventtype))
 		{
-			MOD_syslog(LOG_DEBUG, "Unregistered message function (type %d)\n",
+			syslog(LOG_DEBUG, "Unregistered message function (type %d)\n",
 				   EventType);
 			p = cur->next;
 			free(cur);
@@ -771,7 +771,7 @@ void CtdlDestroyMessageHook(void)
 	cur = MessageHookTable; 
 	while (cur != NULL)
 	{
-		MOD_syslog(LOG_DEBUG, "Destroyed message function (type %d)\n", cur->eventtype);
+		syslog(LOG_DEBUG, "Destroyed message function (type %d)\n", cur->eventtype);
 		p = cur->next;
 		free(cur);
 		cur = p;
@@ -790,7 +790,7 @@ void CtdlRegisterRoomHook(int (*fcn_ptr)(struct ctdlroom *))
 	newfcn->fcn_ptr = fcn_ptr;
 	RoomHookTable = newfcn;
 
-	MODM_syslog(LOG_DEBUG, "Registered a new room function\n");
+	syslog(LOG_DEBUG, "Registered a new room function\n");
 }
 
 
@@ -802,7 +802,7 @@ void CtdlUnregisterRoomHook(int (*fcn_ptr)(struct ctdlroom *))
 	while (cur != NULL)
 	{
 		if (fcn_ptr == cur->fcn_ptr) {
-			MODM_syslog(LOG_DEBUG, "Unregistered room function\n");
+			syslog(LOG_DEBUG, "Unregistered room function\n");
 			p = cur->next;
 
 			free(cur);
@@ -829,7 +829,7 @@ void CtdlDestroyRoomHooks(void)
 	cur = RoomHookTable;
 	while (cur != NULL)
 	{
-		MODM_syslog(LOG_DEBUG, "Destroyed room function\n");
+		syslog(LOG_DEBUG, "Destroyed room function\n");
 		p = cur->next;
 		free(cur);
 		cur = p;
@@ -847,7 +847,7 @@ void CtdlRegisterNetprocHook(int (*handler)(struct CtdlMessage *, char *) )
 	newfcn->h_function_pointer = handler;
 	NetprocHookTable = newfcn;
 
-	MODM_syslog(LOG_DEBUG, "Registered a new netproc function\n");
+	syslog(LOG_DEBUG, "Registered a new netproc function\n");
 }
 
 
@@ -861,7 +861,7 @@ void CtdlUnregisterNetprocHook(int (*handler)(struct CtdlMessage *, char *) )
 	while (cur != NULL) {
 		if (handler == cur->h_function_pointer)
 		{
-			MODM_syslog(LOG_DEBUG, "Unregistered netproc function\n");
+			syslog(LOG_DEBUG, "Unregistered netproc function\n");
 			p = cur->next;
 			free(cur);
 			if (last != NULL) {
@@ -886,7 +886,7 @@ void CtdlDestroyNetprocHooks(void)
 	cur = NetprocHookTable;
 	while (cur != NULL)
 	{
-		MODM_syslog(LOG_DEBUG, "Destroyed netproc function\n");
+		syslog(LOG_DEBUG, "Destroyed netproc function\n");
 		p = cur->next;
 		free(cur);
 		cur = p;
@@ -905,7 +905,7 @@ void CtdlRegisterDeleteHook(void (*handler)(char *, long) )
 	newfcn->h_function_pointer = handler;
 	DeleteHookTable = newfcn;
 
-	MODM_syslog(LOG_DEBUG, "Registered a new delete function\n");
+	syslog(LOG_DEBUG, "Registered a new delete function\n");
 }
 
 
@@ -918,7 +918,7 @@ void CtdlUnregisterDeleteHook(void (*handler)(char *, long) )
 	while (cur != NULL) {
 		if (handler == cur->h_function_pointer )
 		{
-			MODM_syslog(LOG_DEBUG, "Unregistered delete function\n");
+			syslog(LOG_DEBUG, "Unregistered delete function\n");
 			p = cur->next;
 			free(cur);
 
@@ -942,7 +942,7 @@ void CtdlDestroyDeleteHooks(void)
 	cur = DeleteHookTable;
 	while (cur != NULL)
 	{
-		MODM_syslog(LOG_DEBUG, "Destroyed delete function\n");
+		syslog(LOG_DEBUG, "Destroyed delete function\n");
 		p = cur->next;
 		free(cur);
 		cur = p;		
@@ -964,7 +964,7 @@ void CtdlRegisterFixedOutputHook(char *content_type, void (*handler)(char *, int
 	safestrncpy(newfcn->content_type, content_type, sizeof newfcn->content_type);
 	FixedOutputTable = newfcn;
 
-	MOD_syslog(LOG_DEBUG, "Registered a new fixed output function for %s\n", newfcn->content_type);
+	syslog(LOG_DEBUG, "Registered a new fixed output function for %s\n", newfcn->content_type);
 }
 
 
@@ -977,7 +977,7 @@ void CtdlUnregisterFixedOutputHook(char *content_type)
 	while (cur != NULL) {
 		/* This will also remove duplicates if any */
 		if (!strcasecmp(content_type, cur->content_type)) {
-			MOD_syslog(LOG_DEBUG,
+			syslog(LOG_DEBUG,
 				   "Unregistered fixed output function for %s\n",
 				   content_type);
 
@@ -1006,7 +1006,7 @@ void CtdlDestroyFixedOutputHooks(void)
 	cur = FixedOutputTable; 
 	while (cur != NULL)
 	{
-		MOD_syslog(LOG_DEBUG, "Destroyed fixed output function for %s\n", cur->content_type);
+		syslog(LOG_DEBUG, "Destroyed fixed output function for %s\n", cur->content_type);
 		p = cur->next;
 		free(cur);
 		cur = p;
@@ -1043,7 +1043,7 @@ void CtdlRegisterXmsgHook(int (*fcn_ptr) (char *, char *, char *, char *), int o
 	newfcn->order = order;
 	newfcn->h_function_pointer = fcn_ptr;
 	XmsgHookTable = newfcn;
-	MOD_syslog(LOG_DEBUG, "Registered a new x-msg function (priority %d)\n", order);
+	syslog(LOG_DEBUG, "Registered a new x-msg function (priority %d)\n", order);
 }
 
 
@@ -1057,7 +1057,7 @@ void CtdlUnregisterXmsgHook(int (*fcn_ptr) (char *, char *, char *, char *), int
 		/* This will also remove duplicates if any */
 		if (fcn_ptr == cur->h_function_pointer &&
 		    order == cur->order) {
-			MOD_syslog(LOG_DEBUG, "Unregistered x-msg function "
+			syslog(LOG_DEBUG, "Unregistered x-msg function "
 				   "(priority %d)\n", order);
 			p = cur->next;
 			free(cur);
@@ -1083,7 +1083,7 @@ void CtdlDestroyXmsgHooks(void)
 	cur = XmsgHookTable;
 	while (cur != NULL)
 	{
-		MOD_syslog(LOG_DEBUG, "Destroyed x-msg function "
+		syslog(LOG_DEBUG, "Destroyed x-msg function "
 			"(priority %d)\n", cur->order);
 		p = cur->next;
 			
@@ -1122,7 +1122,7 @@ void CtdlRegisterServiceHook(int tcp_port,
 		snprintf(message, SIZ, "Unix domain socket '%s': ", sockpath);
 	}
 	else if (tcp_port <= 0) {	/* port -1 to disable */
-		MOD_syslog(LOG_INFO, "Service %s has been manually disabled, skipping\n", ServiceName);
+		syslog(LOG_INFO, "Service %s has been manually disabled, skipping\n", ServiceName);
 		free (message);
 		free(newfcn);
 		return;
@@ -1139,12 +1139,12 @@ void CtdlRegisterServiceHook(int tcp_port,
 	if (newfcn->msock > 0) {
 		ServiceHookTable = newfcn;
 		strcat(message, "registered.");
-		MOD_syslog(LOG_INFO, "%s\n", message);
+		syslog(LOG_INFO, "%s\n", message);
 	}
 	else {
 		AddPortError(message, error);
 		strcat(message, "FAILED.");
-		MOD_syslog(LOG_CRIT, "%s\n", message);
+		syslog(LOG_CRIT, "%s\n", message);
 		free(newfcn);
 	}
 	free(message);
@@ -1172,13 +1172,13 @@ void CtdlUnregisterServiceHook(int tcp_port, char *sockpath,
 			if (cur->msock > 0)
 				close(cur->msock);
 			if (sockpath) {
-				MOD_syslog(LOG_INFO, "Closed UNIX domain socket %s\n",
+				syslog(LOG_INFO, "Closed UNIX domain socket %s\n",
 					   sockpath);
 				unlink(sockpath);
 			} else if (tcp_port) {
-				MOD_syslog(LOG_INFO, "Closed TCP port %d\n", tcp_port);
+				syslog(LOG_INFO, "Closed TCP port %d\n", tcp_port);
 			} else {
-				MOD_syslog(LOG_INFO, "Unregistered service \"%s\"\n", cur->ServiceName);
+				syslog(LOG_INFO, "Unregistered service \"%s\"\n", cur->ServiceName);
 			}
 			p = cur->next;
 			free(cur);
@@ -1209,12 +1209,12 @@ void CtdlShutdownServiceHooks(void)
 			close(cur->msock);
 			cur->msock = -1;
 			if (cur->sockpath != NULL){
-				MOD_syslog(LOG_INFO, "[%s] Closed UNIX domain socket %s\n",
+				syslog(LOG_INFO, "[%s] Closed UNIX domain socket %s\n",
 					   cur->ServiceName,
 					   cur->sockpath);
 				unlink(cur->sockpath);
 			} else {
-				MOD_syslog(LOG_INFO, "[%s] closing service\n", 
+				syslog(LOG_INFO, "[%s] closing service\n", 
 					   cur->ServiceName);
 			}
 		}
@@ -1241,14 +1241,14 @@ void CtdlDestroyServiceHook(void)
 		}
 
 		if (cur->sockpath) {
-			MOD_syslog(LOG_INFO, "%s UNIX domain socket %s\n",
+			syslog(LOG_INFO, "%s UNIX domain socket %s\n",
 				   Text,
 				   cur->sockpath);
 			unlink(cur->sockpath);
 		} else if (cur->tcp_port) {
-			MOD_syslog(LOG_INFO, "%s TCP port %d\n", Text, cur->tcp_port);
+			syslog(LOG_INFO, "%s TCP port %d\n", Text, cur->tcp_port);
 		} else {
-			MOD_syslog(LOG_INFO, "Destroyed service \"%s\"\n", cur->ServiceName);
+			syslog(LOG_INFO, "Destroyed service \"%s\"\n", cur->ServiceName);
 		}
 		p = cur->next;
 		free(cur);
@@ -1272,7 +1272,7 @@ void CtdlRegisterSearchFuncHook(void (*fcn_ptr)(int *, long **, const char *), c
 	newfcn->fcn_ptr = fcn_ptr;
 	SearchFunctionHookTable = newfcn;
 
-	MOD_syslog(LOG_DEBUG, "Registered a new search function (%s)\n", name);
+	syslog(LOG_DEBUG, "Registered a new search function (%s)\n", name);
 }
 
 void CtdlUnregisterSearchFuncHook(void (*fcn_ptr)(int *, long **, const char *), char *name)
@@ -1286,7 +1286,7 @@ void CtdlUnregisterSearchFuncHook(void (*fcn_ptr)(int *, long **, const char *),
 		    (cur->fcn_ptr == fcn_ptr) &&
 		    name && !strcmp(name, cur->name))
 		{
-			MOD_syslog(LOG_DEBUG, "Unregistered search function(%s)\n", name);
+			syslog(LOG_DEBUG, "Unregistered search function(%s)\n", name);
 			p = cur->next;
 			free (cur);
 			if (last != NULL)
@@ -1373,10 +1373,10 @@ int PerformMessageHooks(struct CtdlMessage *msg, recptypes *recps, int EventType
 
 	/* Other code may elect to protect this message from server-side
 	 * handlers; if this is the case, don't do anything.
-	MOD_syslog(LOG_DEBUG, "** Event type is %d, flags are %d\n", EventType, msg->cm_flags);
+	syslog(LOG_DEBUG, "** Event type is %d, flags are %d\n", EventType, msg->cm_flags);
 	 */
 	if (msg->cm_flags & CM_SKIP_HOOKS) {
-		MODM_syslog(LOG_DEBUG, "Skipping hooks\n");
+		syslog(LOG_DEBUG, "Skipping hooks\n");
 		return(0);
 	}
 
@@ -1401,7 +1401,7 @@ int PerformRoomHooks(struct ctdlroom *target_room)
 	RoomFunctionHook *fcn;
 	int total_retval = 0;
 
-	MOD_syslog(LOG_DEBUG, "Performing room hooks for <%s>\n", target_room->QRname);
+	syslog(LOG_DEBUG, "Performing room hooks for <%s>\n", target_room->QRname);
 
 	for (fcn = RoomHookTable; fcn != NULL; fcn = fcn->next) {
 		total_retval = total_retval + (*fcn->fcn_ptr) (target_room);

@@ -1,7 +1,7 @@
 /* 
  * Server functions which handle file transfers and room directories.
  *
- * Copyright (c) 1987-2016 by the citadel.org team
+ * Copyright (c) 1987-2017 by the citadel.org team
  *
  * This program is open source software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3.
@@ -35,14 +35,12 @@ void cmd_delf(char *filename)
 		return;
 
 	if ((CC->room.QRflags & QR_DIRECTORY) == 0) {
-		cprintf("%d No directory in this room.\n",
-			ERROR + NOT_HERE);
+		cprintf("%d No directory in this room.\n", ERROR + NOT_HERE);
 		return;
 	}
 
 	if (IsEmptyStr(filename)) {
-		cprintf("%d You must specify a file name.\n",
-			ERROR + FILE_NOT_FOUND);
+		cprintf("%d You must specify a file name.\n", ERROR + FILE_NOT_FOUND);
 		return;
 	}
 	for (a = 0; !IsEmptyStr(&filename[a]); ++a) {
@@ -51,20 +49,18 @@ void cmd_delf(char *filename)
 		}
 	}
 	snprintf(pathname, sizeof pathname,
-			 "%s/%s/%s",
-			 ctdl_file_dir,
-			 CC->room.QRdirname, filename);
+		 "%s/%s/%s",
+		 ctdl_file_dir,
+		 CC->room.QRdirname, filename
+	);
 	a = unlink(pathname);
 	if (a == 0) {
 		cprintf("%d File '%s' deleted.\n", CIT_OK, pathname);
 	}
 	else {
-		cprintf("%d File '%s' not found.\n",
-			ERROR + FILE_NOT_FOUND, pathname);
+		cprintf("%d File '%s' not found.\n", ERROR + FILE_NOT_FOUND, pathname);
 	}
 }
-
-
 
 
 /*
@@ -86,14 +82,12 @@ void cmd_movf(char *cmdbuf)
 	if (CtdlAccessCheck(ac_room_aide)) return;
 
 	if ((CC->room.QRflags & QR_DIRECTORY) == 0) {
-		cprintf("%d No directory in this room.\n",
-			ERROR + NOT_HERE);
+		cprintf("%d No directory in this room.\n", ERROR + NOT_HERE);
 		return;
 	}
 
 	if (IsEmptyStr(filename)) {
-		cprintf("%d You must specify a file name.\n",
-			ERROR + FILE_NOT_FOUND);
+		cprintf("%d You must specify a file name.\n", ERROR + FILE_NOT_FOUND);
 		return;
 	}
 
@@ -102,11 +96,9 @@ void cmd_movf(char *cmdbuf)
 			filename[a] = '_';
 		}
 	}
-	snprintf(pathname, sizeof pathname, "./files/%s/%s",
-		 CC->room.QRdirname, filename);
+	snprintf(pathname, sizeof pathname, "./files/%s/%s", CC->room.QRdirname, filename);
 	if (access(pathname, 0) != 0) {
-		cprintf("%d File '%s' not found.\n",
-			ERROR + FILE_NOT_FOUND, pathname);
+		cprintf("%d File '%s' not found.\n", ERROR + FILE_NOT_FOUND, pathname);
 		return;
 	}
 
@@ -115,23 +107,18 @@ void cmd_movf(char *cmdbuf)
 		return;
 	}
 	if ((qrbuf.QRflags & QR_DIRECTORY) == 0) {
-		cprintf("%d '%s' is not a directory room.\n",
-			ERROR + NOT_HERE, qrbuf.QRname);
+		cprintf("%d '%s' is not a directory room.\n", ERROR + NOT_HERE, qrbuf.QRname);
 		return;
 	}
-	snprintf(newpath, sizeof newpath, "./files/%s/%s", qrbuf.QRdirname,
-		 filename);
+	snprintf(newpath, sizeof newpath, "./files/%s/%s", qrbuf.QRdirname, filename);
 	if (link(pathname, newpath) != 0) {
-		cprintf("%d Couldn't move file: %s\n", ERROR + INTERNAL_ERROR,
-			strerror(errno));
+		cprintf("%d Couldn't move file: %s\n", ERROR + INTERNAL_ERROR, strerror(errno));
 		return;
 	}
 	unlink(pathname);
 
 	/* this is a crude method of copying the file description */
-	snprintf(buf, sizeof buf,
-		 "cat ./files/%s/filedir |grep \"%s\" >>./files/%s/filedir",
-		 CC->room.QRdirname, filename, qrbuf.QRdirname);
+	snprintf(buf, sizeof buf, "cat ./files/%s/filedir |grep \"%s\" >>./files/%s/filedir", CC->room.QRdirname, filename, qrbuf.QRdirname);
 	system(buf);
 	cprintf("%d File '%s' has been moved.\n", CIT_OK, filename);
 }
@@ -155,8 +142,7 @@ void OpenCmdResult(char *filename, const char *mime_type)
 	filesize = (long) statbuf.st_size;
 	modtime = (time_t) statbuf.st_mtime;
 
-	cprintf("%d %ld|%ld|%s|%s\n",
-		CIT_OK, filesize, (long)modtime, filename, mime_type);
+	cprintf("%d %ld|%ld|%s|%s\n", CIT_OK, filesize, (long)modtime, filename, mime_type);
 }
 
 
@@ -174,26 +160,22 @@ void cmd_open(char *cmdbuf)
 	if (CtdlAccessCheck(ac_logged_in)) return;
 
 	if ((CC->room.QRflags & QR_DIRECTORY) == 0) {
-		cprintf("%d No directory in this room.\n",
-			ERROR + NOT_HERE);
+		cprintf("%d No directory in this room.\n", ERROR + NOT_HERE);
 		return;
 	}
 
 	if (IsEmptyStr(filename)) {
-		cprintf("%d You must specify a file name.\n",
-			ERROR + FILE_NOT_FOUND);
+		cprintf("%d You must specify a file name.\n", ERROR + FILE_NOT_FOUND);
 		return;
 	}
 	if (strstr(filename, "../") != NULL)
 	{
-		cprintf("%d syntax error.\n",
-			ERROR + ILLEGAL_VALUE);
+		cprintf("%d syntax error.\n", ERROR + ILLEGAL_VALUE);
 		return;
 	}
 
 	if (CC->download_fp != NULL) {
-		cprintf("%d You already have a download file open.\n",
-			ERROR + RESOURCE_BUSY);
+		cprintf("%d You already have a download file open.\n", ERROR + RESOURCE_BUSY);
 		return;
 	}
 
@@ -203,20 +185,17 @@ void cmd_open(char *cmdbuf)
 		}
 	}
 
-	snprintf(pathname, sizeof pathname,
-			 "%s/%s/%s",
-			 ctdl_file_dir,
-			 CC->room.QRdirname, filename);
+	snprintf(pathname, sizeof pathname, "%s/%s/%s", ctdl_file_dir, CC->room.QRdirname, filename);
 	CC->download_fp = fopen(pathname, "r");
 
 	if (CC->download_fp == NULL) {
-		cprintf("%d cannot open %s: %s\n",
-			ERROR + INTERNAL_ERROR, pathname, strerror(errno));
+		cprintf("%d cannot open %s: %s\n", ERROR + INTERNAL_ERROR, pathname, strerror(errno));
 		return;
 	}
 
 	OpenCmdResult(filename, "application/octet-stream");
 }
+
 
 /*
  * open an image file
@@ -231,14 +210,12 @@ void cmd_oimg(char *cmdbuf)
 	extract_token(filename, cmdbuf, 0, '|', sizeof filename);
 
 	if (IsEmptyStr(filename)) {
-		cprintf("%d You must specify a file name.\n",
-			ERROR + FILE_NOT_FOUND);
+		cprintf("%d You must specify a file name.\n", ERROR + FILE_NOT_FOUND);
 		return;
 	}
 
 	if (CC->download_fp != NULL) {
-		cprintf("%d You already have a download file open.\n",
-			ERROR + RESOURCE_BUSY);
+		cprintf("%d You already have a download file open.\n", ERROR + RESOURCE_BUSY);
 		return;
 	}
 
@@ -248,8 +225,7 @@ void cmd_oimg(char *cmdbuf)
 		CC->download_fp = fopen(pathname, "rb");
 	}
 	if (CC->download_fp == NULL) {
-		cprintf("%d Cannot open %s: %s\n",
-			ERROR + FILE_NOT_FOUND, pathname, strerror(errno));
+		cprintf("%d Cannot open %s: %s\n", ERROR + FILE_NOT_FOUND, pathname, strerror(errno));
 		return;
 	}
 	rv = fread(&MimeTestBuf[0], 1, 32, CC->download_fp);
@@ -277,20 +253,17 @@ void cmd_uopn(char *cmdbuf)
 	if (CtdlAccessCheck(ac_logged_in)) return;
 
 	if ((CC->room.QRflags & QR_DIRECTORY) == 0) {
-		cprintf("%d No directory in this room.\n",
-			ERROR + NOT_HERE);
+		cprintf("%d No directory in this room.\n", ERROR + NOT_HERE);
 		return;
 	}
 
 	if (IsEmptyStr(CC->upl_file)) {
-		cprintf("%d You must specify a file name.\n",
-			ERROR + FILE_NOT_FOUND);
+		cprintf("%d You must specify a file name.\n", ERROR + FILE_NOT_FOUND);
 		return;
 	}
 
 	if (CC->upload_fp != NULL) {
-		cprintf("%d You already have a upload file open.\n",
-			ERROR + RESOURCE_BUSY);
+		cprintf("%d You already have a upload file open.\n", ERROR + RESOURCE_BUSY);
 		return;
 	}
 
@@ -299,33 +272,24 @@ void cmd_uopn(char *cmdbuf)
 			CC->upl_file[a] = '_';
 		}
 	}
-	snprintf(CC->upl_path, sizeof CC->upl_path, 
-			 "%s/%s/%s",
-			 ctdl_file_dir,
-			 CC->room.QRdirname, CC->upl_file);
-	snprintf(CC->upl_filedir, sizeof CC->upl_filedir,
-			 "%s/%s/filedir", 
-			 ctdl_file_dir,
-			 CC->room.QRdirname);
+	snprintf(CC->upl_path, sizeof CC->upl_path, "%s/%s/%s", ctdl_file_dir, CC->room.QRdirname, CC->upl_file);
+	snprintf(CC->upl_filedir, sizeof CC->upl_filedir, "%s/%s/filedir", ctdl_file_dir, CC->room.QRdirname);
 
 	CC->upload_fp = fopen(CC->upl_path, "r");
 	if (CC->upload_fp != NULL) {
 		fclose(CC->upload_fp);
 		CC->upload_fp = NULL;
-		cprintf("%d '%s' already exists\n",
-			ERROR + ALREADY_EXISTS, CC->upl_path);
+		cprintf("%d '%s' already exists\n", ERROR + ALREADY_EXISTS, CC->upl_path);
 		return;
 	}
 
 	CC->upload_fp = fopen(CC->upl_path, "wb");
 	if (CC->upload_fp == NULL) {
-		cprintf("%d Cannot open %s: %s\n",
-			ERROR + INTERNAL_ERROR, CC->upl_path, strerror(errno));
+		cprintf("%d Cannot open %s: %s\n", ERROR + INTERNAL_ERROR, CC->upl_path, strerror(errno));
 		return;
 	}
 	cprintf("%d Ok\n", CIT_OK);
 }
-
 
 
 /*
@@ -346,8 +310,7 @@ void cmd_uimg(char *cmdbuf)
 	extract_token(CC->upl_mimetype, cmdbuf, 1, '|', sizeof CC->upl_mimetype);
 	extract_token(basenm, cmdbuf, 2, '|', sizeof basenm);
 	if (CC->upload_fp != NULL) {
-		cprintf("%d You already have an upload file open.\n",
-			ERROR + RESOURCE_BUSY);
+		cprintf("%d You already have an upload file open.\n", ERROR + RESOURCE_BUSY);
 		return;
 	}
 
@@ -361,15 +324,11 @@ void cmd_uimg(char *cmdbuf)
 	}
 
 	if (CC->user.axlevel >= AxAideU) {
-		snprintf(CC->upl_path, sizeof CC->upl_path, 
-				 "%s/%s",
-				 ctdl_image_dir,
-				 basenm);
+		snprintf(CC->upl_path, sizeof CC->upl_path, "%s/%s", ctdl_image_dir, basenm);
 	}
 
 	if (IsEmptyStr(CC->upl_path)) {
-		cprintf("%d Higher access required.\n",
-			ERROR + HIGHER_ACCESS_REQUIRED);
+		cprintf("%d Higher access required.\n", ERROR + HIGHER_ACCESS_REQUIRED);
 		return;
 	}
 
@@ -380,8 +339,7 @@ void cmd_uimg(char *cmdbuf)
 
 	CC->upload_fp = fopen(CC->upl_path, "wb");
 	if (CC->upload_fp == NULL) {
-		cprintf("%d Cannot open %s: %s\n",
-			ERROR + INTERNAL_ERROR, CC->upl_path, strerror(errno));
+		cprintf("%d Cannot open %s: %s\n", ERROR + INTERNAL_ERROR, CC->upl_path, strerror(errno));
 		return;
 	}
 	cprintf("%d Ok\n", CIT_OK);
@@ -397,8 +355,7 @@ void cmd_clos(char *cmdbuf)
 	char buf[256];
 
 	if (CC->download_fp == NULL) {
-		cprintf("%d You don't have a download file open.\n",
-			ERROR + RESOURCE_NOT_OPEN);
+		cprintf("%d You don't have a download file open.\n", ERROR + RESOURCE_NOT_OPEN);
 		return;
 	}
 
@@ -407,10 +364,7 @@ void cmd_clos(char *cmdbuf)
 
 	if (CC->dl_is_net == 1) {
 		CC->dl_is_net = 0;
-		snprintf(buf, sizeof buf, 
-				 "%s/%s",
-				 ctdl_netout_dir,
-				 CC->net_node);
+		snprintf(buf, sizeof buf, "%s/%s", ctdl_netout_dir, CC->net_node);
 		unlink(buf);
 	}
 
@@ -429,7 +383,6 @@ void abort_upl(CitContext *who)
 		unlink(CC->upl_path);
 	}
 }
-
 
 
 /*
@@ -455,26 +408,17 @@ void cmd_ucls(char *cmd)
 
 		if (CCC->upload_type == UPL_NET) {
 			char final_filename[PATH_MAX];
-		        snprintf(final_filename, sizeof final_filename,
-				"%s/%s.%04lx.%04x",
-				ctdl_netin_dir,
-				CCC->net_node,
-				(long)getpid(),
-				++seq
-			);
+		        snprintf(final_filename, sizeof final_filename, "%s/%s.%04lx.%04x", ctdl_netin_dir, CCC->net_node, (long)getpid(), ++seq);
 
 			if (link(CCC->upl_path, final_filename) == 0) {
-				CTDL_syslog(LOG_INFO, "UCLS: updoaded %s", final_filename);
+				syslog(LOG_INFO, "UCLS: updoaded %s", final_filename);
 				unlink(CCC->upl_path);
 			}
 			else {
-				CTDL_syslog(LOG_INFO, "Cannot link %s to %s: %s",
+				syslog(LOG_INFO, "Cannot link %s to %s: %s",
 					    CCC->upl_path, final_filename, strerror(errno)
 				);
 			}
-			
-
-			/* FIXME ... here we need to trigger a network run */
 		}
 
 		CCC->upload_type = UPL_FILE;
@@ -488,9 +432,7 @@ void cmd_ucls(char *cmd)
 			fp = fopen(CCC->upl_filedir, "w");
 		}
 		if (fp != NULL) {
-			fprintf(fp, "%s %s %s\n", CCC->upl_file,
-				CCC->upl_mimetype,
-				CCC->upl_comment);
+			fprintf(fp, "%s %s %s\n", CCC->upl_file, CCC->upl_mimetype, CCC->upl_comment);
 			fclose(fp);
 		}
 
@@ -530,8 +472,7 @@ void cmd_read(char *cmdbuf)
 	}
 
 	if (CC->download_fp == NULL) {
-		cprintf("%d You don't have a download file open.\n",
-			ERROR + RESOURCE_NOT_OPEN);
+		cprintf("%d You don't have a download file open.\n", ERROR + RESOURCE_NOT_OPEN);
 		return;
 	}
 
@@ -542,12 +483,12 @@ void cmd_read(char *cmdbuf)
 
 	rc = fseek(CC->download_fp, start_pos, 0);
 	if (rc < 0) {
-		struct CitContext *CCC = CC;
 		cprintf("%d your file is smaller then %ld.\n", ERROR + ILLEGAL_VALUE, start_pos);
-		CTDL_syslog(LOG_ERR, "your file %s is smaller then %ld. [%s]", 
+		syslog(LOG_ERR, "your file %s is smaller then %ld. [%s]", 
 			    CC->upl_path, 
 			    start_pos,
-			    strerror(errno));
+			    strerror(errno)
+		);
 
 		return;
 	}
@@ -595,12 +536,10 @@ void cmd_writ(char *cmdbuf)
 	client_read(buf, bytes);
 	rv = fwrite(buf, bytes, 1, CCC->upload_fp);
 	if (rv == -1) {
-		CTDL_syslog(LOG_EMERG, "Couldn't write: %s", strerror(errno));
+		syslog(LOG_EMERG, "Couldn't write: %s", strerror(errno));
 	}
 	free(buf);
 }
-
-
 
 
 /*
@@ -655,6 +594,7 @@ void cmd_ndop(char *cmdbuf)
 	cprintf("%d %ld\n", CIT_OK, (long)statbuf.st_size);
 }
 
+
 /*
  * cmd_nuop() - open a network spool file for uploading
  */
@@ -675,31 +615,32 @@ void cmd_nuop(char *cmdbuf)
 	}
 
 	snprintf(CC->upl_path, sizeof CC->upl_path,
-			 "%s/%s.%04lx.%04x",
-			 ctdl_nettmp_dir,
-			 CC->net_node, 
-			 (long)getpid(), 
-			 ++seq);
+		 "%s/%s.%04lx.%04x",
+		 ctdl_nettmp_dir,
+		 CC->net_node, 
+		 (long)getpid(), 
+		 ++seq
+	);
 
 	CC->upload_fp = fopen(CC->upl_path, "r");
 	if (CC->upload_fp != NULL) {
 		fclose(CC->upload_fp);
 		CC->upload_fp = NULL;
-		cprintf("%d '%s' already exists\n",
-			ERROR + ALREADY_EXISTS, CC->upl_path);
+		cprintf("%d '%s' already exists\n", ERROR + ALREADY_EXISTS, CC->upl_path);
 		return;
 	}
 
 	CC->upload_fp = fopen(CC->upl_path, "w");
 	if (CC->upload_fp == NULL) {
-		cprintf("%d Cannot open %s: %s\n",
-			ERROR + INTERNAL_ERROR, CC->upl_path, strerror(errno));
+		cprintf("%d Cannot open %s: %s\n", ERROR + INTERNAL_ERROR, CC->upl_path, strerror(errno));
 		return;
 	}
 
 	CC->upload_type = UPL_NET;
 	cprintf("%d Ok\n", CIT_OK);
 }
+
+
 void files_logout_hook(void)
 {
         CitContext *CCC = MyContext();
@@ -721,6 +662,7 @@ void files_logout_hook(void)
 
 }
 
+
 /* 
  * help_subst()  -  support routine for help file viewer
  */
@@ -735,6 +677,7 @@ void help_subst(char *strbuf, char *source, char *dest)
 		strcat(strbuf, workbuf);
 	}
 }
+
 
 void do_help_subst(char *buffer)
 {
@@ -853,7 +796,6 @@ CTDL_MODULE_INIT(file_ops)
 {
 	if (!threading) {
                 CtdlRegisterSessionHook(files_logout_hook, EVT_LOGOUT, PRIO_LOGOUT + 8);
-
 		CtdlRegisterProtoHook(cmd_delf, "DELF", "Delete a file");
 		CtdlRegisterProtoHook(cmd_movf, "MOVF", "Move a file");
 		CtdlRegisterProtoHook(cmd_open, "OPEN", "Open a download file transfer");
@@ -866,7 +808,6 @@ CTDL_MODULE_INIT(file_ops)
 		CtdlRegisterProtoHook(cmd_nuop, "NUOP", "Open a network spool file for upload");
 		CtdlRegisterProtoHook(cmd_oimg, "OIMG", "Open an image file for download");
 		CtdlRegisterProtoHook(cmd_uimg, "UIMG", "Upload an image file");
-
 		CtdlRegisterProtoHook(cmd_mesg, "MESG", "fetch system banners");
 		CtdlRegisterProtoHook(cmd_emsg, "EMSG", "submit system banners");
 	}

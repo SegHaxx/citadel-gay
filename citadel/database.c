@@ -1,7 +1,7 @@
 /*
  * This is a data store backend for the Citadel server which uses Berkeley DB.
  *
- * Copyright (c) 1987-2016 by the citadel.org team
+ * Copyright (c) 1987-2017 by the citadel.org team
  *
  * This program is open source software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License version 3.
@@ -213,7 +213,7 @@ void cdb_checkpoint(void)
 {
 	int ret;
 
-	MARKM_syslog(LOG_DEBUG, "-- db checkpoint --");
+	syslog(LOG_DEBUG, "-- db checkpoint --");
 	ret = dbenv->txn_checkpoint(dbenv, MAX_CHECKPOINT_KBYTES, MAX_CHECKPOINT_MINUTES, 0);
 
 	if (ret != 0) {
@@ -873,18 +873,6 @@ void cdb_trunc(int cdb)
 
 int SeentDebugEnabled = 0;
 
-#define DBGLOG(LEVEL) if ((LEVEL != LOG_DEBUG) || (SeentDebugEnabled != 0))
-#define SEENM_syslog(LEVEL, FORMAT)					\
-	DBGLOG(LEVEL) syslog(LEVEL,					\
-			     "%s[%ld]CC[%ld] SEEN[%s][%d] " FORMAT,	\
-			     IOSTR, ioid, ccid, Facility, cType)
-
-#define SEEN_syslog(LEVEL, FORMAT, ...)					\
-	DBGLOG(LEVEL) syslog(LEVEL,					\
-			     "%s[%ld]CC[%ld] SEEN[%s][%d] " FORMAT,	\
-			     IOSTR, ioid, ccid, Facility, cType,	\
-			     __VA_ARGS__)
-
 time_t CheckIfAlreadySeen(const char *Facility,
 			  StrBuf *guid,
 			  time_t now,
@@ -899,7 +887,7 @@ time_t CheckIfAlreadySeen(const char *Facility,
 
 	if (cType != eWrite)
 	{
-		SEEN_syslog(LOG_DEBUG, "Loading [%s]", ChrPtr(guid));
+		syslog(LOG_DEBUG, "Loading [%s]", ChrPtr(guid));
 		cdbut = cdb_fetch(CDB_USETABLE, SKEY(guid));
 		if ((cdbut != NULL) && (cdbut->ptr != NULL)) {
 			memcpy(&ut, cdbut->ptr,
@@ -909,13 +897,13 @@ time_t CheckIfAlreadySeen(const char *Facility,
 
 			if (InDBTimeStamp < antiexpire)
 			{
-				SEEN_syslog(LOG_DEBUG, "Found - Not expired %ld < %ld", InDBTimeStamp, antiexpire);
+				syslog(LOG_DEBUG, "Found - Not expired %ld < %ld", InDBTimeStamp, antiexpire);
 				cdb_free(cdbut);
 				return InDBTimeStamp;
 			}
 			else
 			{
-				SEEN_syslog(LOG_DEBUG, "Found - Expired. %ld >= %ld", InDBTimeStamp, antiexpire);
+				syslog(LOG_DEBUG, "Found - Expired. %ld >= %ld", InDBTimeStamp, antiexpire);
 				cdb_free(cdbut);
 			}
 		}
@@ -923,7 +911,7 @@ time_t CheckIfAlreadySeen(const char *Facility,
 		{
 			if (cdbut) cdb_free(cdbut);
 			
-			SEENM_syslog(LOG_DEBUG, "not Found");
+			syslog(LOG_DEBUG, "not Found");
 			if (cType == eCheckUpdate)
 				return 0;
 		}
@@ -935,13 +923,13 @@ time_t CheckIfAlreadySeen(const char *Facility,
 	memcpy(ut.ut_msgid, SKEY(guid));
 	ut.ut_timestamp = now;
 
-	SEENM_syslog(LOG_DEBUG, "Saving new Timestamp");
+	syslog(LOG_DEBUG, "Saving new Timestamp");
 	/* rewrite the record anyway, to update the timestamp */
 	cdb_store(CDB_USETABLE,
 		  SKEY(guid),
 		  &ut, sizeof(struct UseTable) );
 
-	SEENM_syslog(LOG_DEBUG, "Done Saving");
+	syslog(LOG_DEBUG, "Done Saving");
 	return InDBTimeStamp;
 }
 

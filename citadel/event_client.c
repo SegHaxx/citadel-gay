@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1998-2012 by the citadel.org team
+ * Copyright (c) 1998-2017 by the citadel.org team
  *
  * This program is open source software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 3.
@@ -109,11 +109,11 @@ eNextState QueueAnDBOperation(AsyncIO *IO)
 	{
 		/* shutting down... */
 		free(h);
-		EVM_syslog(LOG_DEBUG, "DBEVENT Q exiting.\n");
+		syslog(LOG_DEBUG, "DBEVENT Q exiting.\n");
 		pthread_mutex_unlock(&DBEventQueueMutex);
 		return eAbort;
 	}
-	EVM_syslog(LOG_DEBUG, "DBEVENT Q\n");
+	syslog(LOG_DEBUG, "DBEVENT Q\n");
 	i = ++evdb_count ;
 	Put(DBInboundEventQueue, IKEY(i), h, NULL);
 	pthread_mutex_unlock(&DBEventQueueMutex);
@@ -127,7 +127,7 @@ eNextState QueueAnDBOperation(AsyncIO *IO)
 	ev_async_send (event_db, &DBAddJob);
 	pthread_mutex_unlock(&DBEventExitQueueMutex);
 
-	EVQM_syslog(LOG_DEBUG, "DBEVENT Q Done.\n");
+	syslog(LOG_DEBUG, "DBEVENT Q Done.\n");
 	return eDBQuery;
 }
 
@@ -144,7 +144,7 @@ void ShutDownDBCLient(AsyncIO *IO)
 	become_session(Ctx);
 
 	SetEVState(IO, eDBTerm);
-	EVM_syslog(LOG_DEBUG, "DBEVENT Terminating.\n");
+	syslog(LOG_DEBUG, "DBEVENT Terminating.\n");
 	StopDBWatchers(IO);
 
 	assert(IO->DBTerminate);
@@ -158,7 +158,7 @@ DB_PerformNext(struct ev_loop *loop, ev_idle *watcher, int revents)
 
 	SetEVState(IO, eDBNext);
 	SET_EV_TIME(IO, event_db);
-	EV_syslog(LOG_DEBUG, "%s()", __FUNCTION__);
+	syslog(LOG_DEBUG, "%s()", __FUNCTION__);
 	become_session(IO->CitContext);
 
 	ev_idle_stop(event_db, &IO->db_unwind_stack);
@@ -220,7 +220,7 @@ static void IO_abort_shutdown_callback(struct ev_loop *loop,
 	AsyncIO *IO = watcher->data;
 
 	SetEVState(IO, eIOAbort);
-	EV_syslog(LOG_DEBUG, "EVENT Q: %s\n", __FUNCTION__);
+	syslog(LOG_DEBUG, "EVENT Q: %s\n", __FUNCTION__);
 	SET_EV_TIME(IO, event_base);
 	assert(IO->ShutdownAbort);
 	IO->ShutdownAbort(IO);
@@ -249,11 +249,11 @@ eNextState QueueAnEventContext(AsyncIO *IO)
 	{
 		free(h);
 		/* shutting down... */
-		EVM_syslog(LOG_DEBUG, "EVENT Q exiting.\n");
+		syslog(LOG_DEBUG, "EVENT Q exiting.\n");
 		pthread_mutex_unlock(&EventQueueMutex);
 		return eAbort;
 	}
-	EVM_syslog(LOG_DEBUG, "EVENT Q\n");
+	syslog(LOG_DEBUG, "EVENT Q\n");
 	i = ++evbase_count;
 	Put(InboundEventQueue, IKEY(i), h, NULL);
 	pthread_mutex_unlock(&EventQueueMutex);
@@ -265,7 +265,7 @@ eNextState QueueAnEventContext(AsyncIO *IO)
 	}
 	ev_async_send (event_base, &AddJob);
 	pthread_mutex_unlock(&EventExitQueueMutex);
-	EVM_syslog(LOG_DEBUG, "EVENT Q Done.\n");
+	syslog(LOG_DEBUG, "EVENT Q Done.\n");
 	return eSendReply;
 }
 
@@ -305,12 +305,12 @@ eNextState QueueCurlContext(AsyncIO *IO)
 	{
 		/* shutting down... */
 		free(h);
-		EVM_syslog(LOG_DEBUG, "EVENT Q exiting.\n");
+		syslog(LOG_DEBUG, "EVENT Q exiting.\n");
 		pthread_mutex_unlock(&EventQueueMutex);
 		return eAbort;
 	}
 
-	EVM_syslog(LOG_DEBUG, "EVENT Q\n");
+	syslog(LOG_DEBUG, "EVENT Q\n");
 	i = ++evbase_count;
 	Put(InboundEventQueue, IKEY(i), h, NULL);
 	pthread_mutex_unlock(&EventQueueMutex);
@@ -323,7 +323,7 @@ eNextState QueueCurlContext(AsyncIO *IO)
 	ev_async_send (event_base, &AddJob);
 	pthread_mutex_unlock(&EventExitQueueMutex);
 
-	EVM_syslog(LOG_DEBUG, "EVENT Q Done.\n");
+	syslog(LOG_DEBUG, "EVENT Q Done.\n");
 	return eSendReply;
 }
 
@@ -357,7 +357,7 @@ void FreeAsyncIOContents(AsyncIO *IO)
 void DestructCAres(AsyncIO *IO);
 void StopClientWatchers(AsyncIO *IO, int CloseFD)
 {
-	EVM_syslog(LOG_DEBUG, "EVENT StopClientWatchers");
+	syslog(LOG_DEBUG, "EVENT StopClientWatchers");
 	
 	DestructCAres(IO);
 
@@ -379,7 +379,7 @@ void StopClientWatchers(AsyncIO *IO, int CloseFD)
 
 void StopCurlWatchers(AsyncIO *IO)
 {
-	EVM_syslog(LOG_DEBUG, "EVENT StopCurlWatchers \n");
+	syslog(LOG_DEBUG, "EVENT StopCurlWatchers \n");
 
 	ev_timer_stop (event_base, &IO->rw_timeout);
 	ev_timer_stop(event_base, &IO->conn_fail);
@@ -407,7 +407,7 @@ eNextState ShutDownCLient(AsyncIO *IO)
 	SetEVState(IO, eExit);
 	become_session(Ctx);
 
-	EVM_syslog(LOG_DEBUG, "EVENT Terminating \n");
+	syslog(LOG_DEBUG, "EVENT Terminating \n");
 
 	StopClientWatchers(IO, 1);
 
@@ -673,7 +673,7 @@ IO_send_callback(struct ev_loop *loop, ev_io *watcher, int revents)
 	else if (rc < 0) {
 		if (errno != EAGAIN) {
 			StopClientWatchers(IO, 1);
-			EV_syslog(LOG_DEBUG,
+			syslog(LOG_DEBUG,
 				  "IO_send_callback(): Socket Invalid! [%d] [%s] [%d]\n",
 				  errno, strerror(errno), IO->SendBuf.fd);
 			StrBufPrintf(IO->ErrMsg,
@@ -814,7 +814,7 @@ IO_connestd_callback(struct ev_loop *loop, ev_io *watcher, int revents)
 
 	SetEVState(IO, eIOConnNow);
 	SET_EV_TIME(IO, event_base);
-        EVM_syslog(LOG_DEBUG, "connect() succeeded.\n");
+        syslog(LOG_DEBUG, "connect() succeeded.\n");
 
         ev_io_stop(loop, &IO->conn_event);
         ev_timer_stop(event_base, &IO->conn_fail);
@@ -827,7 +827,7 @@ IO_connestd_callback(struct ev_loop *loop, ev_io *watcher, int revents)
 
         if ((err == 0) && (so_err != 0))
         {
-                EV_syslog(LOG_DEBUG, "connect() failed [%d][%s]\n",
+                syslog(LOG_DEBUG, "connect() failed [%d][%s]\n",
                           so_err,
                           strerror(so_err));
                 IO_connfail_callback(loop, &IO->conn_fail, revents);
@@ -835,7 +835,7 @@ IO_connestd_callback(struct ev_loop *loop, ev_io *watcher, int revents)
         }
         else
         {
-                EVM_syslog(LOG_DEBUG, "connect() succeeded\n");
+                syslog(LOG_DEBUG, "connect() succeeded\n");
                 set_start_callback(loop, IO, revents);
         }
 }
@@ -915,7 +915,7 @@ IO_recv_callback(struct ev_loop *loop, ev_io *watcher, int revents)
 		if (errno != EAGAIN) {
 			// FD is gone. kick it. 
 			StopClientWatchers(IO, 1);
-			EV_syslog(LOG_DEBUG,
+			syslog(LOG_DEBUG,
 				  "IO_recv_callback(): Socket Invalid! [%d] [%s] [%d]\n",
 				  errno, strerror(errno), IO->SendBuf.fd);
 			StrBufPrintf(IO->ErrMsg,
@@ -934,7 +934,7 @@ IO_postdns_callback(struct ev_loop *loop, ev_idle *watcher, int revents)
 
 	SetEVState(IO, eCaresFinished);
 	SET_EV_TIME(IO, event_base);
-	EV_syslog(LOG_DEBUG, "event: %s\n", __FUNCTION__);
+	syslog(LOG_DEBUG, "event: %s\n", __FUNCTION__);
 	become_session(IO->CitContext);
 	assert(IO->DNS.Query->PostDNS);
 	switch (IO->DNS.Query->PostDNS(IO))
@@ -989,7 +989,7 @@ eNextState EvConnectSock(AsyncIO *IO,
 			IPPROTO_TCP);
 
 	if (IO->SendBuf.fd < 0) {
-		EV_syslog(LOG_ERR,
+		syslog(LOG_ERR,
 			  "EVENT: socket() failed: %s\n",
 			  strerror(errno));
 
@@ -1001,7 +1001,7 @@ eNextState EvConnectSock(AsyncIO *IO,
 	}
 	fdflags = fcntl(IO->SendBuf.fd, F_GETFL);
 	if (fdflags < 0) {
-		EV_syslog(LOG_ERR,
+		syslog(LOG_ERR,
 			  "EVENT: unable to get socket %d flags! %s \n",
 			  IO->SendBuf.fd,
 			  strerror(errno));
@@ -1015,7 +1015,7 @@ eNextState EvConnectSock(AsyncIO *IO,
 	}
 	fdflags = fdflags | O_NONBLOCK;
 	if (fcntl(IO->SendBuf.fd, F_SETFL, fdflags) < 0) {
-		EV_syslog(
+		syslog(
 			LOG_ERR,
 			"EVENT: unable to set socket %d nonblocking flags! %s \n",
 			IO->SendBuf.fd,
@@ -1076,13 +1076,13 @@ eNextState EvConnectSock(AsyncIO *IO,
 
 	if (rc >= 0){
 		SetEVState(IO, eIOConnNow);
-		EV_syslog(LOG_DEBUG, "connect() = %d immediate success.\n", IO->SendBuf.fd);
+		syslog(LOG_DEBUG, "connect() = %d immediate success.\n", IO->SendBuf.fd);
 		set_start_callback(event_base, IO, 0);
 		return IO->NextState;
 	}
 	else if (errno == EINPROGRESS) {
 		SetEVState(IO, eIOConnWait);
-		EV_syslog(LOG_DEBUG, "connect() = %d have to wait now.\n", IO->SendBuf.fd);
+		syslog(LOG_DEBUG, "connect() = %d have to wait now.\n", IO->SendBuf.fd);
 
 		ev_io_init(&IO->conn_event,
 			   IO_connestd_callback,
@@ -1102,7 +1102,7 @@ eNextState EvConnectSock(AsyncIO *IO,
 		IO->conn_fail_immediate.data = IO;
 		ev_idle_start(event_base, &IO->conn_fail_immediate);
 
-		EV_syslog(LOG_ERR,
+		syslog(LOG_ERR,
 			  "connect() = %d failed: %s\n",
 			  IO->SendBuf.fd,
 			  strerror(errno));
@@ -1176,7 +1176,7 @@ void InitIOStruct(AsyncIO *IO,
 	IO->SendBuf.Buf   = NewStrBufPlain(NULL, 1024);
 	IO->RecvBuf.Buf   = NewStrBufPlain(NULL, 1024);
 	IO->IOBuf         = NewStrBuf();
-	EV_syslog(LOG_DEBUG,
+	syslog(LOG_DEBUG,
 		  "EVENT: Session lives at %p IO at %p \n",
 		  Data, IO);
 
@@ -1220,7 +1220,7 @@ eNextState KillTerminate(AsyncIO *IO)
 {
 	long id;
 	KillOtherSessionContext *Ctx = (KillOtherSessionContext*)IO->Data;
-	EV_syslog(LOG_DEBUG, "%s Exit\n", __FUNCTION__);
+	syslog(LOG_DEBUG, "%s Exit\n", __FUNCTION__);
 	id = IO->ID;
 	FreeAsyncIOContents(IO);
 	memset(Ctx, 0, sizeof(KillOtherSessionContext));
@@ -1315,10 +1315,10 @@ void EV_backtrace(AsyncIO *IO)
 	strings = backtrace_symbols(stack_frames, size);
 	for (i = 0; i < size; i++) {
 		if (strings != NULL) {
-			EV_syslog(LOG_ALERT, " BT %s\n", strings[i]);
+			syslog(LOG_ALERT, " BT %s\n", strings[i]);
 		}
 		else {
-			EV_syslog(LOG_ALERT, " BT %p\n", stack_frames[i]);
+			syslog(LOG_ALERT, " BT %p\n", stack_frames[i]);
 		}
 	}
 	free(strings);

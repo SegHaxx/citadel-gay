@@ -1,7 +1,7 @@
 /* 
- * Citadel protocoll main dispatcher
+ * Citadel protocol main dispatcher
  *
- * Copyright (c) 1987-2015 by the citadel.org team
+ * Copyright (c) 1987-2017 by the citadel.org team
  *
  * This program is open source software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 3.
@@ -28,19 +28,19 @@ void do_command_loop(void) {
 	time(&CCC->lastcmd);
 	memset(cmdbuf, 0, sizeof cmdbuf); /* Clear it, just in case */
 	if (client_getln(cmdbuf, sizeof cmdbuf) < 1) {
-		CTDLM_syslog(LOG_INFO, "Citadel client disconnected: ending session.");
+		syslog(LOG_INFO, "Citadel client disconnected: ending session.");
 		CCC->kill_me = KILLME_CLIENT_DISCONNECTED;
 		return;
 	}
 
 	/* Log the server command, but don't show passwords... */
 	if ( (strncasecmp(cmdbuf, "PASS", 4)) && (strncasecmp(cmdbuf, "SETP", 4)) ) {
-		CTDL_syslog(LOG_DEBUG, "[%s(%ld)] %s",
+		syslog(LOG_DEBUG, "[%s(%ld)] %s",
 			CCC->curr_user, CCC->user.usernum, cmdbuf
 		);
 	}
 	else {
-		CTDL_syslog(LOG_DEBUG, "[%s(%ld)] <password command hidden from log>",
+		syslog(LOG_DEBUG, "[%s(%ld)] <password command hidden from log>",
 			    CCC->curr_user, CCC->user.usernum
 		);
 	}

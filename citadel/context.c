@@ -102,7 +102,7 @@ int CtdlTerminateOtherSession (int session_num)
 
 	aide = ( (CCC->user.axlevel >= AxAideU) || (CCC->internal_pgm) ) ;
 
-	CONM_syslog(LOG_DEBUG, "Locating session to kill\n");
+	syslog(LOG_DEBUG, "Locating session to kill\n");
 	begin_critical_section(S_SESSION_TABLE);
 	for (ccptr = ContextList; ccptr != NULL; ccptr = ccptr->next) {
 		if (session_num == ccptr->cs_pid) {
@@ -259,9 +259,9 @@ void terminate_idle_sessions(void)
 	}
 	end_critical_section(S_SESSION_TABLE);
 	if (killed > 0)
-		CON_syslog(LOG_INFO, "Scheduled %d idle sessions for termination\n", killed);
+		syslog(LOG_INFO, "Scheduled %d idle sessions for termination\n", killed);
 	if (longrunners > 0)
-		CON_syslog(LOG_INFO, "Didn't terminate %d protected idle sessions", longrunners);
+		syslog(LOG_INFO, "Didn't terminate %d protected idle sessions", longrunners);
 }
 
 
@@ -278,10 +278,10 @@ void terminate_all_sessions(void)
 		if (ccptr->client_socket != -1)
 		{
 			if (ccptr->IO != NULL) {
-				CON_syslog(LOG_INFO, "terminate_all_sessions() is murdering %s IO[%ld]CC[%d]", ccptr->curr_user, ccptr->IO->ID, ccptr->cs_pid);
+				syslog(LOG_INFO, "terminate_all_sessions() is murdering %s IO[%ld]CC[%d]", ccptr->curr_user, ccptr->IO->ID, ccptr->cs_pid);
 			}
 			else {
-				CON_syslog(LOG_INFO, "terminate_all_sessions() is murdering %s CC[%d]", ccptr->curr_user, ccptr->cs_pid);
+				syslog(LOG_INFO, "terminate_all_sessions() is murdering %s CC[%d]", ccptr->curr_user, ccptr->cs_pid);
 			}
 			close(ccptr->client_socket);
 			ccptr->client_socket = -1;
@@ -290,7 +290,7 @@ void terminate_all_sessions(void)
 	}
 	end_critical_section(S_SESSION_TABLE);
 	if (killed > 0) {
-		CON_syslog(LOG_INFO, "Flushed %d stuck sessions\n", killed);
+		syslog(LOG_INFO, "Flushed %d stuck sessions\n", killed);
 	}
 }
 
@@ -303,14 +303,14 @@ void RemoveContext (CitContext *con)
 {
 	const char *c;
 	if (con == NULL) {
-		CONM_syslog(LOG_ERR, "WARNING: RemoveContext() called with NULL!");
+		syslog(LOG_ERR, "WARNING: RemoveContext() called with NULL!");
 		return;
 	}
 	c = con->ServiceName;
 	if (c == NULL) {
 		c = "WTF?";
 	}
-	CON_syslog(LOG_DEBUG, "RemoveContext(%s) session %d", c, con->cs_pid);
+	syslog(LOG_DEBUG, "RemoveContext(%s) session %d", c, con->cs_pid);
 ///	cit_backtrace();
 
 	/* Run any cleanup routines registered by loadable modules.
@@ -323,7 +323,7 @@ void RemoveContext (CitContext *con)
 	client_close();				/* If the client is still connected, blow 'em away. */
 	become_session(NULL);
 
-	CON_syslog(LOG_NOTICE, "[%3d]SRV[%s] Session ended.", con->cs_pid, c);
+	syslog(LOG_NOTICE, "[%3d]SRV[%s] Session ended.", con->cs_pid, c);
 
 	/* 
 	 * If the client is still connected, blow 'em away. 
@@ -331,7 +331,7 @@ void RemoveContext (CitContext *con)
 	 */
 	if (con->client_socket > 0)
 	{
-		CON_syslog(LOG_NOTICE, "Closing socket %d", con->client_socket);
+		syslog(LOG_NOTICE, "Closing socket %d", con->client_socket);
 		close(con->client_socket);
 	}
 
@@ -347,7 +347,7 @@ void RemoveContext (CitContext *con)
 		free(con->cached_msglist);
 	}
 
-	CONM_syslog(LOG_DEBUG, "Done with RemoveContext()");
+	syslog(LOG_DEBUG, "Done with RemoveContext()");
 }
 
 
@@ -363,7 +363,7 @@ CitContext *CreateNewContext(void) {
 
 	me = (CitContext *) malloc(sizeof(CitContext));
 	if (me == NULL) {
-		CONM_syslog(LOG_ALERT, "citserver: can't allocate memory!!\n");
+		syslog(LOG_ALERT, "citserver: can't allocate memory!!\n");
 		return NULL;
 	}
 	memset(me, 0, sizeof(CitContext));
@@ -412,7 +412,7 @@ CitContext *CloneContext(CitContext *CloneMe) {
 
 	me = (CitContext *) malloc(sizeof(CitContext));
 	if (me == NULL) {
-		CONM_syslog(LOG_ALERT, "citserver: can't allocate memory!!\n");
+		syslog(LOG_ALERT, "citserver: can't allocate memory!!\n");
 		return NULL;
 	}
 	memcpy(me, CloneMe, sizeof(CitContext));
@@ -612,7 +612,7 @@ void CtdlFillSystemContext(CitContext *context, char *name)
 	if (context->user.usernum == 0)
 	{	/* old system user with number 0, upgrade it */
 		context->user.usernum = get_new_user_number();
-		CON_syslog(LOG_INFO, "Upgrading system user \"%s\" from user number 0 to user number %ld\n", context->user.fullname, context->user.usernum);
+		syslog(LOG_INFO, "Upgrading system user \"%s\" from user number 0 to user number %ld\n", context->user.fullname, context->user.usernum);
 		/* add user to the database */
 		CtdlPutUser(&(context->user));
 		cdb_store(CDB_USERSBYNUMBER, &(context->user.usernum), sizeof(long), context->user.fullname, strlen(context->user.fullname)+1);
@@ -646,7 +646,7 @@ void context_cleanup(void)
 		rem = ptr->next;
 		--num_sessions;
 
-		CON_syslog(LOG_DEBUG, "context_cleanup(): purging session %d\n", ptr->cs_pid);
+		syslog(LOG_DEBUG, "context_cleanup(): purging session %d\n", ptr->cs_pid);
 		RemoveContext(ptr);
 		free (ptr);
 		ptr = rem;
@@ -706,7 +706,7 @@ void dead_session_purge(int force) {
 	 * is allocated privately on this thread's stack.
 	 */
 	while (rem != NULL) {
-		CON_syslog(LOG_DEBUG, "dead_session_purge(): purging session %d, reason=%d\n", rem->cs_pid, rem->kill_me);
+		syslog(LOG_DEBUG, "dead_session_purge(): purging session %d, reason=%d\n", rem->cs_pid, rem->kill_me);
 		RemoveContext(rem);
 		ptr = rem;
 		rem = rem->next;
@@ -737,7 +737,7 @@ void InitializeMasterCC(void) {
  */
 void set_async_waiting(struct CitContext *ccptr)
 {
-	CON_syslog(LOG_DEBUG, "Setting async_waiting flag for session %d\n", ccptr->cs_pid);
+	syslog(LOG_DEBUG, "Setting async_waiting flag for session %d\n", ccptr->cs_pid);
 	if (ccptr->is_async) {
 		ccptr->async_waiting++;
 		if (ccptr->state == CON_IDLE) {

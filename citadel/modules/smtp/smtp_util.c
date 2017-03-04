@@ -20,7 +20,7 @@
  * The VRFY and EXPN commands have been removed from this implementation
  * because nobody uses these commands anymore, except for spammers.
  *
- * Copyright (c) 1998-2015 by the citadel.org team
+ * Copyright (c) 1998-2017 by the citadel.org team
  *
  * This program is open source software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3.
@@ -121,7 +121,7 @@ void smtp_do_bounce(char *instr, StrBuf *OMsgTxt)
 	StrBuf *BounceMB;
 	long omsgid = (-1);
 
-	SMTPCM_syslog(LOG_DEBUG, "smtp_do_bounce() called");
+	syslog(LOG_DEBUG, "smtp_do_bounce() called");
 	strcpy(bounceto, "");
 	boundary = NewStrBufPlain(HKEY("=_Citadel_Multipart_"));
 
@@ -206,8 +206,7 @@ void smtp_do_bounce(char *instr, StrBuf *OMsgTxt)
 		dsnlen = extract_token(dsn, buf, 3, '|', sizeof dsn);
 		bounce_this = 0;
 
-		SMTPC_syslog(LOG_DEBUG, "key=<%s> addr=<%s> status=%d dsn=<%s>",
-			     key, addr, status, dsn);
+		syslog(LOG_DEBUG, "key=<%s> addr=<%s> status=%d dsn=<%s>", key, addr, status, dsn);
 
 		if (!strcasecmp(key, "bounceto")) {
 			strcpy(bounceto, addr);
@@ -279,15 +278,15 @@ void smtp_do_bounce(char *instr, StrBuf *OMsgTxt)
 	CM_SetAsFieldSB(bmsg, eMesageText, &BounceMB);
 
 	/* Deliver the bounce if there's anything worth mentioning */
-	SMTPC_syslog(LOG_DEBUG, "num_bounces = %d\n", num_bounces);
+	syslog(LOG_DEBUG, "num_bounces = %d", num_bounces);
 	if (num_bounces > 0) {
 
 		/* First try the user who sent the message */
 		if (IsEmptyStr(bounceto)) {
-			SMTPCM_syslog(LOG_ERR, "No bounce address specified");
+			syslog(LOG_ERR, "No bounce address specified");
 		}
 		else {
-			SMTPC_syslog(LOG_DEBUG, "bounce to user <%s>", bounceto);
+			syslog(LOG_DEBUG, "bounce to user <%s>", bounceto);
 		}
 		/* Can we deliver the bounce to the original sender? */
 		valid = validate_recipients(bounceto,
@@ -312,5 +311,5 @@ void smtp_do_bounce(char *instr, StrBuf *OMsgTxt)
 	}
 	FreeStrBuf(&boundary);
 	CM_Free(bmsg);
-	SMTPCM_syslog(LOG_DEBUG, "Done processing bounces\n");
+	syslog(LOG_DEBUG, "Done processing bounces");
 }

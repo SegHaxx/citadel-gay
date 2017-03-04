@@ -1,7 +1,7 @@
 /*
  * Implements the message store.
  *
- * Copyright (c) 1987-2016 by the citadel.org team
+ * Copyright (c) 1987-2017 by the citadel.org team
  *
  * This program is open source software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3.
@@ -38,8 +38,6 @@ struct addresses_to_be_filed *atbf = NULL;
 /* This temp file holds the queue of operations for AdjRefCount() */
 static FILE *arcfp = NULL;
 void AdjRefCountList(long *msgnum, long nmsg, int incr);
-
-int MessageDebugEnabled = 0;
 
 /*
  * These are the four-character field headers we use when outputting
@@ -294,8 +292,7 @@ int CM_IsValidMsg(struct CtdlMessage *msg) {
 	if (msg == NULL)
 		return 0;
 	if ((msg->cm_magic) != CTDLMESSAGE_MAGIC) {
-		struct CitContext *CCC = CC;
-		MSGM_syslog(LOG_WARNING, "CM_IsValidMsg() -- self-check failed\n");
+		syslog(LOG_WARNING, "CM_IsValidMsg() -- self-check failed\n");
 		return 0;
 	}
 	return 1;
@@ -411,11 +408,10 @@ int CtdlMsgCmp(struct CtdlMessage *msg, struct CtdlMessage *template) {
  * Retrieve the "seen" message list for the current room.
  */
 void CtdlGetSeen(char *buf, int which_set) {
-	struct CitContext *CCC = CC;
 	visit vbuf;
 
 	/* Learn about the user and room in question */
-	CtdlGetRelationship(&vbuf, &CCC->user, &CCC->room);
+	CtdlGetRelationship(&vbuf, &CC->user, &CC->room);
 
 	if (which_set == ctdlsetseen_seen)
 		safestrncpy(buf, vbuf.v_seen, SIZ);
@@ -431,7 +427,6 @@ void CtdlGetSeen(char *buf, int which_set) {
 void CtdlSetSeen(long *target_msgnums, int num_target_msgnums,
 		int target_setting, int which_set,
 		struct ctdluser *which_user, struct ctdlroom *which_room) {
-	struct CitContext *CCC = CC;
 	struct cdbdata *cdbfr;
 	int i, k;
 	int is_seen = 0;
@@ -455,15 +450,15 @@ void CtdlSetSeen(long *target_msgnums, int num_target_msgnums,
 
 	/* If no room was specified, we go with the current room. */
 	if (!which_room) {
-		which_room = &CCC->room;
+		which_room = &CC->room;
 	}
 
 	/* If no user was specified, we go with the current user. */
 	if (!which_user) {
-		which_user = &CCC->user;
+		which_user = &CC->user;
 	}
 
-	MSG_syslog(LOG_DEBUG, "CtdlSetSeen(%d msgs starting with %ld, %s, %d) in <%s>\n",
+	syslog(LOG_DEBUG, "CtdlSetSeen(%d msgs starting with %ld, %s, %d) in <%s>\n",
 		   num_target_msgnums, target_msgnums[0],
 		   (target_setting ? "SET" : "CLEAR"),
 		   which_set,
@@ -500,17 +495,17 @@ void CtdlSetSeen(long *target_msgnums, int num_target_msgnums,
 
 
 #if 0	/* This is a special diagnostic section.  Do not allow it to run during normal operation. */
-	MSG_syslog(LOG_DEBUG, "There are %d messages in the room.\n", num_msgs);
+	syslog(LOG_DEBUG, "There are %d messages in the room.\n", num_msgs);
 	for (i=0; i<num_msgs; ++i) {
 		if ((i > 0) && (msglist[i] <= msglist[i-1])) abort();
 	}
-	MSG_syslog(LOG_DEBUG, "We are twiddling %d of them.\n", num_target_msgnums);
+	syslog(LOG_DEBUG, "We are twiddling %d of them.\n", num_target_msgnums);
 	for (k=0; k<num_target_msgnums; ++k) {
 		if ((k > 0) && (target_msgnums[k] <= target_msgnums[k-1])) abort();
 	}
 #endif
 
-	MSG_syslog(LOG_DEBUG, "before update: %s\n", ChrPtr(vset));
+	syslog(LOG_DEBUG, "before update: %s\n", ChrPtr(vset));
 
 	/* Translate the existing sequence set into an array of booleans */
 	setstr = NewStrBuf();
@@ -633,7 +628,7 @@ void CtdlSetSeen(long *target_msgnums, int num_target_msgnums,
 		vset = new_set;
 	}
 
-	MSG_syslog(LOG_DEBUG, " after update: %s\n", ChrPtr(vset));
+	syslog(LOG_DEBUG, " after update: %s\n", ChrPtr(vset));
 
 	/* Decide which message set we're manipulating */
 	switch (which_set) {
@@ -662,7 +657,6 @@ int CtdlForEachMessage(int mode, long ref, char *search_string,
                         ForEachMsgCallback CallBack,
 			void *userdata)
 {
-	struct CitContext *CCC = CC;
 	int a, i, j;
 	visit vbuf;
 	struct cdbdata *cdbfr;
@@ -691,13 +685,13 @@ int CtdlForEachMessage(int mode, long ref, char *search_string,
 		if (need_to_free_re) regfree(&re);
 		return -1;
 	}
-	CtdlGetUser(&CCC->user, CCC->curr_user);
+	CtdlGetUser(&CC->user, CC->curr_user);
 
 	if (server_shutting_down) {
 		if (need_to_free_re) regfree(&re);
 		return -1;
 	}
-	CtdlGetRelationship(&vbuf, &CCC->user, &CCC->room);
+	CtdlGetRelationship(&vbuf, &CC->user, &CC->room);
 
 	if (server_shutting_down) {
 		if (need_to_free_re) regfree(&re);
@@ -705,7 +699,7 @@ int CtdlForEachMessage(int mode, long ref, char *search_string,
 	}
 
 	/* Load the message list */
-	cdbfr = cdb_fetch(CDB_MSGLISTS, &CCC->room.QRnumber, sizeof(long));
+	cdbfr = cdb_fetch(CDB_MSGLISTS, &CC->room.QRnumber, sizeof(long));
 	if (cdbfr == NULL) {
 		if (need_to_free_re) regfree(&re);
 		return 0;	/* No messages at all?  No further action. */
@@ -852,7 +846,7 @@ int CtdlForEachMessage(int mode, long ref, char *search_string,
 				|| ((mode == MSGS_EQ) && (thismsg == ref))
 			    )
 			    ) {
-				if ((mode == MSGS_NEW) && (CCC->user.flags & US_LASTOLD) && (lastold > 0L) && (printed_lastold == 0) && (!is_seen)) {
+				if ((mode == MSGS_NEW) && (CC->user.flags & US_LASTOLD) && (lastold > 0L) && (printed_lastold == 0) && (!is_seen)) {
 					if (CallBack)
 						CallBack(lastold, userdata);
 					printed_lastold = 1;
@@ -867,12 +861,12 @@ int CtdlForEachMessage(int mode, long ref, char *search_string,
 	/*
 	 * We cache the most recent msglist in order to do security checks later
 	 */
-	if (CCC->client_socket > 0) {
-		if (CCC->cached_msglist != NULL) {
-			free(CCC->cached_msglist);
+	if (CC->client_socket > 0) {
+		if (CC->cached_msglist != NULL) {
+			free(CC->cached_msglist);
 		}
-		CCC->cached_msglist = msglist;
-		CCC->cached_num_msgs = num_msgs;
+		CC->cached_msglist = msglist;
+		CC->cached_num_msgs = num_msgs;
 	}
 	else {
 		free(msglist);
@@ -894,7 +888,6 @@ void memfmout(
 	char *mptr,		/* where are we going to get our text from? */
 	const char *nl		/* string to terminate lines with */
 ) {
-	struct CitContext *CCC = CC;
 	int column = 0;
 	unsigned char ch = 0;
 	char outbuf[1024];
@@ -908,13 +901,13 @@ void memfmout(
 		if (ch == '\n') {
 			if (client_write(outbuf, len) == -1)
 			{
-				MSGM_syslog(LOG_ERR, "memfmout(): aborting due to write failure.\n");
+				syslog(LOG_ERR, "memfmout(): aborting due to write failure.\n");
 				return;
 			}
 			len = 0;
 			if (client_write(nl, nllen) == -1)
 			{
-				MSGM_syslog(LOG_ERR, "memfmout(): aborting due to write failure.\n");
+				syslog(LOG_ERR, "memfmout(): aborting due to write failure.\n");
 				return;
 			}
 			column = 0;
@@ -926,13 +919,13 @@ void memfmout(
 			if (column > 72) {		/* Beyond 72 columns, break on the next space */
 				if (client_write(outbuf, len) == -1)
 				{
-					MSGM_syslog(LOG_ERR, "memfmout(): aborting due to write failure.\n");
+					syslog(LOG_ERR, "memfmout(): aborting due to write failure.\n");
 					return;
 				}
 				len = 0;
 				if (client_write(nl, nllen) == -1)
 				{
-					MSGM_syslog(LOG_ERR, "memfmout(): aborting due to write failure.\n");
+					syslog(LOG_ERR, "memfmout(): aborting due to write failure.\n");
 					return;
 				}
 				column = 0;
@@ -948,13 +941,13 @@ void memfmout(
 			if (column > 1000) {		/* Beyond 1000 columns, break anywhere */
 				if (client_write(outbuf, len) == -1)
 				{
-					MSGM_syslog(LOG_ERR, "memfmout(): aborting due to write failure.\n");
+					syslog(LOG_ERR, "memfmout(): aborting due to write failure.\n");
 					return;
 				}
 				len = 0;
 				if (client_write(nl, nllen) == -1)
 				{
-					MSGM_syslog(LOG_ERR, "memfmout(): aborting due to write failure.\n");
+					syslog(LOG_ERR, "memfmout(): aborting due to write failure.\n");
 					return;
 				}
 				column = 0;
@@ -964,7 +957,7 @@ void memfmout(
 	if (len) {
 		if (client_write(outbuf, len) == -1)
 		{
-			MSGM_syslog(LOG_ERR, "memfmout(): aborting due to write failure.\n");
+			syslog(LOG_ERR, "memfmout(): aborting due to write failure.\n");
 			return;
 		}
 		client_write(nl, nllen);
@@ -1045,37 +1038,36 @@ void mime_download(char *name, char *filename, char *partnum, char *disp,
 		   char *encoding, char *cbid, void *cbuserdata)
 {
 	int rv = 0;
-	CitContext *CCC = MyContext();
 
 	/* Silently go away if there's already a download open. */
-	if (CCC->download_fp != NULL)
+	if (CC->download_fp != NULL)
 		return;
 
 	if (
-		(!IsEmptyStr(partnum) && (!strcasecmp(CCC->download_desired_section, partnum)))
-	||	(!IsEmptyStr(cbid) && (!strcasecmp(CCC->download_desired_section, cbid)))
+		(!IsEmptyStr(partnum) && (!strcasecmp(CC->download_desired_section, partnum)))
+	||	(!IsEmptyStr(cbid) && (!strcasecmp(CC->download_desired_section, cbid)))
 	) {
-		CCC->download_fp = tmpfile();
-		if (CCC->download_fp == NULL) {
-			MSG_syslog(LOG_EMERG, "mime_download(): Couldn't write: %s\n",
+		CC->download_fp = tmpfile();
+		if (CC->download_fp == NULL) {
+			syslog(LOG_EMERG, "mime_download(): Couldn't write: %s\n",
 				    strerror(errno));
 			cprintf("%d cannot open temporary file: %s\n",
 				ERROR + INTERNAL_ERROR, strerror(errno));
 			return;
 		}
 	
-		rv = fwrite(content, length, 1, CCC->download_fp);
+		rv = fwrite(content, length, 1, CC->download_fp);
 		if (rv <= 0) {
-			MSG_syslog(LOG_EMERG, "mime_download(): Couldn't write: %s\n",
+			syslog(LOG_EMERG, "mime_download(): Couldn't write: %s\n",
 				   strerror(errno));
 			cprintf("%d unable to write tempfile.\n",
 				ERROR + TOO_BIG);
-			fclose(CCC->download_fp);
-			CCC->download_fp = NULL;
+			fclose(CC->download_fp);
+			CC->download_fp = NULL;
 			return;
 		}
-		fflush(CCC->download_fp);
-		rewind(CCC->download_fp);
+		fflush(CC->download_fp);
+		rewind(CC->download_fp);
 	
 		OpenCmdResult(filename, cbtype);
 	}
@@ -1111,7 +1103,6 @@ void mime_spew_section(char *name, char *filename, char *partnum, char *disp,
 
 struct CtdlMessage *CtdlDeserializeMessage(long msgnum, int with_body, const char *Buffer, long Length)
 {
-	struct CitContext *CCC = CC;
 	struct CtdlMessage *ret = NULL;
 	const char *mptr;
 	const char *upper_bound;
@@ -1129,7 +1120,7 @@ struct CtdlMessage *CtdlDeserializeMessage(long msgnum, int with_body, const cha
 	 */
 	ch = *mptr++;
 	if (ch != 255) {
-		MSG_syslog(LOG_ERR, "Message %ld appears to be corrupted.\n", msgnum);
+		syslog(LOG_ERR, "Message %ld appears to be corrupted.\n", msgnum);
 		return NULL;
 	}
 	ret = (struct CtdlMessage *) malloc(sizeof(struct CtdlMessage));
@@ -1181,20 +1172,19 @@ struct CtdlMessage *CtdlDeserializeMessage(long msgnum, int with_body, const cha
  */
 struct CtdlMessage *CtdlFetchMessage(long msgnum, int with_body, int run_msg_hooks)
 {
-	struct CitContext *CCC = CC;
 	struct cdbdata *dmsgtext;
 	struct CtdlMessage *ret = NULL;
 
-	MSG_syslog(LOG_DEBUG, "CtdlFetchMessage(%ld, %d)\n", msgnum, with_body);
+	syslog(LOG_DEBUG, "CtdlFetchMessage(%ld, %d)\n", msgnum, with_body);
 	dmsgtext = cdb_fetch(CDB_MSGMAIN, &msgnum, sizeof(long));
 	if (dmsgtext == NULL) {
-		MSG_syslog(LOG_ERR, "CtdlFetchMessage(%ld, %d) Failed!\n", msgnum, with_body);
+		syslog(LOG_ERR, "CtdlFetchMessage(%ld, %d) Failed!\n", msgnum, with_body);
 		return NULL;
 	}
 
 	if (dmsgtext->ptr[dmsgtext->len - 1] != '\0')
 	{
-		MSG_syslog(LOG_ERR, "CtdlFetchMessage(%ld, %d) Forcefully terminating message!!\n", msgnum, with_body);
+		syslog(LOG_ERR, "CtdlFetchMessage(%ld, %d) Forcefully terminating message!!\n", msgnum, with_body);
 		dmsgtext->ptr[dmsgtext->len - 1] = '\0';
 	}
 
@@ -1247,11 +1237,10 @@ void fixed_output_pre(char *name, char *filename, char *partnum, char *disp,
 	  	void *content, char *cbtype, char *cbcharset, size_t length, char *encoding,
 		char *cbid, void *cbuserdata)
 {
-	struct CitContext *CCC = CC;
 	struct ma_info *ma;
 	
 	ma = (struct ma_info *)cbuserdata;
-	MSG_syslog(LOG_DEBUG, "fixed_output_pre() type=<%s>\n", cbtype);	
+	syslog(LOG_DEBUG, "fixed_output_pre() type=<%s>\n", cbtype);	
 	if (!strcasecmp(cbtype, "multipart/alternative")) {
 		++ma->is_ma;
 		ma->did_print = 0;
@@ -1268,11 +1257,10 @@ void fixed_output_post(char *name, char *filename, char *partnum, char *disp,
 	  	void *content, char *cbtype, char *cbcharset, size_t length,
 		char *encoding, char *cbid, void *cbuserdata)
 {
-	struct CitContext *CCC = CC;
 	struct ma_info *ma;
 	
 	ma = (struct ma_info *)cbuserdata;
-	MSG_syslog(LOG_DEBUG, "fixed_output_post() type=<%s>\n", cbtype);	
+	syslog(LOG_DEBUG, "fixed_output_post() type=<%s>\n", cbtype);	
 	if (!strcasecmp(cbtype, "multipart/alternative")) {
 		--ma->is_ma;
 		ma->did_print = 0;
@@ -1289,7 +1277,6 @@ void fixed_output(char *name, char *filename, char *partnum, char *disp,
 	  	void *content, char *cbtype, char *cbcharset, size_t length,
 		char *encoding, char *cbid, void *cbuserdata)
 {
-	struct CitContext *CCC = CC;
 	char *ptr;
 	char *wptr;
 	size_t wlen;
@@ -1297,7 +1284,7 @@ void fixed_output(char *name, char *filename, char *partnum, char *disp,
 
 	ma = (struct ma_info *)cbuserdata;
 
-	MSG_syslog(LOG_DEBUG,
+	syslog(LOG_DEBUG,
 		"fixed_output() part %s: %s (%s) (%ld bytes)\n",
 		partnum, filename, cbtype, (long)length);
 
@@ -1306,7 +1293,7 @@ void fixed_output(char *name, char *filename, char *partnum, char *disp,
 	 * we've already printed another section, skip this one.
 	 */	
    	if ( (ma->is_ma) && (ma->did_print) ) {
-		MSG_syslog(LOG_DEBUG, "Skipping part %s (%s)\n", partnum, cbtype);
+		syslog(LOG_DEBUG, "Skipping part %s (%s)\n", partnum, cbtype);
 		return;
 	}
 	ma->did_print = 1;
@@ -1363,7 +1350,6 @@ void choose_preferred(char *name, char *filename, char *partnum, char *disp,
 	  	void *content, char *cbtype, char *cbcharset, size_t length,
 		char *encoding, char *cbid, void *cbuserdata)
 {
-	struct CitContext *CCC = CC;
 	char buf[1024];
 	int i;
 	struct ma_info *ma;
@@ -1375,11 +1361,11 @@ void choose_preferred(char *name, char *filename, char *partnum, char *disp,
 	// I don't know if there are any side effects!  Please TEST TEST TEST
 	//if (ma->is_ma > 0) {
 
-	for (i=0; i<num_tokens(CCC->preferred_formats, '|'); ++i) {
-		extract_token(buf, CCC->preferred_formats, i, '|', sizeof buf);
+	for (i=0; i<num_tokens(CC->preferred_formats, '|'); ++i) {
+		extract_token(buf, CC->preferred_formats, i, '|', sizeof buf);
 		if ( (!strcasecmp(buf, cbtype)) && (!ma->freeze) ) {
 			if (i < ma->chosen_pref) {
-				MSG_syslog(LOG_DEBUG, "Setting chosen part: <%s>\n", partnum);
+				syslog(LOG_DEBUG, "Setting chosen part: <%s>\n", partnum);
 				safestrncpy(ma->chosen_part, partnum, sizeof ma->chosen_part);
 				ma->chosen_pref = i;
 			}
@@ -1402,7 +1388,6 @@ void output_preferred(char *name,
 		      char *cbid, 
 		      void *cbuserdata)
 {
-	struct CitContext *CCC = CC;
 	int i;
 	char buf[128];
 	int add_newline = 0;
@@ -1420,8 +1405,8 @@ void output_preferred(char *name,
 	/* If the content-type of this part is in our preferred formats
 	 * list, we can simply output it verbatim.
 	 */
-	for (i=0; i<num_tokens(CCC->preferred_formats, '|'); ++i) {
-		extract_token(buf, CCC->preferred_formats, i, '|', sizeof buf);
+	for (i=0; i<num_tokens(CC->preferred_formats, '|'); ++i) {
+		extract_token(buf, CC->preferred_formats, i, '|', sizeof buf);
 		if (!strcasecmp(buf, cbtype)) {
 			/* Yeah!  Go!  W00t!! */
 			if (ma->dont_decode == 0) 
@@ -1458,7 +1443,7 @@ void output_preferred(char *name,
 			cprintf("\n");
 			if (client_write(text_content, length) == -1)
 			{
-				MSGM_syslog(LOG_ERR, "output_preferred(): aborting due to write failure.\n");
+				syslog(LOG_ERR, "output_preferred(): aborting due to write failure.\n");
 				return;
 			}
 			if (add_newline) cprintf("\n");
@@ -1524,13 +1509,12 @@ void extract_encapsulated_message(char *name, char *filename, char *partnum, cha
  * (This is a security check)
  */
 int check_cached_msglist(long msgnum) {
-	struct CitContext *CCC = CC;
 
 	/* cases in which we skip the check */
-	if (!CCC) return om_ok;						/* not a session */
-	if (CCC->client_socket <= 0) return om_ok;			/* not a client session */
-	if (CCC->cached_msglist == NULL) return om_access_denied;	/* no msglist fetched */
-	if (CCC->cached_num_msgs == 0) return om_access_denied;		/* nothing to check */
+	if (!CC) return om_ok;						/* not a session */
+	if (CC->client_socket <= 0) return om_ok;			/* not a client session */
+	if (CC->cached_msglist == NULL) return om_access_denied;	/* no msglist fetched */
+	if (CC->cached_num_msgs == 0) return om_access_denied;		/* nothing to check */
 
 
 	/* Do a binary search within the cached_msglist for the requested msgnum */
@@ -1539,7 +1523,7 @@ int check_cached_msglist(long msgnum) {
 
 	while (max >= min) {
 		int middle = min + (max-min) / 2 ;
-		if (msgnum == CCC->cached_msglist[middle]) {
+		if (msgnum == CC->cached_msglist[middle]) {
 			return om_ok;
 		}
 		if (msgnum > CC->cached_msglist[middle]) {
@@ -1570,13 +1554,12 @@ int CtdlOutputMsg(long msg_num,		/* message number (local) to fetch */
 		char **Address,
 		char **MessageID
 ) {
-	struct CitContext *CCC = CC;
 	struct CtdlMessage *TheMessage = NULL;
 	int retcode = CIT_OK;
 	struct encapmsg encap;
 	int r;
 
-	MSG_syslog(LOG_DEBUG, "CtdlOutputMsg(msgnum=%ld, mode=%d, section=%s)\n", 
+	syslog(LOG_DEBUG, "CtdlOutputMsg(msgnum=%ld, mode=%d, section=%s)\n", 
 		msg_num, mode,
 		(section ? section : "<>")
 	);
@@ -1604,8 +1587,8 @@ int CtdlOutputMsg(long msg_num,		/* message number (local) to fetch */
 		r = check_cached_msglist(msg_num);
 	}
 	if (r != om_ok) {
-		MSG_syslog(LOG_DEBUG, "Security check fail: message %ld is not in %s\n",
-			   msg_num, CCC->room.QRname
+		syslog(LOG_DEBUG, "Security check fail: message %ld is not in %s\n",
+			   msg_num, CC->room.QRname
 		);
 		if (do_proto) {
 			if (r == om_access_denied) {
@@ -1991,8 +1974,7 @@ void Dump_RFC822HeadersBody(
 		if (outlen > 1000) {
 			if (client_write(outbuf, outlen) == -1)
 			{
-				struct CitContext *CCC = CC;
-				MSGM_syslog(LOG_ERR, "Dump_RFC822HeadersBody(): aborting due to write failure.\n");
+				syslog(LOG_ERR, "Dump_RFC822HeadersBody(): aborting due to write failure.\n");
 				return;
 			}
 			lfSent =  (outbuf[outlen - 1] == '\n');
@@ -2065,8 +2047,7 @@ void DumpFormatFixed(
 
 			if (client_write(buf, buflen) == -1)
 			{
-				struct CitContext *CCC = CC;
-				MSGM_syslog(LOG_ERR, "DumpFormatFixed(): aborting due to write failure.\n");
+				syslog(LOG_ERR, "DumpFormatFixed(): aborting due to write failure.\n");
 				return;
 			}
 			*buf = '\0';
@@ -2093,7 +2074,6 @@ int CtdlOutputPreLoadedMsg(
 		int crlf,		/* Use CRLF newlines instead of LF? */
 		int flags		/* should the bessage be exported clean? */
 ) {
-	struct CitContext *CCC = CC;
 	int i;
 	const char *nl;	/* newline string */
 	int nlen;
@@ -2109,7 +2089,7 @@ int CtdlOutputPreLoadedMsg(
 	char snode[100];
 	char mid[100];
 
-	MSG_syslog(LOG_DEBUG, "CtdlOutputPreLoadedMsg(TheMessage=%s, %d, %d, %d, %d\n",
+	syslog(LOG_DEBUG, "CtdlOutputPreLoadedMsg(TheMessage=%s, %d, %d, %d, %d\n",
 		   ((TheMessage == NULL) ? "NULL" : "not null"),
 		   mode, headers_only, do_proto, crlf);
 
@@ -2118,7 +2098,7 @@ int CtdlOutputPreLoadedMsg(
 	nlen = crlf ? 2 : 1;
 
 	if (!CM_IsValidMsg(TheMessage)) {
-		MSGM_syslog(LOG_ERR,
+		syslog(LOG_ERR,
 			    "ERROR: invalid preloaded message for output\n");
 		cit_backtrace ();
 	 	return(om_no_such_msg);
@@ -2137,7 +2117,7 @@ int CtdlOutputPreLoadedMsg(
 			if (do_proto)
 				cprintf("%d This is not a MIME message.\n",
 				ERROR + ILLEGAL_VALUE);
-		} else if (CCC->download_fp != NULL) {
+		} else if (CC->download_fp != NULL) {
 			if (do_proto) cprintf(
 				"%d You already have a download open.\n",
 				ERROR + RESOURCE_BUSY);
@@ -2148,14 +2128,14 @@ int CtdlOutputPreLoadedMsg(
 			/* If there's no file open by this time, the requested
 			 * section wasn't found, so print an error
 			 */
-			if (CCC->download_fp == NULL) {
+			if (CC->download_fp == NULL) {
 				if (do_proto) cprintf(
 					"%d Section %s not found.\n",
 					ERROR + FILE_NOT_FOUND,
-					CCC->download_desired_section);
+					CC->download_desired_section);
 			}
 		}
-		return((CCC->download_fp != NULL) ? om_ok : om_mime_error);
+		return((CC->download_fp != NULL) ? om_ok : om_mime_error);
 	}
 
 	/* MT_SPEW_SECTION is like MT_DOWNLOAD except it outputs the whole MIME part
@@ -2178,10 +2158,10 @@ int CtdlOutputPreLoadedMsg(
 				if (do_proto) cprintf(
 					"%d Section %s not found.\n",
 					ERROR + FILE_NOT_FOUND,
-					CCC->download_desired_section);
+					CC->download_desired_section);
 			}
 		}
-		return((CCC->download_fp != NULL) ? om_ok : om_mime_error);
+		return((CC->download_fp != NULL) ? om_ok : om_mime_error);
 	}
 
 	/* now for the user-mode message reading loops */
@@ -2326,7 +2306,7 @@ START_TEXT:
 			ma.use_fo_hooks = 0;
 			strcpy(ma.chosen_part, "1");
 			ma.chosen_pref = 9999;
-			ma.dont_decode = CCC->msg4_dont_decode;
+			ma.dont_decode = CC->msg4_dont_decode;
 			mime_parser(CM_RANGE(TheMessage, eMesageText),
 				    *choose_preferred, *fixed_output_pre,
 				    *fixed_output_post, (void *)&ma, 1);
@@ -2361,7 +2341,6 @@ DONE:	/* now we're done */
 int CtdlSaveMsgPointersInRoom(char *roomname, long newmsgidlist[], int num_newmsgs,
 			int do_repl_check, struct CtdlMessage *supplied_msg, int suppress_refcount_adj
 ) {
-	struct CitContext *CCC = CC;
 	int i, j, unique;
 	char hold_rm[ROOMNAMELEN];
 	struct cdbdata *cdbfr;
@@ -2375,12 +2354,12 @@ int CtdlSaveMsgPointersInRoom(char *roomname, long newmsgidlist[], int num_newms
 	long *msgs_to_be_merged = NULL;
 	int num_msgs_to_be_merged = 0;
 
-	MSG_syslog(LOG_DEBUG,
+	syslog(LOG_DEBUG,
 		   "CtdlSaveMsgPointersInRoom(room=%s, num_msgs=%d, repl=%d, suppress_rca=%d)\n",
 		   roomname, num_newmsgs, do_repl_check, suppress_refcount_adj
 	);
 
-	strcpy(hold_rm, CCC->room.QRname);
+	strcpy(hold_rm, CC->room.QRname);
 
 	/* Sanity checks */
 	if (newmsgidlist == NULL) return(ERROR + INTERNAL_ERROR);
@@ -2388,10 +2367,10 @@ int CtdlSaveMsgPointersInRoom(char *roomname, long newmsgidlist[], int num_newms
 	if (num_newmsgs > 1) supplied_msg = NULL;
 
 	/* Now the regular stuff */
-	if (CtdlGetRoomLock(&CCC->room,
-	   ((roomname != NULL) ? roomname : CCC->room.QRname) )
+	if (CtdlGetRoomLock(&CC->room,
+	   ((roomname != NULL) ? roomname : CC->room.QRname) )
 	   != 0) {
-		MSG_syslog(LOG_ERR, "No such room <%s>\n", roomname);
+		syslog(LOG_ERR, "No such room <%s>\n", roomname);
 		return(ERROR + ROOM_NOT_FOUND);
 	}
 
@@ -2400,7 +2379,7 @@ int CtdlSaveMsgPointersInRoom(char *roomname, long newmsgidlist[], int num_newms
 	num_msgs_to_be_merged = 0;
 
 
-	cdbfr = cdb_fetch(CDB_MSGLISTS, &CCC->room.QRnumber, sizeof(long));
+	cdbfr = cdb_fetch(CDB_MSGLISTS, &CC->room.QRnumber, sizeof(long));
 	if (cdbfr == NULL) {
 		msglist = NULL;
 		num_msgs = 0;
@@ -2428,14 +2407,14 @@ int CtdlSaveMsgPointersInRoom(char *roomname, long newmsgidlist[], int num_newms
 		}
 	}
 
-	MSG_syslog(LOG_DEBUG, "%d unique messages to be merged\n", num_msgs_to_be_merged);
+	syslog(LOG_DEBUG, "%d unique messages to be merged\n", num_msgs_to_be_merged);
 
 	/*
 	 * Now merge the new messages
 	 */
 	msglist = realloc(msglist, (sizeof(long) * (num_msgs + num_msgs_to_be_merged)) );
 	if (msglist == NULL) {
-		MSGM_syslog(LOG_ALERT, "ERROR: can't realloc message list!\n");
+		syslog(LOG_ALERT, "ERROR: can't realloc message list!\n");
 		free(msgs_to_be_merged);
 		return (ERROR + INTERNAL_ERROR);
 	}
@@ -2449,19 +2428,19 @@ int CtdlSaveMsgPointersInRoom(char *roomname, long newmsgidlist[], int num_newms
 	highest_msg = msglist[num_msgs - 1];
 
 	/* Write it back to disk. */
-	cdb_store(CDB_MSGLISTS, &CCC->room.QRnumber, (int)sizeof(long),
+	cdb_store(CDB_MSGLISTS, &CC->room.QRnumber, (int)sizeof(long),
 		  msglist, (int)(num_msgs * sizeof(long)));
 
 	/* Free up the memory we used. */
 	free(msglist);
 
 	/* Update the highest-message pointer and unlock the room. */
-	CCC->room.QRhighest = highest_msg;
-	CtdlPutRoomLock(&CCC->room);
+	CC->room.QRhighest = highest_msg;
+	CtdlPutRoomLock(&CC->room);
 
 	/* Perform replication checks if necessary */
-	if ( (DoesThisRoomNeedEuidIndexing(&CCC->room)) && (do_repl_check) ) {
-		MSGM_syslog(LOG_DEBUG, "CtdlSaveMsgPointerInRoom() doing repl checks\n");
+	if ( (DoesThisRoomNeedEuidIndexing(&CC->room)) && (do_repl_check) ) {
+		syslog(LOG_DEBUG, "CtdlSaveMsgPointerInRoom() doing repl checks\n");
 
 		for (i=0; i<num_msgs_to_be_merged; ++i) {
 			msgid = msgs_to_be_merged[i];
@@ -2478,7 +2457,7 @@ int CtdlSaveMsgPointersInRoom(char *roomname, long newmsgidlist[], int num_newms
 		
 				/* If the message has an Exclusive ID, index that... */
 				if (!CM_IsEmpty(msg, eExclusiveID)) {
-					index_message_by_euid(msg->cm_fields[eExclusiveID], &CCC->room, msgid);
+					index_message_by_euid(msg->cm_fields[eExclusiveID], &CC->room, msgid);
 				}
 
 				/* Free up the memory we may have allocated */
@@ -2491,14 +2470,14 @@ int CtdlSaveMsgPointersInRoom(char *roomname, long newmsgidlist[], int num_newms
 	}
 
 	else {
-		MSGM_syslog(LOG_DEBUG, "CtdlSaveMsgPointerInRoom() skips repl checks\n");
+		syslog(LOG_DEBUG, "CtdlSaveMsgPointerInRoom() skips repl checks\n");
 	}
 
 	/* Submit this room for processing by hooks */
-	PerformRoomHooks(&CCC->room);
+	PerformRoomHooks(&CC->room);
 
 	/* Go back to the room we were in before we wandered here... */
-	CtdlGetRoom(&CCC->room, hold_rm);
+	CtdlGetRoom(&CC->room, hold_rm);
 
 	/* Bump the reference count for all messages which were merged */
 	if (!suppress_refcount_adj) {
@@ -2537,7 +2516,6 @@ int CtdlSaveMsgPointerInRoom(char *roomname, long msgid,
  *
  */
 long CtdlSaveThisMessage(struct CtdlMessage *msg, long msgid, int Reply) {
-	struct CitContext *CCC = CC;
 	long retval;
 	struct ser_ret smr;
 	int is_bigmsg = 0;
@@ -2572,7 +2550,7 @@ long CtdlSaveThisMessage(struct CtdlMessage *msg, long msgid, int Reply) {
 				ERROR + INTERNAL_ERROR);
 		}
 		else {
-			MSGM_syslog(LOG_ERR, "CtdlSaveMessage() unable to serialize message");
+			syslog(LOG_ERR, "CtdlSaveMessage() unable to serialize message");
 
 		}
 		return (-1L);
@@ -2582,7 +2560,7 @@ long CtdlSaveThisMessage(struct CtdlMessage *msg, long msgid, int Reply) {
 	retval = cdb_store(CDB_MSGMAIN, &msgid, (int)sizeof(long),
 			   smr.ser, smr.len);
 	if (retval < 0) {
-		MSG_syslog(LOG_ERR, "Can't store message %ld: %ld", msgid, retval);
+		syslog(LOG_ERR, "Can't store message %ld: %ld", msgid, retval);
 	}
 	else {
 		if (is_bigmsg) {
@@ -2593,7 +2571,7 @@ long CtdlSaveThisMessage(struct CtdlMessage *msg, long msgid, int Reply) {
 					   (holdMLen + 1)
 				);
 			if (retval < 0) {
-				MSG_syslog(LOG_ERR, "failed to store message body for msgid %ld:  %ld",
+				syslog(LOG_ERR, "failed to store message body for msgid %ld:  %ld",
 					   msgid, retval);
 			}
 		}
@@ -2649,7 +2627,6 @@ long send_message(struct CtdlMessage *msg) {
 void CtdlSerializeMessage(struct ser_ret *ret,		/* return values */
 			  struct CtdlMessage *msg)	/* unserialized msg */
 {
-	struct CitContext *CCC = CC;
 	size_t wlen;
 	int i;
 
@@ -2657,7 +2634,7 @@ void CtdlSerializeMessage(struct ser_ret *ret,		/* return values */
 	 * Check for valid message format
 	 */
 	if (CM_IsValidMsg(msg) == 0) {
-		MSGM_syslog(LOG_ERR, "CtdlSerializeMessage() aborting due to invalid message\n");
+		syslog(LOG_ERR, "CtdlSerializeMessage() aborting due to invalid message\n");
 		ret->len = 0;
 		ret->ser = NULL;
 		return;
@@ -2670,7 +2647,7 @@ void CtdlSerializeMessage(struct ser_ret *ret,		/* return values */
 
 	ret->ser = malloc(ret->len);
 	if (ret->ser == NULL) {
-		MSG_syslog(LOG_ERR, "CtdlSerializeMessage() malloc(%ld) failed: %s\n",
+		syslog(LOG_ERR, "CtdlSerializeMessage() malloc(%ld) failed: %s\n",
 			   (long)ret->len, strerror(errno));
 		ret->len = 0;
 		ret->ser = NULL;
@@ -2695,7 +2672,7 @@ void CtdlSerializeMessage(struct ser_ret *ret,		/* return values */
 		}
 
 	if (ret->len != wlen) {
-		MSG_syslog(LOG_ERR, "ERROR: len=%ld wlen=%ld\n",
+		syslog(LOG_ERR, "ERROR: len=%ld wlen=%ld\n",
 			   (long)ret->len, (long)wlen);
 	}
 
@@ -2708,25 +2685,24 @@ void CtdlSerializeMessage(struct ser_ret *ret,		/* return values */
  * carry the same Exclusive ID as this one.  If any are found, delete them.
  */
 void ReplicationChecks(struct CtdlMessage *msg) {
-	struct CitContext *CCC = CC;
 	long old_msgnum = (-1L);
 
-	if (DoesThisRoomNeedEuidIndexing(&CCC->room) == 0) return;
+	if (DoesThisRoomNeedEuidIndexing(&CC->room) == 0) return;
 
-	MSG_syslog(LOG_DEBUG, "Performing replication checks in <%s>\n",
-		   CCC->room.QRname);
+	syslog(LOG_DEBUG, "Performing replication checks in <%s>\n",
+		   CC->room.QRname);
 
 	/* No exclusive id?  Don't do anything. */
 	if (msg == NULL) return;
 	if (CM_IsEmpty(msg, eExclusiveID)) return;
 
-	/*MSG_syslog(LOG_DEBUG, "Exclusive ID: <%s> for room <%s>\n",
-	  msg->cm_fields[eExclusiveID], CCC->room.QRname);*/
+	/*syslog(LOG_DEBUG, "Exclusive ID: <%s> for room <%s>\n",
+	  msg->cm_fields[eExclusiveID], CC->room.QRname);*/
 
-	old_msgnum = CtdlLocateMessageByEuid(msg->cm_fields[eExclusiveID], &CCC->room);
+	old_msgnum = CtdlLocateMessageByEuid(msg->cm_fields[eExclusiveID], &CC->room);
 	if (old_msgnum > 0L) {
-		MSG_syslog(LOG_DEBUG, "ReplicationChecks() replacing message %ld\n", old_msgnum);
-		CtdlDeleteMessages(CCC->room.QRname, &old_msgnum, 1, "");
+		syslog(LOG_DEBUG, "ReplicationChecks() replacing message %ld\n", old_msgnum);
+		CtdlDeleteMessages(CC->room.QRname, &old_msgnum, 1, "");
 	}
 }
 
@@ -2757,9 +2733,8 @@ long CtdlSubmitMsg(struct CtdlMessage *msg,	/* message to save */
 	struct addresses_to_be_filed *aptr = NULL;
 	StrBuf *saved_rfc822_version = NULL;
 	int qualified_for_journaling = 0;
-	CitContext *CCC = MyContext();
 
-	MSGM_syslog(LOG_DEBUG, "CtdlSubmitMsg() called\n");
+	syslog(LOG_DEBUG, "CtdlSubmitMsg() called\n");
 	if (CM_IsValidMsg(msg) == 0) return(-1);	/* self check */
 
 	/* If this message has no timestamp, we take the liberty of
@@ -2794,7 +2769,7 @@ long CtdlSubmitMsg(struct CtdlMessage *msg,	/* message to save */
 
 	/* Learn about what's inside, because it's what's inside that counts */
 	if (CM_IsEmpty(msg, eMesageText)) {
-		MSGM_syslog(LOG_ERR, "ERROR: attempt to save message with NULL body\n");
+		syslog(LOG_ERR, "ERROR: attempt to save message with NULL body\n");
 		return(-2);
 	}
 
@@ -2826,20 +2801,20 @@ long CtdlSubmitMsg(struct CtdlMessage *msg,	/* message to save */
 	}
 
 	/* Goto the correct room */
-	room = (recps) ? CCC->room.QRname : SENTITEMS;
-	MSG_syslog(LOG_DEBUG, "Selected room %s\n", room);
-	strcpy(hold_rm, CCC->room.QRname);
-	strcpy(actual_rm, CCC->room.QRname);
+	room = (recps) ? CC->room.QRname : SENTITEMS;
+	syslog(LOG_DEBUG, "Selected room %s\n", room);
+	strcpy(hold_rm, CC->room.QRname);
+	strcpy(actual_rm, CC->room.QRname);
 	if (recps != NULL) {
 		strcpy(actual_rm, SENTITEMS);
 	}
 
 	/* If the user is a twit, move to the twit room for posting */
 	if (TWITDETECT) {
-		if (CCC->user.axlevel == AxProbU) {
+		if (CC->user.axlevel == AxProbU) {
 			strcpy(hold_rm, actual_rm);
 			strcpy(actual_rm, CtdlGetConfigStr("c_twitroom"));
-			MSGM_syslog(LOG_DEBUG, "Diverting to twit room\n");
+			syslog(LOG_DEBUG, "Diverting to twit room\n");
 		}
 	}
 
@@ -2848,33 +2823,33 @@ long CtdlSubmitMsg(struct CtdlMessage *msg,	/* message to save */
 		strcpy(actual_rm, force_room);
 	}
 
-	MSG_syslog(LOG_DEBUG, "Final selection: %s (%s)\n", actual_rm, room);
-	if (strcasecmp(actual_rm, CCC->room.QRname)) {
-		/* CtdlGetRoom(&CCC->room, actual_rm); */
+	syslog(LOG_DEBUG, "Final selection: %s (%s)\n", actual_rm, room);
+	if (strcasecmp(actual_rm, CC->room.QRname)) {
+		/* CtdlGetRoom(&CC->room, actual_rm); */
 		CtdlUserGoto(actual_rm, 0, 1, NULL, NULL, NULL, NULL);
 	}
 
 	/*
 	 * If this message has no O (room) field, generate one.
 	 */
-	if (CM_IsEmpty(msg, eOriginalRoom) && !IsEmptyStr(CCC->room.QRname)) {
-		CM_SetField(msg, eOriginalRoom, CCC->room.QRname, strlen(CCC->room.QRname));
+	if (CM_IsEmpty(msg, eOriginalRoom) && !IsEmptyStr(CC->room.QRname)) {
+		CM_SetField(msg, eOriginalRoom, CC->room.QRname, strlen(CC->room.QRname));
 	}
 
 	/* Perform "before save" hooks (aborting if any return nonzero) */
-	MSGM_syslog(LOG_DEBUG, "Performing before-save hooks\n");
+	syslog(LOG_DEBUG, "Performing before-save hooks\n");
 	if (PerformMessageHooks(msg, recps, EVT_BEFORESAVE) > 0) return(-3);
 
 	/*
 	 * If this message has an Exclusive ID, and the room is replication
 	 * checking enabled, then do replication checks.
 	 */
-	if (DoesThisRoomNeedEuidIndexing(&CCC->room)) {
+	if (DoesThisRoomNeedEuidIndexing(&CC->room)) {
 		ReplicationChecks(msg);
 	}
 
 	/* Save it to disk */
-	MSGM_syslog(LOG_DEBUG, "Saving to disk\n");
+	syslog(LOG_DEBUG, "Saving to disk\n");
 	newmsgid = send_message(msg);
 	if (newmsgid <= 0L) return(-5);
 
@@ -2882,7 +2857,7 @@ long CtdlSubmitMsg(struct CtdlMessage *msg,	/* message to save */
 	 * be a critical section because nobody else knows about this message
 	 * yet.
 	 */
-	MSGM_syslog(LOG_DEBUG, "Creating MetaData record\n");
+	syslog(LOG_DEBUG, "Creating MetaData record\n");
 	memset(&smi, 0, sizeof(struct MetaData));
 	smi.meta_msgnum = newmsgid;
 	smi.meta_refcount = 0;
@@ -2899,28 +2874,28 @@ long CtdlSubmitMsg(struct CtdlMessage *msg,	/* message to save */
 	 * 2. If journaling is enabled, we will need an RFC822 version of the
 	 *    message to attach to the journalized copy.
 	 */
-	if (CCC->redirect_buffer != NULL) {
-		MSGM_syslog(LOG_ALERT, "CCC->redirect_buffer is not NULL during message submission!\n");
+	if (CC->redirect_buffer != NULL) {
+		syslog(LOG_ALERT, "CC->redirect_buffer is not NULL during message submission!\n");
 		abort();
 	}
-	CCC->redirect_buffer = NewStrBufPlain(NULL, SIZ);
+	CC->redirect_buffer = NewStrBufPlain(NULL, SIZ);
 	CtdlOutputPreLoadedMsg(msg, MT_RFC822, HEADERS_ALL, 0, 1, QP_EADDR);
-	smi.meta_rfc822_length = StrLength(CCC->redirect_buffer);
-	saved_rfc822_version = CCC->redirect_buffer;
-	CCC->redirect_buffer = NULL;
+	smi.meta_rfc822_length = StrLength(CC->redirect_buffer);
+	saved_rfc822_version = CC->redirect_buffer;
+	CC->redirect_buffer = NULL;
 
 	PutMetaData(&smi);
 
 	/* Now figure out where to store the pointers */
-	MSGM_syslog(LOG_DEBUG, "Storing pointers\n");
+	syslog(LOG_DEBUG, "Storing pointers\n");
 
 	/* If this is being done by the networker delivering a private
 	 * message, we want to BYPASS saving the sender's copy (because there
 	 * is no local sender; it would otherwise go to the Trashcan).
 	 */
-	if ((!CCC->internal_pgm) || (recps == NULL)) {
+	if ((!CC->internal_pgm) || (recps == NULL)) {
 		if (CtdlSaveMsgPointerInRoom(actual_rm, newmsgid, 1, msg) != 0) {
-			MSGM_syslog(LOG_ERR, "ERROR saving message pointer!\n");
+			syslog(LOG_ERR, "ERROR saving message pointer!\n");
 			CtdlSaveMsgPointerInRoom(CtdlGetConfigStr("c_aideroom"), newmsgid, 0, msg);
 		}
 	}
@@ -2935,22 +2910,22 @@ long CtdlSubmitMsg(struct CtdlMessage *msg,	/* message to save */
 		for (i=0; i<num_tokens(recps->recp_room, '|'); ++i) {
 			extract_token(recipient, recps->recp_room, i,
 				      '|', sizeof recipient);
-			MSG_syslog(LOG_DEBUG, "Delivering to room <%s>\n", recipient);///// xxxx
+			syslog(LOG_DEBUG, "Delivering to room <%s>\n", recipient);///// xxxx
 			CtdlSaveMsgPointerInRoom(recipient, newmsgid, 0, msg);
 		}
 
 	/* Bump this user's messages posted counter. */
-	MSGM_syslog(LOG_DEBUG, "Updating user\n");
+	syslog(LOG_DEBUG, "Updating user\n");
 	CtdlLockGetCurrentUser();
-	CCC->user.posted = CCC->user.posted + 1;
+	CC->user.posted = CC->user.posted + 1;
 	CtdlPutCurrentUserLock();
 
 	/* Decide where bounces need to be delivered */
 	if ((recps != NULL) && (recps->bounce_to == NULL))
 	{
-		if (CCC->logged_in) 
+		if (CC->logged_in) 
 			snprintf(bounce_to, sizeof bounce_to, "%s@%s",
-				 CCC->user.fullname, CtdlGetConfigStr("c_nodename"));
+				 CC->user.fullname, CtdlGetConfigStr("c_nodename"));
 		else 
 			snprintf(bounce_to, sizeof bounce_to, "%s@%s",
 				 msg->cm_fields[eAuthor], msg->cm_fields[eNodeName]);
@@ -2974,7 +2949,7 @@ long CtdlSubmitMsg(struct CtdlMessage *msg,	/* message to save */
 		for (i=0; i<ntokens; ++i)
 		{
 			extract_token(recipient, pch, i, '|', sizeof recipient);
-			MSG_syslog(LOG_DEBUG, "Delivering private local mail to <%s>\n", recipient);
+			syslog(LOG_DEBUG, "Delivering private local mail to <%s>\n", recipient);
 			if (CtdlGetUser(&userbuf, recipient) == 0) {
 				CtdlMailboxName(actual_rm, sizeof actual_rm, &userbuf, MAILROOM);
 				CtdlSaveMsgPointerInRoom(actual_rm, newmsgid, 0, msg);
@@ -2982,7 +2957,7 @@ long CtdlSubmitMsg(struct CtdlMessage *msg,	/* message to save */
 				PerformMessageHooks(msg, recps, EVT_AFTERUSRMBOXSAVE);
 			}
 			else {
-				MSG_syslog(LOG_DEBUG, "No user <%s>\n", recipient);
+				syslog(LOG_DEBUG, "No user <%s>\n", recipient);
 				CtdlSaveMsgPointerInRoom(CtdlGetConfigStr("c_aideroom"), newmsgid, 0, msg);
 			}
 		}
@@ -2990,20 +2965,20 @@ long CtdlSubmitMsg(struct CtdlMessage *msg,	/* message to save */
 	}
 
 	/* Perform "after save" hooks */
-	MSGM_syslog(LOG_DEBUG, "Performing after-save hooks\n");
+	syslog(LOG_DEBUG, "Performing after-save hooks\n");
 
 	PerformMessageHooks(msg, recps, EVT_AFTERSAVE);
 	CM_FlushField(msg, eVltMsgNum);
 
 	/* Go back to the room we started from */
-	MSG_syslog(LOG_DEBUG, "Returning to original room %s\n", hold_rm);
-	if (strcasecmp(hold_rm, CCC->room.QRname))
+	syslog(LOG_DEBUG, "Returning to original room %s\n", hold_rm);
+	if (strcasecmp(hold_rm, CC->room.QRname))
 		CtdlUserGoto(hold_rm, 0, 1, NULL, NULL, NULL, NULL);
 
 	/*
 	 * Any addresses to harvest for someone's address book?
 	 */
-	if ( (CCC->logged_in) && (recps != NULL) ) {
+	if ( (CC->logged_in) && (recps != NULL) ) {
 		collected_addresses = harvest_collected_addresses(msg);
 	}
 
@@ -3011,7 +2986,7 @@ long CtdlSubmitMsg(struct CtdlMessage *msg,	/* message to save */
 		aptr = (struct addresses_to_be_filed *)
 			malloc(sizeof(struct addresses_to_be_filed));
 		CtdlMailboxName(actual_rm, sizeof actual_rm,
-				&CCC->user, USERCONTACTSROOM);
+				&CC->user, USERCONTACTSROOM);
 		aptr->roomname = strdup(actual_rm);
 		aptr->collected_addresses = collected_addresses;
 		begin_critical_section(S_ATBF);
@@ -3130,7 +3105,6 @@ void flood_protect_quickie_message(const char *from,
 				   long ioid,
 				   time_t NOW)
 {
-	struct CitContext *CCC = CC;
 	int i;
 	u_char rawdigest[MD5_DIGEST_LEN];
 	struct MD5Context md5context;
@@ -3168,13 +3142,13 @@ void flood_protect_quickie_message(const char *from,
 	{
 		FreeStrBuf(&guid);
 		/* yes, we did. flood protection kicks in. */
-		MSG_syslog(LOG_DEBUG,
+		syslog(LOG_DEBUG,
 			   "not sending message again - %ld < %ld \n", seenstamp, tsday);
 		return;
 	}
 	else
 	{
-		MSG_syslog(LOG_DEBUG,
+		syslog(LOG_DEBUG,
 			   "sending message. %ld >= %ld", seenstamp, tsday);
 		FreeStrBuf(&guid);
 		/* no, this message isn't sent recently; go ahead. */
@@ -3528,7 +3502,6 @@ struct CtdlMessage *CtdlMakeMessageLen(
 	long reflen
 	)
 {
-	struct CitContext *CCC = CC;
 	/* Don't confuse the poor folks if it's not routed mail. * /
 	   char dest_node[256] = "";*/
 	long blen;
@@ -3568,12 +3541,12 @@ struct CtdlMessage *CtdlMakeMessageLen(
 	CM_SetAsFieldSB(msg, eAuthor, &FakeEncAuthor);
 	FreeStrBuf(&FakeAuthor);
 
-	if (!!IsEmptyStr(CCC->room.QRname)) {
-		if (CCC->room.QRflags & QR_MAILBOX) {		/* room */
-			CM_SetField(msg, eOriginalRoom, &CCC->room.QRname[11], strlen(&CCC->room.QRname[11]));
+	if (!!IsEmptyStr(CC->room.QRname)) {
+		if (CC->room.QRflags & QR_MAILBOX) {		/* room */
+			CM_SetField(msg, eOriginalRoom, &CC->room.QRname[11], strlen(&CC->room.QRname[11]));
 		}
 		else {
-			CM_SetField(msg, eOriginalRoom, CCC->room.QRname, strlen(CCC->room.QRname));
+			CM_SetField(msg, eOriginalRoom, CC->room.QRname, strlen(CC->room.QRname));
 		}
 	}
 
@@ -3590,8 +3563,8 @@ struct CtdlMessage *CtdlMakeMessageLen(
 	if (myelen > 0) {
 		CM_SetField(msg, erFc822Addr, my_email, myelen);
 	}
-	else if ( (author == &CCC->user) && (!IsEmptyStr(CCC->cs_inet_email)) ) {
-		CM_SetField(msg, erFc822Addr, CCC->cs_inet_email, strlen(CCC->cs_inet_email));
+	else if ( (author == &CC->user) && (!IsEmptyStr(CC->cs_inet_email)) ) {
+		CM_SetField(msg, erFc822Addr, CC->cs_inet_email, strlen(CC->cs_inet_email));
 	}
 
 	if (subject != NULL) {
@@ -3652,7 +3625,6 @@ int CtdlDeleteMessages(const char *room_name,		/* which room */
 		       char *content_type	/* or "" for any.  regular expressions expected. */
 	)
 {
-	struct CitContext *CCC = CC;
 	struct ctdlroom qrbuf;
 	struct cdbdata *cdbfr;
 	long *msglist = NULL;
@@ -3670,12 +3642,12 @@ int CtdlDeleteMessages(const char *room_name,		/* which room */
 			regcomp(&re, content_type, 0);
 			need_to_free_re = 1;
 		}
-	MSG_syslog(LOG_DEBUG, " CtdlDeleteMessages(%s, %d msgs, %s)\n",
+	syslog(LOG_DEBUG, " CtdlDeleteMessages(%s, %d msgs, %s)\n",
 		   room_name, num_dmsgnums, content_type);
 
 	/* get room record, obtaining a lock... */
 	if (CtdlGetRoomLock(&qrbuf, room_name) != 0) {
-		MSG_syslog(LOG_ERR, " CtdlDeleteMessages(): Room <%s> not found\n",
+		syslog(LOG_ERR, " CtdlDeleteMessages(): Room <%s> not found\n",
 			   room_name);
 		if (need_to_free_re) regfree(&re);
 		return (0);	/* room not found */
@@ -3702,7 +3674,7 @@ int CtdlDeleteMessages(const char *room_name,		/* which room */
 			StrBuf *dbg = NewStrBuf();
 			for (i = 0; i < num_dmsgnums; i++)
 				StrBufAppendPrintf(dbg, ", %ld", dmsgnums[i]);
-			MSG_syslog(LOG_DEBUG, " Deleting before: %s", ChrPtr(dbg));
+			syslog(LOG_DEBUG, " Deleting before: %s", ChrPtr(dbg));
 			FreeStrBuf(&dbg);
 		}
 */
@@ -3752,7 +3724,7 @@ int CtdlDeleteMessages(const char *room_name,		/* which room */
 			StrBuf *dbg = NewStrBuf();
 			for (i = 0; i < num_deleted; i++)
 				StrBufAppendPrintf(dbg, ", %ld", dellist[i]);
-			MSG_syslog(LOG_DEBUG, " Deleting: %s", ChrPtr(dbg));
+			syslog(LOG_DEBUG, " Deleting: %s", ChrPtr(dbg));
 			FreeStrBuf(&dbg);
 		}
 */
@@ -3784,7 +3756,7 @@ int CtdlDeleteMessages(const char *room_name,		/* which room */
 	/* Now free the memory we used, and go away. */
 	if (msglist != NULL) free(msglist);
 	if (dellist != NULL) free(dellist);
-	MSG_syslog(LOG_DEBUG, " %d message(s) deleted.\n", num_deleted);
+	syslog(LOG_DEBUG, " %d message(s) deleted.\n", num_deleted);
 	if (need_to_free_re) regfree(&re);
 	return (num_deleted);
 }
@@ -3842,11 +3814,10 @@ void PutMetaData(struct MetaData *smibuf)
  */
 void AdjRefCount(long msgnum, int incr)
 {
-	struct CitContext *CCC = CC;
 	struct arcq new_arcq;
 	int rv = 0;
 
-	MSG_syslog(LOG_DEBUG, "AdjRefCount() msg %ld ref count delta %+d\n", msgnum, incr);
+	syslog(LOG_DEBUG, "AdjRefCount() msg %ld ref count delta %+d\n", msgnum, incr);
 
 	begin_critical_section(S_SUPPMSGMAIN);
 	if (arcfp == NULL) {
@@ -3858,7 +3829,7 @@ void AdjRefCount(long msgnum, int incr)
 
 	/* msgnum < 0 means that we're trying to close the file */
 	if (msgnum < 0) {
-		MSGM_syslog(LOG_DEBUG, "Closing the AdjRefCount queue file\n");
+		syslog(LOG_DEBUG, "Closing the AdjRefCount queue file\n");
 		begin_critical_section(S_SUPPMSGMAIN);
 		if (arcfp != NULL) {
 			fclose(arcfp);
@@ -3880,7 +3851,7 @@ void AdjRefCount(long msgnum, int incr)
 	new_arcq.arcq_delta = incr;
 	rv = fwrite(&new_arcq, sizeof(struct arcq), 1, arcfp);
 	if (rv == -1) {
-		MSG_syslog(LOG_EMERG, "Couldn't write Refcount Queue File %s: %s\n",
+		syslog(LOG_EMERG, "Couldn't write Refcount Queue File %s: %s\n",
 			   file_arcq,
 			   strerror(errno));
 	}
@@ -3891,12 +3862,11 @@ void AdjRefCount(long msgnum, int incr)
 
 void AdjRefCountList(long *msgnum, long nmsg, int incr)
 {
-	struct CitContext *CCC = CC;
 	long i, the_size, offset;
 	struct arcq *new_arcq;
 	int rv = 0;
 
-	MSG_syslog(LOG_DEBUG, "AdjRefCountList() msg %ld ref count delta %+d\n", nmsg, incr);
+	syslog(LOG_DEBUG, "AdjRefCountList() msg %ld ref count delta %+d\n", nmsg, incr);
 
 	begin_critical_section(S_SUPPMSGMAIN);
 	if (arcfp == NULL) {
@@ -3927,7 +3897,7 @@ void AdjRefCountList(long *msgnum, long nmsg, int incr)
 	{
 		rv = fwrite(new_arcq + offset, 1, the_size - offset, arcfp);
 		if (rv == -1) {
-			MSG_syslog(LOG_EMERG, "Couldn't write Refcount Queue File %s: %s\n",
+			syslog(LOG_EMERG, "Couldn't write Refcount Queue File %s: %s\n",
 				   file_arcq,
 				   strerror(errno));
 		}
@@ -3951,7 +3921,6 @@ void AdjRefCountList(long *msgnum, long nmsg, int incr)
  */
 int TDAP_ProcessAdjRefCountQueue(void)
 {
-	struct CitContext *CCC = CC;
 	char file_arcq_temp[PATH_MAX];
 	int r;
 	FILE *fp;
@@ -3968,7 +3937,7 @@ int TDAP_ProcessAdjRefCountQueue(void)
 
 	r = link(file_arcq, file_arcq_temp);
 	if (r != 0) {
-		MSG_syslog(LOG_CRIT, "%s: %s\n", file_arcq_temp, strerror(errno));
+		syslog(LOG_CRIT, "%s: %s\n", file_arcq_temp, strerror(errno));
 		end_critical_section(S_SUPPMSGMAIN);
 		return(num_records_processed);
 	}
@@ -3978,7 +3947,7 @@ int TDAP_ProcessAdjRefCountQueue(void)
 
 	fp = fopen(file_arcq_temp, "rb");
 	if (fp == NULL) {
-		MSG_syslog(LOG_CRIT, "%s: %s\n", file_arcq_temp, strerror(errno));
+		syslog(LOG_CRIT, "%s: %s\n", file_arcq_temp, strerror(errno));
 		return(num_records_processed);
 	}
 
@@ -3990,7 +3959,7 @@ int TDAP_ProcessAdjRefCountQueue(void)
 	fclose(fp);
 	r = unlink(file_arcq_temp);
 	if (r != 0) {
-		MSG_syslog(LOG_CRIT, "%s: %s\n", file_arcq_temp, strerror(errno));
+		syslog(LOG_CRIT, "%s: %s\n", file_arcq_temp, strerror(errno));
 	}
 
 	return(num_records_processed);
@@ -4008,7 +3977,6 @@ int TDAP_ProcessAdjRefCountQueue(void)
  */
 void TDAP_AdjRefCount(long msgnum, int incr)
 {
-	struct CitContext *CCC = CC;
 
 	struct MetaData smi;
 	long delnum;
@@ -4022,7 +3990,7 @@ void TDAP_AdjRefCount(long msgnum, int incr)
 	smi.meta_refcount += incr;
 	PutMetaData(&smi);
 	end_critical_section(S_SUPPMSGMAIN);
-	MSG_syslog(LOG_DEBUG, "TDAP_AdjRefCount() msg %ld ref count delta %+d, is now %d\n",
+	syslog(LOG_DEBUG, "TDAP_AdjRefCount() msg %ld ref count delta %+d, is now %d\n",
 		   msgnum, incr, smi.meta_refcount
 		);
 
@@ -4030,7 +3998,7 @@ void TDAP_AdjRefCount(long msgnum, int incr)
 	 * (and its supplementary record as well).
 	 */
 	if (smi.meta_refcount == 0) {
-		MSG_syslog(LOG_DEBUG, "Deleting message <%ld>\n", msgnum);
+		syslog(LOG_DEBUG, "Deleting message <%ld>\n", msgnum);
 		
 		/* Call delete hooks with NULL room to show it has gone altogether */
 		PerformDeleteHooks(NULL, msgnum);
@@ -4063,7 +4031,6 @@ void CtdlWriteObject(char *req_room,			/* Room to stuff it in */
 		     unsigned int flags		/* Internal save flags */
 	)
 {
-	struct CitContext *CCC = CC;
 	struct ctdlroom qrbuf;
 	char roomname[ROOMNAMELEN];
 	struct CtdlMessage *msg;
@@ -4076,7 +4043,7 @@ void CtdlWriteObject(char *req_room,			/* Room to stuff it in */
 		safestrncpy(roomname, req_room, sizeof(roomname));
 	}
 
-	MSG_syslog(LOG_DEBUG, "Raw length is %ld\n", (long)raw_length);
+	syslog(LOG_DEBUG, "Raw length is %ld\n", (long)raw_length);
 
 	if (is_binary) {
 		encoded_message = NewStrBufPlain(NULL, (size_t) (((raw_length * 134) / 100) + 4096 ) );
@@ -4103,13 +4070,13 @@ void CtdlWriteObject(char *req_room,			/* Room to stuff it in */
 		StrBufAppendBufPlain(encoded_message, raw_message, raw_length, 0);
 	}
 
-	MSGM_syslog(LOG_DEBUG, "Allocating\n");
+	syslog(LOG_DEBUG, "Allocating\n");
 	msg = malloc(sizeof(struct CtdlMessage));
 	memset(msg, 0, sizeof(struct CtdlMessage));
 	msg->cm_magic = CTDLMESSAGE_MAGIC;
 	msg->cm_anon_type = MES_NORMAL;
 	msg->cm_format_type = 4;
-	CM_SetField(msg, eAuthor, CCC->user.fullname, strlen(CCC->user.fullname));
+	CM_SetField(msg, eAuthor, CC->user.fullname, strlen(CC->user.fullname));
 	CM_SetField(msg, eOriginalRoom, req_room, strlen(req_room));
 	CM_SetField(msg, eNodeName, CtdlGetConfigStr("c_nodename"), strlen(CtdlGetConfigStr("c_nodename")));
 	CM_SetField(msg, eHumanNode, CtdlGetConfigStr("c_humannode"), strlen(CtdlGetConfigStr("c_humannode")));
@@ -4127,7 +4094,7 @@ void CtdlWriteObject(char *req_room,			/* Room to stuff it in */
 	 * other objects of this type that are currently in the room.
 	 */
 	if (is_unique) {
-		MSG_syslog(LOG_DEBUG, "Deleted %d other msgs of this type\n",
+		syslog(LOG_DEBUG, "Deleted %d other msgs of this type\n",
 			   CtdlDeleteMessages(roomname, NULL, 0, content_type)
 			);
 	}
@@ -4141,15 +4108,11 @@ void CtdlWriteObject(char *req_room,			/* Room to stuff it in */
 /*****************************************************************************/
 /*                      MODULE INITIALIZATION STUFF                          */
 /*****************************************************************************/
-void SetMessageDebugEnabled(const int n)
-{
-	MessageDebugEnabled = n;
-}
+
 CTDL_MODULE_INIT(msgbase)
 {
 	if (!threading) {
 		FillMsgKeyLookupTable();
-		CtdlRegisterDebugFlagHook(HKEY("messages"), SetMessageDebugEnabled, &MessageDebugEnabled);
 	}
 
         /* return our Subversion id for the Log */
