@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996-2012 by the citadel.org team
+ * Copyright (c) 1996-2017 by the citadel.org team
  *
  * This program is open source software.  You can redistribute it and/or
  * modify it under the terms of the GNU General Public License, version 3.
@@ -430,7 +430,7 @@ void parse_vcard(StrBuf *Target, struct vCard *v, HashList *VC, wc_mime_attachme
 		StrBufPlain(thisname, v->prop[i].name, -1);
 		StrBufLowerCase(thisname);
 		
-		/*len = */extract_token(firsttoken, ChrPtr(thisname), 0, ';', sizeof firsttoken);
+		extract_token(firsttoken, ChrPtr(thisname), 0, ';', sizeof firsttoken);
 		ntokens = num_tokens(ChrPtr(thisname), ';');
 		for (j=0, k=0; j < ntokens && k < 10; ++j) {
 			len = extract_token(buf, ChrPtr(thisname), j, ';', sizeof buf);
@@ -440,7 +440,7 @@ void parse_vcard(StrBuf *Target, struct vCard *v, HashList *VC, wc_mime_attachme
 			else if (!strcasecmp(buf, "encoding=base64")) {
 				is_b64 = 1;
 			}
-			else{
+			else {
 				if (StrLength(thisVCToken) > 0) {
 					StrBufAppendBufPlain(thisVCToken, HKEY(";"), 0);
 				}
@@ -464,7 +464,6 @@ void parse_vcard(StrBuf *Target, struct vCard *v, HashList *VC, wc_mime_attachme
 				while (thisField->Sub[j].STR.len > 0) {
 					StrBufExtract_NextToken(Buf, thisArray, &Pos, ';');
 					ThisFieldStr = NewStrBufDup(Buf);
-					
 					PutVcardItem(VC, &thisField->Sub[j], ThisFieldStr, is_qp, Swap);
 					j++;
 				}
@@ -925,12 +924,15 @@ int vcard_LoadMsgFromServer(SharedMessageStatus *Stat,
 	abEntry->name = NewStrBuf();
 	abEntry->VC = NewHash(0, lFlathash);
 	abEntry->ab_msgnum = Msg->msgnum;
+
 	parse_vcard(WCC->WBuf, v, abEntry->VC, VCMime);
 
         memset(&SubTP, 0, sizeof(WCTemplputParams));    
 	StackContext(TP, &SubTP, abEntry, CTX_VCARD, 0, NULL);
 
-	DoTemplate(HKEY("vcard_list_name"), WCC->WBuf, &SubTP);
+	// No, don't display the name, it just shits all over the screen
+	// DoTemplate(HKEY("vcard_list_name"), WCC->WBuf, &SubTP);
+
 	UnStackContext(&SubTP);
 
 	if (StrLength(abEntry->name) == 0) {
