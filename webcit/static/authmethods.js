@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2011, the Citadel Team
+ * Copyright 2010-2017, the Citadel Team
  * Licensed under the GPL V3
  *
  * JavaScript functions which handle various authentication methods.
@@ -192,7 +192,7 @@ function ajax_try_google() {
 }
 
 
-/****************** GOOGLE ***********************/
+/****************** YAHOO ***********************/
 
 /*
  * Attempt login with Yahoo, called from modal dialog
