@@ -420,8 +420,7 @@ void parse_vcard(StrBuf * Target, struct vCard *v, HashList * VC, wc_mime_attach
 		StrBufPlain(thisname, v->prop[i].name, -1);
 		StrBufLowerCase(thisname);
 
-		extract_token(firsttoken, ChrPtr(thisname), 0, ';',
-			      sizeof firsttoken);
+		extract_token(firsttoken, ChrPtr(thisname), 0, ';', sizeof firsttoken);
 		ntokens = num_tokens(ChrPtr(thisname), ';');
 		for (j = 0, k = 0; j < ntokens && k < 10; ++j) {
 			len = extract_token(buf, ChrPtr(thisname), j, ';', sizeof buf);
@@ -699,19 +698,15 @@ void submit_vcard(void)
 	if (havebstr("force_room")) {
 		ForceRoom = sbstr("force_room");
 		if (gotoroom(ForceRoom) != 200) {
-			AppendImportantMessage(_
-					       ("Unable to enter the room to save your message"),
-					       -1);
+			AppendImportantMessage(_ ("Unable to enter the room to save your message"), -1);
 			AppendImportantMessage(HKEY(": "));
 			AppendImportantMessage(SKEY(ForceRoom));
 			AppendImportantMessage(HKEY("; "));
 			AppendImportantMessage(_("Aborting."), -1);
 
-			if (!strcmp
-			    (bstr("return_to"), "select_user_to_edit")) {
+			if (!strcmp(bstr("return_to"), "select_user_to_edit")) {
 				select_user_to_edit(NULL);
-			} else
-			    if (!strcmp(bstr("return_to"), "do_welcome")) {
+			} else if (!strcmp(bstr("return_to"), "do_welcome")) {
 				do_welcome();
 			} else if (!IsEmptyStr(bstr("return_to"))) {
 				http_redirect(bstr("return_to"));
@@ -737,9 +732,7 @@ void submit_vcard(void)
 	}
 
 	/* Make a vCard structure out of the data supplied in the form */
-	StrBufPrintf(Buf, "begin:vcard\r\n%s\r\nend:vcard\r\n",
-		     bstr("extrafields")
-	    );
+	StrBufPrintf(Buf, "begin:vcard\r\n%s\r\nend:vcard\r\n", bstr("extrafields"));
 	v = VCardLoad(Buf);	/* Start with the extra fields */
 	if (v == NULL) {
 		AppendImportantMessage(_("An error has occurred."), -1);
@@ -760,9 +753,7 @@ void submit_vcard(void)
 			vcField *Sub;
 			FlushStrBuf(SubStr);
 			itSub = GetNewHashPos(DefineToToken, 0);
-			while (GetNextHashPos
-			       (DefineToToken, itSub, &len, &Key, &pv)
-			       && (pv != NULL)) {
+			while (GetNextHashPos (DefineToToken, itSub, &len, &Key, &pv) && (pv != NULL)) {
 				Sub = (vcField *) pv;
 				if (Sub->parentCVal == t->cval) {
 					if (StrLength(SubStr) > 0) {
@@ -795,11 +786,9 @@ void submit_vcard(void)
 	s = sbstr("other_inetemail");
 	if (StrLength(s) > 0) {
 		FlushStrBuf(SubStr);
-		while (StrBufSipLine(SubStr, s, &Pos),
-		       ((Pos != StrBufNOTNULL) && (Pos != NULL))) {
+		while (StrBufSipLine(SubStr, s, &Pos), ((Pos != StrBufNOTNULL) && (Pos != NULL))) {
 			if (StrLength(SubStr) > 0) {
-				vcard_add_prop(v, "email;internet",
-					       ChrPtr(SubStr));
+				vcard_add_prop(v, "email;internet", ChrPtr(SubStr));
 			}
 		}
 	}
@@ -861,8 +850,7 @@ int vcard_GetParamsGetServerCall(SharedMessageStatus * Stat,
 	if (VS->is_singlecard != 1) {
 		VS->addrbook = NewHash(0, NULL);
 		if (oper == do_search) {
-			snprintf(cmd, len, "MSGS SEARCH|%s",
-				 bstr("query"));
+			snprintf(cmd, len, "MSGS SEARCH|%s", bstr("query"));
 		} else {
 			strcpy(cmd, "MSGS ALL");
 		}
@@ -905,8 +893,7 @@ int vcard_LoadMsgFromServer(SharedMessageStatus * Stat,
 	memset(&SubTP, 0, sizeof(WCTemplputParams));
 	StackContext(TP, &SubTP, abEntry, CTX_VCARD, 0, NULL);
 
-	// No, don't display the name, it just shits all over the screen
-	// FIXME AJC WORKING IN HERE RIGHT NOW
+	// ajc 2017mar08: not sure why this was here, it just writes in the wrong part of the screen
 	// DoTemplate(HKEY("vcard_list_name"), WCC->WBuf, &SubTP);
 
 	UnStackContext(&SubTP);
@@ -977,19 +964,14 @@ void do_addrbook_view(vcardview_struct * VS)
 		if (tablast > (num_ab - 1))
 			tablast = (num_ab - 1);
 
-		headline =
-		    NewStrBufPlain(NULL,
-				   StrLength(v1) + StrLength(v2) + 10);
+		headline = NewStrBufPlain(NULL, StrLength(v1) + StrLength(v2) + 10);
 		if (GetHashAt(VS->addrbook, tabfirst, &hklen1, &c1, &v1)) {
 			a1 = (addrbookent *) v1;
 			StrBufAppendBuf(headline, a1->name, 0);
 			StrBuf_Utf8StrCut(headline, 3);
-			if (GetHashAt
-			    (VS->addrbook, tablast, &hklen2, &c2, &v2)) {
-
+			if (GetHashAt(VS->addrbook, tablast, &hklen2, &c2, &v2)) {
 				a2 = (addrbookent *) v2;
-				StrBufAppendBufPlain(headline, HKEY(" - "),
-						     0);
+				StrBufAppendBufPlain(headline, HKEY(" - "), 0);
 				StrBufAppendBuf(headline, a2->name, 0);
 				StrBuf_Utf8StrCut(headline, 9);
 			}
@@ -1008,19 +990,18 @@ void do_addrbook_view(vcardview_struct * VS)
 }
 
 
-
-int vcard_RenderView_or_Tail(SharedMessageStatus * Stat,
-			     void **ViewSpecific, long oper)
+int vcard_RenderView_or_Tail(SharedMessageStatus * Stat, void **ViewSpecific, long oper)
 {
 	const StrBuf *Mime;
 	vcardview_struct *VS;
 
 	VS = (vcardview_struct *) * ViewSpecific;
-	if (VS->is_singlecard)
-		read_message(WC->WBuf, HKEY("view_message"),
-			     lbstr("startmsg"), NULL, &Mime, NULL);
-	else
+	if (VS->is_singlecard) {
+		read_message(WC->WBuf, HKEY("view_message"), lbstr("startmsg"), NULL, &Mime, NULL);
+	}
+	else {
 		do_addrbook_view(VS);	/* Render the address book */
+	}
 	return 0;
 }
 
@@ -1030,37 +1011,34 @@ int vcard_Cleanup(void **ViewSpecific)
 
 	VS = (vcardview_struct *) * ViewSpecific;
 	wDumpContent(1);
-	if ((VS != NULL) && (VS->addrbook != NULL))
+	if ((VS != NULL) && (VS->addrbook != NULL)) {
 		DeleteHash(&VS->addrbook);
-	if (VS != NULL)
+	}
+	if (VS != NULL) {
 		free(VS);
+	}
 
 	return 0;
 }
 
-void render_MIME_VCard(StrBuf * Target, WCTemplputParams * TP,
-		       StrBuf * FoundCharset)
+void render_MIME_VCard(StrBuf * Target, WCTemplputParams * TP, StrBuf * FoundCharset)
 {
-	wc_mime_attachment *Mime =
-	    (wc_mime_attachment *) CTX(CTX_MIME_ATACH);
+	wc_mime_attachment *Mime = (wc_mime_attachment *) CTX(CTX_MIME_ATACH);
 	wcsession *WCC = WC;
-	if (StrLength(Mime->Data) == 0)
+	if (StrLength(Mime->Data) == 0) {
 		MimeLoadData(Mime);
+	}
 	if (StrLength(Mime->Data) > 0) {
 		struct vCard *v;
 		StrBuf *Buf;
 
 		Buf = NewStrBuf();
 		/* If it's my vCard I can edit it */
-		if ((!strcasecmp
-		     (ChrPtr(WCC->CurRoom.name), USERCONFIGROOM))
-		    || ((StrLength(WCC->CurRoom.name) > 11)
-			&&
-			(!strcasecmp
-			 (&(ChrPtr(WCC->CurRoom.name)[11]),
-			  USERCONFIGROOM)))
-		    || (WCC->CurRoom.view == VIEW_ADDRESSBOOK)
-		    ) {
+		if (	(!strcasecmp(ChrPtr(WCC->CurRoom.name), USERCONFIGROOM))
+			|| ((StrLength(WCC->CurRoom.name) > 11)
+			&& (!strcasecmp (&(ChrPtr(WCC->CurRoom.name)[11]), USERCONFIGROOM)))
+			|| (WCC->CurRoom.view == VIEW_ADDRESSBOOK)
+		) {
 			StrBufAppendPrintf(Buf,
 					   "<a href=\"edit_vcard?msgnum=%ld?partnum=%s\">",
 					   Mime->msgnum,
@@ -1086,8 +1064,7 @@ void render_MIME_VCard(StrBuf * Target, WCTemplputParams * TP,
 			memset(&SubTP, 0, sizeof(WCTemplputParams));
 			StackContext(TP, &SubTP, &ab, CTX_VCARD, 0, NULL);
 
-			DoTemplate(HKEY("vcard_msg_display"), Target,
-				   &SubTP);
+			DoTemplate(HKEY("vcard_msg_display"), Target, &SubTP);
 			UnStackContext(&SubTP);
 			DeleteHash(&ab.VC);
 			vcard_free(v);
