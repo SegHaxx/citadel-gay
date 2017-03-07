@@ -145,8 +145,7 @@ void RegisterVCardToken(vcField * vf, StrBuf * name, int inTokenCount)
 	Put(vcNames, LKEY(vf->cval), NewStrBufPlain(CKEY(vf->Name)),
 	    HFreeStrBuf);
 
-	syslog(LOG_DEBUG, "Token: %s -> %ld, %d",
-	       ChrPtr(name), vf->cval, inTokenCount);
+	syslog(LOG_DEBUG, "Token: %s -> %ld, %d", ChrPtr(name), vf->cval, inTokenCount);
 
 }
 
@@ -165,16 +164,14 @@ void autoRegisterTokens(long *enumCounter, vcField * vf, StrBuf * BaseStr,
 		}
 		StrBufAppendBufPlain(subStr, CKEY(vf[i].STR), 0);
 		if (layer == 0) {
-			Put(VCTokenToDefine, CKEY(vf[i].STR), &vf[i],
-			    reference_free_handler);
+			Put(VCTokenToDefine, CKEY(vf[i].STR), &vf[i], reference_free_handler);
 		}
 		switch (vf[i].Type) {
 		case FlatString:
 			break;
 		case StringCluster:
 			{
-				autoRegisterTokens(enumCounter, vf[i].Sub,
-						   subStr, 1, vf[i].cval);
+				autoRegisterTokens(enumCounter, vf[i].Sub, subStr, 1, vf[i].cval);
 			}
 			break;
 		case PhoneNumber:
@@ -218,8 +215,7 @@ int preeval_vcard_item(WCTemplateToken * Token)
 	TP->Tokens = Token;
 	searchFieldNo = GetTemplateTokenNumber(Target, TP, 0, 0);
 	if (searchFieldNo >= VCEnumCounter) {
-		LogTemplateError(NULL, "VCardItem", ERR_PARM1, TP,
-				 "Invalid define");
+		LogTemplateError(NULL, "VCardItem", ERR_PARM1, TP, "Invalid define");
 		return 0;
 	}
 	return 1;
@@ -230,8 +226,7 @@ void tmpl_vcard_item(StrBuf * Target, WCTemplputParams * TP)
 	void *vItem;
 	long searchFieldNo = GetTemplateTokenNumber(Target, TP, 0, 0);
 	addrbookent *ab = (addrbookent *) CTX(CTX_VCARD);
-	if (GetHash(ab->VC, LKEY(searchFieldNo), &vItem)
-	    && (vItem != NULL)) {
+	if (GetHash(ab->VC, LKEY(searchFieldNo), &vItem) && (vItem != NULL)) {
 		StrBufAppendTemplate(Target, TP, (StrBuf *) vItem, 1);
 	}
 }
@@ -243,16 +238,14 @@ void tmpl_vcard_context_item(StrBuf * Target, WCTemplputParams * TP)
 	addrbookent *ab = (addrbookent *) CTX(CTX_VCARD);
 
 	if (t == NULL) {
-		LogTemplateError(NULL, "VCard item", ERR_NAME, TP,
-				 "Missing context");
+		LogTemplateError(NULL, "VCard item", ERR_NAME, TP, "Missing context");
 		return;
 	}
 
 	if (GetHash(ab->VC, LKEY(t->cval), &vItem) && (vItem != NULL)) {
 		StrBufAppendTemplate(Target, TP, (StrBuf *) vItem, 0);
 	} else {
-		LogTemplateError(NULL, "VCard item", ERR_NAME, TP,
-				 "Doesn't have that key - did you miss to filter in advance?");
+		LogTemplateError(NULL, "VCard item", ERR_NAME, TP, "Doesn't have that key - did you miss to filter in advance?");
 	}
 }
 
@@ -279,8 +272,7 @@ void tmpl_vcard_name_str(StrBuf * Target, WCTemplputParams * TP)
 	void *vItem;
 	long searchFieldNo = GetTemplateTokenNumber(Target, TP, 0, 0);
 	/* todo: get descriptive string for this vcard type */
-	if (GetHash(vcNames, LKEY(searchFieldNo), &vItem)
-	    && (vItem != NULL)) {
+	if (GetHash(vcNames, LKEY(searchFieldNo), &vItem) && (vItem != NULL)) {
 		StrBufAppendTemplate(Target, TP, (StrBuf *) vItem, 1);
 	} else {
 		LogTemplateError(NULL, "VCard item type", ERR_NAME, TP, "No i18n string for this.");
@@ -325,13 +317,13 @@ int filter_VC_ByType(const char *key, long len, void *Context, StrBuf * Target, 
 	vcField *vf = (vcField *) Context;
 
 	memcpy(&type, key, sizeof(long));
-	searchType =
-	    GetTemplateTokenNumber(Target, TP, IT_ADDT_PARAM(0), 0);
+	searchType = GetTemplateTokenNumber(Target, TP, IT_ADDT_PARAM(0), 0);
 
 	if (vf->Type == searchType) {
 		addrbookent *ab = (addrbookent *) CTX(CTX_VCARD);
-		if (GetHash(ab->VC, LKEY(vf->cval), &v) && v != NULL)
+		if (GetHash(ab->VC, LKEY(vf->cval), &v) && v != NULL) {
 			return 1;
+		}
 	}
 	return rc;
 }
@@ -343,7 +335,6 @@ HashList *getContextVcard(StrBuf * Target, WCTemplputParams * TP)
 
 	if ((vf == NULL) || (ab == NULL)) {
 		LogTemplateError(NULL, "VCard item type", ERR_NAME, TP, "Need VCard and Vcard type in context");
-
 		return NULL;
 	}
 	return ab->VC;
@@ -372,8 +363,7 @@ int conditional_VC_Havetype(StrBuf * Target, WCTemplputParams * TP)
 	const char *Key;
 	long len;
 	HashPos *it = GetNewHashPos(ab->VC, 0);
-	while (GetNextHashPos(ab->VC, it, &len, &Key, &vVCitem) &&
-	       (vVCitem != NULL)) {
+	while (GetNextHashPos(ab->VC, it, &len, &Key, &vVCitem) && (vVCitem != NULL)) {
 		void *vvcField;
 		long type = 0;
 		memcpy(&type, Key, sizeof(long));
@@ -426,7 +416,7 @@ void parse_vcard(StrBuf * Target, struct vCard *v, HashList * VC, wc_mime_attach
 		FlushStrBuf(thisVCToken);
 		is_qp = 0;
 		is_b64 = 0;
-		syslog(LOG_DEBUG, "i: %d oneprop: %s - value: %s", i, v->prop[i].name, v->prop[i].value);
+		// syslog(LOG_DEBUG, "i: %d oneprop: %s - value: %s", i, v->prop[i].name, v->prop[i].value);
 		StrBufPlain(thisname, v->prop[i].name, -1);
 		StrBufLowerCase(thisname);
 
@@ -434,9 +424,7 @@ void parse_vcard(StrBuf * Target, struct vCard *v, HashList * VC, wc_mime_attach
 			      sizeof firsttoken);
 		ntokens = num_tokens(ChrPtr(thisname), ';');
 		for (j = 0, k = 0; j < ntokens && k < 10; ++j) {
-			len =
-			    extract_token(buf, ChrPtr(thisname), j, ';',
-					  sizeof buf);
+			len = extract_token(buf, ChrPtr(thisname), j, ';', sizeof buf);
 			if (!strcasecmp(buf, "encoding=quoted-printable")) {
 				is_qp = 1;
 			} else if (!strcasecmp(buf, "encoding=base64")) {
@@ -455,7 +443,7 @@ void parse_vcard(StrBuf * Target, struct vCard *v, HashList * VC, wc_mime_attach
 		    (vField != NULL)) {
 			vcField *thisField = (vcField *) vField;
 			StrBuf *ThisFieldStr = NULL;
-			syslog(LOG_DEBUG, "got this token: %s, found: %s", ChrPtr(thisVCToken), thisField->STR.Key);
+			// syslog(LOG_DEBUG, "got this token: %s, found: %s", ChrPtr(thisVCToken), thisField->STR.Key);
 			switch (thisField->Type) {
 			case StringCluster:{
 					int j = 0;
@@ -606,10 +594,10 @@ wc_mime_attachment *load_vcard(message_summary * Msg)
  * to start with a blank card.
  */
 void do_edit_vcard(long msgnum, char *partnum,
-		   message_summary * VCMsg,
-		   wc_mime_attachment * VCAtt,
-		   const char *return_to, const char *force_room)
-{
+	message_summary * VCMsg,
+	wc_mime_attachment * VCAtt,
+	const char *return_to, const char *force_room
+) {
 	WCTemplputParams SubTP;
 	wcsession *WCC = WC;
 	message_summary *Msg = NULL;
@@ -777,22 +765,14 @@ void submit_vcard(void)
 			       && (pv != NULL)) {
 				Sub = (vcField *) pv;
 				if (Sub->parentCVal == t->cval) {
-					if (StrLength(SubStr) > 0)
-						StrBufAppendBufPlain
-						    (SubStr, HKEY(";"), 0);
-
-
-
-					blen =
-					    snprintf(buf, sizeof(buf),
-						     "%ld", Sub->cval);
+					if (StrLength(SubStr) > 0) {
+						StrBufAppendBufPlain (SubStr, HKEY(";"), 0);
+					}
+					blen = snprintf(buf, sizeof(buf), "%ld", Sub->cval);
 					s = SSubBstr(postVcard, buf, blen);
-
-					if ((s != NULL)
-					    && (StrLength(s) > 0)) {
+					if ((s != NULL) && (StrLength(s) > 0)) {
 						/// todo: utf8 qp
-						StrBufAppendBuf(SubStr, s,
-								0);
+						StrBufAppendBuf(SubStr, s, 0);
 					}
 				}
 			}
@@ -934,6 +914,8 @@ int vcard_LoadMsgFromServer(SharedMessageStatus * Stat,
 	if (StrLength(abEntry->name) == 0) {
 		StrBufPlain(abEntry->name, _("(no name)"), -1);
 	}
+
+	syslog(LOG_DEBUG, "abEntry->name : %s", ChrPtr(abEntry->name));
 
 	vcard_free(v);
 
