@@ -892,10 +892,7 @@ int vcard_LoadMsgFromServer(SharedMessageStatus * Stat,
 
 	memset(&SubTP, 0, sizeof(WCTemplputParams));
 	StackContext(TP, &SubTP, abEntry, CTX_VCARD, 0, NULL);
-
-	// ajc 2017mar08: not sure why this was here, it just writes in the wrong part of the screen
-	// DoTemplate(HKEY("vcard_list_name"), WCC->WBuf, &SubTP);
-
+	DoTemplate(HKEY("vcard_list_name"), abEntry->name, &SubTP);		// this puts the indexable contact name in abEntry->name for later sorting/display
 	UnStackContext(&SubTP);
 
 	if (StrLength(abEntry->name) == 0) {
