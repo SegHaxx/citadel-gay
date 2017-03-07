@@ -638,12 +638,13 @@ void imap_login(int num_parms, ConstStr *Params)
 			}
 			else
 			{
-				IReplyPrintf("NO AUTHENTICATE %s failed",
-					     Params[3].Key);
+				IReplyPrintf("NO AUTHENTICATE %s failed", Params[3].Key);
+				return;
 			}
 		}
 
 		IReply("BAD Login incorrect");
+		return;
 	default:
 		IReply("BAD incorrect number of parameters");
 		return;
