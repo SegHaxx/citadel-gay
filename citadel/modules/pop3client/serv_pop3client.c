@@ -247,8 +247,7 @@ eNextState POP3C_SendUser(pop3aggr *RecvMsg)
 	 * to be Exchange, which is so b0rken it actually barfs on
 	 * LF-terminated newlines.
 	 */
-	StrBufPrintf(RecvMsg->IO.SendBuf.Buf,
-		     "USER %s\r\n", ChrPtr(RecvMsg->pop3user));
+	StrBufPrintf(RecvMsg->IO.SendBuf.Buf, "USER %s\r\n", ChrPtr(RecvMsg->pop3user));
 	return eReadMessage;
 }
 
@@ -263,8 +262,7 @@ eNextState POP3C_SendPassword(pop3aggr *RecvMsg)
 	AsyncIO *IO = &RecvMsg->IO;
 	SetPOP3State(IO, ePassword);
 	/* Password */
-	StrBufPrintf(RecvMsg->IO.SendBuf.Buf,
-		     "PASS %s\r\n", ChrPtr(RecvMsg->pop3pass));
+	StrBufPrintf(RecvMsg->IO.SendBuf.Buf, "PASS %s\r\n", ChrPtr(RecvMsg->pop3pass));
 	syslog(LOG_DEBUG, "<PASS <password>\n");
 	return eReadMessage;
 }
@@ -975,11 +973,23 @@ void pop3client_scan_room(struct ctdlroom *qrbuf, void *data, OneRoomNetCfg *One
 
 	while (pLine != NULL)
 	{
+
+
+		// BEGIN diagnostics for ajc 2017mar08
+		syslog(LOG_DEBUG, "pop3client: room=<%s> host=<%s> user=<%s> pass=<%s> keep=<%d> interval=<%ld>",
+			qrbuf->QRname,
+			ChrPtr(pLine->Value[0]),
+			ChrPtr(pLine->Value[1]),
+			ChrPtr(pLine->Value[2]),
+			atoi(ChrPtr(pLine->Value[3])),
+			atol(ChrPtr(pLine->Value[4]))
+		);
+		// END diagnostics for ajc 2017mar08
+
 		pop3aggr *cptr;
 
 		cptr = (pop3aggr *) malloc(sizeof(pop3aggr));
 		memset(cptr, 0, sizeof(pop3aggr));
-		///TODO do we need this? cptr->roomlist_parts=1;
 		cptr->RoomName = NewStrBufPlain(qrbuf->QRname, -1);
 		cptr->pop3user = NewStrBufDup(pLine->Value[1]);
 		cptr->pop3pass = NewStrBufDup(pLine->Value[2]);
@@ -1058,7 +1068,7 @@ void pop3client_scan(void) {
 		cptr = (pop3aggr *)vrptr;
 		if (cptr->RefCount == 0) {
 			if (!pop3_do_fetching(cptr)) {
-				DeletePOP3Aggregator(cptr);////TODO
+				DeletePOP3Aggregator(cptr);
 			}
 		}
 	}
@@ -1073,7 +1083,6 @@ void pop3client_scan(void) {
 
 void pop3_cleanup(void)
 {
-	/* citthread_mutex_destroy(&POP3QueueMutex); TODO */
 	while (doing_pop3client != 0) ;
 	DeleteHash(&POP3FetchUrls);
 	DeleteHash(&POP3QueueRooms);
