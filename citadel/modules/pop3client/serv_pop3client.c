@@ -36,6 +36,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <libcitadel.h>
+#include <curl/curl.h>
 #include "citadel.h"
 #include "server.h"
 #include "citserver.h"
