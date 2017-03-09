@@ -134,7 +134,7 @@ void rss_end_element(void *data, const char *el)
 			// check the use table
 			StrBuf *u = NewStrBuf();
 			StrBufAppendPrintf(u, "rss/%s", r->item_id);
-			time_t already_seen = CheckIfAlreadySeen("rss", u, time(NULL), 604800, eUpdate, 0, 0);
+			time_t already_seen = CheckIfAlreadySeen(u, time(NULL), 604800, eUpdate);
 			FreeStrBuf(&u);
 
 			if (already_seen == 0) {

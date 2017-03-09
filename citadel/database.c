@@ -515,8 +515,8 @@ int cdb_store(int cdb, const void *ckey, int ckeylen, void *cdata, int cdatalen)
 	ddata.size = cdatalen;
 	ddata.data = cdata;
 
-	/* Only compress Visit records.  Everything else is uncompressed. */
-	if (cdb == CDB_VISIT) {
+	/* Only compress Visit and UseTable records.  Everything else is uncompressed. */
+	if ( (cdb == CDB_VISIT) || (cdb == CDB_USETABLE) ) {
 		compressing = 1;
 		zheader.magic = COMPRESS_MAGIC;
 		zheader.uncompressed_len = cdatalen;
@@ -869,26 +869,31 @@ void cdb_trunc(int cdb)
 	}
 }
 
-time_t CheckIfAlreadySeen(const char *Facility,
-			  StrBuf *guid,
-			  time_t now,
-			  time_t antiexpire,
-			  eCheckType cType,
-			  long ccid,
-			  long ioid)
+
+//time_t CheckIfAlreadySeen(const char *Facility,
+			  //StrBuf *guid,
+			  //time_t now,
+			  //time_t antiexpire,
+			  //eCheckType cType,
+			  //long ccid,
+			  //long ioid
+//) {
+
+
+time_t CheckIfAlreadySeen(StrBuf *guid, time_t now, time_t antiexpire, eCheckType cType)
 {
 	time_t InDBTimeStamp = 0;
 	struct UseTable ut;
 	struct cdbdata *cdbut;
+
+	memset(&ut, 0, sizeof(struct UseTable));	// zeroing it out makes it compress better
 
 	if (cType != eWrite)
 	{
 		syslog(LOG_DEBUG, "Loading [%s]", ChrPtr(guid));
 		cdbut = cdb_fetch(CDB_USETABLE, SKEY(guid));
 		if ((cdbut != NULL) && (cdbut->ptr != NULL)) {
-			memcpy(&ut, cdbut->ptr,
-			       ((cdbut->len > sizeof(struct UseTable)) ?
-				sizeof(struct UseTable) : cdbut->len));
+			memcpy(&ut, cdbut->ptr, ((cdbut->len > sizeof(struct UseTable)) ?  sizeof(struct UseTable) : cdbut->len));
 			InDBTimeStamp = now - ut.ut_timestamp;
 
 			if (InDBTimeStamp < antiexpire)
@@ -919,13 +924,9 @@ time_t CheckIfAlreadySeen(const char *Facility,
 	memcpy(ut.ut_msgid, SKEY(guid));
 	ut.ut_timestamp = now;
 
-	syslog(LOG_DEBUG, "Saving new Timestamp");
 	/* rewrite the record anyway, to update the timestamp */
-	cdb_store(CDB_USETABLE,
-		  SKEY(guid),
-		  &ut, sizeof(struct UseTable) );
-
-	syslog(LOG_DEBUG, "Done Saving");
+	syslog(LOG_DEBUG, "(re)writing usetable record");
+	cdb_store(CDB_USETABLE, SKEY(guid), &ut, sizeof(struct UseTable));
 	return InDBTimeStamp;
 }
 

@@ -374,12 +374,11 @@ eNextState POP3_FetchNetworkUsetableEntry(AsyncIO *IO)
 
 		RecvMsg->CurrMsg = (FetchItem*)vData;
 
-		seenstamp = CheckIfAlreadySeen("POP3 Item Seen",
-					       RecvMsg->CurrMsg->MsgUID,
-					       EvGetNow(IO),
-					       EvGetNow(IO) - USETABLE_ANTIEXPIRE,
-					       eCheckUpdate,
-					       IO->ID, CCID);
+		seenstamp = CheckIfAlreadySeen(RecvMsg->CurrMsg->MsgUID,
+			EvGetNow(IO),
+			EvGetNow(IO) - USETABLE_ANTIEXPIRE,
+			eCheckUpdate
+		);
 		if (seenstamp != 0)
 		{
 			/* Item has already been seen */
@@ -526,13 +525,7 @@ eNextState POP3C_StoreMsgRead(AsyncIO *IO)
 	SetPOP3State(IO, eStoreMsg);
 
 	syslog(LOG_DEBUG, "MARKING: %s as seen: ", ChrPtr(RecvMsg->CurrMsg->MsgUID));
-	CheckIfAlreadySeen("POP3 Item Seen",
-		RecvMsg->CurrMsg->MsgUID,
-		EvGetNow(IO),
-		EvGetNow(IO) - USETABLE_ANTIEXPIRE,
-		eWrite,
-		IO->ID, CCID
-	);
+	CheckIfAlreadySeen(RecvMsg->CurrMsg->MsgUID, EvGetNow(IO), EvGetNow(IO) - USETABLE_ANTIEXPIRE, eWrite);
 
 	return DBQueueEventContext(&RecvMsg->IO, POP3_C_ReAttachToFetchMessages);
 }

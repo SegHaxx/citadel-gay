@@ -60,13 +60,14 @@ typedef enum __eCheckType {
 	eWrite         /* write this to DB, unconditional. */
 }eCheckType;
 
-time_t CheckIfAlreadySeen(const char *Facility,
-			  StrBuf *guid,
-			  time_t now,
-			  time_t antiexpire,
-			  eCheckType cType,
-			  long ccid,
-			  long ioid);
+//time_t CheckIfAlreadySeen(const char *Facility,
+			  //StrBuf *guid,
+			  //time_t now,
+			  //time_t antiexpire,
+			  //eCheckType cType,
+			  //long ccid,
+			  //long ioid);
+time_t CheckIfAlreadySeen(StrBuf *guid, time_t now, time_t antiexpire, eCheckType cType);
 
 
 #endif /* DATABASE_H */

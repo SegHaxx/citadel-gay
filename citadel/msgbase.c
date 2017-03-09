@@ -3131,25 +3131,17 @@ void flood_protect_quickie_message(const char *from,
 	if (StrLength(guid) > 40)
 		StrBufCutAt(guid, 40, NULL);
 
-	seenstamp = CheckIfAlreadySeen("FPAideMessage",
-				       guid,
-				       NOW,
-				       tsday,
-				       eUpdate,
-				       ccid,
-				       ioid);
+	seenstamp = CheckIfAlreadySeen(guid, NOW, tsday, eUpdate);
 	if ((seenstamp > 0) && (seenstamp < tsday))
 	{
 		FreeStrBuf(&guid);
 		/* yes, we did. flood protection kicks in. */
-		syslog(LOG_DEBUG,
-			   "not sending message again - %ld < %ld \n", seenstamp, tsday);
+		syslog(LOG_DEBUG, "not sending message again - %ld < %ld \n", seenstamp, tsday);
 		return;
 	}
 	else
 	{
-		syslog(LOG_DEBUG,
-			   "sending message. %ld >= %ld", seenstamp, tsday);
+		syslog(LOG_DEBUG, "sending message. %ld >= %ld", seenstamp, tsday);
 		FreeStrBuf(&guid);
 		/* no, this message isn't sent recently; go ahead. */
 		quickie_message(from,

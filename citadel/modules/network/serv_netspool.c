@@ -2,7 +2,7 @@
  * This module handles shared rooms, inter-Citadel mail, and outbound
  * mailing list processing.
  *
- * Copyright (c) 2000-2016 by the citadel.org team
+ * Copyright (c) 2000-2017 by the citadel.org team
  *
  * This program is open source software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 3.
@@ -520,12 +520,7 @@ int network_usetable(struct CtdlMessage *msg)
 		}
 	}
 	now = time(NULL);
-	if (CheckIfAlreadySeen("Networker Import",
-			       msgid,
-			       now, 0,
-			       eUpdate,
-			       CCC->cs_pid, 0) != 0)
-	{
+	if (CheckIfAlreadySeen(msgid, now, 0, eUpdate)) {
 		FreeStrBuf(&msgid);
 		return(1);
 	}
