@@ -77,7 +77,6 @@ void pop3client_one_mailbox(struct ctdlroom *qrbuf, const char *host, const char
 	char url[SIZ];
 	CURL *curl;
 	CURLcode res = CURLE_OK;
-	int is_pop3s = 0;
 
 	curl = curl_easy_init();
 	if (!curl) {
@@ -96,7 +95,6 @@ void pop3client_one_mailbox(struct ctdlroom *qrbuf, const char *host, const char
 	curl_easy_setopt(curl, CURLOPT_URL, url);
 	res = curl_easy_perform(curl);
 	if (res == CURLE_OK) {
-		is_pop3s = 1;
 	} else {
 		syslog(LOG_DEBUG, "POP3S client failed: %s , trying POP3 next", curl_easy_strerror(res));
 		snprintf(url, sizeof url, "pop3://%s", host);			// try unencrypted next
@@ -110,7 +108,16 @@ void pop3client_one_mailbox(struct ctdlroom *qrbuf, const char *host, const char
 		return;
 	}
 
-	// FIXME finish this
+	// If we got this far, a connection was established, we know whether it's pop3s or pop3, and UIDL is supported.
+
+
+	// FIXME write the rest ... all this crap was just a test to make sure libcurl is holding open a single connection.
+	curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, "RETR 1");
+	res = curl_easy_perform(curl);
+	curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, "UIDL");
+	res = curl_easy_perform(curl);
+
+
 
 	curl_easy_cleanup(curl);
 	return;
