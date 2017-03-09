@@ -70,9 +70,50 @@ static int doing_pop3client = 0;
  */
 void pop3client_one_mailbox(struct ctdlroom *qrbuf, const char *host, const char *user, const char *pass, int keep, long interval)
 {
-		syslog(LOG_DEBUG, "\033[33mpop3client: room=<%s> host=<%s> user=<%s> pass=<%s> keep=<%d> interval=<%ld>\033[0m",
-			qrbuf->QRname, host, user, pass, keep, interval
-		);
+	syslog(LOG_DEBUG, "\033[33mpop3client: room=<%s> host=<%s> user=<%s> pass=<%s> keep=<%d> interval=<%ld>\033[0m",
+		qrbuf->QRname, host, user, pass, keep, interval
+	);
+
+	char url[SIZ];
+	CURL *curl;
+	CURLcode res = CURLE_OK;
+	int is_pop3s = 0;
+
+	curl = curl_easy_init();
+	if (!curl) {
+		return;
+	}
+
+	curl_easy_setopt(curl, CURLOPT_USERNAME, user);
+	curl_easy_setopt(curl, CURLOPT_PASSWORD, pass);
+	curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0L);
+	curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 0L);
+	curl_easy_setopt(curl, CURLOPT_TIMEOUT, 15);
+	curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, "UIDL");
+
+	/* Try POP3S (SSL encrypted) first */
+	snprintf(url, sizeof url, "pop3s://%s", host);
+	curl_easy_setopt(curl, CURLOPT_URL, url);
+	res = curl_easy_perform(curl);
+	if (res == CURLE_OK) {
+		is_pop3s = 1;
+	} else {
+		syslog(LOG_DEBUG, "POP3S client failed: %s , trying POP3 next", curl_easy_strerror(res));
+		snprintf(url, sizeof url, "pop3://%s", host);			// try unencrypted next
+		curl_easy_setopt(curl, CURLOPT_URL, url);
+		res = curl_easy_perform(curl);
+	}
+
+	if (res != CURLE_OK) {
+		syslog(LOG_DEBUG, "pop3 client failed: %s", curl_easy_strerror(res));
+		curl_easy_cleanup(curl);
+		return;
+	}
+
+	// FIXME finish this
+
+	curl_easy_cleanup(curl);
+	return;
 }
 
 
