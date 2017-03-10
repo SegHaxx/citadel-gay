@@ -70,24 +70,30 @@ static int doing_pop3client = 0;
  */
 void pop3client_one_mailbox(struct ctdlroom *qrbuf, const char *host, const char *user, const char *pass, int keep, long interval)
 {
-	syslog(LOG_DEBUG, "\033[33mpop3client: room=<%s> host=<%s> user=<%s> pass=<%s> keep=<%d> interval=<%ld>\033[0m",
-		qrbuf->QRname, host, user, pass, keep, interval
+	syslog(LOG_DEBUG, "pop3client: room=<%s> host=<%s> user=<%s> keep=<%d> interval=<%ld>",
+		qrbuf->QRname, host, user, keep, interval
 	);
 
 	char url[SIZ];
 	CURL *curl;
 	CURLcode res = CURLE_OK;
+	StrBuf *Uidls = NULL;
+	int i;
 
 	curl = curl_easy_init();
 	if (!curl) {
 		return;
 	}
 
+	Uidls = NewStrBuf();
+
 	curl_easy_setopt(curl, CURLOPT_USERNAME, user);
 	curl_easy_setopt(curl, CURLOPT_PASSWORD, pass);
 	curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0L);
 	curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 0L);
 	curl_easy_setopt(curl, CURLOPT_TIMEOUT, 15);
+	curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, CurlFillStrBuf_callback);	// What to do with downloaded data
+	curl_easy_setopt(curl, CURLOPT_WRITEDATA, Uidls);			// Give it our StrBuf to work with
 	curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, "UIDL");
 
 	/* Try POP3S (SSL encrypted) first */
@@ -99,27 +105,40 @@ void pop3client_one_mailbox(struct ctdlroom *qrbuf, const char *host, const char
 		syslog(LOG_DEBUG, "POP3S client failed: %s , trying POP3 next", curl_easy_strerror(res));
 		snprintf(url, sizeof url, "pop3://%s", host);			// try unencrypted next
 		curl_easy_setopt(curl, CURLOPT_URL, url);
+		FlushStrBuf(Uidls);
 		res = curl_easy_perform(curl);
 	}
 
 	if (res != CURLE_OK) {
 		syslog(LOG_DEBUG, "pop3 client failed: %s", curl_easy_strerror(res));
 		curl_easy_cleanup(curl);
+		FreeStrBuf(&Uidls);
 		return;
 	}
 
 	// If we got this far, a connection was established, we know whether it's pop3s or pop3, and UIDL is supported.
+	// Now go through the UIDL list and look for messages.
 
+	int num_msgs = num_tokens(ChrPtr(Uidls), '\n');
+	syslog(LOG_DEBUG, "There are %d messages.", num_msgs);
+	for (i=0; i<num_msgs; ++i) {
+		char oneuidl[1024];
+		extract_token(oneuidl, ChrPtr(Uidls), i, '\n', sizeof oneuidl);
+		if (strlen(oneuidl) > 2) {
+			if (oneuidl[strlen(oneuidl)-1] == '\r') {
+				oneuidl[strlen(oneuidl)-1] = 0;
+			}
+			int this_msg = atoi(oneuidl);
+			char *c = strchr(oneuidl, ' ');
+			if (c) strcpy(oneuidl, ++c);
 
-	// FIXME write the rest ... all this crap was just a test to make sure libcurl is holding open a single connection.
-	curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, "RETR 1");
-	res = curl_easy_perform(curl);
-	curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, "UIDL");
-	res = curl_easy_perform(curl);
+			syslog(LOG_DEBUG, "<\033[34m%d\033[0m> <\033[34m%s\033[0m>", this_msg, oneuidl);
 
-
+		}
+	}
 
 	curl_easy_cleanup(curl);
+	FreeStrBuf(&Uidls);
 	return;
 }
 

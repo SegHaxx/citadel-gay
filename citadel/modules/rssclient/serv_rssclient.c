@@ -332,17 +332,6 @@ void rssclient_push_todo(char *rssurl, char *roomname)
 }
 
 
-// Callback function for curl
-//
-size_t rss_pof_write_data(void *buffer, size_t size, size_t nmemb, void *userp)
-{
-	StrBuf *Downloaded = (StrBuf *)userp;
-	size_t bytes = size * nmemb;
-	StrBufAppendBufPlain(Downloaded, buffer, bytes, 0);
-	return(bytes);
-}
-
-
 // pull one feed (possibly multiple rooms)
 //
 void rss_pull_one_feed(struct rssurl *url)
@@ -362,7 +351,7 @@ void rss_pull_one_feed(struct rssurl *url)
 
 	curl_easy_setopt(curl, CURLOPT_URL, url->url);
 	curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);			// Follow redirects
-	curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, rss_pof_write_data);	// What to do with downloaded data
+	curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, CurlFillStrBuf_callback);	// What to do with downloaded data
 	curl_easy_setopt(curl, CURLOPT_WRITEDATA, Downloaded);			// Give it our StrBuf to work with
 	curl_easy_setopt(curl, CURLOPT_TIMEOUT, 20L);				// Time out after 20 seconds
 	res = curl_easy_perform(curl);						// Perform the request
