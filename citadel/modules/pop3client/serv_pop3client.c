@@ -49,30 +49,26 @@
 #include "database.h"
 #include "citadel_dirs.h"
 
+struct p3cq {				// module-local queue of pop3 client work that needs processing
+	struct p3cq *next;
+	char *room;
+	char *host;
+	char *user;
+	char *pass;
+	int keep;
+	long interval;
+};
 
 struct CitContext pop3_client_CC;
 static int doing_pop3client = 0;
-
-
-//	This is how we form a USETABLE record for pop3 client
-//
-//	StrBufPrintf(RecvMsg->CurrMsg->MsgUID,
-//		     "pop3/%s/%s:%s@%s",
-//		     ChrPtr(RecvMsg->RoomName),
-//		     ChrPtr(RecvMsg->CurrMsg->MsgUIDL),
-//		     RecvMsg->IO.ConnectMe->User,
-//		     RecvMsg->IO.ConnectMe->Host
-//	);
-
+struct p3cq *p3cq = NULL;
 
 /*
  * Process one mailbox.
  */
-void pop3client_one_mailbox(struct ctdlroom *qrbuf, const char *host, const char *user, const char *pass, int keep, long interval)
+void pop3client_one_mailbox(char *room, const char *host, const char *user, const char *pass, int keep, long interval)
 {
-	syslog(LOG_DEBUG, "pop3client: room=<%s> host=<%s> user=<%s> keep=<%d> interval=<%ld>",
-		qrbuf->QRname, host, user, keep, interval
-	);
+	syslog(LOG_DEBUG, "pop3client: room=<%s> host=<%s> user=<%s> keep=<%d> interval=<%ld>", room, host, user, keep, interval);
 
 	char url[SIZ];
 	CURL *curl;
@@ -134,6 +130,13 @@ void pop3client_one_mailbox(struct ctdlroom *qrbuf, const char *host, const char
 
 			syslog(LOG_DEBUG, "<\033[34m%d\033[0m> <\033[34m%s\033[0m>", this_msg, oneuidl);
 
+			// Make up the Use Table record so we can check if we've already seen this message.
+			StrBuf *UT = NewStrBuf();
+			StrBufPrintf(UT, "pop3/%s/%s:%s@%s", room, oneuidl, user, host);
+			time_t already_seen = CheckIfAlreadySeen(UT, time(NULL), 31536000, eUpdate);
+			FreeStrBuf(&UT);
+			syslog(LOG_DEBUG, "%s seen?  %ld", oneuidl, already_seen);
+
 		}
 	}
 
@@ -149,6 +152,7 @@ void pop3client_one_mailbox(struct ctdlroom *qrbuf, const char *host, const char
 void pop3client_scan_room(struct ctdlroom *qrbuf, void *data, OneRoomNetCfg *OneRNCFG)
 {
 	const RoomNetCfgLine *pLine;
+	struct p3cq *pptr = NULL;
 
 	if (server_shutting_down) return;
 
@@ -156,15 +160,17 @@ void pop3client_scan_room(struct ctdlroom *qrbuf, void *data, OneRoomNetCfg *One
 
 	while (pLine != NULL)
 	{
-		pop3client_one_mailbox(qrbuf, 
-			ChrPtr(pLine->Value[0]),
-			ChrPtr(pLine->Value[1]),
-			ChrPtr(pLine->Value[2]),
-			atoi(ChrPtr(pLine->Value[3])),
-			atol(ChrPtr(pLine->Value[4]))
-		);
+		pptr = malloc(sizeof(struct p3cq));
+		pptr->next = p3cq;
+		p3cq = pptr;
+		pptr->room = strdup(qrbuf->QRname);
+		pptr->host = strdup(ChrPtr(pLine->Value[0]));
+		pptr->user = strdup(ChrPtr(pLine->Value[1]));
+		pptr->pass = strdup(ChrPtr(pLine->Value[2]));
+		pptr->keep = atoi(ChrPtr(pLine->Value[3]));
+		pptr->interval = atol(ChrPtr(pLine->Value[4]));
+	
 		pLine = pLine->next;
-
 	}
 }
 
@@ -172,6 +178,7 @@ void pop3client_scan_room(struct ctdlroom *qrbuf, void *data, OneRoomNetCfg *One
 void pop3client_scan(void) {
 	static time_t last_run = 0L;
 	time_t fastest_scan;
+	struct p3cq *pptr = NULL;
 
 	become_session(&pop3_client_CC);
 
@@ -198,8 +205,26 @@ void pop3client_scan(void) {
 	if (doing_pop3client) return;
 	doing_pop3client = 1;
 
-	syslog(LOG_DEBUG, "pop3client started");
+	syslog(LOG_DEBUG, "pop3client scan started");
 	CtdlForEachNetCfgRoom(pop3client_scan_room, NULL);
+
+	/*
+	 * We have to queue and process in separate phases, otherwise we leave a cursor open
+	 */
+	syslog(LOG_DEBUG, "pop3client processing started");
+	while (p3cq != NULL) {
+		pptr = p3cq;
+		p3cq = p3cq->next;
+
+		pop3client_one_mailbox(pptr->room, pptr->host, pptr->user, pptr->pass, pptr->keep, pptr->interval);
+
+		free(pptr->room);
+		free(pptr->host);
+		free(pptr->user);
+		free(pptr->pass);
+		free(pptr);
+	}
+
 	syslog(LOG_DEBUG, "pop3client ended");
 	last_run = time(NULL);
 	doing_pop3client = 0;
