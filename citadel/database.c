@@ -870,16 +870,6 @@ void cdb_trunc(int cdb)
 }
 
 
-//time_t CheckIfAlreadySeen(const char *Facility,
-			  //StrBuf *guid,
-			  //time_t now,
-			  //time_t antiexpire,
-			  //eCheckType cType,
-			  //long ccid,
-			  //long ioid
-//) {
-
-
 time_t CheckIfAlreadySeen(StrBuf *guid, time_t now, time_t antiexpire, eCheckType cType)
 {
 	time_t InDBTimeStamp = 0;
