@@ -1,7 +1,7 @@
 /*
  * Configuration screens that are part of the text mode client.
  *
- * Copyright (c) 1987-2016 by the citadel.org team
+ * Copyright (c) 1987-2017 by the citadel.org team
  *
  * This program is open source software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3.
@@ -975,14 +975,12 @@ void do_pop3client_configuration(CtdlIPC *ipc)
 			"      Remote POP3 host       "
 			"         User name           "
 			"Keep on server? "
-			"Fetching inteval"
 			"\n");
 		color(DIM_WHITE);
 		scr_printf(	"--- "
 			"---------------------------- "
 			"---------------------------- "
 			"--------------- "
-			"---------------- "
 			"\n");
 		for (i=0; i<num_recs; ++i) {
 		color(DIM_WHITE);
@@ -997,9 +995,7 @@ void do_pop3client_configuration(CtdlIPC *ipc)
 		scr_printf("%-28s ", buf);
 
 		color(BRIGHT_CYAN);
-		scr_printf("%-15s ", (extract_int(recs[i], 4) ? "Yes" : "No") );
-		color(BRIGHT_MAGENTA);
-		scr_printf("%ld\n", extract_long(recs[i], 5) );
+		scr_printf("%-15s\n", (extract_int(recs[i], 4) ? "Yes" : "No") );
 		color(DIM_WHITE);
 		}
 
@@ -1022,8 +1018,6 @@ void do_pop3client_configuration(CtdlIPC *ipc)
 				strcat(buf, "|");
 				scr_printf("Keep messages on server instead of deleting them? ");
 				sprintf(&buf[strlen(buf)], "%d", yesno());
-				strcat(buf, "|");
-				newprompt("Enter interval : ", &buf[strlen(buf)], 5);
 				strcat(buf, "|");
 				recs[num_recs-1] = strdup(buf);
 				modified = 1;
