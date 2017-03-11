@@ -75,6 +75,7 @@ void pop3client_one_mailbox(char *room, const char *host, const char *user, cons
 	CURLcode res = CURLE_OK;
 	StrBuf *Uidls = NULL;
 	int i;
+	char cmd[1024];
 
 	curl = curl_easy_init();
 	if (!curl) {
@@ -128,15 +129,38 @@ void pop3client_one_mailbox(char *room, const char *host, const char *user, cons
 			char *c = strchr(oneuidl, ' ');
 			if (c) strcpy(oneuidl, ++c);
 
-			syslog(LOG_DEBUG, "<\033[34m%d\033[0m> <\033[34m%s\033[0m>", this_msg, oneuidl);
-
 			// Make up the Use Table record so we can check if we've already seen this message.
 			StrBuf *UT = NewStrBuf();
 			StrBufPrintf(UT, "pop3/%s/%s:%s@%s", room, oneuidl, user, host);
 			time_t already_seen = CheckIfAlreadySeen(UT, time(NULL), 0, eUpdate);
-			syslog(LOG_DEBUG, "%s seen? \033[32m%ld\033[0m", ChrPtr(UT), already_seen);
 			FreeStrBuf(&UT);
 
+			// Only fetch the message if we haven't seen it before.
+			if (already_seen == 0) {
+				StrBuf *TheMsg = NewStrBuf();
+				snprintf(cmd, sizeof cmd, "RETR %d", this_msg);
+				curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, cmd);
+				curl_easy_setopt(curl, CURLOPT_WRITEDATA, TheMsg);
+				res = curl_easy_perform(curl);
+				if (res == CURLE_OK) {
+					struct CtdlMessage *msg = convert_internet_message_buf(&TheMsg);
+					CtdlSubmitMsg(msg, NULL, room, 0);
+					CM_Free(msg);
+				}
+				else {
+					FreeStrBuf(&TheMsg);
+				}
+
+				// Unless the configuration says to keep the message on the server, delete it.
+				if (keep == 0) {
+					snprintf(cmd, sizeof cmd, "DELE %d", this_msg);
+					curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, cmd);
+					res = curl_easy_perform(curl);
+				}
+			}
+			else {
+				syslog(LOG_DEBUG, "%s has already been retrieved", oneuidl);
+			}
 		}
 	}
 
