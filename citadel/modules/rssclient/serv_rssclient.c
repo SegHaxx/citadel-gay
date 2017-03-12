@@ -134,7 +134,7 @@ void rss_end_element(void *data, const char *el)
 			// check the use table
 			StrBuf *u = NewStrBuf();
 			StrBufAppendPrintf(u, "rss/%s", r->item_id);
-			time_t already_seen = CheckIfAlreadySeen(u, time(NULL), 0, eUpdate);
+			int already_seen = CheckIfAlreadySeen(u);
 			FreeStrBuf(&u);
 
 			if (already_seen == 0) {
@@ -185,7 +185,7 @@ void rss_end_element(void *data, const char *el)
 				}
 			}
 			else {
-				syslog(LOG_DEBUG, "%s was already seen %ld seconds ago", r->item_id, already_seen);
+				syslog(LOG_DEBUG, "%s was already seen", r->item_id);
 			}
 	
 			CM_Free(r->msg);

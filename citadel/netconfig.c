@@ -633,8 +633,6 @@ void cmd_netp(char *cmdbuf)
 	StrBuf *NodeStr;
 	long nodelen;
 	int v;
-	long lens[2];
-	const char *strs[2];
 
 	const StrBuf *secret = NULL;
 	const StrBuf *nexthop = NULL;
@@ -654,20 +652,7 @@ void cmd_netp(char *cmdbuf)
 		);
 		syslog(LOG_WARNING, "%s", err_buf);
 		cprintf("%d authentication failed\n", ERROR + PASSWORD_REQUIRED);
-
-		strs[0] = CCC->cs_addr;
-		lens[0] = strlen(CCC->cs_addr);
-		
-		strs[1] = "SRV_UNKNOWN";
-		lens[1] = sizeof("SRV_UNKNOWN") - 1;
-
-		CtdlAideFPMessage(
-			err_buf,
-			"IGNet Networking.",
-			2, strs, (long*) &lens,
-			CCC->cs_pid, 0,
-			time(NULL));
-
+		CtdlAideMessage(err_buf, "IGNet Networking");
 		DeleteHash(&working_ignetcfg);
 		FreeStrBuf(&NodeStr);
 		return;
@@ -682,20 +667,7 @@ void cmd_netp(char *cmdbuf)
 		syslog(LOG_WARNING, "%s", err_buf);
 		cprintf("%d authentication failed\n", ERROR + PASSWORD_REQUIRED);
 
-		strs[0] = CCC->cs_addr;
-		lens[0] = strlen(CCC->cs_addr);
-		
-		strs[1] = "SRV_PW";
-		lens[1] = sizeof("SRV_PW") - 1;
-
-		CtdlAideFPMessage(
-			err_buf,
-			"IGNet Networking.",
-			2, strs,
-			(long*) &lens,
-			CCC->cs_pid, 0,
-			time(NULL));
-
+		CtdlAideMessage(err_buf, "IGNet Networking");
 		DeleteHash(&working_ignetcfg);
 		FreeStrBuf(&NodeStr);
 		return;

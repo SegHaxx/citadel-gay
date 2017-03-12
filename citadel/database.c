@@ -870,54 +870,29 @@ void cdb_trunc(int cdb)
 }
 
 
-time_t CheckIfAlreadySeen(StrBuf *guid, time_t now, time_t antiexpire, eCheckType cType)
+
+// Has an item already been seen (is it in the CDB_USETABLE) ?
+// Returns 0 if it hasn't, 1 if it has
+// In either case, writes the item to the database for next time.
+int CheckIfAlreadySeen(StrBuf *guid)
 {
-	time_t InDBTimeStamp = 0;
+	int found = 0;
 	struct UseTable ut;
 	struct cdbdata *cdbut;
 
-	memset(&ut, 0, sizeof(struct UseTable));	// zeroing it out makes it compress better
-
-	if (cType != eWrite)
-	{
-		syslog(LOG_DEBUG, "Loading [%s]", ChrPtr(guid));
-		cdbut = cdb_fetch(CDB_USETABLE, SKEY(guid));
-		if ((cdbut != NULL) && (cdbut->ptr != NULL)) {
-			memcpy(&ut, cdbut->ptr, ((cdbut->len > sizeof(struct UseTable)) ?  sizeof(struct UseTable) : cdbut->len));
-			InDBTimeStamp = now - ut.ut_timestamp;
-
-			if (InDBTimeStamp < antiexpire)
-			{
-				syslog(LOG_DEBUG, "Found - Not expired %ld < %ld", InDBTimeStamp, antiexpire);
-				cdb_free(cdbut);
-				return InDBTimeStamp;
-			}
-			else
-			{
-				syslog(LOG_DEBUG, "Found - Expired. %ld >= %ld", InDBTimeStamp, antiexpire);
-				cdb_free(cdbut);
-			}
-		}
-		else
-		{
-			if (cdbut) cdb_free(cdbut);
-			
-			syslog(LOG_DEBUG, "not Found");
-			if (cType == eCheckUpdate)
-				return 0;
-		}
-
-		if (cType == eCheckExist)
-			return InDBTimeStamp;
+	syslog(LOG_DEBUG, "CheckIfAlreadySeen(%s)", ChrPtr(guid));
+	cdbut = cdb_fetch(CDB_USETABLE, SKEY(guid));
+	if (cdbut != NULL) {
+		found = 1;
+		cdb_free(cdbut);
 	}
 
+	/* (Re)write the record, to update the timestamp.  Zeroing it out makes it compress better. */
+	memset(&ut, 0, sizeof(struct UseTable));
 	memcpy(ut.ut_msgid, SKEY(guid));
-	ut.ut_timestamp = now;
-
-	/* rewrite the record anyway, to update the timestamp */
-	syslog(LOG_DEBUG, "(re)writing usetable record");
+	ut.ut_timestamp = time(NULL);
 	cdb_store(CDB_USETABLE, SKEY(guid), &ut, sizeof(struct UseTable));
-	return InDBTimeStamp;
+	return(found);
 }
 
 

@@ -132,7 +132,7 @@ void pop3client_one_mailbox(char *room, const char *host, const char *user, cons
 			// Make up the Use Table record so we can check if we've already seen this message.
 			StrBuf *UT = NewStrBuf();
 			StrBufPrintf(UT, "pop3/%s/%s:%s@%s", room, oneuidl, user, host);
-			time_t already_seen = CheckIfAlreadySeen(UT, time(NULL), 0, eUpdate);
+			int already_seen = CheckIfAlreadySeen(UT);
 			FreeStrBuf(&UT);
 
 			// Only fetch the message if we haven't seen it before.

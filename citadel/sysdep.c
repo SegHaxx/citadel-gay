@@ -1085,8 +1085,6 @@ void checkcrash(void)
 	if (nFireUpsNonRestart != nFireUps)
 	{
 		StrBuf *CrashMail;
-		const char *msgs[1] = {"crash"};
-		const long lens[1] = {sizeof("crash") - 1};
 		CrashMail = NewStrBuf();
 		syslog(LOG_ALERT, "Posting crash message\n");
 		StrBufPrintf(CrashMail, 
@@ -1103,11 +1101,7 @@ void checkcrash(void)
 			" If you have already done this, the core dump is likely to be found at %score.%d\n"
 			,
 			ctdl_run_dir, ForkedPid);
-		CtdlAideFPMessage(ChrPtr(CrashMail),
-				  "Citadel server process terminated unexpectedly",
-				  1, msgs, lens,
-				  0, 0,
-				  time(NULL));
+		CtdlAideMessage(ChrPtr(CrashMail), "Citadel server process terminated unexpectedly");
 		FreeStrBuf(&CrashMail);
 	}
 }

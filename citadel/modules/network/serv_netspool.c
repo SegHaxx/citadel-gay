@@ -498,8 +498,6 @@ void network_spoolout_room(SpoolControl *sc)
 int network_usetable(struct CtdlMessage *msg)
 {
 	StrBuf *msgid;
-	struct CitContext *CCC = CC;
-	time_t now;
 
 	/* Bail out if we can't generate a message ID */
 	if ((msg == NULL) || CM_IsEmpty(msg, emessageId))
@@ -519,8 +517,7 @@ int network_usetable(struct CtdlMessage *msg)
 			return(0);
 		}
 	}
-	now = time(NULL);
-	if (CheckIfAlreadySeen(msgid, now, 0, eUpdate)) {
+	if (CheckIfAlreadySeen(msgid)) {
 		FreeStrBuf(&msgid);
 		return(1);
 	}

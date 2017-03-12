@@ -170,23 +170,10 @@ void DeleteNetworker(void *vptr)
 eNextState NWC_SendFailureMessage(AsyncIO *IO)
 {
 	AsyncNetworker *NW = IO->Data;
-	long lens[2];
-	const char *strs[2];
 
 	syslog(LOG_DEBUG, "NWC: %s\n", __FUNCTION__);
 
-	strs[0] = ChrPtr(NW->node);
-	lens[0] = StrLength(NW->node);
-	
-	strs[1] = ChrPtr(NW->IO.ErrMsg);
-	lens[1] = StrLength(NW->IO.ErrMsg);
-	CtdlAideFPMessage(
-		ChrPtr(NW->IO.ErrMsg),
-		"Networker error",
-		2, strs, (long*) &lens,
-		CCID, IO->ID,
-		EvGetNow(IO));
-	
+	CtdlAideMessage(ChrPtr(NW->IO.ErrMsg), "Networker error");
 	return eAbort;
 }
 
