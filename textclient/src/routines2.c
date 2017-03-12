@@ -1,16 +1,15 @@
 /*
  * More client-side support functions.
- * Unlike routines.c, some of these DO use global variables.
  *
- * Copyright (c) 1987-2016 by the citadel.org team
+ * Copyright (c) 1987-2017 by the citadel.org team
  *
- *  This program is open source software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License version 3.
+ * This program is open source software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 3.
  *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
  */
 
 #include <stdlib.h>
@@ -62,22 +61,10 @@ extern int screenwidth;
 
 
 /*
-int eopen(char *name, int mode)
-{
-	int ret;
-	ret = open(name, mode);
-	if (ret < 0) {
-		scr_printf("Cannot open file '%s', mode=%d, errno=%d\n",
-			name, mode, errno);
-		interr(errno);
-	}
-	return (ret);
-}
-*/
-
-
+ * return proper room prompt character
+ */
 int room_prompt(unsigned int qrflags)
-{				/* return proper room prompt character */
+{
 	int a;
 	a = '>';
 	if (qrflags & QR_DIRECTORY)
@@ -89,8 +76,12 @@ int room_prompt(unsigned int qrflags)
 	return (a);
 }
 
+
+/*
+ * Register with name and address
+ */
 void entregis(CtdlIPC *ipc)
-{				/* register with name and address */
+{
 
 	char buf[SIZ];
 	char tmpname[30];
@@ -191,8 +182,11 @@ void entregis(CtdlIPC *ipc)
 	scr_printf("\n");
 }
 
+/*
+ * make all messages old in current room
+ */
 void updatels(CtdlIPC *ipc)
-{				/* make all messages old in current room */
+{
 	char buf[256];
 	int r;				/* IPC response code */
 
@@ -486,8 +480,11 @@ int val_user(CtdlIPC *ipc, char *user, int do_validate)
 }
 
 
+/*
+ * Validate new users
+ */
 void validate(CtdlIPC *ipc)
-{				/* validate new users */
+{
 	char cmd[256];
 	char buf[256];
 	int finished = 0;
@@ -618,6 +615,3 @@ void read_bio(CtdlIPC *ipc)
 	}
 	if (resp) free(resp);
 }
-
-
-
