@@ -2,7 +2,7 @@
  * This file contains functions which implement parts of the
  * text-mode user interface.
  *
- * Copyright (c) 1987-2016 by the citadel.org team
+ * Copyright (c) 1987-2017 by the citadel.org team
  *
  * This program is open source software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3.
@@ -308,9 +308,11 @@ static void really_do_keepalive(void) {
 	}
 }
 
-/* threaded nonblocking keepalive stuff starts here. I'm going for a simple
-   encapsulated interface; in theory there should be no need to touch these
-   globals outside of the async_ka_* functions. */
+/*
+ * threaded nonblocking keepalive stuff starts here. I'm going for a simple
+ * encapsulated interface; in theory there should be no need to touch these
+ * globals outside of the async_ka_* functions.
+ */
 
 #ifdef THREADED_CLIENT
 static pthread_t ka_thr_handle;
@@ -352,9 +354,9 @@ static void async_ka_exec(void)
 #endif /* THREADED_CLIENT */
 
 /* I changed this from static to not because I need to call it from
-   screen.c, either that or make something in screen.c not static.
-   Fix it how you like. Why all the staticness? stu */
-   
+ * screen.c, either that or make something in screen.c not static.
+ * Fix it how you like. Why all the staticness? stu
+ */
 void do_keepalive(void)
 {
 	time_t now;
@@ -377,11 +379,13 @@ void do_keepalive(void)
 
 
 /* Now the actual async-keepalve API that we expose to higher levels:
-   async_ka_start() and async_ka_end(). These do nothing when we don't have
-   threading enabled, so we avoid sprinkling ifdef's throughout the code. */
+ * async_ka_start() and async_ka_end(). These do nothing when we don't have
+ * threading enabled, so we avoid sprinkling ifdef's throughout the code.
+ */
 
 /* wait for a background keepalive to complete. this must be done before
-   attempting any further server requests! */
+ * attempting any further server requests!
+ */
 void async_ka_end(void)
 {
 #ifdef THREADED_CLIENT
