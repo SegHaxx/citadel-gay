@@ -1,7 +1,7 @@
 /*
  * DNS lookup for SMTP sender
  *
- * Copyright (c) 1987-2011 by the citadel.org team
+ * Copyright (c) 1987-2017 by the citadel.org team
  *
  * This program is open source software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 3.
@@ -127,9 +127,7 @@ int getmx(char *mxbuf, char *dest) {
 	 * Make a call to the resolver library.
 	 */
 
-	ret = res_query(
-		dest,
-		C_IN, T_MX, (unsigned char *)answer.bytes, sizeof(answer)  );
+	ret = res_query(dest, C_IN, T_MX, (unsigned char *)answer.bytes, sizeof(answer));
 
 	if (ret < 0) {
 		mxrecs = malloc(sizeof(struct mx));
@@ -140,12 +138,13 @@ int getmx(char *mxbuf, char *dest) {
 	else {
 
 		/* If we had to truncate, shrink the number to avoid fireworks */
-		if (ret > sizeof(answer))
+		if (ret > sizeof(answer)) {
 			ret = sizeof(answer);
+		}
 	
-		startptr = &answer.bytes[0];		/* start and end of buffer */
+		startptr = &answer.bytes[0];		// start and end of buffer
 		endptr = &answer.bytes[ret];
-		ptr = startptr + HFIXEDSZ;	/* advance past header */
+		ptr = startptr + HFIXEDSZ;		// advance past header
 	
 		for (qdcount = ntohs(answer.header.qdcount); qdcount--; ptr += ret + QFIXEDSZ) {
 			if ((ret = dn_skipname(ptr, endptr)) < 0) {
@@ -156,12 +155,7 @@ int getmx(char *mxbuf, char *dest) {
 	
 		while(1) {
 			memset(expanded_buf, 0, sizeof(expanded_buf));
-			ret = dn_expand(startptr,
-					endptr,
-					ptr,
-					expanded_buf,
-					sizeof(expanded_buf)
-					);
+			ret = dn_expand(startptr, endptr, ptr, expanded_buf, sizeof(expanded_buf));
 			if (ret < 0) break;
 			ptr += ret;
 	
@@ -175,12 +169,7 @@ int getmx(char *mxbuf, char *dest) {
 	
 			else {
 				GETSHORT(pref, ptr);
-				ret = dn_expand(startptr,
-						endptr,
-						ptr,
-						expanded_buf,
-						sizeof(expanded_buf)
-						);
+				ret = dn_expand(startptr, endptr, ptr, expanded_buf, sizeof(expanded_buf));
 				ptr += ret;
 	
 				++num_mxrecs;
@@ -188,13 +177,11 @@ int getmx(char *mxbuf, char *dest) {
 					mxrecs = malloc(sizeof(struct mx));
 				}
 				else {
-					mxrecs = realloc(mxrecs,
-					    (sizeof(struct mx) * num_mxrecs) );
+					mxrecs = realloc(mxrecs, (sizeof(struct mx) * num_mxrecs) );
 				}
 	
 				mxrecs[num_mxrecs - 1].pref = pref;
-				strcpy(mxrecs[num_mxrecs - 1].host,
-				       expanded_buf);
+				strcpy(mxrecs[num_mxrecs - 1].host, expanded_buf);
 			}
 		}
 	}
@@ -211,7 +198,8 @@ int getmx(char *mxbuf, char *dest) {
 	}
 	free(mxrecs);
 
-	/* Append any fallback smart hosts we have configured.
+	/*
+	 * Append any fallback smart hosts we have configured.
 	 */
 	num_mxrecs += get_hosts(&mxbuf[strlen(mxbuf)], "fallbackhost");
 	return(num_mxrecs);
