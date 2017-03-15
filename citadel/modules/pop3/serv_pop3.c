@@ -1,7 +1,7 @@
 /*
  * POP3 service for the Citadel system
  *
- * Copyright (c) 1998-2015 by the citadel.org team
+ * Copyright (c) 1998-2017 by the citadel.org team
  *
  * This program is open source software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3.
@@ -19,7 +19,6 @@
  *    there exist mail clients which insist on using it (such as Bynari
  *    TradeMail, and certain versions of Eudora).
  * -> Capability detection via the method described in RFC2449 is implemented.
- * 
  */
 
 #include "sysdep.h"
@@ -59,24 +58,8 @@
 #include "internet_addressing.h"
 #include "serv_pop3.h"
 #include "md5.h"
-
-
-
 #include "ctdl_module.h"
 
-int POP3DebugEnabled = 0;
-
-#define POP3DBGLOG(LEVEL) if ((LEVEL != LOG_DEBUG) || (POP3DebugEnabled != 0))
-#define CCCID CCC->cs_pid
-#define POP3_syslog(LEVEL, FORMAT, ...)			\
-	POP3DBGLOG(LEVEL) syslog(LEVEL,			\
-				 "POP3CC[%d] " FORMAT,	\
-				 CCCID, __VA_ARGS__)
-
-#define POP3M_syslog(LEVEL, FORMAT)			\
-	POP3DBGLOG(LEVEL) syslog(LEVEL,			\
-				 "POP3CC[%d] " FORMAT,	\
-				 CCCID)
 
 /*
  * This cleanup function blows away the temporary memory and files used by
@@ -90,14 +73,13 @@ void pop3_cleanup_function(void)
 	if (CCC->h_command_function != pop3_command_loop) return;
 
 	struct citpop3 *pop3 = ((struct citpop3 *)CCC->session_specific_data);
-	POP3M_syslog(LOG_DEBUG, "Performing POP3 cleanup hook");
+	syslog(LOG_DEBUG, "pop3: performing cleanup hook");
 	if (pop3->msgs != NULL) {
 		free(pop3->msgs);
 	}
 
 	free(pop3);
 }
-
 
 
 /*
@@ -135,7 +117,6 @@ void pop3s_greeting(void)
 }
 
 
-
 /*
  * Specify user name (implements POP3 "USER" command)
  */
@@ -152,7 +133,6 @@ void pop3_user(char *argbuf)
 	strcpy(username, argbuf);
 	striplt(username);
 
-	/* POP3_syslog(LOG_DEBUG, "Trying <%s>", username); */
 	if (CtdlLoginExistingUser(NULL, username) == login_ok) {
 		cprintf("+OK Password required for %s\r\n", username);
 	}
@@ -160,7 +140,6 @@ void pop3_user(char *argbuf)
 		cprintf("-ERR No such user.\r\n");
 	}
 }
-
 
 
 /*
@@ -186,21 +165,13 @@ void pop3_add_message(long msgnum, void *userdata)
 	GetMetaData(&smi, msgnum);
 	if (smi.meta_rfc822_length <= 0L) {
 		CCC->redirect_buffer = NewStrBufPlain(NULL, SIZ);
-
-		CtdlOutputMsg(msgnum,
-			      MT_RFC822,
-			      HEADERS_ALL,
-			      0, 1, NULL,
-			      SUPPRESS_ENV_TO,
-			      NULL, NULL, NULL);
-
+		CtdlOutputMsg(msgnum, MT_RFC822, HEADERS_ALL, 0, 1, NULL, SUPPRESS_ENV_TO, NULL, NULL, NULL);
 		smi.meta_rfc822_length = StrLength(CCC->redirect_buffer);
-		FreeStrBuf(&CCC->redirect_buffer); /* TODO: WHEW, all this for just knowing the length???? */
+		FreeStrBuf(&CCC->redirect_buffer);
 		PutMetaData(&smi);
 	}
 	POP3->msgs[POP3->num_msgs-1].rfc822_length = smi.meta_rfc822_length;
 }
-
 
 
 /*
@@ -217,21 +188,20 @@ int pop3_grab_mailbox(void)
 	if (CtdlGetRoom(&CCC->room, MAILROOM) != 0) return(-1);
 
 	/* Load up the messages */
-	CtdlForEachMessage(MSGS_ALL, 0L, NULL, NULL, NULL,
-		pop3_add_message, NULL);
+	CtdlForEachMessage(MSGS_ALL, 0L, NULL, NULL, NULL, pop3_add_message, NULL);
 
 	/* Figure out which are old and which are new */
         CtdlGetRelationship(&vbuf, &CCC->user, &CCC->room);
 	POP3->lastseen = (-1);
 	if (POP3->num_msgs) for (i=0; i<POP3->num_msgs; ++i) {
-		if (is_msg_in_sequence_set(vbuf.v_seen,
-		   (POP3->msgs[POP3->num_msgs-1].msgnum) )) {
+		if (is_msg_in_sequence_set(vbuf.v_seen, (POP3->msgs[POP3->num_msgs-1].msgnum) )) {
 			POP3->lastseen = i;
 		}
 	}
 
 	return(POP3->num_msgs);
 }
+
 
 void pop3_login(void)
 {
@@ -242,7 +212,7 @@ void pop3_login(void)
 	if (msgs >= 0) {
 		cprintf("+OK %s is logged in (%d messages)\r\n",
 			CCC->user.fullname, msgs);
-		POP3_syslog(LOG_DEBUG, "POP3 authenticated %s", CCC->user.fullname);
+		syslog(LOG_DEBUG, "pop3: authenticated %s", CCC->user.fullname);
 	}
 	else {
 		cprintf("-ERR Can't open your mailbox\r\n");
@@ -260,7 +230,6 @@ void pop3_pass(char *argbuf) {
 	safestrncpy(password, argbuf, sizeof password);
 	striplt(password);
 
-	/* POP3_syslog(LOG_DEBUG, "Trying <%s>", password); */
 	if (CtdlTryPassword(password, strlen(password)) == pass_ok) {
 		pop3_login();
 	}
@@ -268,7 +237,6 @@ void pop3_pass(char *argbuf) {
 		cprintf("-ERR That is NOT the password.\r\n");
 	}
 }
-
 
 
 /*
@@ -283,8 +251,7 @@ void pop3_list(char *argbuf) {
 	/* "list one" mode */
 	if (which_one > 0) {
 		if (which_one > POP3->num_msgs) {
-			cprintf("-ERR no such message, only %d are here\r\n",
-				POP3->num_msgs);
+			cprintf("-ERR no such message, only %d are here\r\n", POP3->num_msgs);
 			return;
 		}
 		else if (POP3->msgs[which_one-1].deleted) {
@@ -292,10 +259,7 @@ void pop3_list(char *argbuf) {
 			return;
 		}
 		else {
-			cprintf("+OK %d %ld\r\n",
-				which_one,
-				(long)POP3->msgs[which_one-1].rfc822_length
-				);
+			cprintf("+OK %d %ld\r\n", which_one, (long)POP3->msgs[which_one-1].rfc822_length);
 			return;
 		}
 	}
@@ -305,9 +269,7 @@ void pop3_list(char *argbuf) {
 		cprintf("+OK Here's your mail:\r\n");
 		if (POP3->num_msgs > 0) for (i=0; i<POP3->num_msgs; ++i) {
 			if (! POP3->msgs[i].deleted) {
-				cprintf("%d %ld\r\n",
-					i+1,
-					(long)POP3->msgs[i].rfc822_length);
+				cprintf("%d %ld\r\n", i+1, (long)POP3->msgs[i].rfc822_length);
 			}
 		}
 		cprintf(".\r\n");
@@ -334,7 +296,6 @@ void pop3_stat(char *argbuf) {
 }
 
 
-
 /*
  * RETR command (fetch a message)
  */
@@ -353,10 +314,10 @@ void pop3_retr(char *argbuf) {
 	}
 
 	cprintf("+OK Message %d:\r\n", which_one);
-	CtdlOutputMsg(POP3->msgs[which_one - 1].msgnum,
-		      MT_RFC822, HEADERS_ALL, 0, 1, NULL,
-		      (ESC_DOT|SUPPRESS_ENV_TO),
-		      NULL, NULL, NULL);
+	CtdlOutputMsg(POP3->msgs[which_one - 1].msgnum, MT_RFC822,
+		HEADERS_ALL, 0, 1, NULL,
+		(ESC_DOT|SUPPRESS_ENV_TO), NULL, NULL, NULL
+	);
 	cprintf(".\r\n");
 }
 
@@ -478,12 +439,9 @@ void pop3_update(void)
 	/* Set last read pointer */
 	if (POP3->num_msgs > 0) {
 		CtdlLockGetCurrentUser();
-
 		CtdlGetRelationship(&vbuf, &CCC->user, &CCC->room);
-		snprintf(vbuf.v_seen, sizeof vbuf.v_seen, "*:%ld",
-			POP3->msgs[POP3->num_msgs-1].msgnum);
+		snprintf(vbuf.v_seen, sizeof vbuf.v_seen, "*:%ld", POP3->msgs[POP3->num_msgs-1].msgnum);
 		CtdlSetRelationship(&vbuf, &CCC->user, &CCC->room);
-
 		CtdlPutCurrentUserLock();
 	}
 
@@ -505,7 +463,6 @@ void pop3_rset(char *argbuf) {
 }
 
 
-
 /* 
  * LAST (Determine which message is the last unread message)
  */
@@ -515,8 +472,7 @@ void pop3_last(char *argbuf) {
 
 
 /*
- * CAPA is a command which tells the client which POP3 extensions
- * are supported.
+ * CAPA is a command which tells the client which POP3 extensions are supported.
  */
 void pop3_capa(void) {
 	cprintf("+OK Capability list follows\r\n"
@@ -529,7 +485,6 @@ void pop3_capa(void) {
 		CITADEL
 	);
 }
-
 
 
 /*
@@ -545,8 +500,7 @@ void pop3_uidl(char *argbuf) {
 	/* "list one" mode */
 	if (which_one > 0) {
 		if (which_one > POP3->num_msgs) {
-			cprintf("-ERR no such message, only %d are here\r\n",
-				POP3->num_msgs);
+			cprintf("-ERR no such message, only %d are here\r\n", POP3->num_msgs);
 			return;
 		}
 		else if (POP3->msgs[which_one-1].deleted) {
@@ -554,10 +508,7 @@ void pop3_uidl(char *argbuf) {
 			return;
 		}
 		else {
-			cprintf("+OK %d %ld\r\n",
-				which_one,
-				POP3->msgs[which_one-1].msgnum
-				);
+			cprintf("+OK %d %ld\r\n", which_one, POP3->msgs[which_one-1].msgnum);
 			return;
 		}
 	}
@@ -567,9 +518,7 @@ void pop3_uidl(char *argbuf) {
 		cprintf("+OK Here's your mail:\r\n");
 		if (POP3->num_msgs > 0) for (i=0; i<POP3->num_msgs; ++i) {
 			if (! POP3->msgs[i].deleted) {
-				cprintf("%d %ld\r\n",
-					i+1,
-					POP3->msgs[i].msgnum);
+				cprintf("%d %ld\r\n", i+1, POP3->msgs[i].msgnum);
 			}
 		}
 		cprintf(".\r\n");
@@ -586,19 +535,11 @@ void pop3_stls(void)
 	char nosup_response[SIZ];
 	char error_response[SIZ];
 
-	sprintf(ok_response,
-		"+OK Begin TLS negotiation now\r\n");
-	sprintf(nosup_response,
-		"-ERR TLS not supported here\r\n");
-	sprintf(error_response,
-		"-ERR Internal error\r\n");
+	sprintf(ok_response,	"+OK Begin TLS negotiation now\r\n");
+	sprintf(nosup_response,	"-ERR TLS not supported here\r\n");
+	sprintf(error_response,	"-ERR Internal error\r\n");
 	CtdlModuleStartCryptoMsgs(ok_response, nosup_response, error_response);
 }
-
-
-
-
-
 
 
 /* 
@@ -612,15 +553,15 @@ void pop3_command_loop(void)
 	time(&CCC->lastcmd);
 	memset(cmdbuf, 0, sizeof cmdbuf); /* Clear it, just in case */
 	if (client_getln(cmdbuf, sizeof cmdbuf) < 1) {
-		POP3M_syslog(LOG_INFO, "POP3 client disconnected: ending session.");
+		syslog(LOG_INFO, "pop3: client disconnected; ending session.");
 		CCC->kill_me = KILLME_CLIENT_DISCONNECTED;
 		return;
 	}
 	if (!strncasecmp(cmdbuf, "PASS", 4)) {
-		POP3M_syslog(LOG_DEBUG, "POP3: PASS...");
+		syslog(LOG_DEBUG, "pop3: PASS...");
 	}
 	else {
-		POP3_syslog(LOG_DEBUG, "POP3: %s", cmdbuf);
+		syslog(LOG_DEBUG, "pop3: %s", cmdbuf);
 	}
 	while (strlen(cmdbuf) < 5) strcat(cmdbuf, " ");
 
@@ -703,18 +644,11 @@ void pop3_command_loop(void)
 const char *CitadelServicePop3="POP3";
 const char *CitadelServicePop3S="POP3S";
 
-void SetPOP3DebugEnabled(const int n)
-{
-	POP3DebugEnabled = n;
-}
-
 
 CTDL_MODULE_INIT(pop3)
 {
 	if(!threading)
 	{
-		CtdlRegisterDebugFlagHook(HKEY("pop3srv"), SetPOP3DebugEnabled, &POP3DebugEnabled);
-
 		CtdlRegisterServiceHook(CtdlGetConfigInt("c_pop3_port"),
 					NULL,
 					pop3_greeting,
