@@ -108,8 +108,6 @@
  * How long (in seconds) to retain message entries in the use table
  */
 #define USETABLE_RETAIN			864000L		/* 10 days */
-#define USETABLE_ANTIEXPIRE     	345600L         /*  4 days */
-#define USETABLE_ANTIEXPIRE_HIRES	 86400L         /*  1 day */
 
 /*
  * The size of per-thread stacks.  If set too low, citserver will randomly crash.
