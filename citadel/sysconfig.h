@@ -14,19 +14,6 @@
  */
 
 /*
- * If you want to keep a transcript of all multiuser chats that go across
- * your system, define CHATLOG to the filename to be saved to.  Otherwise,
- * set CHATLOG to "/dev/null".
- */
-#define CHATLOG		"/dev/null"
-
-/*
- * Logging level to use if none is specified on the command line.
- * Note that this will suppress messages before they even get to syslog().
- */
-#define DEFAULT_VERBOSITY	7
-
-/*
  * NLI is the string that shows up in a <W>ho's online listing for sessions
  * that are active, but for which no user has yet authenticated.
  */
@@ -54,17 +41,15 @@
 #define BIGMSG		1024
 
 /*
- * SMTP delivery retry rules (all values are in seconds)
- *
- * If delivery of a message via SMTP is unsuccessful, Citadel will try again
- * after SMTP_RETRY_INTERVAL seconds.  This interval will double after each
- * unsuccessful delivery, up to a maximum of SMTP_RETRY_MAX seconds.  If no
- * successful delivery has been accomplished after SMTP_GIVE_UP seconds, the
- * message will be returned to its sender.
+ * SMTP delivery timeouts (measured in seconds)
+ * If outbound SMTP deliveries cannot be completed due to transient errors
+ * within SMTP_DELIVER_WARN seconds, the sender will receive a warning message
+ * indicating that the message has not yet been delivered but Citadel will
+ * keep trying.  After SMTP_DELIVER_FAIL seconds, Citadel will advise the
+ * sender that the deliveries have failed.
  */
-#define	SMTP_RETRY_INTERVAL	300	/* 5 minutes */
-#define SMTP_RETRY_MAX		43200	/* 12 hours */
-#define SMTP_GIVE_UP		432000	/* 5 days */
+#define SMTP_DELIVER_WARN	14400		// warn after four hours
+#define SMTP_DELIVER_FAIL	432000		// fail after five days
 
 /*
  * Who bounced messages appear to be from

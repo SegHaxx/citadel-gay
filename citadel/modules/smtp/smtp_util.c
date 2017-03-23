@@ -1,24 +1,5 @@
 /*
- * This module is an SMTP and ESMTP implementation for the Citadel system.
- * It is compliant with all of the following:
- *
- * RFC  821 - Simple Mail Transfer Protocol
- * RFC  876 - Survey of SMTP Implementations
- * RFC 1047 - Duplicate messages and SMTP
- * RFC 1652 - 8 bit MIME
- * RFC 1869 - Extended Simple Mail Transfer Protocol
- * RFC 1870 - SMTP Service Extension for Message Size Declaration
- * RFC 2033 - Local Mail Transfer Protocol
- * RFC 2197 - SMTP Service Extension for Command Pipelining
- * RFC 2476 - Message Submission
- * RFC 2487 - SMTP Service Extension for Secure SMTP over TLS
- * RFC 2554 - SMTP Service Extension for Authentication
- * RFC 2821 - Simple Mail Transfer Protocol
- * RFC 2822 - Internet Message Format
- * RFC 2920 - SMTP Service Extension for Command Pipelining
- *  
- * The VRFY and EXPN commands have been removed from this implementation
- * because nobody uses these commands anymore, except for spammers.
+ * Utility functions for the Citadel SMTP implementation
  *
  * Copyright (c) 1998-2017 by the citadel.org team
  *
@@ -77,12 +58,8 @@
 #include "clientsocket.h"
 #include "locate_host.h"
 #include "citadel_dirs.h"
-
 #include "ctdl_module.h"
-
 #include "smtp_util.h"
-#include "smtpqueue.h"
-#include "smtp_clienthandlers.h"
 
 const char *smtp_get_Recipients(void)
 {
@@ -95,11 +72,16 @@ const char *smtp_get_Recipients(void)
 
 
 /*
- * smtp_do_bounce() is caled by smtp_do_procmsg() to scan a set of delivery
- * instructions for "5" codes (permanent fatal errors) and produce/deliver
- * a "bounce" message (delivery status notification).
+ * smtp_do_bounce() is caled by smtp_process_one_msg() to scan a set of delivery
+ * instructions for errors and produce/deliver a "bounce" message (delivery
+ * status notification).
+ *
+ * is_final should be set to:
+ *	SDB_BOUNCE_FATALS	Advise the sender of all 5XX (permanent failures)
+ *	SDB_BOUNCE_ALL		Advise the sender that all deliveries have failed and will not be retried
+ *	SDB_WARN		Warn the sender about all 4XX transient delays
  */
-void smtp_do_bounce(char *instr, StrBuf *OMsgTxt)
+void smtp_do_bounce(const char *instr, int is_final)
 {
 	int i;
 	int lines;
@@ -112,9 +94,7 @@ void smtp_do_bounce(char *instr, StrBuf *OMsgTxt)
 	StrBuf *boundary;
 	int num_bounces = 0;
 	int bounce_this = 0;
-	time_t submitted = 0L;
 	struct CtdlMessage *bmsg = NULL;
-	int give_up = 0;
 	recptypes *valid;
 	int successful_bounce = 0;
 	static int seq = 0;
@@ -127,21 +107,6 @@ void smtp_do_bounce(char *instr, StrBuf *OMsgTxt)
 
 	StrBufAppendPrintf(boundary, "%s_%04x%04x", CtdlGetConfigStr("c_fqdn"), getpid(), ++seq);
 
-	lines = num_tokens(instr, '\n');
-
-	/* See if it's time to give up on delivery of this message */
-	for (i=0; i<lines; ++i) {
-		extract_token(buf, instr, i, '\n', sizeof buf);
-		extract_token(key, buf, 0, '|', sizeof key);
-		extract_token(addr, buf, 1, '|', sizeof addr);
-		if (!strcasecmp(key, "submitted")) {
-			submitted = atol(addr);
-		}
-	}
-
-	if ( (time(NULL) - submitted) > SMTP_GIVE_UP ) {
-		give_up = 1;
-	}
 
 	/* Start building our bounce message */
 
@@ -162,40 +127,50 @@ void smtp_do_bounce(char *instr, StrBuf *OMsgTxt)
 	StrBufAppendBufPlain(BounceMB, HKEY("\"\r\n"), 0);
 	StrBufAppendBufPlain(BounceMB, HKEY("MIME-Version: 1.0\r\n"), 0);
 	StrBufAppendBufPlain(BounceMB, HKEY("X-Mailer: " CITADEL "\r\n"), 0);
-
-	StrBufAppendBufPlain(
-		BounceMB,
-		HKEY("\r\nThis is a multipart message in MIME format."
-		     "\r\n\r\n"), 0);
-
+	StrBufAppendBufPlain(BounceMB, HKEY("\r\nThis is a multipart message in MIME format.\r\n\r\n"), 0);
 	StrBufAppendBufPlain(BounceMB, HKEY("--"), 0);
 	StrBufAppendBuf(BounceMB, boundary, 0);
 	StrBufAppendBufPlain(BounceMB, HKEY("\r\n"), 0);
-	StrBufAppendBufPlain(BounceMB,
-			     HKEY("Content-type: text/plain\r\n\r\n"), 0);
+	StrBufAppendBufPlain(BounceMB, HKEY("Content-type: text/plain\r\n\r\n"), 0);
 
-	if (give_up)
+	if (is_final == SDB_BOUNCE_ALL)
 	{
 		StrBufAppendBufPlain(
 			BounceMB,
-			HKEY("A message you sent could not be delivered "
-			     "to some or all of its recipients\ndue to "
-			     "prolonged unavailability of its destination(s).\n"
-			     "Giving up on the following addresses:\n\n"), 0);
+			HKEY(	"A message you sent could not be delivered "
+				"to some or all of its recipients\ndue to "
+				"prolonged unavailability of its destination(s).\n"
+				"Giving up on the following addresses:\n\n"),
+			0);
 	}
-	else
+	else if (is_final == SDB_BOUNCE_FATALS)
 	{
 		StrBufAppendBufPlain(
 			BounceMB,
-			HKEY("A message you sent could not be delivered "
-			     "to some or all of its recipients.\n"
-			     "The following addresses were undeliverable:\n\n"
-				), 0);
+			HKEY(	"A message you sent could not be delivered "
+				"to some or all of its recipients.\n"
+				"The following addresses were undeliverable:\n\n"),
+			0);
+	}
+	else if (is_final == SDB_WARN)
+	{
+		StrBufAppendBufPlain(
+			BounceMB,
+			HKEY("A message you sent has not been delivered "
+				"to some or all of its recipients.\n"
+				"Citadel will continue attempting delivery for five days.\n"
+				"The following addresses were undeliverable:\n\n"),
+			0);
+	}
+	else	// should never get here
+	{
+		StrBufAppendBufPlain(BounceMB, HKEY("This message should never occur.\n\n"), 0);
 	}
 
 	/*
 	 * Now go through the instructions checking for stuff.
 	 */
+	lines = num_tokens(instr, '\n');
 	for (i=0; i<lines; ++i) {
 		long addrlen;
 		long dsnlen;
@@ -217,21 +192,17 @@ void smtp_do_bounce(char *instr, StrBuf *OMsgTxt)
 		}
 
 		if (!strcasecmp(key, "remote")) {
-			if (status == 5) bounce_this = 1;
-			if (give_up) bounce_this = 1;
+			if ((is_final == SDB_BOUNCE_FATALS) && (status == 5)) bounce_this = 1;
+			if ((is_final == SDB_BOUNCE_ALL) && (status != 2)) bounce_this = 1;
+			if ((is_final == SDB_WARN) && (status == 4)) bounce_this = 1;
 		}
 
 		if (bounce_this) {
 			++num_bounces;
-
 			StrBufAppendBufPlain(BounceMB, addr, addrlen, 0);
 			StrBufAppendBufPlain(BounceMB, HKEY(": "), 0);
 			StrBufAppendBufPlain(BounceMB, dsn, dsnlen, 0);
 			StrBufAppendBufPlain(BounceMB, HKEY("\r\n"), 0);
-
-			remove_token(instr, i, '\n');
-			--i;
-			--lines;
 		}
 	}
 
@@ -240,35 +211,20 @@ void smtp_do_bounce(char *instr, StrBuf *OMsgTxt)
 		StrBufAppendBufPlain(BounceMB, HKEY("--"), 0);
 		StrBufAppendBuf(BounceMB, boundary, 0);
 		StrBufAppendBufPlain(BounceMB, HKEY("\r\n"), 0);
-
-		StrBufAppendBufPlain(
-			BounceMB,
-			HKEY("Content-type: message/rfc822\r\n"), 0);
-
-		StrBufAppendBufPlain(
-			BounceMB,
-			HKEY("Content-Transfer-Encoding: 7bit\r\n"), 0);
-
-		StrBufAppendBufPlain(
-			BounceMB,
-			HKEY("Content-Disposition: inline\r\n"), 0);
-
+		StrBufAppendBufPlain(BounceMB, HKEY("Content-type: message/rfc822\r\n"), 0);
+		StrBufAppendBufPlain(BounceMB, HKEY("Content-Transfer-Encoding: 7bit\r\n"), 0);
+		StrBufAppendBufPlain(BounceMB, HKEY("Content-Disposition: inline\r\n"), 0);
 		StrBufAppendBufPlain(BounceMB, HKEY("\r\n"), 0);
 
-		if (OMsgTxt == NULL) {
-			CC->redirect_buffer = NewStrBufPlain(NULL, SIZ);
-			CtdlOutputMsg(omsgid,
-				      MT_RFC822,
-				      HEADERS_ALL,
-				      0, 1, NULL, 0,
-				      NULL, NULL, NULL);
-
-			StrBufAppendBuf(BounceMB, CC->redirect_buffer, 0);
-			FreeStrBuf(&CC->redirect_buffer);
-		}
-		else {
-			StrBufAppendBuf(BounceMB, OMsgTxt, 0);
-		}
+		CC->redirect_buffer = NewStrBufPlain(NULL, SIZ);
+		CtdlOutputMsg(omsgid,
+			MT_RFC822,
+			HEADERS_ALL,
+			0, 1, NULL, 0,
+			NULL, NULL, NULL
+		);
+		StrBufAppendBuf(BounceMB, CC->redirect_buffer, 0);
+		FreeStrBuf(&CC->redirect_buffer);
 	}
 
 	/* Close the multipart MIME scope */
@@ -289,9 +245,7 @@ void smtp_do_bounce(char *instr, StrBuf *OMsgTxt)
 			syslog(LOG_DEBUG, "bounce to user <%s>", bounceto);
 		}
 		/* Can we deliver the bounce to the original sender? */
-		valid = validate_recipients(bounceto,
-					    smtp_get_Recipients (),
-					    0);
+		valid = validate_recipients(bounceto, smtp_get_Recipients (), 0);
 		if (valid != NULL) {
 			if (valid->num_error == 0) {
 				CtdlSubmitMsg(bmsg, valid, "", QP_EADDR);
@@ -313,3 +267,73 @@ void smtp_do_bounce(char *instr, StrBuf *OMsgTxt)
 	CM_Free(bmsg);
 	syslog(LOG_DEBUG, "Done processing bounces");
 }
+
+
+
+
+
+char *smtpcodes[][2] = {
+	{ "211 - System status / system help reply" },
+	{ "214", "Help message" },
+	{ "220", "Domain service ready" },
+	{ "221", "Domain service closing transmission channel" },
+	{ "250", "Requested mail action completed and OK" },
+	{ "251", "Not Local User, forward email to forward path" },
+	{ "252", "Cannot Verify user, will attempt delivery later" },
+	{ "253", "Pending messages for node started" },
+	{ "354", "Start mail input; end with ." },
+	{ "355", "Octet-offset is the transaction offset" },
+	{ "421", "Domain service not available, closing transmission channel" },
+	{ "432", "Domain service not available, closing transmission channel" },
+	{ "450", "Requested mail action not taken: mailbox unavailable. request refused" },
+	{ "451", "Requested action aborted: local error in processing Request is unable to be processed, try again" },
+	{ "452", "Requested action not taken: insufficient system storage" },
+	{ "453", "No mail" },
+	{ "454", "TLS not available due to temporary reason. Encryption required for requested authentication mechanism" },
+	{ "458", "Unable to queue messages for node" },
+	{ "459", "Node not allowed: reason" },
+	{ "500", "Syntax error, command unrecognized" },
+	{ "501", "Syntax error in parameters or arguments" },
+	{ "502", "Command not implemented" },
+	{ "503", "Bad sequence of commands" },
+	{ "504", "Command parameter not implemented" },
+	{ "510", "Check the recipient address" },
+	{ "512", "Domain can not be found. Unknown host." },
+	{ "515", "Destination mailbox address invalid" },
+	{ "517", "Problem with senders mail attribute, check properties" },
+	{ "521", "Domain does not accept mail" },
+	{ "522", "Recipient has exceeded mailbox limit" },
+	{ "523", "Server limit exceeded. Message too large" },
+	{ "530", "Access Denied. Authentication required" },
+	{ "531", "Mail system Full" },
+	{ "533", "Remote server has insufficient disk space to hold email" },
+	{ "534", "Authentication mechanism is too weak. Message too big" },
+	{ "535", "Multiple servers using same IP. Required Authentication" },
+	{ "538", "Encryption required for requested authentication mechanism" },
+	{ "540", "Email address has no DNS Server" },
+	{ "541", "No response from host" },
+	{ "542", "Bad Connection" },
+	{ "543", "Routing server failure. No available route" },
+	{ "546", "Email looping" },
+	{ "547", "Delivery time-out" },
+	{ "550", "Requested action not taken: mailbox unavailable or relaying denied" },
+	{ "551", "User not local; please try forward path" },
+	{ "552", "Requested mail action aborted: exceeded storage allocation" },
+	{ "553", "Requested action not taken: mailbox name not allowed" },
+	{ "554", "Transaction failed" }
+};
+
+
+
+char *smtpstatus(int code) {
+	int i;
+
+	for (i=0; i<(sizeof(smtpcodes)/sizeof(char *)/2); ++i) {
+		if (atoi(smtpcodes[i][0]) == code) {
+			return(smtpcodes[i][1]);
+		}
+	}
+	
+	return("Unknown or other SMTP status");
+}
+
