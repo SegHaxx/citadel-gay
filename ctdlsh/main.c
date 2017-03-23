@@ -32,6 +32,7 @@ COMMAND commands[] = {
 	{	"who",		cmd_who,	"Display a list of online users"	},
 	{	"exit",		cmd_quit,	"Quit using ctdlsh"			},
 	{	"quit",		cmd_quit,	"Quit using ctdlsh"			},
+	{	"mailq",	cmd_mailq,	"Show the outbound email queue"		},
 	{	NULL,		NULL,		NULL					}
 };
 
@@ -72,6 +73,7 @@ char *command_generator(const char *text, int state) {
 char **ctdlsh_completion(const char *text, int start, int end) {
 	char **matches = (char **) NULL;
 
+	rl_completer_word_break_characters = " ";
 	if (start == 0) {
 		matches = rl_completion_matches(text, command_generator);
 	}

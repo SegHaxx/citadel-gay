@@ -22,6 +22,7 @@
 #include <fcntl.h>
 #include <errno.h>
 #include <readline/readline.h>
+#include <libcitadel.h>
 
 /*
  * Set to the location of Citadel
@@ -47,3 +48,4 @@ int cmd_shutdown(int, char *);
 int cmd_who(int, char *);
 int cmd_export(int, char *);
 int cmd_config(int, char *);
+int cmd_mailq(int, char *);
