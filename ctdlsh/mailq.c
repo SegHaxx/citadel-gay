@@ -28,7 +28,7 @@ void mailq_show_this_queue_entry(StrBuf *MsgText) {
 			printf("Last delivery attempt: %s", asctime(localtime(&attempted)));
 		}
 		else if (!strncasecmp(ChrPtr(Line), HKEY("bounceto|"))) {
-			printf("Sender: %s\n", ChrPtr(Line)+10);
+			printf("Sender: %s\n", ChrPtr(Line)+9);
 		}
 		else if (!strncasecmp(ChrPtr(Line), HKEY("remote|"))) {
 			printf("Recipient: %s\n", ChrPtr(Line)+7);
