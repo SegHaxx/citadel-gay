@@ -1,7 +1,7 @@
 /*
  * This module handles states which are global to the entire server.
  *
- * Copyright (c) 1987-2016 by the citadel.org team
+ * Copyright (c) 1987-2017 by the citadel.org team
  *
  * This program is open source software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3.
@@ -83,10 +83,10 @@ void control_find_highest(struct ctdlroom *qrbuf, void *data)
 	}
 	cdb_free(cdbfr);
 	if (room_fixed) {
-		syslog(LOG_INFO, "Control record checking....Fixed room counter\n");
+		syslog(LOG_INFO, "control: fixed room counter");
 	}
 	if (message_fixed) {
-		syslog(LOG_INFO, "Control record checking....Fixed message count\n");
+		syslog(LOG_INFO, "control: fixed message count");
 	}
 	return;
 }
@@ -106,7 +106,7 @@ void control_find_user (struct ctdluser *EachUser, void *out_data)
 		user_fixed = 1;
 	}
 	if(user_fixed)
-		syslog(LOG_INFO, "Control record checking....Fixed user count\n");
+		syslog(LOG_INFO, "control: fixed user count");
 }
 
 
@@ -121,7 +121,7 @@ void migrate_legacy_control_record(void)
 
 	fp = fopen(file_citadel_control, "rb+");
 	if (fp != NULL) {
-		syslog(LOG_INFO, "Legacy format control record found -- importing to db");
+		syslog(LOG_INFO, "control: legacy format record found -- importing to db");
 		fread(&c, sizeof(struct legacy_ctrl_format), 1, fp);
 		
 		CtdlSetConfigLong(	"MMhighest",			c.MMhighest);
@@ -147,7 +147,7 @@ void migrate_legacy_control_record(void)
  */
 void check_control(void)
 {
-	syslog(LOG_INFO, "Sanity checking the recorded highest message, user, and room numbers\n");
+	syslog(LOG_INFO, "control: sanity checking the recorded highest message, user, and room numbers");
 	CtdlForEachRoom(control_find_highest, NULL);
 	ForEachUser(control_find_user, NULL);
 }

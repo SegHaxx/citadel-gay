@@ -1,7 +1,7 @@
 /*
  * Read and write the citadel.config file
  *
- * Copyright (c) 1987-2016 by the citadel.org team
+ * Copyright (c) 1987-2017 by the citadel.org team
  *
  * This program is open source software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3.
@@ -29,8 +29,8 @@ void config_warn_if_port_unset(char *key, int default_port)			\
 	int p = CtdlGetConfigInt(key);
 	if ((p < -1) ||	(p == 0) || (p > UINT16_MAX))
 	{
-		syslog(LOG_EMERG,
-			"configuration setting %s is not -1 (disabled) or a valid TCP-Port - check your config! Default setting is: %d",
+		syslog(LOG_ERR,
+			"config: setting %s is not -1 (disabled) or a valid TCP-Port - check your config! Default setting is: %d",
 			key, default_port
 		);
 	}
@@ -41,10 +41,9 @@ void config_warn_if_empty(char *key)
 {
 	if (IsEmptyStr(CtdlGetConfigStr(key)))
 	{
-		syslog(LOG_EMERG, "configuration setting %s is empty, but must not - check your config!", key);
+		syslog(LOG_ERR, "config: setting %s is empty, but must not - check your config!", key);
 	}
 }
-
 
 
 void validate_config(void) {
@@ -78,10 +77,10 @@ void validate_config(void) {
 	config_warn_if_port_unset("c_nntps_port", 563);
 
 	if (getpwuid(ctdluid) == NULL) {
-		syslog(LOG_EMERG, "The UID (%d) citadel is configured to use is not defined in your system (/etc/passwd?)!", ctdluid);
+		syslog(LOG_ERR, "config: UID (%d) citadel is configured to use is not defined in your system (/etc/passwd?)!", ctdluid);
 	}
-	
 }
+
 
 /*
  * Put some sane default values into our configuration.  Some will be overridden when we run setup.
@@ -141,7 +140,6 @@ void brand_new_installation_set_defaults(void) {
 	 */
 	CtdlSetConfigLong("c_config_created_or_migrated", (long)time(NULL));
 }
-
 
 
 /*
@@ -224,7 +222,6 @@ void migrate_legacy_config(struct legacy_config *lconfig)
 	CtdlSetConfigInt(	"c_nntp_port"		,	lconfig->c_nntp_port		);
 	CtdlSetConfigInt(	"c_nntps_port"		,	lconfig->c_nntps_port		);
 }
-
 
 
 /*
@@ -333,7 +330,6 @@ void initialize_config_system(void) {
 }
 
 
-
 /*
  * Called when Citadel server is shutting down.
  * Clears out the config hash table.
@@ -342,7 +338,6 @@ void shutdown_config_system(void)
 {
 	DeleteHash(&ctdlconfig);
 }
-
 
 
 /*
@@ -389,7 +384,6 @@ void CtdlSetConfigInt(char *key, int value)
 }
 
 
-
 /*
  * Delete a system config value.
  */
@@ -411,8 +405,6 @@ void CtdlDelConfig(char *key)
 
 	assert(Pos == NULL);	// no memory leaks allowed
 }
-
-
 
 
 /*
@@ -470,18 +462,6 @@ long CtdlGetConfigLong(char *key)
 }
 
 
-
-/**********************************************************************/
-
-
-
-
-
-
-
-
-
-
 void CtdlGetSysConfigBackend(long msgnum, void *userdata) {
 	config_msgnum = msgnum;
 }
@@ -499,7 +479,6 @@ char *CtdlGetSysConfig(char *sysconfname) {
 		CtdlGetRoom(&CC->room, hold_rm);
 		return NULL;
 	}
-
 
 	/* We want the last (and probably only) config in this room */
 	begin_critical_section(S_CONFIG);
@@ -537,4 +516,3 @@ char *CtdlGetSysConfig(char *sysconfname) {
 void CtdlPutSysConfig(char *sysconfname, char *sysconfdata) {
 	CtdlWriteObject(SYSCONFIGROOM, sysconfname, sysconfdata, (strlen(sysconfdata)+1), NULL, 0, 1, 0);
 }
-
