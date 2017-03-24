@@ -181,11 +181,11 @@ void rss_end_element(void *data, const char *el)
 					else {
 						CtdlSaveMsgPointerInRoom(rr->room, msgnum, 0, NULL);
 					}
-					syslog(LOG_DEBUG, "Saved message %ld to %s", msgnum, rr->room);
+					syslog(LOG_DEBUG, "rssclient: saved message %ld to %s", msgnum, rr->room);
 				}
 			}
 			else {
-				syslog(LOG_DEBUG, "%s was already seen", r->item_id);
+				syslog(LOG_DEBUG, "rssclient: already seen %s", r->item_id);
 			}
 	
 			CM_Free(r->msg);
@@ -310,7 +310,7 @@ void rssclient_push_todo(char *rssurl, char *roomname)
 	struct rssurl *thisone = NULL;
 	struct rssroom *newroom = NULL;
 
-	syslog(LOG_DEBUG, "rssclient_push_todo(%s, %s)", rssurl, roomname);
+	syslog(LOG_DEBUG, "rssclient: will fetch %s to %s", rssurl, roomname);
 
 	for (r=rsstodo; r!=NULL; r=r->next) {
 		if (!strcasecmp(r->url, rssurl)) {
@@ -340,7 +340,7 @@ void rss_pull_one_feed(struct rssurl *url)
 	CURLcode res;
 	StrBuf *Downloaded = NULL;
 
-	syslog(LOG_DEBUG, "rss_pull_one_feed(%s)", url->url);
+	syslog(LOG_DEBUG, "rssclient: fetching %s", url->url);
 
 	curl = curl_easy_init();
 	if (!curl) {
@@ -358,7 +358,7 @@ void rss_pull_one_feed(struct rssurl *url)
 	curl_easy_setopt(curl, CURLOPT_TIMEOUT, 20L);				// Time out after 20 seconds
 	res = curl_easy_perform(curl);						// Perform the request
 	if (res != CURLE_OK) {
-		syslog(LOG_WARNING, "Failed to load feed: %s", curl_easy_strerror(res));
+		syslog(LOG_WARNING, "rssclient: failed to load feed: %s", curl_easy_strerror(res));
 	}
 	curl_easy_cleanup(curl);
 
@@ -430,7 +430,7 @@ void rssclient_scan(void) {
 	/* Run no more than once every 15 minutes. */
 	if ((now - last_run) < 900) {
 		syslog(LOG_DEBUG,
-			"Client: polling interval not yet reached; last run was %ldm%lds ago",
+			"rssclient: polling interval not yet reached; last run was %ldm%lds ago",
 			((now - last_run) / 60),
 			((now - last_run) % 60)
 		);
@@ -438,10 +438,10 @@ void rssclient_scan(void) {
 	}
 
 	become_session(&rss_CC);
-	syslog(LOG_DEBUG, "rssclient started");
+	syslog(LOG_DEBUG, "rssclient: started");
 	CtdlForEachRoom(rssclient_scan_room, NULL);
 	rss_pull_feeds();
-	syslog(LOG_DEBUG, "rssclient ended");
+	syslog(LOG_DEBUG, "rssclient: ended");
 	last_run = time(NULL);
 	return;
 }
@@ -451,7 +451,7 @@ CTDL_MODULE_INIT(rssclient)
 {
 	if (!threading)
 	{
-		syslog(LOG_INFO, "%s", curl_version());
+		syslog(LOG_INFO, "rssclient: using %s", curl_version());
 		CtdlRegisterSessionHook(rssclient_scan, EVT_TIMER, PRIO_AGGR + 300);
 	}
 	else

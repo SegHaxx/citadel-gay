@@ -1,6 +1,6 @@
 /*
  * This module handles fulltext indexing of the message base.
- * Copyright (c) 2005-2015 by the citadel.org team
+ * Copyright (c) 2005-2017 by the citadel.org team
  *
  * This program is open source software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License as published
@@ -90,7 +90,7 @@ void ft_flush_cache(void) {
 	for (i=0; i<65536; ++i) {
 		if ((time(NULL) - last_update) >= 10) {
 			syslog(LOG_INFO,
-				"Flushing index cache to disk (%d%% complete)",
+				"fulltext: flushing index cache to disk (%d%% complete)",
 				(i * 100 / 65536)
 			);
 			last_update = time(NULL);
@@ -103,7 +103,7 @@ void ft_flush_cache(void) {
 			ftc_msgs[i] = NULL;
 		}
 	}
-	syslog(LOG_INFO, "Flushed index cache to disk (100%% complete)");
+	syslog(LOG_INFO, "fulltext: flushed index cache to disk (100%% complete)");
 }
 
 
@@ -122,17 +122,17 @@ void ft_index_message(long msgnum, int op) {
 
 	msg = CtdlFetchMessage(msgnum, 1, 1);
 	if (msg == NULL) {
-		syslog(LOG_ERR, "ft_index_message() could not load msg %ld", msgnum);
+		syslog(LOG_ERR, "fulltext: ft_index_message() could not load msg %ld", msgnum);
 		return;
 	}
 
 	if (!CM_IsEmpty(msg, eSuppressIdx)) {
-		syslog(LOG_DEBUG, "ft_index_message() excluded msg %ld", msgnum);
+		syslog(LOG_DEBUG, "fulltext: ft_index_message() excluded msg %ld", msgnum);
 		CM_Free(msg);
 		return;
 	}
 
-	syslog(LOG_DEBUG, "ft_index_message() %s msg %ld", (op ? "adding" : "removing") , msgnum);
+	syslog(LOG_DEBUG, "fulltext: ft_index_message() %s msg %ld", (op ? "adding" : "removing") , msgnum);
 
 	/* Output the message as text before indexing it, so we don't end up
 	 * indexing a bunch of encoded base64, etc.
@@ -143,13 +143,13 @@ void ft_index_message(long msgnum, int op) {
 	msgtext = CC->redirect_buffer;
 	CC->redirect_buffer = NULL;
 	if (msgtext != NULL) {
-		syslog(LOG_DEBUG, "Wordbreaking message %ld (%d bytes)", msgnum, StrLength(msgtext));
+		syslog(LOG_DEBUG, "fulltext: wordbreaking message %ld (%d bytes)", msgnum, StrLength(msgtext));
 	}
 	txt = SmashStrBuf(&msgtext);
 	wordbreaker(txt, &num_tokens, &tokens);
 	free(txt);
 
-	syslog(LOG_DEBUG, "Indexing message %ld [%d tokens]", msgnum, num_tokens);
+	syslog(LOG_DEBUG, "fulltext: indexing message %ld [%d tokens]", msgnum, num_tokens);
 	if (num_tokens > 0) {
 		for (i=0; i<num_tokens; ++i) {
 
@@ -195,7 +195,7 @@ void ft_index_message(long msgnum, int op) {
 				}
 			}
 			else {
-				syslog(LOG_ALERT, "Invalid token %d !!", tok);
+				syslog(LOG_ALERT, "fulltext: invalid token %d !!", tok);
 			}
 		}
 
@@ -242,8 +242,6 @@ void do_fulltext_indexing(void) {
 	int i;
 	static time_t last_index = 0L;
 	static time_t last_progress = 0L;
-	time_t run_time = 0L;
-	time_t end_time = 0L;
 	static int is_running = 0;
 	if (is_running) return;         /* Concurrency check - only one can run */
 	is_running = 1;
@@ -259,7 +257,6 @@ void do_fulltext_indexing(void) {
 	 * Make sure we don't run the indexer too frequently.
 	 * FIXME move the setting into config
 	 */
- 
 	if ( (time(NULL) - last_index) < 300L) {
 		return;
 	}
@@ -275,19 +272,16 @@ void do_fulltext_indexing(void) {
 		return;		/* nothing to do! */
 	}
 	
-	run_time = time(NULL);
-	syslog(LOG_DEBUG, "do_fulltext_indexing() started (%ld)", run_time);
-	
 	/*
 	 * If we've switched wordbreaker modules, burn the index and start
 	 * over.
 	 */
 	begin_critical_section(S_CONTROL);
 	if (CtdlGetConfigInt("MM_fulltext_wordbreaker") != FT_WORDBREAKER_ID) {
-		syslog(LOG_DEBUG, "wb ver on disk = %d, code ver = %d",
+		syslog(LOG_DEBUG, "fulltext: wb ver on disk = %d, code ver = %d",
 			CtdlGetConfigInt("MM_fulltext_wordbreaker"), FT_WORDBREAKER_ID
 		);
-		syslog(LOG_INFO, "(re)initializing full text index");
+		syslog(LOG_INFO, "fulltext: (re)initializing index");
 		cdb_trunc(CDB_FULLTEXT);
 		CtdlSetConfigLong("MMfulltext", 0);
 	}
@@ -314,7 +308,7 @@ void do_fulltext_indexing(void) {
 		for (i=0; i<ft_num_msgs; ++i) {
 			if (time(NULL) != last_progress) {
 				syslog(LOG_DEBUG,
-					"Indexed %d of %d messages (%d%%)",
+					"fulltext: indexed %d of %d messages (%d%%)",
 						i, ft_num_msgs,
 						((i*100) / ft_num_msgs)
 				);
@@ -324,14 +318,14 @@ void do_fulltext_indexing(void) {
 
 			/* Check to see if we need to quit early */
 			if (server_shutting_down) {
-				syslog(LOG_DEBUG, "Indexer quitting early");
+				syslog(LOG_DEBUG, "fulltext: indexer quitting early");
 				ft_newhighest = ft_newmsgs[i];
 				break;
 			}
 
 			/* Check to see if we have to maybe flush to disk */
 			if (i >= FT_MAX_CACHE) {
-				syslog(LOG_DEBUG, "Time to flush.");
+				syslog(LOG_DEBUG, "fulltext: time to flush.");
 				ft_newhighest = ft_newmsgs[i];
 				break;
 			}
@@ -343,15 +337,12 @@ void do_fulltext_indexing(void) {
 		ft_num_alloc = 0;
 		ft_newmsgs = NULL;
 	}
-	end_time = time(NULL);
 
 	if (server_shutting_down) {
 		is_running = 0;
 		return;
 	}
 	
-	syslog(LOG_DEBUG, "do_fulltext_indexing() duration (%ld)", end_time - run_time);
-		
 	/* Save our place so we don't have to do this again */
 	ft_flush_cache();
 	begin_critical_section(S_CONTROL);
@@ -360,7 +351,7 @@ void do_fulltext_indexing(void) {
 	end_critical_section(S_CONTROL);
 	last_index = time(NULL);
 
-	syslog(LOG_DEBUG, "do_fulltext_indexing() finished");
+	syslog(LOG_DEBUG, "fulltext: indexing finished");
 	is_running = 0;
 	return;
 }

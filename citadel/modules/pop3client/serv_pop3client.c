@@ -99,7 +99,7 @@ void pop3client_one_mailbox(char *room, const char *host, const char *user, cons
 	res = curl_easy_perform(curl);
 	if (res == CURLE_OK) {
 	} else {
-		syslog(LOG_DEBUG, "POP3S client failed: %s , trying POP3 next", curl_easy_strerror(res));
+		syslog(LOG_DEBUG, "pop3client: POP3S connection failed: %s , trying POP3 next", curl_easy_strerror(res));
 		snprintf(url, sizeof url, "pop3://%s", host);			// try unencrypted next
 		curl_easy_setopt(curl, CURLOPT_URL, url);
 		FlushStrBuf(Uidls);
@@ -107,7 +107,7 @@ void pop3client_one_mailbox(char *room, const char *host, const char *user, cons
 	}
 
 	if (res != CURLE_OK) {
-		syslog(LOG_DEBUG, "pop3 client failed: %s", curl_easy_strerror(res));
+		syslog(LOG_DEBUG, "pop3client: POP3 connection failed: %s", curl_easy_strerror(res));
 		curl_easy_cleanup(curl);
 		FreeStrBuf(&Uidls);
 		return;
@@ -117,7 +117,7 @@ void pop3client_one_mailbox(char *room, const char *host, const char *user, cons
 	// Now go through the UIDL list and look for messages.
 
 	int num_msgs = num_tokens(ChrPtr(Uidls), '\n');
-	syslog(LOG_DEBUG, "There are %d messages.", num_msgs);
+	syslog(LOG_DEBUG, "pop3client: there are %d messages", num_msgs);
 	for (i=0; i<num_msgs; ++i) {
 		char oneuidl[1024];
 		extract_token(oneuidl, ChrPtr(Uidls), i, '\n', sizeof oneuidl);
@@ -159,7 +159,7 @@ void pop3client_one_mailbox(char *room, const char *host, const char *user, cons
 				}
 			}
 			else {
-				syslog(LOG_DEBUG, "%s has already been retrieved", oneuidl);
+				syslog(LOG_DEBUG, "pop3client: %s has already been retrieved", oneuidl);
 			}
 		}
 	}
@@ -229,13 +229,13 @@ void pop3client_scan(void) {
 	if (doing_pop3client) return;
 	doing_pop3client = 1;
 
-	syslog(LOG_DEBUG, "pop3client scan started");
+	syslog(LOG_DEBUG, "pop3client: scan started");
 	CtdlForEachNetCfgRoom(pop3client_scan_room, NULL);
 
 	/*
 	 * We have to queue and process in separate phases, otherwise we leave a cursor open
 	 */
-	syslog(LOG_DEBUG, "pop3client processing started");
+	syslog(LOG_DEBUG, "pop3client: processing started");
 	while (p3cq != NULL) {
 		pptr = p3cq;
 		p3cq = p3cq->next;
@@ -249,7 +249,7 @@ void pop3client_scan(void) {
 		free(pptr);
 	}
 
-	syslog(LOG_DEBUG, "pop3client ended");
+	syslog(LOG_DEBUG, "pop3client: ended");
 	last_run = time(NULL);
 	doing_pop3client = 0;
 }

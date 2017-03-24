@@ -1,23 +1,16 @@
 /*
  * Default wordbreaker module for full text indexing.
  *
- * Copyright (c) 2005-2012 by the citadel.org team
+ * Copyright (c) 2005-2017 by the citadel.org team
  *
- *  This program is open source software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License version 3.
- *  
- *  
+ * This program is open source software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 3.
  *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  
- *  
- *  
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
  */
-
 
 #include "sysdep.h"
 #include <stdlib.h>
@@ -159,7 +152,7 @@ void noise_word_cleanup(void)
 	int i;
 	noise_word *cur, *next;
 	
-	syslog(LOG_INFO, "Cleaning up fulltext noise words.\n");
+	syslog(LOG_INFO, "wordbreaker: cleaning up fulltext noise words");
 	
 	for (i = 0 ; i < 26 ; i++)
 	{
@@ -231,12 +224,11 @@ void wordbreaker(const char *text, int *num_tokens, int **tokens) {
 		ch = *ptr;
 		if ( (!isalnum(ch)) && (word_start) ) {
 			word_end = ptr;
-//			--word_end;
 
 			/* extract the word */
 			word_len = word_end - word_start;
 			if (word_len >= sizeof word) {
-				syslog(LOG_DEBUG, "Invalid word length: %d\n", word_len);
+				syslog(LOG_DEBUG, "wordbreaker: invalid word length: %d", word_len);
 				safestrncpy(word, word_start, sizeof word);
 				word[(sizeof word) - 1] = 0;
 			}
