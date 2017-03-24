@@ -317,16 +317,6 @@ void smtp_process_one_msg(long qmsgnum)
 	char *bounceto = NULL;
 	char *envelope_from = NULL;
 
-	// Example queue instructions
-	//
-	// msgid|3978
-	// submitted|1489343934
-	// bounceto|IGnatius T Foobar@dev
-	// attempted|1489344257
-	// remote|unreachable@example.com|4|Timeout while connecting example.com [93.184.216.34]:25
-	// remote|unreachable@example.org|4|Timeout while connecting example.org [93.184.216.34]:25
-	// remote|unreachable@example.gov|0|1) A-lookup example.gov - Domain name not found; 2) AAAA-lookup example.gov - Domain name not found;
-
 	char cfgline[SIZ];
 	for (i=0; i<num_tokens(instr, '\n'); ++i) {
 		extract_token(cfgline, instr, i, '\n', sizeof cfgline);
