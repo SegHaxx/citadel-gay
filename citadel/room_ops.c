@@ -914,7 +914,7 @@ void CtdlUserGoto(char *where, int display_result, int transiently,
 	if (retnew != NULL) *retnew = new_messages;
 	if (retoldest != NULL) *retoldest = oldest_message;
 	if (retnewest != NULL) *retnewest = newest_message;
-	syslog(LOG_DEBUG, "<%s> %d new of %d total messages, oldest=%ld, newest=%ld",
+	syslog(LOG_DEBUG, "room_ops: %s : %d new of %d total messages, oldest=%ld, newest=%ld",
 		   CCC->room.QRname, new_messages, total_messages, oldest_message, newest_message
 	);
 
@@ -997,7 +997,7 @@ int CtdlRenameRoom(char *old_name, char *new_name, int new_floor) {
 	long owner = 0L;
 	char actual_old_name[ROOMNAMELEN];
 
-	syslog(LOG_DEBUG, "CtdlRenameRoom(%s, %s, %d)", old_name, new_name, new_floor);
+	syslog(LOG_DEBUG, "room_ops: CtdlRenameRoom(%s, %s, %d)", old_name, new_name, new_floor);
 
 	if (new_floor >= 0) {
 		fl = CtdlGetCachedFloor(new_floor);
@@ -1086,11 +1086,11 @@ int CtdlRenameRoom(char *old_name, char *new_name, int new_floor) {
 		lgetfloor(&flbuf, old_floor);
 		--flbuf.f_ref_count;
 		lputfloor(&flbuf, old_floor);
-		syslog(LOG_DEBUG, "Reference count for floor %d is now %d", old_floor, flbuf.f_ref_count);
+		syslog(LOG_DEBUG, "room_ops: reference count for floor %d is now %d", old_floor, flbuf.f_ref_count);
 		lgetfloor(&flbuf, new_floor);
 		++flbuf.f_ref_count;
 		lputfloor(&flbuf, new_floor);
-		syslog(LOG_DEBUG, "Reference count for floor %d is now %d", new_floor, flbuf.f_ref_count);
+		syslog(LOG_DEBUG, "room_ops: reference count for floor %d is now %d", new_floor, flbuf.f_ref_count);
 	}
 
 	/* ...and everybody say "YATTA!" */	
@@ -1109,7 +1109,7 @@ void CtdlScheduleRoomForDeletion(struct ctdlroom *qrbuf)
 	char old_name[ROOMNAMELEN];
 	static int seq = 0;
 
-	syslog(LOG_NOTICE, "Scheduling room <%s> for deletion", qrbuf->QRname);
+	syslog(LOG_NOTICE, "room_ops: scheduling room <%s> for deletion", qrbuf->QRname);
 
 	safestrncpy(old_name, qrbuf->QRname, sizeof old_name);
 	CtdlGetRoom(qrbuf, qrbuf->QRname);
@@ -1142,7 +1142,7 @@ void CtdlDeleteRoom(struct ctdlroom *qrbuf)
 	struct floor flbuf;
 	char configdbkeyname[25];
 
-	syslog(LOG_NOTICE, "Deleting room <%s>", qrbuf->QRname);
+	syslog(LOG_NOTICE, "room_ops: deleting room <%s>", qrbuf->QRname);
 
 	/* Delete the room's network configdb entry */
 	netcfg_keyname(configdbkeyname, qrbuf->QRnumber);
@@ -1226,10 +1226,10 @@ unsigned CtdlCreateRoom(char *new_room_name,
 	struct floor flbuf;
 	visit vbuf;
 
-	syslog(LOG_DEBUG, "CtdlCreateRoom(name=%s, type=%d, view=%d)", new_room_name, new_room_type, new_room_view);
+	syslog(LOG_DEBUG, "room_ops: CtdlCreateRoom(name=%s, type=%d, view=%d)", new_room_name, new_room_type, new_room_view);
 
 	if (CtdlGetRoom(&qrbuf, new_room_name) == 0) {
-		syslog(LOG_DEBUG, "Cannot create room <%s> - already exists", new_room_name);
+		syslog(LOG_DEBUG, "room_ops: cannot create room <%s> - already exists", new_room_name);
 		return(0);
 	}
 

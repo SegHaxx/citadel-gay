@@ -108,7 +108,7 @@ void network_bounce(struct CtdlMessage **pMsg, char *reason)
 	long len;
 	struct CtdlMessage *msg = *pMsg;
 	*pMsg = NULL;
-	syslog(LOG_DEBUG, "entering network_bounce()");
+	syslog(LOG_DEBUG, "netspool: entering network_bounce()");
 
 	if (msg == NULL) return;
 
@@ -171,7 +171,7 @@ void network_bounce(struct CtdlMessage **pMsg, char *reason)
 	/* Clean up */
 	if (valid != NULL) free_recipients(valid);
 	CM_Free(msg);
-	syslog(LOG_DEBUG, "leaving network_bounce()");
+	syslog(LOG_DEBUG, "netspool: leaving network_bounce()");
 }
 
 
@@ -267,7 +267,7 @@ void InspectQueuedRoom(SpoolControl **pSC,
 	SpoolControl *sc;
 	int i = 0;
 
-	syslog(LOG_INFO, "InspectQueuedRoom(%s)", room_to_spool->name);
+	syslog(LOG_INFO, "netspool: InspectQueuedRoom(%s)", room_to_spool->name);
 
 	sc = (SpoolControl*)malloc(sizeof(SpoolControl));
 	memset(sc, 0, sizeof(SpoolControl));
@@ -280,7 +280,7 @@ void InspectQueuedRoom(SpoolControl **pSC,
 	 * queued for networking and then deleted before it can happen.
 	 */
 	if (CtdlGetRoom(&sc->room, room_to_spool->name) != 0) {
-		syslog(LOG_INFO, "ERROR: cannot load <%s>", room_to_spool->name);
+		syslog(LOG_INFO, "netspool: ERROR; cannot load <%s>", room_to_spool->name);
 		free(sc);
 		return;
 	}
@@ -289,11 +289,11 @@ void InspectQueuedRoom(SpoolControl **pSC,
 
 	sc->RNCfg = CtdlGetNetCfgForRoom(sc->room.QRnumber);
 
-	syslog(LOG_DEBUG, "Room <%s> highest=%ld lastsent=%ld", room_to_spool->name, sc->room.QRhighest, sc->RNCfg->lastsent);
+	syslog(LOG_DEBUG, "netspool: room <%s> highest=%ld lastsent=%ld", room_to_spool->name, sc->room.QRhighest, sc->RNCfg->lastsent);
 	if ( (!HaveSpoolConfig(sc->RNCfg)) || (sc->room.QRhighest <= sc->RNCfg->lastsent) ) 
 	{
 		// There is nothing to send from this room.
-		MARK_syslog(LOG_DEBUG, "Nothing to do for <%s>", room_to_spool->name);
+		MARK_syslog(LOG_DEBUG, "netspool: nothing to do for <%s>", room_to_spool->name);
 		FreeRoomNetworkStruct(&sc->RNCfg);
 		sc->RNCfg = NULL;
 		free(sc);
@@ -428,7 +428,7 @@ void network_spoolout_room(SpoolControl *sc)
 	 */
 	memcpy (&CCC->room, &sc->room, sizeof(ctdlroom));
 
-	syslog(LOG_INFO, "network_spoolout_room(room=%s, lastsent=%ld)", CCC->room.QRname, sc->lastsent);
+	syslog(LOG_INFO, "netspool: network_spoolout_room(room=%s, lastsent=%ld)", CCC->room.QRname, sc->lastsent);
 
 	CalcListID(sc);
 
@@ -474,7 +474,7 @@ void network_spoolout_room(SpoolControl *sc)
 	}
 
 	/* Now rewrite the netconfig */
-	syslog(LOG_DEBUG, "lastsent was %ld , now it is %ld", lastsent, sc->lastsent);
+	syslog(LOG_DEBUG, "netspool: lastsent was %ld , now it is %ld", lastsent, sc->lastsent);
 	if (sc->lastsent != lastsent)
 	{
 		OneRoomNetCfg *r;
@@ -547,13 +547,13 @@ void network_process_buffer(char *buffer, long size, HashList *working_ignetcfg,
 	unsigned char firstbyte;
 	unsigned char lastbyte;
 
-	syslog(LOG_DEBUG, "network_process_buffer() processing %ld bytes", size);
+	syslog(LOG_DEBUG, "netspool: network_process_buffer() processing %ld bytes", size);
 
 	/* Validate just a little bit.  First byte should be FF and * last byte should be 00. */
 	firstbyte = buffer[0];
 	lastbyte = buffer[size-1];
 	if ( (firstbyte != 255) || (lastbyte != 0) ) {
-		syslog(LOG_ERR, "Corrupt message ignored.  Length=%ld, firstbyte = %d, lastbyte = %d", size, firstbyte, lastbyte);
+		syslog(LOG_ERR, "netspool: corrupt message ignored.  Length=%ld, firstbyte = %d, lastbyte = %d", size, firstbyte, lastbyte);
 		return;
 	}
 
@@ -603,7 +603,7 @@ void network_process_buffer(char *buffer, long size, HashList *working_ignetcfg,
 					 time(NULL),
 					 rand()
 				);
-				syslog(LOG_DEBUG, "Appending to %s", filename);
+				syslog(LOG_DEBUG, "netspool: appending to %s", filename);
 				fp = fopen(filename, "ab");
 				if (fp != NULL) {
 					fwrite(sermsg.ser, sermsg.len, 1, fp);
@@ -664,7 +664,7 @@ void network_process_buffer(char *buffer, long size, HashList *working_ignetcfg,
 				"A message you sent could not be delivered due to an invalid address.\n"
 				"Please check the address and try sending the message again.\n");
 			free_recipients(recp);
-			syslog(LOG_DEBUG, "Bouncing message due to invalid recipient address.");
+			syslog(LOG_DEBUG, "netspool: bouncing message due to invalid recipient address.");
 			return;
 		}
 		strcpy(target_room, "");	/* no target room if mail */
@@ -741,12 +741,12 @@ void network_process_file(char *filename,
 
 	fp = fopen(filename, "rb");
 	if (fp == NULL) {
-		syslog(LOG_CRIT, "Error opening %s: %s", filename, strerror(errno));
+		syslog(LOG_ERR, "%s: %s", filename, strerror(errno));
 		return;
 	}
 
 	fseek(fp, 0L, SEEK_END);
-	syslog(LOG_INFO, "network: processing %ld bytes from %s", ftell(fp), filename);
+	syslog(LOG_INFO, "netspool: processing %ld bytes from %s", ftell(fp), filename);
 	rewind(fp);
 
 	/* Look for messages in the data stream and break them out */
@@ -781,7 +781,7 @@ void network_process_file(char *filename,
 	}
 
 	if (nMessages > 0)
-		syslog(LOG_INFO, "network: processed %d messages in %s", nMessages, filename);
+		syslog(LOG_INFO, "netspool: processed %d messages in %s", nMessages, filename);
 
 	fclose(fp);
 	unlink(filename);
@@ -808,11 +808,11 @@ void network_do_spoolin(HashList *working_ignetcfg, HashList *the_netmap, int *n
 	 */
 	if (stat(ctdl_netin_dir, &statbuf)) return;
 	if (statbuf.st_mtime == last_spoolin_mtime) {
-		MARKM_syslog(LOG_DEBUG, "network: nothing in inbound queue");
+		MARKM_syslog(LOG_DEBUG, "netspool: nothing in inbound queue");
 		return;
 	}
 	last_spoolin_mtime = statbuf.st_mtime;
-	MARKM_syslog(LOG_DEBUG, "network: processing inbound queue");
+	MARKM_syslog(LOG_DEBUG, "netspool: processing inbound queue");
 
 	/*
 	 * Ok, there's something interesting in there, so scan it.
@@ -979,10 +979,10 @@ void network_consolidate_spoolout(HashList *working_ignetcfg, HashList *the_netm
 			 ctdl_netout_dir,
 			 ChrPtr(NextHop));
 
-		syslog(LOG_DEBUG, "Consolidate %s to %s", filename, ChrPtr(NextHop));
+		syslog(LOG_DEBUG, "netspool: consolidate %s to %s", filename, ChrPtr(NextHop));
 		if (CtdlNetworkTalkingTo(SKEY(NextHop), NTT_CHECK)) {
 			nFailed++;
-			syslog(LOG_DEBUG, "Currently online with %s - skipping for now", ChrPtr(NextHop));
+			syslog(LOG_DEBUG, "netspool: urrently online with %s - skipping for now", ChrPtr(NextHop));
 		}
 		else {
 			size_t dsize;
@@ -994,10 +994,7 @@ void network_consolidate_spoolout(HashList *working_ignetcfg, HashList *the_netm
 			infd = open(filename, O_RDONLY);
 			if (infd == -1) {
 				nFailed++;
-				syslog(LOG_ERR,
-					  "failed to open %s for reading due to %s; skipping.",
-					  filename, strerror(errno)
-				);
+				syslog(LOG_ERR, "%s: %s", filename, strerror(errno));
 				CtdlNetworkTalkingTo(SKEY(NextHop), NTT_REMOVE);
 				continue;				
 			}
@@ -1013,10 +1010,7 @@ void network_consolidate_spoolout(HashList *working_ignetcfg, HashList *the_netm
 			}
 			if (outfd == -1) {
 				nFailed++;
-				syslog(LOG_ERR,
-					  "failed to open %s for reading due to %s; skipping.",
-					  spooloutfilename, strerror(errno)
-				);
+				syslog(LOG_ERR, "%s: %s", spooloutfilename, strerror(errno));
 				close(infd);
 				CtdlNetworkTalkingTo(SKEY(NextHop), NTT_REMOVE);
 				continue;
@@ -1027,9 +1021,6 @@ void network_consolidate_spoolout(HashList *working_ignetcfg, HashList *the_netm
 
 			fstat(infd, &statbuf);
 			fsize = statbuf.st_size;
-/*
-			fsize = lseek(infd, 0, SEEK_END);
-*/			
 			IOB.fd = infd;
 			FDIOBufferInit(&FDIO, &IOB, outfd, fsize + dsize);
 			FDIO.ChunkSendRemain = fsize;
@@ -1039,11 +1030,11 @@ void network_consolidate_spoolout(HashList *working_ignetcfg, HashList *the_netm
 			do {} while ((FileMoveChunked(&FDIO, &err) > 0) && (err == NULL));
 			if (err == NULL) {
 				unlink(filename);
-				syslog(LOG_DEBUG, "Spoolfile %s now "SIZE_T_FMT" KB", spooloutfilename, (dsize + fsize)/1024);
+				syslog(LOG_DEBUG, "netspool: spoolfile %s now "SIZE_T_FMT" KB", spooloutfilename, (dsize + fsize)/1024);
 			}
 			else {
 				nFailed++;
-				syslog(LOG_ERR, "failed to append to %s [%s]; rolling back..", spooloutfilename, strerror(errno));
+				syslog(LOG_ERR, "netspool: failed to append to %s [%s]; rolling back..", spooloutfilename, strerror(errno));
 				/* whoops partial append?? truncate spooloutfilename again! */
 				ftruncate(outfd, dsize);
 			}
@@ -1057,7 +1048,7 @@ void network_consolidate_spoolout(HashList *working_ignetcfg, HashList *the_netm
 
 	if (nFailed > 0) {
 		FreeStrBuf(&NextHop);
-		syslog(LOG_INFO, "skipping Spoolcleanup because of %d files unprocessed.", nFailed);
+		syslog(LOG_INFO, "netspool: skipping Spoolcleanup because of %d files unprocessed.", nFailed);
 
 		return;
 	}
@@ -1150,21 +1141,21 @@ void free_spoolcontrol_struct_members(SpoolControl *sc)
  */
 void create_spool_dirs(void) {
 	if ((mkdir(ctdl_spool_dir, 0700) != 0) && (errno != EEXIST))
-		syslog(LOG_EMERG, "unable to create directory [%s]: %s", ctdl_spool_dir, strerror(errno));
+		syslog(LOG_EMERG, "netspool: unable to create directory [%s]: %s", ctdl_spool_dir, strerror(errno));
 	if (chown(ctdl_spool_dir, CTDLUID, (-1)) != 0)
-		syslog(LOG_EMERG, "unable to set the access rights for [%s]: %s", ctdl_spool_dir, strerror(errno));
+		syslog(LOG_EMERG, "netspool: unable to set the access rights for [%s]: %s", ctdl_spool_dir, strerror(errno));
 	if ((mkdir(ctdl_netin_dir, 0700) != 0) && (errno != EEXIST))
-		syslog(LOG_EMERG, "unable to create directory [%s]: %s", ctdl_netin_dir, strerror(errno));
+		syslog(LOG_EMERG, "netspool: unable to create directory [%s]: %s", ctdl_netin_dir, strerror(errno));
 	if (chown(ctdl_netin_dir, CTDLUID, (-1)) != 0)
-		syslog(LOG_EMERG, "unable to set the access rights for [%s]: %s", ctdl_netin_dir, strerror(errno));
+		syslog(LOG_EMERG, "netspool: unable to set the access rights for [%s]: %s", ctdl_netin_dir, strerror(errno));
 	if ((mkdir(ctdl_nettmp_dir, 0700) != 0) && (errno != EEXIST))
-		syslog(LOG_EMERG, "unable to create directory [%s]: %s", ctdl_nettmp_dir, strerror(errno));
+		syslog(LOG_EMERG, "netspool: unable to create directory [%s]: %s", ctdl_nettmp_dir, strerror(errno));
 	if (chown(ctdl_nettmp_dir, CTDLUID, (-1)) != 0)
-		syslog(LOG_EMERG, "unable to set the access rights for [%s]: %s", ctdl_nettmp_dir, strerror(errno));
+		syslog(LOG_EMERG, "netspool: unable to set the access rights for [%s]: %s", ctdl_nettmp_dir, strerror(errno));
 	if ((mkdir(ctdl_netout_dir, 0700) != 0) && (errno != EEXIST))
-		syslog(LOG_EMERG, "unable to create directory [%s]: %s", ctdl_netout_dir, strerror(errno));
+		syslog(LOG_EMERG, "netspool: unable to create directory [%s]: %s", ctdl_netout_dir, strerror(errno));
 	if (chown(ctdl_netout_dir, CTDLUID, (-1)) != 0)
-		syslog(LOG_EMERG, "unable to set the access rights for [%s]: %s", ctdl_netout_dir, strerror(errno));
+		syslog(LOG_EMERG, "netspool: unable to set the access rights for [%s]: %s", ctdl_netout_dir, strerror(errno));
 }
 
 /*
