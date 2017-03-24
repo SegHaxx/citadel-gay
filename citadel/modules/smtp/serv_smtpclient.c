@@ -236,9 +236,19 @@ int smtp_attempt_delivery(long msgid, char *recp, char *envelope_from)
 			curl_easy_setopt(curl, CURLOPT_READDATA, &s);
 			curl_easy_setopt(curl, CURLOPT_UPLOAD, 1);						// tell libcurl we are uploading
 			curl_easy_setopt(curl, CURLOPT_TIMEOUT, 20L);						// Time out after 20 seconds
+			curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0L);
+			curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 0L);
 
 			strcpy(try_this_mx, "smtp://");
 			extract_token(&try_this_mx[7], mxes, i, '|', (sizeof try_this_mx - 7));
+			if (
+				(!strncasecmp(try_this_mx, HKEY("smtp://smtp://")))				// This can happen if the administrator
+				|| (!strncasecmp(try_this_mx, HKEY("smtp://smtps://")))				// puts a full smtp[s] URI as the smart-host
+			) {
+				strcpy(try_this_mx, &try_this_mx[7]);
+			}
+
+
 			curl_easy_setopt(curl, CURLOPT_URL, try_this_mx);
 
 			syslog(LOG_DEBUG, "smtpclient: trying %s", try_this_mx);			// send the message

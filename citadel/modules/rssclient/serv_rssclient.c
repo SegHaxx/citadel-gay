@@ -350,6 +350,8 @@ void rss_pull_one_feed(struct rssurl *url)
 	Downloaded = NewStrBuf();
 
 	curl_easy_setopt(curl, CURLOPT_URL, url->url);
+	curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0L);
+	curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 0L);
 	curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);			// Follow redirects
 	curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, CurlFillStrBuf_callback);	// What to do with downloaded data
 	curl_easy_setopt(curl, CURLOPT_WRITEDATA, Downloaded);			// Give it our StrBuf to work with
