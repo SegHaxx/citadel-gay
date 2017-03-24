@@ -79,7 +79,7 @@ void smtp_init_spoolout(void) {
 
 	/*
 	 * Make sure it's set to be a "system room" so it doesn't show up
-	 * in the <K>nown rooms list for Aides.
+	 * in the <K>nown rooms list for administrators.
 	 */
 	if (CtdlGetRoomLock(&qrbuf, SMTP_SPOOLOUT_ROOM) == 0) {
 		qrbuf.QRflags2 |= QR2_SYSTEM;
@@ -248,7 +248,6 @@ int smtp_attempt_delivery(long msgid, char *recp, char *envelope_from)
 				strcpy(try_this_mx, &try_this_mx[7]);
 			}
 
-
 			curl_easy_setopt(curl, CURLOPT_URL, try_this_mx);
 
 			syslog(LOG_DEBUG, "smtpclient: trying %s", try_this_mx);			// send the message
@@ -287,7 +286,7 @@ void smtp_process_one_msg(long qmsgnum)
 	long deletes[2];
 	int delete_this_queue = 0;
 
-	syslog(LOG_DEBUG, "smtpclient: smtp_process_one_msg(%ld)", qmsgnum);
+	syslog(LOG_DEBUG, "smtpclient: processing queue entry %ld", qmsgnum);
 
 	msg = CtdlFetchMessage(qmsgnum, 1, 1);
 	if (msg == NULL) {
@@ -343,8 +342,7 @@ void smtp_process_one_msg(long qmsgnum)
 	}
 
 	if (should_try_now) {
-		syslog(LOG_DEBUG, "smtpclient: attempting delivery");
-
+		syslog(LOG_DEBUG, "smtpclient: attempting delivery now");
 		StrBuf *NewInstr = NewStrBuf();
 		StrBufAppendPrintf(NewInstr, "Content-type: "SPOOLMIME"\n\n");
 		StrBufAppendPrintf(NewInstr, "msgid|%ld\n", msgid);
@@ -421,7 +419,7 @@ void smtp_process_one_msg(long qmsgnum)
 			FreeStrBuf(&NewInstr);						// We have to free NewInstr here, no longer needed
 		}
 		else {
-			// replace the old qmsg with the new one
+			// replace the old queue entry with the new one
 			syslog(LOG_DEBUG, "smtpclient: rewriting this queue entry");
 			msg = convert_internet_message_buf(&NewInstr);			// This function will free NewInstr for us
 			CtdlSubmitMsg(msg, NULL, SMTP_SPOOLOUT_ROOM, 0);
@@ -436,7 +434,6 @@ void smtp_process_one_msg(long qmsgnum)
 	if (bounceto != NULL)		free(bounceto);
 	if (envelope_from != NULL)	free(envelope_from);
 	free(instr);
-
 }
 
 
@@ -467,7 +464,7 @@ void smtp_do_queue(void) {
 	int i = 0;
 
 	/*
-	 * This is a simple concurrency check to make sure only one pop3client
+	 * This is a simple concurrency check to make sure only one smtpclient
 	 * run is done at a time.  We could do this with a mutex, but since we
 	 * don't really require extremely fine granularity here, we'll do it
 	 * with a static variable instead.
