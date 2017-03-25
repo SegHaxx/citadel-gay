@@ -2,7 +2,7 @@
  * Citadel Extension Loader
  * Written by Brian Costello <btx@calyx.net>
  *
- * Copyright (c) 1987-2015 by the citadel.org team
+ * Copyright (c) 1987-2017 by the citadel.org team
  *
  * This program is open source software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 3.
@@ -259,8 +259,8 @@ void LogPrintMessages(long err)
 	StrBufAppendBufPlain(Message, HKEY("\n\n"), 0);
 	StrBufAppendBufPlain(Message, CKEY(ErrGeneral[3]), 0);
 
-	syslog(LOG_EMERG, "%s", ChrPtr(Message));
-	syslog(LOG_EMERG, "%s", ErrSubject);
+	syslog(LOG_EMERG, "extensions: %s", ChrPtr(Message));
+	syslog(LOG_EMERG, "extensions: %s", ErrSubject);
 	quickie_message("Citadel", NULL, NULL, AIDEROOM, ChrPtr(Message), FMT_FIXED, ErrSubject);
 
 	FreeStrBuf(&Message);
@@ -386,7 +386,7 @@ void CtdlRegisterProtoHook(void (*handler) (char *), char *cmd, char *desc)
 	p->desc = desc;
 
 	Put(ProtoHookList, cmd, 4, p, NULL);
-	syslog(LOG_DEBUG, "Registered server command %s (%s)\n", cmd, desc);
+	syslog(LOG_DEBUG, "extensions: registered server command %s (%s)", cmd, desc);
 }
 
 void CtdlDestroyProtoHooks(void)
@@ -407,7 +407,7 @@ void CtdlRegisterCleanupHook(void (*fcn_ptr) (void))
 	newfcn->h_function_pointer = fcn_ptr;
 	CleanupHookTable = newfcn;
 
-	syslog(LOG_DEBUG, "Registered a new cleanup function\n");
+	syslog(LOG_DEBUG, "extensions: registered a new cleanup function");
 }
 
 
@@ -420,7 +420,7 @@ void CtdlUnregisterCleanupHook(void (*fcn_ptr) (void))
 	{
 		if (fcn_ptr == cur->h_function_pointer)
 		{
-			syslog(LOG_DEBUG, "Unregistered cleanup function\n");
+			syslog(LOG_DEBUG, "extensions: unregistered cleanup function");
 			p = cur->next;
 
 			free(cur);
@@ -447,7 +447,7 @@ void CtdlDestroyCleanupHooks(void)
 	cur = CleanupHookTable;
 	while (cur != NULL)
 	{
-		syslog(LOG_DEBUG, "Destroyed cleanup function\n");
+		syslog(LOG_DEBUG, "extensions: destroyed cleanup function");
 		p = cur->next;
 		free(cur);
 		cur = p;
@@ -466,7 +466,7 @@ void CtdlRegisterEVCleanupHook(void (*fcn_ptr) (void))
 	newfcn->h_function_pointer = fcn_ptr;
 	EVCleanupHookTable = newfcn;
 
-	syslog(LOG_DEBUG, "Registered a new cleanup function\n");
+	syslog(LOG_DEBUG, "extensions: registered a new cleanup function");
 }
 
 
@@ -479,7 +479,7 @@ void CtdlUnregisterEVCleanupHook(void (*fcn_ptr) (void))
 	{
 		if (fcn_ptr == cur->h_function_pointer)
 		{
-			syslog(LOG_DEBUG, "Unregistered cleanup function\n");
+			syslog(LOG_DEBUG, "extensions: unregistered cleanup function");
 			p = cur->next;
 
 			free(cur);
@@ -506,7 +506,7 @@ void CtdlDestroyEVCleanupHooks(void)
 	cur = EVCleanupHookTable;
 	while (cur != NULL)
 	{
-		syslog(LOG_DEBUG, "Destroyed cleanup function\n");
+		syslog(LOG_DEBUG, "extensions: destroyed cleanup function");
 		p = cur->next;
 		cur->h_function_pointer();
 		free(cur);
@@ -535,7 +535,7 @@ void CtdlRegisterTDAPVetoHook(int (*fcn_ptr) (StrBuf*), int EventType, int Prior
 	newfcn->next = *pfcn;
 	*pfcn = newfcn;
 	
-	syslog(LOG_DEBUG, "Registered a new TDAP Veto function (type %d Priority %d)\n",
+	syslog(LOG_DEBUG, "extensions: registered a new TDAP Veto function (type %d Priority %d)",
 		   EventType, Priority);
 }
 
@@ -549,8 +549,7 @@ void CtdlUnregisterTDAPVetoHook(int (*fcn_ptr) (StrBuf*), int EventType)
 		if ((fcn_ptr == cur->h_function_pointer) &&
 		    (EventType == cur->eventtype))
 		{
-			syslog(LOG_DEBUG, "Unregistered TDAP Veto function (type %d)\n",
-				   EventType);
+			syslog(LOG_DEBUG, "extensions: unregistered TDAP Veto function (type %d)", EventType);
 			p = cur->next;
 
 			free(cur);
@@ -576,7 +575,7 @@ void CtdlDestroyTDAPVetoHooks(void)
 	cur = TDAPVetoHookTable;
 	while (cur != NULL)
 	{
-		syslog(LOG_DEBUG, "Destroyed TDAP Veto function\n");
+		syslog(LOG_DEBUG, "extensions: destroyed TDAP Veto function");
 		p = cur->next;
 		free(cur);
 		cur = p;
@@ -605,8 +604,7 @@ void CtdlRegisterSessionHook(void (*fcn_ptr) (void), int EventType, int Priority
 	newfcn->next = *pfcn;
 	*pfcn = newfcn;
 	
-	syslog(LOG_DEBUG, "Registered a new session function (type %d Priority %d)\n",
-		   EventType, Priority);
+	syslog(LOG_DEBUG, "extensions: registered a new session function (type %d Priority %d)", EventType, Priority);
 }
 
 
@@ -619,8 +617,7 @@ void CtdlUnregisterSessionHook(void (*fcn_ptr) (void), int EventType)
 		if ((fcn_ptr == cur->h_function_pointer) &&
 		    (EventType == cur->eventtype))
 		{
-			syslog(LOG_DEBUG, "Unregistered session function (type %d)\n",
-				   EventType);
+			syslog(LOG_DEBUG, "extensions: unregistered session function (type %d)", EventType);
 			p = cur->next;
 
 			free(cur);
@@ -646,7 +643,7 @@ void CtdlDestroySessionHooks(void)
 	cur = SessionHookTable;
 	while (cur != NULL)
 	{
-		syslog(LOG_DEBUG, "Destroyed session function\n");
+		syslog(LOG_DEBUG, "extensions: destroyed session function");
 		p = cur->next;
 		free(cur);
 		cur = p;
@@ -667,7 +664,7 @@ void CtdlRegisterUserHook(void (*fcn_ptr) (ctdluser *), int EventType)
 	newfcn->eventtype = EventType;
 	UserHookTable = newfcn;
 
-	syslog(LOG_DEBUG, "Registered a new user function (type %d)\n",
+	syslog(LOG_DEBUG, "extensions: registered a new user function (type %d)",
 		   EventType);
 }
 
@@ -681,8 +678,7 @@ void CtdlUnregisterUserHook(void (*fcn_ptr) (struct ctdluser *), int EventType)
 		if ((fcn_ptr == cur->h_function_pointer) &&
 		    (EventType == cur->eventtype))
 		{
-			syslog(LOG_DEBUG, "Unregistered user function (type %d)\n",
-				   EventType);
+			syslog(LOG_DEBUG, "extensions: unregistered user function (type %d)", EventType);
 			p = cur->next;
 
 			free(cur);
@@ -708,7 +704,7 @@ void CtdlDestroyUserHooks(void)
 	cur = UserHookTable;
 	while (cur != NULL)
 	{
-		syslog(LOG_DEBUG, "Destroyed user function \n");
+		syslog(LOG_DEBUG, "extensions: destroyed user function");
 		p = cur->next;
 		free(cur);
 		cur = p;
@@ -730,8 +726,7 @@ void CtdlRegisterMessageHook(int (*handler)(struct CtdlMessage *, recptypes *),
 	newfcn->eventtype = EventType;
 	MessageHookTable = newfcn;
 
-	syslog(LOG_DEBUG, "Registered a new message function (type %d)\n",
-		   EventType);
+	syslog(LOG_DEBUG, "extensions: registered a new message function (type %d)", EventType);
 }
 
 
@@ -745,8 +740,7 @@ void CtdlUnregisterMessageHook(int (*handler)(struct CtdlMessage *, recptypes *)
 		if ((handler == cur->h_function_pointer) &&
 		    (EventType == cur->eventtype))
 		{
-			syslog(LOG_DEBUG, "Unregistered message function (type %d)\n",
-				   EventType);
+			syslog(LOG_DEBUG, "extensions: unregistered message function (type %d)", EventType);
 			p = cur->next;
 			free(cur);
 			cur = NULL;
@@ -771,7 +765,7 @@ void CtdlDestroyMessageHook(void)
 	cur = MessageHookTable; 
 	while (cur != NULL)
 	{
-		syslog(LOG_DEBUG, "Destroyed message function (type %d)\n", cur->eventtype);
+		syslog(LOG_DEBUG, "extensions: destroyed message function (type %d)", cur->eventtype);
 		p = cur->next;
 		free(cur);
 		cur = p;
@@ -790,7 +784,7 @@ void CtdlRegisterRoomHook(int (*fcn_ptr)(struct ctdlroom *))
 	newfcn->fcn_ptr = fcn_ptr;
 	RoomHookTable = newfcn;
 
-	syslog(LOG_DEBUG, "Registered a new room function\n");
+	syslog(LOG_DEBUG, "extensions: registered a new room function");
 }
 
 
@@ -802,7 +796,7 @@ void CtdlUnregisterRoomHook(int (*fcn_ptr)(struct ctdlroom *))
 	while (cur != NULL)
 	{
 		if (fcn_ptr == cur->fcn_ptr) {
-			syslog(LOG_DEBUG, "Unregistered room function\n");
+			syslog(LOG_DEBUG, "extensions: unregistered room function");
 			p = cur->next;
 
 			free(cur);
@@ -829,7 +823,7 @@ void CtdlDestroyRoomHooks(void)
 	cur = RoomHookTable;
 	while (cur != NULL)
 	{
-		syslog(LOG_DEBUG, "Destroyed room function\n");
+		syslog(LOG_DEBUG, "extensions: destroyed room function");
 		p = cur->next;
 		free(cur);
 		cur = p;
@@ -847,7 +841,7 @@ void CtdlRegisterNetprocHook(int (*handler)(struct CtdlMessage *, char *) )
 	newfcn->h_function_pointer = handler;
 	NetprocHookTable = newfcn;
 
-	syslog(LOG_DEBUG, "Registered a new netproc function\n");
+	syslog(LOG_DEBUG, "extensions: registered a new netproc function");
 }
 
 
@@ -861,7 +855,7 @@ void CtdlUnregisterNetprocHook(int (*handler)(struct CtdlMessage *, char *) )
 	while (cur != NULL) {
 		if (handler == cur->h_function_pointer)
 		{
-			syslog(LOG_DEBUG, "Unregistered netproc function\n");
+			syslog(LOG_DEBUG, "extensions: unregistered netproc function");
 			p = cur->next;
 			free(cur);
 			if (last != NULL) {
@@ -886,7 +880,7 @@ void CtdlDestroyNetprocHooks(void)
 	cur = NetprocHookTable;
 	while (cur != NULL)
 	{
-		syslog(LOG_DEBUG, "Destroyed netproc function\n");
+		syslog(LOG_DEBUG, "extensions: destroyed netproc function");
 		p = cur->next;
 		free(cur);
 		cur = p;
@@ -905,7 +899,7 @@ void CtdlRegisterDeleteHook(void (*handler)(char *, long) )
 	newfcn->h_function_pointer = handler;
 	DeleteHookTable = newfcn;
 
-	syslog(LOG_DEBUG, "Registered a new delete function\n");
+	syslog(LOG_DEBUG, "extensions: registered a new delete function");
 }
 
 
@@ -918,7 +912,7 @@ void CtdlUnregisterDeleteHook(void (*handler)(char *, long) )
 	while (cur != NULL) {
 		if (handler == cur->h_function_pointer )
 		{
-			syslog(LOG_DEBUG, "Unregistered delete function\n");
+			syslog(LOG_DEBUG, "extensions: unregistered delete function");
 			p = cur->next;
 			free(cur);
 
@@ -935,6 +929,8 @@ void CtdlUnregisterDeleteHook(void (*handler)(char *, long) )
 		}
 	}
 }
+
+
 void CtdlDestroyDeleteHooks(void)
 {
 	DeleteFunctionHook *cur, *p;
@@ -942,15 +938,13 @@ void CtdlDestroyDeleteHooks(void)
 	cur = DeleteHookTable;
 	while (cur != NULL)
 	{
-		syslog(LOG_DEBUG, "Destroyed delete function\n");
+		syslog(LOG_DEBUG, "extensions: destroyed delete function");
 		p = cur->next;
 		free(cur);
 		cur = p;		
 	}
 	DeleteHookTable = NULL;
 }
-
-
 
 
 void CtdlRegisterFixedOutputHook(char *content_type, void (*handler)(char *, int) )
@@ -964,7 +958,7 @@ void CtdlRegisterFixedOutputHook(char *content_type, void (*handler)(char *, int
 	safestrncpy(newfcn->content_type, content_type, sizeof newfcn->content_type);
 	FixedOutputTable = newfcn;
 
-	syslog(LOG_DEBUG, "Registered a new fixed output function for %s\n", newfcn->content_type);
+	syslog(LOG_DEBUG, "extensions: registered a new fixed output function for %s", newfcn->content_type);
 }
 
 
@@ -977,10 +971,7 @@ void CtdlUnregisterFixedOutputHook(char *content_type)
 	while (cur != NULL) {
 		/* This will also remove duplicates if any */
 		if (!strcasecmp(content_type, cur->content_type)) {
-			syslog(LOG_DEBUG,
-				   "Unregistered fixed output function for %s\n",
-				   content_type);
-
+			syslog(LOG_DEBUG, "extensions: unregistered fixed output function for %s", content_type);
 			p = cur->next;
 			free(cur);
 
@@ -1006,7 +997,7 @@ void CtdlDestroyFixedOutputHooks(void)
 	cur = FixedOutputTable; 
 	while (cur != NULL)
 	{
-		syslog(LOG_DEBUG, "Destroyed fixed output function for %s\n", cur->content_type);
+		syslog(LOG_DEBUG, "extensions: destroyed fixed output function for %s", cur->content_type);
 		p = cur->next;
 		free(cur);
 		cur = p;
@@ -1030,9 +1021,6 @@ int PerformFixedOutputHooks(char *content_type, char *content, int content_lengt
 }
 
 
-
-
-
 void CtdlRegisterXmsgHook(int (*fcn_ptr) (char *, char *, char *, char *), int order)
 {
 
@@ -1043,7 +1031,7 @@ void CtdlRegisterXmsgHook(int (*fcn_ptr) (char *, char *, char *, char *), int o
 	newfcn->order = order;
 	newfcn->h_function_pointer = fcn_ptr;
 	XmsgHookTable = newfcn;
-	syslog(LOG_DEBUG, "Registered a new x-msg function (priority %d)\n", order);
+	syslog(LOG_DEBUG, "extensions: registered a new x-msg function (priority %d)", order);
 }
 
 
@@ -1057,16 +1045,16 @@ void CtdlUnregisterXmsgHook(int (*fcn_ptr) (char *, char *, char *, char *), int
 		/* This will also remove duplicates if any */
 		if (fcn_ptr == cur->h_function_pointer &&
 		    order == cur->order) {
-			syslog(LOG_DEBUG, "Unregistered x-msg function "
-				   "(priority %d)\n", order);
+			syslog(LOG_DEBUG, "extensions: unregistered x-msg function (priority %d)", order);
 			p = cur->next;
 			free(cur);
 
-			if (last != NULL)
+			if (last != NULL) {
 				last->next = p;
-			else
+			}
+			else {
 				XmsgHookTable = p;
-			
+			}
 			cur = p;
 		}
 		else {
@@ -1076,6 +1064,7 @@ void CtdlUnregisterXmsgHook(int (*fcn_ptr) (char *, char *, char *, char *), int
 	}
 }
 
+
 void CtdlDestroyXmsgHooks(void)
 {
 	XmsgFunctionHook *cur, *p;
@@ -1083,10 +1072,8 @@ void CtdlDestroyXmsgHooks(void)
 	cur = XmsgHookTable;
 	while (cur != NULL)
 	{
-		syslog(LOG_DEBUG, "Destroyed x-msg function "
-			"(priority %d)\n", cur->order);
+		syslog(LOG_DEBUG, "extensions: destroyed x-msg function (priority %d)", cur->order);
 		p = cur->next;
-			
 		free(cur);
 		cur = p;
 	}
@@ -1119,10 +1106,10 @@ void CtdlRegisterServiceHook(int tcp_port,
 
 	if (sockpath != NULL) {
 		newfcn->msock = ctdl_uds_server(sockpath, CtdlGetConfigInt("c_maxsessions"), error);
-		snprintf(message, SIZ, "Unix domain socket '%s': ", sockpath);
+		snprintf(message, SIZ, "extensions: unix domain socket '%s': ", sockpath);
 	}
 	else if (tcp_port <= 0) {	/* port -1 to disable */
-		syslog(LOG_INFO, "Service %s has been manually disabled, skipping\n", ServiceName);
+		syslog(LOG_INFO, "extensions: service %s has been manually disabled, skipping", ServiceName);
 		free (message);
 		free(newfcn);
 		return;
@@ -1132,19 +1119,19 @@ void CtdlRegisterServiceHook(int tcp_port,
 					      tcp_port,
 					      CtdlGetConfigInt("c_maxsessions"), 
 					      error);
-		snprintf(message, SIZ, "TCP port %s:%d: (%s) ", 
+		snprintf(message, SIZ, "extensions: TCP port %s:%d: (%s) ", 
 			 CtdlGetConfigStr("c_ip_addr"), tcp_port, ServiceName);
 	}
 
 	if (newfcn->msock > 0) {
 		ServiceHookTable = newfcn;
 		strcat(message, "registered.");
-		syslog(LOG_INFO, "%s\n", message);
+		syslog(LOG_INFO, "%s", message);
 	}
 	else {
 		AddPortError(message, error);
 		strcat(message, "FAILED.");
-		syslog(LOG_CRIT, "%s\n", message);
+		syslog(LOG_ERR, "%s", message);
 		free(newfcn);
 	}
 	free(message);
@@ -1172,13 +1159,12 @@ void CtdlUnregisterServiceHook(int tcp_port, char *sockpath,
 			if (cur->msock > 0)
 				close(cur->msock);
 			if (sockpath) {
-				syslog(LOG_INFO, "Closed UNIX domain socket %s\n",
-					   sockpath);
+				syslog(LOG_INFO, "extensions: closed UNIX domain socket %s", sockpath);
 				unlink(sockpath);
 			} else if (tcp_port) {
-				syslog(LOG_INFO, "Closed TCP port %d\n", tcp_port);
+				syslog(LOG_INFO, "extensions: closed TCP port %d", tcp_port);
 			} else {
-				syslog(LOG_INFO, "Unregistered service \"%s\"\n", cur->ServiceName);
+				syslog(LOG_INFO, "extensions: unregistered service \"%s\"", cur->ServiceName);
 			}
 			p = cur->next;
 			free(cur);
@@ -1209,18 +1195,16 @@ void CtdlShutdownServiceHooks(void)
 			close(cur->msock);
 			cur->msock = -1;
 			if (cur->sockpath != NULL){
-				syslog(LOG_INFO, "[%s] Closed UNIX domain socket %s\n",
-					   cur->ServiceName,
-					   cur->sockpath);
+				syslog(LOG_INFO, "extensions: [%s] Closed UNIX domain socket %s", cur->ServiceName, cur->sockpath);
 				unlink(cur->sockpath);
 			} else {
-				syslog(LOG_INFO, "[%s] closing service\n", 
-					   cur->ServiceName);
+				syslog(LOG_INFO, "extensions: [%s] closing service", cur->ServiceName);
 			}
 		}
 		cur = cur->next;
 	}
 }
+
 
 void CtdlDestroyServiceHook(void)
 {
@@ -1241,14 +1225,12 @@ void CtdlDestroyServiceHook(void)
 		}
 
 		if (cur->sockpath) {
-			syslog(LOG_INFO, "%s UNIX domain socket %s\n",
-				   Text,
-				   cur->sockpath);
+			syslog(LOG_INFO, "extensions: %s UNIX domain socket %s", Text, cur->sockpath);
 			unlink(cur->sockpath);
 		} else if (cur->tcp_port) {
-			syslog(LOG_INFO, "%s TCP port %d\n", Text, cur->tcp_port);
+			syslog(LOG_INFO, "extensions: %s TCP port %d", Text, cur->tcp_port);
 		} else {
-			syslog(LOG_INFO, "Destroyed service \"%s\"\n", cur->ServiceName);
+			syslog(LOG_INFO, "extensions: destroyed service \"%s\"", cur->ServiceName);
 		}
 		p = cur->next;
 		free(cur);
@@ -1272,7 +1254,7 @@ void CtdlRegisterSearchFuncHook(void (*fcn_ptr)(int *, long **, const char *), c
 	newfcn->fcn_ptr = fcn_ptr;
 	SearchFunctionHookTable = newfcn;
 
-	syslog(LOG_DEBUG, "Registered a new search function (%s)\n", name);
+	syslog(LOG_DEBUG, "extensions: registered a new search function (%s)", name);
 }
 
 void CtdlUnregisterSearchFuncHook(void (*fcn_ptr)(int *, long **, const char *), char *name)
@@ -1286,7 +1268,7 @@ void CtdlUnregisterSearchFuncHook(void (*fcn_ptr)(int *, long **, const char *),
 		    (cur->fcn_ptr == fcn_ptr) &&
 		    name && !strcmp(name, cur->name))
 		{
-			syslog(LOG_DEBUG, "Unregistered search function(%s)\n", name);
+			syslog(LOG_DEBUG, "extensions: unregistered search function(%s)", name);
 			p = cur->next;
 			free (cur);
 			if (last != NULL)
@@ -1373,10 +1355,8 @@ int PerformMessageHooks(struct CtdlMessage *msg, recptypes *recps, int EventType
 
 	/* Other code may elect to protect this message from server-side
 	 * handlers; if this is the case, don't do anything.
-	syslog(LOG_DEBUG, "** Event type is %d, flags are %d\n", EventType, msg->cm_flags);
 	 */
 	if (msg->cm_flags & CM_SKIP_HOOKS) {
-		syslog(LOG_DEBUG, "Skipping hooks\n");
 		return(0);
 	}
 
@@ -1401,7 +1381,7 @@ int PerformRoomHooks(struct ctdlroom *target_room)
 	RoomFunctionHook *fcn;
 	int total_retval = 0;
 
-	syslog(LOG_DEBUG, "Performing room hooks for <%s>\n", target_room->QRname);
+	syslog(LOG_DEBUG, "extensions: performing room hooks for <%s>", target_room->QRname);
 
 	for (fcn = RoomHookTable; fcn != NULL; fcn = fcn->next) {
 		total_retval = total_retval + (*fcn->fcn_ptr) (target_room);

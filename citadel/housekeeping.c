@@ -1,7 +1,7 @@
 /*
  * This file contains miscellaneous housekeeping tasks.
  *
- * Copyright (c) 1987-2011 by the citadel.org team
+ * Copyright (c) 1987-2017 by the citadel.org team
  *
  * This program is open source software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 3.
@@ -23,11 +23,10 @@
 
 void check_sched_shutdown(void) {
 	if ((ScheduledShutdown == 1) && (ContextList == NULL)) {
-		syslog(LOG_NOTICE, "Scheduled shutdown initiating.\n");
+		syslog(LOG_NOTICE, "housekeeping: scheduled shutdown initiating");
 		server_shutting_down = 1;
 	}
 }
-
 
 
 /*
@@ -43,13 +42,14 @@ void check_ref_counts_backend(struct ctdlroom *qrbuf, void *data) {
 	++new_refcounts[(int)qrbuf->QRfloor];
 }
 
+
 void check_ref_counts(void) {
 	struct floor flbuf;
 	int a;
 
 	int new_refcounts[MAXFLOORS];
 
-	syslog(LOG_DEBUG, "Checking floor reference counts\n");
+	syslog(LOG_DEBUG, "housekeeping: checking floor reference counts");
 	for (a=0; a<MAXFLOORS; ++a) {
 		new_refcounts[a] = 0;
 	}
@@ -68,9 +68,10 @@ void check_ref_counts(void) {
 			flbuf.f_flags = flbuf.f_flags & ~QR_INUSE;
 		}
 		lputfloor(&flbuf, a);
-		syslog(LOG_DEBUG, "Floor %d: %d rooms\n", a, new_refcounts[a]);
+		syslog(LOG_DEBUG, "housekeeping: floor %d has %d rooms", a, new_refcounts[a]);
 	}
 }	
+
 
 /*
  * This is the housekeeping loop.  Worker threads come through here after
@@ -130,6 +131,7 @@ void do_housekeeping(void) {
 	end_critical_section(S_HOUSEKEEPING);
 }
 
+
 void CtdlDisableHouseKeeping(void)
 {
 	int ActiveBackgroundJobs;
@@ -138,7 +140,7 @@ void CtdlDisableHouseKeeping(void)
 	int nContexts, i;
 
 retry_block_housekeeping:
-	syslog(LOG_INFO, "trying to disable housekeeping services");
+	syslog(LOG_INFO, "housekeeping: trying to disable services");
 	begin_critical_section(S_HOUSEKEEPING);
 	if (housekeeping_in_progress == 0) {
 		do_housekeeping_now = 1;
@@ -150,7 +152,7 @@ retry_block_housekeeping:
 		goto retry_block_housekeeping;
 	}
 	
-	syslog(LOG_INFO, "checking for running server Jobs");
+	syslog(LOG_INFO, "housekeeping: checking for running server jobs");
 
 retry_wait_for_contexts:
 	/* So that we don't keep the context list locked for a long time
@@ -165,7 +167,7 @@ retry_wait_for_contexts:
 			if ((nptr[i].state != CON_SYS) || (nptr[i].IO == NULL) || (nptr[i].lastcmd == 0))
 				continue;
 			ActiveBackgroundJobs ++;
-			syslog(LOG_INFO, "Job CC[%d] active; use TERM if you don't want to wait for it",nptr[i].cs_pid);
+			syslog(LOG_INFO, "jousekeeping: job CC[%d] active; use TERM if you don't want to wait for it", nptr[i].cs_pid);
 		
 		}
 	
@@ -173,12 +175,13 @@ retry_wait_for_contexts:
 
 	}
 	if (ActiveBackgroundJobs != 0) {
-		syslog(LOG_INFO, "found %d running jobs, need to wait", ActiveBackgroundJobs);
+		syslog(LOG_INFO, "housekeeping: found %d running jobs, need to wait", ActiveBackgroundJobs);
 		usleep(5000000);
 		goto retry_wait_for_contexts;
 	}
-	syslog(LOG_INFO, "Housekeeping disabled now.");
+	syslog(LOG_INFO, "housekeeping: disabled now.");
 }
+
 
 void CtdlEnableHouseKeeping(void)
 {

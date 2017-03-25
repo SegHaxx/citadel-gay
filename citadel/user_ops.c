@@ -1,7 +1,7 @@
 /* 
  * Server functions which perform operations on user objects.
  *
- * Copyright (c) 1987-2016 by the citadel.org team
+ * Copyright (c) 1987-2017 by the citadel.org team
  *
  * This program is open source software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License, version 3.
@@ -161,16 +161,14 @@ int rename_user(char *oldname, char *newname) {
 		else {		/* Sanity checks succeeded.  Now rename the user. */
 			if (usbuf.usernum == 0)
 			{
-				syslog(LOG_DEBUG, "Can not rename user \"Citadel\".\n");
+				syslog(LOG_DEBUG, "user_ops: can not rename user \"Citadel\".");
 				retcode = RENAMEUSER_NOT_FOUND;
 			} else {
-				syslog(LOG_DEBUG, "Renaming <%s> to <%s>\n", oldname, newname);
+				syslog(LOG_DEBUG, "user_ops: renaming <%s> to <%s>\n", oldname, newname);
 				cdb_delete(CDB_USERS, oldnamekey, strlen(oldnamekey));
 				safestrncpy(usbuf.fullname, newname, sizeof usbuf.fullname);
 				CtdlPutUser(&usbuf);
-				cdb_store(CDB_USERSBYNUMBER, &usbuf.usernum, sizeof(long),
-					usbuf.fullname, strlen(usbuf.fullname)+1 );
-
+				cdb_store(CDB_USERSBYNUMBER, &usbuf.usernum, sizeof(long), usbuf.fullname, strlen(usbuf.fullname)+1 );
 				retcode = RENAMEUSER_OK;
 			}
 		}
@@ -207,7 +205,6 @@ int GenerateRelationshipIndex(char *IndexBuf,
 }
 
 
-
 /*
  * Back end for CtdlSetRelationship()
  */
@@ -218,18 +215,13 @@ void put_visit(visit *newvisit)
 
 	memset (IndexBuf, 0, sizeof (IndexBuf));
 	/* Generate an index */
-	IndexLen = GenerateRelationshipIndex(IndexBuf,
-					     newvisit->v_roomnum,
-					     newvisit->v_roomgen,
-					     newvisit->v_usernum);
+	IndexLen = GenerateRelationshipIndex(IndexBuf, newvisit->v_roomnum, newvisit->v_roomgen, newvisit->v_usernum);
 
 	/* Store the record */
 	cdb_store(CDB_VISIT, IndexBuf, IndexLen,
 		  newvisit, sizeof(visit)
 	);
 }
-
-
 
 
 /*
@@ -399,6 +391,7 @@ int is_room_aide(void)
 	}
 }
 
+
 /*
  * CtdlGetUserByNumber() -	get user by number
  * 			returns 0 if user was found
@@ -412,15 +405,16 @@ int CtdlGetUserByNumber(struct ctdluser *usbuf, long number)
 
 	cdbun = cdb_fetch(CDB_USERSBYNUMBER, &number, sizeof(long));
 	if (cdbun == NULL) {
-		syslog(LOG_INFO, "User %ld not found\n", number);
+		syslog(LOG_INFO, "user_ops: %ld not found", number);
 		return(-1);
 	}
 
-	syslog(LOG_INFO, "User %ld maps to %s\n", number, cdbun->ptr);
+	syslog(LOG_INFO, "user_ops: %ld maps to %s", number, cdbun->ptr);
 	r = CtdlGetUser(usbuf, cdbun->ptr);
 	cdb_free(cdbun);
 	return(r);
 }
+
 
 /*
  * Helper function for rebuild_usersbynumber()
@@ -452,16 +446,13 @@ void rebuild_ubn_for_user(struct ctdluser *usbuf, void *data) {
 	}
 
 	while (u != NULL) {
-		syslog(LOG_DEBUG, "Rebuilding usersbynumber index %10ld : %s\n",
-			u->usernum, u->username);
+		syslog(LOG_DEBUG, "user_ops: rebuilding usersbynumber index %10ld : %s", u->usernum, u->username);
 		cdb_store(CDB_USERSBYNUMBER, &u->usernum, sizeof(long), u->username, strlen(u->username)+1);
-
 		ptr = u;
 		u = u->next;
 		free(ptr);
 	}
 }
-
 
 
 /*
@@ -472,7 +463,6 @@ void rebuild_usersbynumber(void) {
 	ForEachUser(rebuild_ubn_for_user, NULL);	/* enumerate the users */
 	rebuild_ubn_for_user(NULL, NULL);		/* and index them */
 }
-
 
 
 /*
@@ -502,6 +492,7 @@ int getuserbyuid(struct ctdluser *usbuf, uid_t number)
 	return (-1);
 }
 
+
 /*
  * Back end for cmd_user() and its ilk
  *
@@ -513,7 +504,7 @@ int CtdlLoginExistingUser(char *authname, const char *trythisname)
 	int found_user;
 	long len;
 
-	syslog(LOG_DEBUG, "CtdlLoginExistingUser(%s, %s)\n", authname, trythisname);
+	syslog(LOG_DEBUG, "user_ops: CtdlLoginExistingUser(%s, %s)", authname, trythisname);
 
 	if ((CC->logged_in)) {
 		return login_already_logged_in;
@@ -523,7 +514,7 @@ int CtdlLoginExistingUser(char *authname, const char *trythisname)
 	
 	if (!strncasecmp(trythisname, "SYS_", 4))
 	{
-		syslog(LOG_DEBUG, "System user \"%s\" is not allowed to log in.\n", trythisname);
+		syslog(LOG_DEBUG, "user_ops: system user \"%s\" is not allowed to log in.", trythisname);
 		return login_not_found;
 	}
 
@@ -554,21 +545,21 @@ int CtdlLoginExistingUser(char *authname, const char *trythisname)
 		struct passwd *tempPwdPtr;
 		char pwdbuffer[256];
 	
-		syslog(LOG_DEBUG, "asking host about <%s>\n", username);
+		syslog(LOG_DEBUG, "user_ops: asking host about <%s>", username);
 #ifdef HAVE_GETPWNAM_R
 #ifdef SOLARIS_GETPWUID
-		syslog(LOG_DEBUG, "Calling getpwnam_r()\n");
+		syslog(LOG_DEBUG, "user_ops: calling getpwnam_r()");
 		tempPwdPtr = getpwnam_r(username, &pd, pwdbuffer, sizeof pwdbuffer);
 #else // SOLARIS_GETPWUID
-		syslog(LOG_DEBUG, "Calling getpwnam_r()\n");
+		syslog(LOG_DEBUG, "user_ops: calling getpwnam_r()");
 		getpwnam_r(username, &pd, pwdbuffer, sizeof pwdbuffer, &tempPwdPtr);
 #endif // SOLARIS_GETPWUID
 #else // HAVE_GETPWNAM_R
-		syslog(LOG_DEBUG, "SHOULD NEVER GET HERE!!!\n");
+		syslog(LOG_DEBUG, "user_ops: SHOULD NEVER GET HERE!!!");
 		tempPwdPtr = NULL;
 #endif // HAVE_GETPWNAM_R
 		if (tempPwdPtr == NULL) {
-			syslog(LOG_DEBUG, "no such user <%s>\n", username);
+			syslog(LOG_DEBUG, "user_ops: no such user <%s>", username);
 			return login_not_found;
 		}
 	
@@ -576,8 +567,7 @@ int CtdlLoginExistingUser(char *authname, const char *trythisname)
 		 * If not found, make one attempt to create it.
 		 */
 		found_user = getuserbyuid(&CC->user, pd.pw_uid);
-		syslog(LOG_DEBUG, "found it: uid=%ld, gecos=%s here: %d\n",
-			(long)pd.pw_uid, pd.pw_gecos, found_user);
+		syslog(LOG_DEBUG, "user_ops: found it: uid=%ld, gecos=%s here: %d", (long)pd.pw_uid, pd.pw_gecos, found_user);
 		if (found_user != 0) {
 			len = cutuserkey(username);
 			create_user(username, len, 0);
@@ -650,9 +640,6 @@ int CtdlLoginExistingUser(char *authname, const char *trythisname)
 }
 
 
-
-
-
 /*
  * session startup code which is common to both cmd_pass() and cmd_newu()
  */
@@ -661,7 +648,7 @@ void do_login(void)
 	struct CitContext *CCC = CC;
 
 	CCC->logged_in = 1;
-	syslog(LOG_NOTICE, "<%s> logged in\n", CCC->curr_user);
+	syslog(LOG_NOTICE, "user_ops: <%s> logged in", CCC->curr_user);
 
 	CtdlGetUserLock(&CCC->user, CCC->curr_user);
 	++(CCC->user.timescalled);
@@ -717,18 +704,16 @@ void logged_in_response(void)
 		CIT_OK, CC->user.fullname, CC->user.axlevel,
 		CC->user.timescalled, CC->user.posted,
 		CC->user.flags, CC->user.usernum,
-		CC->previous_login);
+		CC->previous_login
+	);
 }
-
 
 
 void CtdlUserLogout(void)
 {
 	CitContext *CCC = MyContext();
 
-	syslog(LOG_DEBUG, "CtdlUserLogout() logging out <%s> from session %d",
-		   CCC->curr_user, CCC->cs_pid
-	);
+	syslog(LOG_DEBUG, "user_ops: CtdlUserLogout() logging out <%s> from session %d", CCC->curr_user, CCC->cs_pid);
 
 	/* Run any hooks registered by modules... */
 	PerformSessionHooks(EVT_LOGOUT);
@@ -745,8 +730,9 @@ void CtdlUserLogout(void)
 	CCC->logged_in = 0;
 
 	/* Check to see if the user was deleted whilst logged in and purge them if necessary */
-	if ((CCC->user.axlevel == AxDeleted) && (CCC->user.usernum))
+	if ((CCC->user.axlevel == AxDeleted) && (CCC->user.usernum)) {
 		purge_user(CCC->user.fullname);
+	}
 
 	/* Clear out the user record in memory so we don't behave like a ghost */
 	memset(&CCC->user, 0, sizeof(struct ctdluser));
@@ -758,7 +744,6 @@ void CtdlUserLogout(void)
 	CCC->fake_username[0] = 0;
 	CCC->fake_hostname[0] = 0;
 	CCC->fake_roomname[0] = 0;
-	
 
 	/* Free any output buffers */
 	unbuffer_output();
@@ -774,41 +759,42 @@ static int validpw(uid_t uid, const char *pass)
 	int rv = 0;
 
 	if (IsEmptyStr(pass)) {
-		syslog(LOG_DEBUG, "Refusing to chkpwd for uid=%d with empty password.\n", uid);
+		syslog(LOG_DEBUG, "user_ops: refusing to chkpwd for uid=%d with empty password", uid);
 		return 0;
 	}
 
-	syslog(LOG_DEBUG, "Validating password for uid=%d using chkpwd...\n", uid);
+	syslog(LOG_DEBUG, "user_ops: validating password for uid=%d using chkpwd...", uid);
 
 	begin_critical_section(S_CHKPWD);
 	rv = write(chkpwd_write_pipe[1], &uid, sizeof(uid_t));
 	if (rv == -1) {
-		syslog(LOG_EMERG, "Communicatino with chkpwd broken: %s\n", strerror(errno));
+		syslog(LOG_EMERG, "user_ops: communication with chkpwd broken: %s", strerror(errno));
 		end_critical_section(S_CHKPWD);
 		return 0;
 	}
 	rv = write(chkpwd_write_pipe[1], pass, 256);
 	if (rv == -1) {
-		syslog(LOG_EMERG, "Communicatino with chkpwd broken: %s\n", strerror(errno));
+		syslog(LOG_EMERG, "user_ops: communication with chkpwd broken: %s", strerror(errno));
 		end_critical_section(S_CHKPWD);
 		return 0;
 	}
 	rv = read(chkpwd_read_pipe[0], buf, 4);
 	if (rv == -1) {
-		syslog(LOG_EMERG, "Communicatino with chkpwd broken: %s\n", strerror(errno));
+		syslog(LOG_EMERG, "user_ops: ommunication with chkpwd broken: %s", strerror(errno));
 		end_critical_section(S_CHKPWD);
 		return 0;
 	}
 	end_critical_section(S_CHKPWD);
 
 	if (!strncmp(buf, "PASS", 4)) {
-		syslog(LOG_DEBUG, "...pass\n");
+		syslog(LOG_DEBUG, "user_ops: chkpwd pass");
 		return(1);
 	}
 
-	syslog(LOG_DEBUG, "...fail\n");
+	syslog(LOG_DEBUG, "user_ops: chkpwd fail");
 	return 0;
 }
+
 
 /* 
  * Start up the chkpwd daemon so validpw() has something to talk to
@@ -818,37 +804,32 @@ void start_chkpwd_daemon(void) {
 	struct stat filestats;
 	int i;
 
-	syslog(LOG_DEBUG, "Starting chkpwd daemon for host authentication mode\n");
+	syslog(LOG_DEBUG, "user_ops: starting chkpwd daemon for host authentication mode");
 
-	if ((stat(file_chkpwd, &filestats)==-1) ||
-	    (filestats.st_size==0)){
+	if ((stat(file_chkpwd, &filestats)==-1) || (filestats.st_size==0)) {
 		printf("didn't find chkpwd daemon in %s: %s\n", file_chkpwd, strerror(errno));
 		abort();
 	}
 	if (pipe(chkpwd_write_pipe) != 0) {
-		syslog(LOG_EMERG, "Unable to create pipe for chkpwd daemon: %s\n", strerror(errno));
+		syslog(LOG_ERR, "user_ops: unable to create pipe for chkpwd daemon: %s", strerror(errno));
 		abort();
 	}
 	if (pipe(chkpwd_read_pipe) != 0) {
-		syslog(LOG_EMERG, "Unable to create pipe for chkpwd daemon: %s\n", strerror(errno));
+		syslog(LOG_ERR, "user_ops: unable to create pipe for chkpwd daemon: %s", strerror(errno));
 		abort();
 	}
 
 	chkpwd_pid = fork();
 	if (chkpwd_pid < 0) {
-		syslog(LOG_EMERG, "Unable to fork chkpwd daemon: %s\n", strerror(errno));
+		syslog(LOG_ERR, "user_ops: unable to fork chkpwd daemon: %s", strerror(errno));
 		abort();
 	}
 	if (chkpwd_pid == 0) {
-		syslog(LOG_DEBUG, "Now calling dup2() write\n");
 		dup2(chkpwd_write_pipe[0], 0);
-		syslog(LOG_DEBUG, "Now calling dup2() write\n");
 		dup2(chkpwd_read_pipe[1], 1);
-		syslog(LOG_DEBUG, "Now closing stuff\n");
 		for (i=2; i<256; ++i) close(i);
-		syslog(LOG_DEBUG, "Now calling execl(%s)\n", file_chkpwd);
 		execl(file_chkpwd, file_chkpwd, NULL);
-		syslog(LOG_EMERG, "Unable to exec chkpwd daemon: %s\n", strerror(errno));
+		syslog(LOG_ERR, "user_ops: unable to exec chkpwd daemon: %s", strerror(errno));
 		abort();
 		exit(errno);
 	}
@@ -861,19 +842,19 @@ int CtdlTryPassword(const char *password, long len)
 	CitContext *CCC = CC;
 
 	if ((CCC->logged_in)) {
-		syslog(LOG_WARNING, "CtdlTryPassword: already logged in\n");
+		syslog(LOG_WARNING, "user_ops: CtdlTryPassword: already logged in");
 		return pass_already_logged_in;
 	}
 	if (!strcmp(CCC->curr_user, NLI)) {
-		syslog(LOG_WARNING, "CtdlTryPassword: no user selected\n");
+		syslog(LOG_WARNING, "user_ops: CtdlTryPassword: no user selected");
 		return pass_no_user;
 	}
 	if (CtdlGetUser(&CCC->user, CCC->curr_user)) {
-		syslog(LOG_ERR, "CtdlTryPassword: internal error\n");
+		syslog(LOG_ERR, "user_ops: CtdlTryPassword: internal error");
 		return pass_internal_error;
 	}
 	if (password == NULL) {
-		syslog(LOG_INFO, "CtdlTryPassword: NULL password string supplied\n");
+		syslog(LOG_INFO, "user_ops: CtdlTryPassword: NULL password string supplied");
 		return pass_wrong_password;
 	}
 
@@ -903,7 +884,6 @@ int CtdlTryPassword(const char *password, long len)
 			/*
 			 * (sooper-seekrit hack ends here)
 			 */
-
 		}
 		else {
 			code = (-1);
@@ -945,22 +925,18 @@ int CtdlTryPassword(const char *password, long len)
 	if (!code) {
 		do_login();
 		return pass_ok;
-	} else {
-		syslog(LOG_WARNING, "Bad password specified for <%s> Service <%s> Port <%ld> Remote <%s / %s>\n",
-			   CCC->curr_user,
-			   CCC->ServiceName,
-			   CCC->tcp_port,
-			   CCC->cs_host,
-			   CCC->cs_addr);
-
-
-//citserver[5610]: Bad password specified for <willi> Service <citadel-TCP> Remote <PotzBlitz / >
-
+	}
+	else {
+		syslog(LOG_WARNING, "user_ops: bad password specified for <%s> Service <%s> Port <%ld> Remote <%s / %s>",
+			CCC->curr_user,
+			CCC->ServiceName,
+			CCC->tcp_port,
+			CCC->cs_host,
+			CCC->cs_addr
+		);
 		return pass_wrong_password;
 	}
 }
-
-
 
 
 /*
@@ -978,7 +954,7 @@ int purge_user(char pname[])
 		return (ERROR + NO_SUCH_USER);
 
 	if (CtdlGetUser(&usbuf, pname) != 0) {
-		syslog(LOG_ERR, "Cannot purge user <%s> - not found\n", pname);
+		syslog(LOG_ERR, "user_ops: cannot purge user <%s> - not found", pname);
 		return (ERROR + NO_SUCH_USER);
 	}
 	/* Don't delete a user who is currently logged in.  Instead, just
@@ -986,12 +962,12 @@ int purge_user(char pname[])
 	 * during the next purge.
 	 */
 	if (CtdlIsUserLoggedInByNum(usbuf.usernum)) {
-		syslog(LOG_WARNING, "User <%s> is logged in; not deleting.\n", pname);
+		syslog(LOG_WARNING, "user_ops: <%s> is logged in; not deleting", pname);
 		usbuf.axlevel = AxDeleted;
 		CtdlPutUser(&usbuf);
 		return (1);
 	}
-	syslog(LOG_NOTICE, "Deleting user <%s>\n", pname);
+	syslog(LOG_NOTICE, "user_ops: deleting <%s>", pname);
 
 /*
  * FIXME:
@@ -1000,7 +976,7 @@ int purge_user(char pname[])
  * That would truly mess things up :-(
  * I would like to see the S_USERS start before the CtdlIsUserLoggedInByNum() above
  * and end after the user has been deleted from the database, below.
- * Question is should we enter the EVT_PURGEUSER whilst S_USERS is active?
+ * Question is should we enter the EVT_PURGEUSER while S_USERS is active?
  */
 
 	/* Perform any purge functions registered by server extensions */
@@ -1048,7 +1024,6 @@ int internal_create_user (const char *username, long len, struct ctdluser *usbuf
 
 	return 0;
 }
-
 
 
 /*
@@ -1155,10 +1130,9 @@ int create_user(const char *newusername, long len, int become_user)
 		CC->cs_addr
 	);
 	CtdlAideMessage(buf, "User Creation Notice");
-	syslog(LOG_NOTICE, "New user <%s> created\n", username);
+	syslog(LOG_NOTICE, "user_ops: <%s> created", username);
 	return (0);
 }
-
 
 
 /*
@@ -1169,11 +1143,9 @@ void CtdlSetPassword(char *new_pw)
 	CtdlGetUserLock(&CC->user, CC->curr_user);
 	safestrncpy(CC->user.password, new_pw, sizeof(CC->user.password));
 	CtdlPutUserLock(&CC->user);
-	syslog(LOG_INFO, "Password changed for user <%s>\n", CC->curr_user);
+	syslog(LOG_INFO, "user_ops: password changed for <%s>", CC->curr_user);
 	PerformSessionHooks(EVT_SETPASS);
 }
-
-
 
 
 /*
@@ -1244,8 +1216,6 @@ int CtdlForgetThisRoom(void) {
 }
 
 
-
-
 /* 
  *  Traverse the user file...
  */
@@ -1294,8 +1264,6 @@ void ListThisUser(struct ctdluser *usbuf, void *data)
 		}
 	}
 }
-
-
 
 
 /*
@@ -1352,7 +1320,3 @@ int InitialMailCheck()
 
 	return (num_newmsgs);
 }
-
-
-
-
