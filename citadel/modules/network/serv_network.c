@@ -2,7 +2,7 @@
  * This module handles shared rooms, inter-Citadel mail, and outbound
  * mailing list processing.
  *
- * Copyright (c) 2000-2016 by the citadel.org team
+ * Copyright (c) 2000-2017 by the citadel.org team
  *
  * This program is open source software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 3.
@@ -163,7 +163,7 @@ int network_sync_to(char *target_node, long len)
 	DeleteHash(&sc.the_netmap);
 	free_spoolcontrol_struct_members(&sc);
 
-	QN_syslog(LOG_NOTICE, "Synchronized %d messages to <%s>", num_spooled, target_node);
+	syslog(LOG_NOTICE, "network: synchronized %d messages to <%s>", num_spooled, target_node);
 	return(num_spooled);
 }
 
@@ -302,7 +302,6 @@ void destroy_network_queue_room_locked (void)
  */
 void network_do_queue(void)
 {
-	struct CitContext *CCC = CC;
 	static time_t last_run = 0L;
 	int full_processing = 1;
 	HashList *working_ignetcfg;
@@ -319,9 +318,7 @@ void network_do_queue(void)
 	if ( (time(NULL) - last_run) < CtdlGetConfigLong("c_net_freq") )
 	{
 		full_processing = 0;
-		MARK_syslog(LOG_DEBUG, "Network full processing in %ld seconds.",
-			    CtdlGetConfigLong("c_net_freq") - (time(NULL)- last_run)
-		);
+		syslog(LOG_DEBUG, "network: full processing in %ld seconds.", CtdlGetConfigLong("c_net_freq") - (time(NULL)- last_run));
 	}
 
 	become_session(&networker_spool_CC);
@@ -345,14 +342,14 @@ void network_do_queue(void)
 	 * Go ahead and run the queue
 	 */
 	if (full_processing && !server_shutting_down) {
-		QNM_syslog(LOG_DEBUG, "network: loading outbound queue");
+		syslog(LOG_DEBUG, "network: loading outbound queue");
 		CtdlForEachNetCfgRoom(network_queue_interesting_rooms, &RL);
 	}
 
 	if ((RL.rplist != NULL) && (!server_shutting_down)) {
 		RoomProcList *ptr, *cmp;
 		ptr = RL.rplist;
-		QNM_syslog(LOG_DEBUG, "network: running outbound queue");
+		syslog(LOG_DEBUG, "network: running outbound queue");
 		while (ptr != NULL && !server_shutting_down) {
 			
 			cmp = ptr->next;
@@ -392,9 +389,7 @@ void network_do_queue(void)
 	}
 	/* If there is anything in the inbound queue, process it */
 	if (!server_shutting_down) {
-		network_do_spoolin(working_ignetcfg, 
-				   the_netmap,
-				   &netmap_changed);
+		network_do_spoolin(working_ignetcfg, the_netmap, &netmap_changed);
 	}
 
 	/* Free the filter list in memory */
@@ -417,7 +412,7 @@ void network_do_queue(void)
 
 	DeleteHash(&working_ignetcfg);
 
-	QNM_syslog(LOG_DEBUG, "network: queue run completed");
+	syslog(LOG_DEBUG, "network: queue run completed");
 
 	if (full_processing) {
 		last_run = time(NULL);
@@ -503,8 +498,7 @@ int ignet_aftersave(struct CtdlMessage *msg, recptypes *recps)
 				if (network_fp != NULL) {
 					rv = fwrite(smr.ser, smr.len, 1, network_fp);
 					if (rv == -1) {
-						MSG_syslog(LOG_EMERG, "CtdlSubmitMsg(): Couldn't write network spool file: %s",
-							   strerror(errno));
+						syslog(LOG_EMERG, "network: CtdlSubmitMsg() Couldn't write network spool file: %s", strerror(errno));
 					}
 					fclose(network_fp);
 				}

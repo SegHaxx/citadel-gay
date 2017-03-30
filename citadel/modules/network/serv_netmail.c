@@ -86,7 +86,6 @@ void aggregate_recipients(StrBuf **recps, RoomNetCfg Which, OneRoomNetCfg *OneRN
 	int i;
 	size_t recps_len = 0;
 	RoomNetCfgLine *nptr;
-	struct CitContext *CCC = CC;
 
 	*recps = NULL;
 	/*
@@ -103,9 +102,7 @@ void aggregate_recipients(StrBuf **recps, RoomNetCfg Which, OneRoomNetCfg *OneRN
 	*recps = NewStrBufPlain(NULL, recps_len);
 
 	if (*recps == NULL) {
-		QN_syslog(LOG_EMERG,
-			  "Cannot allocate %ld bytes for recps...\n",
-			  (long)recps_len);
+		syslog(LOG_ERR, "netmail: cannot allocate %ld bytes for recps", (long)recps_len);
 		abort();
 	}
 
@@ -493,15 +490,12 @@ void network_process_ignetpush(SpoolControl *sc, struct CtdlMessage *omsg, long 
 				    sc->working_ignetcfg,
 				    sc->the_netmap) != 0)
 		{
-			QN_syslog(LOG_ERR,
-				  "Invalid node <%s>\n",
-				  ChrPtr(Recipient));
-			
+			syslog(LOG_ERR, "netmail: invalid node <%s>", ChrPtr(Recipient));
 			send = 0;
 		}
 		
 		/* Check for split horizon */
-		QN_syslog(LOG_DEBUG, "Path is %s\n", msg->cm_fields[eMessagePath]);
+		syslog(LOG_DEBUG, "netmail: path is %s", msg->cm_fields[eMessagePath]);
 		bang = num_tokens(msg->cm_fields[eMessagePath], '!');
 		if (bang > 1) {
 			for (i=0; i<(bang-1); ++i) {
@@ -510,18 +504,14 @@ void network_process_ignetpush(SpoolControl *sc, struct CtdlMessage *omsg, long 
 					      i, '!',
 					      sizeof buf);
 
-				QN_syslog(LOG_DEBUG, "Compare <%s> to <%s>\n",
-					  buf, ChrPtr(Recipient)) ;
+				syslog(LOG_DEBUG, "netmail: compare <%s> to <%s>", buf, ChrPtr(Recipient)) ;
 				if (!strcasecmp(buf, ChrPtr(Recipient))) {
 					send = 0;
 					break;
 				}
 			}
 			
-			QN_syslog(LOG_INFO,
-				  " %sSending to %s\n",
-				  (send)?"":"Not ",
-				  ChrPtr(Recipient));
+			syslog(LOG_INFO, "netmail: %ssending to %s", (send)?"":"not ", ChrPtr(Recipient));
 		}
 		
 		/* Send the message */
@@ -553,9 +543,7 @@ void network_process_ignetpush(SpoolControl *sc, struct CtdlMessage *omsg, long 
 					 rand()
 					);
 					
-				QN_syslog(LOG_DEBUG,
-					  "Appending to %s\n",
-					  filename);
+				syslog(LOG_DEBUG, "netmail: appending to %s", filename);
 				
 				fp = fopen(filename, "ab");
 				if (fp != NULL) {
@@ -564,10 +552,7 @@ void network_process_ignetpush(SpoolControl *sc, struct CtdlMessage *omsg, long 
 					fclose(fp);
 				}
 				else {
-					QN_syslog(LOG_ERR,
-						  "%s: %s\n",
-						  filename,
-						  strerror(errno));
+					syslog(LOG_ERR, "%s: %s\n", filename, strerror(errno));
 				}
 
 				/* free the serialized version */
@@ -596,7 +581,7 @@ void network_spool_msg(long msgnum, void *userdata)
 
 	if (msg == NULL)
 	{
-		syslog(LOG_ERR, "failed to load Message <%ld> from disk\n", msgnum);
+		syslog(LOG_ERR, "netmail: failed to load Message <%ld> from disk", msgnum);
 		return;
 	}
 	network_process_list(sc, msg, &delete_after_send);
