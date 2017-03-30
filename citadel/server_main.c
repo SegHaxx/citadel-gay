@@ -46,21 +46,21 @@ void ctdl_lockfile(int yo) {
 
 
 	if (yo) {
-		syslog(LOG_DEBUG, "Creating lockfile");
+		syslog(LOG_DEBUG, "main: creating lockfile");
 		snprintf(lockfilename, sizeof lockfilename, "%s/citadel.lock", ctdl_run_dir);
 		fp = fopen(lockfilename, "w");
 		if (!fp) {
-			syslog(LOG_ERR, "Cannot open or create %s", lockfilename);
+			syslog(LOG_ERR, "%s: %s", lockfilename, strerror(errno));
 			exit(CTDLEXIT_DB);
 		}
 		if (flock(fileno(fp), (LOCK_EX|LOCK_NB)) != 0) {
-			syslog(LOG_ERR, "Cannot lock %s , is another citserver running?", lockfilename);
+			syslog(LOG_ERR, "main: cannot lock %s , is another citserver running?", lockfilename);
 			exit(CTDLEXIT_DB);
 		}
 		return;
 	}
 
-	syslog(LOG_DEBUG, "Removing lockfile");
+	syslog(LOG_DEBUG, "main: removing lockfile");
 	unlink(lockfilename);
 	flock(fileno(fp), LOCK_UN);
 	fclose(fp);
@@ -255,18 +255,14 @@ int main(int argc, char **argv)
 		pwp = NULL;
 #endif // HAVE_GETPWUID_R
 
-		if ((mkdir(ctdl_run_dir, 0755) != 0) && (errno != EEXIST))
-			syslog(LOG_EMERG, 
-				      "unable to create run directory [%s]: %s", 
-				      ctdl_run_dir, strerror(errno));
+		if ((mkdir(ctdl_run_dir, 0755) != 0) && (errno != EEXIST)) {
+			syslog(LOG_ERR, "main: unable to create run directory [%s]: %s", ctdl_run_dir, strerror(errno));
+		}
 
-		if (chown(ctdl_run_dir, ctdluid, (pwp==NULL)?-1:pw.pw_gid) != 0)
-			syslog(LOG_EMERG, 
-				      "unable to set the access rights for [%s]: %s", 
-				      ctdl_run_dir, strerror(errno));
+		if (chown(ctdl_run_dir, ctdluid, (pwp==NULL)?-1:pw.pw_gid) != 0) {
+			syslog(LOG_ERR, "main: unable to set the access rights for [%s]: %s", ctdl_run_dir, strerror(errno));
+		}
 	}
-			
-
 #endif
 
 	ctdl_lockfile(1);
@@ -287,7 +283,7 @@ int main(int argc, char **argv)
 	/*
 	 * Run any upgrade entry points
 	 */
-	syslog(LOG_INFO, "Upgrading modules.");
+	syslog(LOG_INFO, "main: upgrading modules");
 	upgrade_modules();
 	
 /*
@@ -338,7 +334,7 @@ int main(int argc, char **argv)
 	/*
 	 * Load any server-side extensions available here.
 	 */
-	syslog(LOG_INFO, "Initializing server extensions");
+	syslog(LOG_INFO, "main: initializing server extensions");
 	
 	initialise_modules(0);
 
@@ -378,18 +374,15 @@ int main(int argc, char **argv)
 #endif // HAVE_GETPWUID_R
 
 		if (pwp == NULL)
-			syslog(LOG_CRIT, "WARNING: getpwuid(%ld): %s"
-				   "Group IDs will be incorrect.\n", (long)CTDLUID,
-				strerror(errno));
+			syslog(LOG_ERR, "main: WARNING, getpwuid(%ld): %s" "Group IDs will be incorrect.", (long)CTDLUID, strerror(errno));
 		else {
 			initgroups(pw.pw_name, pw.pw_gid);
 			if (setgid(pw.pw_gid))
-				syslog(LOG_CRIT, "setgid(%ld): %s", (long)pw.pw_gid,
-					strerror(errno));
+				syslog(LOG_ERR, "main: setgid(%ld): %s", (long)pw.pw_gid, strerror(errno));
 		}
-		syslog(LOG_INFO, "Changing uid to %ld", (long)CTDLUID);
+		syslog(LOG_INFO, "main: changing uid to %ld", (long)CTDLUID);
 		if (setuid(CTDLUID) != 0) {
-			syslog(LOG_CRIT, "setuid() failed: %s", strerror(errno));
+			syslog(LOG_ERR, "main: setuid() failed: %s", strerror(errno));
 		}
 #if defined (HAVE_SYS_PRCTL_H) && defined (PR_SET_DUMPABLE)
 		prctl(PR_SET_DUMPABLE, 1);

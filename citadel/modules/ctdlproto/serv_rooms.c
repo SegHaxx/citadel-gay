@@ -1,7 +1,7 @@
 /* 
  * Server functions which perform operations on room objects.
  *
- * Copyright (c) 1987-2015 by the citadel.org team
+ * Copyright (c) 1987-2017 by the citadel.org team
  *
  * This program is open source software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 3.
@@ -341,7 +341,7 @@ void cmd_goto(char *gargs)
 				   ((ra & UA_KNOWN) == 0) &&
 			           (CCC->user.axlevel < AxAideU)
                                   ) {
-				CTDLM_syslog(LOG_DEBUG, "Failed to acquire private room");
+				syslog(LOG_DEBUG, "rooms: failed to acquire private room");
 			} else {
 				memcpy(&CCC->room, &QRscratch,
 					sizeof(struct ctdlroom));

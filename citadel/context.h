@@ -207,18 +207,5 @@ static INLINE void become_session(CitContext *which_con) {
 
 
 
-/* typedef void (*CtdlDbgFunction) (const int); */
-
-extern int DebugSession;
-#define CONDBGLOG(LEVEL) if ((LEVEL != LOG_DEBUG) || (DebugSession != 0))
-
-#define CON_syslog(LEVEL, FORMAT, ...)					\
-	CONDBGLOG(LEVEL) syslog(LEVEL,					\
-				"%s Context: " FORMAT, IOSTR, __VA_ARGS__)
-
-#define CONM_syslog(LEVEL, FORMAT)				\
-	CONDBGLOG(LEVEL) syslog(LEVEL,				\
-				"%s Context: " FORMAT, IOSTR);
-
 
 #endif /* CONTEXT_H */

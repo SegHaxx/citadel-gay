@@ -73,12 +73,7 @@ void initialise_modules (int threading)
     long filter;
     const char *pMod;
 
-    if (threading) {
-        MODM_syslog(LOG_DEBUG, "Initializing, CtdlThreads enabled.\n");
-    }
-    else {
-        MODM_syslog(LOG_INFO, "Initializing. CtdlThreads not yet enabled.\n");
-    }
+    syslog(LOG_DEBUG, "modules: initializing, CtdlThreads %s", (threading ? "enabled" : "not yet enabled"));
 
 EOF
 
@@ -86,7 +81,7 @@ EOF
 for i in ${STATIC_FIRST_MODULES} ${DYNAMIC_MODULES} ${USER_MODULES} ${STATIC_LAST_MODULES}; do 
 cat <<EOF >> $C_FILE
 	pMod = CTDL_INIT_CALL($i);
-	MOD_syslog(LOG_DEBUG, "Loaded module: %s\n", pMod);
+	syslog(LOG_DEBUG, "modules: loaded %s", pMod);
 EOF
 
 done
@@ -208,13 +203,13 @@ void upgrade_modules (void)
 {
         const char *pMod;
 
-        MODM_syslog(LOG_INFO, "Upgrade modules.\n");
+        syslog(LOG_INFO, "modules: upgrading.");
 
 EOF
 
 # Add this entry point to the .c file
 
-grep CTDL_MODULE_UPGRADE *.c modules/*/*.c  |$SED 's;.*(\(.*\));\tpMod = CTDL_UPGRADE_CALL(\1)\;\n\tMOD_syslog(LOG_INFO, "%s\\n", pMod)\;\n;' >> $U_FILE
+grep CTDL_MODULE_UPGRADE *.c modules/*/*.c  |$SED 's;.*(\(.*\));\tpMod = CTDL_UPGRADE_CALL(\1)\;\n\tsyslog(LOG_INFO, "modules: %s\\n", pMod)\;\n;' >> $U_FILE
 
 #close the upgrade file
 /usr/bin/printf "}\n" >> $U_FILE

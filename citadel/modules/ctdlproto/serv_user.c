@@ -1,7 +1,7 @@
 /* 
  * Server functions which perform operations on user objects.
  *
- * Copyright (c) 1987-2015 by the citadel.org team
+ * Copyright (c) 1987-2017 by the citadel.org team
  *
  * This program is open source software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License, version 3.
@@ -29,11 +29,9 @@ void cmd_user(char *cmdbuf)
 	char username[256];
 	int a;
 
-	CON_syslog(LOG_DEBUG, "cmd_user(%s)\n", cmdbuf);
 	extract_token(username, cmdbuf, 0, '|', sizeof username);
-	CON_syslog(LOG_DEBUG, "username: %s\n", username);
 	striplt(username);
-	CON_syslog(LOG_DEBUG, "username: %s\n", username);
+	syslog(LOG_DEBUG, "user_ops: cmd_user(%s)", username);
 
 	a = CtdlLoginExistingUser(NULL, username);
 	switch (a) {

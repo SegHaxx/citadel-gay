@@ -232,24 +232,6 @@ extern int DebugCAres;
 
 #define CCID ((CitContext*)IO->CitContext)?((CitContext*)IO->CitContext)->cs_pid:-1
 
-#define EVQ_syslog(LEVEL, FORMAT, ...)					\
-	EDBGLOG (LEVEL) syslog(LEVEL, "%sQ " FORMAT, IOSTR, __VA_ARGS__)
-
-#define EVQM_syslog(LEVEL, FORMAT)			\
-	EDBGLOG (LEVEL) syslog(LEVEL, "%s " FORMAT, IOSTR)
-
-#define EV_syslog(LEVEL, FORMAT, ...)					\
-	EDBGLOG (LEVEL) syslog(LEVEL, "%s[%ld]CC[%d] " FORMAT, IOSTR, IO->ID, CCID, __VA_ARGS__)
-
-#define EVM_syslog(LEVEL, FORMAT)					\
-	EDBGLOG (LEVEL) syslog(LEVEL, "%s[%ld]CC[%d] " FORMAT, IOSTR, IO->ID, CCID)
-
-#define EVNC_syslog(LEVEL, FORMAT, ...)					\
-	EDBGLOG (LEVEL) syslog(LEVEL, "%s[%ld] " FORMAT, IOSTR, IO->ID, __VA_ARGS__)
-
-#define EVNCM_syslog(LEVEL, FORMAT) EDBGLOG (LEVEL) syslog(LEVEL, "%s[%ld]" FORMAT, IOSTR, IO->ID)
-
-
 #define CDBGLOG() if (DebugCAres != 0)
 #define CEDBGLOG(LEVEL) if ((LEVEL != LOG_DEBUG) || (DebugCAres != 0))
 #define EV_DNS_LOG_START(a)							\
@@ -275,12 +257,6 @@ extern int DebugCAres;
 #define EV_DNS_LOGT_INIT(a)							\
 	CDBGLOG () { syslog(LOG_DEBUG, "%s[%ld]CC[%d] * Init " #a " %p", IOSTR, IO->ID, CCID, &IO->a); \
 		     EV_backtrace(IO);}
-
-#define EV_DNS_syslog(LEVEL, FORMAT, ...)				\
-	CEDBGLOG (LEVEL) syslog(LEVEL, "%s[%ld]CC[%d] " FORMAT, IOSTR, IO->ID, CCID, __VA_ARGS__)
-
-#define EVM_DNS_syslog(LEVEL, FORMAT)					\
-	CEDBGLOG (LEVEL) syslog(LEVEL, "%s[%ld]CC[%d] " FORMAT, IOSTR, IO->ID, CCID)
 
 void FreeAsyncIOContents(AsyncIO *IO);
 
@@ -322,7 +298,7 @@ void SetNextTimeout(AsyncIO *IO, double timeout);
 	do { \
 		sta = curl_easy_setopt(chnd, (CURLOPT_##s), (v));	\
 		if (sta)  {						\
-			EVQ_syslog(LOG_ERR,				\
+			syslog(LOG_ERR,				\
 			       "error setting option " #s		\
 			       " on curl handle: %s",			\
 			       curl_easy_strerror(sta));		\
