@@ -78,13 +78,13 @@ void xmpp_iq_roster_query(void)
 	struct CitContext *cptr;
 	int nContexts, i;
 
-	XMPPM_syslog(LOG_DEBUG, "Roster push!");
+	syslog(LOG_DEBUG, "xmpp: roster push!");
 	cprintf("<query xmlns=\"jabber:iq:roster\">");
 	cptr = CtdlGetContextArray(&nContexts);
 	if (cptr) {
 		for (i=0; i<nContexts; i++) {
 			if (xmpp_is_visible(&cptr[i], CC)) {
-				XMPP_syslog(LOG_DEBUG, "Rosterizing %s\n", cptr[i].user.fullname);
+				syslog(LOG_DEBUG, "xmpp: rosterizing %s", cptr[i].user.fullname);
 				xmpp_roster_item(&cptr[i]);
 			}
 		}
@@ -97,7 +97,6 @@ void xmpp_iq_roster_query(void)
 
 /*
  * Client is doing a namespace query.  These are all handled differently.
- * A "rumplestiltskin lookup" is the most efficient way to handle this.  Please do not refactor this code.
  */
 void xmpp_query_namespace(char *iq_id, char *iq_from, char *iq_to, char *query_xmlns)
 {
@@ -119,7 +118,7 @@ void xmpp_query_namespace(char *iq_id, char *iq_from, char *iq_to, char *query_x
 		supported_namespace = 1;
 	}
 
-	XMPP_syslog(LOG_DEBUG, "xmpp_query_namespace(id=%s, from=%s, to=%s, xmlns=%s)\n", iq_id, iq_from, iq_to, query_xmlns);
+	syslog(LOG_DEBUG, "xmpp: xmpp_query_namespace(id=%s, from=%s, to=%s, xmlns=%s)", iq_id, iq_from, iq_to, query_xmlns);
 
 	/*
 	 * Beginning of query result.
@@ -195,7 +194,7 @@ void xmpp_query_namespace(char *iq_id, char *iq_from, char *iq_to, char *query_x
 	 */
 
 	else {
-		XMPP_syslog(LOG_DEBUG, "Unknown query namespace '%s' - returning <service-unavailable/>\n", query_xmlns);
+		syslog(LOG_DEBUG, "xmpp: unknown query namespace '%s' - returning <service-unavailable/>", query_xmlns);
 		cprintf("<error code=\"503\" type=\"cancel\">"
 			"<service-unavailable xmlns=\"urn:ietf:params:xml:ns:xmpp-stanzas\"/>"
 			"</error>"

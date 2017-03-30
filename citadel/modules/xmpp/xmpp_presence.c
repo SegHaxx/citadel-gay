@@ -1,7 +1,7 @@
 /*
  * Handle XMPP presence exchanges
  *
- * Copyright (c) 2007-2015 by Art Cancro and citadel.org
+ * Copyright (c) 2007-2017 by Art Cancro and citadel.org
  *
  * This program is open source software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -67,7 +67,7 @@ void xmpp_indicate_presence(char *presence_jid)
 {
 	char xmlbuf[256];
 
-	XMPP_syslog(LOG_DEBUG, "XMPP: indicating presence of <%s> to <%s>", presence_jid, XMPP->client_jid);
+	syslog(LOG_DEBUG, "xmpp: indicating presence of <%s> to <%s>", presence_jid, XMPP->client_jid);
 	cprintf("<presence from=\"%s\" ", xmlesc(xmlbuf, presence_jid, sizeof xmlbuf));
 	cprintf("to=\"%s\"></presence>", xmlesc(xmlbuf, XMPP->client_jid, sizeof xmlbuf));
 }
@@ -195,11 +195,11 @@ void xmpp_presence_notify(char *presence_jid, int event_type) {
 		}
 	}
 
-	XMPP_syslog(LOG_DEBUG, "%d sessions for <%s> are now visible to session %d\n", visible_sessions, presence_jid, CC->cs_pid);
+	syslog(LOG_DEBUG, "xmpp: %d sessions for <%s> are now visible to session %d", visible_sessions, presence_jid, CC->cs_pid);
 
 	if ( (event_type == XMPP_EVT_LOGIN) && (visible_sessions == 1) ) {
 
-		XMPP_syslog(LOG_DEBUG, "Telling session %d that <%s> logged in\n", CC->cs_pid, presence_jid);
+		syslog(LOG_DEBUG, "xmpp: telling session %d that <%s> logged in", CC->cs_pid, presence_jid);
 
 		/* Do an unsolicited roster update that adds a new contact. */
 		assert(which_cptr_is_relevant >= 0);
@@ -213,8 +213,7 @@ void xmpp_presence_notify(char *presence_jid, int event_type) {
 	}
 
 	if (visible_sessions == 0) {
-		XMPP_syslog(LOG_DEBUG, "Telling session %d that <%s> logged out\n",
-			    CC->cs_pid, presence_jid);
+		syslog(LOG_DEBUG, "xmpp: telling session %d that <%s> logged out", CC->cs_pid, presence_jid);
 		xmpp_destroy_buddy(presence_jid, 0);	/* non aggressive presence update */
 	}
 
@@ -270,7 +269,7 @@ void xmpp_fetch_mortuary_backend(long msgnum, void *userdata) {
 HashList *xmpp_fetch_mortuary(void) {
 	HashList *mortuary = NewHash(1, NULL);
 	if (!mortuary) {
-		XMPPM_syslog(LOG_ALERT, "NewHash() failed!\n");
+		syslog(LOG_ALERT, "xmpp: NewHash() failed!");
 		return(NULL);
 	}
 

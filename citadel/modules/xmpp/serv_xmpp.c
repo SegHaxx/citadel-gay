@@ -1,6 +1,6 @@
 /*
  * XMPP (Jabber) service for the Citadel system
- * Copyright (c) 2007-2015 by Art Cancro and citadel.org
+ * Copyright (c) 2007-2017 by Art Cancro and citadel.org
  *
  * This program is open source software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -76,7 +76,7 @@ static void xmpp_entity_declaration(void *userData, const XML_Char *entityName,
 				const XML_Char *systemId, const XML_Char *publicId,
 				const XML_Char *notationName
 ) {
-	XMPPM_syslog(LOG_WARNING, "Illegal entity declaration encountered; stopping parser.");
+	syslog(LOG_WARNING, "xmpp: illegal entity declaration encountered; stopping parser.");
 	XML_StopParser(XMPP->xp, XML_FALSE);
 }
 #endif
@@ -240,9 +240,9 @@ void xmpp_xml_start(void *data, const char *supplied_el, const char **attr) {
 	}
 
 	/*
-	XMPP_syslog(LOG_DEBUG, "XMPP ELEMENT START: <%s>\n", el);
+	syslog(LOG_DEBUG, "xmpp: ELEMENT START: <%s>", el);
 	for (i=0; attr[i] != NULL; i+=2) {
-		XMPP_syslog(LOG_DEBUG, "                    Attribute '%s' = '%s'\n", attr[i], attr[i+1]);
+		syslog(LOG_DEBUG, "xmpp: Attribute '%s' = '%s'", attr[i], attr[i+1]);
 	}
 	uncomment for more verbosity */
 
@@ -312,9 +312,9 @@ void xmpp_xml_end(void *data, const char *supplied_el) {
 	}
 
 	/*
-	XMPP_syslog(LOG_DEBUG, "XMPP ELEMENT END  : <%s>\n", el);
+	syslog(LOG_DEBUG, "xmpp: ELEMENT END  : <%s>", el);
 	if (XMPP->chardata_len > 0) {
-		XMPP_syslog(LOG_DEBUG, "          chardata: %s\n", XMPP->chardata);
+		syslog(LOG_DEBUG, "xmpp: chardata: %s", XMPP->chardata);
 	}
 	uncomment for more verbosity */
 
@@ -375,10 +375,7 @@ void xmpp_xml_end(void *data, const char *supplied_el) {
 			 * Unknown query ... return the XML equivalent of a blank stare
 			 */
 			else {
-				XMPP_syslog(LOG_DEBUG,
-					    "Unknown query <%s> - returning <service-unavailable/>\n",
-					    el
-				);
+				syslog(LOG_DEBUG, "xmpp: Unknown query <%s> - returning <service-unavailable/>", el);
 				cprintf("<iq type=\"error\" id=\"%s\">", xmlesc(xmlbuf, XMPP->iq_id, sizeof xmlbuf));
 				cprintf("<error code=\"503\" type=\"cancel\">"
 					"<service-unavailable xmlns=\"urn:ietf:params:xml:ns:xmpp-stanzas\"/>"
@@ -510,7 +507,7 @@ void xmpp_xml_end(void *data, const char *supplied_el) {
 	}
 
 	else if (!strcasecmp(el, "stream")) {
-		XMPPM_syslog(LOG_DEBUG, "XMPP client shut down their stream\n");
+		syslog(LOG_DEBUG, "xmpp: client shut down their stream");
 		xmpp_massacre_roster();
 		cprintf("</stream>\n");
 		CC->kill_me = KILLME_CLIENT_LOGGED_OUT;
@@ -525,7 +522,7 @@ void xmpp_xml_end(void *data, const char *supplied_el) {
 	}
 
 	else {
-		XMPP_syslog(LOG_DEBUG, "Ignoring unknown tag <%s>\n", el);
+		syslog(LOG_DEBUG, "xmpp: ignoring unknown tag <%s>", el);
 	}
 
 	XMPP->chardata_len = 0;
@@ -590,7 +587,7 @@ void xmpp_greeting(void) {
 
 	XMPP->xp = XML_ParserCreateNS("UTF-8", ':');
 	if (XMPP->xp == NULL) {
-		XMPPM_syslog(LOG_ALERT, "Cannot create XML parser!\n");
+		syslog(LOG_ERR, "xmpp: cannot create XML parser");
 		CC->kill_me = KILLME_XML_PARSER;
 		return;
 	}
@@ -627,7 +624,7 @@ void xmpp_command_loop(void) {
 		XML_Parse(XMPP->xp, ChrPtr(stream_input), rc, 0);
 	}
 	else {
-		XMPPM_syslog(LOG_ERR, "client disconnected: ending session.\n");
+		syslog(LOG_ERR, "xmpp: client disconnected: ending session.");
 		CC->kill_me = KILLME_CLIENT_DISCONNECTED;
 	}
 	FreeStrBuf(&stream_input);

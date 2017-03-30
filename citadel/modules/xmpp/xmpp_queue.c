@@ -1,22 +1,15 @@
 /*
  * XMPP event queue
  *
- * Copyright (c) 2007-2009 by Art Cancro
+ * Copyright (c) 2007-2017 by Art Cancro
  *
- *  This program is open source software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License version 3.
- *  
- *  
+ * This program is open source software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 3.
  *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  
- *  
- *  
- *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
  */
 
 #include "sysdep.h"
@@ -66,7 +59,7 @@ void xmpp_queue_event(int event_type, char *email_addr) {
 	int purged_something = 0;
 	struct CitContext *cptr;
 
-	MARK_syslog(LOG_DEBUG, "xmpp_queue_event(%d, %s)\n", event_type, email_addr);
+	syslog(LOG_DEBUG, "xmpp: xmpp_queue_event(%d, %s)", event_type, email_addr);
 
 	/* Purge events more than a minute old */
 	begin_critical_section(S_XMPP_QUEUE);
