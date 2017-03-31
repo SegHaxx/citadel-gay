@@ -48,7 +48,7 @@ void cmd_asyn(char *argbuf)
 
 
 /*
- * cmd_info()  -  tell the client about this server
+ * cmd_info()  -  Identify this server and its capabilities to the client
  */
 void cmd_info(char *cmdbuf) {
 	cprintf("%d Server info:\n", LISTING_FOLLOWS);
@@ -189,8 +189,7 @@ void cmd_term(char *cmdbuf)
 			cprintf("%d Session terminated.\n", CIT_OK);
 		}
 		else {
-			cprintf("%d You are not allowed to do that.\n",
-				ERROR + HIGHER_ACCESS_REQUIRED);
+			cprintf("%d You are not allowed to do that.\n", ERROR + HIGHER_ACCESS_REQUIRED);
 		}
 	}
 	else {
@@ -201,17 +200,17 @@ void cmd_term(char *cmdbuf)
 
 void cmd_time(char *argbuf)
 {
-   time_t tv;
-   struct tm tmp;
-   
-   tv = time(NULL);
-   localtime_r(&tv, &tmp);
-   
-   /* timezone and daylight global variables are not portable. */
+	time_t tv;
+	struct tm tmp;
+
+	tv = time(NULL);
+	localtime_r(&tv, &tmp);
+
+	/* timezone and daylight global variables are not portable. */
 #ifdef HAVE_STRUCT_TM_TM_GMTOFF
-   cprintf("%d %ld|%ld|%d|%ld\n", CIT_OK, (long)tv, tmp.tm_gmtoff, tmp.tm_isdst, server_startup_time);
+	cprintf("%d %ld|%ld|%d|%ld\n", CIT_OK, (long)tv, tmp.tm_gmtoff, tmp.tm_isdst, server_startup_time);
 #else
-   cprintf("%d %ld|%ld|%d|%ld\n", CIT_OK, (long)tv, timezone, tmp.tm_isdst, server_startup_time);
+	cprintf("%d %ld|%ld|%d|%ld\n", CIT_OK, (long)tv, timezone, tmp.tm_isdst, server_startup_time);
 #endif
 }
 
