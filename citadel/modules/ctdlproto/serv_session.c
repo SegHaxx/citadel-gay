@@ -1,7 +1,7 @@
 /* 
  * Server functions which perform operations on user objects.
  *
- * Copyright (c) 1987-2015 by the citadel.org team
+ * Copyright (c) 1987-2017 by the citadel.org team
  *
  * This program is open source software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License, version 3.
@@ -14,11 +14,11 @@
 
 #include <stdio.h>
 #include <libcitadel.h>
-
 #include "citserver.h"
 #include "svn_revision.h"
 #include "ctdl_module.h"
 #include "config.h"
+
 
 void cmd_noop(char *argbuf)
 {
@@ -30,6 +30,7 @@ void cmd_qnop(char *argbuf)
 {
 	/* do nothing, this command returns no response */
 }
+
 
 /*
  * Set or unset asynchronous protocol mode
@@ -44,7 +45,6 @@ void cmd_asyn(char *argbuf)
 	}
 	cprintf("%d %d\n", CIT_OK, CC->is_async);
 }
-
 
 
 /*
@@ -83,12 +83,11 @@ void cmd_info(char *cmdbuf) {
 
 	cprintf("%s\n", CtdlGetConfigStr("c_default_cal_zone"));
 
-	/* thread load averages -- temporarily disabled during refactoring of this code */
-	cprintf("0\n");		/* load average */
-	cprintf("0\n");		/* worker average */
-	cprintf("0\n");		/* thread count */
-
+	cprintf("0\n");		/* load average		(no longer used) */
+	cprintf("0\n");		/* worker average	(no longer used) */
+	cprintf("0\n");		/* thread count		(no longer used) */
 	cprintf("1\n");		/* yes, Sieve mail filtering is supported */
+
 	cprintf("%d\n", CtdlGetConfigInt("c_enable_fulltext"));
 	cprintf("%s\n", svn_revision());
 
@@ -100,9 +99,9 @@ void cmd_info(char *cmdbuf) {
 	}
 
 	cprintf("%d\n", CtdlGetConfigInt("c_guest_logins"));
-	
 	cprintf("000\n");
 }
+
 
 /*
  * echo 
@@ -111,6 +110,7 @@ void cmd_echo(char *etext)
 {
 	cprintf("%d %s\n", CIT_OK, etext);
 }
+
 
 /* 
  * get the paginator prompt
@@ -159,7 +159,7 @@ void cmd_iden(char *argbuf)
 		CCC->cs_addr[0] = 0;
 	}
 
-	syslog(LOG_NOTICE, "Client %d/%d/%01d.%02d (%s) from %s\n",
+	syslog(LOG_NOTICE, "session: client %d/%d/%01d.%02d (%s) from %s",
 		dev_code,
 		cli_code,
 		(rev_level / 100),
@@ -170,17 +170,14 @@ void cmd_iden(char *argbuf)
 	cprintf("%d Ok\n",CIT_OK);
 }
 
+
 /*
  * Terminate another running session
  */
 void cmd_term(char *cmdbuf)
 {
-	int session_num;
-	int terminated = 0;
-
-	session_num = extract_int(cmdbuf, 0);
-
-	terminated = CtdlTerminateOtherSession(session_num);
+	int session_num = extract_int(cmdbuf, 0);
+	int terminated = CtdlTerminateOtherSession(session_num);
 
 	if (terminated < 0) {
 		cprintf("%d You can't kill your own session.\n", ERROR + ILLEGAL_VALUE);
@@ -219,8 +216,6 @@ void cmd_time(char *argbuf)
 }
 
 
-
-
 /*****************************************************************************/
 /*                      MODULE INITIALIZATION STUFF                          */
 /*****************************************************************************/
@@ -230,14 +225,12 @@ CTDL_MODULE_INIT(serv_session)
 	if (!threading) {
 		CtdlRegisterProtoHook(cmd_noop, "NOOP", "no operation");
 		CtdlRegisterProtoHook(cmd_qnop, "QNOP", "no operation with no response");
-;
 		CtdlRegisterProtoHook(cmd_asyn, "ASYN", "enable asynchronous server responses");
 		CtdlRegisterProtoHook(cmd_info, "INFO", "fetch server capabilities and configuration");
 		CtdlRegisterProtoHook(cmd_echo, "ECHO", "echo text back to the client");
 		CtdlRegisterProtoHook(cmd_more, "MORE", "fetch the paginator prompt");
 		CtdlRegisterProtoHook(cmd_iden, "IDEN", "identify the client software and location");
 		CtdlRegisterProtoHook(cmd_term, "TERM", "terminate another running session");
-
 		CtdlRegisterProtoHook(cmd_time, "TIME", "fetch the date and time from the server");
 	}
         /* return our id for the Log */
