@@ -689,11 +689,6 @@ int PurgeUseTable(StrBuf *ErrMsg) {
 	struct UPurgeList *uptr; 
 
 	/* Phase 1: traverse through the table, discovering old records... */
-	if (CheckTDAPVeto(CDB_USETABLE, ErrMsg))
-	{
-		syslog(LOG_DEBUG, "Purge use table: VETO!");
-		return 0;
-	}
 
 	syslog(LOG_DEBUG, "Purge use table: phase 1");
 	cdb_rewind(CDB_USETABLE);

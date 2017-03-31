@@ -53,19 +53,6 @@ FixedOutputHook *FixedOutputTable = NULL;
 
 
 
-/*
- * TDAPVetoHookFunctionHook extensions are used for any type of hook for which
- * may prevent the autopurger to run for this specific data class.
- * the function should at least LOG_INFO that it does so.
- */
-typedef struct TDAPVetoHookFunctionHook TDAPVetoHookFunctionHook;
-struct TDAPVetoHookFunctionHook {
-	TDAPVetoHookFunctionHook *next;
-	int Priority;
-	int (*h_function_pointer) (StrBuf *);
-	int eventtype;
-};
-TDAPVetoHookFunctionHook *TDAPVetoHookTable = NULL;
 
 
 
@@ -515,73 +502,7 @@ void CtdlDestroyEVCleanupHooks(void)
 	EVCleanupHookTable = NULL;
 }
 
-void CtdlRegisterTDAPVetoHook(int (*fcn_ptr) (StrBuf*), int EventType, int Priority)
-{
-	TDAPVetoHookFunctionHook *newfcn;
 
-	newfcn = (TDAPVetoHookFunctionHook *)
-	    malloc(sizeof(TDAPVetoHookFunctionHook));
-	newfcn->Priority = Priority;
-	newfcn->h_function_pointer = fcn_ptr;
-	newfcn->eventtype = EventType;
-
-	TDAPVetoHookFunctionHook **pfcn;
-	pfcn = &TDAPVetoHookTable;
-	while ((*pfcn != NULL) && 
-	       ((*pfcn)->Priority < newfcn->Priority) &&
-	       ((*pfcn)->next != NULL))
-		pfcn = &(*pfcn)->next;
-		
-	newfcn->next = *pfcn;
-	*pfcn = newfcn;
-	
-	syslog(LOG_DEBUG, "extensions: registered a new TDAP Veto function (type %d Priority %d)",
-		   EventType, Priority);
-}
-
-
-void CtdlUnregisterTDAPVetoHook(int (*fcn_ptr) (StrBuf*), int EventType)
-{
-	TDAPVetoHookFunctionHook *cur, *p, *last;
-	last = NULL;
-	cur = TDAPVetoHookTable;
-	while  (cur != NULL) {
-		if ((fcn_ptr == cur->h_function_pointer) &&
-		    (EventType == cur->eventtype))
-		{
-			syslog(LOG_DEBUG, "extensions: unregistered TDAP Veto function (type %d)", EventType);
-			p = cur->next;
-
-			free(cur);
-			cur = NULL;
-
-			if (last != NULL)
-				last->next = p;
-			else 
-				TDAPVetoHookTable = p;
-			cur = p;
-		}
-		else {
-			last = cur;
-			cur = cur->next;
-		}
-	}
-}
-
-void CtdlDestroyTDAPVetoHooks(void)
-{
-	TDAPVetoHookFunctionHook *cur, *p;
-
-	cur = TDAPVetoHookTable;
-	while (cur != NULL)
-	{
-		syslog(LOG_DEBUG, "extensions: destroyed TDAP Veto function");
-		p = cur->next;
-		free(cur);
-		cur = p;
-	}
-	TDAPVetoHookTable = NULL;
-}
 
 
 void CtdlRegisterSessionHook(void (*fcn_ptr) (void), int EventType, int Priority)
@@ -1310,18 +1231,6 @@ void CtdlModuleDoSearch(int *num_msgs, long **search_msgs, const char *search_st
 	*num_msgs = 0;
 }
 
-int CheckTDAPVeto (int DBType, StrBuf *ErrMsg)
-{
-	int Result = 0;
-	TDAPVetoHookFunctionHook *fcn = NULL;
-
-	for (fcn = TDAPVetoHookTable; (fcn != NULL) && (Result == 0); fcn = fcn->next) {
-		if (fcn->eventtype == DBType) {
-			Result = (*fcn->h_function_pointer) (ErrMsg);
-		}
-	}
-	return Result;
-}
 
 void PerformSessionHooks(int EventType)
 {
