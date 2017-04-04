@@ -13,12 +13,13 @@
  * GNU General Public License for more details.
  */
 
+#include <stdlib.h>
+#include <unistd.h>
 #include <stdio.h>
+#include <sys/stat.h>
 #include <libcitadel.h>
-
 #include "sysdep_decls.h"
 #include "modules/crypto/serv_crypto.h"	/* Needed until a universal crypto startup hook is implimented for CtdlStartTLS */
-
 #include "serv_extensions.h"
 #include "ctdl_module.h"
 #include "config.h"

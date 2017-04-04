@@ -179,15 +179,6 @@ void go_threading(void)
 	}
 
 	/* When we get to this point we are getting ready to shut down our Citadel server */
-	if (!EventQShuttingDown)
-	{
-		EventQShuttingDown = 1;
-		ShutDownEventQueues();
-	}
-	while (!EVQShutDown)
-		usleep(1000000);
-
-
 	terminate_all_sessions();		/* close all client sockets */
 	CtdlShutdownServiceHooks();		/* close all listener sockets to prevent new connections */
 	PerformSessionHooks(EVT_SHUTDOWN);	/* run any registered shutdown hooks */

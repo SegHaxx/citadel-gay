@@ -13,12 +13,13 @@
  */
 
 
+#include <stdlib.h>
+#include <unistd.h>
 #include <stdio.h>
 #include <regex.h>
+#include <sys/stat.h>
 #include <libcitadel.h>
-
 #include "md5.h"
-
 #include "ctdl_module.h"
 #include "citserver.h"
 #include "control.h"
@@ -27,7 +28,6 @@
 #include "genstamp.h"
 #include "room_ops.h"
 #include "user_ops.h"
-
 #include "internet_addressing.h"
 #include "euidindex.h"
 #include "msgbase.h"
@@ -3090,8 +3090,7 @@ StrBuf *CtdlReadMessageBodyBuf(char *terminator,	/* token signalling EOT */
 			       size_t maxlen,		/* maximum message length */
 			       StrBuf *exist,		/* if non-null, append to it;
 							   exist is ALWAYS freed  */
-			       int crlf,		/* CRLF newlines instead of LF */
-			       int *sock		/* socket handle or 0 for this session's client socket */
+			       int crlf			/* CRLF newlines instead of LF */
 	) 
 {
 	StrBuf *Message;
@@ -3115,18 +3114,12 @@ StrBuf *CtdlReadMessageBodyBuf(char *terminator,	/* token signalling EOT */
 
 	/* read in the lines of message text one by one */
 	do {
-		if (sock != NULL) {
-			if ((CtdlSockGetLine(sock, LineBuf, 5) < 0) ||
-			    (*sock == -1))
-				finished = 1;
-		}
-		else {
-			if (CtdlClientGetLine(LineBuf) < 0) finished = 1;
-		}
-		if ((StrLength(LineBuf) == tlen) && 
-		    (!strcmp(ChrPtr(LineBuf), terminator)))
+		if (CtdlClientGetLine(LineBuf) < 0) {
 			finished = 1;
-
+		}
+		if ((StrLength(LineBuf) == tlen) && (!strcmp(ChrPtr(LineBuf), terminator))) {
+			finished = 1;
+		}
 		if ( (!flushing) && (!finished) ) {
 			if (crlf) {
 				StrBufAppendBufPlain(LineBuf, HKEY("\r\n"), 0);
@@ -3154,174 +3147,6 @@ StrBuf *CtdlReadMessageBodyBuf(char *terminator,	/* token signalling EOT */
 	return Message;
 }
 
-void DeleteAsyncMsg(ReadAsyncMsg **Msg)
-{
-	if (*Msg == NULL)
-		return;
-	FreeStrBuf(&(*Msg)->MsgBuf);
-
-	free(*Msg);
-	*Msg = NULL;
-}
-
-ReadAsyncMsg *NewAsyncMsg(const char *terminator,	/* token signalling EOT */
-			  long tlen,
-			  size_t maxlen,		/* maximum message length */
-			  size_t expectlen,             /* if we expect a message, how long should it be? */
-			  StrBuf *exist,		/* if non-null, append to it;
-						   	   exist is ALWAYS freed  */
-			  long eLen,            	/* length of exist */
-			  int crlf			/* CRLF newlines instead of LF */
-	)
-{
-	ReadAsyncMsg *NewMsg;
-
-	NewMsg = (ReadAsyncMsg *)malloc(sizeof(ReadAsyncMsg));
-	memset(NewMsg, 0, sizeof(ReadAsyncMsg));
-
-	if (exist == NULL) {
-		long len;
-
-		if (expectlen == 0) {
-			len = 4 * SIZ;
-		}
-		else {
-			len = expectlen + 10;
-		}
-		NewMsg->MsgBuf = NewStrBufPlain(NULL, len);
-	}
-	else {
-		NewMsg->MsgBuf = NewStrBufDup(exist);
-	}
-	/* Do we need to change leading ".." to "." for SMTP escaping? */
-	if ((tlen == 1) && (*terminator == '.')) {
-		NewMsg->dodot = 1;
-	}
-
-	NewMsg->terminator = terminator;
-	NewMsg->tlen = tlen;
-
-	NewMsg->maxlen = maxlen;
-
-	NewMsg->crlf = crlf;
-
-	return NewMsg;
-}
-
-/*
- * Back end function used by CtdlMakeMessage() and similar functions
- */
-eReadState CtdlReadMessageBodyAsync(AsyncIO *IO)
-{
-	ReadAsyncMsg *ReadMsg;
-	int MsgFinished = 0;
-	eReadState Finished = eMustReadMore;
-
-#ifdef BIGBAD_IODBG
-	char fn [SIZ];
-	FILE *fd;
-	const char *pch = ChrPtr(IO->SendBuf.Buf);
-	const char *pchh = IO->SendBuf.ReadWritePointer;
-	long nbytes;
-	
-	if (pchh == NULL)
-		pchh = pch;
-	
-	nbytes = StrLength(IO->SendBuf.Buf) - (pchh - pch);
-	snprintf(fn, SIZ, "/tmp/foolog_ev_%s.%d",
-		 ((CitContext*)(IO->CitContext))->ServiceName,
-		 IO->SendBuf.fd);
-	
-	fd = fopen(fn, "a+");
-	if (fd == NULL) {
-		syslog(LOG_ERR, "%s: %s", fn, strerror(errno));
-		cit_backtrace();
-		exit(1);
-	}
-#endif
-
-	ReadMsg = IO->ReadMsg;
-
-	/* read in the lines of message text one by one */
-	do {
-		Finished = StrBufChunkSipLine(IO->IOBuf, &IO->RecvBuf);
-		
-		switch (Finished) {
-		case eMustReadMore: /// read new from socket... 
-#ifdef BIGBAD_IODBG
-			if (IO->RecvBuf.ReadWritePointer != NULL) {
-				nbytes = StrLength(IO->RecvBuf.Buf) - (IO->RecvBuf.ReadWritePointer - ChrPtr(IO->RecvBuf.Buf));
-				fprintf(fd, "Read; Line unfinished: %ld Bytes still in buffer [", nbytes);
-				
-				fwrite(IO->RecvBuf.ReadWritePointer, nbytes, 1, fd);
-			
-				fprintf(fd, "]\n");
-			} else {
-				fprintf(fd, "BufferEmpty! \n");
-			}
-			fclose(fd);
-#endif
-			return Finished;
-		    break;
-		case eBufferNotEmpty: /* shouldn't happen... */
-		case eReadSuccess: /// done for now...
-		    break;
-		case eReadFail: /// WHUT?
-		    ///todo: shut down! 
-			break;
-		}
-	    
-
-		if ((StrLength(IO->IOBuf) == ReadMsg->tlen) && 
-		    (!strcmp(ChrPtr(IO->IOBuf), ReadMsg->terminator))) {
-			MsgFinished = 1;
-#ifdef BIGBAD_IODBG
-			fprintf(fd, "found Terminator; Message Size: %d\n", StrLength(ReadMsg->MsgBuf));
-#endif
-		}
-		else if (!ReadMsg->flushing) {
-
-#ifdef BIGBAD_IODBG
-			fprintf(fd, "Read Line: [%d][%s]\n", StrLength(IO->IOBuf), ChrPtr(IO->IOBuf));
-#endif
-
-			/* Unescape SMTP-style input of two dots at the beginning of the line */
-			if ((ReadMsg->dodot) &&
-			    (StrLength(IO->IOBuf) == 2) &&  /* TODO: do we just unescape lines with two dots or any line? */
-			    (!strcmp(ChrPtr(IO->IOBuf), "..")))
-			{
-#ifdef BIGBAD_IODBG
-				fprintf(fd, "UnEscaped!\n");
-#endif
-				StrBufCutLeft(IO->IOBuf, 1);
-			}
-
-			if (ReadMsg->crlf) {
-				StrBufAppendBufPlain(IO->IOBuf, HKEY("\r\n"), 0);
-			}
-			else {
-				StrBufAppendBufPlain(IO->IOBuf, HKEY("\n"), 0);
-			}
-
-			StrBufAppendBuf(ReadMsg->MsgBuf, IO->IOBuf, 0);
-		}
-
-		/* if we've hit the max msg length, flush the rest */
-		if (StrLength(ReadMsg->MsgBuf) >= ReadMsg->maxlen) ReadMsg->flushing = 1;
-
-	} while (!MsgFinished);
-
-#ifdef BIGBAD_IODBG
-	fprintf(fd, "Done with reading; %s.\n, ",
-		(MsgFinished)?"Message Finished": "FAILED");
-	fclose(fd);
-#endif
-	if (MsgFinished)
-		return eReadSuccess;
-	else 
-		return eReadFail;
-}
-
 
 /*
  * Back end function used by CtdlMakeMessage() and similar functions
@@ -3331,8 +3156,7 @@ char *CtdlReadMessageBody(char *terminator,	/* token signalling EOT */
 			  size_t maxlen,		/* maximum message length */
 			  StrBuf *exist,		/* if non-null, append to it;
 						   exist is ALWAYS freed  */
-			  int crlf,		/* CRLF newlines instead of LF */
-			  int *sock		/* socket handle or 0 for this session's client socket */
+			  int crlf		/* CRLF newlines instead of LF */
 	) 
 {
 	StrBuf *Message;
@@ -3341,8 +3165,8 @@ char *CtdlReadMessageBody(char *terminator,	/* token signalling EOT */
 					 tlen,
 					 maxlen,
 					 exist,
-					 crlf,
-					 sock);
+					 crlf
+	);
 	if (Message == NULL)
 		return NULL;
 	else
@@ -3522,7 +3346,7 @@ struct CtdlMessage *CtdlMakeMessageLen(
 	}
 	else {
 		StrBuf *MsgBody;
-		MsgBody = CtdlReadMessageBodyBuf(HKEY("000"), CtdlGetConfigLong("c_maxmsglen"), NULL, 0, 0);
+		MsgBody = CtdlReadMessageBodyBuf(HKEY("000"), CtdlGetConfigLong("c_maxmsglen"), NULL, 0);
 		if (MsgBody != NULL) {
 			CM_SetAsFieldSB(msg, eMesageText, &MsgBody);
 		}

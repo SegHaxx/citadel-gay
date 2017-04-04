@@ -15,6 +15,9 @@
  * GNU General Public License for more details.
  */
 
+#include <stdlib.h>
+#include <unistd.h>
+#include <netdb.h>
 #include <stdio.h>
 #include <libcitadel.h>
 #include "ctdl_module.h"
@@ -101,18 +104,12 @@ int sock_connect(char *host, char *service)
  *      0       Request timed out.
  *	-1   	Connection is broken, or other error.
  */
-int socket_read_blob(int *Socket, StrBuf * Target, int bytes, int timeout)
+int socket_read_blob(int *Socket, StrBuf *Target, int bytes, int timeout)
 {
-	CitContext *CCC = MyContext();
 	const char *Error;
 	int retval = 0;
 
-
-	retval = StrBufReadBLOBBuffered(Target,
-					CCC->SBuf.Buf,
-					&CCC->SBuf.ReadWritePointer,
-					Socket, 1, bytes, O_TERM, &Error);
-	
+	retval = StrBufReadBLOBBuffered(Target, CC->SBuf.Buf, &CC->SBuf.ReadWritePointer, Socket, 1, bytes, O_TERM, &Error); 
 	if (retval < 0) {
 		syslog(LOG_CRIT, "socket_read_blob() failed: %s", Error);
 	}
@@ -120,7 +117,7 @@ int socket_read_blob(int *Socket, StrBuf * Target, int bytes, int timeout)
 }
 
 
-int CtdlSockGetLine(int *sock, StrBuf * Target, int nSec)
+int CtdlSockGetLine(int *sock, StrBuf *Target, int nSec)
 {
 	CitContext *CCC = MyContext();
 	const char *Error;
@@ -131,16 +128,15 @@ int CtdlSockGetLine(int *sock, StrBuf * Target, int nSec)
 					       CCC->SBuf.Buf,
 					       &CCC->SBuf.ReadWritePointer,
 					       sock, nSec, 1, &Error);
-	if ((rc < 0) && (Error != NULL))
+	if ((rc < 0) && (Error != NULL)) {
 		syslog(LOG_CRIT, "CtdlSockGetLine() failed: %s", Error);
+	}
 	return rc;
 }
 
 
 /*
  * client_getln()   ...   Get a LF-terminated line of text from the client.
- * (This is implemented in terms of client_read() and could be
- * justifiably moved out of sysdep.c)
  */
 int sock_getln(int *sock, char *buf, int bufsize)
 {
@@ -232,11 +228,8 @@ int sock_write_timeout(int *sock, const char *buf, int nbytes, int timeout)
 }
 
 
-
 /*
  * client_getln()   ...   Get a LF-terminated line of text from the client.
- * (This is implemented in terms of client_read() and could be
- * justifiably moved out of sysdep.c)
  */
 int sock_getln_err(int *sock, char *buf, int bufsize, int *rc, int nSec)
 {
@@ -259,6 +252,7 @@ int sock_getln_err(int *sock, char *buf, int bufsize, int *rc, int nSec)
 	}
 	return i;
 }
+
 
 /*
  * Multiline version of sock_gets() ... this is a convenience function for

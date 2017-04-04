@@ -847,7 +847,7 @@ void smtp_data(long offset, long flags)
 				nowstamp);
 		}
 	}
-	body = CtdlReadMessageBodyBuf(HKEY("."), CtdlGetConfigLong("c_maxmsglen"), defbody, 1, NULL);
+	body = CtdlReadMessageBodyBuf(HKEY("."), CtdlGetConfigLong("c_maxmsglen"), defbody, 1);
 	FreeStrBuf(&defbody);
 	if (body == NULL) {
 		cprintf("550 Unable to save message: internal error.\r\n");

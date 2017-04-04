@@ -28,10 +28,12 @@ typedef enum __CCState {
 	CON_SYS                 /* This is a system context and mustn't be purged */
 } CCState;
 
-#ifndef __ASYNCIO__
-#define __ASYNCIO__
-typedef struct AsyncIO AsyncIO; /* forward declaration for event_client.h */
-#endif
+//#ifndef __ASYNCIO__
+//#define __ASYNCIO__
+//typedef struct AsyncIO AsyncIO; /* forward declaration for event_client.h */
+//#endif
+
+
 #ifndef __CIT_CONTEXT__
 #define __CIT_CONTEXT__
 typedef struct CitContext CitContext;
@@ -151,13 +153,10 @@ struct CitContext {
 
 	char vcard_updated_by_ldap;		/* !0 iff ldap changed the vcard, treat as aide update */
 
-	AsyncIO *IO;				/* if this session has AsyncIO going on... */
+	//AsyncIO *IO;				/* if this session has AsyncIO going on... */
 };
 
-
-
 #define CC MyContext()
-
 
 extern pthread_key_t MyConKey;			/* TSD key for MyContext() */
 extern int num_sessions;

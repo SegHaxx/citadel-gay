@@ -12,7 +12,11 @@
  * GNU General Public License for more details.
  */
 
+#include <stdlib.h>
+#include <unistd.h>
 #include <stdio.h>
+#include <sys/types.h>
+#include <sys/stat.h>
 #include <dirent.h>	/* for cmd_rdir to read contents of the directory */
 #include <libcitadel.h>
 

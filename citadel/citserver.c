@@ -12,7 +12,10 @@
  * GNU General Public License for more details.
  */
 
+#include <stdlib.h>
+#include <unistd.h>
 #include <stdio.h>
+#include <sys/stat.h>
 #include "sysdep.h"
 #include <time.h>
 #if HAVE_BACKTRACE

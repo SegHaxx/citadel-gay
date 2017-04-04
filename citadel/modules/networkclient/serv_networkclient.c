@@ -1,6 +1,5 @@
 /*
- * This module handles shared rooms, inter-Citadel mail, and outbound
- * mailing list processing.
+ * This module polls other Citadel servers for inter-site networking.
  *
  * Copyright (c) 2000-2017 by the citadel.org team
  *
@@ -73,837 +72,136 @@
 
 struct CitContext networker_client_CC;
 
-#define NODE ChrPtr(((AsyncNetworker*)IO->Data)->node)
-#define N ((AsyncNetworker*)IO->Data)->n
 
-typedef enum _eNWCState {
-	eGreating,
-	eAuth,
-	eNDOP,
-	eREAD,
-	eReadBLOB,
-	eCLOS,
-	eNUOP,
-	eWRIT,
-	eWriteBLOB,
-	eUCLS,
-	eQUIT
-}eNWCState;
-
-typedef enum _eNWCVState {
-	eNWCVSLookup,
-	eNWCVSConnecting,
-	eNWCVSConnFail,
-	eNWCVSGreating,
-	eNWCVSAuth,
-	eNWCVSAuthFailNTT,
-	eNWCVSAuthFail,
-	eNWCVSNDOP,
-	eNWCVSNDOPDone,
-	eNWCVSNUOP,
-	eNWCVSNUOPDone,
-	eNWCVSFail
-}eNWCVState;
-
-ConstStr NWCStateStr[] = {
-	{HKEY("Looking up Host")},
-	{HKEY("Connecting host")},
-	{HKEY("Failed to connect")},
-	{HKEY("Rread Greeting")},
-	{HKEY("Authenticating")},
-	{HKEY("Auth failed by NTT")},
-	{HKEY("Auth failed")},
-	{HKEY("Downloading")},
-	{HKEY("Downloading Success")},
-	{HKEY("Uploading Spoolfile")},
-	{HKEY("Uploading done")},
-	{HKEY("failed")}
-};
-
-void SetNWCState(AsyncIO *IO, eNWCVState State)
-{
-	CitContext* CCC = IO->CitContext;
-	memcpy(CCC->cs_clientname, NWCStateStr[State].Key, NWCStateStr[State].len + 1);
-}
-
-typedef struct _async_networker {
-        AsyncIO IO;
-	DNSQueryParts HostLookup;
-	eNWCState State;
-	long n;
-        StrBuf *SpoolFileName;
-        StrBuf *tempFileName;
-	StrBuf *node;
-	StrBuf *host;
-	StrBuf *port;
-	StrBuf *secret;
-	StrBuf		*Url;
-} AsyncNetworker;
-
-typedef eNextState(*NWClientHandler)(AsyncNetworker* NW);
-eNextState nwc_get_one_host_ip(AsyncIO *IO);
-
-eNextState nwc_connect_ip(AsyncIO *IO);
-
-eNextState NWC_SendQUIT(AsyncNetworker *NW);
-eNextState NWC_DispatchWriteDone(AsyncIO *IO);
-
-void DeleteNetworker(void *vptr)
-{
-	AsyncNetworker *NW = (AsyncNetworker *)vptr;
-        FreeStrBuf(&NW->SpoolFileName);
-        FreeStrBuf(&NW->tempFileName);
-	FreeStrBuf(&NW->node);
-	FreeStrBuf(&NW->host);
-	FreeStrBuf(&NW->port);
-	FreeStrBuf(&NW->secret);
-	FreeStrBuf(&NW->Url);
-	FreeStrBuf(&NW->IO.ErrMsg);
-	FreeAsyncIOContents(&NW->IO);
-	if (NW->HostLookup.VParsedDNSReply != NULL) {
-		NW->HostLookup.DNSReplyFree(NW->HostLookup.VParsedDNSReply);
-		NW->HostLookup.VParsedDNSReply = NULL;
-	}
-	free(NW);
-}
-
-eNextState NWC_SendFailureMessage(AsyncIO *IO)
-{
-	AsyncNetworker *NW = IO->Data;
-
-	syslog(LOG_DEBUG, "netpoll: %s", __FUNCTION__);
-
-	CtdlAideMessage(ChrPtr(NW->IO.ErrMsg), "Networker error");
-	return eAbort;
-}
-
-eNextState FinalizeNetworker(AsyncIO *IO)
-{
-	AsyncNetworker *NW = (AsyncNetworker *)IO->Data;
-
-	CtdlNetworkTalkingTo(SKEY(NW->node), NTT_REMOVE);
-
-	DeleteNetworker(IO->Data);
-	return eAbort;
-}
-
-eNextState NWC_ReadGreeting(AsyncNetworker *NW)
-{
-	char connected_to[SIZ];
-	AsyncIO *IO = &NW->IO;
-	SetNWCState(IO, eNWCVSGreating);
-	/* Read the server greeting */
-	/* Check that the remote is who we think it is and warn the Aide if not */
-	extract_token (connected_to, ChrPtr(NW->IO.IOBuf), 1, ' ', sizeof connected_to);
-	if (strcmp(connected_to, ChrPtr(NW->node)) != 0)
-	{
-		if (NW->IO.ErrMsg == NULL)
-			NW->IO.ErrMsg = NewStrBuf();
-		StrBufPrintf(NW->IO.ErrMsg,
-			     "Connected to node \"%s\" but I was expecting to connect to node \"%s\".",
-			     connected_to, ChrPtr(NW->node));
-		syslog(LOG_ERR, "netpoll: %s", ChrPtr(NW->IO.ErrMsg));
-
-		return EventQueueDBOperation(IO, NWC_SendFailureMessage, 1);
-	}
-	return eSendReply;
-}
-
-eNextState NWC_SendAuth(AsyncNetworker *NW)
-{
-	AsyncIO *IO = &NW->IO;
-	SetNWCState(IO, eNWCVSAuth);
-	/* We're talking to the correct node.  Now identify ourselves. */
-	StrBufPrintf(NW->IO.SendBuf.Buf, "NETP %s|%s\n", 
-		     CtdlGetConfigStr("c_nodename"), 
-		     ChrPtr(NW->secret));
-	return eSendReply;
-}
-
-eNextState NWC_ReadAuthReply(AsyncNetworker *NW)
-{
-	AsyncIO *IO = &NW->IO;
-	if (ChrPtr(NW->IO.IOBuf)[0] == '2')
-	{
-		return eSendReply;
-	}
-	else
-	{
-		int Error = atol(ChrPtr(NW->IO.IOBuf));
-		if (NW->IO.ErrMsg == NULL)
-			NW->IO.ErrMsg = NewStrBuf();
-		StrBufPrintf(NW->IO.ErrMsg,
-			     "Connected to node \"%s\" but my secret wasn't accurate.\nReason was:%s\n",
-			     ChrPtr(NW->node), ChrPtr(NW->IO.IOBuf) + 4);
-		if (Error == 552) {
-			SetNWCState(IO, eNWCVSAuthFailNTT);
-			syslog(LOG_INFO, "netpoll: already talking to %s; skipping this time.", ChrPtr(NW->node));
-			
-		}
-		else {
-			SetNWCState(IO, eNWCVSAuthFailNTT);
-			syslog(LOG_ERR, "netpoll: %s", ChrPtr(NW->IO.ErrMsg));
-			return EventQueueDBOperation(IO, NWC_SendFailureMessage, 1);
-		}
-		return eAbort;
-	}
-}
-
-eNextState NWC_SendNDOP(AsyncNetworker *NW)
-{
-	AsyncIO *IO = &NW->IO;
-	SetNWCState(IO, eNWCVSNDOP);
-	NW->tempFileName = NewStrBuf();
-	NW->SpoolFileName = NewStrBuf();
-	StrBufPrintf(NW->SpoolFileName,
-		     "%s/%s.%lx%x",
-		     ctdl_netin_dir,
-		     ChrPtr(NW->node),
-		     time(NULL),// TODO: get time from libev
-		     rand());
-	StrBufStripSlashes(NW->SpoolFileName, 1);
-	StrBufPrintf(NW->tempFileName, 
-		     "%s/%s.%lx%x",
-		     ctdl_nettmp_dir,
-		     ChrPtr(NW->node),
-		     time(NULL),// TODO: get time from libev
-		     rand());
-	StrBufStripSlashes(NW->tempFileName, 1);
-	/* We're talking to the correct node.  Now identify ourselves. */
-	StrBufPlain(NW->IO.SendBuf.Buf, HKEY("NDOP\n"));
-	return eSendReply;
-}
-
-eNextState NWC_ReadNDOPReply(AsyncNetworker *NW)
-{
-	AsyncIO *IO = &NW->IO;
-	int TotalSendSize;
-	if (ChrPtr(NW->IO.IOBuf)[0] == '2')
-	{
-		int LogLevel = LOG_DEBUG;
-
-		NW->IO.IOB.TotalSentAlready = 0;
-
-		TotalSendSize = atol (ChrPtr(NW->IO.IOBuf) + 4);
-
-		if (TotalSendSize > 0)
-			LogLevel = LOG_INFO;
-
-		syslog(LogLevel, "netpoll: expecting to transfer %d bytes to %s", TotalSendSize, ChrPtr(NW->tempFileName));
-
-		if (TotalSendSize <= 0) {
-			NW->State = eNUOP - 1;
-		}
-		else {
-			int fd;
-			fd = open(ChrPtr(NW->tempFileName), 
-				  O_EXCL|O_CREAT|O_NONBLOCK|O_WRONLY, 
-				  S_IRUSR|S_IWUSR);
-			if (fd < 0)
-			{
-				SetNWCState(IO, eNWCVSFail);
-				syslog(LOG_ERR, "%s: %s", ChrPtr(NW->tempFileName), strerror(errno));
-
-				NW->State = eQUIT - 1;
-				return eAbort;
-			}
-			FDIOBufferInit(&NW->IO.IOB, &NW->IO.RecvBuf, fd, TotalSendSize);
-		}
-		return eSendReply;
-	}
-	else
-	{
-		SetNWCState(IO, eNWCVSFail);
-		return eAbort;
-	}
-}
-
-eNextState NWC_SendREAD(AsyncNetworker *NW)
-{
-	AsyncIO *IO = &NW->IO;
-	eNextState rc;
-
-	if (NW->IO.IOB.TotalSentAlready < NW->IO.IOB.TotalSendSize)
-	{
-		/*
-		 * If shutting down we can exit here and unlink the temp file.
-		 * this shouldn't loose us any messages.
-		 */
-		if (server_shutting_down)
-		{
-			FDIOBufferDelete(&NW->IO.IOB);
-			unlink(ChrPtr(NW->tempFileName));
-			FDIOBufferDelete(&IO->IOB);
-			SetNWCState(IO, eNWCVSFail);
-			return eAbort;
-		}
-		StrBufPrintf(NW->IO.SendBuf.Buf, "READ "LOFF_T_FMT"|%ld\n",
-			     NW->IO.IOB.TotalSentAlready,
-			     NW->IO.IOB.TotalSendSize);
-		return eSendReply;
-	}
-	else 
-	{
-		NW->State = eCLOS;
-		rc = NWC_DispatchWriteDone(&NW->IO);
-
-		return rc;
-	}
-}
-
-eNextState NWC_ReadREADState(AsyncNetworker *NW)
-{
-	AsyncIO *IO = &NW->IO;
-	if (ChrPtr(NW->IO.IOBuf)[0] == '6')
-	{
-		NW->IO.IOB.ChunkSendRemain = 
-			NW->IO.IOB.ChunkSize = atol(ChrPtr(NW->IO.IOBuf)+4);
-		return eReadFile;
-	}
-	FDIOBufferDelete(&IO->IOB);
-	return eAbort;
-}
-eNextState NWC_ReadREADBlobDone(AsyncNetworker *NW);
-eNextState NWC_ReadREADBlob(AsyncNetworker *NW)
-{
-	eNextState rc;
-	if (NW->IO.IOB.TotalSendSize == NW->IO.IOB.TotalSentAlready)
-	{
-		NW->State ++;
-
-		FDIOBufferDelete(&NW->IO.IOB);
-
-		if (link(ChrPtr(NW->tempFileName), ChrPtr(NW->SpoolFileName)) != 0) {
-			syslog(LOG_ERR, "netpoll: could not link %s to %s: %s", ChrPtr(NW->tempFileName), ChrPtr(NW->SpoolFileName), strerror(errno));
-		}
-		else {
-			syslog(LOG_INFO, "netpoll: moved %s to %s", ChrPtr(NW->tempFileName), ChrPtr(NW->SpoolFileName));
-		}
-
-		unlink(ChrPtr(NW->tempFileName));
-		rc = NWC_DispatchWriteDone(&NW->IO);
-		NW->State --;
-		return rc;
-	}
-	else {
-		NW->State --;
-		NW->IO.IOB.ChunkSendRemain = NW->IO.IOB.ChunkSize;
-		return eSendReply; //NWC_DispatchWriteDone(&NW->IO);
-	}
-}
-
-eNextState NWC_ReadREADBlobDone(AsyncNetworker *NW)
-{
-	eNextState rc;
-/* we don't have any data to debug print here. */
-	if (NW->IO.IOB.TotalSentAlready >= NW->IO.IOB.TotalSendSize)
-	{
-		NW->State ++;
-
-		FDIOBufferDelete(&NW->IO.IOB);
-		if (link(ChrPtr(NW->tempFileName), ChrPtr(NW->SpoolFileName)) != 0) {
-			syslog(LOG_ERR, "netpoll: could not link %s to %s: %s", ChrPtr(NW->tempFileName), ChrPtr(NW->SpoolFileName), strerror(errno));
-		}
-		else {
-			syslog(LOG_INFO, "netpoll: moved %s to %s", ChrPtr(NW->tempFileName), ChrPtr(NW->SpoolFileName));
-		}
-	
-		unlink(ChrPtr(NW->tempFileName));
-		rc = NWC_DispatchWriteDone(&NW->IO);
-		NW->State --;
-		return rc;
-	}
-	else {
-		NW->State --;
-		NW->IO.IOB.ChunkSendRemain = NW->IO.IOB.ChunkSize;
-		return NWC_DispatchWriteDone(&NW->IO);
-	}
-}
-eNextState NWC_SendCLOS(AsyncNetworker *NW)
-{
-	AsyncIO *IO = &NW->IO;
-	SetNWCState(IO, eNWCVSNDOPDone);
-	StrBufPlain(NW->IO.SendBuf.Buf, HKEY("CLOS\n"));
-	return eSendReply;
-}
-
-eNextState NWC_ReadCLOSReply(AsyncNetworker *NW)
-{
-	AsyncIO *IO = &NW->IO;
-	FDIOBufferDelete(&IO->IOB);
-	if (ChrPtr(NW->IO.IOBuf)[0] != '2')
-		return eTerminateConnection;
-	return eSendReply;
-}
-
-
-eNextState NWC_SendNUOP(AsyncNetworker *NW)
-{
-	AsyncIO *IO = &NW->IO;
-	eNextState rc;
-	long TotalSendSize;
-	struct stat statbuf;
-	int fd;
-
-	SetNWCState(IO, eNWCVSNUOP);
-	StrBufPrintf(NW->SpoolFileName,
-		     "%s/%s",
-		     ctdl_netout_dir,
-		     ChrPtr(NW->node));
-	StrBufStripSlashes(NW->SpoolFileName, 1);
-
-	fd = open(ChrPtr(NW->SpoolFileName), O_EXCL|O_NONBLOCK|O_RDONLY);
-	if (fd < 0) {
-		if (errno != ENOENT) {
-			syslog(LOG_ERR, "%s: %s", ChrPtr(NW->SpoolFileName), strerror(errno));
-		}
-		NW->State = eQUIT;
-		rc = NWC_SendQUIT(NW);
-		return rc;
-	}
-
-	if (fstat(fd, &statbuf) == -1) {
-		syslog(LOG_ERR, "%s: %s", ChrPtr(NW->SpoolFileName), strerror(errno));
-		if (fd > 0) close(fd);
-		return eAbort;
-	}
-	TotalSendSize = statbuf.st_size;
-	if (TotalSendSize == 0) {
-		syslog(LOG_DEBUG, "netpoll: nothing to send.");
-		NW->State = eQUIT;
-		rc = NWC_SendQUIT(NW);
-		if (fd > 0) close(fd);
-		return rc;
-	}
-	else
-       	{
-		syslog(LOG_INFO, "netpoll: sending %s to %s", ChrPtr(NW->SpoolFileName), ChrPtr(NW->node));
-	}
-
-	FDIOBufferInit(&NW->IO.IOB, &NW->IO.SendBuf, fd, TotalSendSize);
-
-	StrBufPlain(NW->IO.SendBuf.Buf, HKEY("NUOP\n"));
-	return eSendReply;
-
-}
-eNextState NWC_ReadNUOPReply(AsyncNetworker *NW)
-{
-	AsyncIO *IO = &NW->IO;
-	if (ChrPtr(NW->IO.IOBuf)[0] != '2') {
-		FDIOBufferDelete(&IO->IOB);
-		return eAbort;
-	}
-	return eSendReply;
-}
-
-eNextState NWC_SendWRIT(AsyncNetworker *NW)
-{
-	StrBufPrintf(NW->IO.SendBuf.Buf, "WRIT "LOFF_T_FMT"\n", 
-		     NW->IO.IOB.TotalSendSize - NW->IO.IOB.TotalSentAlready);
-	return eSendReply;
-}
-eNextState NWC_ReadWRITReply(AsyncNetworker *NW)
-{
-	AsyncIO *IO = &NW->IO;
-	if (ChrPtr(NW->IO.IOBuf)[0] != '7')
-	{
-		FDIOBufferDelete(&IO->IOB);
-		return eAbort;
-	}
-
-	NW->IO.IOB.ChunkSendRemain = 
-		NW->IO.IOB.ChunkSize = atol(ChrPtr(NW->IO.IOBuf)+4);
-	return eSendFile;
-}
-
-eNextState NWC_SendBlobDone(AsyncNetworker *NW)
-{
-	AsyncIO *IO = &NW->IO;
-	eNextState rc;
-	if (NW->IO.IOB.TotalSentAlready >= IO->IOB.TotalSendSize)
-	{
-		NW->State ++;
-
-		FDIOBufferDelete(&IO->IOB);
-		rc =  NWC_DispatchWriteDone(IO);
-		NW->State --;
-		return rc;
-	}
-	else {
-		NW->State --;
-		IO->IOB.ChunkSendRemain = IO->IOB.ChunkSize;
-		rc = NWC_DispatchWriteDone(IO);
-		NW->State --;
-		return rc;
-	}
-}
-
-eNextState NWC_SendUCLS(AsyncNetworker *NW)
-{
-	StrBufPlain(NW->IO.SendBuf.Buf, HKEY("UCLS 1\n"));
-	return eSendReply;
-
-}
-eNextState NWC_ReadUCLS(AsyncNetworker *NW)
-{
-	AsyncIO *IO = &NW->IO;
-
-	syslog(LOG_INFO, "netpoll: sent %s (%ld octets) to <%s>", ChrPtr(NW->SpoolFileName), NW->IO.IOB.ChunkSize, ChrPtr(NW->node));
-
-	if (ChrPtr(NW->IO.IOBuf)[0] == '2') {
-		syslog(LOG_DEBUG, "Removing <%s>\n", ChrPtr(NW->SpoolFileName));
-		unlink(ChrPtr(NW->SpoolFileName));
-	}
-	FDIOBufferDelete(&IO->IOB);
-	SetNWCState(IO, eNWCVSNUOPDone);
-	return eSendReply;
-}
-
-eNextState NWC_SendQUIT(AsyncNetworker *NW)
-{
-	StrBufPlain(NW->IO.SendBuf.Buf, HKEY("QUIT\n"));
-
-	return eSendReply;
-}
-
-eNextState NWC_ReadQUIT(AsyncNetworker *NW)
-{
-	return eAbort;
-}
-
-
-NWClientHandler NWC_ReadHandlers[] = {
-	NWC_ReadGreeting,
-	NWC_ReadAuthReply,
-	NWC_ReadNDOPReply,
-	NWC_ReadREADState,
-	NWC_ReadREADBlob,
-	NWC_ReadCLOSReply,
-	NWC_ReadNUOPReply,
-	NWC_ReadWRITReply,
-	NWC_SendBlobDone,
-	NWC_ReadUCLS,
-	NWC_ReadQUIT};
-
-long NWC_ConnTimeout = 100;
-
-const long NWC_SendTimeouts[] = {
-	100,
-	100,
-	100,
-	100,
-	100,
-	100,
-	100,
-	100
-};
-const ConstStr NWC[] = {
-	{HKEY("Connection broken during ")},
-	{HKEY("Connection broken during ")},
-	{HKEY("Connection broken during ")},
-	{HKEY("Connection broken during ")},
-	{HKEY("Connection broken during ")},
-	{HKEY("Connection broken during ")},
-	{HKEY("Connection broken during ")},
-	{HKEY("Connection broken during ")}
-};
-
-NWClientHandler NWC_SendHandlers[] = {
-	NULL,
-	NWC_SendAuth,
-	NWC_SendNDOP,
-	NWC_SendREAD,
-	NWC_ReadREADBlobDone,
-	NWC_SendCLOS,
-	NWC_SendNUOP,
-	NWC_SendWRIT,
-	NWC_SendBlobDone,
-	NWC_SendUCLS,
-	NWC_SendQUIT
-};
-
-const long NWC_ReadTimeouts[] = {
-	100,
-	100,
-	100,
-	100,
-	100,
-	100,
-	100,
-	100,
-	100,
-	100
-};
-
-
-eNextState nwc_get_one_host_ip_done(AsyncIO *IO)
-{
-	AsyncNetworker *NW = IO->Data;
-	struct hostent *hostent;
-
-	QueryCbDone(IO);
-
-	hostent = NW->HostLookup.VParsedDNSReply;
-	if ((NW->HostLookup.DNSStatus == ARES_SUCCESS) && 
-	    (hostent != NULL) ) {
-		memset(&NW->IO.ConnectMe->Addr, 0, sizeof(struct in6_addr));
-		if (NW->IO.ConnectMe->IPv6) {
-			memcpy(&NW->IO.ConnectMe->Addr.sin6_addr.s6_addr, 
-			       &hostent->h_addr_list[0],
-			       sizeof(struct in6_addr));
-			
-			NW->IO.ConnectMe->Addr.sin6_family = hostent->h_addrtype;
-			NW->IO.ConnectMe->Addr.sin6_port   = htons(atol(ChrPtr(NW->port)));//// TODO use the one from the URL.
-		}
-		else {
-			struct sockaddr_in *addr = (struct sockaddr_in*) &NW->IO.ConnectMe->Addr;
-			/* Bypass the ns lookup result like this: IO->Addr.sin_addr.s_addr = inet_addr("127.0.0.1"); */
-//			addr->sin_addr.s_addr = htonl((uint32_t)&hostent->h_addr_list[0]);
-			memcpy(&addr->sin_addr.s_addr, 
-			       hostent->h_addr_list[0], 
-			       sizeof(uint32_t));
-			
-			addr->sin_family = hostent->h_addrtype;
-			addr->sin_port   = htons(504);/// default citadel port
-			
-		}
-		return nwc_connect_ip(IO);
-	}
-	else
-		return eAbort;
-}
-
-
-eNextState nwc_get_one_host_ip(AsyncIO *IO)
-{
-	AsyncNetworker *NW = IO->Data;
-	/* 
-	 * here we start with the lookup of one host.
-	 */ 
-
-	syslog(LOG_DEBUG, "netpoll: %s", __FUNCTION__);
-
-	syslog(LOG_DEBUG, 
-		   "netpoll: [%ld]: looking up %s-Record %s : %d ...", 
-		   NW->n, 
-		   (NW->IO.ConnectMe->IPv6)? "aaaa": "a",
-		   NW->IO.ConnectMe->Host, 
-		   NW->IO.ConnectMe->Port);
-
-	QueueQuery((NW->IO.ConnectMe->IPv6)? ns_t_aaaa : ns_t_a, 
-		   NW->IO.ConnectMe->Host, 
-		   &NW->IO, 
-		   &NW->HostLookup, 
-		   nwc_get_one_host_ip_done);
-	IO->NextState = eReadDNSReply;
-	return IO->NextState;
-}
-/**
- * @brief lineread Handler; understands when to read more POP3 lines, and when this is a one-lined reply.
+/*
+ * Poll one Citadel node (the Citadel node name, host/ip, port number, and shared secret are supplied by the caller)
  */
-eReadState NWC_ReadServerStatus(AsyncIO *IO)
+void network_poll_node(StrBuf *node, StrBuf *host, StrBuf *port, StrBuf *secret)
 {
-//	AsyncNetworker *NW = IO->Data;
-	eReadState Finished = eBufferNotEmpty; 
+	char buf[SIZ];
+	CC->SBuf.Buf = NewStrBuf();
+	CC->sMigrateBuf = NewStrBuf();
+	CC->SBuf.ReadWritePointer = NULL;
+	int bytes_read = 0;
+	int bytes_total = 0;
+	int this_block = 0;
+	StrBuf *SpoolFileName = NULL;
 
-	switch (IO->NextState) {
-	case eSendDNSQuery:
-	case eReadDNSReply:
-	case eDBQuery:
-	case eConnect:
-	case eTerminateConnection:
-	case eAbort:
-		Finished = eReadFail;
-		break;
-	case eSendReply: 
-	case eSendMore:
-	case eReadMore:
-	case eReadMessage: 
-		Finished = StrBufChunkSipLine(IO->IOBuf, &IO->RecvBuf);
-		break;
-	case eReadFile:
-	case eSendFile:
-	case eReadPayload:
-		break;
-	}
-	return Finished;
-}
+	syslog(LOG_DEBUG, "netpoll: polling %s at %s:%s", ChrPtr(node), ChrPtr(host), ChrPtr(port));
 
-
-
-eNextState NWC_FailNetworkConnection(AsyncIO *IO)
-{
-	SetNWCState(IO, eNWCVSConnFail);
-	return EventQueueDBOperation(IO, NWC_SendFailureMessage, 1);
-}
-
-void NWC_SetTimeout(eNextState NextTCPState, AsyncNetworker *NW)
-{
-	double Timeout = 0.0;
-
-	switch (NextTCPState) {
-	case eSendMore:
-	case eSendReply:
-	case eReadMessage:
-		Timeout = NWC_ReadTimeouts[NW->State];
-		break;
-	case eReadFile:
-	case eSendFile:
-	case eReadPayload:
-		Timeout = 100000;
-		break;
-	case eSendDNSQuery:
-	case eReadDNSReply:
-	case eDBQuery:
-	case eReadMore:
-	case eConnect:
-	case eTerminateConnection:
-	case eAbort:
+	int sock = sock_connect((char *)ChrPtr(host), (char *)ChrPtr(port));
+	if (sock < 0) {
+		syslog(LOG_ERR, "%s: %s", ChrPtr(host), strerror(errno));
 		return;
 	}
-	if (Timeout > 0) {
-		syslog(LOG_DEBUG, "netpoll: %s - %d %f", __FUNCTION__, NextTCPState, Timeout);
-		SetNextTimeout(&NW->IO, Timeout*100);
-	}
-}
 
+	/* Read the server greeting */
+        if (sock_getln(&sock, buf, sizeof buf) < 0) {
+                goto bail;
+        }
 
-eNextState NWC_DispatchReadDone(AsyncIO *IO)
-{
-	syslog(LOG_DEBUG, "netpoll: %s", __FUNCTION__);
-	AsyncNetworker *NW = IO->Data;
-	eNextState rc;
-
-	rc = NWC_ReadHandlers[NW->State](NW);
-
-	if ((rc != eReadMore) &&
-	    (rc != eAbort) && 
-	    (rc != eDBQuery)) {
-		NW->State++;
+	/* Check that the remote is who we think it is and warn the site admin if not */
+	if (strncmp(&buf[4], ChrPtr(node), StrLength(node))) {
+		CtdlAideMessage(buf, "Connected to wrong node!");
+		syslog(LOG_ERR, "netpoll: was expecting node <%s> but got %s", ChrPtr(node), buf);
+		goto bail;
 	}
 
-	NWC_SetTimeout(rc, NW);
-
-	return rc;
-}
-eNextState NWC_DispatchWriteDone(AsyncIO *IO)
-{
-	syslog(LOG_DEBUG, "netpoll: %s", __FUNCTION__);
-	AsyncNetworker *NW = IO->Data;
-	eNextState rc;
-
-	rc = NWC_SendHandlers[NW->State](NW);
-	NWC_SetTimeout(rc, NW);
-	return rc;
-}
-
-/*****************************************************************************/
-/*                     Networker CLIENT ERROR CATCHERS                       */
-/*****************************************************************************/
-eNextState NWC_Terminate(AsyncIO *IO)
-{
-	syslog(LOG_DEBUG, "netpoll: %s", __FUNCTION__);
-	FinalizeNetworker(IO);
-	return eAbort;
-}
-
-eNextState NWC_TerminateDB(AsyncIO *IO)
-{
-	syslog(LOG_DEBUG, "netpoll: %s", __FUNCTION__);
-	FinalizeNetworker(IO);
-	return eAbort;
-}
-
-eNextState NWC_Timeout(AsyncIO *IO)
-{
-	AsyncNetworker *NW = IO->Data;
-	syslog(LOG_DEBUG, "netpoll: %s", __FUNCTION__);
-
-	if (NW->IO.ErrMsg == NULL)
-		NW->IO.ErrMsg = NewStrBuf();
-	StrBufPrintf(NW->IO.ErrMsg, "Timeout while talking to %s \r\n", ChrPtr(NW->host));
-	return NWC_FailNetworkConnection(IO);
-}
-eNextState NWC_ConnFail(AsyncIO *IO)
-{
-	AsyncNetworker *NW = IO->Data;
-
-	syslog(LOG_DEBUG, "netpoll: %s", __FUNCTION__);
-	if (NW->IO.ErrMsg == NULL)
-		NW->IO.ErrMsg = NewStrBuf();
-	StrBufPrintf(NW->IO.ErrMsg, "failed to connect %s \r\n", ChrPtr(NW->host));
-
-	return NWC_FailNetworkConnection(IO);
-}
-eNextState NWC_DNSFail(AsyncIO *IO)
-{
-	AsyncNetworker *NW = IO->Data;
-
-	syslog(LOG_DEBUG, "netpoll: %s", __FUNCTION__);
-	if (NW->IO.ErrMsg == NULL)
-		NW->IO.ErrMsg = NewStrBuf();
-	StrBufPrintf(NW->IO.ErrMsg, "failed to look up %s \r\n", ChrPtr(NW->host));
-
-	return NWC_FailNetworkConnection(IO);
-}
-eNextState NWC_Shutdown(AsyncIO *IO)
-{
-	syslog(LOG_DEBUG, "netpoll: %s", __FUNCTION__);
-
-	FinalizeNetworker(IO);
-	return eAbort;
-}
-
-
-eNextState nwc_connect_ip(AsyncIO *IO)
-{
-	AsyncNetworker *NW = IO->Data;
-
-	SetNWCState(&NW->IO, eNWCVSConnecting);
-	syslog(LOG_DEBUG, "netpoll: %s", __FUNCTION__);
-	syslog(LOG_INFO, "netpoll: onnecting to <%s> at %s:%s", ChrPtr(NW->node), ChrPtr(NW->host), ChrPtr(NW->port));
-	
-	return EvConnectSock(IO,
-			     NWC_ConnTimeout,
-			     NWC_ReadTimeouts[0],
-			     1);
-}
-
-static int NetworkerCount = 0;
-void RunNetworker(AsyncNetworker *NW)
-{
-	NW->n = NetworkerCount++;
-	CtdlNetworkTalkingTo(SKEY(NW->node), NTT_ADD);
-	syslog(LOG_DEBUG, "netpoll: NW[%s][%ld]: polling", ChrPtr(NW->node), NW->n);
-	ParseURL(&NW->IO.ConnectMe, NW->Url, 504);
-
-	InitIOStruct(&NW->IO,
-		     NW,
-		     eReadMessage,
-		     NWC_ReadServerStatus,
-		     NWC_DNSFail,
-		     NWC_DispatchWriteDone,
-		     NWC_DispatchReadDone,
-		     NWC_Terminate,
-		     NWC_TerminateDB,
-		     NWC_ConnFail,
-		     NWC_Timeout,
-		     NWC_Shutdown);
-
-	safestrncpy(((CitContext *)NW->IO.CitContext)->cs_host, 
-		    ChrPtr(NW->host),
-		    sizeof(((CitContext *)NW->IO.CitContext)->cs_host)); 
-
-	if (NW->IO.ConnectMe->IsIP) {
-		SetNWCState(&NW->IO, eNWCVSLookup);
-		QueueEventContext(&NW->IO,
-				  nwc_connect_ip);
+	/* We're talking to the correct node.  Now identify ourselves. */
+	snprintf(buf, sizeof buf, "NETP %s|%s", CtdlGetConfigStr("c_nodename"), ChrPtr(secret));
+	sock_puts(&sock, buf);
+        if (sock_getln(&sock, buf, sizeof buf) < 0) {
+                goto bail;
+        }
+	if (buf[0] != '2') {
+		CtdlAideMessage(buf, "Could not authenticate to network peer");
+		syslog(LOG_ERR, "netpoll: could not authenticate to <%s> : %s", ChrPtr(node), buf);
+		goto bail;
 	}
-	else { /* uneducated admin has chosen to add DNS to the equation... */
-		SetNWCState(&NW->IO, eNWCVSConnecting);
-		QueueEventContext(&NW->IO,
-				  nwc_get_one_host_ip);
+
+	/* Tell it we want to download anything headed our way. */
+	sock_puts(&sock, "NDOP");
+        if (sock_getln(&sock, buf, sizeof buf) < 0) {
+                goto bail;
+        }
+	if (buf[0] != '2') {
+		CtdlAideMessage(buf, "NDOP error");
+		syslog(LOG_ERR, "netpoll: NDOP error talking to <%s> : %s", ChrPtr(node), buf);
+		goto bail;
 	}
+
+	bytes_total = atoi(&buf[4]);
+	bytes_read = 0;
+
+	SpoolFileName = NewStrBuf();
+	StrBufPrintf(SpoolFileName,			// Incoming packets get dropped into the "spoolin/" directory
+		"%s/%s.%lx%x",
+		ctdl_netin_dir,
+		ChrPtr(node),
+		time(NULL),
+		rand()
+	);
+	StrBufStripSlashes(SpoolFileName, 1);
+
+	FILE *netinfp = fopen(ChrPtr(SpoolFileName), "w");
+	FreeStrBuf(&SpoolFileName);
+	if (!netinfp) {
+		goto bail;
+	}
+
+	while (bytes_read < bytes_total) {
+		snprintf(buf, sizeof buf, "READ %d|%d", bytes_read, bytes_total-bytes_read);
+		sock_puts(&sock, buf);
+        	if (sock_getln(&sock, buf, sizeof buf) < 0) {
+			fclose(netinfp);
+                	goto bail;
+        	}
+		if (buf[0] == '6') {
+			this_block = atoi(&buf[4]);
+
+			// Use buffered reads to download the data from remote server
+			StrBuf *ThisBlockBuf = NewStrBuf();
+			int blen = socket_read_blob(&sock, ThisBlockBuf, this_block, 20);
+			if (blen > 0) {
+				fwrite(ChrPtr(ThisBlockBuf), blen, 1, netinfp);
+				bytes_read += blen;
+			}
+			FreeStrBuf(&ThisBlockBuf);
+			if (blen < this_block) {
+				syslog(LOG_DEBUG, "netpoll: got short block, ftn");
+				fclose(netinfp);
+				goto bail;
+			}
+		}
+	}
+
+	syslog(LOG_DEBUG, "netpoll: downloaded %d of %d bytes from %s", bytes_read, bytes_total, ChrPtr(node));
+
+	if (fclose(netinfp) == 0) {
+		sock_puts(&sock, "CLOS");				// CLOSing the download causes it to be deleted on the other node
+        	if (sock_getln(&sock, buf, sizeof buf) < 0) {
+                	goto bail;
+        	}
+	}
+
+	// Now get ready to send our network data to the other node.
+	SpoolFileName = NewStrBuf();
+	StrBufPrintf(SpoolFileName,			// Outgoing packets come from the "spoolout/" directory
+		"%s/%s",
+		ctdl_netout_dir,
+		ChrPtr(node)
+	);
+	FILE *netoutfp = fopen(ChrPtr(SpoolFileName), "w");
+	FreeStrBuf(&SpoolFileName);
+	if (!netoutfp) {
+		goto bail;
+	}
+	fclose(netoutfp);
+	//unlink(netoutfp);
+
+bail:	close(sock);
+	FreeStrBuf(&CC->SBuf.Buf);
+	FreeStrBuf(&CC->sMigrateBuf);
 }
 
 
@@ -918,7 +216,6 @@ void network_poll_other_citadel_nodes(int full_poll, HashList *ignetcfg)
 	long len;
 	HashPos *Pos;
 	void *vCfg;
-	AsyncNetworker *NW;
 	StrBuf *SpoolFileName;
 	
 	int poll = 0;
@@ -936,28 +233,26 @@ void network_poll_other_citadel_nodes(int full_poll, HashList *ignetcfg)
 	while (GetNextHashPos(ignetcfg, Pos, &len, &key, &vCfg))
 	{
 		/* Use the string tokenizer to grab one line at a time */
-		if(server_shutting_down)
-			return;/* TODO free stuff*/
+		if (server_shutting_down) {
+			return;
+		}
 		CtdlNodeConf *pNode = (CtdlNodeConf*) vCfg;
 		poll = 0;
-		NW = (AsyncNetworker*)malloc(sizeof(AsyncNetworker));
-		memset(NW, 0, sizeof(AsyncNetworker));
 		
-		NW->node = NewStrBufDup(pNode->NodeName);
-		NW->host = NewStrBufDup(pNode->Host);
-		NW->port = NewStrBufDup(pNode->Port);
-		NW->secret = NewStrBufDup(pNode->Secret);
+		StrBuf *node = NewStrBufDup(pNode->NodeName);
+		StrBuf *host = NewStrBufDup(pNode->Host);
+		StrBuf *port = NewStrBufDup(pNode->Port);
+		StrBuf *secret = NewStrBufDup(pNode->Secret);
 		
-		if ( (StrLength(NW->node) != 0) && 
-		     (StrLength(NW->secret) != 0) &&
-		     (StrLength(NW->host) != 0) &&
-		     (StrLength(NW->port) != 0))
-		{
+		if ( (StrLength(node) != 0) && 
+		     (StrLength(secret) != 0) &&
+		     (StrLength(host) != 0)
+		) {
 			poll = full_poll;
 			if (poll == 0)
 			{
 				StrBufAppendBufPlain(SpoolFileName, HKEY("/"), 0);
-				StrBufAppendBuf(SpoolFileName, NW->node, 0);
+				StrBufAppendBuf(SpoolFileName, node, 0);
 				StrBufStripSlashes(SpoolFileName, 1);
 				
 				if (access(ChrPtr(SpoolFileName), R_OK) == 0) {
@@ -965,17 +260,15 @@ void network_poll_other_citadel_nodes(int full_poll, HashList *ignetcfg)
 				}
 			}
 		}
-		if (poll && (StrLength(NW->host) > 0) && strcmp("0.0.0.0", ChrPtr(NW->host)))
-		{
-			NW->Url = NewStrBuf();
-			StrBufPrintf(NW->Url, "citadel://%s@%s:%s", ChrPtr(NW->secret), ChrPtr(NW->host), ChrPtr(NW->port));
-			if (!CtdlNetworkTalkingTo(SKEY(NW->node), NTT_CHECK))
-			{
-				RunNetworker(NW);
-				continue;
+		if (poll && (StrLength(host) > 0) && strcmp("0.0.0.0", ChrPtr(host))) {
+			if (!CtdlNetworkTalkingTo(SKEY(node), NTT_CHECK)) {
+				network_poll_node(node, host, port, secret);
 			}
 		}
-		DeleteNetworker(NW);
+		FreeStrBuf(&node);
+		FreeStrBuf(&host);
+		FreeStrBuf(&secret);
+		FreeStrBuf(&port);
 	}
 	FreeStrBuf(&SpoolFileName);
 	DeleteHashPos(&Pos);

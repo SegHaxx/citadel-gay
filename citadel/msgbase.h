@@ -2,7 +2,6 @@
 #ifndef MSGBASE_H
 #define MSGBASE_H
 
-#include "event_client.h"
 enum {
 	MSGS_ALL,
 	MSGS_OLD,
@@ -76,30 +75,12 @@ struct addresses_to_be_filed {
 extern struct addresses_to_be_filed *atbf;
 
 int GetFieldFromMnemonic(eMsgField *f, const char* c);
-
-
 void memfmout (char *mptr, const char *nl);
 void output_mime_parts(char *);
 long send_message (struct CtdlMessage *);
 void loadtroom (void);
 long CtdlSubmitMsg(struct CtdlMessage *, recptypes *, const char *, int);
-
 long quickie_message(const char *from, const char *fromaddr, const char *to, char *room, const char *text, int format_type, const char *subject);
-
-void flood_protect_quickie_message(const char *from,
-				   const char *fromaddr,
-				   const char *to,
-				   char *room,
-				   const char *text, 
-				   int format_type,
-				   const char *subject,
-				   int nCriterions,
-				   const char **CritStr,
-				   const long *CritStrLen,
-				   long ccid,
-				   long ioid,
-				   time_t NOW);
-
 void GetMetaData(struct MetaData *, long);
 void PutMetaData(struct MetaData *);
 void AdjRefCount(long, int);
@@ -152,18 +133,18 @@ void CtdlSerializeMessage(struct ser_ret *, struct CtdlMessage *);
 struct CtdlMessage *CtdlDeserializeMessage(long msgnum, int with_body, const char *Buffer, long Length);
 void ReplicationChecks(struct CtdlMessage *);
 int CtdlSaveMsgPointersInRoom(char *roomname, long newmsgidlist[], int num_newmsgs,
-			      int do_repl_check, struct CtdlMessage *supplied_msg, int suppress_refcount_adj);
+			      int do_repl_check, struct CtdlMessage *supplied_msg, int suppress_refcount_adj
+);
 int CtdlSaveMsgPointerInRoom(char *roomname, long msgid, int do_repl_check, struct CtdlMessage *msg);
 long CtdlSaveThisMessage(struct CtdlMessage *msg, long msgid, int Reply);
-char *CtdlReadMessageBody(char *terminator, long tlen, size_t maxlen, StrBuf *exist, int crlf, int *sock);
-StrBuf *CtdlReadMessageBodyBuf(char *terminator,	/* token signalling EOT */
-			       long tlen,
-			       size_t maxlen,		/* maximum message length */
-			       StrBuf *exist,		/* if non-null, append to it;
-							   exist is ALWAYS freed  */
-			       int crlf,		/* CRLF newlines instead of LF */
-			       int *sock		/* socket handle or 0 for this session's client socket */
-	);
+char *CtdlReadMessageBody(char *terminator, long tlen, size_t maxlen, StrBuf *exist, int crlf);
+StrBuf *CtdlReadMessageBodyBuf(
+		char *terminator,	/* token signalling EOT */
+		long tlen,
+		size_t maxlen,		/* maximum message length */
+		StrBuf *exist,		/* if non-null, append to it; exist is ALWAYS freed  */
+		int crlf		/* CRLF newlines instead of LF */
+);
 
 int CtdlOutputMsg(long msg_num,		/* message number (local) to fetch */
 		int mode,		/* how would you like that message? */
@@ -197,9 +178,12 @@ enum {
 	ctdlsetseen_seen,
 	ctdlsetseen_answered
 };
+
 void CtdlSetSeen(long *target_msgnums, int num_target_msgnums,
-		 int target_setting, int which_set,
-		struct ctdluser *which_user, struct ctdlroom *which_room);
+	int target_setting, int which_set,
+	struct ctdluser *which_user, struct ctdlroom *which_room
+);
+
 void CtdlGetSeen(char *buf, int which_set);
 
 
@@ -239,29 +223,8 @@ struct CtdlMessage *CtdlMakeMessageLen(
 	char *preformatted_text,	/* ...or NULL to read text from client */
 	long textlen,
 	char *references,		/* Thread references */
-	long reflen);
-
-/* 
- * loading messages async via an FD: 
- * add IO->ReadMsg = NewAsyncMsg(...)
- * and then call CtdlReadMessageBodyAsync() from your linreader handler.
- */
-
-ReadAsyncMsg *NewAsyncMsg(const char *terminator,	/* token signalling EOT */
-			  long tlen,
-			  size_t expectlen,             /* if we expect a message, how long should it be? */
-			  size_t maxlen,		/* maximum message length */
-			  StrBuf *exist,		/* if non-null, append to it;
-						   	   exist is ALWAYS freed  */
-			  long eLen,            	/* length of exist */
-			  int crlf			/* CRLF newlines instead of LF */
-	);
-
-eReadState CtdlReadMessageBodyAsync(AsyncIO *IO);
-void DeleteAsyncMsg(ReadAsyncMsg **Msg);
-
-
-
+	long reflen
+);
 
 
 #endif /* MSGBASE_H */

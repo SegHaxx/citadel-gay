@@ -11,8 +11,11 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  */
+#include <stdlib.h>
+#include <unistd.h>
 #include <stdio.h>
 #include <sys/types.h>
+#include <sys/stat.h>
 #include <grp.h>
 #include <sys/file.h>
 #include <libcitadel.h>
@@ -211,23 +214,6 @@ int main(int argc, char **argv)
 		start_daemon(0);
 		drop_root_perms = 1;
 	}
-
-#if 0
- def HAVE_BACKTRACE
-	bzero(&params, sizeof(params));
-	params.filename = file_pid_paniclog;
-	panic_fd=open(file_pid_paniclog, O_APPEND|O_CREAT|O_DIRECT);
-	params.filep = fopen(file_pid_paniclog, "a+");
-	params.debugLevel = ECRASH_DEBUG_VERBOSE;
-	params.dumpAllThreads = TRUE;
-	params.useBacktraceSymbols = 1;
-	params.signals[0]=SIGSEGV;
-	params.signals[1]=SIGILL;
-	params.signals[2]=SIGBUS;
-	params.signals[3]=SIGABRT;
-	eCrash_Init(&params);
-	eCrash_RegisterThread("MasterThread", 0);
-#endif
 
 	/* Tell 'em who's in da house */
 	syslog(LOG_NOTICE, " ");

@@ -12,10 +12,12 @@
  * GNU General Public License for more details.
  */
 
+#include <stdlib.h>
+#include <unistd.h>
 #include "sysdep.h"
 #include <stdio.h>
+#include <sys/stat.h>
 #include <libcitadel.h>
-
 #include "control.h"
 #include "support.h"
 #include "citserver.h"

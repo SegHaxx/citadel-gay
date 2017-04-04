@@ -565,59 +565,6 @@ AC_CHECK_HEADER(libcitadel.h,
 CFLAGS="$saved_CFLAGS"
 
 
-AC_CHECK_LIB(cares, ares_parse_mx_reply,
-            [
-                    C_ARES_LIBS=-lcares
-		    AC_DEFINE(HAVE_C_ARES, 1, [Define to use c-ares library])
-                    have_good_c_ares=yes
-            ],, $SOCKET_LIBS $NSL_LIBS
-)
-
-
-
-saved_CFLAGS="$CFLAGS"
-CFLAGS="$CFLAGS $SERVER_LIBS"
-dnl Check for c-ares
-AC_CHECK_HEADER(ares.h,
-	[AC_CHECK_LIB(cares, ares_parse_mx_reply,
-		[
-			LIBS="-lcares $LIBS $SERVER_LIBS"
-		],
-		[
-			AC_MSG_ERROR(libc-ares was not found or is not usable.  Please install libc-ares.)
-		]
-	)],
-	[
-		AC_MSG_ERROR(ares.h was not found or is not usable.  Please install libc-ares.)
-	]
-)
-CFLAGS="$saved_CFLAGS"
-
-saved_CFLAGS="$CFLAGS"
-CFLAGS="$CFLAGS $SERVER_LIBS"
-dnl Check for libev
-AC_CHECK_HEADER(ev.h,
-	[AC_TRY_COMPILE([#include <math.h>
-#include <ev.h>], 
-                         [
-			 ev_cleanup abort_by_shutdown;
-			 struct ev_loop *event_base;
-			 ev_cleanup_start(event_base, &abort_by_shutdown);
-			],
-			[
-			LIBS="-lev -lm $LIBS $SERVER_LIBS"
-			],
-		[
-			AC_MSG_ERROR(libev was not found or is not usable.  Please install libev.)
-		])
-	],
-	[
-		AC_MSG_ERROR(ev.h was not found or is not usable.  Please install libev.)
-	]
-)
-CFLAGS="$saved_CFLAGS"
-
-
 # The big search for OpenSSL
 if test "$with_ssl" != "no"; then
 	saved_LIBS="$LIBS"

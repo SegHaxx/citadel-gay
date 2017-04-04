@@ -12,10 +12,14 @@
  * GNU General Public License for more details.
  */
 
+#include <stdlib.h>
+#include <unistd.h>
 #include <stdio.h>
+#include <netdb.h>
 #include <libcitadel.h>
 #include <dirent.h>
-
+#include <sys/types.h>
+#include <sys/stat.h>
 #include "ctdl_module.h"
 #include "citserver.h"
 #include "support.h"

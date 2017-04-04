@@ -535,20 +535,19 @@ void network_process_ignetpush(SpoolControl *sc, struct CtdlMessage *omsg, long 
 				
 				/* write it to a spool file */
 				snprintf(filename,
-					 sizeof(filename),
-					 "%s/%s@%lx%x",
-					 ctdl_netout_dir,
-					 ChrPtr(Recipient),
-					 time(NULL),
-					 rand()
-					);
+					sizeof(filename),
+					"%s/%s@%lx%x",
+					ctdl_netout_dir,
+					ChrPtr(Recipient),
+					time(NULL),
+					rand()
+				);
 					
 				syslog(LOG_DEBUG, "netmail: appending to %s", filename);
 				
 				fp = fopen(filename, "ab");
 				if (fp != NULL) {
-					fwrite(sermsg.ser,
-					       sermsg.len, 1, fp);
+					fwrite(sermsg.ser, sermsg.len, 1, fp);
 					fclose(fp);
 				}
 				else {

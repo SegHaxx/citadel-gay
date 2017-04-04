@@ -914,6 +914,9 @@ void network_consolidate_spoolout(HashList *working_ignetcfg, HashList *the_netm
 	int d_type = 0;
 
 
+
+	return;	// FIXME still trying to figure this out
+
 	/* Step 1: consolidate files in the outbound queue into one file per neighbor node */
 	d = (struct dirent *)malloc(offsetof(struct dirent, d_name) + PATH_MAX + 1);
 	if (d == NULL) 	return;
@@ -982,7 +985,7 @@ void network_consolidate_spoolout(HashList *working_ignetcfg, HashList *the_netm
 		syslog(LOG_DEBUG, "netspool: consolidate %s to %s", filename, ChrPtr(NextHop));
 		if (CtdlNetworkTalkingTo(SKEY(NextHop), NTT_CHECK)) {
 			nFailed++;
-			syslog(LOG_DEBUG, "netspool: urrently online with %s - skipping for now", ChrPtr(NextHop));
+			syslog(LOG_DEBUG, "netspool: currently online with %s - skipping for now", ChrPtr(NextHop));
 		}
 		else {
 			size_t dsize;
@@ -1133,7 +1136,6 @@ void free_spoolcontrol_struct_members(SpoolControl *sc)
 	for (i = 0; i < maxRoomNetCfg; i++)
 		FreeStrBuf(&sc->Users[i]);
 }
-
 
 
 /*

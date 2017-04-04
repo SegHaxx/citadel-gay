@@ -164,7 +164,7 @@ retry_wait_for_contexts:
 	{
 		for (i=0; i<nContexts; i++) 
 		{
-			if ((nptr[i].state != CON_SYS) || (nptr[i].IO == NULL) || (nptr[i].lastcmd == 0))
+			if ((nptr[i].state != CON_SYS) || (nptr[i].lastcmd == 0))
 				continue;
 			ActiveBackgroundJobs ++;
 			syslog(LOG_INFO, "jousekeeping: job CC[%d] active; use TERM if you don't want to wait for it", nptr[i].cs_pid);

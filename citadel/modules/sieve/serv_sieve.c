@@ -2,7 +2,7 @@
  * This module glues libSieve to the Citadel server in order to implement
  * the Sieve mailbox filtering language (RFC 3028).
  *
- * Copyright (c) 1987-2015 by the citadel.org team
+ * Copyright (c) 1987-2017 by the citadel.org team
  *
  * This program is open source software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3.
@@ -1174,7 +1174,7 @@ void cmd_msiv(char *argbuf) {
 		extract_token(script_name, argbuf, 1, '|', sizeof script_name);
 		if (!IsEmptyStr(script_name)) {
 			cprintf("%d Transmit script now\n", SEND_LISTING);
-			script_content = CtdlReadMessageBody(HKEY("000"), CtdlGetConfigLong("c_maxmsglen"), NULL, 0, 0);
+			script_content = CtdlReadMessageBody(HKEY("000"), CtdlGetConfigLong("c_maxmsglen"), NULL, 0);
 			msiv_putscript(&u, script_name, script_content);
 			changes_made = 1;
 		}

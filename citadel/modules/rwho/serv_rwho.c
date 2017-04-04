@@ -214,6 +214,7 @@ void cmd_rwho(char *argbuf) {
 	cprintf("000\n");
 }
 
+#if 0
 /*
  * check for async io jobs that are stuck (didn't ping back for 10 mins)
  */
@@ -276,8 +277,8 @@ void dead_io_check(void) {
 	
 	/* release out copy of the context list */
 	free(nptr);
-
 }
+#endif
 
 /*
  * Masquerade roomname
@@ -381,7 +382,7 @@ CTDL_MODULE_INIT(rwho)
 	        CtdlRegisterProtoHook(cmd_rchg, "RCHG", "Masquerade roomname");
         	CtdlRegisterProtoHook(cmd_uchg, "UCHG", "Masquerade username");
 	        CtdlRegisterProtoHook(cmd_stel, "STEL", "Enter/exit stealth mode");
-		CtdlRegisterSessionHook(dead_io_check, EVT_TIMER, PRIO_QUEUE + 50);
+		//CtdlRegisterSessionHook(dead_io_check, EVT_TIMER, PRIO_QUEUE + 50);
 
 	}
 	

@@ -1749,7 +1749,7 @@ void ical_putics(void)
 	}
 
 	cprintf("%d Transmit data now\n", SEND_LISTING);
-	calstream = CtdlReadMessageBody(HKEY("000"), CtdlGetConfigLong("c_maxmsglen"), NULL, 0, 0);
+	calstream = CtdlReadMessageBody(HKEY("000"), CtdlGetConfigLong("c_maxmsglen"), NULL, 0);
 	if (calstream == NULL) {
 		return;
 	}

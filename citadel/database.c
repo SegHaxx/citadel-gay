@@ -27,6 +27,9 @@
 /*****************************************************************************/
 
 #include "sysdep.h"
+#include <stdlib.h>
+#include <unistd.h>
+#include <sys/stat.h>
 #include <stdio.h>
 #include <dirent.h>
 #include <zlib.h>
@@ -49,7 +52,6 @@
 #include "control.h"
 #include "citserver.h"
 #include "config.h"
-#pragma GCC diagnostic ignored "-Wcast-qual"
 
 static DB *dbp[MAXCDB];		/* One DB handle for each Citadel database */
 static DB_ENV *dbenv;		/* The DB environment (global) */

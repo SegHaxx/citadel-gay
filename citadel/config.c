@@ -13,7 +13,10 @@
  */
 
 #include "sysdep.h"
+#include <stdlib.h>
+#include <unistd.h>
 #include <stdio.h>
+#include <netdb.h>
 #include <sys/utsname.h>
 #include <libcitadel.h>
 #include <assert.h>

@@ -16,14 +16,15 @@
  */
 
 #include "sysdep.h"
-
+#include <stdlib.h>
+#include <unistd.h>
+#include <sys/stat.h>
 #include <errno.h>
 #include <signal.h>
 #include <stdio.h>
 #include <syslog.h>
 #include <sys/syslog.h>
-
-
+#include <netdb.h>
 #include <sys/un.h>
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -31,17 +32,13 @@
 #include <arpa/inet.h>
 #include <netinet/tcp.h>
 #include <arpa/inet.h>
-
 #define SHOW_ME_VAPPEND_PRINTF
 #include <libcitadel.h>
-
 #include "citserver.h"
 #include "config.h"
 #include "ctdl_module.h"
-
 #include "sysdep_decls.h"
 #include "modules/crypto/serv_crypto.h"	/* Needed for init_ssl, client_write_ssl, client_read_ssl, destruct_ssl */
-
 #include "housekeeping.h"
 #include "context.h"
 /*
@@ -400,8 +397,7 @@ int client_write(const char *buf, int nbytes)
 			cit_backtrace();
 			exit(1);
 		}
-		fprintf(fd, "Sending: BufSize: %d BufContent: [",
-			nbytes);
+		fprintf(fd, "Sending: BufSize: %d BufContent: [", nbytes);
 		rv = fwrite(buf, nbytes, 1, fd);
 		fprintf(fd, "]\n");
 		fclose(fd);
@@ -1230,8 +1226,6 @@ void *worker_thread(void *blah) {
 	++num_workers;
 	pthread_mutex_unlock(&ThreadCountMutex);
 
-	pthread_setspecific(evConKey, WorkerLogStr);
-
 	while (!server_shutting_down) {
 
 		/* make doubly sure we're not holding any stale db handles
@@ -1314,9 +1308,6 @@ do_select:	force_purge = 0;
 				server_shutting_down = 1;
 				continue;
 			} else {
-#if 0
-				syslog(LOG_DEBUG, "Interrupted select()\n");
-#endif
 				if (server_shutting_down) {
 					--num_workers;
 					return(NULL);
