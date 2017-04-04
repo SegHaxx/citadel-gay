@@ -306,22 +306,11 @@ void do_system_configuration(CtdlIPC *ipc)
 			&sc[48][0], 127);
 	}
 
-	/* Funambol push stuff */
-	int yes_funambol = 0;
-	if (strlen(sc[53]) > 0) yes_funambol = 1;
-	yes_funambol = boolprompt("Connect to an external Funambol sync server", yes_funambol);
-	if (yes_funambol) {
-		strprompt("Funambol server (blank to disable)", &sc[53][0], 63);
-		strprompt("Funambol server port", &sc[54][0], 5);
-		strprompt("Funambol sync source", &sc[55][0], 63);
-		strprompt("Funambol authentication details (user:pass in Base64)", &sc[56][0],63);
-	}
-	else {
-		sc[53][0] = 0;
-		sc[54][0] = 0;
-		sc[55][0] = 0;
-		sc[56][0] = 0;
-	}
+	/* No more Funambol */
+	sc[53][0] = 0;
+	sc[54][0] = 0;
+	sc[55][0] = 0;
+	sc[56][0] = 0;
 
 	/* External pager stuff */
 	int yes_pager = 0;
@@ -555,8 +544,7 @@ void network_config_management(CtdlIPC *ipc, char *entrytype, char *comment)
 	int r;
 
 	if (IsEmptyStr(editor_path)) {
-		scr_printf("You must have an external editor configured in"
-			" order to use this function.\n");
+		scr_printf("You must have an external editor configured in order to use this function.\n");
 		return;
 	}
 
