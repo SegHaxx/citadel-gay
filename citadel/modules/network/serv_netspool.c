@@ -892,23 +892,171 @@ void network_do_spoolin(HashList *working_ignetcfg, HashList *the_netmap, int *n
 }
 
 /*
- * delete any files in the outbound queue that were for neighbors who no longer exist.
+ * Step 1: consolidate files in the outbound queue into one file per neighbor node
+ * Step 2: delete any files in the outbound queue that were for neighbors who no longer exist.
  */
 void network_consolidate_spoolout(HashList *working_ignetcfg, HashList *the_netmap)
 {
+	IOBuffer IOB;
+	FDIOBuffer FDIO;
         int d_namelen;
 	DIR *dp;
 	struct dirent *d;
 	struct dirent *filedir_entry;
 	const char *pch;
+	char spooloutfilename[PATH_MAX];
 	char filename[PATH_MAX];
 	const StrBuf *nexthop;
 	StrBuf *NextHop;
 	int i;
+	struct stat statbuf;
+	int nFailed = 0;
 	int d_type = 0;
+
+
 
 	return;	// FIXME still trying to figure this out
 
+	/* Step 1: consolidate files in the outbound queue into one file per neighbor node */
+	d = (struct dirent *)malloc(offsetof(struct dirent, d_name) + PATH_MAX + 1);
+	if (d == NULL) 	return;
+
+	dp = opendir(ctdl_netout_dir);
+	if (dp == NULL) {
+		free(d);
+		return;
+	}
+
+	NextHop = NewStrBuf();
+	memset(&IOB, 0, sizeof(IOBuffer));
+	memset(&FDIO, 0, sizeof(FDIOBuffer));
+	FDIO.IOB = &IOB;
+
+	while ((readdir_r(dp, d, &filedir_entry) == 0) &&
+	       (filedir_entry != NULL))
+	{
+#ifdef _DIRENT_HAVE_D_NAMLEN
+		d_namelen = filedir_entry->d_namlen;
+
+#else
+		d_namelen = strlen(filedir_entry->d_name);
+#endif
+
+#ifdef _DIRENT_HAVE_D_TYPE
+		d_type = filedir_entry->d_type;
+#else
+		d_type = DT_UNKNOWN;
+#endif
+		if (d_type == DT_DIR)
+			continue;
+
+		if ((d_namelen > 1) && filedir_entry->d_name[d_namelen - 1] == '~')
+			continue; /* Ignore backup files... */
+
+		if ((d_namelen == 1) && 
+		    (filedir_entry->d_name[0] == '.'))
+			continue;
+
+		if ((d_namelen == 2) && 
+		    (filedir_entry->d_name[0] == '.') &&
+		    (filedir_entry->d_name[1] == '.'))
+			continue;
+
+		pch = strchr(filedir_entry->d_name, '@');
+		if (pch == NULL)
+			continue;
+
+		snprintf(filename, 
+			 sizeof filename,
+			 "%s/%s",
+			 ctdl_netout_dir,
+			 filedir_entry->d_name);
+
+		StrBufPlain(NextHop,
+			    filedir_entry->d_name,
+			    pch - filedir_entry->d_name);
+
+		snprintf(spooloutfilename,
+			 sizeof spooloutfilename,
+			 "%s/%s",
+			 ctdl_netout_dir,
+			 ChrPtr(NextHop));
+
+		syslog(LOG_DEBUG, "netspool: consolidate %s to %s", filename, ChrPtr(NextHop));
+		if (CtdlNetworkTalkingTo(SKEY(NextHop), NTT_CHECK)) {
+			nFailed++;
+			syslog(LOG_DEBUG, "netspool: currently online with %s - skipping for now", ChrPtr(NextHop));
+		}
+		else {
+			size_t dsize;
+			size_t fsize;
+			int infd, outfd;
+			const char *err = NULL;
+			CtdlNetworkTalkingTo(SKEY(NextHop), NTT_ADD);
+
+			infd = open(filename, O_RDONLY);
+			if (infd == -1) {
+				nFailed++;
+				syslog(LOG_ERR, "%s: %s", filename, strerror(errno));
+				CtdlNetworkTalkingTo(SKEY(NextHop), NTT_REMOVE);
+				continue;				
+			}
+			
+			outfd = open(spooloutfilename,
+				  O_EXCL|O_CREAT|O_NONBLOCK|O_WRONLY, 
+				  S_IRUSR|S_IWUSR);
+			if (outfd == -1)
+			{
+				outfd = open(spooloutfilename,
+					     O_EXCL|O_NONBLOCK|O_WRONLY, 
+					     S_IRUSR | S_IWUSR);
+			}
+			if (outfd == -1) {
+				nFailed++;
+				syslog(LOG_ERR, "%s: %s", spooloutfilename, strerror(errno));
+				close(infd);
+				CtdlNetworkTalkingTo(SKEY(NextHop), NTT_REMOVE);
+				continue;
+			}
+
+			dsize = lseek(outfd, 0, SEEK_END);
+			lseek(outfd, -dsize, SEEK_SET);
+
+			fstat(infd, &statbuf);
+			fsize = statbuf.st_size;
+			IOB.fd = infd;
+			FDIOBufferInit(&FDIO, &IOB, outfd, fsize + dsize);
+			FDIO.ChunkSendRemain = fsize;
+			FDIO.TotalSentAlready = dsize;
+			err = NULL;
+			errno = 0;
+			do {} while ((FileMoveChunked(&FDIO, &err) > 0) && (err == NULL));
+			if (err == NULL) {
+				unlink(filename);
+				syslog(LOG_DEBUG, "netspool: spoolfile %s now "SIZE_T_FMT" KB", spooloutfilename, (dsize + fsize)/1024);
+			}
+			else {
+				nFailed++;
+				syslog(LOG_ERR, "netspool: failed to append to %s [%s]; rolling back..", spooloutfilename, strerror(errno));
+				/* whoops partial append?? truncate spooloutfilename again! */
+				ftruncate(outfd, dsize);
+			}
+			FDIOBufferDelete(&FDIO);
+			close(infd);
+			close(outfd);
+			CtdlNetworkTalkingTo(SKEY(NextHop), NTT_REMOVE);
+		}
+	}
+	closedir(dp);
+
+	if (nFailed > 0) {
+		FreeStrBuf(&NextHop);
+		syslog(LOG_INFO, "netspool: skipping Spoolcleanup because of %d files unprocessed.", nFailed);
+
+		return;
+	}
+
+	/* Step 2: delete any files in the outbound queue that were for neighbors who no longer exist */
 	dp = opendir(ctdl_netout_dir);
 	if (dp == NULL) {
 		FreeStrBuf(&NextHop);
