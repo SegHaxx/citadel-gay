@@ -536,7 +536,7 @@ void network_process_ignetpush(SpoolControl *sc, struct CtdlMessage *omsg, long 
 				/* write it to a spool file */
 				snprintf(filename,
 					sizeof(filename),
-					"%s/%s@%lx%x",
+					"%s/%s@%lx%x-mail",
 					ctdl_netout_dir,
 					ChrPtr(Recipient),
 					time(NULL),

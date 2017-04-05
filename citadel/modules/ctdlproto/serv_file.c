@@ -415,11 +415,11 @@ void cmd_ucls(char *cmd)
 		        snprintf(final_filename, sizeof final_filename, "%s/%s.%04lx.%04x", ctdl_netin_dir, CCC->net_node, (long)getpid(), ++seq);
 
 			if (link(CCC->upl_path, final_filename) == 0) {
-				syslog(LOG_INFO, "UCLS: updoaded %s", final_filename);
+				syslog(LOG_INFO, "serv_file: ucls updoaded %s", final_filename);
 				unlink(CCC->upl_path);
 			}
 			else {
-				syslog(LOG_INFO, "Cannot link %s to %s: %s",
+				syslog(LOG_INFO, "serv_file: cannot link %s to %s: %s",
 					    CCC->upl_path, final_filename, strerror(errno)
 				);
 			}
@@ -487,11 +487,11 @@ void cmd_read(char *cmdbuf)
 
 	rc = fseek(CC->download_fp, start_pos, 0);
 	if (rc < 0) {
-		cprintf("%d your file is smaller then %ld.\n", ERROR + ILLEGAL_VALUE, start_pos);
-		syslog(LOG_ERR, "your file %s is smaller then %ld. [%s]", 
-			    CC->upl_path, 
-			    start_pos,
-			    strerror(errno)
+		cprintf("%d your file is smaller than %ld.\n", ERROR + ILLEGAL_VALUE, start_pos);
+		syslog(LOG_ERR, "serv_file: your file %s is smaller than %ld [%s]", 
+			CC->upl_path, 
+			start_pos,
+			strerror(errno)
 		);
 
 		return;
@@ -540,7 +540,7 @@ void cmd_writ(char *cmdbuf)
 	client_read(buf, bytes);
 	rv = fwrite(buf, bytes, 1, CCC->upload_fp);
 	if (rv == -1) {
-		syslog(LOG_EMERG, "Couldn't write: %s", strerror(errno));
+		syslog(LOG_ERR, "serv_file: %s", strerror(errno));
 	}
 	free(buf);
 }
@@ -741,7 +741,7 @@ void cmd_mesg(char *mname)
 			ERROR + FILE_NOT_FOUND, targ, strerror(errno));
 		return;
 	}
-	cprintf("%d %s\n", LISTING_FOLLOWS,buf);
+	cprintf("%d %s\n", LISTING_FOLLOWS, buf);
 
 	while (fgets(buf, (sizeof buf - 1), mfp) != NULL) {
 		buf[strlen(buf)-1] = 0;

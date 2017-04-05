@@ -913,10 +913,6 @@ void network_consolidate_spoolout(HashList *working_ignetcfg, HashList *the_netm
 	int nFailed = 0;
 	int d_type = 0;
 
-
-
-	return;	// FIXME still trying to figure this out
-
 	/* Step 1: consolidate files in the outbound queue into one file per neighbor node */
 	d = (struct dirent *)malloc(offsetof(struct dirent, d_name) + PATH_MAX + 1);
 	if (d == NULL) 	return;

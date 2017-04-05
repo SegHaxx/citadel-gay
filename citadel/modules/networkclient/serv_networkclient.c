@@ -11,13 +11,12 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
- * ** NOTE **   A word on the S_NETCONFIGS semaphore:
- * This is a fairly high-level type of critical section.  It ensures that no
- * two threads work on the netconfigs files at the same time.  Since we do
- * so many things inside these, here are the rules:
- *  1. begin_critical_section(S_NETCONFIGS) *before* begin_ any others.
- *  2. Do *not* perform any I/O with the client during these sections.
- *
+ * Implementation note:
+ * I'm not really happy with this.  It looks more like a Gen 1 poller
+ * than a Gen 3 poller, because libcurl (understandably) does not have
+ * support for Citadel protocol.  In the not too distant future I would
+ * like to remove Citadel-to-Citadel protocol entirely, and replace it
+ * with NNTP.
  */
 
 
@@ -86,6 +85,7 @@ void network_poll_node(StrBuf *node, StrBuf *host, StrBuf *port, StrBuf *secret)
 	int bytes_total = 0;
 	int this_block = 0;
 	StrBuf *SpoolFileName = NULL;
+	FILE *netoutfp = NULL;
 
 	syslog(LOG_DEBUG, "netpoll: polling %s at %s:%s", ChrPtr(node), ChrPtr(host), ChrPtr(port));
 
@@ -186,20 +186,72 @@ void network_poll_node(StrBuf *node, StrBuf *host, StrBuf *port, StrBuf *secret)
 
 	// Now get ready to send our network data to the other node.
 	SpoolFileName = NewStrBuf();
-	StrBufPrintf(SpoolFileName,			// Outgoing packets come from the "spoolout/" directory
+	StrBufPrintf(SpoolFileName,					// Outgoing packets come from the "spoolout/" directory
 		"%s/%s",
 		ctdl_netout_dir,
 		ChrPtr(node)
 	);
-	FILE *netoutfp = fopen(ChrPtr(SpoolFileName), "w");
-	FreeStrBuf(&SpoolFileName);
+	netoutfp = fopen(ChrPtr(SpoolFileName), "r");
 	if (!netoutfp) {
 		goto bail;
 	}
-	fclose(netoutfp);
-	//unlink(netoutfp);
+
+	/* Tell it we want to upload. */
+	sock_puts(&sock, "NUOP");
+        if (sock_getln(&sock, buf, sizeof buf) < 0) {
+                goto bail;
+        }
+	if (buf[0] != '2') {
+		CtdlAideMessage(buf, "NUOP error");
+		syslog(LOG_ERR, "netpoll: NUOP error talking to <%s> : %s", ChrPtr(node), buf);
+		goto bail;
+	}
+
+	fseek(netoutfp, 0, SEEK_END);
+	long total_to_send = ftell(netoutfp);
+	rewind(netoutfp);
+
+	syslog(LOG_DEBUG, "netpoll: I want to send %ld bytes to %s", total_to_send, ChrPtr(node));
+	long bytes_sent = 0;
+	while (bytes_sent < total_to_send) {
+		if (server_shutting_down) {
+			goto bail;
+		}
+
+		this_block = total_to_send - bytes_sent;
+		if (this_block > sizeof(buf)) {
+			this_block = sizeof(buf);
+		}
+
+		snprintf(buf, sizeof buf, "WRIT %d", this_block);
+		sock_puts(&sock, buf);
+        	if (sock_getln(&sock, buf, sizeof buf) < 0) {
+                	goto bail;
+        	}
+		if (buf[0] != '7') {
+			goto bail;
+		}
+		this_block = atol(&buf[4]);
+		fread(buf, this_block, 1, netoutfp);
+		if (sock_write(&sock, buf, this_block) != this_block) {
+			goto bail;
+		}
+		bytes_sent += this_block;
+		syslog(LOG_DEBUG, "netpoll: sent %ld of %ld bytes to %s", bytes_sent, total_to_send, ChrPtr(node));
+	}
+
+	/* Tell them we're done. */
+	sock_puts(&sock, "UCLS 1");					// UCLS 1 causes it to close *and delete* on the other node
+        if (sock_getln(&sock, buf, sizeof buf) < 0) {
+                goto bail;
+        }
+	if (buf[0] == '2') {
+		unlink(ChrPtr(SpoolFileName));
+	}
 
 bail:	close(sock);
+	if (SpoolFileName != NULL) FreeStrBuf(&SpoolFileName);
+	if (netoutfp != NULL) fclose(netoutfp);
 	FreeStrBuf(&CC->SBuf.Buf);
 	FreeStrBuf(&CC->sMigrateBuf);
 }
@@ -302,6 +354,7 @@ void network_do_clientqueue(void)
 	network_poll_other_citadel_nodes(full_processing, working_ignetcfg);
 	DeleteHash(&working_ignetcfg);
 }
+
 
 /*
  * Module entry point
