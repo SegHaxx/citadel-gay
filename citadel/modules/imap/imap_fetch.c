@@ -141,8 +141,7 @@ void imap_fetch_rfc822(long msgnum, const char *whichfmt) {
 	 * us to fetch the message body from disk.  If not, we can save
 	 * on some disk operations...
 	 */
-	if ( (!strcasecmp(whichfmt, "RFC822"))
-	   || (!strcasecmp(whichfmt, "RFC822.TEXT")) ) {
+	if ( (!strcasecmp(whichfmt, "RFC822")) || (!strcasecmp(whichfmt, "RFC822.TEXT")) ) {
 		need_body = 1;
 	}
 
@@ -188,7 +187,9 @@ void imap_fetch_rfc822(long msgnum, const char *whichfmt) {
 			(need_body ? HEADERS_ALL : HEADERS_FAST),
 			0, 1, NULL, SUPPRESS_ENV_TO, NULL, NULL, NULL
 		);
-		if (!need_body) IAPuts("\r\n");	/* extra trailing newline */
+		if (!need_body) {
+			client_write(HKEY("\r\n"));		// extra trailing newline -- to the redirect_buffer, *not* to the client
+		}
 		Imap->cached_rfc822 = CCC->redirect_buffer;
 		CCC->redirect_buffer = NULL;
 		Imap->cached_rfc822_msgnum = msgnum;
@@ -229,16 +230,11 @@ void imap_fetch_rfc822(long msgnum, const char *whichfmt) {
 		FreeStrBuf(&Line);
 	}
 	else {
-		headers_size = 
-			total_size = StrLength(Imap->cached_rfc822);
+		headers_size = total_size = StrLength(Imap->cached_rfc822);
 		text_size = 0;
 	}
 
-	syslog(LOG_DEBUG, 
-		    "RFC822: headers=" SIZE_T_FMT 
-		    ", text=" SIZE_T_FMT
-		    ", total=" SIZE_T_FMT,
-		    headers_size, text_size, total_size);
+	syslog(LOG_DEBUG, "imap: RFC822 headers=" SIZE_T_FMT ", text=" SIZE_T_FMT ", total=" SIZE_T_FMT, headers_size, text_size, total_size);
 
 	if (!strcasecmp(whichfmt, "RFC822.SIZE")) {
 		IAPrintf("RFC822.SIZE " SIZE_T_FMT, total_size);
@@ -265,7 +261,6 @@ void imap_fetch_rfc822(long msgnum, const char *whichfmt) {
 }
 
 
-
 /*
  * Load a specific part of a message into the temp file to be output to a
  * client.  FIXME we can handle parts like "2" and "2.1" and even "2.MIME"
@@ -282,10 +277,7 @@ void imap_load_part(char *name, char *filename, char *partnum, char *disp,
 	StrBuf *desired_section;
 
 	desired_section = (StrBuf *)cbuserdata;
-	syslog(LOG_DEBUG, "imap_load_part() looking for %s, found %s",
-		    ChrPtr(desired_section),
-		    partnum
-		);
+	syslog(LOG_DEBUG, "imap: imap_load_part() looking for %s, found %s", ChrPtr(desired_section), partnum);
 
 	if (!strcasecmp(partnum, ChrPtr(desired_section))) {
 		client_write(content, length);
@@ -349,10 +341,9 @@ void imap_output_envelope_from(struct CtdlMessage *msg) {
 	}
 
 	/* For everything else, we do stuff. */
-	IAPuts("(("); /* open double-parens */
-	IPutMsgField(eAuthor);	/* personal name */
-	IAPuts(" NIL ");	/* source route (not used) */
-
+	IAPuts("((");				// open double-parens
+	IPutMsgField(eAuthor);			// display name
+	IAPuts(" NIL ");			// source route (not used)
 
 	if (!CM_IsEmpty(msg, erFc822Addr)) {
 		process_rfc822_addr(msg->cm_fields[erFc822Addr], user, node, name);
@@ -373,7 +364,6 @@ void imap_output_envelope_from(struct CtdlMessage *msg) {
 	
 	IAPuts(")) "); /* close double-parens */
 }
-
 
 
 /*
@@ -446,8 +436,7 @@ void imap_fetch_envelope(struct CtdlMessage *msg) {
 	else {
 		msgdate = time(NULL);
 	}
-	len = datestring(datestringbuf, sizeof datestringbuf,
-			 msgdate, DATESTRING_IMAP);
+	len = datestring(datestringbuf, sizeof datestringbuf, msgdate, DATESTRING_IMAP);
 
 	/* Now start spewing data fields.  The order is important, as it is
 	 * defined by the protocol specification.  Nonexistent fields must
@@ -516,10 +505,9 @@ void imap_fetch_envelope(struct CtdlMessage *msg) {
 	len = msg->cm_lengths[emessageId];
 	
 	if ((len == 0) || (
-		    (msg->cm_fields[emessageId][0] == '<') && 
-		    (msg->cm_fields[emessageId][len - 1] == '>'))
-		)
-	{
+		(msg->cm_fields[emessageId][0] == '<') && 
+		(msg->cm_fields[emessageId][len - 1] == '>'))
+	) {
 		IPutMsgField(emessageId);
 	}
 	else 
@@ -545,6 +533,7 @@ void imap_fetch_envelope(struct CtdlMessage *msg) {
 	}
 	IAPuts(")");
 }
+
 
 /*
  * This function is called only when CC->redirect_buffer contains a set of
@@ -665,7 +654,7 @@ void imap_fetch_body(long msgnum, ConstStr item, int is_peek) {
 	if (strchr(ChrPtr(section), '[') != NULL) {
 		StrBufStripAllBut(section, '[', ']');
 	}
-	syslog(LOG_DEBUG, "Section is: [%s]", (StrLength(section) == 0) ? "(empty)" : ChrPtr(section));
+	syslog(LOG_DEBUG, "imap: selected section is [%s]", (StrLength(section) == 0) ? "(empty)" : ChrPtr(section));
 
 	/* Burn the cache if we don't have the same section of the 
 	 * same message again.
@@ -697,7 +686,7 @@ void imap_fetch_body(long msgnum, ConstStr item, int is_peek) {
 		is_partial = 1;
 	}
 	if ( (is_partial == 1) && (StrLength(partial) > 0) ) {
-		syslog(LOG_DEBUG, "Partial is <%s>", ChrPtr(partial));
+		syslog(LOG_DEBUG, "imap: selected partial is <%s>", ChrPtr(partial));
 	}
 
 	if (Imap->cached_body == NULL) {
@@ -1122,16 +1111,16 @@ void imap_do_fetch(citimap_command *Cmd) {
 /* debug output the parsed vector */
 	{
 		int i;
-		syslog(LOG_DEBUG, "----- %ld params", Cmd->num_parms);
+		syslog(LOG_DEBUG, "imap: ----- %ld params", Cmd->num_parms);
 
 	for (i=0; i < Cmd->num_parms; i++) {
 		if (Cmd->Params[i].len != strlen(Cmd->Params[i].Key))
-			syslog(LOG_DEBUG, "*********** %ld != %ld : %s",
+			syslog(LOG_DEBUG, "imap: *********** %ld != %ld : %s",
 				    Cmd->Params[i].len, 
 				    strlen(Cmd->Params[i].Key),
 				    Cmd->Params[i].Key);
 		else
-			syslog(LOG_DEBUG, "%ld : %s",
+			syslog(LOG_DEBUG, "imap: %ld : %s",
 				    Cmd->Params[i].len, 
 				    Cmd->Params[i].Key);
 	}}
@@ -1454,7 +1443,7 @@ void imap_uidfetch(int num_parms, ConstStr *Params) {
 
 	MakeStringOf(Cmd.CmdBuf, 4);
 #if 0
-	syslog(LOG_DEBUG, "-------%s--------", ChrPtr(Cmd.CmdBuf));
+	syslog(LOG_DEBUG, "imap: -------%s--------", ChrPtr(Cmd.CmdBuf));
 #endif
 	num_items = imap_extract_data_items(&Cmd);
 	if (num_items < 1) {
