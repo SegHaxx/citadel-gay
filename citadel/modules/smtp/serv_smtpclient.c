@@ -238,6 +238,7 @@ int smtp_attempt_delivery(long msgid, char *recp, char *envelope_from)
 			curl_easy_setopt(curl, CURLOPT_TIMEOUT, 20L);						// Time out after 20 seconds
 			curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0L);
 			curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 0L);
+			// curl_easy_setopt(curl, CURLOPT_ERRORBUFFER, curl_error_buffer);
 
 			strcpy(try_this_mx, "smtp://");
 			extract_token(&try_this_mx[7], mxes, i, '|', (sizeof try_this_mx - 7));
@@ -288,11 +289,9 @@ void smtp_process_one_msg(long qmsgnum)
 	long deletes[2];
 	int delete_this_queue = 0;
 
-	syslog(LOG_DEBUG, "smtpclient: processing queue entry %ld", qmsgnum);
-
 	msg = CtdlFetchMessage(qmsgnum, 1, 1);
 	if (msg == NULL) {
-		syslog(LOG_WARNING, "smtpclient: queue message %ld does not exist", qmsgnum);
+		syslog(LOG_WARNING, "smtpclient: %ld does not exist", qmsgnum);
 		return;
 	}
 
@@ -328,7 +327,7 @@ void smtp_process_one_msg(long qmsgnum)
 		if (!strncasecmp(cfgline, HKEY("envelope_from|")))	envelope_from = strdup(&cfgline[14]);
 	}
 
-	int should_try_now = 1;
+	int should_try_now = 0;
 	if (attempted < submitted) {				// If no attempts have been made yet, try now
 		should_try_now = 1;
 	}
@@ -344,7 +343,7 @@ void smtp_process_one_msg(long qmsgnum)
 	}
 
 	if (should_try_now) {
-		syslog(LOG_DEBUG, "smtpclient: attempting delivery now");
+		syslog(LOG_DEBUG, "smtpclient: %ld attempting delivery now", qmsgnum);
 		StrBuf *NewInstr = NewStrBuf();
 		StrBufAppendPrintf(NewInstr, "Content-type: "SPOOLMIME"\n\n");
 		StrBufAppendPrintf(NewInstr, "msgid|%ld\n", msgid);
@@ -414,7 +413,7 @@ void smtp_process_one_msg(long qmsgnum)
 		}
 	
 		if (delete_this_queue) {
-			syslog(LOG_DEBUG, "smtpclient: deleting this queue entry");
+			syslog(LOG_DEBUG, "smtpclient: %ld deleting", qmsgnum);
 			deletes[0] = qmsgnum;
 			deletes[1] = msgid;
 			CtdlDeleteMessages(SMTP_SPOOLOUT_ROOM, deletes, 2, "");
@@ -422,7 +421,7 @@ void smtp_process_one_msg(long qmsgnum)
 		}
 		else {
 			// replace the old queue entry with the new one
-			syslog(LOG_DEBUG, "smtpclient: rewriting this queue entry");
+			syslog(LOG_DEBUG, "smtpclient: %ld rewriting", qmsgnum);
 			msg = convert_internet_message_buf(&NewInstr);			// This function will free NewInstr for us
 			CtdlSubmitMsg(msg, NULL, SMTP_SPOOLOUT_ROOM, 0);
 			CM_Free(msg);
@@ -430,7 +429,7 @@ void smtp_process_one_msg(long qmsgnum)
 		}
 	}
 	else {
-		syslog(LOG_DEBUG, "smtpclient: retry time not reached");
+		syslog(LOG_DEBUG, "smtpclient: %ld retry time not reached", qmsgnum);
 	}
 
 	if (bounceto != NULL)		free(bounceto);
