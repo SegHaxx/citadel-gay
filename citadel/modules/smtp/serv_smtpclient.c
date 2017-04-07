@@ -261,7 +261,9 @@ int smtp_attempt_delivery(long msgid, char *recp, char *envelope_from)
 				response_code = 421;
 			}
 
-		curl_slist_free_all(recipients);
+		if (recipients != NULL) {
+			curl_slist_free_all(recipients);
+		}
 		curl_easy_cleanup(curl);
 		}
 	}
