@@ -261,10 +261,10 @@ int smtp_attempt_delivery(long msgid, char *recp, char *envelope_from)
 				response_code = 421;
 			}
 
-		if (recipients != NULL) {
 			curl_slist_free_all(recipients);
-		}
-		curl_easy_cleanup(curl);
+			recipients = NULL;								// this gets reused; avoid double-free
+			curl_easy_cleanup(curl);
+			curl = NULL;									// this gets reused; avoid double-free
 		}
 	}
 
