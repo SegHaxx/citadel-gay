@@ -51,7 +51,7 @@ volatile int restart_server = 0;
 volatile int running_as_daemon = 0;
 
 static RETSIGTYPE signal_cleanup(int signum) {
-	syslog(LOG_DEBUG, "Caught signal %d; shutting down.", signum);
+	syslog(LOG_DEBUG, "sysdep: caught signal %d; shutting down.", signum);
 	exit_signal = signum;
 	server_shutting_down = 1;
 }
@@ -91,7 +91,7 @@ void init_sysdep(void) {
 	 * session to which the calling thread is currently bound.
 	 */
 	if (pthread_key_create(&MyConKey, NULL) != 0) {
-		syslog(LOG_CRIT, "Can't create TSD key: %s", strerror(errno));
+		syslog(LOG_CRIT, "sysdep: can't create TSD key: %s", strerror(errno));
 	}
 
 	/*
@@ -155,10 +155,8 @@ int ctdl_tcp_server(char *ip_addr, int port_number, int queue_len, char *errorme
 	{
 		ip_version = 4;
 		if (inet_pton(AF_INET, ip_addr, &sin4.sin_addr) <= 0) {
-			snprintf(errormessage, SIZ,
-				 "Error binding to [%s] : %s", ip_addr, strerror(errno)
-			);
-			syslog(LOG_ALERT, "%s", errormessage);
+			snprintf(errormessage, SIZ, "Error binding to [%s] : %s", ip_addr, strerror(errno));
+			syslog(LOG_ALERT, "tcpserver: %s", errormessage);
 			return (-1);
 		}
 	}
@@ -169,14 +167,14 @@ int ctdl_tcp_server(char *ip_addr, int port_number, int queue_len, char *errorme
 			snprintf(errormessage, SIZ,
 				 "Error binding to [%s] : %s", ip_addr, strerror(errno)
 			);
-			syslog(LOG_ALERT, "%s", errormessage);
+			syslog(LOG_ALERT, "tcpserver: %s", errormessage);
 			return (-1);
 		}
 	}
 
 	if (port_number == 0) {
 		snprintf(errormessage, SIZ, "Can't start: no port number specified.");
-		syslog(LOG_ALERT, "%s", errormessage);
+		syslog(LOG_ALERT, "tcpserver: %s", errormessage);
 		return (-1);
 	}
 	sin6.sin6_port = htons((u_short) port_number);
@@ -186,10 +184,8 @@ int ctdl_tcp_server(char *ip_addr, int port_number, int queue_len, char *errorme
 
 	s = socket( ((ip_version == 6) ? PF_INET6 : PF_INET), SOCK_STREAM, (p->p_proto));
 	if (s < 0) {
-		snprintf(errormessage, SIZ,
-			 "Can't create a listening socket: %s", strerror(errno)
-		);
-		syslog(LOG_ALERT, "%s", errormessage);
+		snprintf(errormessage, SIZ, "Can't create a listening socket: %s", strerror(errno));
+		syslog(LOG_ALERT, "tcpserver: %s", errormessage);
 		return (-1);
 	}
 	/* Set some socket options that make sense. */
@@ -204,27 +200,20 @@ int ctdl_tcp_server(char *ip_addr, int port_number, int queue_len, char *errorme
 	}
 
 	if (b < 0) {
-		snprintf(errormessage, SIZ,
-			 "Can't bind: %s", strerror(errno)
-		);
-		syslog(LOG_ALERT, "%s", errormessage);
+		snprintf(errormessage, SIZ, "Can't bind: %s", strerror(errno));
+		syslog(LOG_ALERT, "tcpserver: %s", errormessage);
 		return (-1);
 	}
 
 	fcntl(s, F_SETFL, O_NONBLOCK);
 
 	if (listen(s, ((queue_len >= 5) ? queue_len : 5) ) < 0) {
-		snprintf(errormessage, SIZ,
-			 "Can't listen: %s", strerror(errno)
-		);
-		syslog(LOG_ALERT, "%s", errormessage);
+		snprintf(errormessage, SIZ, "Can't listen: %s", strerror(errno));
+		syslog(LOG_ALERT, "tcpserver: %s", errormessage);
 		return (-1);
 	}
 	return (s);
 }
-
-
-
 
 
 /*
@@ -245,10 +234,8 @@ int ctdl_uds_server(char *sockpath, int queue_len, char *errormessage)
 
 	i = unlink(sockpath);
 	if ((i != 0) && (errno != ENOENT)) {
-		snprintf(errormessage, SIZ, "citserver: can't unlink %s: %s",
-			sockpath, strerror(errno)
-		);
-		syslog(LOG_EMERG, "%s", errormessage);
+		snprintf(errormessage, SIZ, "can't unlink %s: %s", sockpath, strerror(errno));
+		syslog(LOG_EMERG, "udsserver: %s", errormessage);
 		return(-1);
 	}
 
@@ -258,28 +245,28 @@ int ctdl_uds_server(char *sockpath, int queue_len, char *errormessage)
 
 	s = socket(AF_UNIX, SOCK_STREAM, 0);
 	if (s < 0) {
-		snprintf(errormessage, SIZ, "citserver: Can't create a socket: %s", strerror(errno));
-		syslog(LOG_EMERG, "%s", errormessage);
+		snprintf(errormessage, SIZ, "can't create a socket: %s", strerror(errno));
+		syslog(LOG_EMERG, "udsserver: %s", errormessage);
 		return(-1);
 	}
 
 	if (bind(s, (struct sockaddr *)&addr, sizeof(addr)) < 0) {
-		snprintf(errormessage, SIZ, "citserver: Can't bind: %s", strerror(errno));
-		syslog(LOG_EMERG, "%s", errormessage);
+		snprintf(errormessage, SIZ, "can't bind: %s", strerror(errno));
+		syslog(LOG_EMERG, "udsserver: %s", errormessage);
 		return(-1);
 	}
 
 	/* set to nonblock - we need this for some obscure situations */
 	if (fcntl(s, F_SETFL, O_NONBLOCK) < 0) {
-		snprintf(errormessage, SIZ, "citserver: Can't set socket to non-blocking: %s", strerror(errno));
-		syslog(LOG_EMERG, "%s", errormessage);
+		snprintf(errormessage, SIZ, "can't set socket to non-blocking: %s", strerror(errno));
+		syslog(LOG_EMERG, "udsserver: %s", errormessage);
 		close(s);
 		return(-1);
 	}
 
 	if (listen(s, actual_queue_len) < 0) {
-		snprintf(errormessage, SIZ, "citserver: Can't listen: %s", strerror(errno));
-		syslog(LOG_EMERG, "%s", errormessage);
+		snprintf(errormessage, SIZ, "can't listen: %s", strerror(errno));
+		syslog(LOG_EMERG, "udsserver: %s", errormessage);
 		return(-1);
 	}
 
@@ -290,7 +277,6 @@ int ctdl_uds_server(char *sockpath, int queue_len, char *errormessage)
 	chmod(sockpath, S_ISGID|S_IRUSR|S_IWUSR|S_IXUSR|S_IRGRP|S_IWGRP|S_IXGRP|S_IROTH|S_IWOTH|S_IXOTH);
 	return(s);
 }
-
 
 
 /*
@@ -356,13 +342,10 @@ void client_close(void) {
 
 	if (!CCC) return;
 	if (CCC->client_socket <= 0) return;
-	syslog(LOG_DEBUG, "Closing socket %d", CCC->client_socket);
-
+	syslog(LOG_DEBUG, "sysdep: closing socket %d", CCC->client_socket);
 	close(CCC->client_socket);
 	CCC->client_socket = -1 ;
 }
-
-
 
 
 /*
@@ -393,7 +376,7 @@ int client_write(const char *buf, int nbytes)
 		
 		fd = fopen(fn, "a+");
 		if (fd == NULL) {
-			syslog(LOG_EMERG, "failed to open file %s: %s", fn, strerror(errno));
+			syslog(LOG_ERR, "%s: %s", fn, strerror(errno));
 			cit_backtrace();
 			exit(1);
 		}
@@ -427,9 +410,7 @@ int client_write(const char *buf, int nbytes)
 			if (select(1, NULL, &wset, NULL, NULL) == -1) {
 				if (errno == EINTR)
 				{
-					syslog(LOG_DEBUG, "client_write(%d bytes) select() interrupted.",
-						nbytes-bytes_written
-					);
+					syslog(LOG_DEBUG, "sysdep: client_write(%d bytes) select() interrupted.", nbytes-bytes_written);
 					if (server_shutting_down) {
 						CC->kill_me = KILLME_SELECT_INTERRUPTED;
 						return (-1);
@@ -439,7 +420,7 @@ int client_write(const char *buf, int nbytes)
 					}
 				} else {
 					syslog(LOG_ERR,
-						"client_write(%d bytes) select failed: %s (%d)",
+						"sysdep: client_write(%d bytes) select failed: %s (%d)",
 						nbytes - bytes_written,
 						strerror(errno), errno
 					);
@@ -454,7 +435,7 @@ int client_write(const char *buf, int nbytes)
 		retval = write(Ctx->client_socket, &buf[bytes_written], nbytes - bytes_written);
 		if (retval < 1) {
 			syslog(LOG_ERR,
-				"client_write(%d bytes) failed: %s (%d)",
+				"sysdep: client_write(%d bytes) failed: %s (%d)",
 				nbytes - bytes_written,
 				strerror(errno), errno
 			);
@@ -519,7 +500,7 @@ int client_read_blob(StrBuf *Target, int bytes, int timeout)
 			
 		fd = fopen(fn, "a+");
 		if (fd == NULL) {
-			syslog(LOG_EMERG, "failed to open file %s: %s", fn, strerror(errno));
+			syslog(LOG_ERR, "%s: %s", fn, strerror(errno));
 			cit_backtrace();
 			exit(1);
 		}
@@ -532,14 +513,14 @@ int client_read_blob(StrBuf *Target, int bytes, int timeout)
 #endif
 		retval = client_read_sslblob(Target, bytes, timeout);
 		if (retval < 0) {
-			syslog(LOG_CRIT, "client_read_blob() failed");
+			syslog(LOG_ERR, "sysdep: client_read_blob() failed");
 		}
 #ifdef BIGBAD_IODBG
 		snprintf(fn, SIZ, "/tmp/foolog_%s.%d", CCC->ServiceName, CCC->cs_pid);
 		
 		fd = fopen(fn, "a+");
 		if (fd == NULL) {
-			syslog(LOG_EMERG, "failed to open file %s: %s", fn, strerror(errno));
+			syslog(LOG_ERR, "%s: %s", fn, strerror(errno));
 			cit_backtrace();
 			exit(1);
 		}
@@ -561,7 +542,7 @@ int client_read_blob(StrBuf *Target, int bytes, int timeout)
 			
 		fd = fopen(fn, "a+");
 		if (fd == NULL) {
-			syslog(LOG_EMERG, "failed to open file %s: %s", fn, strerror(errno));
+			syslog(LOG_ERR, "%s: %s", fn, strerror(errno));
 			cit_backtrace();
 			exit(1);
 		}
@@ -581,7 +562,7 @@ int client_read_blob(StrBuf *Target, int bytes, int timeout)
 						&Error
 		);
 		if (retval < 0) {
-			syslog(LOG_CRIT, "client_read_blob() failed: %s", Error);
+			syslog(LOG_ERR, "sysdep: client_read_blob() failed: %s", Error);
 			client_close();
 			return retval;
 		}
@@ -590,7 +571,7 @@ int client_read_blob(StrBuf *Target, int bytes, int timeout)
 		
 		fd = fopen(fn, "a+");
 		if (fd == NULL) {
-			syslog(LOG_EMERG, "failed to open file %s: %s", fn, strerror(errno));
+			syslog(LOG_ERR, "%s: %s", fn, strerror(errno));
 			cit_backtrace();
 			exit(1);
 		}
@@ -649,7 +630,7 @@ int client_read_random_blob(StrBuf *Target, int timeout)
 			
 				fd = fopen(fn, "a+");
 				if (fd == NULL) {
-					syslog(LOG_EMERG, "failed to open file %s: %s", fn, strerror(errno));
+					syslog(LOG_ERR, "%s: %s", fn, strerror(errno));
 					cit_backtrace();
 					exit(1);
 				}
@@ -734,7 +715,7 @@ int CtdlClientGetLine(StrBuf *Target)
 
 		fd = fopen(fn, "a+");
 		if (fd == NULL) {
-			syslog(LOG_EMERG, "failed to open file %s: %s", fn, strerror(errno));
+			syslog(LOG_ERR, "%s: %s", fn, strerror(errno));
 			cit_backtrace();
 			exit(1);
 		}
@@ -774,7 +755,7 @@ int CtdlClientGetLine(StrBuf *Target)
                 fclose(fd);
 
 		if (rc < 0) {
-			syslog(LOG_CRIT, "CtdlClientGetLine() failed");
+			syslog(LOG_ERR, "sysdep: CtdlClientGetLine() failed");
 		}
 #endif
 		return rc;
@@ -792,7 +773,7 @@ int CtdlClientGetLine(StrBuf *Target)
 
 		fd = fopen(fn, "a+");
 		if (fd == NULL) {
-			syslog(LOG_EMERG, "failed to open file %s: %s", fn, strerror(errno));
+			syslog(LOG_ERR, "%s: %s", fn, strerror(errno));
 			cit_backtrace();
 			exit(1);
 		}
@@ -837,7 +818,7 @@ int CtdlClientGetLine(StrBuf *Target)
                 fclose(fd);
 
 		if ((rc < 0) && (Error != NULL)) {
-			syslog(LOG_CRIT, "CtdlClientGetLine() failed: %s", Error);
+			syslog(LOG_ERR, "sysdep: CtdlClientGetLine() failed: %s", Error);
 		}
 #endif
 		return rc;
@@ -901,12 +882,13 @@ void close_masters (void)
 
 		if (serviceptr->tcp_port > 0)
 		{
-			if (serviceptr->msock == -1)
+			if (serviceptr->msock == -1) {
 				Text = "not closing again";
-			else
+			}
+			else {
 				Text = "Closing";
-					
-			syslog(LOG_INFO, "%s %d listener on port %d",
+			}
+			syslog(LOG_INFO, "sysdep: %s %d listener on port %d",
 			       Text,
 			       serviceptr->msock,
 			       serviceptr->tcp_port
@@ -916,12 +898,13 @@ void close_masters (void)
 		
 		if (serviceptr->sockpath != NULL)
 		{
-			if (serviceptr->msock == -1)
+			if (serviceptr->msock == -1) {
 				Text = "not closing again";
-			else
+			}
+			else {
 				Text = "Closing";
-
-			syslog(LOG_INFO, "%s %d listener on '%s'",
+			}
+			syslog(LOG_INFO, "sysdep: %s %d listener on '%s'",
 			       Text,
 			       serviceptr->msock,
 			       serviceptr->sockpath
@@ -1001,10 +984,9 @@ void start_daemon(int unused) {
 	 * We don't just call close() because we don't want these fd's
 	 * to be reused for other files.
 	 */
-	if (chdir(ctdl_run_dir) != 0)
-		syslog(LOG_EMERG, 
-			      "unable to change into directory [%s]: %s", 
-			      ctdl_run_dir, strerror(errno));
+	if (chdir(ctdl_run_dir) != 0) {
+		syslog(LOG_ERR, "%s: %s", ctdl_run_dir, strerror(errno));
+	}
 
 	child = fork();
 	if (child != 0) {
@@ -1017,28 +999,23 @@ void start_daemon(int unused) {
 
 	setsid();
 	umask(0);
-        if ((freopen("/dev/null", "r", stdin) != stdin) || 
-	    (freopen("/dev/null", "w", stdout) != stdout) || 
-	    (freopen("/dev/null", "w", stderr) != stderr))
-		syslog(LOG_EMERG, 
-			      "unable to reopen stdin/out/err %s", 
-			      strerror(errno));
-		
+        if (	(freopen("/dev/null", "r", stdin) != stdin) || 
+		(freopen("/dev/null", "w", stdout) != stdout) || 
+		(freopen("/dev/null", "w", stderr) != stderr)
+	) {
+		syslog(LOG_ERR, "sysdep: unable to reopen stdio: %s", strerror(errno));
+	}
 
 	do {
 		current_child = fork();
-
 		signal(SIGTERM, graceful_shutdown);
-	
 		if (current_child < 0) {
 			perror("fork");
 			exit(errno);
 		}
-	
 		else if (current_child == 0) {
 			return; /* continue starting citadel. */
 		}
-	
 		else {
 			fp = fopen(file_pid_file, "w");
 			if (fp != NULL) {
@@ -1047,7 +1024,6 @@ void start_daemon(int unused) {
 			}
 			waitpid(current_child, &status, 0);
 		}
-
 		nFireUpsNonRestart = nFireUps;
 		
 		/* Exit code 0 means the watcher should exit */
@@ -1081,7 +1057,7 @@ void checkcrash(void)
 	{
 		StrBuf *CrashMail;
 		CrashMail = NewStrBuf();
-		syslog(LOG_ALERT, "Posting crash message\n");
+		syslog(LOG_ALERT, "sysdep: posting crash message");
 		StrBufPrintf(CrashMail, 
 			" \n"
 			" The Citadel server process (citserver) terminated unexpectedly."
@@ -1159,8 +1135,8 @@ void HuntBadSession(void)
 			    (errno == EBADF))
 			{
 				/* Gotcha! */
-				syslog(LOG_EMERG,
-				       "Killing Session CC[%d] bad FD: [%d:%d] User[%s] Host[%s:%s]\n",
+				syslog(LOG_ERR,
+				       "sysdep: killing session CC[%d] bad FD: [%d:%d] User[%s] Host[%s:%s]",
 				       ptr->cs_pid,
 				       ptr->client_socket,
 				       ptr->is_local_socket,
@@ -1193,10 +1169,7 @@ void HuntBadSession(void)
 		    (errno == EBADF))
 		{
 			/* Gotcha! server socket dead? commit suicide! */
-			syslog(LOG_EMERG,
-			       "Found bad FD: %d and its a server socket! Shutting Down!\n",
-			       serviceptr->msock);
-
+			syslog(LOG_ERR, "sysdep: found bad FD: %d and its a server socket! Shutting Down!", serviceptr->msock);
 			server_shutting_down = 1;
 			break;
 		}
@@ -1299,12 +1272,12 @@ do_select:	force_purge = 0;
 		 */
 		if (retval < 0) {
 			if (errno == EBADF) {
-				syslog(LOG_EMERG, "select() failed: (%s)\n", strerror(errno));
-				HuntBadSession ();
+				syslog(LOG_ERR, "sysdep: select() failed: (%s)", strerror(errno));
+				HuntBadSession();
 				goto do_select;
 			}
 			if (errno != EINTR) {
-				syslog(LOG_EMERG, "Exiting (%s)\n", strerror(errno));
+				syslog(LOG_ERR, "sysdep: exiting (%s)", strerror(errno));
 				server_shutting_down = 1;
 				continue;
 			} else {
@@ -1329,14 +1302,14 @@ do_select:	force_purge = 0;
 			if (FD_ISSET(serviceptr->msock, &readfds)) {
 				ssock = accept(serviceptr->msock, NULL, 0);
 				if (ssock >= 0) {
-					syslog(LOG_DEBUG, "New client socket %d", ssock);
+					syslog(LOG_DEBUG, "sysdep: new client socket %d", ssock);
 
 					/* The master socket is non-blocking but the client
 					 * sockets need to be blocking, otherwise certain
 					 * operations barf on FreeBSD.  Not a fatal error.
 					 */
 					if (fcntl(ssock, F_SETFL, 0) < 0) {
-						syslog(LOG_EMERG, "citserver: Can't set socket to blocking: %s", strerror(errno));
+						syslog(LOG_ERR, "sysdep: Can't set socket to blocking: %s", strerror(errno));
 					}
 
 					/* New context will be created already

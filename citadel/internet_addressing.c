@@ -459,7 +459,7 @@ int alias(char *name)
 	}
 
 	if (strcasecmp(original_name, name)) {
-		syslog(LOG_INFO, "%s is being forwarded to %s\n", original_name, name);
+		syslog(LOG_INFO, "internet_addressing: %s is being forwarded to %s", original_name, name);
 	}
 
 	/* Change "user @ xxx" to "user" if xxx is an alias for this host */
@@ -467,7 +467,7 @@ int alias(char *name)
 		if (name[a] == '@') {
 			if (CtdlHostAlias(&name[a+1]) == hostalias_localhost) {
 				name[a] = 0;
-				syslog(LOG_INFO, "Changed to <%s>\n", name);
+				syslog(LOG_DEBUG, "internet_addressing: changed to <%s>", name);
 				break;
 			}
 		}
@@ -620,7 +620,7 @@ recptypes *validate_recipients(const char *supplied_recipients,
 		striplt(this_recp);
 		if (IsEmptyStr(this_recp))
 			break;
-		syslog(LOG_DEBUG, "Evaluating recipient #%d: %s\n", num_recps, this_recp);
+		syslog(LOG_DEBUG, "internet_addressing: evaluating recipient #%d: %s", num_recps, this_recp);
 		++num_recps;
 
 		strcpy(org_recp, this_recp);
@@ -773,12 +773,9 @@ recptypes *validate_recipients(const char *supplied_recipients,
 		strcpy(ret->errormsg, "No recipients specified.");
 	}
 
-	syslog(LOG_DEBUG, "validate_recipients()\n");
-	syslog(LOG_DEBUG, " local: %d <%s>\n", ret->num_local, ret->recp_local);
-	syslog(LOG_DEBUG, "  room: %d <%s>\n", ret->num_room, ret->recp_room);
-	syslog(LOG_DEBUG, "  inet: %d <%s>\n", ret->num_internet, ret->recp_internet);
-	syslog(LOG_DEBUG, " ignet: %d <%s>\n", ret->num_ignet, ret->recp_ignet);
-	syslog(LOG_DEBUG, " error: %d <%s>\n", ret->num_error, ret->errormsg);
+	syslog(LOG_DEBUG, "internet_addressing: validate_recipients() = %d local, %d room, %d SMTP, %d IGnet, %d error",
+		ret->num_local, ret->num_room, ret->num_internet, ret->num_ignet, ret->num_error
+	);
 
 	free(recipients);
 	return(ret);
@@ -795,7 +792,7 @@ void free_recipients(recptypes *valid) {
 	}
 
 	if (valid->recptypes_magic != RECPTYPES_MAGIC) {
-		syslog(LOG_EMERG, "Attempt to call free_recipients() on some other data type!\n");
+		syslog(LOG_ERR, "internet_addressing: attempt to call free_recipients() on some other data type!");
 		abort();
 	}
 
@@ -833,7 +830,7 @@ char *qp_encode_email_addrs(char *source)
 
 	if (source == NULL) return source;
 	if (IsEmptyStr(source)) return source;
-	syslog(LOG_DEBUG, "qp_encode_email_addrs: [%s]\n", source);
+	syslog(LOG_DEBUG, "internet_addressing: qp_encode_email_addrs <%s>", source);
 
 	AddrPtr = malloc (sizeof (long) * nAddrPtrMax);
 	AddrUtf8 = malloc (sizeof (long) * nAddrPtrMax);
@@ -1221,7 +1218,7 @@ int convert_field(struct CtdlMessage *msg, const char *beg, const char *end) {
 
 	else if (!strcasecmp(key, "From")) {
 		process_rfc822_addr(value, user, node, name);
-		syslog(LOG_DEBUG, "Converted to <%s@%s> (%s)\n", user, node, name);
+		syslog(LOG_DEBUG, "internet_addressing: converted to <%s@%s> (%s)", user, node, name);
 		snprintf(addr, sizeof(addr), "%s@%s", user, node);
 		if (CM_IsEmpty(msg, eAuthor) && !IsEmptyStr(name))
 			CM_SetField(msg, eAuthor, name, strlen(name));
@@ -1256,7 +1253,7 @@ int convert_field(struct CtdlMessage *msg, const char *beg, const char *end) {
 
 	else if (!strcasecmp(key, "Message-ID")) {
 		if (!CM_IsEmpty(msg, emessageId)) {
-			syslog(LOG_WARNING, "duplicate message id\n");
+			syslog(LOG_WARNING, "internet_addressing: duplicate message id");
 		}
 		else {
 			char *pValue;
@@ -1534,9 +1531,8 @@ void directory_key(char *key, char *addr) {
 	}
 	key[keylen++] = 0;
 
-	syslog(LOG_DEBUG, "Directory key is <%s>\n", key);
+	syslog(LOG_DEBUG, "internet_addressing: directory key is <%s>", key);
 }
-
 
 
 /* Return nonzero if the supplied address is in a domain we keep in
@@ -1579,7 +1575,7 @@ int CtdlDirectoryAddUser(char *internet_addr, char *citadel_addr) {
 
 	if (IsDirectory(internet_addr, 0) == 0) 
 		return 0;
-	syslog(LOG_DEBUG, "Create directory entry: %s --> %s\n", internet_addr, citadel_addr);
+	syslog(LOG_DEBUG, "internet_addressing: create directory entry: %s --> %s", internet_addr, citadel_addr);
 	directory_key(key, internet_addr);
 	cdb_store(CDB_DIRECTORY, key, strlen(key), citadel_addr, strlen(citadel_addr)+1 );
 	return 1;
@@ -1595,7 +1591,7 @@ int CtdlDirectoryAddUser(char *internet_addr, char *citadel_addr) {
 int CtdlDirectoryDelUser(char *internet_addr, char *citadel_addr) {
 	char key[SIZ];
 	
-	syslog(LOG_DEBUG, "Delete directory entry: %s --> %s\n", internet_addr, citadel_addr);
+	syslog(LOG_DEBUG, "internet_addressing: delete directory entry: %s --> %s", internet_addr, citadel_addr);
 	directory_key(key, internet_addr);
 	return cdb_delete(CDB_DIRECTORY, key, strlen(key) ) == 0;
 }
