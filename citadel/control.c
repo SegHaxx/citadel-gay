@@ -625,18 +625,23 @@ void cmd_conf(char *argbuf)
 	}
 
 	// CONF GETVAL - retrieve configuration variables from the database
-	else if (!strcasecmp(cmd, "GETVAL")) {
+	// CONF LOADVAL - same thing but can handle variables bigger than 1 KB
+	else if ( (!strcasecmp(cmd, "GETVAL")) || (!strcasecmp(cmd, "LOADVAL")) ) {
 		extract_token(confname, argbuf, 1, '|', sizeof confname);
 		char *v = CtdlGetConfigStr(confname);
-		if (v) {
+		if ( (v) && (!strcasecmp(cmd, "GETVAL")) ) {
 			cprintf("%d %s|\n", CIT_OK, v);
+		}
+		else if ( (v) && (!strcasecmp(cmd, "LOADVAL")) ) {
+			cprintf("%d %d\n", BINARY_FOLLOWS, strlen(v));
+			client_write(v, strlen(v));
 		}
 		else {
 			cprintf("%d |\n", ERROR);
 		}
 	}
 
-	// CONF PUTVAL - store configuration variables from the database
+	// CONF PUTVAL - store configuration variables in the database
 	else if (!strcasecmp(cmd, "PUTVAL")) {
 		if (num_tokens(argbuf, '|') < 3) {
 			cprintf("%d name and value required\n", ERROR);
@@ -646,6 +651,23 @@ void cmd_conf(char *argbuf)
 			extract_token(buf, argbuf, 2, '|', sizeof buf);
 			CtdlSetConfigStr(confname, buf);
 			cprintf("%d setting '%s' to '%s'\n", CIT_OK, confname, buf);
+		}
+	}
+
+	// CONF STOREVAL - store configuration variables in the database bigger than 1 KB
+	else if (!strcasecmp(cmd, "STOREVAL")) {
+		if (num_tokens(argbuf, '|') < 3) {
+			cprintf("%d name and length required\n", ERROR);
+		}
+		else {
+			extract_token(confname, argbuf, 1, '|', sizeof confname);
+			int bytes = extract_int(argbuf, 2);
+			char *valbuf = malloc(bytes + 1);
+			cprintf("%d %d\n", SEND_BINARY, bytes);
+			client_read(valbuf, bytes);
+			valbuf[bytes+1] = 0;
+			CtdlSetConfigStr(confname, valbuf);
+			free(valbuf);
 		}
 	}
 
@@ -659,10 +681,12 @@ void cmd_conf(char *argbuf)
 		cprintf("%d all configuration variables\n", LISTING_FOLLOWS);
 		cdb_rewind(CDB_CONFIG);
 		while (cdbcfg = cdb_next_item(CDB_CONFIG), cdbcfg != NULL) {
-			keylen = strlen(cdbcfg->ptr);
-			key = cdbcfg->ptr;
-			value = cdbcfg->ptr + keylen + 1;
-			cprintf("%s|%s\n", key, value);
+			if (cdbcfg->len < 1020) {
+				keylen = strlen(cdbcfg->ptr);
+				key = cdbcfg->ptr;
+				value = cdbcfg->ptr + keylen + 1;
+				cprintf("%s|%s\n", key, value);
+			}
 			cdb_free(cdbcfg);
 		}
 		cprintf("000\n");
