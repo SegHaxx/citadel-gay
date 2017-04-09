@@ -1,8 +1,7 @@
 /*
- * This module handles shared rooms, inter-Citadel mail, and outbound
- * mailing list processing.
+ * This module handles loading, saving, and parsing of room network configurations.
  *
- * Copyright (c) 2000-2016 by the citadel.org team
+ * Copyright (c) 2000-2017 by the citadel.org team
  *
  * This program is open source software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 3.
@@ -79,6 +78,7 @@ const CfgLineType *GetCfgTypeByStr(const char *Key, long len)
 	}
 }
 
+
 const CfgLineType *GetCfgTypeByEnum(RoomNetCfg eCfg, HashPos *It)
 {
 	const char *Key;
@@ -95,6 +95,7 @@ const CfgLineType *GetCfgTypeByEnum(RoomNetCfg eCfg, HashPos *It)
 	}
 	return NULL;
 }
+
 
 void ParseGeneric(const CfgLineType *ThisOne, StrBuf *Line, const char *LinePos, OneRoomNetCfg *OneRNCfg)
 {
@@ -122,6 +123,7 @@ void ParseGeneric(const CfgLineType *ThisOne, StrBuf *Line, const char *LinePos,
 	OneRNCfg->NetConfigs[ThisOne->C] = nptr;
 }
 
+
 void SerializeGeneric(const CfgLineType *ThisOne, StrBuf *OutputBuffer, OneRoomNetCfg *OneRNCfg, RoomNetCfgLine *data)
 {
 	int i;
@@ -136,6 +138,7 @@ void SerializeGeneric(const CfgLineType *ThisOne, StrBuf *OutputBuffer, OneRoomN
 	}
 	StrBufAppendBufPlain(OutputBuffer, HKEY("\n"), 0);
 }
+
 
 void DeleteGenericCfgLine(const CfgLineType *ThisOne, RoomNetCfgLine **data)
 {
@@ -152,6 +155,7 @@ void DeleteGenericCfgLine(const CfgLineType *ThisOne, RoomNetCfgLine **data)
 	free(*data);
 	*data = NULL;
 }
+
 
 RoomNetCfgLine *DuplicateOneGenericCfgLine(const RoomNetCfgLine *data)
 {
@@ -182,7 +186,6 @@ void netcfg_keyname(char *keybuf, long roomnum)
 }
 
 
-
 /*
  * Given a room number and a textual netconfig, convert to base64 and write to the configdb
  */
@@ -207,7 +210,6 @@ void write_netconfig_to_configdb(long roomnum, const char *raw_netconfig)
 		free(enc);
 	}
 }
-
 
 
 /*
@@ -332,7 +334,6 @@ void SaveRoomNetConfigFile(OneRoomNetCfg *OneRNCfg, long roomnum)
 }
 
 
-
 void AddRoomCfgLine(OneRoomNetCfg *OneRNCfg, struct ctdlroom *qrbuf, RoomNetCfg LineType, RoomNetCfgLine *Line)
 {
 	RoomNetCfgLine **pLine;
@@ -434,7 +435,11 @@ void cmd_gnet(char *argbuf)
 
 	char *c = LoadRoomNetConfigFile(CC->room.QRnumber);
 	if (c) {
-		cprintf("%s\n", c);
+		int len = strlen(c);
+		client_write(c, len);			// Can't use cprintf() here, it has a limit of 1024 bytes
+		if (c[len] != '\n') {
+			client_write(HKEY("\n"));
+		}
 		free(c);
 	}
 	cprintf("000\n");
@@ -480,6 +485,7 @@ void DeleteCtdlNodeConf(void *vNode)
 	FreeStrBuf(&Node->Port);
 	free(Node);
 }
+
 
 CtdlNodeConf *NewNode(StrBuf *SerializedNode)
 {
@@ -581,11 +587,7 @@ int is_recipient(OneRoomNetCfg *RNCfg, const char *Name)
 }
 
 
-
-int CtdlNetconfigCheckRoomaccess(
-	char *errmsgbuf, 
-	size_t n,
-	const char* RemoteIdentifier)
+int CtdlNetconfigCheckRoomaccess(char *errmsgbuf, size_t n, const char* RemoteIdentifier)
 {
 	OneRoomNetCfg *RNCfg;
 	int found;
@@ -618,7 +620,6 @@ int CtdlNetconfigCheckRoomaccess(
 		return (ERROR + NO_SUCH_USER);
 	}
 }
-
 
 
 /*
@@ -703,6 +704,7 @@ void DeleteNetMap(void *vNetMap)
 	free(TheNetMap);
 }
 
+
 CtdlNetMap *NewNetMap(StrBuf *SerializedNetMap)
 {
 	const char *Pos = NULL;
@@ -723,6 +725,7 @@ CtdlNetMap *NewNetMap(StrBuf *SerializedNetMap)
 
 	return NM;
 }
+
 
 HashList* CtdlReadNetworkMap(void)
 {
@@ -756,6 +759,7 @@ HashList* CtdlReadNetworkMap(void)
 	FreeStrBuf(&LineBuf);
 	return Hash;
 }
+
 
 StrBuf *CtdlSerializeNetworkMap(HashList *Map)
 {
@@ -926,7 +930,6 @@ void convert_legacy_netcfg_files(void)
 	closedir(dh);
 	rmdir(ctdl_netcfg_dir);
 }
-
 
 
 /*
