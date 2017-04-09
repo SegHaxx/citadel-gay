@@ -205,7 +205,7 @@ void write_netconfig_to_configdb(long roomnum, const char *raw_netconfig)
 		if ((enc_len > 1) && (enc[enc_len-2] == 13)) enc[enc_len-2] = 0;
 		if ((enc_len > 0) && (enc[enc_len-1] == 10)) enc[enc_len-1] = 0;
 		enc[enc_len] = 0;
-		syslog(LOG_DEBUG, "Writing key '%s' (length=%d)", keyname, enc_len);
+		syslog(LOG_DEBUG, "netconfig: writing key '%s' (length=%d)", keyname, enc_len);
 		CtdlSetConfigStr(keyname, enc);
 		free(enc);
 	}
@@ -651,7 +651,7 @@ void cmd_netp(char *cmdbuf)
 			"An unknown Citadel server called \"%s\" attempted to connect from %s [%s].\n",
 			node, CCC->cs_host, CCC->cs_addr
 		);
-		syslog(LOG_WARNING, "%s", err_buf);
+		syslog(LOG_WARNING, "netconfig: %s", err_buf);
 		cprintf("%d authentication failed\n", ERROR + PASSWORD_REQUIRED);
 		CtdlAideMessage(err_buf, "IGNet Networking");
 		DeleteHash(&working_ignetcfg);
@@ -665,7 +665,7 @@ void cmd_netp(char *cmdbuf)
 			"A Citadel server at %s [%s] failed to authenticate as network node \"%s\".\n",
 			CCC->cs_host, CCC->cs_addr, node
 		);
-		syslog(LOG_WARNING, "%s", err_buf);
+		syslog(LOG_WARNING, "netconfig: %s", err_buf);
 		cprintf("%d authentication failed\n", ERROR + PASSWORD_REQUIRED);
 
 		CtdlAideMessage(err_buf, "IGNet Networking");
@@ -675,7 +675,7 @@ void cmd_netp(char *cmdbuf)
 	}
 
 	if (CtdlNetworkTalkingTo(node, nodelen, NTT_CHECK)) {
-		syslog(LOG_WARNING, "Duplicate session for network node <%s>", node);
+		syslog(LOG_WARNING, "netconfig: duplicate session for network node <%s>", node);
 		cprintf("%d Already talking to %s right now\n", ERROR + RESOURCE_BUSY, node);
 		DeleteHash(&working_ignetcfg);
 		FreeStrBuf(&NodeStr);
@@ -683,7 +683,7 @@ void cmd_netp(char *cmdbuf)
 	}
 	nodelen = safestrncpy(CCC->net_node, node, sizeof CCC->net_node);
 	CtdlNetworkTalkingTo(CCC->net_node, nodelen, NTT_ADD);
-	syslog(LOG_NOTICE, "Network node <%s> logged in from %s [%s]",
+	syslog(LOG_INFO, "netconfig: network node <%s> logged in from %s [%s]",
 		CCC->net_node, CCC->cs_host, CCC->cs_addr
 	);
 	cprintf("%d authenticated as network node '%s'\n", CIT_OK, CCC->net_node);
@@ -845,7 +845,7 @@ int CtdlIsValidNode(const StrBuf **nexthop,
 	 * First try the neighbor nodes
 	 */
 	if (GetCount(IgnetCfg) == 0) {
-		syslog(LOG_INFO, "IgnetCfg is empty!");
+		syslog(LOG_INFO, "netconfig: IgnetCfg is empty!");
 		if (nexthop != NULL) {
 			*nexthop = NULL;
 		}
@@ -877,7 +877,7 @@ int CtdlIsValidNode(const StrBuf **nexthop,
 	/*
 	 * If we get to this point, the supplied node name is bogus.
 	 */
-	syslog(LOG_ERR, "Invalid node name <%s>", ChrPtr(node));
+	syslog(LOG_ERR, "netconfig: invalid node name <%s>", ChrPtr(node));
 	return(-1);
 }
 
@@ -898,7 +898,7 @@ void convert_legacy_netcfg_files(void)
 	dh = opendir(ctdl_netcfg_dir);
 	if (!dh) return;
 
-	syslog(LOG_INFO, "Legacy netconfig files exist - converting them!");
+	syslog(LOG_INFO, "netconfig: legacy netconfig files exist - converting them!");
 
 	while (dit = readdir(dh), dit != NULL) {		// yes, we use the non-reentrant version; we're not in threaded mode yet
 		roomnum = atol(dit->d_name);

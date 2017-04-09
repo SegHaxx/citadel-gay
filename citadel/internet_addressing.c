@@ -83,12 +83,12 @@ void utf8ify_rfc822_string(char *buf) {
 	char encoding[16];
 	char istr[1024];
 	iconv_t ic = (iconv_t)(-1) ;
-	char *ibuf;			/**< Buffer of characters to be converted */
-	char *obuf;			/**< Buffer for converted characters */
-	size_t ibuflen;			/**< Length of input buffer */
-	size_t obuflen;			/**< Length of output buffer */
-	char *isav;			/**< Saved pointer to input buffer */
-	char *osav;			/**< Saved pointer to output buffer */
+	char *ibuf;			// Buffer of characters to be converted
+	char *obuf;			// Buffer for converted characters
+	size_t ibuflen;			// Length of input buffer
+	size_t obuflen;			// Length of output buffer
+	char *isav;			// Saved pointer to input buffer
+	char *osav;			// Saved pointer to output buffer
 	int passes = 0;
 	int i, len, delta;
 	int illegal_non_rfc2047_encoding = 0;
@@ -103,7 +103,7 @@ void utf8ify_rfc822_string(char *buf) {
 	for (i=0; i<len; ++i) {
 		if ((buf[i] < 32) || (buf[i] > 126)) {
 			illegal_non_rfc2047_encoding = 1;
-			i = len; ///< take a shortcut, it won't be more than one.
+			i = len;	// take a shortcut, it won't be more than one.
 		}
 	}
 	if (illegal_non_rfc2047_encoding) {
@@ -189,10 +189,10 @@ void utf8ify_rfc822_string(char *buf) {
 
 		ibuf = malloc(1024);
 		isav = ibuf;
-		if (!strcasecmp(encoding, "B")) {	/**< base64 */
+		if (!strcasecmp(encoding, "B")) {	// base64
 			ibuflen = CtdlDecodeBase64(ibuf, istr, strlen(istr));
 		}
-		else if (!strcasecmp(encoding, "Q")) {	/**< quoted-printable */
+		else if (!strcasecmp(encoding, "Q")) {	// quoted-printable
 			size_t len;
 			unsigned long pos;
 			
@@ -207,7 +207,7 @@ void utf8ify_rfc822_string(char *buf) {
 			ibuflen = CtdlDecodeQuotedPrintable(ibuf, istr, len);
 		}
 		else {
-			strcpy(ibuf, istr);		/**< unknown encoding */
+			strcpy(ibuf, istr);		// unknown encoding
 			ibuflen = strlen(istr);
 		}
 
@@ -269,7 +269,6 @@ inline void utf8ify_rfc822_string(char *a){};
 #endif
 
 
-
 struct trynamebuf {
 	char buffer1[SIZ];
 	char buffer2[SIZ];
@@ -325,7 +324,6 @@ int CtdlHostAlias(char *fqdn) {
 }
 
 
-
 /*
  * Determine whether a given Internet address belongs to the current user
  */
@@ -379,9 +377,6 @@ void sanitize_truncated_recipient(char *str)
 }
 
 
-
-
-
 /*
  * This function is self explanatory.
  * (What can I say, I'm in a weird mood today...)
@@ -406,7 +401,6 @@ void remove_any_whitespace_to_the_left_or_right_of_at_symbol(char *name)
 
 /*
  * Aliasing for network mail.
- * (Error messages have been commented out, because this is a server.)
  */
 int alias(char *name)
 {				/* process alias and routing info for mail */
@@ -520,7 +514,6 @@ int alias(char *name)
 	/* If we get to this point it's an invalid node name */
 	return (MES_ERROR);
 }
-
 
 
 /*
@@ -876,8 +869,9 @@ char *qp_encode_email_addrs(char *source)
 	EncodedMaxLen = nColons * (sizeof(headerStr) + 3) + SourceLen * 3;
 	Encoded = (char*) malloc (EncodedMaxLen);
 
-	for (i = 0; i < nColons; i++)
+	for (i = 0; i < nColons; i++) {
 		source[AddrPtr[i]++] = '\0';
+	}
 	/* TODO: if libidn, this might get larger*/
 	user = malloc(SourceLen + 1);
 	node = malloc(SourceLen + 1);
@@ -992,7 +986,6 @@ void unfold_rfc822_field(char **field, char **FieldEnd)
 	*pField = '\0';
 	*FieldEnd = pField - 1;
 }
-
 
 
 /*
@@ -1131,7 +1124,6 @@ void process_rfc822_addr(const char *rfc822, char *user, char *node, char *name)
 		strcpy(name, user);
 	}
 }
-
 
 
 /*
@@ -1339,7 +1331,6 @@ struct CtdlMessage *convert_internet_message(char *rfc822) {
 }
 
 
-
 struct CtdlMessage *convert_internet_message_buf(StrBuf **rfc822)
 {
 	struct CtdlMessage *msg;
@@ -1434,7 +1425,6 @@ struct CtdlMessage *convert_internet_message_buf(StrBuf **rfc822)
 }
 
 
-
 /*
  * Look for a particular header field in an RFC822 message text.  If the
  * requested field is found, it is unfolded (if necessary) and returned to
@@ -1484,7 +1474,6 @@ char *rfc822_fetch_field(const char *rfc822, const char *fieldname) {
 
 	return(fieldbuf);
 }
-
 
 
 /*****************************************************************************

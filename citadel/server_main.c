@@ -33,11 +33,7 @@
 uid_t ctdluid = 0;
 const char *CitadelServiceUDS="citadel-UDS";
 const char *CitadelServiceTCP="citadel-TCP";
-
-
-
 void go_threading(void);
-
 
 
 /*
@@ -46,7 +42,6 @@ void go_threading(void);
 void ctdl_lockfile(int yo) {
 	static char lockfilename[SIZ];
 	static FILE *fp;
-
 
 	if (yo) {
 		syslog(LOG_DEBUG, "main: creating lockfile");
@@ -68,10 +63,6 @@ void ctdl_lockfile(int yo) {
 	flock(fileno(fp), LOCK_UN);
 	fclose(fp);
 }
-
-
-
-
 
 
 /*
@@ -216,15 +207,13 @@ int main(int argc, char **argv)
 	}
 
 	/* Tell 'em who's in da house */
-	syslog(LOG_NOTICE, " ");
-	syslog(LOG_NOTICE, " ");
-	syslog(LOG_NOTICE, "*** Citadel server engine ***\n");
- 	syslog(LOG_NOTICE, "Version %d (build %s) ***", REV_LEVEL, svn_revision());
-	syslog(LOG_NOTICE, "Copyright (C) 1987-2017 by the Citadel development team.");
-	syslog(LOG_NOTICE, "This program is distributed under the terms of the GNU "
-					"General Public License.");
-	syslog(LOG_NOTICE, " ");
-	syslog(LOG_DEBUG, "Called as: %s", argv[0]);
+	syslog(LOG_INFO, " ");
+	syslog(LOG_INFO, " ");
+	syslog(LOG_INFO, "*** Citadel server engine ***\n");
+ 	syslog(LOG_INFO, "Version %d (build %s) ***", REV_LEVEL, svn_revision());
+	syslog(LOG_INFO, "Copyright (C) 1987-2017 by the Citadel development team.");
+	syslog(LOG_INFO, "This program is distributed under the terms of the GNU General Public License.");
+	syslog(LOG_INFO, " ");
 	syslog(LOG_INFO, "%s", libcitadel_version_string());
 
 #ifdef HAVE_RUN_DIR

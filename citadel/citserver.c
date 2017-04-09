@@ -52,10 +52,12 @@ void cit_backtrace(void)
 	size = backtrace(stack_frames, sizeof(stack_frames) / sizeof(void*));
 	strings = backtrace_symbols(stack_frames, size);
 	for (i = 0; i < size; i++) {
-		if (strings != NULL)
-			syslog(LOG_ALERT, "%s %s\n", p, strings[i]);
-		else
-			syslog(LOG_ALERT, "%s %p\n", p, stack_frames[i]);
+		if (strings != NULL) {
+			syslog(LOG_DEBUG, "citserver: %s %s", p, strings[i]);
+		}
+		else {
+			syslog(LOG_DEBUG, "citserver: %s %p", p, stack_frames[i]);
+		}
 	}
 	free(strings);
 #endif
@@ -81,11 +83,12 @@ void cit_oneline_backtrace(void)
 				StrBufAppendPrintf(Buf, "%p : ", stack_frames[i]);
 		}
 		free(strings);
-		syslog(LOG_ALERT, "%s %s\n", IOSTR, ChrPtr(Buf));
+		syslog(LOG_DEBUG, "citserver: %s %s", IOSTR, ChrPtr(Buf));
 		FreeStrBuf(&Buf);
 	}
 #endif
 }
+
 
 /*
  * print the actual stack frame.
@@ -101,10 +104,12 @@ void cit_panic_backtrace(int SigNum)
 	size = backtrace(stack_frames, sizeof(stack_frames) / sizeof(void*));
 	strings = backtrace_symbols(stack_frames, size);
 	for (i = 0; i < size; i++) {
-		if (strings != NULL)
-			syslog(LOG_ALERT, "%s\n", strings[i]);
-		else
-			syslog(LOG_ALERT, "%p\n", stack_frames[i]);
+		if (strings != NULL) {
+			syslog(LOG_DEBUG, "%s", strings[i]);
+		}
+		else {
+			syslog(LOG_DEBUG, "%p", stack_frames[i]);
+		}
 	}
 	free(strings);
 #endif
