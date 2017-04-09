@@ -936,31 +936,6 @@ char *qp_encode_email_addrs(char *source)
 
 
 /*
- * Return 0 if a given string fuzzy-matches a Citadel user account
- *
- * FIXME ... this needs to be updated to handle aliases.
- */
-int fuzzy_match(struct ctdluser *us, char *matchstring) {
-	int a;
-	long len;
-
-	if ( (!strncasecmp(matchstring, "cit", 3)) 
-	   && (atol(&matchstring[3]) == us->usernum)) {
-		return 0;
-	}
-
-	len = strlen(matchstring);
-	for (a=0; !IsEmptyStr(&us->fullname[a]); ++a) {
-		if (!strncasecmp(&us->fullname[a],
-		   matchstring, len)) {
-			return 0;
-		}
-	}
-	return -1;
-}
-
-
-/*
  * Unfold a multi-line field into a single line, removing multi-whitespaces
  */
 void unfold_rfc822_field(char **field, char **FieldEnd) 
