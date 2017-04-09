@@ -71,7 +71,7 @@ int sock_connect(char *host, char *service)
 	for (ai = res; ai != NULL; ai = ai->ai_next) {
 		sock = socket(ai->ai_family, ai->ai_socktype, ai->ai_protocol);
 		if (sock < 0) {
-			syslog(LOG_ERR, "socket() failed: %s", strerror(errno));
+			syslog(LOG_ERR, "%s: %s", host, strerror(errno));
 			freeaddrinfo(res);
 			return(-1);
 		}
@@ -81,7 +81,7 @@ int sock_connect(char *host, char *service)
 			return(sock);
 		}
 		else {
-			syslog(LOG_ERR, "connect() failed: %s", strerror(errno));
+			syslog(LOG_ERR, "%s: %s", host, strerror(errno));
 			close(sock);
 		}
 	}
@@ -111,7 +111,7 @@ int socket_read_blob(int *Socket, StrBuf *Target, int bytes, int timeout)
 
 	retval = StrBufReadBLOBBuffered(Target, CC->SBuf.Buf, &CC->SBuf.ReadWritePointer, Socket, 1, bytes, O_TERM, &Error); 
 	if (retval < 0) {
-		syslog(LOG_CRIT, "socket_read_blob() failed: %s", Error);
+		syslog(LOG_ERR, "clientsocket: socket_read_blob() failed: %s", Error);
 	}
 	return retval;
 }
@@ -129,7 +129,7 @@ int CtdlSockGetLine(int *sock, StrBuf *Target, int nSec)
 					       &CCC->SBuf.ReadWritePointer,
 					       sock, nSec, 1, &Error);
 	if ((rc < 0) && (Error != NULL)) {
-		syslog(LOG_CRIT, "CtdlSockGetLine() failed: %s", Error);
+		syslog(LOG_ERR, "clientsocket: CtdlSockGetLine() failed: %s", Error);
 	}
 	return rc;
 }

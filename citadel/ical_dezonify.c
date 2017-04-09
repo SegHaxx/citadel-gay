@@ -1,7 +1,17 @@
-/* 
+/*
  * Function to go through an ical component set and convert all non-UTC
  * date/time properties to UTC.  It also strips out any VTIMEZONE
  * subcomponents afterwards, because they're irrelevant.
+ *
+ * Copyright (c) 1987-2017 by the citadel.org team
+ *
+ * This program is open source software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License version 3.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
  */
 
 
@@ -23,7 +33,6 @@
 #include "support.h"
 #include "config.h"
 #include "ical_dezonify.h"
-
 #include "ctdl_module.h"
 
 
@@ -40,13 +49,11 @@ icaltimezone *get_default_icaltimezone(void) {
                 zone = icaltimezone_get_builtin_timezone(default_zone_name);
         }
         if (!zone) {
-		syslog(LOG_ALERT,
-			"Unable to load '%s' time zone.  Defaulting to UTC.\n",
-			default_zone_name);
+		syslog(LOG_ERR, "ical: Unable to load '%s' time zone.  Defaulting to UTC.", default_zone_name);
                 zone = icaltimezone_get_utc_timezone();
 	}
 	if (!zone) {
-		syslog(LOG_ALERT, "Unable to load UTC time zone!\n");
+		syslog(LOG_ERR, "ical: unable to load UTC time zone!");
 	}
         return zone;
 }

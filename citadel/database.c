@@ -10,7 +10,6 @@
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- *
  */
 
 /*****************************************************************************
@@ -83,7 +82,7 @@ void cdb_verbose_log(const DB_ENV *dbenv, const char *msg)
 void cdb_verbose_err(const DB_ENV *dbenv, const char *errpfx, const char *msg)
 {
 	int *FOO = NULL;
-	syslog(LOG_ALERT, "db: %s", msg);
+	syslog(LOG_ERR, "db: %s", msg);
 	cit_backtrace();
 	*FOO = 1;
 }
@@ -97,7 +96,7 @@ static void txabort(DB_TXN * tid)
 	ret = tid->abort(tid);
 
 	if (ret) {
-		syslog(LOG_EMERG, "db: txn_abort: %s", db_strerror(ret));
+		syslog(LOG_ERR, "db: txn_abort: %s", db_strerror(ret));
 		cdb_abort();
 	}
 }
@@ -110,7 +109,7 @@ static void txcommit(DB_TXN * tid)
 	ret = tid->commit(tid, 0);
 
 	if (ret) {
-		syslog(LOG_EMERG, "db: txn_commit: %s", db_strerror(ret));
+		syslog(LOG_ERR, "db: txn_commit: %s", db_strerror(ret));
 		cdb_abort();
 	}
 }
@@ -123,14 +122,14 @@ static void txbegin(DB_TXN ** tid)
 	ret = dbenv->txn_begin(dbenv, NULL, tid, 0);
 
 	if (ret) {
-		syslog(LOG_EMERG, "db: txn_begin: %s", db_strerror(ret));
+		syslog(LOG_ERR, "db: txn_begin: %s", db_strerror(ret));
 		cdb_abort();
 	}
 }
 
 static void dbpanic(DB_ENV * env, int errval)
 {
-	syslog(LOG_EMERG, "db: PANIC: %s", db_strerror(errval));
+	syslog(LOG_ERR, "db: PANIC: %s", db_strerror(errval));
 	cit_backtrace();
 }
 
@@ -139,7 +138,7 @@ static void cclose(DBC * cursor)
 	int ret;
 
 	if ((ret = cursor->c_close(cursor))) {
-		syslog(LOG_EMERG, "db: c_close: %s", db_strerror(ret));
+		syslog(LOG_ERR, "db: c_close: %s", db_strerror(ret));
 		cdb_abort();
 	}
 }
@@ -150,7 +149,7 @@ static void bailIfCursor(DBC ** cursors, const char *msg)
 
 	for (i = 0; i < MAXCDB; i++)
 		if (cursors[i] != NULL) {
-			syslog(LOG_EMERG, "db: cursor still in progress on cdb %02x: %s", i, msg);
+			syslog(LOG_ERR, "db: cursor still in progress on cdb %02x: %s", i, msg);
 			cdb_abort();
 		}
 }
@@ -161,7 +160,7 @@ void cdb_check_handles(void)
 	bailIfCursor(TSD->cursors, "in check_handles");
 
 	if (TSD->tid != NULL) {
-		syslog(LOG_EMERG, "db: transaction still in progress!");
+		syslog(LOG_ERR, "db: transaction still in progress!");
 		cdb_abort();
 	}
 }
@@ -219,7 +218,7 @@ void cdb_checkpoint(void)
 	ret = dbenv->txn_checkpoint(dbenv, MAX_CHECKPOINT_KBYTES, MAX_CHECKPOINT_MINUTES, 0);
 
 	if (ret != 0) {
-		syslog(LOG_EMERG, "db: cdb_checkpoint() txn_checkpoint: %s", db_strerror(ret));
+		syslog(LOG_ERR, "db: cdb_checkpoint() txn_checkpoint: %s", db_strerror(ret));
 		cdb_abort();
 	}
 
@@ -264,20 +263,20 @@ void open_databases(void)
 	 * already there, no problem.
 	 */
 	if ((mkdir(ctdl_data_dir, 0700) != 0) && (errno != EEXIST)){
-		syslog(LOG_EMERG, "db: unable to create database directory [%s]: %s", ctdl_data_dir, strerror(errno));
+		syslog(LOG_ERR, "db: unable to create database directory [%s]: %s", ctdl_data_dir, strerror(errno));
 	}
 	if (chmod(ctdl_data_dir, 0700) != 0){
-		syslog(LOG_EMERG, "db: unable to set database directory accessrights [%s]: %s", ctdl_data_dir, strerror(errno));
+		syslog(LOG_ERR, "db: unable to set database directory accessrights [%s]: %s", ctdl_data_dir, strerror(errno));
 	}
 	if (chown(ctdl_data_dir, CTDLUID, (-1)) != 0){
-		syslog(LOG_EMERG, "db: unable to set the owner for [%s]: %s", ctdl_data_dir, strerror(errno));
+		syslog(LOG_ERR, "db: unable to set the owner for [%s]: %s", ctdl_data_dir, strerror(errno));
 	}
 	syslog(LOG_DEBUG, "db: Setting up DB environment\n");
 	/* db_env_set_func_yield((int (*)(u_long,  u_long))sched_yield); */
 	ret = db_env_create(&dbenv, 0);
 	if (ret) {
-		syslog(LOG_EMERG, "db: db_env_create: %s", db_strerror(ret));
-		syslog(LOG_EMERG, "db: exit code %d", ret);
+		syslog(LOG_ERR, "db: db_env_create: %s", db_strerror(ret));
+		syslog(LOG_ERR, "db: exit code %d", ret);
 		exit(CTDLEXIT_DB);
 	}
 	dbenv->set_errpfx(dbenv, "citserver");
@@ -294,16 +293,16 @@ void open_databases(void)
 	 */
 	ret = dbenv->set_cachesize(dbenv, 0, 64 * 1024, 0);
 	if (ret) {
-		syslog(LOG_EMERG, "db: set_cachesize: %s", db_strerror(ret));
+		syslog(LOG_ERR, "db: set_cachesize: %s", db_strerror(ret));
 		dbenv->close(dbenv, 0);
-		syslog(LOG_EMERG, "db: exit code %d", ret);
+		syslog(LOG_ERR, "db: exit code %d", ret);
 		exit(CTDLEXIT_DB);
 	}
 
 	if ((ret = dbenv->set_lk_detect(dbenv, DB_LOCK_DEFAULT))) {
-		syslog(LOG_EMERG, "db: set_lk_detect: %s", db_strerror(ret));
+		syslog(LOG_ERR, "db: set_lk_detect: %s", db_strerror(ret));
 		dbenv->close(dbenv, 0);
-		syslog(LOG_EMERG, "db: exit code %d", ret);
+		syslog(LOG_ERR, "db: exit code %d", ret);
 		exit(CTDLEXIT_DB);
 	}
 
@@ -311,22 +310,22 @@ void open_databases(void)
 	syslog(LOG_DEBUG, "db: dbenv->open(dbenv, %s, %d, 0)", ctdl_data_dir, flags);
 	ret = dbenv->open(dbenv, ctdl_data_dir, flags, 0);
 	if (ret == DB_RUNRECOVERY) {
-		syslog(LOG_ALERT, "db: dbenv->open: %s", db_strerror(ret));
-		syslog(LOG_ALERT, "db: attempting recovery...");
+		syslog(LOG_ERR, "db: dbenv->open: %s", db_strerror(ret));
+		syslog(LOG_ERR, "db: attempting recovery...");
 		flags |= DB_RECOVER;
 		ret = dbenv->open(dbenv, ctdl_data_dir, flags, 0);
 	}
 	if (ret == DB_RUNRECOVERY) {
-		syslog(LOG_ALERT, "db: dbenv->open: %s", db_strerror(ret));
-		syslog(LOG_ALERT, "db: attempting catastrophic recovery...");
+		syslog(LOG_ERR, "db: dbenv->open: %s", db_strerror(ret));
+		syslog(LOG_ERR, "db: attempting catastrophic recovery...");
 		flags &= ~DB_RECOVER;
 		flags |= DB_RECOVER_FATAL;
 		ret = dbenv->open(dbenv, ctdl_data_dir, flags, 0);
 	}
 	if (ret) {
-		syslog(LOG_EMERG, "db: dbenv->open: %s", db_strerror(ret));
+		syslog(LOG_ERR, "db: dbenv->open: %s", db_strerror(ret));
 		dbenv->close(dbenv, 0);
-		syslog(LOG_EMERG, "db: exit code %d", ret);
+		syslog(LOG_ERR, "db: exit code %d", ret);
 		exit(CTDLEXIT_DB);
 	}
 
@@ -337,8 +336,8 @@ void open_databases(void)
 		/* Create a database handle */
 		ret = db_create(&dbp[i], dbenv, 0);
 		if (ret) {
-			syslog(LOG_EMERG, "db: db_create: %s", db_strerror(ret));
-			syslog(LOG_EMERG, "db: exit code %d", ret);
+			syslog(LOG_ERR, "db: db_create: %s", db_strerror(ret));
+			syslog(LOG_ERR, "db: exit code %d", ret);
 			exit(CTDLEXIT_DB);
 		}
 
@@ -357,11 +356,11 @@ void open_databases(void)
 				   0600
 		);
 		if (ret) {
-			syslog(LOG_EMERG, "db: db_open[%02x]: %s", i, db_strerror(ret));
+			syslog(LOG_ERR, "db: db_open[%02x]: %s", i, db_strerror(ret));
 			if (ret == ENOMEM) {
-				syslog(LOG_EMERG, "db: You may need to tune your database; please read http://www.citadel.org/doku.php?id=faq:troubleshooting:out_of_lock_entries for more information.");
+				syslog(LOG_ERR, "db: You may need to tune your database; please read http://www.citadel.org/doku.php?id=faq:troubleshooting:out_of_lock_entries for more information.");
 			}
-			syslog(LOG_EMERG, "db: exit code %d", ret);
+			syslog(LOG_ERR, "db: exit code %d", ret);
 			exit(CTDLEXIT_DB);
 		}
 	}
@@ -424,7 +423,7 @@ void close_databases(void)
 		syslog(LOG_INFO, "db: closing database %02x", a);
 		ret = dbp[a]->close(dbp[a], 0);
 		if (ret) {
-			syslog(LOG_EMERG, "db: db_close: %s", db_strerror(ret));
+			syslog(LOG_ERR, "db: db_close: %s", db_strerror(ret));
 		}
 
 	}
