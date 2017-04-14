@@ -342,37 +342,37 @@ install-exec-new: all
 	done
 
 clean:
-	rm -fr locale/*
-	rm -f *.o 
-	rm -f utils/*.o ;\
-	rm -f utillib/*.o ;\
+	rm -vfr locale/*
+	rm -vf *.o 
+	rm -vf utils/*.o ;\
+	rm -vf utillib/*.o ;\
 	for i in $(srcdir)/modules/* ; do \
-		rm -f $$i/*.o ;\
+		rm -vf $$i/*.o ;\
 	done
 	if test -d $(srcdir)/user_modules ; then \
 		for i in $(srcdir)/user_modules/* ; do \
-			rm -f $$i/*.o ;\
+			rm -vf $$i/*.o ;\
 		done \
 	fi
-	rm -f $(SERVER_TARGETS) $(UTIL_TARGETS) $(UTILBIN_TARGETS) $(NOINST_TARGETS)
+	rm -vf $(SERVER_TARGETS) $(UTIL_TARGETS) $(UTILBIN_TARGETS) $(NOINST_TARGETS)
 
 
 cleaner: clean
-	rm -rf $(SERVER_TARGETS) $(UTIL_TARGETS) $(UTILBIN_TARGETS) $(NOINST_TARGETS) database_cleanup.sh *.la
-	rm -rf modules_upgrade.c modules_init.c modules_init.h Make_modules Make_sources
+	rm -vrf $(SERVER_TARGETS) $(UTIL_TARGETS) $(UTILBIN_TARGETS) $(NOINST_TARGETS) database_cleanup.sh *.la
+	rm -vrf modules_upgrade.c modules_init.c modules_init.h Make_modules Make_sources
 
 distclean: cleaner
-	find . -name '*~' -o -name '.#*' | xargs rm -f
-	rm -f po/Makefile 
-	rm -f Makefile sysdep.h config.cache config.log config.status *.d 
-	rm -f utils/*.d ;
-	rm -f utillib/*.d ;
+	find . -name '*~' -o -name '.#*' | xargs rm -vf
+	rm -vf po/Makefile 
+	rm -vf Makefile configure sysdep.h config.cache config.log config.status *.d 
+	rm -vf utils/*.d ;
+	rm -vf utillib/*.d ;
 	for i in $(srcdir)/modules/* ; do \
-		rm -f $$i/*.d ;\
+		rm -vf $$i/*.d ;\
 	done
 	if test -d $(srcdir)/user_modules ; then \
 		for i in $(srcdir)/user_modules/* ; do \
-			rm -f $$i/*.o ;\
+			rm -vf $$i/*.o ;\
 		done \
 	fi
 

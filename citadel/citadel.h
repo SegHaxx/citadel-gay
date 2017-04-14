@@ -45,7 +45,7 @@ extern "C" {
  * usually more strict because you're not really supposed to dump/load and
  * upgrade at the same time.
  */
-#define REV_LEVEL	909		// This version
+#define REV_LEVEL	911		// This version
 #define REV_MIN		591		// Oldest compatible database
 #define EXPORT_REV_MIN	760		// Oldest compatible export files
 #define LIBCITADEL_MIN	903		// Minimum required version of libcitadel
@@ -74,10 +74,10 @@ struct ExpirePolicy {
 	int expire_value;
 };
 
-#define EXPIRE_NEXTLEVEL	0	/* Inherit expiration policy    */
-#define EXPIRE_MANUAL		1	/* Don't expire messages at all */
-#define EXPIRE_NUMMSGS		2	/* Keep only latest n messages  */
-#define EXPIRE_AGE		3	/* Expire messages after n days */
+#define EXPIRE_NEXTLEVEL	0	// Inherit expiration policy
+#define EXPIRE_MANUAL		1	// Don't expire messages at all
+#define EXPIRE_NUMMSGS		2	// Keep only latest n messages
+#define EXPIRE_AGE		3	// Expire messages after n days
 
 
 /*
@@ -101,48 +101,48 @@ struct march {
  * User records.
  */
 typedef struct ctdluser ctdluser;
-struct ctdluser {			/* User record                       */
-	int version;			/* Cit vers. which created this rec  */
-	uid_t uid;			/* Associate with a unix account?    */
-	char password[32];		/* password                          */
-	unsigned flags;			/* See US_ flags below               */
-	long timescalled;		/* Total number of logins            */
-	long posted;			/* Number of messages ever submitted */
-	cit_uint8_t axlevel;		/* Access level                      */
-	long usernum;			/* User number (never recycled)      */
-	time_t lastcall;		/* Date/time of most recent login    */
-	int USuserpurge;		/* Purge time (in days) for user     */
-	char fullname[64];		/* Display name (primary identifier) */
-	long msgnum_bio;		/* msgnum of user's profile (bio)    */
-	long msgnum_pic;		/* msgnum of user's avatar (photo)   */
+struct ctdluser {			// User record
+	int version;			// Cit vers. which created this rec
+	uid_t uid;			// Associate with a unix account?
+	char password[32];		// password
+	unsigned flags;			// See US_ flags below
+	long timescalled;		// Total number of logins
+	long posted;			// Number of messages ever submitted
+	cit_uint8_t axlevel;		// Access level
+	long usernum;			// User number (never recycled)
+	time_t lastcall;		// Date/time of most recent login
+	int USuserpurge;		// Purge time (in days) for user
+	char fullname[64];		// Display name (primary identifier)
+	long msgnum_bio;		// msgnum of user's profile (bio)
+	long msgnum_pic;		// msgnum of user's avatar (photo)
 };
 
 
 /* Bits which may appear in MMflags.
  */
-#define MM_VALID	4		/* New users need validating        */
+#define MM_VALID	4		// New users need validating
 
 /*
  * Room records.
  */
 typedef struct ctdlroom ctdlroom;
 struct ctdlroom {
- 	char QRname[ROOMNAMELEN];	/* Name of room                     */
- 	char QRpasswd[10];		/* Only valid if it's a private rm  */
- 	long QRroomaide;		/* User number of room aide         */
- 	long QRhighest;			/* Highest message NUMBER in room   */
- 	time_t QRgen;			/* Generation number of room        */
- 	unsigned QRflags;		/* See flag values below            */
- 	char QRdirname[15];		/* Directory name, if applicable    */
- 	long msgnum_info;		/* msgnum of room banner (info file)*/
- 	char QRfloor;			/* Which floor this room is on      */
- 	time_t QRmtime;			/* Date/time of last post           */
- 	struct ExpirePolicy QRep;	/* Message expiration policy        */
- 	long QRnumber;			/* Globally unique room number      */
- 	char QRorder;			/* Sort key for room listing order  */
- 	unsigned QRflags2;		/* Additional flags                 */
- 	int QRdefaultview;		/* How to display the contents      */
-	long msgnum_pic;		/* msgnum of room picture or icon   */
+ 	char QRname[ROOMNAMELEN];	// Name of room
+ 	char QRpasswd[10];		// Only valid if it's a private rm
+ 	long QRroomaide;		// User number of room aide
+ 	long QRhighest;			// Highest message NUMBER in room
+ 	time_t QRgen;			// Generation number of room
+ 	unsigned QRflags;		// See flag values below
+ 	char QRdirname[15];		// Directory name, if applicable
+ 	long msgnum_info;		// msgnum of room banner (info file)
+ 	char QRfloor;			// Which floor this room is on
+ 	time_t QRmtime;			// Date/time of last post
+ 	struct ExpirePolicy QRep;	// Message expiration policy
+ 	long QRnumber;			// Globally unique room number
+ 	char QRorder;			// Sort key for room listing order
+ 	unsigned QRflags2;		// Additional flags
+ 	int QRdefaultview;		// How to display the contents
+	long msgnum_pic;		// msgnum of room picture or icon
 };
 
 /* Private rooms are always flagged with QR_PRIVATE.  If neither QR_PASSWORDED
@@ -154,14 +154,14 @@ struct ctdlroom {
 /*
  * Miscellaneous
  */
-#define MES_NORMAL	65		/* Normal message                   */
-#define MES_ANONONLY	66		/* "****" header                    */
-#define MES_ANONOPT	67		/* "Anonymous" header               */
+#define MES_NORMAL	65		// Normal message
+#define MES_ANONONLY	66		// "****" header
+#define MES_ANONOPT	67		// "Anonymous" header
 
-#define MES_ERROR	(-1)	/* Can't send message due to bad address   */
-#define MES_LOCAL	0	/* Local message, do no network processing */
-#define MES_INTERNET	1	/* Convert msg and send as Internet mail   */
-#define MES_IGNET	2	/* Process recipient and send via Cit net  */
+#define MES_ERROR	(-1)		// Can't send message due to bad address
+#define MES_LOCAL	0		// Local message, do no network processing
+#define MES_INTERNET	1		// Convert msg and send as Internet mail
+#define MES_IGNET	2		// Process recipient and send via Cit net
 
 /****************************************************************************/
 
@@ -170,21 +170,20 @@ struct ctdlroom {
  */
 typedef struct floor floor;
 struct floor {
-	unsigned short f_flags;		/* flags */
-	char f_name[256];		/* name of floor */
-	int f_ref_count;		/* reference count */
-	struct ExpirePolicy f_ep;	/* default expiration policy */
+	unsigned short f_flags;		// flags
+	char f_name[256];		// name of floor
+	int f_ref_count;		// reference count
+	struct ExpirePolicy f_ep;	// default expiration policy
 };
 
-#define F_INUSE		1		/* floor is in use */
+#define F_INUSE		1		// floor is in use
 
 
 /*
  * Values used internally for function call returns, etc.
  */
-
-#define NEWREGISTER	0		/* new user to register */
-#define REREGISTER	1		/* existing user reregistering */
+#define NEWREGISTER	0		// new user to register
+#define REREGISTER	1		// existing user reregistering
 
 /* number of items which may be handled by the CONF command */
 #define NUM_CONFIGS 71
@@ -198,10 +197,10 @@ struct floor {
 /*
  * Authentication modes
  */
-#define AUTHMODE_NATIVE		0	/* Native (self-contained or "black box") */
-#define AUTHMODE_HOST		1	/* Authenticate against the host OS user database */
-#define AUTHMODE_LDAP		2	/* Authenticate against an LDAP server with RFC 2307 schema */
-#define AUTHMODE_LDAP_AD	3	/* Authenticate against non-standard MS Active Directory LDAP */
+#define AUTHMODE_NATIVE		0	// Native (self-contained or "black box")
+#define AUTHMODE_HOST		1	// Authenticate against the host OS user database
+#define AUTHMODE_LDAP		2	// Authenticate against an LDAP server with RFC 2307 schema
+#define AUTHMODE_LDAP_AD	3	// Authenticate against non-standard MS Active Directory LDAP
 
 #ifdef __cplusplus
 }
