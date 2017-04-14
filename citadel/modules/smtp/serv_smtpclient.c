@@ -198,6 +198,7 @@ int smtp_attempt_delivery(long msgid, char *recp, char *envelope_from)
 	char node[1024];
 	char name[1024];
 	char try_this_mx[256];
+	char smtp_url[512];
 	int i;
 
 	syslog(LOG_DEBUG, "smtpclient: smtp_attempt_delivery(%ld, %s)", msgid, recp);
@@ -240,18 +241,20 @@ int smtp_attempt_delivery(long msgid, char *recp, char *envelope_from)
 			curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 0L);
 			// curl_easy_setopt(curl, CURLOPT_ERRORBUFFER, curl_error_buffer);
 
-			strcpy(try_this_mx, "smtp://");
-			extract_token(&try_this_mx[7], mxes, i, '|', (sizeof try_this_mx - 7));
-			if (
-				(!strncasecmp(try_this_mx, HKEY("smtp://smtp://")))				// This can happen if the administrator
-				|| (!strncasecmp(try_this_mx, HKEY("smtp://smtps://")))				// puts a full smtp[s] URI as the smart-host
-			) {
-				strcpy(try_this_mx, &try_this_mx[7]);
-			}
-
-			curl_easy_setopt(curl, CURLOPT_URL, try_this_mx);
-
-			syslog(LOG_DEBUG, "smtpclient: trying %s", try_this_mx);			// send the message
+			// Construct an SMTP URL in the form of:
+			// 	smtp[s]://target_host/source_host
+			// This looks weird but libcurl uses that last part to set our name for EHLO or HELO.
+			// We check for "smtp://" and "smtps://" because the admin may have put those prefixes in a smart-host entry.
+			// If there is no prefix we add "smtp://"
+			extract_token(try_this_mx, mxes, i, '|', (sizeof try_this_mx - 7));
+			snprintf(smtp_url, sizeof smtp_url,
+				"%s%s/%s",
+				(((!strncasecmp(try_this_mx, HKEY("smtp://"))) || (!strncasecmp(try_this_mx, HKEY("smtps://")))) ? "" : "smtp://"),
+				try_this_mx,
+				CtdlGetConfigStr("c_fqdn")
+			);
+			curl_easy_setopt(curl, CURLOPT_URL, smtp_url);
+			syslog(LOG_DEBUG, "smtpclient: trying %s", smtp_url);				// send the message
 			res = curl_easy_perform(curl);
 			curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &response_code);
 			syslog(LOG_DEBUG, "smtpclient: libcurl returned %d (%s) , SMTP response %ld",
