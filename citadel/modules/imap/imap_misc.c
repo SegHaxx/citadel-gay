@@ -159,9 +159,10 @@ int imap_do_copy(const char *destination_folder) {
  * messages in our source room.  Since the Citadel system uses UID's that
  * are both globally unique and persistent across a room-to-room copy, we
  * can get this done quite easily.
+ *
+ * FIXME this is outputing WRONG !!!   See https://tools.ietf.org/html/rfc2359#section-4.3
  */
-void imap_output_copyuid_response(void) {
-	citimap *Imap = IMAP;
+void imap_output_copyuid_response(citimap *Imap) {
 	int i;
 	int num_output = 0;
   
@@ -205,7 +206,7 @@ void imap_copy(int num_parms, ConstStr *Params) {
 	ret = imap_do_copy(Params[3].Key);
 	if (!ret) {
 		IAPrintf("%s OK ", Params[0].Key);
-		imap_output_copyuid_response();
+		imap_output_copyuid_response(IMAP);
 		IAPuts("COPY completed\r\n");
 	}
 	else {
@@ -233,7 +234,7 @@ void imap_uidcopy(int num_parms, ConstStr *Params) {
 
 	if (imap_do_copy(Params[4].Key) == 0) {
 		IAPrintf("%s OK ", Params[0].Key);
-		imap_output_copyuid_response();
+		imap_output_copyuid_response(IMAP);
 		IAPuts("UID COPY completed\r\n");
 	}
 	else {
