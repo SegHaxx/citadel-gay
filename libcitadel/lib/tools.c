@@ -2,7 +2,7 @@
  * A basic toolset containing miscellaneous functions for string manipluation,
  * encoding/decoding, and a bunch of other stuff.
  *
- * Copyright (c) 1987-2011 by the citadel.org team
+ * Copyright (c) 1987-2017 by the citadel.org team
  *
  * This program is open source software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -459,32 +459,6 @@ int haschar(const char *st, int ch)
 	}
 	return (b);
 }
-
-
-
-
-
-/*
- * Format a date/time stamp for output 
- * seconds is whether to print the seconds
- */
-void fmt_date(char *buf, size_t n, time_t thetime, int seconds) {
-	struct tm tm;
-	char *teh_format = NULL;
-
-	*buf = '\0';
-	localtime_r(&thetime, &tm);
-
-	if (seconds) {
-		teh_format = "%F %R:%S";
-	}
-	else {
-		teh_format = "%F %R";
-	}
-
-	strftime(buf, n, teh_format, &tm);
-}
-
 
 
 /*

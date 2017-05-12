@@ -435,7 +435,7 @@ int read_message(CtdlIPC *ipc,
 	FILE *dest) /* Destination file, NULL for screen */
 {
 	char buf[SIZ];
-	char now[SIZ];
+	char now[256];
 	int format_type = 0;
 	int fr = 0;
 	int nhdr = 0;
@@ -538,7 +538,9 @@ int read_message(CtdlIPC *ipc,
 			scr_printf(" ****");
 		}
 	} else {
-		fmt_date(now, sizeof now, message->time, 0);
+		struct tm thetime;
+		localtime_r(&message->time, &thetime);
+		strftime(now, sizeof now, "%F %R", &thetime);
 		if (dest) {
 			fprintf(dest, "%s from %s ", now, message->author);
 			if (!IsEmptyStr(message->email)) {
@@ -878,7 +880,7 @@ int client_make_message(CtdlIPC *ipc,
 	FILE *fp;
 	int a, b, e_ex_code;
 	long beg;
-	char datestr[SIZ];
+	char datestr[256];
 	char header[SIZ];
 	int cksum = 0;
 
@@ -887,7 +889,10 @@ int client_make_message(CtdlIPC *ipc,
 		mode = 0;
 	}
 
-	fmt_date(datestr, sizeof datestr, time(NULL), 0);
+	struct tm thetime;
+	time_t now = time(NULL);
+	localtime_r(&now, &thetime);
+	strftime(datestr, sizeof datestr, "%F %R", &thetime);
 	header[0] = 0;
 
 	if (room_flags & QR_ANONONLY && !recipient) {
