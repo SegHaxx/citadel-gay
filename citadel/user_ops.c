@@ -38,7 +38,6 @@ int chkpwd_read_pipe[2];
  */
 int CtdlGetUserLen(struct ctdluser *usbuf, const char *name, long len)
 {
-
 	char usernamekey[USERNAME_SIZE];
 	struct cdbdata *cdbus;
 
@@ -68,12 +67,13 @@ int CtdlGetUser(struct ctdluser *usbuf, char *name)
 	return CtdlGetUserLen(usbuf, name, cutuserkey(name));
 }
 
+
 int CtdlLockGetCurrentUser(void)
 {
 	CitContext *CCC = CC;
-
 	return CtdlGetUserLen(&CCC->user, CCC->curr_user, cutuserkey(CCC->curr_user));
 }
+
 
 /*
  * CtdlGetUserLock()  -  same as getuser() but locks the record
@@ -97,16 +97,11 @@ void CtdlPutUser(struct ctdluser *usbuf)
 {
 	char usernamekey[USERNAME_SIZE];
 
-	makeuserkey(usernamekey, 
-		    usbuf->fullname, 
-		    cutuserkey(usbuf->fullname));
-
+	makeuserkey(usernamekey, usbuf->fullname, cutuserkey(usbuf->fullname));
 	usbuf->version = REV_LEVEL;
-	cdb_store(CDB_USERS,
-		  usernamekey, strlen(usernamekey),
-		  usbuf, sizeof(struct ctdluser));
-
+	cdb_store(CDB_USERS, usernamekey, strlen(usernamekey), usbuf, sizeof(struct ctdluser));
 }
+
 
 void CtdlPutCurrentUserLock()
 {
@@ -122,7 +117,6 @@ void CtdlPutUserLock(struct ctdluser *usbuf)
 	CtdlPutUser(usbuf);
 	end_critical_section(S_USERS);
 }
-
 
 
 /*
@@ -166,7 +160,7 @@ int rename_user(char *oldname, char *newname) {
 				syslog(LOG_DEBUG, "user_ops: can not rename user \"Citadel\".");
 				retcode = RENAMEUSER_NOT_FOUND;
 			} else {
-				syslog(LOG_DEBUG, "user_ops: renaming <%s> to <%s>\n", oldname, newname);
+				syslog(LOG_DEBUG, "user_ops: renaming <%s> to <%s>", oldname, newname);
 				cdb_delete(CDB_USERS, oldnamekey, strlen(oldnamekey));
 				safestrncpy(usbuf.fullname, newname, sizeof usbuf.fullname);
 				CtdlPutUser(&usbuf);
@@ -180,7 +174,6 @@ int rename_user(char *oldname, char *newname) {
 	end_critical_section(S_USERS);
 	return(retcode);
 }
-
 
 
 /*
@@ -233,8 +226,6 @@ void CtdlSetRelationship(visit *newvisit,
 			 struct ctdluser *rel_user,
 			 struct ctdlroom *rel_room)
 {
-
-
 	/* We don't use these in Citadel because they're implicit by the
 	 * index, but they must be present if the database is exported.
 	 */
@@ -245,6 +236,7 @@ void CtdlSetRelationship(visit *newvisit,
 	put_visit(newvisit);
 }
 
+
 /*
  * Locate a relationship between a user and a room
  */
@@ -252,7 +244,6 @@ void CtdlGetRelationship(visit *vbuf,
 			 struct ctdluser *rel_user,
 			 struct ctdlroom *rel_room)
 {
-
 	char IndexBuf[32];
 	int IndexLen;
 	struct cdbdata *cdbvisit;
@@ -321,6 +312,7 @@ int CtdlCheckInternetMailPermission(struct ctdluser *who) {
 	return(0);
 }
 
+
 /*
  * Convenience function.
  */
@@ -328,8 +320,7 @@ int CtdlAccessCheck(int required_level)
 {
 	if (CC->internal_pgm) return(0);
 	if (required_level >= ac_internal) {
-		cprintf("%d This is not a user-level command.\n",
-			ERROR + HIGHER_ACCESS_REQUIRED);
+		cprintf("%d This is not a user-level command.\n", ERROR + HIGHER_ACCESS_REQUIRED);
 		return(-1);
 	}
 
@@ -360,7 +351,6 @@ int CtdlAccessCheck(int required_level)
 	/* shhh ... succeed quietly */
 	return(0);
 }
-
 
 
 /*
@@ -809,7 +799,7 @@ void start_chkpwd_daemon(void) {
 	syslog(LOG_DEBUG, "user_ops: starting chkpwd daemon for host authentication mode");
 
 	if ((stat(file_chkpwd, &filestats)==-1) || (filestats.st_size==0)) {
-		printf("didn't find chkpwd daemon in %s: %s\n", file_chkpwd, strerror(errno));
+		syslog(LOG_ERR, "user_ops: %s: %s", file_chkpwd, strerror(errno));
 		abort();
 	}
 	if (pipe(chkpwd_write_pipe) != 0) {
@@ -1044,11 +1034,9 @@ int create_user(const char *newusername, long len, int become_user)
 	char buf[SIZ];
 	int retval;
 	uid_t uid = (-1);
-	
 
 	safestrncpy(username, newusername, sizeof username);
 	strproc(username);
-
 	
 	if (CtdlGetConfigInt("c_auth_mode") == AUTHMODE_HOST) {
 

@@ -46,7 +46,7 @@
 #include <iconv.h>
 
 #if 0
-/* This is the non-define version in case of s.b. needing to debug */
+/* This is the non-define version in case it is needed for debugging */
 inline void FindNextEnd (char *bptr, char *end)
 {
 	/* Find the next ?Q? */
@@ -275,8 +275,6 @@ struct trynamebuf {
 };
 
 char *inetcfg = NULL;
-struct spamstrings_t *spamstrings = NULL;
-
 
 /*
  * Return nonzero if the supplied name is an alias for this host.
@@ -1526,7 +1524,7 @@ int IsDirectory(char *addr, int allow_masq_domains) {
 /*
  * Initialize the directory database (erasing anything already there)
  */
-void CtdlDirectoryInit(void) {
+void CtdlRebuildDirectoryIndex(void) {
 	cdb_trunc(CDB_DIRECTORY);
 }
 

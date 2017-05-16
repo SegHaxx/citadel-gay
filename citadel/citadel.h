@@ -45,7 +45,7 @@ extern "C" {
  * usually more strict because you're not really supposed to dump/load and
  * upgrade at the same time.
  */
-#define REV_LEVEL	911		// This version
+#define REV_LEVEL	912		// This version
 #define REV_MIN		591		// Oldest compatible database
 #define EXPORT_REV_MIN	760		// Oldest compatible export files
 #define LIBCITADEL_MIN	903		// Minimum required version of libcitadel
@@ -115,6 +115,7 @@ struct ctdluser {			// User record
 	char fullname[64];		// Display name (primary identifier)
 	long msgnum_bio;		// msgnum of user's profile (bio)
 	long msgnum_pic;		// msgnum of user's avatar (photo)
+	char emailaddrs[512];		// Internet email addresses
 };
 
 

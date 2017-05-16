@@ -129,103 +129,10 @@ void vcard_extract_internet_addresses(struct CtdlMessage *msg, int (*callback)(c
 
 	vcard_free(v);
 }
+
+
 ///TODO: gettext!
 #define _(a) a
-/*
- * Callback for vcard_add_to_directory()
- * (Lotsa ugly nested callbacks.  Oh well.)
- */
-int vcard_directory_add_user(char *internet_addr, char *citadel_addr) {
-	struct CitContext *CCC = CC;
-	char buf[SIZ];
-
-	/* We have to validate that we're not stepping on someone else's
-	 * email address ... but only if we're logged in.  Otherwise it's
-	 * probably just the networker or something.
-	 */
-	if (CCC->logged_in) {
-		syslog(LOG_DEBUG, "Checking for <%s>...", internet_addr);
-		if (CtdlDirectoryLookup(buf, internet_addr, sizeof buf) == 0) {
-			if (strcasecmp(buf, citadel_addr)) {
-				/* This address belongs to someone else.
-				 * Bail out silently without saving.
-				 */
-				syslog(LOG_DEBUG, "DOOP!");
-				
-				StrBufAppendPrintf(CCC->StatusMessage, "\n%d|", ERROR+ALREADY_EXISTS);
-				StrBufAppendBufPlain(CCC->StatusMessage, internet_addr, -1, 0);
-				StrBufAppendBufPlain(CCC->StatusMessage, HKEY("|"), 0);
-				StrBufAppendBufPlain(CCC->StatusMessage, _("Unable to add this email address again."), -1, 0);
-				StrBufAppendBufPlain(CCC->StatusMessage, HKEY("\n"), 0);
-				return 0;
-			}
-		}
-	}
-	syslog(LOG_INFO, "Adding %s (%s) to directory", citadel_addr, internet_addr);
-	if (CtdlDirectoryAddUser(internet_addr, citadel_addr))
-	{
-		StrBufAppendPrintf(CCC->StatusMessage, "\n%d|", CIT_OK);
-		StrBufAppendBufPlain(CCC->StatusMessage, internet_addr, -1, 0);
-		StrBufAppendBufPlain(CCC->StatusMessage, HKEY("|"), 0);
-		StrBufAppendBufPlain(CCC->StatusMessage, _("Successfully added email address."), -1, 0);
-		return 1;
-	}
-	else
-	{
-		StrBufAppendPrintf(CCC->StatusMessage, "\n%d|", ERROR+ ILLEGAL_VALUE);
-		StrBufAppendBufPlain(CCC->StatusMessage, internet_addr, -1, 0);
-		StrBufAppendBufPlain(CCC->StatusMessage, HKEY("|"), 0);
-		StrBufAppendBufPlain(CCC->StatusMessage, _("Unable to add this email address. It does not match any local domain."), -1, 0);
-		return 0;
-	}
-}
-
-
-/*
- * Back end function for cmd_igab()
- */
-void vcard_add_to_directory(long msgnum, void *data) {
-	struct CtdlMessage *msg;
-
-	msg = CtdlFetchMessage(msgnum, 1, 1);
-	if (msg != NULL) {
-		vcard_extract_internet_addresses(msg, vcard_directory_add_user);
-	}
-
-	CM_Free(msg);
-}
-
-
-/*
- * Initialize Global Adress Book
- */
-void cmd_igab(char *argbuf) {
-	char hold_rm[ROOMNAMELEN];
-
-	if (CtdlAccessCheck(ac_aide)) return;
-
-	strcpy(hold_rm, CC->room.QRname);	/* save current room */
-
-	if (CtdlGetRoom(&CC->room, ADDRESS_BOOK_ROOM) != 0) {
-		CtdlGetRoom(&CC->room, hold_rm);
-		cprintf("%d cannot get address book room\n", ERROR + ROOM_NOT_FOUND);
-		return;
-	}
-
-	/* Empty the existing database first.
-	 */
-	CtdlDirectoryInit();
-
-	/* We want *all* vCards in this room */
-	NewStrBufDupAppendFlush(&CC->StatusMessage, NULL, NULL, 0);
-	CtdlForEachMessage(MSGS_ALL, 0, NULL, "[Tt][Ee][Xx][Tt]/.*[Vv][Cc][Aa][Rr][Dd]$",
-		NULL, vcard_add_to_directory, NULL);
-
-	CtdlGetRoom(&CC->room, hold_rm);	/* return to saved room */
-	cprintf("%d Directory has been rebuilt.\n", CIT_OK);
-}
-
-
 
 
 /*
@@ -585,9 +492,6 @@ int vcard_upload_aftersave(struct CtdlMessage *msg, recptypes *recp) {
 				/* Put it in the Global Address Book room... */
 				CtdlSaveMsgPointerInRoom(ADDRESS_BOOK_ROOM, I, 1, msg);
 			}
-
-			/* ...and also in the directory database. */
-			vcard_add_to_directory(I, NULL);
 
 			/* Some sites want an Aide to be notified when a
 			 * user registers or re-registers
@@ -1522,7 +1426,6 @@ CTDL_MODULE_INIT(vcard)
 		CtdlRegisterDeleteHook(vcard_delete_remove);
 		CtdlRegisterProtoHook(cmd_regi, "REGI", "Enter registration info");
 		CtdlRegisterProtoHook(cmd_greg, "GREG", "Get registration info");
-		CtdlRegisterProtoHook(cmd_igab, "IGAB", "Initialize Global Address Book");
 		CtdlRegisterProtoHook(cmd_qdir, "QDIR", "Query Directory");
 		CtdlRegisterProtoHook(cmd_gvsn, "GVSN", "Get Valid Screen Names");
 		CtdlRegisterProtoHook(cmd_gvea, "GVEA", "Get Valid Email Addresses");

@@ -4,7 +4,7 @@
  * guesses about what kind of data format changes need to be applied, and
  * we apply them transparently.
  *
- * Copyright (c) 1987-2016 by the citadel.org team
+ * Copyright (c) 1987-2017 by the citadel.org team
  *
  * This program is open source software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License version 3.
@@ -52,6 +52,8 @@
 #include "serv_upgrade.h"
 #include "euidindex.h"
 #include "ctdl_module.h"
+#include "serv_vcard.h"
+#include "internet_addressing.h"
 
 
 /*
@@ -99,16 +101,18 @@ void fix_sys_user_name(void)
 
 /* 
  * Back end processing function for convert_ctdluid_to_minusone()
+ * Call this function as a ForEachUser backend in order to queue up
+ * room names, or call it with a null user to make it do the processing.
+ * This allows us to maintain the list as a static instead of passing
+ * pointers around.
  */
 void cbtm_backend(struct ctdluser *usbuf, void *data) {
 	static struct UserProcList *uplist = NULL;
 	struct UserProcList *ptr;
 	struct ctdluser us;
 
-	/* Lazy programming here.  Call this function as a ForEachUser backend
-	 * in order to queue up the room names, or call it with a null user
-	 * to make it do the processing.
-	 */
+	/* this is the calling mode where we add a user */
+
 	if (usbuf != NULL) {
 		ptr = (struct UserProcList *)
 			malloc(sizeof (struct UserProcList));
@@ -119,6 +123,8 @@ void cbtm_backend(struct ctdluser *usbuf, void *data) {
 		uplist = ptr;
 		return;
 	}
+
+	/* this is the calling mode where we do the processing */
 
 	while (uplist != NULL) {
 
@@ -419,6 +425,92 @@ void update_config(void) {
 }
 
 
+/*
+ * Helper function for move_inet_addrs_from_vcards_to_user_records()
+ *
+ * Call this function as a ForEachUser backend in order to queue up
+ * room names, or call it with a null user to make it do the processing.
+ * This allows us to maintain the list as a static instead of passing
+ * pointers around.
+ */
+void miafvtur_backend(struct ctdluser *usbuf, void *data) {
+
+	struct miafvtur {
+		char name[64];
+		char emails[512];
+	};
+
+	static struct miafvtur *m = NULL;
+	static int num_m = 0;
+	static int alloc_m = 0;
+
+	/* this is the calling mode where we add a user */
+
+	if (usbuf != NULL) {
+		char primary_inet_email[512] = { 0 };
+		char other_inet_emails[512] = { 0 };
+		struct vCard *v = vcard_get_user(usbuf);
+		if (!v) return;
+		extract_inet_email_addrs(primary_inet_email, sizeof primary_inet_email, other_inet_emails, sizeof other_inet_emails, v, 1);
+		vcard_free(v);
+	
+		if ( (IsEmptyStr(primary_inet_email)) && (IsEmptyStr(other_inet_emails)) ) {
+			return;
+		}
+
+		if (num_m >= alloc_m) {
+			if (alloc_m == 0) {
+				alloc_m = 100;
+				m = malloc(sizeof(struct miafvtur) * alloc_m);
+			}
+			else {
+				alloc_m *= 2;
+				m = realloc(m, (sizeof(struct miafvtur) * alloc_m));
+			}
+		}
+
+		strcpy(m[num_m].name, usbuf->fullname);
+		snprintf(m[num_m].emails, 512, "%s%s%s",
+			(!IsEmptyStr(primary_inet_email) ? primary_inet_email : ""),
+			((!IsEmptyStr(primary_inet_email)&&(!IsEmptyStr(other_inet_emails))) ? "|" : ""),
+			(!IsEmptyStr(other_inet_emails) ? other_inet_emails : "")
+		);
+		++num_m;
+		return;
+	}
+
+	/* this is the calling mode where we do the processing */
+
+	int i;
+	struct ctdluser u;
+
+	CtdlRebuildDirectoryIndex();
+
+	for (i=0; i<num_m; ++i) {
+		syslog(LOG_DEBUG, "<%s> = <%s>", m[i].name, m[i].emails);
+		if (CtdlGetUser(&u, m[i].name) == 0) {
+			safestrncpy(u.emailaddrs, m[i].emails, sizeof u.emailaddrs);
+			CtdlPutUser(&u);
+		}
+	}
+	free(m);
+	num_m = 0;
+	alloc_m = 0;
+	abort();
+	return;
+}
+
+
+/*
+ * Prior to version 912 we kept a user's various Internet email addresses in their vCards.
+ * This function moves them over to the user record, which is where we keep them now.
+ */
+void move_inet_addrs_from_vcards_to_user_records(void)
+{
+	ForEachUser(miafvtur_backend, NULL);
+	miafvtur_backend(NULL, NULL);
+}
+
 
 /*
  * Based on the server version number reported by the existing database,
@@ -470,6 +562,10 @@ void check_server_upgrades(void) {
 
 	if ((CtdlGetConfigInt("MM_hosted_upgrade_level") > 000) && (CtdlGetConfigInt("MM_hosted_upgrade_level") < 902)) {
 		ingest_old_roominfo_and_roompic_files();
+	}
+
+	if ((CtdlGetConfigInt("MM_hosted_upgrade_level") > 000) && (CtdlGetConfigInt("MM_hosted_upgrade_level") < 912)) {
+		move_inet_addrs_from_vcards_to_user_records();
 	}
 
 	CtdlSetConfigInt("MM_hosted_upgrade_level", REV_LEVEL);
