@@ -1522,14 +1522,6 @@ int IsDirectory(char *addr, int allow_masq_domains) {
 
 
 /*
- * Initialize the directory database (erasing anything already there)
- */
-void CtdlRebuildDirectoryIndex(void) {
-	cdb_trunc(CDB_DIRECTORY);
-}
-
-
-/*
  * Add an Internet e-mail address to the directory for a user
  */
 int CtdlDirectoryAddUser(char *internet_addr, char *citadel_addr) {
@@ -1656,4 +1648,72 @@ char *harvest_collected_addresses(struct CtdlMessage *msg) {
 		return(NULL);
 	}
 	return(coll);
+}
+
+
+/*
+ * Helper function for CtdlRebuildDirectoryIndex()
+ *
+ * Call this function as a ForEachUser backend in order to queue up
+ * user names, or call it with a null user to make it do the processing.
+ * This allows us to maintain the list as a static instead of passing
+ * pointers around.
+ */
+void CtdlRebuildDirectoryIndex_backend(struct ctdluser *usbuf, void *data) {
+
+	struct crdib {
+		char name[64];
+		char emails[512];
+	};
+
+	static struct crdib *e = NULL;
+	static int num_e = 0;
+	static int alloc_e = 0;
+
+	/* this is the calling mode where we add a user */
+
+	if (usbuf != NULL) {
+		if (num_e >= alloc_e) {
+			if (alloc_e == 0) {
+				alloc_e = 100;
+				e = malloc(sizeof(struct crdib) * alloc_e);
+			}
+			else {
+				alloc_e *= 2;
+				e = realloc(e, (sizeof(struct crdib) * alloc_e));
+			}
+		}
+		strcpy(e[num_e].name, usbuf->fullname);
+		strcpy(e[num_e].emails, usbuf->emailaddrs);
+		++num_e;
+		return;
+	}
+
+	/* this is the calling mode where we do the processing */
+
+	int i, j;
+	for (i=0; i<num_e; ++i) {
+		if ( (!IsEmptyStr(e[i].name)) && (!IsEmptyStr(e[i].emails)) ) {
+			for (j=0; j<num_tokens(e[i].emails, '|'); ++j) {
+				char one_email[512];
+				extract_token(one_email, e[i].emails, j, '|', sizeof one_email);
+				CtdlDirectoryAddUser(one_email, e[i].name);
+			}
+		}
+	}
+	free(e);
+	num_e = 0;
+	alloc_e = 0;
+	return;
+}
+
+
+/*
+ * Initialize the directory database (erasing anything already there)
+ */
+void CtdlRebuildDirectoryIndex(void) {
+	syslog(LOG_INFO, "internet_addressing: rebuilding email address directory index");
+	cdb_trunc(CDB_DIRECTORY);
+	ForEachUser(CtdlRebuildDirectoryIndex_backend, NULL);
+	CtdlRebuildDirectoryIndex_backend(NULL, NULL);
 }

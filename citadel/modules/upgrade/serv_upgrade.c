@@ -102,7 +102,7 @@ void fix_sys_user_name(void)
 /* 
  * Back end processing function for convert_ctdluid_to_minusone()
  * Call this function as a ForEachUser backend in order to queue up
- * room names, or call it with a null user to make it do the processing.
+ * user names, or call it with a null user to make it do the processing.
  * This allows us to maintain the list as a static instead of passing
  * pointers around.
  */
@@ -429,7 +429,7 @@ void update_config(void) {
  * Helper function for move_inet_addrs_from_vcards_to_user_records()
  *
  * Call this function as a ForEachUser backend in order to queue up
- * room names, or call it with a null user to make it do the processing.
+ * user names, or call it with a null user to make it do the processing.
  * This allows us to maintain the list as a static instead of passing
  * pointers around.
  */
@@ -484,8 +484,6 @@ void miafvtur_backend(struct ctdluser *usbuf, void *data) {
 	int i;
 	struct ctdluser u;
 
-	CtdlRebuildDirectoryIndex();
-
 	for (i=0; i<num_m; ++i) {
 		syslog(LOG_DEBUG, "<%s> = <%s>", m[i].name, m[i].emails);
 		if (CtdlGetUser(&u, m[i].name) == 0) {
@@ -496,7 +494,6 @@ void miafvtur_backend(struct ctdluser *usbuf, void *data) {
 	free(m);
 	num_m = 0;
 	alloc_m = 0;
-	abort();
 	return;
 }
 
@@ -509,6 +506,8 @@ void move_inet_addrs_from_vcards_to_user_records(void)
 {
 	ForEachUser(miafvtur_backend, NULL);
 	miafvtur_backend(NULL, NULL);
+	CtdlRebuildDirectoryIndex();
+	abort();
 }
 
 
