@@ -507,7 +507,6 @@ void move_inet_addrs_from_vcards_to_user_records(void)
 	ForEachUser(miafvtur_backend, NULL);
 	miafvtur_backend(NULL, NULL);
 	CtdlRebuildDirectoryIndex();
-	abort();
 }
 
 

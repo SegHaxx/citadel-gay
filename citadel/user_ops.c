@@ -666,13 +666,24 @@ void do_login(void)
 	CtdlPutUserLock(&CCC->user);
 
 	/*
-	 * Populate CCC->cs_inet_email with a default address.  This will be
-	 * overwritten with the user's directory address, if one exists, when
-	 * the vCard module's login hook runs.
+	 * No email address for user?  Make one up.
 	 */
-	snprintf(CCC->cs_inet_email, sizeof CCC->cs_inet_email, "%s@%s",
-		CCC->user.fullname, CtdlGetConfigStr("c_fqdn"));
-	convert_spaces_to_underscores(CCC->cs_inet_email);
+	if (IsEmptyStr(CCC->user.emailaddrs)) {
+		sprintf(CCC->user.emailaddrs, "cit%ld@%s", CCC->user.usernum, CtdlGetConfigStr("c_fqdn"));
+	}
+	
+	/*
+	 * Populate cs_inet_email and cs_inet_other_emails with valid email addresses from the user record
+	 */
+	strcpy(CCC->cs_inet_email, CCC->user.emailaddrs);
+	char *firstsep = strstr(CCC->cs_inet_email, "|");
+	if (firstsep) {
+		strcpy(CCC->cs_inet_other_emails, firstsep+1);
+		*firstsep = 0;
+	}
+	else {
+		CCC->cs_inet_other_emails[0] = 0;
+	}
 
 	/* Create any personal rooms required by the system.
 	 * (Technically, MAILROOM should be there already, but just in case...)

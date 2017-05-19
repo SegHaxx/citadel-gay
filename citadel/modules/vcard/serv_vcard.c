@@ -477,12 +477,9 @@ int vcard_upload_aftersave(struct CtdlMessage *msg, recptypes *recp) {
 			I = atol(msg->cm_fields[eVltMsgNum]);
 			if (I <= 0L) return(0);
 
-			/* Store our Internet return address in memory */
+			/* Store our friendly/display name in memory */
 			if (is_MY_UserConf) {
 				v = vcard_load(msg->cm_fields[eMesageText]);
-				extract_inet_email_addrs(CCC->cs_inet_email, sizeof CCC->cs_inet_email,
-						CCC->cs_inet_other_emails, sizeof CCC->cs_inet_other_emails,
-						v, 1);
 				extract_friendly_name(CCC->cs_inet_fn, sizeof CCC->cs_inet_fn, v);
 				vcard_free(v);
 			}
@@ -968,6 +965,7 @@ void cmd_gvsn(char *argbuf)
 
 /*
  * Get Valid Email Addresses
+ * FIXME this doesn't belong in serv_vcard.c anymore , maybe move it to internet_addressing.c
  */
 void cmd_gvea(char *argbuf)
 {
@@ -991,8 +989,6 @@ void cmd_gvea(char *argbuf)
 	}
 	cprintf("000\n");
 }
-
-
 
 
 /*
@@ -1206,15 +1202,11 @@ void vcard_session_login_hook(void) {
 #endif
 
 	/*
-	 * Extract from the user's vCard, any Internet email addresses and the user's real name.
+	 * Extract the user's friendly/screen name
 	 * These are inserted into the session data for various message entry commands to use.
 	 */
 	v = vcard_get_user(&CCC->user);
 	if (v) {
-		extract_inet_email_addrs(CCC->cs_inet_email, sizeof CCC->cs_inet_email,
-					CCC->cs_inet_other_emails, sizeof CCC->cs_inet_other_emails,
-					v, 1
-		);
 		extract_friendly_name(CCC->cs_inet_fn, sizeof CCC->cs_inet_fn, v);
 		vcard_free(v);
 	}
