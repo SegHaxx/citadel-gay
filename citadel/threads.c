@@ -138,7 +138,7 @@ void CtdlThreadCreate(void *(*start_routine)(void*))
 	ret = pthread_attr_init(&attr);
 	ret = pthread_attr_setstacksize(&attr, THREADSTACKSIZE);
 	ret = pthread_create(&thread, &attr, CTC_backend, (void *)start_routine);
-	if (ret != 0) syslog(LOG_EMERG, "pthread_create() : %s", strerror(errno));
+	if (ret != 0) syslog(LOG_ERR, "pthread_create() : %m");
 }
 
 
@@ -156,7 +156,7 @@ int EVQShutDown = 0;
 void go_threading(void)
 {
 	if (pthread_key_create(&ThreadKey, NULL) != 0) {
-		syslog(LOG_EMERG, "pthread_key_create() : %s", strerror(errno));
+		syslog(LOG_ERR, "pthread_key_create() : %m");
 		abort();
 	}
 

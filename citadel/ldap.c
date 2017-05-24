@@ -40,7 +40,7 @@ int ctdl_ldap_initialize(LDAP **ld) {
 	snprintf(server_url, sizeof server_url, "ldap://%s:%d", CtdlGetConfigStr("c_ldap_host"), CtdlGetConfigInt("c_ldap_port"));
 	ret = ldap_initialize(ld, server_url);
 	if (ret != LDAP_SUCCESS) {
-		syslog(LOG_ERR, "ldap: could not connect to %s : %s", server_url, strerror(errno));
+		syslog(LOG_ERR, "ldap: could not connect to %s : %m", server_url);
 		*ld = NULL;
 		return(errno);
 	}

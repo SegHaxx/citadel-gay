@@ -263,13 +263,13 @@ void open_databases(void)
 	 * already there, no problem.
 	 */
 	if ((mkdir(ctdl_data_dir, 0700) != 0) && (errno != EEXIST)){
-		syslog(LOG_ERR, "db: unable to create database directory [%s]: %s", ctdl_data_dir, strerror(errno));
+		syslog(LOG_ERR, "db: unable to create database directory [%s]: %m", ctdl_data_dir);
 	}
 	if (chmod(ctdl_data_dir, 0700) != 0){
-		syslog(LOG_ERR, "db: unable to set database directory accessrights [%s]: %s", ctdl_data_dir, strerror(errno));
+		syslog(LOG_ERR, "db: unable to set database directory accessrights [%s]: %m", ctdl_data_dir);
 	}
 	if (chown(ctdl_data_dir, CTDLUID, (-1)) != 0){
-		syslog(LOG_ERR, "db: unable to set the owner for [%s]: %s", ctdl_data_dir, strerror(errno));
+		syslog(LOG_ERR, "db: unable to set the owner for [%s]: %m", ctdl_data_dir);
 	}
 	syslog(LOG_DEBUG, "db: Setting up DB environment\n");
 	/* db_env_set_func_yield((int (*)(u_long,  u_long))sched_yield); */

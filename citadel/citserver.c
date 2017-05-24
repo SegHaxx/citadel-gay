@@ -1,7 +1,7 @@
 /* 
  * Main source module for the Citadel server
  *
- * Copyright (c) 1987-2015 by the citadel.org team
+ * Copyright (c) 1987-2017 by the citadel.org team
  *
  * This program is open source software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 3.
@@ -176,9 +176,9 @@ void master_startup(void) {
 	urandom = fopen("/dev/urandom", "r");
 	if (urandom != NULL) {
 		rv = fread(&seed, sizeof seed, 1, urandom);
-		if (rv == -1)
-			syslog(LOG_EMERG, "failed to read random seed: %s\n", 
-			       strerror(errno));
+		if (rv == -1) {
+			syslog(LOG_ERR, "citserver: failed to read random seed: %m");
+		}
 		fclose(urandom);
 	}
 	else {

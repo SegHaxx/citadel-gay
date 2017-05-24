@@ -4,7 +4,7 @@
  * sockets for the Citadel client; for that you must look in ipc_c_tcp.c
  * (which, uncoincidentally, bears a striking similarity to this file).
  *
- * Copyright (c) 1987-2011 by the citadel.org team
+ * Copyright (c) 1987-2017 by the citadel.org team
  *
  * This program is open source software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License, version 3.
@@ -71,7 +71,7 @@ int sock_connect(char *host, char *service)
 	for (ai = res; ai != NULL; ai = ai->ai_next) {
 		sock = socket(ai->ai_family, ai->ai_socktype, ai->ai_protocol);
 		if (sock < 0) {
-			syslog(LOG_ERR, "%s: %s", host, strerror(errno));
+			syslog(LOG_ERR, "%s: %m", host);
 			freeaddrinfo(res);
 			return(-1);
 		}
@@ -81,7 +81,7 @@ int sock_connect(char *host, char *service)
 			return(sock);
 		}
 		else {
-			syslog(LOG_ERR, "%s: %s", host, strerror(errno));
+			syslog(LOG_ERR, "%s: %m", host);
 			close(sock);
 		}
 	}
@@ -192,7 +192,6 @@ int sock_write_timeout(int *sock, const char *buf, int nbytes, int timeout)
 			FD_ZERO(&rfds);
 			FD_SET(*sock, &rfds);
 			if (select(*sock + 1, NULL, &rfds, NULL, &tv) == -1) {
-///				*Error = strerror(errno);
 				close (*sock);
 				*sock = -1;
 				return -1;
@@ -217,7 +216,6 @@ int sock_write_timeout(int *sock, const char *buf, int nbytes, int timeout)
 			FD_ZERO(&rfds);
 			FD_SET(*sock, &rfds);
 			if (select(*sock + 1, NULL, &rfds, NULL, &tv) == -1) {
-///				*Error = strerror(errno);
 				close (*sock);
 				*sock = -1;
 				return -1;

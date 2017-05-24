@@ -48,7 +48,7 @@ void ctdl_lockfile(int yo) {
 		snprintf(lockfilename, sizeof lockfilename, "%s/citadel.lock", ctdl_run_dir);
 		fp = fopen(lockfilename, "w");
 		if (!fp) {
-			syslog(LOG_ERR, "%s: %s", lockfilename, strerror(errno));
+			syslog(LOG_ERR, "%s: %m", lockfilename);
 			exit(CTDLEXIT_DB);
 		}
 		if (flock(fileno(fp), (LOCK_EX|LOCK_NB)) != 0) {
@@ -230,11 +230,11 @@ int main(int argc, char **argv)
 #endif // HAVE_GETPWUID_R
 
 		if ((mkdir(ctdl_run_dir, 0755) != 0) && (errno != EEXIST)) {
-			syslog(LOG_ERR, "main: unable to create run directory [%s]: %s", ctdl_run_dir, strerror(errno));
+			syslog(LOG_ERR, "main: unable to create run directory [%s]: %m", ctdl_run_dir);
 		}
 
 		if (chown(ctdl_run_dir, ctdluid, (pwp==NULL)?-1:pw.pw_gid) != 0) {
-			syslog(LOG_ERR, "main: unable to set the access rights for [%s]: %s", ctdl_run_dir, strerror(errno));
+			syslog(LOG_ERR, "main: unable to set the access rights for [%s]: %m", ctdl_run_dir);
 		}
 	}
 #endif
@@ -345,15 +345,15 @@ int main(int argc, char **argv)
 #endif // HAVE_GETPWUID_R
 
 		if (pwp == NULL)
-			syslog(LOG_ERR, "main: WARNING, getpwuid(%ld): %s" "Group IDs will be incorrect.", (long)CTDLUID, strerror(errno));
+			syslog(LOG_ERR, "main: WARNING, getpwuid(%ld): %m Group IDs will be incorrect.", (long)CTDLUID);
 		else {
 			initgroups(pw.pw_name, pw.pw_gid);
 			if (setgid(pw.pw_gid))
-				syslog(LOG_ERR, "main: setgid(%ld): %s", (long)pw.pw_gid, strerror(errno));
+				syslog(LOG_ERR, "main: setgid(%ld): %m", (long)pw.pw_gid);
 		}
 		syslog(LOG_INFO, "main: changing uid to %ld", (long)CTDLUID);
 		if (setuid(CTDLUID) != 0) {
-			syslog(LOG_ERR, "main: setuid() failed: %s", strerror(errno));
+			syslog(LOG_ERR, "main: setuid() failed: %m");
 		}
 #if defined (HAVE_SYS_PRCTL_H) && defined (PR_SET_DUMPABLE)
 		prctl(PR_SET_DUMPABLE, 1);

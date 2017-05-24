@@ -1045,14 +1045,14 @@ void mime_download(char *name, char *filename, char *partnum, char *disp,
 	) {
 		CC->download_fp = tmpfile();
 		if (CC->download_fp == NULL) {
-			syslog(LOG_EMERG, "msgbase: mime_download() couldn't write: %s", strerror(errno));
+			syslog(LOG_EMERG, "msgbase: mime_download() couldn't write: %m");
 			cprintf("%d cannot open temporary file: %s\n", ERROR + INTERNAL_ERROR, strerror(errno));
 			return;
 		}
 	
 		rv = fwrite(content, length, 1, CC->download_fp);
 		if (rv <= 0) {
-			syslog(LOG_EMERG, "msgbase: mime_download() Couldn't write: %s", strerror(errno));
+			syslog(LOG_EMERG, "msgbase: mime_download() Couldn't write: %m");
 			cprintf("%d unable to write tempfile.\n", ERROR + TOO_BIG);
 			fclose(CC->download_fp);
 			CC->download_fp = NULL;
@@ -2639,9 +2639,7 @@ void CtdlSerializeMessage(struct ser_ret *ret,		/* return values */
 
 	ret->ser = malloc(ret->len);
 	if (ret->ser == NULL) {
-		syslog(LOG_ERR, "msgbase: CtdlSerializeMessage() malloc(%ld) failed: %s",
-			   (long)ret->len, strerror(errno)
-		);
+		syslog(LOG_ERR, "msgbase: CtdlSerializeMessage() malloc(%ld) failed: %m", (long)ret->len);
 		ret->len = 0;
 		ret->ser = NULL;
 		return;
@@ -3592,7 +3590,7 @@ void AdjRefCount(long msgnum, int incr)
 	new_arcq.arcq_delta = incr;
 	rv = fwrite(&new_arcq, sizeof(struct arcq), 1, arcfp);
 	if (rv == -1) {
-		syslog(LOG_EMERG, "%s: %s", file_arcq, strerror(errno));
+		syslog(LOG_EMERG, "%s: %m", file_arcq);
 	}
 	fflush(arcfp);
 
@@ -3636,7 +3634,7 @@ void AdjRefCountList(long *msgnum, long nmsg, int incr)
 	{
 		rv = fwrite(new_arcq + offset, 1, the_size - offset, arcfp);
 		if (rv == -1) {
-			syslog(LOG_EMERG, "%s: %s", file_arcq, strerror(errno));
+			syslog(LOG_ERR, "%s: %m", file_arcq);
 		}
 		else {
 			offset += rv;
@@ -3674,7 +3672,7 @@ int TDAP_ProcessAdjRefCountQueue(void)
 
 	r = link(file_arcq, file_arcq_temp);
 	if (r != 0) {
-		syslog(LOG_ERR, "%s: %s", file_arcq_temp, strerror(errno));
+		syslog(LOG_ERR, "%s: %m", file_arcq_temp);
 		end_critical_section(S_SUPPMSGMAIN);
 		return(num_records_processed);
 	}
@@ -3684,7 +3682,7 @@ int TDAP_ProcessAdjRefCountQueue(void)
 
 	fp = fopen(file_arcq_temp, "rb");
 	if (fp == NULL) {
-		syslog(LOG_ERR, "%s: %s", file_arcq_temp, strerror(errno));
+		syslog(LOG_ERR, "%s: %m", file_arcq_temp);
 		return(num_records_processed);
 	}
 
@@ -3696,7 +3694,7 @@ int TDAP_ProcessAdjRefCountQueue(void)
 	fclose(fp);
 	r = unlink(file_arcq_temp);
 	if (r != 0) {
-		syslog(LOG_ERR, "%s: %s", file_arcq_temp, strerror(errno));
+		syslog(LOG_ERR, "%s: %m", file_arcq_temp);
 	}
 
 	return(num_records_processed);

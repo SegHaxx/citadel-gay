@@ -771,19 +771,19 @@ static int validpw(uid_t uid, const char *pass)
 	begin_critical_section(S_CHKPWD);
 	rv = write(chkpwd_write_pipe[1], &uid, sizeof(uid_t));
 	if (rv == -1) {
-		syslog(LOG_EMERG, "user_ops: communication with chkpwd broken: %s", strerror(errno));
+		syslog(LOG_ERR, "user_ops: communication with chkpwd broken: %m");
 		end_critical_section(S_CHKPWD);
 		return 0;
 	}
 	rv = write(chkpwd_write_pipe[1], pass, 256);
 	if (rv == -1) {
-		syslog(LOG_EMERG, "user_ops: communication with chkpwd broken: %s", strerror(errno));
+		syslog(LOG_ERR, "user_ops: communication with chkpwd broken: %m");
 		end_critical_section(S_CHKPWD);
 		return 0;
 	}
 	rv = read(chkpwd_read_pipe[0], buf, 4);
 	if (rv == -1) {
-		syslog(LOG_EMERG, "user_ops: ommunication with chkpwd broken: %s", strerror(errno));
+		syslog(LOG_ERR, "user_ops: ommunication with chkpwd broken: %m");
 		end_critical_section(S_CHKPWD);
 		return 0;
 	}
@@ -810,21 +810,21 @@ void start_chkpwd_daemon(void) {
 	syslog(LOG_DEBUG, "user_ops: starting chkpwd daemon for host authentication mode");
 
 	if ((stat(file_chkpwd, &filestats)==-1) || (filestats.st_size==0)) {
-		syslog(LOG_ERR, "user_ops: %s: %s", file_chkpwd, strerror(errno));
+		syslog(LOG_ERR, "user_ops: %s: %m", file_chkpwd);
 		abort();
 	}
 	if (pipe(chkpwd_write_pipe) != 0) {
-		syslog(LOG_ERR, "user_ops: unable to create pipe for chkpwd daemon: %s", strerror(errno));
+		syslog(LOG_ERR, "user_ops: unable to create pipe for chkpwd daemon: %m");
 		abort();
 	}
 	if (pipe(chkpwd_read_pipe) != 0) {
-		syslog(LOG_ERR, "user_ops: unable to create pipe for chkpwd daemon: %s", strerror(errno));
+		syslog(LOG_ERR, "user_ops: unable to create pipe for chkpwd daemon: %m");
 		abort();
 	}
 
 	chkpwd_pid = fork();
 	if (chkpwd_pid < 0) {
-		syslog(LOG_ERR, "user_ops: unable to fork chkpwd daemon: %s", strerror(errno));
+		syslog(LOG_ERR, "user_ops: unable to fork chkpwd daemon: %m");
 		abort();
 	}
 	if (chkpwd_pid == 0) {
@@ -832,7 +832,7 @@ void start_chkpwd_daemon(void) {
 		dup2(chkpwd_read_pipe[1], 1);
 		for (i=2; i<256; ++i) close(i);
 		execl(file_chkpwd, file_chkpwd, NULL);
-		syslog(LOG_ERR, "user_ops: unable to exec chkpwd daemon: %s", strerror(errno));
+		syslog(LOG_ERR, "user_ops: unable to exec chkpwd daemon: %m");
 		abort();
 		exit(errno);
 	}

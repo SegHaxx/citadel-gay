@@ -347,7 +347,7 @@ CitContext *CreateNewContext(void) {
 
 	me = (CitContext *) malloc(sizeof(CitContext));
 	if (me == NULL) {
-		syslog(LOG_ERR, "citserver: malloc() failed: %s", strerror(errno));
+		syslog(LOG_ERR, "citserver: malloc() failed: %m");
 		return NULL;
 	}
 	memset(me, 0, sizeof(CitContext));
@@ -396,7 +396,7 @@ CitContext *CloneContext(CitContext *CloneMe) {
 
 	me = (CitContext *) malloc(sizeof(CitContext));
 	if (me == NULL) {
-		syslog(LOG_ERR, "citserver: malloc() failed: %s", strerror(errno));
+		syslog(LOG_ERR, "citserver: malloc() failed: %m");
 		return NULL;
 	}
 	memcpy(me, CloneMe, sizeof(CitContext));
