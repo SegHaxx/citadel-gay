@@ -82,7 +82,6 @@ int main(int argc, char **argv)
 	char relhome[PATH_MAX]="";
 	char ctdldir[PATH_MAX]=CTDLDIR;
 	int syslog_facility = LOG_DAEMON;
-	const char *eDebuglist[] = {NULL, NULL};
 	uid_t u = 0;
 	struct passwd *p = NULL;
 #ifdef HAVE_RUN_DIR
@@ -122,7 +121,7 @@ int main(int argc, char **argv)
 			break;
 
 		case 'x':
-			eDebuglist [0] = optarg;
+				/* deprecated */
 			break;
 
 		case 't':	/* deprecated */
@@ -312,9 +311,6 @@ int main(int argc, char **argv)
 	syslog(LOG_INFO, "main: initializing server extensions");
 	
 	initialise_modules(0);
-
-	eDebuglist[1] = getenv("CITADEL_LOGDEBUG");
-	CtdlSetDebugLogFacilities(eDebuglist, 2);
 
 	/*
 	 * If we need host auth, start our chkpwd daemon.

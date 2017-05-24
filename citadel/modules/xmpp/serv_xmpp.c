@@ -64,7 +64,6 @@
 
 struct xmpp_event *xmpp_queue = NULL;
 
-int XMPPSrvDebugEnable = 0;
 
 
 
@@ -656,10 +655,6 @@ void xmpp_logout_hook(void) {
 }
 
 
-void LogXMPPSrvDebugEnable(const int n)
-{
-	XMPPSrvDebugEnable = n;
-}
 const char *CitadelServiceXMPP="XMPP";
 extern void xmpp_cleanup_events(void);
 CTDL_MODULE_INIT(xmpp)
@@ -672,7 +667,6 @@ CTDL_MODULE_INIT(xmpp)
 					xmpp_async_loop,
 					CitadelServiceXMPP
 		);
-		CtdlRegisterDebugFlagHook(HKEY("serv_xmpp"), LogXMPPSrvDebugEnable, &XMPPSrvDebugEnable);
 		CtdlRegisterSessionHook(xmpp_cleanup_function, EVT_STOP, PRIO_STOP + 70);
                 CtdlRegisterSessionHook(xmpp_login_hook, EVT_LOGIN, PRIO_LOGIN + 90);
                 CtdlRegisterSessionHook(xmpp_logout_hook, EVT_LOGOUT, PRIO_LOGOUT + 90);

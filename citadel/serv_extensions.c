@@ -1,6 +1,6 @@
 /*
  * Citadel Extension Loader
- * Written by Brian Costello <btx@calyx.net>
+ * Originally written by Brian Costello <btx@calyx.net>
  *
  * Copyright (c) 1987-2017 by the citadel.org team
  *
@@ -25,24 +25,9 @@
 #include "config.h"
 
 
-int DebugModules = 0;
-int EnableMarkers = 0;
-int EnableCtlProto = 0;
-
 /*
  * Structure defentitions for hook tables
  */
-
-HashList *LogDebugEntryTable = NULL;
-
-typedef struct LogFunctionHook LogFunctionHook;
-struct LogFunctionHook {
-	LogFunctionHook *next;
-	int loglevel;
-	void (*h_function_pointer) (char *);
-};
-
-LogFunctionHook *LogHookTable = NULL;
 
 typedef struct FixedOutputHook FixedOutputHook;
 struct FixedOutputHook {
@@ -51,10 +36,6 @@ struct FixedOutputHook {
 	void (*h_function_pointer) (char *, int);
 };
 FixedOutputHook *FixedOutputTable = NULL;
-
-
-
-
 
 
 /*
@@ -72,6 +53,7 @@ struct SessionFunctionHook {
 };
 SessionFunctionHook *SessionHookTable = NULL;
 
+
 /*
  * UserFunctionHook extensions are used for any type of hook which implements
  * an operation on a user or username (potentially) other than the one
@@ -84,6 +66,7 @@ struct UserFunctionHook {
 	int eventtype;
 };
 UserFunctionHook *UserHookTable = NULL;
+
 
 /*
  * MessageFunctionHook extensions are used for hooks which implement handlers
@@ -137,8 +120,6 @@ struct XmsgFunctionHook {
 XmsgFunctionHook *XmsgHookTable = NULL;
 
 
-
-
 /*
  * RoomFunctionHook extensions are used for hooks which impliment room
  * processing functions when new messages are added EG. SIEVE.
@@ -149,7 +130,6 @@ struct RoomFunctionHook {
 	int (*fcn_ptr) (struct ctdlroom *);
 };
 RoomFunctionHook *RoomHookTable = NULL;
-
 
 
 typedef struct SearchFunctionHook SearchFunctionHook;
@@ -188,18 +168,18 @@ ConstStr Empty = {HKEY("")};
 char *ErrSubject = "Startup Problems";
 ConstStr ErrGeneral[] = {
 	{HKEY("Citadel had trouble on starting up. ")},
-	{HKEY(" This means, citadel won't be the service provider for a specific service you configured it to.\n\n"
-	      "If you don't want citadel to provide these services, turn them off in WebCit via: ")},
+	{HKEY(" This means, Citadel won't be the service provider for a specific service you configured it to.\n\n"
+	      "If you don't want Citadel to provide these services, turn them off in WebCit via: ")},
 	{HKEY("To make both ways actualy take place restart the citserver with \"sendcommand down\"\n\n"
 	      "The errors returned by the system were:\n")},
 	{HKEY("You can recheck the above if you follow this faq item:\n"
 	      "http://www.citadel.org/doku.php?id=faq:mastering_your_os:net#netstat")}
 };
 
-ConstStr ErrPortShort = { HKEY("We couldn't bind all ports you configured to be provided by citadel server.\n")};
+ConstStr ErrPortShort = { HKEY("We couldn't bind all ports you configured to be provided by Citadel Server.\n")};
 ConstStr ErrPortWhere = { HKEY("\"Admin->System Preferences->Network\".\n\nThe failed ports and sockets are: ")};
-ConstStr ErrPortHint  = { HKEY("If you want citadel to provide you with that functionality, "
-			       "check the output of \"netstat -lnp\" on linux Servers or \"netstat -na\" on *BSD"
+ConstStr ErrPortHint  = { HKEY("If you want Citadel to provide you with that functionality, "
+			       "check the output of \"netstat -lnp\" on Linux, or \"netstat -na\" on BSD"
 			       " and stop the program that binds these ports.\n You should eventually remove "
 			       " their initscripts in /etc/init.d so that you won't get this trouble once more.\n"
 			       " After that goto \"Administration -> Shutdown Citadel\" to make Citadel restart & retry to bind this port.\n")};
@@ -212,8 +192,7 @@ void LogPrintMessages(long err)
 	ConstStr *Short, *Where, *Hint; 
 
 	
-	Message = NewStrBufPlain(NULL, 
-				 StrLength(portlist) + StrLength(errormessages));
+	Message = NewStrBufPlain(NULL, StrLength(portlist) + StrLength(errormessages));
 	
 	DetailErrorFlags = DetailErrorFlags & ~err;
 
@@ -289,70 +268,6 @@ int DLoader_Exec_Cmd(char *cmdbuf)
 	return 0;
 }
 
-void CtdlRegisterDebugFlagHook(const char *Name, long Len, CtdlDbgFunction F, const int *LogP)
-{
-	LogDebugEntry *E;
-	if (LogDebugEntryTable == NULL)
-		LogDebugEntryTable = NewHash(1, NULL);
-	E = (LogDebugEntry*) malloc(sizeof(LogDebugEntry));
-	E->F = F;
-	E->Name = Name;
-	E->Len = Len;
-	E->LogP = LogP;
-	Put(LogDebugEntryTable, Name, Len, E, NULL);
-	
-}
-void CtdlSetDebugLogFacilities(const char **Str, long n)
-{
-	StrBuf *Token = NULL;
-	StrBuf *Buf = NULL;
-	const char *ch;
-	int i;
-	int DoAll = 0;
-	void *vptr;
-
-	for (i=0; i < n; i++){
-		if ((Str[i] != NULL) && !IsEmptyStr(Str[i])) {
-			if (strcmp(Str[i], "all") == 0) {
-				DoAll = 1;
-				continue;
-			}
-			Buf = NewStrBufPlain(Str[i], -1);
-			ch = NULL;
-			if (Token == NULL)
-				Token = NewStrBufPlain(NULL, StrLength(Buf));
-			while ((ch != StrBufNOTNULL) &&
-			       StrBufExtract_NextToken(Token, Buf, &ch, ',')) {
-				if (GetHash(LogDebugEntryTable, SKEY(Token), &vptr) && 
-				    (vptr != NULL))
-				{
-					LogDebugEntry *E = (LogDebugEntry*)vptr;
-					E->F(1);
-				}
-			}
-		}
-		FreeStrBuf(&Buf);
-	}
-	FreeStrBuf(&Token);
-	if (DoAll) {
-		long HKLen;
-		const char *ch;
-		HashPos *Pos;
-
-		Pos = GetNewHashPos(LogDebugEntryTable, 0);
-		while (GetNextHashPos(LogDebugEntryTable, Pos, &HKLen, &ch, &vptr)) {
-			LogDebugEntry *E = (LogDebugEntry*)vptr;
-			E->F(1);
-		}
-
-		DeleteHashPos(&Pos);
-	}
-}
-void CtdlDestroyDebugTable(void)
-{
-
-	DeleteHash(&LogDebugEntryTable);
-}
 
 void CtdlRegisterProtoHook(void (*handler) (char *), char *cmd, char *desc)
 {
@@ -635,8 +550,7 @@ void CtdlDestroyUserHooks(void)
 }
 
 
-void CtdlRegisterMessageHook(int (*handler)(struct CtdlMessage *, recptypes *),
-				int EventType)
+void CtdlRegisterMessageHook(int (*handler)(struct CtdlMessage *, recptypes *), int EventType)
 {
 
 	MessageFunctionHook *newfcn;
@@ -652,8 +566,7 @@ void CtdlRegisterMessageHook(int (*handler)(struct CtdlMessage *, recptypes *),
 }
 
 
-void CtdlUnregisterMessageHook(int (*handler)(struct CtdlMessage *, recptypes *),
-		int EventType)
+void CtdlUnregisterMessageHook(int (*handler)(struct CtdlMessage *, recptypes *), int EventType)
 {
 	MessageFunctionHook *cur, *p, *last;
 	last = NULL;
@@ -1368,25 +1281,10 @@ void CtdlModuleStartCryptoMsgs(char *ok_response, char *nosup_response, char *er
 #endif
 }
 
-void DebugModulesEnable(const int n)
-{
-	DebugModules = n;
-}
-void MarkersEnable(const int n)
-{
-	EnableMarkers = n;
-}
-void DebugCitadelProtoEnable(const int n)
-{
-	EnableCtlProto = n;
-}
 
 CTDL_MODULE_INIT(modules)
 {
 	if (!threading) {
-		CtdlRegisterDebugFlagHook(HKEY("modules"), DebugModulesEnable, &DebugModules);
-		CtdlRegisterDebugFlagHook(HKEY("periodicmarkers"), MarkersEnable, &EnableMarkers);
-		CtdlRegisterDebugFlagHook(HKEY("citadelprotocol"), DebugCitadelProtoEnable, &EnableCtlProto);
 	}
 	return "modules";
 }

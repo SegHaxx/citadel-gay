@@ -78,7 +78,6 @@
 #include "netspool.h"
 #include "netmail.h"
 
-int NetQDebugEnabled = 0;
 struct CitContext networker_spool_CC;
 
 /* comes from lookup3.c from libcitadel... */
@@ -522,20 +521,13 @@ int ignet_aftersave(struct CtdlMessage *msg, recptypes *recps)
  * Module entry point
  */
 
-void SetNetQDebugEnabled(const int n)
-{
-	NetQDebugEnabled = n;
-}
-
 
 CTDL_MODULE_INIT(network)
 {
 	if (!threading)
 	{
 		CtdlRegisterMessageHook(ignet_aftersave, EVT_AFTERSAVE);
-
 		CtdlFillSystemContext(&networker_spool_CC, "CitNetSpool");
-		CtdlRegisterDebugFlagHook(HKEY("networkqueue"), SetNetQDebugEnabled, &NetQDebugEnabled);
 		CtdlRegisterSessionHook(network_cleanup_function, EVT_STOP, PRIO_STOP + 30);
                 CtdlRegisterSessionHook(network_logout_hook, EVT_LOGOUT, PRIO_LOGOUT + 10);
 		CtdlRegisterProtoHook(cmd_nsyn, "NSYN", "Synchronize room to node");

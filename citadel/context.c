@@ -24,14 +24,9 @@
 #include "control.h"
 #include "config.h"
 
-int DebugSession = 0;
-
 pthread_key_t MyConKey;				/* TSD key for MyContext() */
-
-
 CitContext masterCC;
 CitContext *ContextList = NULL;
-
 time_t last_purge = 0;				/* Last dead session purge */
 int num_sessions = 0;				/* Current number of sessions */
 int next_pid = 0;
@@ -736,14 +731,9 @@ void set_async_waiting(struct CitContext *ccptr)
 }
 
 
-void DebugSessionEnable(const int n)
-{
-	DebugSession = n;
-}
 CTDL_MODULE_INIT(session)
 {
 	if (!threading) {
-		CtdlRegisterDebugFlagHook(HKEY("session"), DebugSessionEnable, &DebugSession);
 	}
 	return "session";
 }
