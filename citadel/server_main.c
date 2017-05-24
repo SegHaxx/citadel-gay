@@ -79,6 +79,7 @@ int main(int argc, char **argv)
 	int relh=0;
 	int home=0;
 	int dbg=0;
+	int max_log_level = LOG_INFO;
 	char relhome[PATH_MAX]="";
 	char ctdldir[PATH_MAX]=CTDLDIR;
 	int syslog_facility = LOG_DAEMON;
@@ -121,7 +122,7 @@ int main(int argc, char **argv)
 			break;
 
 		case 'x':
-				/* deprecated */
+			max_log_level = atoi(optarg);
 			break;
 
 		case 't':	/* deprecated */
@@ -163,6 +164,7 @@ int main(int argc, char **argv)
 			fprintf(stderr,	"citserver: usage: "
 					"citserver "
 					"[-l LogFacility] "
+					"[-x MaxLogLevel] "
 					"[-d] [-D] [-r] "
 					"[-u user] "
 					"[-h HomeDir]\n"
@@ -193,6 +195,7 @@ int main(int argc, char **argv)
 	}
 
 	StartLibCitadel(basesize);
+	setlogmask(LOG_UPTO(max_log_level));
 	openlog("citserver",
 		( running_as_daemon ? (LOG_PID) : (LOG_PID | LOG_PERROR) ),
 		syslog_facility
