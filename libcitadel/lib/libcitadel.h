@@ -697,7 +697,6 @@ extern "C" {
 #define FILTERLIST	"application/x-citadel-filter-list"
 #define SIEVECONFIG	"application/x-citadel-sieve-config"
 #define XMPPMORTUARY	"application/x-citadel-xmpp-mortuary"
-#define INTERNETCFG     "application/x-citadel-internet-config"
 
 #define FILE_MAILALIAS       "__MAIL_ALIAS__"
 

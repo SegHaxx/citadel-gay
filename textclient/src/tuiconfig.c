@@ -383,11 +383,10 @@ void get_inet_rec_type(CtdlIPC *ipc, char *buf) {
 	keyopt(" <1> localhost      (Alias for this computer)\n");
 	keyopt(" <2> smart host     (Forward all outbound mail to this host)\n");
 	keyopt(" <3> fallback host  (Send mail to this host only if direct delivery fails)\n");
-	keyopt(" <4> directory      (Consult the Global Address Book)\n");
-	keyopt(" <5> SpamAssassin   (Address of SpamAssassin server)\n");
-	keyopt(" <6> RBL            (domain suffix of spam hunting RBL)\n");
-	keyopt(" <7> masq domains   (Domains as which users are allowed to masquerade)\n");
-	keyopt(" <8> ClamAV         (Address of ClamAV clamd server)\n");
+	keyopt(" <4> SpamAssassin   (Address of SpamAssassin server)\n");
+	keyopt(" <5> RBL            (domain suffix of spam hunting RBL)\n");
+	keyopt(" <6> masq domains   (Domains as which users are allowed to masquerade)\n");
+	keyopt(" <7> ClamAV         (Address of ClamAV clamd server)\n");
 	sel = intprompt("Which one", 1, 1, 8);
 	switch(sel) {
 		case 1:	strcpy(buf, "localhost");
@@ -396,15 +395,13 @@ void get_inet_rec_type(CtdlIPC *ipc, char *buf) {
 			return;
 		case 3:	strcpy(buf, "fallbackhost");
 			return;
-		case 4:	strcpy(buf, "directory");
+		case 4:	strcpy(buf, "spamassassin");
 			return;
-		case 5:	strcpy(buf, "spamassassin");
+		case 5:	strcpy(buf, "rbl");
 			return;
-		case 6:	strcpy(buf, "rbl");
+		case 6:	strcpy(buf, "masqdomain");
 			return;
-		case 7:	strcpy(buf, "masqdomain");
-			return;
-		case 8:	strcpy(buf, "clamav");
+		case 7:	strcpy(buf, "clamav");
 			return;
 	}
 }
@@ -460,29 +457,29 @@ void do_internet_configuration(CtdlIPC *ipc)
 		ch = keymenu("", "<A>dd|<D>elete|<S>ave|<Q>uit");
 		switch(ch) {
 			case 'a':
-				newprompt("Enter host name: ",
-					buf, 50);
+				newprompt("Enter host name: ", buf, 50);
 				striplt(buf);
 				if (!IsEmptyStr(buf)) {
 					++num_recs;
-					if (num_recs == 1)
+					if (num_recs == 1) {
 						recs = malloc(sizeof(char *));
-					else recs = realloc(recs,
-						(sizeof(char *)) * num_recs);
+					}
+					else {
+						recs = realloc(recs, (sizeof(char *)) * num_recs);
+					}
 					strcat(buf, "|");
-					get_inet_rec_type(ipc,
-							&buf[strlen(buf)]);
+					get_inet_rec_type(ipc, &buf[strlen(buf)]);
 					recs[num_recs-1] = strdup(buf);
 				}
 				modified = 1;
 				break;
 			case 'd':
-				i = intprompt("Delete which one",
-					1, 1, num_recs) - 1;
+				i = intprompt("Delete which one", 1, 1, num_recs) - 1;
 				free(recs[i]);
 				--num_recs;
-				for (j=i; j<num_recs; ++j)
+				for (j=i; j<num_recs; ++j) {
 					recs[j] = recs[j+1];
+				}
 				modified = 1;
 				break;
 			case 's':

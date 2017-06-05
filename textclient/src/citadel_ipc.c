@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1987-2016 by the citadel.org team
+ * Copyright (c) 1987-2017 by the citadel.org team
  *
  *  This program is open source software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License version 3.
@@ -3322,8 +3322,7 @@ CtdlIPC* CtdlIPC_new(int argc, char **argv, char *hostbuf, char *portbuf)
    		}
 	}
 
-	if ((!strcmp(cithost, "localhost"))
-	   || (!strcmp(cithost, "127.0.0.1"))) {
+	if ((!strcmp(cithost, "localhost")) || (!strcmp(cithost, "127.0.0.1"))) {
 		ipc->isLocal = 1;
 	}
 

@@ -251,5 +251,4 @@ InitModule_INETCONF
 	RegisterIterator("SERVCFG:INET", 1, NULL, GetInetConfHash, NULL, NULL, CTX_STRBUF, CTX_NONE, IT_NOFLAG);
 	RegisterNamespace("SERVCFG:FLUSHINETCFG",0, 0, DeleteInetConfHash, NULL, CTX_NONE);
 	RegisterIterator("ITERATE:VALID:DOMAINNAMES", 1, NULL, GetValidDomainNames, NULL, DeleteHash, CTX_STRBUF, CTX_NONE, IT_NOFLAG);
-
 }
