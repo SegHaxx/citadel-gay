@@ -2047,8 +2047,7 @@ int CtdlIPCSetSystemConfig(CtdlIPC *ipc, const char *listing, char *cret)
 
 
 /* CONF GETSYS */
-int CtdlIPCGetSystemConfigByType(CtdlIPC *ipc, const char *mimetype,
-	       	char **listing, char *cret)
+int CtdlIPCGetSystemConfigByType(CtdlIPC *ipc, const char *mimetype, char **listing, char *cret)
 {
 	register int ret;
 	char *aaa;
@@ -2062,18 +2061,16 @@ int CtdlIPCGetSystemConfigByType(CtdlIPC *ipc, const char *mimetype,
 	aaa = malloc(strlen(mimetype) + 13);
 	if (!aaa) return -1;
 	sprintf(aaa, "CONF GETSYS|%s", mimetype);
-	ret = CtdlIPCGenericCommand(ipc, aaa, NULL, 0,
-			listing, &bytes, cret);
-    free(aaa);
-    return ret;
+	ret = CtdlIPCGenericCommand(ipc, aaa, NULL, 0, listing, &bytes, cret);
+	free(aaa);
+	return ret;
 }
 
 
 /* CONF PUTSYS */
-int CtdlIPCSetSystemConfigByType(CtdlIPC *ipc, const char *mimetype,
-	       const char *listing, char *cret)
+int CtdlIPCSetSystemConfigByType(CtdlIPC *ipc, const char *mimetype, const char *listing, char *cret)
 {
-    register int ret;
+	register int ret;
 	char *aaa;
 
 	if (!cret) return -2;
@@ -2083,10 +2080,9 @@ int CtdlIPCSetSystemConfigByType(CtdlIPC *ipc, const char *mimetype,
 	aaa = malloc(strlen(mimetype) + 13);
 	if (!aaa) return -1;
 	sprintf(aaa, "CONF PUTSYS|%s", mimetype);
-	ret = CtdlIPCGenericCommand(ipc, aaa, listing, strlen(listing),
-			NULL, NULL, cret);
-    free(aaa);
-    return ret;
+	ret = CtdlIPCGenericCommand(ipc, aaa, listing, strlen(listing), NULL, NULL, cret);
+	free(aaa);
+	return ret;
 }
 
 
@@ -2099,8 +2095,7 @@ int CtdlIPCGetRoomNetworkConfig(CtdlIPC *ipc, char **listing, char *cret)
 	if (!listing) return -2;
 	if (*listing) return -2;
 
-	return CtdlIPCGenericCommand(ipc, "GNET", NULL, 0,
-			listing, &bytes, cret);
+	return CtdlIPCGenericCommand(ipc, "GNET", NULL, 0, listing, &bytes, cret);
 }
 
 
@@ -2110,8 +2105,7 @@ int CtdlIPCSetRoomNetworkConfig(CtdlIPC *ipc, const char *listing, char *cret)
 	if (!cret) return -2;
 	if (!listing) return -2;
 
-	return CtdlIPCGenericCommand(ipc, "SNET", listing, strlen(listing),
-			NULL, NULL, cret);
+	return CtdlIPCGenericCommand(ipc, "SNET", listing, strlen(listing), NULL, NULL, cret);
 }
 
 
