@@ -4,21 +4,15 @@
  * wrote it as a module merely to keep things as clean and loosely coupled
  * as possible.
  *
- * Copyright (c) 1987-2012 by the citadel.org team
+ * Copyright (c) 1987-2017 by the citadel.org team
  *
- *  This program is open source software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License version 3.
- *  
- *  
+ * This program is open source software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 3.
  *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  
- *  
- *  
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
  */
 
 #include "sysdep.h"
@@ -57,8 +51,6 @@
 #include "internet_addressing.h"
 #include "genstamp.h"
 #include "domain.h"
-
-
 #include "ctdl_module.h"
 
 
@@ -92,17 +84,20 @@ int inetcfg_aftersave(struct CtdlMessage *msg, recptypes *recp) {
 	/* If this isn't the configuration room, or if this isn't a MIME
 	 * message, don't bother.
 	 */
-	if ((msg->cm_fields[eOriginalRoom]) && (strcasecmp(msg->cm_fields[eOriginalRoom], SYSCONFIGROOM)))
-	{
+	if ((msg->cm_fields[eOriginalRoom]) && (strcasecmp(msg->cm_fields[eOriginalRoom], SYSCONFIGROOM))) {
 		return(0);
 	}
-	if (msg->cm_format_type != 4) return(0);
+	if (msg->cm_format_type != 4) {
+		return(0);
+	}
 
 	ptr = msg->cm_fields[eMesageText];
 	while (ptr != NULL) {
 	
 		linelen = strcspn(ptr, "\n");
-		if (linelen == 0) return(0);	/* end of headers */	
+		if (linelen == 0) {
+			return(0);	/* end of headers */	
+		}
 		
 		if (!strncasecmp(ptr, "Content-type: ", 14)) {
 			if (!strncasecmp(&ptr[14], INTERNETCFG,
@@ -131,12 +126,11 @@ void inetcfg_init_backend(long msgnum, void *userdata) {
 
 
 void inetcfg_init(void) {
-	if (CtdlGetRoom(&CC->room, SYSCONFIGROOM) != 0) return;
-	CtdlForEachMessage(MSGS_LAST, 1, NULL, INTERNETCFG, NULL,
-		inetcfg_init_backend, NULL);
+	if (CtdlGetRoom(&CC->room, SYSCONFIGROOM) != 0) {
+		return;
+	}
+	CtdlForEachMessage(MSGS_LAST, 1, NULL, INTERNETCFG, NULL, inetcfg_init_backend, NULL);
 }
-
-
 
 
 /*****************************************************************************/
@@ -145,12 +139,13 @@ void inetcfg_init(void) {
 void clenaup_inetcfg(void)
 {
 	char *buf;
-
 	buf = inetcfg;
 	inetcfg = NULL;
-	if (buf != NULL)
+	if (buf != NULL) {
 		free(buf);
+	}
 }
+
 
 CTDL_MODULE_INIT(inetcfg)
 {
@@ -164,4 +159,3 @@ CTDL_MODULE_INIT(inetcfg)
 	/* return our module name for the log */
 	return "inetcfg";
 }
-
