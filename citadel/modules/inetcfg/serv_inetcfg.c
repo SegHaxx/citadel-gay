@@ -100,8 +100,7 @@ int inetcfg_aftersave(struct CtdlMessage *msg, recptypes *recp) {
 		}
 		
 		if (!strncasecmp(ptr, "Content-type: ", 14)) {
-			if (!strncasecmp(&ptr[14], INTERNETCFG,
-		   	   strlen(INTERNETCFG))) {
+			if (!strncasecmp(&ptr[14], INTERNETCFG, strlen(INTERNETCFG))) {
 				inetcfg_setTo(msg);	/* changing configs */
 			}
 		}

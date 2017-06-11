@@ -486,8 +486,7 @@ char *CtdlGetSysConfig(char *sysconfname) {
 	/* We want the last (and probably only) config in this room */
 	begin_critical_section(S_CONFIG);
 	config_msgnum = (-1L);
-	CtdlForEachMessage(MSGS_LAST, 1, NULL, sysconfname, NULL,
-			   CtdlGetSysConfigBackend, NULL);
+	CtdlForEachMessage(MSGS_LAST, 1, NULL, sysconfname, NULL, CtdlGetSysConfigBackend, NULL);
 	msgnum = config_msgnum;
 	end_critical_section(S_CONFIG);
 
@@ -507,10 +506,12 @@ char *CtdlGetSysConfig(char *sysconfname) {
 
 	CtdlGetRoom(&CC->room, hold_rm);
 
-	if (conf != NULL) do {
+	if (conf != NULL) {
+		do {
 			extract_token(buf, conf, 0, '\n', sizeof buf);
 			strcpy(conf, &conf[strlen(buf)+1]);
 		} while ( (!IsEmptyStr(conf)) && (!IsEmptyStr(buf)) );
+	}
 
 	return(conf);
 }
