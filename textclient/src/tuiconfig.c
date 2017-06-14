@@ -427,6 +427,13 @@ void do_internet_configuration(CtdlIPC *ipc)
 		while (!IsEmptyStr(resp)) {
 			extract_token(buf, resp, 0, '\n', sizeof buf);
 			remove_token(resp, 0, '\n');
+
+			// VILE SLEAZY HACK: replace obsolete "directory" domains with "localhost"
+			char *d = strstr(buf, "|directory");
+			if (d != NULL) {
+				strcpy(d, "|localhost");
+			}
+
 			++num_recs;
 			if (num_recs == 1) recs = malloc(sizeof(char *));
 			else recs = realloc(recs, (sizeof(char *)) * num_recs);

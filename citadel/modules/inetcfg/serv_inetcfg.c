@@ -135,7 +135,7 @@ void inetcfg_init(void) {
 /*****************************************************************************/
 /*                      MODULE INITIALIZATION STUFF                          */
 /*****************************************************************************/
-void clenaup_inetcfg(void)
+void cleanup_inetcfg(void)
 {
 	char *buf;
 	buf = inetcfg;
@@ -152,7 +152,7 @@ CTDL_MODULE_INIT(inetcfg)
 	{
 		CtdlRegisterMessageHook(inetcfg_aftersave, EVT_AFTERSAVE);
 		inetcfg_init();
-		CtdlRegisterCleanupHook(clenaup_inetcfg);
+		CtdlRegisterCleanupHook(cleanup_inetcfg);
 	}
 	
 	/* return our module name for the log */
