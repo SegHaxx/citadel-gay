@@ -61,20 +61,22 @@ void load_inetconf(void)
 		
 	if (GetServerStatus(Buf, NULL) == 1) {
 		CfgToken = NewStrBuf();
-		while ((len = StrBuf_ServGetln(Buf),
-			((len >= 0) && 
-			 ((len != 3) ||
-			  strcmp(ChrPtr(Buf), "000")))))
+		while ((len = StrBuf_ServGetln(Buf), ((len >= 0) && ((len != 3) || strcmp(ChrPtr(Buf), "000")))))
 		{
 			Value = NewStrBuf();
- 
 			StrBufExtract_token(CfgToken, Buf, 1, '|');
+
+			// VILE SLEAZY HACK: change obsolete "directory" domains to "localhost" domains
+			if (!strcasecmp(ChrPtr(CfgToken), "directory")) {
+				FreeStrBuf(&CfgToken);
+				CfgToken = NewStrBufPlain(HKEY("localhost"));
+			}
+
 			StrBufExtract_token(Value, Buf, 0, '|');
 			GetHash(WCC->InetCfg, ChrPtr(CfgToken), StrLength(CfgToken), &vHash);
 			Hash = (HashList*) vHash;
 			if (Hash == NULL) {
-				syslog(LOG_WARNING, "ERROR Loading inet config line: [%s]\n", 
-					ChrPtr(Buf));
+				syslog(LOG_WARNING, "ERROR Loading inet config line: [%s]", ChrPtr(Buf));
 				FreeStrBuf(&Value);
 				continue;
 			}
@@ -165,9 +167,7 @@ void new_save_inetconf(void) {
 				while (GetNextHashPos(Hash, where, &KeyLen, &Key, &vStr)) {
 					Str = (StrBuf*) vStr;
 					if ((Str!= NULL) && (StrLength(Str) > 0))
-						serv_printf("%s|%s", 
-							    ChrPtr(Str),
-							    CfgNames[i].Key); 
+						serv_printf("%s|%s", ChrPtr(Str), CfgNames[i].Key); 
 				}
 				DeleteHashPos(&where);
 			}			
@@ -178,6 +178,7 @@ void new_save_inetconf(void) {
 	FreeStrBuf(&Buf);
 	url_do_template();
 }
+
 
 void DeleteInetConfHash(StrBuf *Target, WCTemplputParams *TP)
 {
