@@ -286,12 +286,12 @@ int CtdlHostAlias(char *fqdn) {
 	char host[256], type[256];
 	int found = 0;
 
-	if (fqdn == NULL) return(hostalias_nomatch);
-	if (IsEmptyStr(fqdn)) return(hostalias_nomatch);
-	if (!strcasecmp(fqdn, "localhost")) return(hostalias_localhost);
-	if (!strcasecmp(fqdn, CtdlGetConfigStr("c_fqdn"))) return(hostalias_localhost);
-	if (!strcasecmp(fqdn, CtdlGetConfigStr("c_nodename"))) return(hostalias_localhost);
-	if (inetcfg == NULL) return(hostalias_nomatch);
+	if (fqdn == NULL)					return(hostalias_nomatch);
+	if (IsEmptyStr(fqdn))					return(hostalias_nomatch);
+	if (!strcasecmp(fqdn, "localhost"))			return(hostalias_localhost);
+	if (!strcasecmp(fqdn, CtdlGetConfigStr("c_fqdn")))	return(hostalias_localhost);
+	if (!strcasecmp(fqdn, CtdlGetConfigStr("c_nodename")))	return(hostalias_localhost);
+	if (inetcfg == NULL)					return(hostalias_nomatch);
 
 	config_lines = num_tokens(inetcfg, '\n');
 	for (i=0; i<config_lines; ++i) {
@@ -302,22 +302,24 @@ int CtdlHostAlias(char *fqdn) {
 		found = 0;
 
 		/* Process these in a specific order, in case there are multiple matches.
-		 * We want directory to override masq, for example.
+		 * We want localhost to override masq, for example.
 		 */
 
 		if ( (!strcasecmp(type, "masqdomain")) && (!strcasecmp(fqdn, host))) {
 			found = hostalias_masq;
 		}
+
 		if ( (!strcasecmp(type, "localhost")) && (!strcasecmp(fqdn, host))) {
 			found = hostalias_localhost;
 		}
+
+		// "directory" used to be a distributed version of "localhost" but they're both the same now
 		if ( (!strcasecmp(type, "directory")) && (!strcasecmp(fqdn, host))) {
-			found = hostalias_directory;
+			found = hostalias_localhost;
 		}
 
 		if (found) return(found);
 	}
-
 	return(hostalias_nomatch);
 }
 
@@ -419,7 +421,7 @@ int alias(char *name)
 	remove_any_whitespace_to_the_left_or_right_of_at_symbol(name);
 	stripallbut(name, '<', '>');
 
-	fp = fopen(file_mail_aliases, "r");
+	fp = fopen(file_mail_aliases, "r");		// when are we going to get rid of this?
 	if (fp == NULL) {
 		fp = fopen("/dev/null", "r");
 	}
@@ -445,7 +447,7 @@ int alias(char *name)
 	}
 	fclose(fp);
 
-	/* Hit the Global Address Book */
+	/* Hit the email address directory */
 	if (CtdlDirectoryLookup(aaa, name, sizeof aaa) == 0) {
 		strcpy(name, aaa);
 	}
@@ -523,9 +525,8 @@ int alias(char *name)
  *
  * Caller needs to free the result using free_recipients()
  */
-recptypes *validate_recipients(const char *supplied_recipients, 
-			       const char *RemoteIdentifier, 
-			       int Flags) {
+recptypes *validate_recipients(const char *supplied_recipients, const char *RemoteIdentifier, int Flags)
+{
 	struct CitContext *CCC = CC;
 	recptypes *ret;
 	char *recipients = NULL;
@@ -1497,8 +1498,7 @@ void directory_key(char *key, char *addr) {
 }
 
 
-/* Return nonzero if the supplied address is in a domain we keep in
- * the directory
+/* Return nonzero if the supplied address is in one of "our" domains
  */
 int IsDirectory(char *addr, int allow_masq_domains) {
 	char domain[256];
@@ -1512,7 +1512,7 @@ int IsDirectory(char *addr, int allow_masq_domains) {
 	if ( (h == hostalias_masq) && allow_masq_domains)
 		return(1);
 	
-	if ( (h == hostalias_localhost) || (h == hostalias_directory) ) {
+	if (h == hostalias_localhost) {
 		return(1);
 	}
 	else {
@@ -1527,8 +1527,9 @@ int IsDirectory(char *addr, int allow_masq_domains) {
 int CtdlDirectoryAddUser(char *internet_addr, char *citadel_addr) {
 	char key[SIZ];
 
-	if (IsDirectory(internet_addr, 0) == 0) 
+	if (IsDirectory(internet_addr, 0) == 0) {
 		return 0;
+	}
 	syslog(LOG_DEBUG, "internet_addressing: create directory entry: %s --> %s", internet_addr, citadel_addr);
 	directory_key(key, internet_addr);
 	cdb_store(CDB_DIRECTORY, key, strlen(key), citadel_addr, strlen(citadel_addr)+1 );
@@ -1630,7 +1631,7 @@ char *harvest_collected_addresses(struct CtdlMessage *msg) {
 					utf8ify_rfc822_string(addr);
 				process_rfc822_addr(addr, user, node, name);
 				h = CtdlHostAlias(node);
-				if ( (h != hostalias_localhost) && (h != hostalias_directory) ) {
+				if (h != hostalias_localhost) {
 					coll = realloc(coll, strlen(coll) + strlen(addr) + 4);
 					if (coll == NULL) return(NULL);
 					if (!IsEmptyStr(coll)) {

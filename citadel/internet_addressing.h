@@ -26,8 +26,6 @@ char *harvest_collected_addresses(struct CtdlMessage *msg);
 enum {
 	hostalias_nomatch,
 	hostalias_localhost,
-	hostalias_gatewaydomain,
-	hostalias_directory,
 	hostalias_masq
 };
 
