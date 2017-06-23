@@ -12,6 +12,7 @@
  * GNU General Public License for more details.
  */
 
+
 #include "support.h"
 #include "control.h"
 #include "ctdl_module.h"
@@ -150,6 +151,7 @@ void cmd_newu(char *cmdbuf)
 	}
 }
 
+
 /*
  * set password - citadel protocol implementation
  */
@@ -221,16 +223,13 @@ void cmd_creu(char *cmdbuf)
 			safestrncpy(tmp.password, password, sizeof(tmp.password));
 			CtdlPutUserLock(&tmp);
 		}
-		cprintf("%d User '%s' created %s.\n", CIT_OK, username,
-				(!IsEmptyStr(password)) ? "and password set" :
-				"with no password");
+		cprintf("%d User '%s' created %s.\n", CIT_OK, username, (!IsEmptyStr(password)) ? "and password set" : "with no password");
 		return;
 	} else if (a == ERROR + ALREADY_EXISTS) {
 		cprintf("%d '%s' already exists.\n", ERROR + ALREADY_EXISTS, username);
 		return;
 	} else if ( (CtdlGetConfigInt("c_auth_mode") != AUTHMODE_NATIVE) && (a == ERROR + NO_SUCH_USER) ) {
-		cprintf("%d User accounts are not created within Citadel in host authentication mode.\n",
-			ERROR + NO_SUCH_USER);
+		cprintf("%d User accounts are not created within Citadel in host authentication mode.\n", ERROR + NO_SUCH_USER);
 		return;
 	} else {
 		cprintf("%d An error occurred creating the user account.\n", ERROR + INTERNAL_ERROR);
@@ -269,6 +268,7 @@ void cmd_setu(char *new_parms)
 	CtdlPutCurrentUserLock();
 	cprintf("%d Ok\n", CIT_OK);
 }
+
 
 /*
  * set last read pointer
@@ -344,6 +344,7 @@ void cmd_gtsn(char *argbuf) {
 	client_write(HKEY("\n"));
 }
 
+
 /*
  * INVT and KICK commands
  */
@@ -359,15 +360,13 @@ void cmd_invt_kick(char *iuser, int op) {
 		/* access granted */
 	} else {
 		/* access denied */
-		cprintf("%d Higher access or room ownership required.\n",
-			ERROR + HIGHER_ACCESS_REQUIRED);
+		cprintf("%d Higher access or room ownership required.\n", ERROR + HIGHER_ACCESS_REQUIRED);
 		return;
 	}
 
 	if (!strncasecmp(CC->room.QRname, CtdlGetConfigStr("c_baseroom"),
 			 ROOMNAMELEN)) {
-		cprintf("%d Can't add/remove users from this room.\n",
-			ERROR + NOT_HERE);
+		cprintf("%d Can't add/remove users from this room.\n", ERROR + NOT_HERE);
 		return;
 	}
 
@@ -383,8 +382,15 @@ void cmd_invt_kick(char *iuser, int op) {
 	return;
 }
 
-void cmd_invt(char *iuser) {cmd_invt_kick(iuser, 1);}
-void cmd_kick(char *iuser) {cmd_invt_kick(iuser, 0);}
+
+void cmd_invt(char *iuser) {
+	cmd_invt_kick(iuser, 1);
+}
+
+
+void cmd_kick(char *iuser) {
+	cmd_invt_kick(iuser, 0);
+}
 
 
 /*
@@ -404,6 +410,7 @@ void cmd_forg(char *argbuf)
 		cprintf("%d You may not forget this room.\n", ERROR + NOT_HERE);
 	}
 }
+
 
 /*
  * Get Next Unregistered User
@@ -428,12 +435,9 @@ void cmd_gnur(char *argbuf)
 	cdb_rewind(CDB_USERS);
 	while (cdbus = cdb_next_item(CDB_USERS), cdbus != NULL) {
 		memset(&usbuf, 0, sizeof(struct ctdluser));
-		memcpy(&usbuf, cdbus->ptr,
-		       ((cdbus->len > sizeof(struct ctdluser)) ?
-			sizeof(struct ctdluser) : cdbus->len));
+		memcpy(&usbuf, cdbus->ptr, ((cdbus->len > sizeof(struct ctdluser)) ?  sizeof(struct ctdluser) : cdbus->len));
 		cdb_free(cdbus);
-		if ((usbuf.flags & US_NEEDVALID)
-		    && (usbuf.axlevel > AxDeleted)) {
+		if ((usbuf.flags & US_NEEDVALID) && (usbuf.axlevel > AxDeleted)) {
 			cprintf("%d %s\n", MORE_DATA, usbuf.fullname);
 			cdb_close_cursor(CDB_USERS);
 			return;
@@ -466,9 +470,7 @@ void cmd_vali(char *v_args)
 	extract_token(user, v_args, 0, '|', sizeof user);
 	newax = extract_int(v_args, 1);
 
-	if (CtdlAccessCheck(ac_aide) || 
-	    (newax > AxAideU) ||
-	    (newax < AxDeleted)) {
+	if (CtdlAccessCheck(ac_aide) || (newax > AxAideU) || (newax < AxDeleted)) {
 		return;
 	}
 
@@ -506,8 +508,6 @@ void cmd_list(char *cmdbuf)
 }
 
 
-
-
 /*
  * assorted info we need to check at login
  */
@@ -521,9 +521,10 @@ void cmd_chek(char *argbuf)
 		return;
 	}
 
-	CtdlGetUser(&CC->user, CC->curr_user);	/* no lock is needed here */
-	if ((REGISCALL != 0) && ((CC->user.flags & US_REGIS) == 0))
+	CtdlGetUser(&CC->user, CC->curr_user);	// no lock is needed here 
+	if ((REGISCALL != 0) && ((CC->user.flags & US_REGIS) == 0)) {
 		regis = 1;
+	}
 
 	if (CC->user.axlevel >= AxAideU) {
 		if (CtdlGetConfigInt("MMflags") & MM_VALID) {
@@ -531,8 +532,7 @@ void cmd_chek(char *argbuf)
 		}
 	}
 
-	/* check for mail */
-	mail = InitialMailCheck();
+	mail = InitialMailCheck();		// check for mail
 
 	cprintf("%d %d|%d|%d|%s|\n", CIT_OK, mail, regis, vali, CC->cs_inet_email);
 }
@@ -582,7 +582,6 @@ void cmd_agup(char *cmdbuf)
 		(long)usbuf.lastcall,
 		usbuf.USuserpurge);
 }
-
 
 
 /*
@@ -635,16 +634,16 @@ void cmd_asup(char *cmdbuf)
 
 	if (deleted) {
 		snprintf(notify, SIZ, 
-			 "User \"%s\" has been deleted by %s.\n",
-			 usbuf.fullname,
-			(CC->logged_in ? CC->user.fullname : "an administrator")
+			"User \"%s\" has been deleted by %s.\n",
+			usbuf.fullname, (CC->logged_in ? CC->user.fullname : "an administrator")
 		);
 		CtdlAideMessage(notify, "User Deletion Message");
 	}
 
 	cprintf("%d Ok", CIT_OK);
-	if (deleted)
+	if (deleted) {
 		cprintf(" (%s deleted)", requested_user);
+	}
 	cprintf("\n");
 }
 
@@ -712,7 +711,8 @@ void cmd_renu(char *cmdbuf)
 			return;
 		case RENAMEUSER_LOGGED_IN:
 			cprintf("%d '%s' is currently logged in and cannot be renamed.\n",
-				ERROR + ALREADY_LOGGED_IN , oldname);
+				ERROR + ALREADY_LOGGED_IN , oldname
+			);
 			return;
 		case RENAMEUSER_NOT_FOUND:
 			cprintf("%d '%s' does not exist.\n", ERROR + NO_SUCH_USER, oldname);
@@ -724,7 +724,6 @@ void cmd_renu(char *cmdbuf)
 
 	cprintf("%d An unknown error occurred.\n", ERROR);
 }
-
 
 
 void cmd_quit(char *argbuf)
