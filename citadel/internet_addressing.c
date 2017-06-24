@@ -702,8 +702,8 @@ recptypes *validate_recipients(const char *supplied_recipients, const char *Remo
 			break;
 		case MES_INTERNET:
 			/* Yes, you're reading this correctly: if the target
-			 * domain points back to the local system or an attached
-			 * Citadel directory, the address is invalid.  That's
+			 * domain points back to the local system,
+			 * the address is invalid.  That's
 			 * because if the address were valid, we would have
 			 * already translated it to a local address by now.
 			 */

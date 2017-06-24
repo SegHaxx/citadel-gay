@@ -668,6 +668,95 @@ void cmd_isme(char *argbuf) {
 
 
 /*
+ * Administrative Get Email Addresses
+ */
+void cmd_agea(char *cmdbuf)
+{
+	struct ctdluser usbuf;
+	char requested_user[128];
+	int i, num_e;
+	char e[512];
+
+	if (CtdlAccessCheck(ac_aide)) {
+		return;
+	}
+
+	extract_token(requested_user, cmdbuf, 0, '|', sizeof requested_user);
+	if (CtdlGetUser(&usbuf, requested_user) != 0) {
+		cprintf("%d No such user.\n", ERROR + NO_SUCH_USER);
+		return;
+	}
+	cprintf("%d internet email addresses for %s\n", LISTING_FOLLOWS, usbuf.fullname);
+	num_e = num_tokens(usbuf.emailaddrs, '|');
+	for (i=0; i<num_e; ++i) {
+		extract_token(e, usbuf.emailaddrs, i, '|', sizeof e);
+		cprintf("%s\n", e);
+	}
+	cprintf("000\n");
+}
+
+
+/*
+ * Administrative Set Email Addresses
+ */
+void cmd_asea(char *cmdbuf)
+{
+	struct ctdluser usbuf;
+	char requested_user[128];
+	char buf[SIZ];
+	char whodat[64];
+	char new_emailaddrs[512] = { 0 } ;
+	int i;
+
+	if (CtdlAccessCheck(ac_aide)) return;
+
+	extract_token(requested_user, cmdbuf, 0, '|', sizeof requested_user);
+	if (CtdlGetUser(&usbuf, requested_user) != 0) {
+		cprintf("%d No such user.\n", ERROR + NO_SUCH_USER);
+		return;
+	}
+
+	cprintf("%d Ok\n", SEND_LISTING);
+	while (client_getln(buf, sizeof buf) >= 0 && strcmp(buf, "000")) {
+		if (											// addresses must be:
+			(!IsEmptyStr(buf))								// non-empty
+			&& ((strlen(new_emailaddrs) + strlen(buf) + 2) < sizeof(new_emailaddrs))	// fit in the remaining buffer
+			&& (IsDirectory(buf, 0))							// in one of our own domains
+			&& (										// not belong to someone else
+				(CtdlDirectoryLookup(whodat, buf, sizeof whodat) != 0)
+				|| (!strcasecmp(whodat, requested_user))
+			)
+		) {
+			if (!IsEmptyStr(new_emailaddrs)) {
+				strcat(new_emailaddrs, "|");
+			}
+			strcat(new_emailaddrs, buf);
+		}
+	}
+
+	if (CtdlGetUserLock(&usbuf, requested_user) != 0) {	// We are relying on the fact that the DirectoryIndex functions don't lock.
+		return;						// Silently fail here if we can't acquire a lock on the user record.
+	}
+
+	/* Delete all of the existing directory index records for the user (easier this way) */
+	for (i=0; i<num_tokens(usbuf.emailaddrs, '|'); ++i) {
+		extract_token(buf, usbuf.emailaddrs, i, '|', sizeof buf);
+		CtdlDirectoryDelUser(buf, requested_user);
+	}
+
+	strcpy(usbuf.emailaddrs, new_emailaddrs);		// make it official.
+
+	/* Index all of the new email addresses (they've already been sanitized) */
+	for (i=0; i<num_tokens(usbuf.emailaddrs, '|'); ++i) {
+		extract_token(buf, usbuf.emailaddrs, i, '|', sizeof buf);
+		CtdlDirectoryAddUser(buf, requested_user);
+	}
+
+	CtdlPutUserLock(&usbuf);
+}
+
+
+/*
  * Set the preferred view for the current user/room combination
  */
 void cmd_view(char *cmdbuf) {
@@ -768,6 +857,8 @@ CTDL_MODULE_INIT(serv_user)
 		CtdlRegisterProtoHook(cmd_qusr, "QUSR", "check to see if a user exists");
 		CtdlRegisterProtoHook(cmd_agup, "AGUP", "Administratively Get User Parameters");
 		CtdlRegisterProtoHook(cmd_asup, "ASUP", "Administratively Set User Parameters");
+		CtdlRegisterProtoHook(cmd_agea, "AGEA", "Administratively Get Email Addresses");
+		CtdlRegisterProtoHook(cmd_asea, "ASEA", "Administratively Set Email Addresses");
 		CtdlRegisterProtoHook(cmd_seen, "SEEN", "Manipulate seen/unread message flags");
 		CtdlRegisterProtoHook(cmd_gtsn, "GTSN", "Fetch seen/unread message flags");
 		CtdlRegisterProtoHook(cmd_view, "VIEW", "Set preferred view for user/room combination");
