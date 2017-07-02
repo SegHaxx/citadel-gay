@@ -98,7 +98,7 @@ int scr_printf(char *fmt, ...)
 {
 	static char outbuf[4096];	/* static for performance -- not re-entrant -- change if needed */
 	va_list ap;
-	register int retval;
+	int retval;
 	int i, len;
 
 	va_start(ap, fmt);

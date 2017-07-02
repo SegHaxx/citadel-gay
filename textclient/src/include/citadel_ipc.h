@@ -82,23 +82,26 @@ struct march {
 	unsigned int march_flags2;
 	int march_access;
 };
+
 /*
- * User records.
+ * This is NOT the same 'struct ctdluser' from the server.
  */
 typedef struct ctdluser ctdluser;
-struct ctdluser {			/* User record                      */
-	int version;			/* Cit vers. which created this rec  */
-	uid_t uid;			/* Associate with a unix account?    */
-	char password[32];		/* password                          */
-	unsigned flags;			/* See US_ flags below               */
-	long timescalled;		/* Total number of logins            */
-	long posted;			/* Number of messages ever submitted */
-	uint8_t axlevel;		/* Access level                      */
-	long usernum;			/* User number (never recycled)      */
-	time_t lastcall;		/* Date/time of most recent login    */
-	int USuserpurge;		/* Purge time (in days) for user     */
-	char fullname[64];		/* Display name (primary identifier) */
+struct ctdluser {			// User record
+	int version;			// Cit vers. which created this rec
+	uid_t uid;			// Associate with a unix account?
+	char password[32];		// password
+	unsigned flags;			// See US_ flags below
+	long timescalled;		// Total number of logins
+	long posted;			// Number of messages ever submitted
+	uint8_t axlevel;		// Access level
+	long usernum;			// User number (never recycled)
+	time_t lastcall;		// Date/time of most recent login
+	int USuserpurge;		// Purge time (in days) for user
+	char fullname[64];		// Display name (primary identifier)
+	char emailaddrs[512];		// Internet email addresses
 };
+
 typedef struct ctdlroom ctdlroom;
 struct ctdlroom {
  	char QRname[ROOMNAMELEN];	/* Name of room                     */
@@ -409,9 +412,10 @@ int CtdlIPCChangeHostname(CtdlIPC *ipc, const char *hostname, char *cret);
 int CtdlIPCChangeRoomname(CtdlIPC *ipc, const char *roomname, char *cret);
 int CtdlIPCChangeUsername(CtdlIPC *ipc, const char *username, char *cret);
 time_t CtdlIPCServerTime(CtdlIPC *ipc, char *crert);
-int CtdlIPCAideGetUserParameters(CtdlIPC *ipc, const char *who,
-				 struct ctdluser **uret, char *cret);
+int CtdlIPCAideGetUserParameters(CtdlIPC *ipc, const char *who, struct ctdluser **uret, char *cret);
+int CtdlIPCAideGetEmailAddresses(CtdlIPC *ipc, const char *who, char *, char *cret);
 int CtdlIPCAideSetUserParameters(CtdlIPC *ipc, const struct ctdluser *uret, char *cret);
+int CtdlIPCAideSetEmailAddresses(CtdlIPC *ipc, const struct ctdluser *uret, char *cret);
 int CtdlIPCRenameUser(CtdlIPC *ipc, char *oldname, char *newname, char *cret);
 int CtdlIPCGetMessageExpirationPolicy(CtdlIPC *ipc, GPEXWhichPolicy which,
 		struct ExpirePolicy **policy, char *cret);

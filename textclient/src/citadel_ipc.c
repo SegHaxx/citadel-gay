@@ -228,7 +228,7 @@ int CtdlIPCNoop(CtdlIPC *ipc)
  */
 int CtdlIPCEcho(CtdlIPC *ipc, const char *arg, char *cret)
 {
-	register int ret;
+	int ret;
 	char *aaa;
 	
 	if (!arg) return -2;
@@ -250,7 +250,7 @@ int CtdlIPCEcho(CtdlIPC *ipc, const char *arg, char *cret)
  */
 int CtdlIPCQuit(CtdlIPC *ipc)
 {
-	register int ret = 221;		/* Default to successful quit */
+	int ret = 221;		/* Default to successful quit */
 	char aaa[SIZ]; 
 
 	CtdlIPC_lock(ipc);
@@ -278,7 +278,7 @@ int CtdlIPCQuit(CtdlIPC *ipc)
  */
 int CtdlIPCLogout(CtdlIPC *ipc)
 {
-	register int ret;
+	int ret;
 	char aaa[SIZ];
 
 	CtdlIPC_lock(ipc);
@@ -297,7 +297,7 @@ int CtdlIPCLogout(CtdlIPC *ipc)
  */
 int CtdlIPCTryLogin(CtdlIPC *ipc, const char *username, char *cret)
 {
-	register int ret;
+	int ret;
 	char *aaa;
 
 	if (!username) return -2;
@@ -319,7 +319,7 @@ int CtdlIPCTryLogin(CtdlIPC *ipc, const char *username, char *cret)
  */
 int CtdlIPCTryPassword(CtdlIPC *ipc, const char *passwd, char *cret)
 {
-	register int ret;
+	int ret;
 	char *aaa;
 
 	if (!passwd) return -2;
@@ -341,7 +341,7 @@ int CtdlIPCTryPassword(CtdlIPC *ipc, const char *passwd, char *cret)
  */
 int CtdlIPCTryApopPassword(CtdlIPC *ipc, const char *response, char *cret)
 {
-	register int ret;
+	int ret;
 	char *aaa;
 
 	if (!response) return -2;
@@ -366,7 +366,7 @@ int CtdlIPCTryApopPassword(CtdlIPC *ipc, const char *response, char *cret)
  */
 int CtdlIPCCreateUser(CtdlIPC *ipc, const char *username, int selfservice, char *cret)
 {
-	register int ret;
+	int ret;
 	char *aaa;
 
 	if (!username) return -2;
@@ -387,7 +387,7 @@ int CtdlIPCCreateUser(CtdlIPC *ipc, const char *username, int selfservice, char 
  */
 int CtdlIPCChangePassword(CtdlIPC *ipc, const char *passwd, char *cret)
 {
-	register int ret;
+	int ret;
 	char *aaa;
 
 	if (!passwd) return -2;
@@ -409,7 +409,7 @@ int CtdlIPCChangePassword(CtdlIPC *ipc, const char *passwd, char *cret)
 /* floor is -1 for all, or floornum */
 int CtdlIPCKnownRooms(CtdlIPC *ipc, enum RoomList which, int floor, struct march **listing, char *cret)
 {
-	register int ret;
+	int ret;
 	struct march *march = NULL;
 	static char *proto[] =
 		{"LKRA", "LKRN", "LKRO", "LZRM", "LRMS", "LPRM" };
@@ -466,7 +466,7 @@ int CtdlIPCKnownRooms(CtdlIPC *ipc, enum RoomList which, int floor, struct march
 /* Caller must free the struct ctdluser; caller may pass an existing one */
 int CtdlIPCGetConfig(CtdlIPC *ipc, struct ctdluser **uret, char *cret)
 {
-	register int ret;
+	int ret;
 
 	if (!cret) return -2;
 	if (!uret) return -2;
@@ -500,7 +500,7 @@ int CtdlIPCSetConfig(CtdlIPC *ipc, struct ctdluser *uret, char *cret)
 /* RENU */
 int CtdlIPCRenameUser(CtdlIPC *ipc, char *oldname, char *newname, char *cret)
 {
-	register int ret;
+	int ret;
 	char cmd[256];
 
 	if (!oldname) return -2;
@@ -517,7 +517,7 @@ int CtdlIPCRenameUser(CtdlIPC *ipc, char *oldname, char *newname, char *cret)
 int CtdlIPCGotoRoom(CtdlIPC *ipc, const char *room, const char *passwd,
 		struct ctdlipcroom **rret, char *cret)
 {
-	register int ret;
+	int ret;
 	char *aaa;
 
 	if (!cret) return -2;
@@ -572,8 +572,8 @@ int CtdlIPCGotoRoom(CtdlIPC *ipc, const char *room, const char *passwd,
 int CtdlIPCGetMessages(CtdlIPC *ipc, enum MessageList which, int whicharg,
 		const char *mtemplate, unsigned long **mret, char *cret)
 {
-	register int ret;
-	register unsigned long count = 0;
+	int ret;
+	unsigned long count = 0;
 	static char *proto[] =
 		{ "ALL", "OLD", "NEW", "LAST", "FIRST", "GT", "LT" };
 	char aaa[33];
@@ -620,7 +620,7 @@ int CtdlIPCGetMessages(CtdlIPC *ipc, enum MessageList which, int whicharg,
 int CtdlIPCGetSingleMessage(CtdlIPC *ipc, long msgnum, int headers, int as_mime,
 		struct ctdlipcmessage **mret, char *cret)
 {
-	register int ret;
+	int ret;
 	char aaa[SIZ];
 	char *bbb = NULL;
 	size_t bbb_len;
@@ -794,7 +794,7 @@ int CtdlIPCGetSingleMessage(CtdlIPC *ipc, long msgnum, int headers, int as_mime,
 /* WHOK */
 int CtdlIPCWhoKnowsRoom(CtdlIPC *ipc, char **listing, char *cret)
 {
-	register int ret;
+	int ret;
 	size_t bytes;
 
 	if (!cret) return -2;
@@ -809,7 +809,7 @@ int CtdlIPCWhoKnowsRoom(CtdlIPC *ipc, char **listing, char *cret)
 /* INFO */
 int CtdlIPCServerInfo(CtdlIPC *ipc, char *cret)
 {
-	register int ret;
+	int ret;
 	size_t bytes;
 	char *listing = NULL;
 	char buf[SIZ];
@@ -880,7 +880,7 @@ int CtdlIPCServerInfo(CtdlIPC *ipc, char *cret)
 /* RDIR */
 int CtdlIPCReadDirectory(CtdlIPC *ipc, char **listing, char *cret)
 {
-	register int ret;
+	int ret;
 	size_t bytes;
 
 	if (!cret) return -2;
@@ -897,7 +897,7 @@ int CtdlIPCReadDirectory(CtdlIPC *ipc, char **listing, char *cret)
  */
 int CtdlIPCSetLastRead(CtdlIPC *ipc, long msgnum, char *cret)
 {
-	register int ret;
+	int ret;
 	char aaa[64];
 
 	if (!cret) return -2;
@@ -916,7 +916,7 @@ int CtdlIPCSetLastRead(CtdlIPC *ipc, long msgnum, char *cret)
 /* INVT */
 int CtdlIPCInviteUserToRoom(CtdlIPC *ipc, const char *username, char *cret)
 {
-	register int ret;
+	int ret;
 	char *aaa;
 
 	if (!cret) return -2;
@@ -935,7 +935,7 @@ int CtdlIPCInviteUserToRoom(CtdlIPC *ipc, const char *username, char *cret)
 /* KICK */
 int CtdlIPCKickoutUserFromRoom(CtdlIPC *ipc, const char *username, char *cret)
 {
-	register int ret;
+	int ret;
 	char *aaa;
 
 	if (!cret) return -1;
@@ -953,7 +953,7 @@ int CtdlIPCKickoutUserFromRoom(CtdlIPC *ipc, const char *username, char *cret)
 /* GETR */
 int CtdlIPCGetRoomAttributes(CtdlIPC *ipc, struct ctdlroom **qret, char *cret)
 {
-	register int ret;
+	int ret;
 
 	if (!cret) return -2;
 	if (!qret) return -2;
@@ -979,7 +979,7 @@ int CtdlIPCGetRoomAttributes(CtdlIPC *ipc, struct ctdlroom **qret, char *cret)
 /* set forget to kick all users out of room */
 int CtdlIPCSetRoomAttributes(CtdlIPC *ipc, int forget, struct ctdlroom *qret, char *cret)
 {
-	register int ret;
+	int ret;
 	char *aaa;
 
 	if (!cret) return -2;
@@ -1011,7 +1011,7 @@ int CtdlIPCGetRoomAide(CtdlIPC *ipc, char *cret)
 /* SETA */
 int CtdlIPCSetRoomAide(CtdlIPC *ipc, const char *username, char *cret)
 {
-	register int ret;
+	int ret;
 	char *aaa;
 
 	if (!cret) return -2;
@@ -1030,7 +1030,7 @@ int CtdlIPCSetRoomAide(CtdlIPC *ipc, const char *username, char *cret)
 /* ENT0 */
 int CtdlIPCPostMessage(CtdlIPC *ipc, int flag, int *subject_required,  struct ctdlipcmessage *mr, char *cret)
 {
-	register int ret;
+	int ret;
 	char cmd[SIZ];
 	char *ptr;
 
@@ -1089,7 +1089,7 @@ int CtdlIPCDeleteMessage(CtdlIPC *ipc, long msgnum, char *cret)
 /* MOVE */
 int CtdlIPCMoveMessage(CtdlIPC *ipc, int copy, long msgnum, const char *destroom, char *cret)
 {
-	register int ret;
+	int ret;
 	char *aaa;
 
 	if (!cret) return -2;
@@ -1122,7 +1122,7 @@ int CtdlIPCDeleteRoom(CtdlIPC *ipc, int for_real, char *cret)
 int CtdlIPCCreateRoom(CtdlIPC *ipc, int for_real, const char *roomname, int type,
 		const char *password, int floor, char *cret)
 {
-	register int ret;
+	int ret;
 	char *aaa;
 
 	if (!cret) return -2;
@@ -1157,7 +1157,7 @@ int CtdlIPCForgetRoom(CtdlIPC *ipc, char *cret)
 /* MESG */
 int CtdlIPCSystemMessage(CtdlIPC *ipc, const char *message, char **mret, char *cret)
 {
-	register int ret;
+	int ret;
 	char *aaa;
 	size_t bytes;
 
@@ -1188,7 +1188,7 @@ int CtdlIPCNextUnvalidatedUser(CtdlIPC *ipc, char *cret)
 /* GREG */
 int CtdlIPCGetUserRegistration(CtdlIPC *ipc, const char *username, char **rret, char *cret)
 {
-	register int ret;
+	int ret;
 	char *aaa;
 	size_t bytes;
 
@@ -1215,7 +1215,7 @@ int CtdlIPCGetUserRegistration(CtdlIPC *ipc, const char *username, char **rret, 
 /* VALI */
 int CtdlIPCValidateUser(CtdlIPC *ipc, const char *username, int axlevel, char *cret)
 {
-	register int ret;
+	int ret;
 	char *aaa;
 
 	if (!cret) return -2;
@@ -1280,7 +1280,7 @@ int CtdlIPCSetRegistration(CtdlIPC *ipc, const char *info, char *cret)
 /* CHEK */
 int CtdlIPCMiscCheck(CtdlIPC *ipc, struct ctdlipcmisc *chek, char *cret)
 {
-	register int ret;
+	int ret;
 
 	if (!cret) return -1;
 	if (!chek) return -1;
@@ -1298,7 +1298,7 @@ int CtdlIPCMiscCheck(CtdlIPC *ipc, struct ctdlipcmisc *chek, char *cret)
 /* DELF */
 int CtdlIPCDeleteFile(CtdlIPC *ipc, const char *filename, char *cret)
 {
-	register int ret;
+	int ret;
 	char *aaa;
 
 	if (!cret) return -2;
@@ -1317,7 +1317,7 @@ int CtdlIPCDeleteFile(CtdlIPC *ipc, const char *filename, char *cret)
 /* MOVF */
 int CtdlIPCMoveFile(CtdlIPC *ipc, const char *filename, const char *destroom, char *cret)
 {
-	register int ret;
+	int ret;
 	char *aaa;
 
 	if (!cret) return -2;
@@ -1337,7 +1337,7 @@ int CtdlIPCMoveFile(CtdlIPC *ipc, const char *filename, const char *destroom, ch
 /* RWHO */
 int CtdlIPCOnlineUsers(CtdlIPC *ipc, char **listing, time_t *stamp, char *cret)
 {
-	register int ret;
+	int ret;
 	size_t bytes;
 
 	if (!cret) return -1;
@@ -1359,7 +1359,7 @@ int CtdlIPCFileDownload(CtdlIPC *ipc, const char *filename, void **buf,
 			(CtdlIPC*, unsigned long, unsigned long),
 		char *cret)
 {
-	register int ret;
+	int ret;
 	size_t bytes;
 	time_t last_mod;
 	char mimetype[SIZ];
@@ -1406,7 +1406,7 @@ int CtdlIPCAttachmentDownload(CtdlIPC *ipc, long msgnum, const char *part,
 			(CtdlIPC*, unsigned long, unsigned long),
 		char *cret)
 {
-	register int ret;
+	int ret;
 	size_t bytes;
 	time_t last_mod;
 	char filename[SIZ];
@@ -1445,7 +1445,7 @@ int CtdlIPCImageDownload(CtdlIPC *ipc, const char *filename, void **buf,
 			(CtdlIPC*, unsigned long, unsigned long),
 		char *cret)
 {
-	register int ret;
+	int ret;
 	size_t bytes;
 	time_t last_mod;
 	char mimetype[SIZ];
@@ -1486,7 +1486,7 @@ int CtdlIPCFileUpload(CtdlIPC *ipc, const char *save_as, const char *comment,
 			(CtdlIPC*, unsigned long, unsigned long),
 		char *cret)
 {
-	register int ret;
+	int ret;
 	char *aaa;
 	FILE *uploadFP;
 	char MimeTestBuf[64];
@@ -1532,7 +1532,7 @@ int CtdlIPCImageUpload(CtdlIPC *ipc, int for_real, const char *path,
 			(CtdlIPC*, unsigned long, unsigned long),
 		char *cret)
 {
-	register int ret;
+	int ret;
 	FILE *uploadFP;
 	char *aaa;
 	char MimeTestBuf[64];
@@ -1573,7 +1573,7 @@ int CtdlIPCImageUpload(CtdlIPC *ipc, int for_real, const char *path,
 /* QUSR */
 int CtdlIPCQueryUsername(CtdlIPC *ipc, const char *username, char *cret)
 {
-	register int ret;
+	int ret;
 	char *aaa;
 
 	if (!cret) return -2;
@@ -1605,7 +1605,7 @@ int CtdlIPCFloorListing(CtdlIPC *ipc, char **listing, char *cret)
 /* CFLR */
 int CtdlIPCCreateFloor(CtdlIPC *ipc, int for_real, const char *name, char *cret)
 {
-	register int ret;
+	int ret;
 	char aaa[SIZ];
 
 	if (!cret) return -2;
@@ -1633,7 +1633,7 @@ int CtdlIPCDeleteFloor(CtdlIPC *ipc, int for_real, int floornum, char *cret)
 /* EFLR */
 int CtdlIPCEditFloor(CtdlIPC *ipc, int floornum, const char *floorname, char *cret)
 {
-	register int ret;
+	int ret;
 	char aaa[SIZ];
 
 	if (!cret) return -2;
@@ -1656,7 +1656,7 @@ int CtdlIPCIdentifySoftware(CtdlIPC *ipc, int developerid, int clientid,
 		int revision, const char *software_name, const char *hostname,
 		char *cret)
 {
-	register int ret;
+	int ret;
 	char *aaa;
 
 	if (developerid < 0 || clientid < 0 || revision < 0 ||
@@ -1683,7 +1683,7 @@ int CtdlIPCIdentifySoftware(CtdlIPC *ipc, int developerid, int clientid,
 int CtdlIPCSendInstantMessage(CtdlIPC *ipc, const char *username, const char *text,
 		char *cret)
 {
-	register int ret;
+	int ret;
 	char *aaa;
 
 	if (!cret) return -2;
@@ -1745,7 +1745,7 @@ int CtdlIPCSetBio(CtdlIPC *ipc, char *bio, char *cret)
 /* RBIO */
 int CtdlIPCGetBio(CtdlIPC *ipc, const char *username, char **listing, char *cret)
 {
-	register int ret;
+	int ret;
 	size_t bytes;
 	char *aaa;
 
@@ -1826,7 +1826,7 @@ int CtdlIPCTerminateServerScheduled(CtdlIPC *ipc, int mode, char *cret)
 int CtdlIPCEnterSystemMessage(CtdlIPC *ipc, const char *filename, const char *text,
 		char *cret)
 {
-	register int ret;
+	int ret;
 	char *aaa;
 
 	if (!cret) return -2;
@@ -1846,7 +1846,7 @@ int CtdlIPCEnterSystemMessage(CtdlIPC *ipc, const char *filename, const char *te
 /* HCHG */
 int CtdlIPCChangeHostname(CtdlIPC *ipc, const char *hostname, char *cret)
 {
-	register int ret;
+	int ret;
 	char *aaa;
 
 	if (!cret) return -2;
@@ -1865,7 +1865,7 @@ int CtdlIPCChangeHostname(CtdlIPC *ipc, const char *hostname, char *cret)
 /* RCHG */
 int CtdlIPCChangeRoomname(CtdlIPC *ipc, const char *roomname, char *cret)
 {
-	register int ret;
+	int ret;
 	char *aaa;
 
 	if (!cret) return -2;
@@ -1884,7 +1884,7 @@ int CtdlIPCChangeRoomname(CtdlIPC *ipc, const char *roomname, char *cret)
 /* UCHG */
 int CtdlIPCChangeUsername(CtdlIPC *ipc, const char *username, char *cret)
 {
-	register int ret;
+	int ret;
 	char *aaa;
 
 	if (!cret) return -2;
@@ -1904,8 +1904,8 @@ int CtdlIPCChangeUsername(CtdlIPC *ipc, const char *username, char *cret)
 /* This function returns the actual server time reported, or 0 if error */
 time_t CtdlIPCServerTime(CtdlIPC *ipc, char *cret)
 {
-	register time_t tret;
-	register int ret;
+	time_t tret;
+	int ret;
 
 	ret = CtdlIPCGenericCommand(ipc, "TIME", NULL, 0, NULL, NULL, cret);
 	if (ret / 100 == 2) {
@@ -1918,10 +1918,9 @@ time_t CtdlIPCServerTime(CtdlIPC *ipc, char *cret)
 
 
 /* AGUP */
-int CtdlIPCAideGetUserParameters(CtdlIPC *ipc, const char *who,
-				 struct ctdluser **uret, char *cret)
+int CtdlIPCAideGetUserParameters(CtdlIPC *ipc, const char *who, struct ctdluser **uret, char *cret)
 {
-	register int ret;
+	int ret;
 	char aaa[SIZ];
 
 	if (!cret) return -2;
@@ -1950,7 +1949,7 @@ int CtdlIPCAideGetUserParameters(CtdlIPC *ipc, const char *who,
 /* ASUP */
 int CtdlIPCAideSetUserParameters(CtdlIPC *ipc, const struct ctdluser *uret, char *cret)
 {
-	register int ret;
+	int ret;
 	char *aaa;
 
 	if (!cret) return -2;
@@ -1969,6 +1968,29 @@ int CtdlIPCAideSetUserParameters(CtdlIPC *ipc, const struct ctdluser *uret, char
 }
 
 
+/* AGEA */
+int CtdlIPCAideGetEmailAddresses(CtdlIPC *ipc, const char *who, char *target_buf, char *cret)
+{
+	int ret;
+	char aaa[SIZ];
+	char *emailaddrs = NULL;
+	size_t emailaddrs_len = 0;
+
+	sprintf(aaa, "AGEA %s", who);
+	ret = CtdlIPCGenericCommand(ipc, aaa, NULL, 0, &emailaddrs, &emailaddrs_len, cret);
+
+	if (ret / 100 == 1) {
+		strcpy(target_buf, emailaddrs);
+	}
+
+	if (emailaddrs != NULL) {
+		free(emailaddrs);
+	}
+
+	return ret;
+}
+
+
 /* GPEX */
 /* which is 0 = room, 1 = floor, 2 = site, 3 = default for mailboxes */
 /* caller must free the struct ExpirePolicy */
@@ -1982,7 +2004,7 @@ int CtdlIPCGetMessageExpirationPolicy(CtdlIPC *ipc, GPEXWhichPolicy which,
 		strof(mailboxespolicy)
 	};
 	char cmd[256];
-	register int ret;
+	int ret;
 
 	if (!cret) return -2;
 	if (!policy) return -2;
@@ -2049,7 +2071,7 @@ int CtdlIPCSetSystemConfig(CtdlIPC *ipc, const char *listing, char *cret)
 /* CONF GETSYS */
 int CtdlIPCGetSystemConfigByType(CtdlIPC *ipc, const char *mimetype, char **listing, char *cret)
 {
-	register int ret;
+	int ret;
 	char *aaa;
 	size_t bytes;
 
@@ -2070,7 +2092,7 @@ int CtdlIPCGetSystemConfigByType(CtdlIPC *ipc, const char *mimetype, char **list
 /* CONF PUTSYS */
 int CtdlIPCSetSystemConfigByType(CtdlIPC *ipc, const char *mimetype, const char *listing, char *cret)
 {
-	register int ret;
+	int ret;
 	char *aaa;
 
 	if (!cret) return -2;
@@ -2232,7 +2254,7 @@ static void endtls(SSL *ssl)
 /* QDIR */
 int CtdlIPCDirectoryLookup(CtdlIPC *ipc, const char *address, char *cret)
 {
-    register int ret;
+	int ret;
 	char *aaa;
 
 	if (!address) return -2;
@@ -2243,8 +2265,8 @@ int CtdlIPCDirectoryLookup(CtdlIPC *ipc, const char *address, char *cret)
 
 	sprintf(aaa, "QDIR %s", address);
 	ret = CtdlIPCGenericCommand(ipc, aaa, NULL, 0, NULL, NULL, cret);
-    free(aaa);
-    return ret;
+	free(aaa);
+	return ret;
 }
 
 
@@ -2322,7 +2344,7 @@ int CtdlIPCSendListing(CtdlIPC *ipc, const char *listing)
 /* Partial read of file from server */
 size_t CtdlIPCPartialRead(CtdlIPC *ipc, void **buf, size_t offset, size_t bytes, char *cret)
 {
-	register size_t len = 0;
+	size_t len = 0;
 	char aaa[SIZ];
 
 	if (!buf) return 0;
@@ -2355,7 +2377,7 @@ size_t CtdlIPCPartialRead(CtdlIPC *ipc, void **buf, size_t offset, size_t bytes,
 /* CLOS */
 int CtdlIPCEndDownload(CtdlIPC *ipc, char *cret)
 {
-	register int ret;
+	int ret;
 
 	if (!cret) return -2;
 	if (!ipc->downloading) return -2;
@@ -2369,7 +2391,7 @@ int CtdlIPCEndDownload(CtdlIPC *ipc, char *cret)
 
 /* MSGP */
 int CtdlIPCSpecifyPreferredFormats(CtdlIPC *ipc, char *cret, char *formats) {
-	register int ret;
+	int ret;
 	char cmd[SIZ];
 	
 	snprintf(cmd, sizeof cmd, "MSGP %s", formats);
@@ -2385,7 +2407,7 @@ int CtdlIPCReadDownload(CtdlIPC *ipc, void **buf, size_t bytes, size_t resume,
 			(CtdlIPC*, unsigned long, unsigned long),
 	       char *cret)
 {
-	register size_t len;
+	size_t len;
 
 	if (!cret) return -1;
 	if (!buf) return -1;
@@ -2396,7 +2418,7 @@ int CtdlIPCReadDownload(CtdlIPC *ipc, void **buf, size_t bytes, size_t resume,
 	if (progress_gauge_callback)
 		progress_gauge_callback(ipc, len, bytes);
 	while (len < bytes) {
-		register size_t block;
+		size_t block;
 
 		block = CtdlIPCPartialRead(ipc, buf, len, 4096, cret);
 		if (block == 0) {
@@ -2417,9 +2439,9 @@ int CtdlIPCHighSpeedReadDownload(CtdlIPC *ipc, void **buf, size_t bytes,
 			(CtdlIPC*, unsigned long, unsigned long),
 	       char *cret)
 {
-	register size_t len;
-	register int calls;	/* How many calls in the pipeline */
-	register int i;		/* iterator */
+	size_t len;
+	int calls;	/* How many calls in the pipeline */
+	int i;		/* iterator */
 	char aaa[4096];
 
 	if (!cret) return -1;
@@ -2466,7 +2488,7 @@ int CtdlIPCHighSpeedReadDownload(CtdlIPC *ipc, void **buf, size_t bytes,
 /* UCLS */
 int CtdlIPCEndUpload(CtdlIPC *ipc, int discard, char *cret)
 {
-	register int ret;
+	int ret;
 	char cmd[8];
 
 	if (!cret) return -1;
@@ -2485,8 +2507,8 @@ int CtdlIPCWriteUpload(CtdlIPC *ipc, FILE *uploadFP,
 			(CtdlIPC*, unsigned long, unsigned long),
 		char *cret)
 {
-	register int ret = -1;
-	register size_t offset = 0;
+	int ret = -1;
+	size_t offset = 0;
 	size_t bytes;
 	char aaa[SIZ];
 	char buf[4096];
@@ -2503,7 +2525,7 @@ int CtdlIPCWriteUpload(CtdlIPC *ipc, FILE *uploadFP,
 		progress_gauge_callback(ipc, 0, bytes);
 
 	while (offset < bytes) {
-		register size_t to_write;
+		size_t to_write;
 
 		/* Read some data in */
 		to_write = fread(buf, 1, 4096, fd);
@@ -2570,7 +2592,7 @@ int CtdlIPCGenericCommand(CtdlIPC *ipc,
 		size_t *bytes_to_receive, char *proto_response)
 {
 	char buf[SIZ];
-	register int ret;
+	int ret;
 
 	if (!command) return -2;
 	if (!proto_response) return -2;

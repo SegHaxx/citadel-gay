@@ -73,6 +73,119 @@ void back(int spaces) {
 }
 
 /*
+ * Edit a user's Internet email addresses
+ */
+void edit_user_internet_email_addresses(CtdlIPC *ipc, char *who)
+{
+	char buf[256];
+	char *resp = NULL;
+	int num_recs = 0;
+	char **recs = NULL;
+	char ch;
+	int i, j;
+	int quitting = 0;
+	int modified = 0;
+	int r;
+	char emailaddrs[512];
+
+	r = CtdlIPCAideGetEmailAddresses(ipc, who, emailaddrs, buf);
+	if (r / 100 == 1) {
+		while (!IsEmptyStr(emailaddrs)) {
+			extract_token(buf, emailaddrs, 0, '\n', sizeof buf);
+			remove_token(emailaddrs, 0, '\n');
+
+			++num_recs;
+			if (num_recs == 1) recs = malloc(sizeof(char *));
+			else recs = realloc(recs, (sizeof(char *)) * num_recs);
+			recs[num_recs-1] = malloc(strlen(buf) + 1);
+			strcpy(recs[num_recs-1], buf);
+		}
+	}
+
+	do {
+		scr_printf("\n");
+		color(BRIGHT_WHITE);
+		scr_printf("    Internet email addresses for %s\n", who);
+		color(DIM_WHITE);
+		scr_printf("--- --------------------------------------------------\n");
+		for (i=0; i<num_recs; ++i) {
+			color(DIM_WHITE);
+			scr_printf("%3d ", i+1);
+			color(BRIGHT_CYAN);
+			scr_printf("%s\n", recs[i]);
+			color(DIM_WHITE);
+		}
+
+		ch = keymenu("", "<A>dd|<D>elete|<S>ave|<Q>uit");
+		switch(ch) {
+			case 'a':
+				newprompt("Enter new email address: ", buf, 50);
+				striplt(buf);
+				if (!IsEmptyStr(buf)) {
+					// FIXME validate the email address (format, our own domain, addr does not belong to another user)
+					++num_recs;
+					if (num_recs == 1) {
+						recs = malloc(sizeof(char *));
+					}
+					else {
+						recs = realloc(recs, (sizeof(char *)) * num_recs);
+					}
+					recs[num_recs-1] = strdup(buf);
+				}
+				modified = 1;
+				break;
+			case 'd':
+				i = intprompt("Delete which address", 1, 1, num_recs) - 1;
+				free(recs[i]);
+				--num_recs;
+				for (j=i; j<num_recs; ++j) {
+					recs[j] = recs[j+1];
+				}
+				modified = 1;
+				break;
+			case 's':
+				r = 1;
+				for (i = 0; i < num_recs; i++)
+					r += 1 + strlen(recs[i]);
+				resp = (char *)calloc(1, r);
+				if (!resp) {
+					scr_printf("Can't save config - out of memory!\n");
+					logoff(ipc, 1);
+				}
+				if (num_recs) for (i = 0; i < num_recs; i++) {
+					strcat(resp, recs[i]);
+					strcat(resp, "\n");
+				}
+
+				//r = CtdlIPCSetSystemConfigByType(ipc, INTERNETCFG, resp, buf);
+				//if (r / 100 != 4) {
+					//scr_printf("%s\n", buf);
+				//} else {
+					//scr_printf("Wrote %d records.\n", num_recs);
+					//modified = 0;
+				//}
+				scr_printf("<%s>\n", resp);
+
+
+
+                		free(resp);
+				break;
+			case 'q':
+				quitting = !modified || boolprompt("Quit without saving", 0);
+				break;
+			default:
+				break;
+		}
+	} while (!quitting);
+
+	if (recs != NULL) {
+		for (i=0; i<num_recs; ++i) free(recs[i]);
+		free(recs);
+	}
+}
+
+
+/*
  * Edit or delete a user (cmd=25 to edit/create, 96 to delete)
  */
 void edituser(CtdlIPC *ipc, int cmd)
@@ -105,8 +218,9 @@ void edituser(CtdlIPC *ipc, int cmd)
 		return;
 	}
 
-	if (cmd == 25) {
-		val_user(ipc, user->fullname, 0); /* Display registration */
+	if (cmd == 25) {		// user edit
+
+		/* val_user(ipc, user->fullname, 0); we used to display the vCard here but there's really no need */
 
 		if (!newnow) {
 			change_name = 1;
@@ -133,22 +247,22 @@ void edituser(CtdlIPC *ipc, int cmd)
 		}
 	
 		user->axlevel = intprompt("Access level", user->axlevel, 0, 6);
-		if (boolprompt("Permission to send Internet mail", (user->flags & US_INTERNET)))
+		if (boolprompt("Permission to send Internet mail", (user->flags & US_INTERNET))) {
 			user->flags |= US_INTERNET;
-		else
+		}
+		else {
 			user->flags &= ~US_INTERNET;
-		if (boolprompt("Ask user to register again", !(user->flags & US_REGIS)))
+		}
+		if (boolprompt("Ask user to register again", !(user->flags & US_REGIS))) {
 			user->flags &= ~US_REGIS;
-		else
+		}
+		else {
 			user->flags |= US_REGIS;
-		user->timescalled = intprompt("Times called",
-			      	user->timescalled, 0, INT_MAX);
-		user->posted = intprompt("Messages posted",
-				 	user->posted, 0, INT_MAX);
-		user->lastcall = boolprompt("Set last call to now", 0) ?
-					time(NULL) : user->lastcall;
-		user->USuserpurge = intprompt("Purge time (in days, 0 for system default",
-			      	user->USuserpurge, 0, INT_MAX);
+		}
+		user->timescalled = intprompt("Times called", user->timescalled, 0, INT_MAX);
+		user->posted = intprompt("Messages posted", user->posted, 0, INT_MAX);
+		user->lastcall = boolprompt("Set last login to now", 0) ?  time(NULL) : user->lastcall;
+		user->USuserpurge = intprompt("Purge time (in days, 0 for system default", user->USuserpurge, 0, INT_MAX);
 	}
 
 	if (cmd == 96) {
@@ -165,6 +279,11 @@ void edituser(CtdlIPC *ipc, int cmd)
 		scr_printf("%s\n", buf);
 	}
 	free(user);
+
+	if (boolprompt("Edit this user's Internet email addresses", 0)) {
+		edit_user_internet_email_addresses(ipc, who);
+	}
+
 }
 
 
