@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1987-2012 by the citadel.org team
+ * Copyright (c) 1987-2017 by the citadel.org team
  *
  *  This program is open source software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License version 3.
@@ -34,6 +34,7 @@ void cdb_chmod_data(void);
 void cdb_checkpoint(void);
 void check_handles(void *arg);
 void cdb_cull_logs(void);
+void cdb_compact(void);
 
 
 /*

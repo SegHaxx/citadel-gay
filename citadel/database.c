@@ -861,6 +861,25 @@ void cdb_trunc(int cdb)
 }
 
 
+/*
+ * compact (defragment) the database , possibly returning space back to the underlying filesystem
+ */
+void cdb_compact(void)
+{
+	int ret;
+	int i;
+
+	syslog(LOG_DEBUG, "db: cdb_compact() started");
+	for (i = 0; i < MAXCDB; i++) {
+		syslog(LOG_DEBUG, "db: compacting database %d", i);
+		ret = dbp[i]->compact(dbp[i], NULL, NULL, NULL, NULL, DB_FREE_SPACE, NULL);
+		if (ret) {
+			syslog(LOG_ERR, "db: compact: %s", db_strerror(ret));
+		}
+	}
+	syslog(LOG_DEBUG, "db: cdb_compact() finished");
+}
+
 
 // Has an item already been seen (is it in the CDB_USETABLE) ?
 // Returns 0 if it hasn't, 1 if it has
