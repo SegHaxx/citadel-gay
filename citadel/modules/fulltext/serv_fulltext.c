@@ -245,7 +245,7 @@ void do_fulltext_indexing(void) {
 	static int is_running = 0;
 	if (is_running) return;         /* Concurrency check - only one can run */
 	is_running = 1;
-	
+
 	/*
 	 * Don't do this if the site doesn't have it enabled.
 	 */
@@ -257,7 +257,13 @@ void do_fulltext_indexing(void) {
 	 * Make sure we don't run the indexer too frequently.
 	 * FIXME move the setting into config
 	 */
-	if ( (time(NULL) - last_index) < 300L) {
+	time_t now = time(NULL);
+	if ( (now - last_index) < 300L) {
+		syslog(LOG_DEBUG,
+			"fulltext: indexing interval not yet reached; last run was %ldm%lds ago",
+			((now - last_index) / 60),
+			((now - last_index) % 60)
+		);
 		return;
 	}
 

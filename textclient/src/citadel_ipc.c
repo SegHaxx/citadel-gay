@@ -1959,9 +1959,9 @@ int CtdlIPCAideSetUserParameters(CtdlIPC *ipc, const struct ctdluser *uret, char
 	if (!aaa) return -1;
 
 	sprintf(aaa, "ASUP %s|%s|%d|%ld|%ld|%d|%ld|%ld|%d",
-			uret->fullname, uret->password, uret->flags,
-			uret->timescalled, uret->posted, uret->axlevel,
-			uret->usernum, uret->lastcall, uret->USuserpurge);
+		uret->fullname, uret->password, uret->flags, uret->timescalled,
+		uret->posted, uret->axlevel, uret->usernum, uret->lastcall, uret->USuserpurge
+	);
 	ret = CtdlIPCGenericCommand(ipc, aaa, NULL, 0, NULL, NULL, cret);
 	free(aaa);
 	return ret;
@@ -1987,6 +1987,22 @@ int CtdlIPCAideGetEmailAddresses(CtdlIPC *ipc, const char *who, char *target_buf
 		free(emailaddrs);
 	}
 
+	return ret;
+}
+
+
+/* ASEA */
+int CtdlIPCAideSetEmailAddresses(CtdlIPC *ipc, const char *who, char *emailaddrs, char *cret)
+{
+	char aaa[SIZ];
+	int ret;
+
+	if (!who) return -2;
+	if (!emailaddrs) return -2;
+	if (!cret) return -2;
+
+	sprintf(aaa, "ASEA %s", who);
+	ret = CtdlIPCGenericCommand(ipc, aaa, emailaddrs, 0, NULL, NULL, cret);
 	return ret;
 }
 

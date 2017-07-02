@@ -77,7 +77,7 @@ void back(int spaces) {
  */
 void edit_user_internet_email_addresses(CtdlIPC *ipc, char *who)
 {
-	char buf[256];
+	char buf[SIZ];
 	char *resp = NULL;
 	int num_recs = 0;
 	char **recs = NULL;
@@ -93,12 +93,13 @@ void edit_user_internet_email_addresses(CtdlIPC *ipc, char *who)
 		while (!IsEmptyStr(emailaddrs)) {
 			extract_token(buf, emailaddrs, 0, '\n', sizeof buf);
 			remove_token(emailaddrs, 0, '\n');
-
-			++num_recs;
-			if (num_recs == 1) recs = malloc(sizeof(char *));
-			else recs = realloc(recs, (sizeof(char *)) * num_recs);
-			recs[num_recs-1] = malloc(strlen(buf) + 1);
-			strcpy(recs[num_recs-1], buf);
+			if (!IsEmptyStr(buf)) {
+				++num_recs;
+				if (num_recs == 1) recs = malloc(sizeof(char *));
+				else recs = realloc(recs, (sizeof(char *)) * num_recs);
+				recs[num_recs-1] = malloc(strlen(buf) + 1);
+				strcpy(recs[num_recs-1], buf);
+			}
 		}
 	}
 
@@ -156,18 +157,14 @@ void edit_user_internet_email_addresses(CtdlIPC *ipc, char *who)
 					strcat(resp, recs[i]);
 					strcat(resp, "\n");
 				}
-
-				//r = CtdlIPCSetSystemConfigByType(ipc, INTERNETCFG, resp, buf);
-				//if (r / 100 != 4) {
-					//scr_printf("%s\n", buf);
-				//} else {
-					//scr_printf("Wrote %d records.\n", num_recs);
-					//modified = 0;
-				//}
-				scr_printf("<%s>\n", resp);
-
-
-
+				r = CtdlIPCAideSetEmailAddresses(ipc, who, resp, buf);
+				if (r / 100 != 4) {
+					scr_printf("%s\n", buf);
+				} else {
+					scr_printf("Saved %d addresses.\n", num_recs);
+					modified = 0;
+					quitting = 1;
+				}
                 		free(resp);
 				break;
 			case 'q':

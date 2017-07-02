@@ -415,7 +415,7 @@ time_t CtdlIPCServerTime(CtdlIPC *ipc, char *crert);
 int CtdlIPCAideGetUserParameters(CtdlIPC *ipc, const char *who, struct ctdluser **uret, char *cret);
 int CtdlIPCAideGetEmailAddresses(CtdlIPC *ipc, const char *who, char *, char *cret);
 int CtdlIPCAideSetUserParameters(CtdlIPC *ipc, const struct ctdluser *uret, char *cret);
-int CtdlIPCAideSetEmailAddresses(CtdlIPC *ipc, const struct ctdluser *uret, char *cret);
+int CtdlIPCAideSetEmailAddresses(CtdlIPC *ipc, const char *who, char *emailaddrs, char *cret);
 int CtdlIPCRenameUser(CtdlIPC *ipc, char *oldname, char *newname, char *cret);
 int CtdlIPCGetMessageExpirationPolicy(CtdlIPC *ipc, GPEXWhichPolicy which,
 		struct ExpirePolicy **policy, char *cret);
