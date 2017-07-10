@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1987-2012 by the citadel.org team
+ * Copyright (c) 1987-2017 by the citadel.org team
  *
  * This program is open source software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 3.
@@ -293,12 +293,12 @@ void FlushReadBuf (void)
 		pche = pch + len;
 		if (WCC->ReadPos != pche)
 		{
-			syslog(LOG_EMERG,
+			syslog(LOG_ERR,
 				"ERROR: somebody didn't eat his soup! Remaing Chars: %ld [%s]\n", 
 				(long)(pche - WCC->ReadPos),
 				pche
 			);
-			syslog(LOG_EMERG, 
+			syslog(LOG_ERR, 
 				"--------------------------------------------------------------------------------\n"
 				"Whole buf: [%s]\n"
 				"--------------------------------------------------------------------------------\n", 
@@ -901,13 +901,13 @@ retry:
 	}
 
 	if (b < 0) {
-		syslog(LOG_EMERG, "Can't bind: %s\n", strerror(errno));
+		syslog(LOG_ERR, "Can't bind: %s\n", strerror(errno));
 		close(s);
 		return (-WC_EXIT_BIND);
 	}
 
 	if (listen(s, queue_len) < 0) {
-		syslog(LOG_EMERG, "Can't listen: %s\n", strerror(errno));
+		syslog(LOG_ERR, "Can't listen: %s\n", strerror(errno));
 		close(s);
 		return (-WC_EXIT_BIND);
 	}

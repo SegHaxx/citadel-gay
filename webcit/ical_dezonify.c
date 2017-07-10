@@ -28,7 +28,7 @@ icaltimezone *get_default_icaltimezone(void) {
                 zone = icaltimezone_get_utc_timezone();
 	}
 	if (!zone) {
-		syslog(LOG_EMERG, "Unable to load UTC time zone!\n");
+		syslog(LOG_ERR, "Unable to load UTC time zone!\n");
 	}
         return zone;
 }

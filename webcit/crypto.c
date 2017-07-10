@@ -85,7 +85,7 @@ void init_ssl(void)
 		for (a = 0; a < CRYPTO_num_locks(); a++) {
 			SSLCritters[a] = malloc(sizeof(pthread_mutex_t));
 			if (!SSLCritters[a]) {
-				syslog(LOG_EMERG,
+				syslog(LOG_ERR,
 					"citserver: can't allocate memory!!\n");
 				/** Nothing's been initialized, just die */
 				ShutDownWebcit();

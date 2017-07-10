@@ -29,6 +29,14 @@
             <td><input type="checkbox" name="inetmail" value="yes" <?%("COND:USERLIST:FLAG:USE_INTERNET", 1, 1, 1, "checked", "")>></td>
           </tr>
           <tr>
+            <td><?_("Primary Internet e-mail address")></td>
+            <td><input type="text" name="primaryemail" value="<?USERLIST:PRIMARYEMAIL("X")>" maxlength="63"></td>
+          </tr>
+          <tr>
+            <td><?_("Internet e-mail aliases")></td>
+            <td><input type="text" name="otheremails" value="<?USERLIST:OTHEREMAILS("X")>" maxlength="512"></td>
+          </tr>
+          <tr>
             <td><?_("Number of logins")></td>
             <td><input type="text" name="timescalled" value="<?USERLIST:NLOGONS>" maxlength="6"></td>
           </tr>

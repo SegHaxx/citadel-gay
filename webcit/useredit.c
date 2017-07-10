@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996-2012 by the citadel.org team
+ * Copyright (c) 1996-2017 by the citadel.org team
  *
  * This program is open source software.  You can redistribute it and/or
  * modify it under the terms of the GNU General Public License, version 3.
@@ -40,6 +40,10 @@ typedef struct _UserListEntry {
 	unsigned int Flags;
 	int DaysTillPurge;
 	int HasBio;
+
+	StrBuf *PrimaryEmail;
+	StrBuf *OtherEmails;
+
 } UserListEntry;
 
 
@@ -53,6 +57,8 @@ UserListEntry* NewUserListOneEntry(StrBuf *SerializedUser, const char *Pos)
 	ul = (UserListEntry*) malloc(sizeof(UserListEntry));
 	ul->UserName = NewStrBuf();
 	ul->Passvoid = NewStrBuf();
+	ul->PrimaryEmail = NewStrBuf();
+	ul->OtherEmails = NewStrBuf();
 
 	StrBufExtract_NextToken(ul->UserName,               SerializedUser, &Pos, '|');
 	StrBufExtract_NextToken(ul->Passvoid,               SerializedUser, &Pos, '|');
@@ -72,6 +78,8 @@ void DeleteUserListEntry(void *vUserList)
 	if (!ul) return;
 	FreeStrBuf(&ul->UserName);
 	FreeStrBuf(&ul->Passvoid);
+	FreeStrBuf(&ul->PrimaryEmail);
+	FreeStrBuf(&ul->OtherEmails);
 	free(ul);
 }
 
@@ -86,6 +94,8 @@ UserListEntry* NewUserListEntry(StrBuf *SerializedUserList)
 	ul = (UserListEntry*) malloc(sizeof(UserListEntry));
 	ul->UserName = NewStrBuf();
 	ul->Passvoid = NewStrBuf();
+	ul->PrimaryEmail = NewStrBuf();
+	ul->OtherEmails = NewStrBuf();
 
 	StrBufExtract_NextToken(ul->UserName,    SerializedUserList, &Pos, '|');
 	ul->AccessLevel = StrBufExtractNext_int( SerializedUserList, &Pos, '|');
@@ -302,9 +312,7 @@ HashList *iterate_load_userlist(StrBuf *Target, WCTemplputParams *TP)
 			Done = 0;
 			while (!Done) {
 			len = StrBuf_ServGetln(Buf);
-			if ((len <0) || 
-			    ((len == 3) &&
-			     !strcmp(ChrPtr(Buf), "000")))
+			if ((len <0) || ((len == 3) && !strcmp(ChrPtr(Buf), "000")))
 			{
 				Done = 1;
 				break;
@@ -338,6 +346,18 @@ void tmplput_USERLIST_Password(StrBuf *Target, WCTemplputParams *TP)
 {
 	UserListEntry *ul = (UserListEntry*) CTX(CTX_USERLIST);
 	StrBufAppendTemplate(Target, TP, ul->Passvoid, 0);
+}
+
+void tmplput_USERLIST_PrimaryEmail(StrBuf *Target, WCTemplputParams *TP)
+{
+	UserListEntry *ul = (UserListEntry*) CTX(CTX_USERLIST);
+	StrBufAppendTemplate(Target, TP, ul->PrimaryEmail, 0);
+}
+
+void tmplput_USERLIST_OtherEmails(StrBuf *Target, WCTemplputParams *TP)
+{
+	UserListEntry *ul = (UserListEntry*) CTX(CTX_USERLIST);
+	StrBufAppendTemplate(Target, TP, ul->OtherEmails, 0);
 }
 
 void tmplput_USERLIST_AccessLevelNo(StrBuf *Target, WCTemplputParams *TP)
@@ -643,6 +663,7 @@ void display_edituser(const char *supplied_username, int is_new) {
 	UserListEntry* UL;
 	StrBuf *Buf;
 	char username[256];
+	int i = 0;
 
 	if (supplied_username != NULL) {
 		safestrncpy(username, supplied_username, sizeof username);
@@ -669,6 +690,24 @@ void display_edituser(const char *supplied_username, int is_new) {
 			delete_user(username);
 		}
 		else if (UL != NULL) {
+
+			serv_printf("AGEA %s", username);
+			StrBuf_ServGetln(Buf);
+			if (GetServerStatusMsg(Buf, NULL, 1, 2) == 1) {
+				while(StrBuf_ServGetln(Buf) , strcmp(ChrPtr(Buf), "000")) {
+					if (i == 0) {
+						StrBufAppendPrintf(UL->PrimaryEmail, "%s", ChrPtr(Buf));
+					}
+					if (i > 1) {
+						StrBufAppendPrintf(UL->OtherEmails, ",");
+					}
+					if (i > 0) {
+						StrBufAppendPrintf(UL->OtherEmails, "%s", ChrPtr(Buf));
+					}
+					++i;
+				}
+			}
+
 			WCTemplputParams SubTP;
 			memset(&SubTP, 0, sizeof(WCTemplputParams));
 			SubTP.Filter.ContextType = CTX_USERLIST;
@@ -716,6 +755,7 @@ void edituser(void) {
 			}
 		}
 
+		/* Send the new account parameters */
 		serv_printf("ASUP %s|%s|%d|%s|%s|%s|%s|%s|%s|",
 			username,
 			bstr("password"),
@@ -729,6 +769,36 @@ void edituser(void) {
 		);
 		StrBuf_ServGetln(Buf);
 		GetServerStatusMsg(Buf, NULL, 1, 2);
+
+		/* Send the new email addresses.  First make up a delimited list... */
+		char all_the_emails[512];
+		snprintf(all_the_emails, sizeof all_the_emails, "%s,%s", bstr("primaryemail"), bstr("otheremails"));
+
+		/* Replace any commas, semicolons, or spaces with newlines */
+		char *pos;
+		for (pos=all_the_emails; *pos!=0; ++pos) {
+			if ((*pos == ',') || (*pos == ';') || (*pos == ' ')) *pos = '\n' ;
+		}
+
+		/* Remove any naughty inappropriate whitespace */
+		striplt(all_the_emails);
+		while (pos = strstr(all_the_emails, "\n,"), (pos != NULL)) {
+			strcpy(pos, pos+1);
+		}
+		while (pos = strstr(all_the_emails, ",\n"), (pos != NULL)) {
+			strcpy(pos+1, pos+2);
+		}
+		while (pos = strstr(all_the_emails, "\n\n"), (pos != NULL)) {
+			strcpy(pos+1, pos+2);
+		}
+
+		/* Now send it to the server. */
+		serv_printf("ASEA %s", username);
+		StrBuf_ServGetln(Buf);
+		if (GetServerStatusMsg(Buf, NULL, 1, 2) == 4) {
+			serv_printf("%s\n000", all_the_emails);
+		}
+
 		FreeStrBuf(&Buf);
 	}
 
@@ -830,7 +900,8 @@ InitModule_USEREDIT
 	RegisterNamespace("USERLIST:LASTLOGON:NO",  0, 0, tmplput_USERLIST_LastLogonNo, NULL, CTX_USERLIST);
 	RegisterNamespace("USERLIST:NLOGONS",       0, 0, tmplput_USERLIST_nLogons, NULL, CTX_USERLIST);
 	RegisterNamespace("USERLIST:NPOSTS",        0, 0, tmplput_USERLIST_nPosts, NULL, CTX_USERLIST);
-						    
+	RegisterNamespace("USERLIST:PRIMARYEMAIL",  0, 1, tmplput_USERLIST_PrimaryEmail, NULL, CTX_USERLIST);
+	RegisterNamespace("USERLIST:OTHEREMAILS",   0, 1, tmplput_USERLIST_OtherEmails, NULL, CTX_USERLIST);
 	RegisterNamespace("USERLIST:FLAGS",         0, 0, tmplput_USERLIST_Flags, NULL, CTX_USERLIST);
 	RegisterNamespace("USERLIST:DAYSTILLPURGE", 0, 0, tmplput_USERLIST_DaysTillPurge, NULL, CTX_USERLIST);
 
