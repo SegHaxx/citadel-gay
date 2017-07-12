@@ -98,7 +98,14 @@ void do_housekeeping(void) {
 	}
 	end_critical_section(S_HOUSEKEEPING);
 
+	now = time(NULL);
 	if (do_housekeeping_now == 0) {
+		if ( (now - last_timer) > (time_t)300 ) {
+			syslog(LOG_WARNING,
+				"housekeeping: WARNING: housekeeping loop has not run for %ld minutes.  Is something stuck?",
+				((now - last_timer) / 60)
+			);
+		}
 		return;
 	}
 
@@ -107,7 +114,6 @@ void do_housekeeping(void) {
 	 * loop.  Everything below this point is real work.
 	 */
 
-	now = time(NULL);
 	if ( (now - last_timer) > (time_t)60 ) {
 		do_perminute_housekeeping_now = 1;
 		last_timer = time(NULL);
