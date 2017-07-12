@@ -237,6 +237,7 @@ int smtp_attempt_delivery(long msgid, char *recp, char *envelope_from)
 			curl_easy_setopt(curl, CURLOPT_READDATA, &s);
 			curl_easy_setopt(curl, CURLOPT_UPLOAD, 1);						// tell libcurl we are uploading
 			curl_easy_setopt(curl, CURLOPT_TIMEOUT, 20L);						// Time out after 20 seconds
+			// curl_easy_setopt(curl, CURLOPT_USE_SSL, CURLUSESSL_TRY); athos-mn
 			curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0L);
 			curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 0L);
 			// curl_easy_setopt(curl, CURLOPT_ERRORBUFFER, curl_error_buffer);
