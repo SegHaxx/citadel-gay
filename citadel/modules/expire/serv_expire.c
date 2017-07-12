@@ -905,17 +905,15 @@ void purge_databases(void)
 	       	syslog(LOG_NOTICE, "Processed %d message reference count adjustments.", retval);
 	}
 
-	// Enable this after we've tested it and make it a site-configurable option.
-	// This will allow the database files to shrink when they can.
-	// if (!server_shutting_down)
-	// {
-		// cdb_compact();
-	// }
+	if ( (!server_shutting_down) && (CtdlGetConfigInt("c_shrink_db_files") != 0) )
+	{
+		cdb_compact();					// Shrink the DB files on disk
+	}
 
 	if (!server_shutting_down)
 	{
 	       	syslog(LOG_INFO, "Auto-purger: finished.");
-		last_purge = now;	/* So we don't do it again soon */
+		last_purge = now;				// So we don't do it again soon
 		force_purge_now = 0;
 	}
 	else {
