@@ -1,6 +1,5 @@
 usr/share/citadel-server/help
 var/lib/citadel/bio
-var/lib/citadel/bitbucket
 var/lib/citadel/data
 var/lib/citadel/files
 var/lib/citadel/images

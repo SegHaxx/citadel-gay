@@ -1,7 +1,7 @@
 /*
  * citadel_dirs.c : calculate pathnames for various files used in the Citadel system
  *
- * Copyright (c) 1987-2016 by the citadel.org team
+ * Copyright (c) 1987-2017 by the citadel.org team
  *
  *  This program is open source software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License version 3.
@@ -27,7 +27,6 @@
 /* our directories... */
 char ctdl_home_directory[PATH_MAX] = "";
 char ctdl_bio_dir[PATH_MAX]="bio";
-char ctdl_bb_dir[PATH_MAX]="bitbucket";
 char ctdl_data_dir[PATH_MAX]="data";
 char ctdl_dspam_dir[PATH_MAX]="dspam";
 char ctdl_file_dir[PATH_MAX]="files";
@@ -159,7 +158,6 @@ void calc_dirs_n_files(int relh, int home, const char *relhome, char  *ctdldir, 
 	basedir=DATA_DIR;
 #endif
 	COMPUTE_DIRECTORY(ctdl_bio_dir);
-	COMPUTE_DIRECTORY(ctdl_bb_dir);
 	COMPUTE_DIRECTORY(ctdl_data_dir);
 	COMPUTE_DIRECTORY(ctdl_dspam_dir);
 	COMPUTE_DIRECTORY(ctdl_file_dir);
@@ -169,7 +167,6 @@ void calc_dirs_n_files(int relh, int home, const char *relhome, char  *ctdldir, 
 	COMPUTE_DIRECTORY(ctdl_bbsbase_dir);
 
 	StripSlashes(ctdl_bio_dir, 1);
-	StripSlashes(ctdl_bb_dir, 1);
 	StripSlashes(ctdl_data_dir, 1);
 	StripSlashes(ctdl_dspam_dir, 1);
 	StripSlashes(ctdl_file_dir, 1);
@@ -309,7 +306,6 @@ void calc_dirs_n_files(int relh, int home, const char *relhome, char  *ctdldir, 
 	StripSlashes(file_funambol_msg, 0);
 
 	DBG_PRINT(ctdl_bio_dir);
-	DBG_PRINT(ctdl_bb_dir);
 	DBG_PRINT(ctdl_data_dir);
 	DBG_PRINT(ctdl_dspam_dir);
 	DBG_PRINT(ctdl_file_dir);
@@ -430,7 +426,6 @@ int create_run_directories(long UID, long GID)
 {
 	int rv = 0;
 	rv += create_dir(ctdl_message_dir   , S_IRUSR|S_IWUSR|S_IXUSR, UID, -1);
-	rv += create_dir(ctdl_bb_dir        , S_IRUSR|S_IWUSR|S_IXUSR, UID, -1);
 	rv += create_dir(ctdl_file_dir      , S_IRUSR|S_IWUSR|S_IXUSR, UID, -1);
 	rv += create_dir(ctdl_spool_dir     , S_IRUSR|S_IWUSR|S_IXUSR, UID, -1);
 	rv += create_dir(ctdl_netout_dir    , S_IRUSR|S_IWUSR|S_IXUSR, UID, -1);

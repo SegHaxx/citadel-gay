@@ -9,7 +9,6 @@ extern char ctdl_home_directory[PATH_MAX];
 
 /* all our directories */
 extern char ctdl_bio_dir[PATH_MAX];
-extern char ctdl_bb_dir[PATH_MAX];
 extern char ctdl_data_dir[PATH_MAX];
 extern char ctdl_dspam_dir[PATH_MAX];
 extern char ctdl_file_dir[PATH_MAX];
