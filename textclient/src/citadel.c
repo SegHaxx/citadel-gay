@@ -1736,7 +1736,7 @@ NEWUSR:	if (IsEmptyStr(rc_password)) {
 		if (termn8 == 0)
 			switch (mcmd) {
 			case 1:
-				formout(ipc, "help");
+				display_help(ipc, "help");
 				break;
 			case 4:
 				entmsg(ipc, 0, ((userflags & US_EXTEDIT) ? 2 : 0), 0);
@@ -1908,8 +1908,9 @@ NEWUSR:	if (IsEmptyStr(rc_password)) {
 				break;
 
 			case 21:
-				if (argbuf[0] == 0)
-					strcpy(aaa, "?");
+				if (argbuf[0] == 0) {
+					strcpy(argbuf, "?");
+				}
 				display_help(ipc, argbuf);
 				break;
 

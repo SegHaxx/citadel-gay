@@ -1,6 +1,6 @@
 //
 // Help files for the text client are now embedded directly into the client.
-// Copyright (c) 1988-2016 by Art Cancro and the citadel.org developers.
+// Copyright (c) 1988-2017 by Art Cancro and the citadel.org developers.
 // This program is gleefully made available to the world under the terms of
 // the GNU General Public License v3, with the following three modifications:
 // 1. The name of our favorite operating system is 'Linux,' not 'GNU/Linux.'
@@ -9,16 +9,52 @@
 //
 
 char *helpnames[] = {
+	"help",
 	"admin",
 	"floors",
 	"intro",
 	"mail",
 	"network",
-	"policy",
 	"software"
 };
 
 char *helptexts[] = {
+
+"                          Citadel Help Menu\n"
+"  \n"
+" ?         Help. (Typing a '?' will give you a menu almost anywhere)\n"
+" A         Abandon this room where you stopped reading, goto next room.\n"
+" C         Chat (multiuser chat, where available)\n"
+" D         Prints directory, if there is one in the current room.\n"
+" E         Enter a message.\n"
+" F         Read all messages in the room, forward.\n"
+" G         Goto next room which has UNREAD messages.\n"
+" H         Help. Same as '?'\n"
+" I         Reads the Information file for this room.\n"
+" K         List of Known rooms.\n"
+" L         Reads the last five messages in the room.\n"
+" N         Reads all new messages in the room.\n"
+" O         Reads all old messages, backwards.\n"
+" P         Page another user (send an instant message)\n"
+" R         Reads all messages in the room, in reverse order.\n"
+" S         Skips current room without making its messages old.\n"
+" T         Terminate (logout)\n"
+" U         Ungoto (returns to the last room you were in)\n"
+" W         Displays who is currently logged in.\n"
+" X         Toggle eXpert mode (menus and help blurbs on/off)\n"
+" Z         Zap (forget) room. (Removes the room from your list)\n"
+" + -       Goto next, previous room on current floor.\n"
+" > <       Goto next, previous floor.\n"
+" *         Enter any locally installed 'doors'.\n"
+"   \n"
+" In addition, there are dot commands. You hit the . (dot), then press the\n"
+"first letter of each word of the command. As you hit the letters, the words\n"
+"pop onto your screen. Exceptions: after you hit .Help or .Goto, the remainder\n"
+"of the command is a help file name or room name.\n"
+"    \n"
+"      *** USE  .<H>elp ?    for additional help *** \n"
+
+,
 
 "The following commands are available only to Admins.  A subset of these\n"
 "commands are available to room aides when they are currently in the room\n"
@@ -259,10 +295,6 @@ char *helptexts[] = {
 "  Welcome to the network. Messages entered in a network room will appear in\n"
 "that room on all other systems carrying it (The name of the room, however,\n"
 "may be different on other systems).\n"
-
-,
-
-" < this new user policy resides in ./messages/newuser > \n"
 
 ,
 

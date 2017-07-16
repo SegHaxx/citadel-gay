@@ -979,7 +979,20 @@ int getcmd(CtdlIPC *ipc, char *argbuf)
 			enable_color = 0;
 	}
 	/* if we're running in idiot mode, display a cute little menu */
-	IFNEXPERT formout(ipc, "mainmenu");
+
+	IFNEXPERT {
+		scr_printf("-----------------------------------------------------------------------\n");
+		scr_printf("Room cmds:    <K>nown rooms, <G>oto next room, <.G>oto a specific room,\n");
+		scr_printf("              <S>kip this room, <A>bandon this room, <Z>ap this room,\n");
+		scr_printf("              <U>ngoto (move back)\n");
+		scr_printf("Message cmds: <N>ew msgs, <F>orward read, <R>everse read, <O>ld msgs,\n");
+		scr_printf("              <L>ast five msgs, <E>nter a message\n");
+		scr_printf("General cmds: <?> help, <T>erminate, <C>hat, <W>ho is online\n");
+		scr_printf("Misc:         <X> toggle eXpert mode, <D>irectory\n");
+		scr_printf("\n");
+		scr_printf(" (Type .Help SUMMARY for extended commands, <X> to hide this menu)\n");
+		scr_printf("-----------------------------------------------------------------------\n");
+	}
 
 	print_instant();
 	strcpy(argbuf, "");

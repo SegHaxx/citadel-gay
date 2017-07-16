@@ -1,7 +1,7 @@
 /*
  * Text client functions for reading and writing of messages
  *
- * Copyright (c) 1987-2016 by the citadel.org team
+ * Copyright (c) 1987-2017 by the citadel.org team
  *
  * This program is open source software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3.
@@ -1211,7 +1211,9 @@ int entmsg(CtdlIPC *ipc,
 
 	/* If the user is a dumbass, tell them how to type. */
 	if ((userflags & US_EXPERT) == 0) {
-		formout(ipc, "entermsg");
+		scr_printf("Entering message.  Word wrap will give you soft linebreaks.  Pressing the\n");
+		scr_printf("'enter' key will give you a hard linebreak and an indent.  Press 'enter' twice\n");
+		scr_printf("when finished.\n");
 	}
 
 	/* Handle the selection of a recipient, if necessary. */
