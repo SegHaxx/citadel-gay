@@ -69,7 +69,6 @@ char file_crpt_file_cer[PATH_MAX]="";
 char file_chkpwd[PATH_MAX]="";
 char file_base64[PATH_MAX]="";
 char file_guesstimezone[PATH_MAX]="";
-char file_funambol_msg[PATH_MAX] = "";
 char file_dpsam_conf[PATH_MAX] = "";
 char file_dspam_log[PATH_MAX] = "";
 
@@ -299,11 +298,6 @@ void calc_dirs_n_files(int relh, int home, const char *relhome, char  *ctdldir, 
 #endif
 		);
 	StripSlashes(file_mail_aliases, 0);
-        snprintf(file_funambol_msg,
-                sizeof file_funambol_msg,
-                "%sfunambol_newmail_soap.xml",
-                ctdl_shared_dir);
-	StripSlashes(file_funambol_msg, 0);
 
 	DBG_PRINT(ctdl_bio_dir);
 	DBG_PRINT(ctdl_data_dir);
@@ -341,7 +335,6 @@ void calc_dirs_n_files(int relh, int home, const char *relhome, char  *ctdldir, 
 	DBG_PRINT(file_chkpwd);
 	DBG_PRINT(file_base64);
 	DBG_PRINT(file_guesstimezone);
-	DBG_PRINT(file_funambol_msg);
 }
 
 

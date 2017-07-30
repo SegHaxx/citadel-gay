@@ -55,8 +55,6 @@ extern char file_guesstimezone[PATH_MAX];
 extern char file_dpsam_conf[PATH_MAX];
 extern char file_dspam_log[PATH_MAX];
 
-extern char file_funambol_msg[PATH_MAX];
-
 extern void calc_dirs_n_files(int relh, int home, const char *relhome, char  *ctdldir, int dbg);
 
 

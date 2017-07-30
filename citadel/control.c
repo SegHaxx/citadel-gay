@@ -308,10 +308,10 @@ void cmd_conf(char *argbuf)
 		cprintf("%d\n",		CtdlGetConfigInt("c_pftcpdict_port"));
 		cprintf("%d\n",		CtdlGetConfigInt("c_managesieve_port"));
 	        cprintf("%d\n",		CtdlGetConfigInt("c_auth_mode"));
-	        cprintf("%s\n",		CtdlGetConfigStr("c_funambol_host"));
-	        cprintf("%d\n",		CtdlGetConfigInt("c_funambol_port"));
-	        cprintf("%s\n",		CtdlGetConfigStr("c_funambol_source"));
-	        cprintf("%s\n",		CtdlGetConfigStr("c_funambol_auth"));
+	        cprintf("\n");
+	        cprintf("\n");
+	        cprintf("\n");
+	        cprintf("\n");
 		cprintf("%d\n",		CtdlGetConfigInt("c_rbl_at_greeting"));
 		cprintf("%s\n",		CtdlGetConfigStr("c_master_user"));
 		cprintf("%s\n",		CtdlGetConfigStr("c_master_pass"));
@@ -518,16 +518,16 @@ void cmd_conf(char *argbuf)
 				CtdlSetConfigInt("c_auth_mode", atoi(buf));
 				break;
 			case 53:
-				CtdlSetConfigStr("c_funambol_host", buf);
+				/* niu */
 				break;
 			case 54:
-				CtdlSetConfigInt("c_funambol_port", atoi(buf));
+				/* niu */
 				break;
 			case 55:
-				CtdlSetConfigStr("c_funambol_source", buf);
+				/* niu */
 				break;
 			case 56:
-				CtdlSetConfigStr("c_funambol_auth", buf);
+				/* niu */
 				break;
 			case 57:
 				CtdlSetConfigInt("c_rbl_at_greeting", confbool(buf));

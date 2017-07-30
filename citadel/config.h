@@ -81,10 +81,10 @@ struct legacy_config {
 	int c_pftcpdict_port;
 	int c_managesieve_port;
 	int c_auth_mode;
-	char c_funambol_host[256];
-	int c_funambol_port;
-	char c_funambol_source[256];
-	char c_funambol_auth[256];
+	char c_niu_8[256];
+	int c_niu_9;
+	char c_niu_10[256];
+	char c_niu_11[256];
 	char c_rbl_at_greeting;
 	char c_master_user[32];
 	char c_master_pass[32];
