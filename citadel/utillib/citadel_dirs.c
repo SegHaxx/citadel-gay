@@ -28,7 +28,6 @@
 char ctdl_home_directory[PATH_MAX] = "";
 char ctdl_bio_dir[PATH_MAX]="bio";
 char ctdl_data_dir[PATH_MAX]="data";
-char ctdl_dspam_dir[PATH_MAX]="dspam";
 char ctdl_file_dir[PATH_MAX]="files";
 char ctdl_shared_dir[PATH_MAX]="";
 char ctdl_image_dir[PATH_MAX]="images";
@@ -69,8 +68,6 @@ char file_crpt_file_cer[PATH_MAX]="";
 char file_chkpwd[PATH_MAX]="";
 char file_base64[PATH_MAX]="";
 char file_guesstimezone[PATH_MAX]="";
-char file_dpsam_conf[PATH_MAX] = "";
-char file_dspam_log[PATH_MAX] = "";
 
 
 
@@ -158,7 +155,6 @@ void calc_dirs_n_files(int relh, int home, const char *relhome, char  *ctdldir, 
 #endif
 	COMPUTE_DIRECTORY(ctdl_bio_dir);
 	COMPUTE_DIRECTORY(ctdl_data_dir);
-	COMPUTE_DIRECTORY(ctdl_dspam_dir);
 	COMPUTE_DIRECTORY(ctdl_file_dir);
 	COMPUTE_DIRECTORY(ctdl_image_dir);
 	COMPUTE_DIRECTORY(ctdl_info_dir);
@@ -167,7 +163,6 @@ void calc_dirs_n_files(int relh, int home, const char *relhome, char  *ctdldir, 
 
 	StripSlashes(ctdl_bio_dir, 1);
 	StripSlashes(ctdl_data_dir, 1);
-	StripSlashes(ctdl_dspam_dir, 1);
 	StripSlashes(ctdl_file_dir, 1);
 	StripSlashes(ctdl_image_dir, 1);
 	StripSlashes(ctdl_info_dir, 1);
@@ -274,16 +269,6 @@ void calc_dirs_n_files(int relh, int home, const char *relhome, char  *ctdldir, 
 		 "%sguesstimezone.sh",
 		 ctdl_utilbin_dir);
 
-	snprintf(file_dpsam_conf,
-		 sizeof file_dpsam_conf,
-		 "%sdspam.conf",
-		 ctdl_etc_dir);
-	StripSlashes(file_dpsam_conf, 0);
-	snprintf(file_dspam_log, 
-		 sizeof file_dspam_log, 
-		 "%sdspam.log",
-		 ctdl_home_directory);
-	StripSlashes(file_dspam_log, 0);
 	/* 
 	 * DIRTY HACK FOLLOWS! due to configs in the network dir in the 
 	 * legacy installations, we need to calculate ifdeffed here.
@@ -301,7 +286,6 @@ void calc_dirs_n_files(int relh, int home, const char *relhome, char  *ctdldir, 
 
 	DBG_PRINT(ctdl_bio_dir);
 	DBG_PRINT(ctdl_data_dir);
-	DBG_PRINT(ctdl_dspam_dir);
 	DBG_PRINT(ctdl_file_dir);
 	DBG_PRINT(ctdl_image_dir);
 	DBG_PRINT(ctdl_info_dir);

@@ -261,7 +261,6 @@ AC_ARG_WITH(ssl,
 	]
 )
 AC_ARG_WITH(with_ldap, [  --with-ldap             use OpenLDAP client library])
-dnl AC_ARG_WITH(with_libdspam, [  --with-libdspam         use libdspam mail spam scanning library])
 AC_ARG_WITH(with_gc, [  --with-gc             use the Boehm-Demers-Weiser garbage collection library])
 
 if test "x$with_db" != xno -a "x$with_db" != xyes -a "$with_db"; then
@@ -722,21 +721,6 @@ fi
 
 
 
-dnl Checks for the libdspam mail spam scanning library.
-dnl if test "x$with_libdspam" != xno ; then
-dnl 	AC_CHECK_HEADERS(dspam/libdspam.h,
-dnl 		[AC_CHECK_LIB(dspam, dspam_init,
-dnl 			[ok_libdspam=yes],,
-dnl 	)])
-dnl fi
-dnl 
-dnl if test "x$ok_libdspam" = xyes ; then
-dnl 	SERVER_LIBS="-ldspam $SERVER_LIBS"
-dnl 	AC_DEFINE(HAVE_LIBDSPAM, [], [(unfinished) define this if you have the libdspam mail spam scanning library available])
-dnl fi
-
-
-
 dnl Checks for the Expat XML parser.
 AC_CHECK_HEADER(expat.h,
 	[AC_CHECK_LIB(expat, XML_ParserCreateNS,
@@ -1029,7 +1013,6 @@ echo ------------------------------------------------------------------------
 echo 'LDAP support:                    ' $ok_ldap
 echo 'Character set conversion support:' $ok_iconv
 echo 'Boehm-Demers-Weiser support:     ' $ok_gc
-dnl echo 'DSpam Scanning support:          ' $ok_libdspam
 echo 
 echo 'Note: if you are not using Linux, make sure you are using GNU make'
 echo '(gmake) to compile Citadel.'
