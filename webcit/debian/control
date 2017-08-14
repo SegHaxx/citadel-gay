@@ -12,9 +12,8 @@ Depends: ${shlibs:Depends}, ${misc:Depends}, debconf, tinymce, citadel-common, o
 Suggests: citadel-server, apache2 | apache, localepurge, gnome-icon-theme
 Recommends: shared-mime-info
 Description: web-based frontend to Citadel groupware server
- WebCit is a web-based, AJAX-enabled frontend to the Citadel groupware system.
- It is an attractive web middleware layer that allows user-friendly access.
+ WebCit is a web-based, dynamic web frontend to the Citadel groupware system.
+ It is an attractive web applicagtion that allows user-friendly access.
  By combining WebCit and Citadel, you can have a versatile online environment
  with many users concurrently accessing the same system using the user
  interface of their choice (text, web, or downloaded client software).
-

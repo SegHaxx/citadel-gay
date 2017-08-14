@@ -65,9 +65,11 @@ void init_ssl(void)
 	char buf[SIZ];
 	int rv = 0;
 
+#ifndef OPENSSL_NO_EGD
 	if (!access("/var/run/egd-pool", F_OK)) {
 		RAND_egd("/var/run/egd-pool");
 	}
+#endif
 
 	if (!RAND_status()) {
 		syslog(LOG_WARNING, "PRNG not adequately seeded, won't do SSL/TLS\n");
@@ -333,8 +335,8 @@ void init_ssl(void)
 				if (cer = X509_new(), cer != NULL) {
 
 					ASN1_INTEGER_set(X509_get_serialNumber(cer), 0);
-					X509_set_issuer_name(cer, req->req_info->subject);
-					X509_set_subject_name(cer, req->req_info->subject);
+					X509_set_issuer_name(cer, X509_REQ_get_subject_name(req));
+					X509_set_subject_name(cer, X509_REQ_get_subject_name(req));
 					X509_gmtime_adj(X509_get_notBefore(cer), 0);
 					X509_gmtime_adj(X509_get_notAfter(cer),(long)60*60*24*SIGN_DAYS);
 
@@ -444,7 +446,7 @@ int starttls(int sock) {
 	else {
 		syslog(LOG_INFO, "SSL_accept success\n");
 	}
-	/*r = */BIO_set_close(newssl->rbio, BIO_NOCLOSE);
+	/*r = */BIO_set_close(SSL_get_rbio(newssl), BIO_NOCLOSE);
 	bits = SSL_CIPHER_get_bits(SSL_get_current_cipher(newssl), &alg_bits);
 	syslog(LOG_INFO, "SSL/TLS using %s on %s (%d of %d bits)\n",
 		SSL_CIPHER_get_name(SSL_get_current_cipher(newssl)),
