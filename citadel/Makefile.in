@@ -214,7 +214,7 @@ install-data:
 		 network/systems; do \
 		$(srcdir)/mkinstalldirs $(DESTDIR)$(prefix)/$$i; \
 	done
-	@for i in funambol_newmail_soap.xml notify_about_newmail.js public_clients citadel_urlshorteners.rc \
+	@for i in notify_about_newmail.js public_clients citadel_urlshorteners.rc \
 		 `find $(srcdir)/help $(srcdir)/messages $(srcdir)/network -type f | grep -v .svn`; do \
 		echo $(INSTALL_DATA) $$i $(DESTDIR)$(prefix)/$$i; \
 		$(INSTALL_DATA) $$i $(DESTDIR)$(prefix)/$$i; \
@@ -241,7 +241,7 @@ install-data-new:
 	done
 
 	$(srcdir)/mkinstalldirs $(DESTDIR)$(HELP_DIR)/help
-	@for i in  funambol_newmail_soap.xml notify_about_newmail.js \
+	@for i in  notify_about_newmail.js \
 		 `find $(srcdir)/help -type f | grep -v .svn`; do \
 		echo $(INSTALL_DATA) $$i $(DESTDIR)$(HELP_DIR)/$$i; \
 		$(INSTALL_DATA) $$i $(DESTDIR)$(HELP_DIR)/$$i; \

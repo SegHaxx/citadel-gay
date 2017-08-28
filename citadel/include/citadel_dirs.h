@@ -10,7 +10,6 @@ extern char ctdl_home_directory[PATH_MAX];
 /* all our directories */
 extern char ctdl_bio_dir[PATH_MAX];
 extern char ctdl_data_dir[PATH_MAX];
-extern char ctdl_dspam_dir[PATH_MAX];
 extern char ctdl_file_dir[PATH_MAX];
 extern char ctdl_shared_dir[PATH_MAX];
 extern char ctdl_image_dir[PATH_MAX];
@@ -52,10 +51,6 @@ extern char file_crpt_file_cer[PATH_MAX];
 extern char file_chkpwd[PATH_MAX];
 extern char file_base64[PATH_MAX];
 extern char file_guesstimezone[PATH_MAX];
-extern char file_dpsam_conf[PATH_MAX];
-extern char file_dspam_log[PATH_MAX];
-
-extern char file_funambol_msg[PATH_MAX];
 
 extern void calc_dirs_n_files(int relh, int home, const char *relhome, char  *ctdldir, int dbg);
 

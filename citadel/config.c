@@ -207,10 +207,6 @@ void migrate_legacy_config(struct legacy_config *lconfig)
 	CtdlSetConfigInt(	"c_pftcpdict_port"	,	lconfig->c_pftcpdict_port	);
 	CtdlSetConfigInt(	"c_managesieve_port"	,	lconfig->c_managesieve_port	);
 	CtdlSetConfigInt(	"c_auth_mode"		,	lconfig->c_auth_mode		);
-	CtdlSetConfigStr(	"c_funambol_host"	,	lconfig->c_funambol_host	);
-	CtdlSetConfigInt(	"c_funambol_port"	,	lconfig->c_funambol_port	);
-	CtdlSetConfigStr(	"c_funambol_source"	,	lconfig->c_funambol_source	);
-	CtdlSetConfigStr(	"c_funambol_auth"	,	lconfig->c_funambol_auth	);
 	CtdlSetConfigInt(	"c_rbl_at_greeting"	,	lconfig->c_rbl_at_greeting	);
 	CtdlSetConfigStr(	"c_master_user"		,	lconfig->c_master_user		);
 	CtdlSetConfigStr(	"c_master_pass"		,	lconfig->c_master_pass		);
