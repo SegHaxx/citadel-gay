@@ -623,8 +623,7 @@ int CtdlLoginExistingUser(char *authname, const char *trythisname)
 		if (((CC->nologin)) && (CC->user.axlevel < AxAideU)) {
 			return login_too_many_users;
 		} else {
-			safestrncpy(CC->curr_user, CC->user.fullname,
-					sizeof CC->curr_user);
+			safestrncpy(CC->curr_user, CC->user.fullname, sizeof CC->curr_user);
 			return login_ok;
 		}
 	}
@@ -664,6 +663,13 @@ void do_login(void)
 	}
 
 	CtdlPutUserLock(&CCC->user);
+
+
+	// PUT THE EMAIL EXTRACT HERE AJC FIXME
+	//#ifdef HAVE_LDAP
+		//if ((CtdlGetConfigInt("c_auth_mode") == AUTHMODE_LDAP) || (CtdlGetConfigInt("c_auth_mode") == AUTHMODE_LDAP_AD)) {
+		//int extract_email_addresses_from_ldap(char *ldap_dn, char *emailaddrs)
+	//#endif
 
 	/*
 	 * No email address for user?  Make one up.

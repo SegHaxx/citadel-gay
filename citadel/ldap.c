@@ -22,6 +22,7 @@ int ctdl_require_ldap_version = 3;
 #include "citadel_ldap.h"
 #include "ctdl_module.h"
 #include "user_ops.h"
+#include "internet_addressing.h"
 #include "config.h"
 
 #ifdef HAVE_LDAP
@@ -438,8 +439,107 @@ int Ctdl_LDAP_to_vCard(char *ldap_dn, struct vCard *v)
 
 	/* unbind so we can go back in as the authenticating user */
 	ldap_unbind(ldserver);
-	
 	return(changed_something);	/* tell the caller whether we made any changes */
+}
+
+
+/*
+ * Extract a user's Internet email addresses from LDAP.
+ * Returns zero if we got a valid set of addresses; nonzero for error.
+ */
+int extract_email_addresses_from_ldap(char *ldap_dn, char *emailaddrs)
+{
+	LDAP *ldserver = NULL;
+	int i;
+	struct timeval tv;
+	LDAPMessage *search_result = NULL;
+	LDAPMessage *entry = NULL;
+	char **mail;
+	char *attrs[] = { "*","+",NULL};
+
+	if (!ldap_dn) return(1);
+	if (!emailaddrs) return(1);
+
+	if (ctdl_ldap_initialize(&ldserver) != LDAP_SUCCESS) {
+		return(2);
+	}
+
+	ldap_set_option(ldserver, LDAP_OPT_PROTOCOL_VERSION, &ctdl_require_ldap_version);
+	ldap_set_option(ldserver, LDAP_OPT_REFERRALS, (void *)LDAP_OPT_OFF);
+
+	striplt(CtdlGetConfigStr("c_ldap_bind_dn"));
+	striplt(CtdlGetConfigStr("c_ldap_bind_pw"));
+	syslog(LOG_DEBUG, "ldap: bind DN: %s", CtdlGetConfigStr("c_ldap_bind_dn"));
+	i = ldap_simple_bind_s(ldserver,
+		(!IsEmptyStr(CtdlGetConfigStr("c_ldap_bind_dn")) ? CtdlGetConfigStr("c_ldap_bind_dn") : NULL),
+		(!IsEmptyStr(CtdlGetConfigStr("c_ldap_bind_pw")) ? CtdlGetConfigStr("c_ldap_bind_pw") : NULL)
+	);
+	if (i != LDAP_SUCCESS) {
+		syslog(LOG_ERR, "ldap: Cannot bind: %s (%d)", ldap_err2string(i), i);
+		return(3);
+	}
+
+	tv.tv_sec = 10;
+	tv.tv_usec = 0;
+
+	syslog(LOG_DEBUG, "ldap: search: %s", ldap_dn);
+	(void) ldap_search_ext_s(
+		ldserver,				// ld
+		ldap_dn,				// base
+		LDAP_SCOPE_SUBTREE,			// scope
+		NULL,					// filter
+		attrs,					// attrs (all attributes)
+		0,					// attrsonly (attrs + values)
+		NULL,					// serverctrls (none)
+		NULL,					// clientctrls (none)
+		&tv,					// timeout
+		1,					// sizelimit (1 result max)
+		&search_result				// res
+	);
+	
+	/* Ignore the return value of ldap_search_ext_s().  Sometimes it returns an error even when
+	 * the search succeeds.  Instead, we check to see whether search_result is still NULL.
+	 */
+	if (search_result == NULL) {
+		syslog(LOG_DEBUG, "ldap: zero search results were returned");
+		ldap_unbind(ldserver);
+		return(4);
+	}
+
+	/* At this point we've got at least one result from our query.  If there are multiple
+	 * results, we still only look at the first one.
+	 */
+	emailaddrs[0] = 0;	/* clear out any previous results */
+	entry = ldap_first_entry(ldserver, search_result);
+	if (entry) {
+		syslog(LOG_DEBUG, "ldap: search got user details");
+		mail=ldap_get_values(ldserver, search_result, "mail");
+
+		if (mail) {
+			int q;
+			for (q=0; q<ldap_count_values(mail); ++q) {
+				if (IsDirectory(mail[q], 0)) {
+					syslog(LOG_DEBUG, "\035FIXME YES DIRECTORY %s\033[0m", mail[q]);
+					if ((strlen(emailaddrs) + strlen(mail[q]) + 2) > 512) {
+						syslog(LOG_ERR, "ldap: can't fit all email addresses into user record");
+					}
+					else {
+						if (!IsEmptyStr(emailaddrs)) {
+							strcat(emailaddrs, "|");
+						}
+						strcat(emailaddrs, mail[q]);
+					}
+				}
+			}
+		}
+	}
+
+	/* free the results */
+	ldap_msgfree(search_result);
+
+	/* unbind so we can go back in as the authenticating user */
+	ldap_unbind(ldserver);
+	return(0);
 }
 
 #endif /* HAVE_LDAP */
