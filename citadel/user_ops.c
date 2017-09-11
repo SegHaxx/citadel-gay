@@ -662,14 +662,18 @@ void do_login(void)
 		}
 	}
 
-	CtdlPutUserLock(&CCC->user);
-
-
-	// PUT THE EMAIL EXTRACT HERE AJC FIXME
-	//#ifdef HAVE_LDAP
-		//if ((CtdlGetConfigInt("c_auth_mode") == AUTHMODE_LDAP) || (CtdlGetConfigInt("c_auth_mode") == AUTHMODE_LDAP_AD)) {
-		//int extract_email_addresses_from_ldap(char *ldap_dn, char *emailaddrs)
-	//#endif
+	/*
+	 * If we are using LDAP authentication, extract the user's email addresses from the directory.
+	 * FIXME make this a site configurable setting
+	 */
+	#ifdef HAVE_LDAP
+		if ((CtdlGetConfigInt("c_auth_mode") == AUTHMODE_LDAP) || (CtdlGetConfigInt("c_auth_mode") == AUTHMODE_LDAP_AD)) {
+			char new_emailaddrs[512];
+			if (extract_email_addresses_from_ldap(CCC->ldap_dn, new_emailaddrs) == 0) {
+				strcpy(CCC->user.emailaddrs, new_emailaddrs);
+			}
+		}
+	#endif
 
 	/*
 	 * No email address for user?  Make one up.
@@ -678,6 +682,8 @@ void do_login(void)
 		sprintf(CCC->user.emailaddrs, "cit%ld@%s", CCC->user.usernum, CtdlGetConfigStr("c_fqdn"));
 	}
 	
+	CtdlPutUserLock(&CCC->user);
+
 	/*
 	 * Populate cs_inet_email and cs_inet_other_emails with valid email addresses from the user record
 	 */
