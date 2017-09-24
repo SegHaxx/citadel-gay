@@ -128,7 +128,7 @@ void master_startup(void) {
 	struct passwd *pw;
 	gid_t gid;
 	
-	syslog(LOG_DEBUG, "master_startup() started\n");
+	syslog(LOG_DEBUG, "master_startup() started");
 	time(&server_startup_time);
 
 	syslog(LOG_INFO, "Checking directory access");
@@ -154,7 +154,7 @@ void master_startup(void) {
 	/* Check floor reference counts */
 	check_ref_counts();
 
-	syslog(LOG_INFO, "Creating base rooms (if necessary)\n");
+	syslog(LOG_INFO, "Creating base rooms (if necessary)");
 	CtdlCreateRoom(CtdlGetConfigStr("c_baseroom"),	0, "", 0, 1, 0, VIEW_BBS);
 	CtdlCreateRoom(AIDEROOM,			3, "", 0, 1, 0, VIEW_BBS);
 	CtdlCreateRoom(SYSCONFIGROOM,			3, "", 0, 1, 0, VIEW_BBS);
@@ -172,7 +172,7 @@ void master_startup(void) {
                 CtdlPutRoomLock(&qrbuf);
         }
 
-	syslog(LOG_INFO, "Seeding the pseudo-random number generator...\n");
+	syslog(LOG_INFO, "Seeding the pseudo-random number generator...");
 	urandom = fopen("/dev/urandom", "r");
 	if (urandom != NULL) {
 		rv = fread(&seed, sizeof seed, 1, urandom);
@@ -188,7 +188,7 @@ void master_startup(void) {
 	srand(seed);
 	srandom(seed);
 
-	syslog(LOG_DEBUG, "master_startup() finished\n");
+	syslog(LOG_DEBUG, "master_startup() finished");
 }
 
 
@@ -222,7 +222,7 @@ int master_cleanup(int exitcode) {
 
 	/* If the operator requested a halt but not an exit, halt here. */
 	if (shutdown_and_halt) {
-		syslog(LOG_NOTICE, "citserver: Halting server without exiting.\n");
+		syslog(LOG_ERR, "citserver: Halting server without exiting.");
 		fflush(stdout); fflush(stderr);
 		while(1) {
 			sleep(32767);
@@ -230,7 +230,7 @@ int master_cleanup(int exitcode) {
 	}
 	
 	/* Now go away. */
-	syslog(LOG_NOTICE, "citserver: Exiting with status %d\n", exitcode);
+	syslog(LOG_ERR, "citserver: Exiting with status %d", exitcode);
 	fflush(stdout); fflush(stderr);
 	
 	if (restart_server != 0) {
@@ -290,14 +290,13 @@ int CtdlIsPublicClient(void)
 	 */
 	if (stat(public_clients_file, &statbuf) != 0) {
 		/* No public_clients file exists, so bail out */
-		syslog(LOG_WARNING, "Warning: '%s' does not exist\n", 
-				public_clients_file);
+		syslog(LOG_WARNING, "Warning: '%s' does not exist", public_clients_file);
 		return(0);
 	}
 
 	if (statbuf.st_mtime > pc_timestamp) {
 		begin_critical_section(S_PUBLIC_CLIENTS);
-		syslog(LOG_INFO, "Loading %s\n", public_clients_file);
+		syslog(LOG_INFO, "Loading %s", public_clients_file);
 
 		public_clientspos = &public_clients[0];
 		public_clientsend = public_clientspos + SIZ;
@@ -343,18 +342,17 @@ int CtdlIsPublicClient(void)
 		end_critical_section(S_PUBLIC_CLIENTS);
 	}
 
-	syslog(LOG_DEBUG, "Checking whether %s is a local or public client\n",
-		CC->cs_addr);
+	syslog(LOG_DEBUG, "Checking whether %s is a local or public client", CC->cs_addr);
 	for (i=0; i<num_parms(public_clients); ++i) {
 		extract_token(addrbuf, public_clients, i, '|', sizeof addrbuf);
 		if (!strcasecmp(CC->cs_addr, addrbuf)) {
-			syslog(LOG_DEBUG, "... yes its local.\n");
+			syslog(LOG_DEBUG, "... yes its local.");
 			return(1);
 		}
 	}
 
 	/* No hits.  This is not a public client. */
-	syslog(LOG_DEBUG, "... no it isn't.\n");
+	syslog(LOG_DEBUG, "... no it isn't.");
 	return(0);
 }
 

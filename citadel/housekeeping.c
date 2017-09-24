@@ -20,6 +20,7 @@
 #include "room_ops.h"
 #include "internet_addressing.h"
 #include "journaling.h"
+#include "citadel_ldap.h"
 
 void check_sched_shutdown(void) {
 	if ((ScheduledShutdown == 1) && (ContextList == NULL)) {
@@ -125,8 +126,9 @@ void do_housekeeping(void) {
 
 	/* Then, do the "once per minute" stuff... */
 	if (do_perminute_housekeeping_now) {
-		cdb_check_handles();			/* suggested by Justin Case */
-		PerformSessionHooks(EVT_TIMER);		/* Run any timer hooks */
+		cdb_check_handles();
+		CtdlPopulateUsersFromLDAP();		// This one isn't from a module so we put it here
+		PerformSessionHooks(EVT_TIMER);		// Run all registered TIMER hooks
 	}
 
 	/*

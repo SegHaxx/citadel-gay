@@ -542,4 +542,96 @@ int extract_email_addresses_from_ldap(char *ldap_dn, char *emailaddrs)
 	return(0);
 }
 
+
+/*
+ * Scan LDAP for users and populate Citadel's user database with everyone
+ */
+void CtdlPopulateUsersFromLDAP(void)
+{
+	LDAP *ldserver = NULL;
+	int i;
+	LDAPMessage *search_result = NULL;
+	LDAPMessage *entry = NULL;
+	char *user_dn = NULL;
+	char searchstring[1024];
+	struct timeval tv;
+	// char **values;
+
+	if ((CtdlGetConfigInt("c_auth_mode") != AUTHMODE_LDAP) && (CtdlGetConfigInt("c_auth_mode") != AUTHMODE_LDAP_AD)) {
+		return;		// not running LDAP
+	}
+
+	syslog(LOG_INFO, "ldap: populating Citadel user database from LDAP");
+
+	if (ctdl_ldap_initialize(&ldserver) != LDAP_SUCCESS) {
+		return;
+	}
+
+	ldap_set_option(ldserver, LDAP_OPT_PROTOCOL_VERSION, &ctdl_require_ldap_version);
+	ldap_set_option(ldserver, LDAP_OPT_REFERRALS, (void *)LDAP_OPT_OFF);
+
+	striplt(CtdlGetConfigStr("c_ldap_bind_dn"));
+	striplt(CtdlGetConfigStr("c_ldap_bind_pw"));
+	syslog(LOG_DEBUG, "ldap: bind DN: %s", CtdlGetConfigStr("c_ldap_bind_dn"));
+	i = ldap_simple_bind_s(ldserver,
+		(!IsEmptyStr(CtdlGetConfigStr("c_ldap_bind_dn")) ? CtdlGetConfigStr("c_ldap_bind_dn") : NULL),
+		(!IsEmptyStr(CtdlGetConfigStr("c_ldap_bind_pw")) ? CtdlGetConfigStr("c_ldap_bind_pw") : NULL)
+	);
+	if (i != LDAP_SUCCESS) {
+		syslog(LOG_ERR, "ldap: Cannot bind: %s (%d)", ldap_err2string(i), i);
+		return;
+	}
+
+	tv.tv_sec = 10;
+	tv.tv_usec = 0;
+
+	if (CtdlGetConfigInt("c_auth_mode") == AUTHMODE_LDAP_AD) {
+			snprintf(searchstring, sizeof(searchstring), "(&(objectClass=user)(objectClass=person)(!(objectClass=computer)))");
+	} else {
+			snprintf(searchstring, sizeof(searchstring), "(objectClass: inetOrgPerson)");
+	}
+
+	syslog(LOG_DEBUG, "ldap: search: %s", searchstring);
+	(void) ldap_search_ext_s(
+		ldserver,					// ld
+		CtdlGetConfigStr("c_ldap_base_dn"),		// base
+		LDAP_SCOPE_SUBTREE,				// scope
+		searchstring,					// filter
+		NULL,						// attrs (all attributes)
+		0,						// attrsonly (attrs + values)
+		NULL,						// serverctrls (none)
+		NULL,						// clientctrls (none)
+		&tv,						// timeout
+		INT_MAX,					// sizelimit (max)
+		&search_result					// result
+	);
+
+	/* Ignore the return value of ldap_search_ext_s().  Sometimes it returns an error even when
+	 * the search succeeds.  Instead, we check to see whether search_result is still NULL.
+	 */
+	if (search_result == NULL) {
+		syslog(LOG_DEBUG, "ldap: zero search results were returned");
+		ldap_unbind(ldserver);
+		return;
+	}
+
+	syslog(LOG_DEBUG, "ldap: %d entries returned", ldap_count_entries(ldserver, search_result));
+	entry = ldap_first_entry(ldserver, search_result);
+	while (entry) {
+
+		user_dn = ldap_get_dn(ldserver, entry);
+		if (user_dn) {
+			syslog(LOG_DEBUG, "ldap: found %s", user_dn);
+		}
+
+		entry = ldap_next_entry(ldserver, entry);
+	}
+
+	/* free the results */
+	ldap_msgfree(search_result);
+
+	/* unbind so we can go back in as the authenticating user */
+	ldap_unbind(ldserver);
+}
+
 #endif /* HAVE_LDAP */
