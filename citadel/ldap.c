@@ -588,7 +588,7 @@ void CtdlPopulateUsersFromLDAP(void)
 	if (CtdlGetConfigInt("c_auth_mode") == AUTHMODE_LDAP_AD) {
 			snprintf(searchstring, sizeof(searchstring), "(&(objectClass=user)(objectClass=person)(!(objectClass=computer)))");
 	} else {
-			snprintf(searchstring, sizeof(searchstring), "(objectClass: inetOrgPerson)");
+			snprintf(searchstring, sizeof(searchstring), "(objectClass=inetOrgPerson)");
 	}
 
 	syslog(LOG_DEBUG, "ldap: search: %s", searchstring);
