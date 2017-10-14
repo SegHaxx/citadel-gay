@@ -141,6 +141,7 @@ int CtdlTryUserLDAP(char *username,
 			syslog(LOG_DEBUG, "ldap: dn = %s", user_dn);
 		}
 
+/* begin - centralize this */
 		if (CtdlGetConfigInt("c_auth_mode") == AUTHMODE_LDAP_AD) {
 			values = ldap_get_values(ldserver, search_result, "displayName");
 			if (values) {
@@ -161,6 +162,8 @@ int CtdlTryUserLDAP(char *username,
 				ldap_value_free(values);
 			}
 		}
+/* end - centralize this */
+
 		/* If we know the username is the CN/displayName, we already set the uid*/
 		if (lookup_based_on_username==0) {
 			if (CtdlGetConfigInt("c_auth_mode") == AUTHMODE_LDAP_AD) {
@@ -555,7 +558,7 @@ void CtdlPopulateUsersFromLDAP(void)
 	char *user_dn = NULL;
 	char searchstring[1024];
 	struct timeval tv;
-	// char **values;
+	char **values;
 
 	if ((CtdlGetConfigInt("c_auth_mode") != AUTHMODE_LDAP) && (CtdlGetConfigInt("c_auth_mode") != AUTHMODE_LDAP_AD)) {
 		return;		// not running LDAP
@@ -622,6 +625,54 @@ void CtdlPopulateUsersFromLDAP(void)
 		user_dn = ldap_get_dn(ldserver, entry);
 		if (user_dn) {
 			syslog(LOG_DEBUG, "ldap: found %s", user_dn);
+
+			// FIXME now create or update the user begin
+			int fullname_size = 256;
+			char fullname[256] = { 0 } ;
+			uid_t uid = (-1);
+
+			if (CtdlGetConfigInt("c_auth_mode") == AUTHMODE_LDAP_AD) {
+				values = ldap_get_values(ldserver, entry, "displayName");	// AD: fullname = displayName
+				if (values) {
+					if (values[0]) {
+						safestrncpy(fullname, values[0], fullname_size);
+					}
+					ldap_value_free(values);
+				}
+				values = ldap_get_values(ldserver, entry, "objectGUID");	// AD: uid hashed from objectGUID
+				if (values) {
+					if (values[0]) {
+						uid = abs(HashLittle(values[0], strlen(values[0])));
+					}
+					ldap_value_free(values);
+				}
+			}
+			else {
+				values = ldap_get_values(ldserver, entry, "cn");		// non-AD: fullname = cn
+				if (values) {
+					if (values[0]) {
+						safestrncpy(fullname, values[0], fullname_size);
+					}
+					ldap_value_free(values);
+				}
+				values = ldap_get_values(ldserver, entry, "uidNumber");		// non-AD: uid = uidNumber
+				if (values) {
+					if (values[0]) {
+						uid = atoi(values[0]);
+					}
+					ldap_value_free(values);
+				}
+			}
+
+			syslog(LOG_DEBUG, "\033[33mldap: display name: <%s> , uid = <%d>\033[0m", fullname, uid);
+
+
+			// FIXME now create or update the user end
+
+
+
+
+
 		}
 
 		entry = ldap_next_entry(ldserver, entry);
