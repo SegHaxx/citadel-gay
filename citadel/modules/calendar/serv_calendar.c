@@ -2580,7 +2580,8 @@ CTDL_MODULE_INIT(calendar)
 	{
 
 		/* Tell libical to return errors instead of aborting if it gets bad data */
-		icalerror_errors_are_fatal = 0;
+		// icalerror_errors_are_fatal = 0; (this was the old way)
+		icalerror_set_errors_are_fatal(0);
 
 		/* Use our own application prefix in tzid's generated from system tzdata */
 		icaltimezone_set_tzid_prefix("/citadel.org/");
