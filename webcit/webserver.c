@@ -272,7 +272,12 @@ int main(int argc, char **argv)
 	}
 
 	/* Tell libical to return an error instead of aborting if it sees badly formed iCalendar data. */
-	icalerror_errors_are_fatal = 0;
+
+#ifdef LIBICAL_ICAL_EXPORT	// cheap and sleazy way to detect libical >=2.0
+		icalerror_set_errors_are_fatal(0);
+#else
+		icalerror_errors_are_fatal = 0;
+#endif
 
 	/* Use our own prefix on tzid's generated from system tzdata */
 	icaltimezone_set_tzid_prefix("/citadel.org/");
