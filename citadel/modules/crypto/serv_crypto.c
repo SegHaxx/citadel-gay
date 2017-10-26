@@ -74,7 +74,6 @@ void destruct_ssl(void)
 void init_ssl(void)
 {
 	const SSL_METHOD *ssl_method;
-	DH *dh;
 	RSA *rsa=NULL;
 	X509_REQ *req = NULL;
 	X509 *cer = NULL;
@@ -136,8 +135,9 @@ void init_ssl(void)
 	CRYPTO_set_locking_callback(ssl_lock);
 	CRYPTO_set_id_callback(id_callback);
 
+#if 0 // this doesn't work in newer openssl
 	/* Load DH parameters into the context */
-	dh = DH_new();
+	DH *dh = DH_new();
 	if (!dh) {
 		syslog(LOG_CRIT, "init_ssl() can't allocate a DH object: %s", ERR_reason_error_string(ERR_get_error()));
 		SSL_CTX_free(ssl_ctx);
@@ -159,6 +159,7 @@ void init_ssl(void)
 	dh->length = DH_L;
 	SSL_CTX_set_tmp_dh(ssl_ctx, dh);
 	DH_free(dh);
+#endif // this doesn't work in newer openssl
 
 	/* Get our certificates in order.
 	 * First, create the key/cert directory if it's not there already...
