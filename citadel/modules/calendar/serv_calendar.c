@@ -2584,7 +2584,7 @@ CTDL_MODULE_INIT(calendar)
 #ifdef LIBICAL_ICAL_EXPORT	// cheap and sleazy way to detect libical >=2.0
 		icalerror_set_errors_are_fatal(0);
 #else
-		icalerror_errors_are_fatal = 0; (this was the old way)
+		icalerror_errors_are_fatal = 0;
 #endif
 
 		/* Use our own application prefix in tzid's generated from system tzdata */
