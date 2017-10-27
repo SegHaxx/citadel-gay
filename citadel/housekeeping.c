@@ -127,7 +127,9 @@ void do_housekeeping(void) {
 	/* Then, do the "once per minute" stuff... */
 	if (do_perminute_housekeeping_now) {
 		cdb_check_handles();
-		//CtdlPopulateUsersFromLDAP();		// This one isn't from a module so we put it here
+#ifdef HAVE_LDAP
+		CtdlSynchronizeUsersFromLDAP();		// This one isn't from a module so we put it here
+#endif
 		PerformSessionHooks(EVT_TIMER);		// Run all registered TIMER hooks
 	}
 

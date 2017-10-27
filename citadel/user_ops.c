@@ -461,8 +461,10 @@ void rebuild_usersbynumber(void) {
  * getuserbyuid()  -     get user by system uid (for PAM mode authentication)
  *		       returns 0 if user was found
  *
- * WARNING: don't use this function unless you absolutely have to.  It does
- *	  a sequential search and therefore is computationally expensive.
+ * WARNING:	don't use this function unless you absolutely have to.  It does
+ *		a sequential search and therefore is computationally expensive.
+ *
+ * FIXME:	build an index, dummy.
  */
 int getuserbyuid(struct ctdluser *usbuf, uid_t number)
 {

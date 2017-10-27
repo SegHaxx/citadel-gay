@@ -16,4 +16,4 @@ int CtdlTryUserLDAP(char *username, char *found_dn, int found_dn_size, char *ful
 int CtdlTryPasswordLDAP(char *user_dn, const char *password);
 int Ctdl_LDAP_to_vCard(char *ldap_dn, struct vCard *v);
 int extract_email_addresses_from_ldap(char *ldap_dn, char *emailaddrs);
-void CtdlPopulateUsersFromLDAP(void);
+void CtdlSynchronizeUsersFromLDAP(void);

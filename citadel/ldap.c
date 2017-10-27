@@ -549,7 +549,7 @@ int extract_email_addresses_from_ldap(char *ldap_dn, char *emailaddrs)
 /*
  * Scan LDAP for users and populate Citadel's user database with everyone
  */
-void CtdlPopulateUsersFromLDAP(void)
+void CtdlSynchronizeUsersFromLDAP(void)
 {
 	LDAP *ldserver = NULL;
 	int i;
