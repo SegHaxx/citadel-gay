@@ -1,7 +1,7 @@
 /*
  * This module dumps and/or loads the Citadel database in XML format.
  *
- * Copyright (c) 1987-2016 by the citadel.org team
+ * Copyright (c) 1987-2017 by the citadel.org team
  *
  * This program is open source software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3.
@@ -366,8 +366,8 @@ void migr_export_openids(void) {
 	long usernum;
 	char url[512];
 
-	cdb_rewind(CDB_OPENID);
-	while (cdboi = cdb_next_item(CDB_OPENID), cdboi != NULL) {
+	cdb_rewind(CDB_EXTAUTH);
+	while (cdboi = cdb_next_item(CDB_EXTAUTH), cdboi != NULL) {
 		if (cdboi->len > sizeof(long)) {
 			client_write(HKEY("<openid>\n"));
 			memcpy(&usernum, cdboi->ptr, sizeof(long));
@@ -712,7 +712,7 @@ void migr_xml_end(void *data, const char *el)
 		oid_data = malloc(oid_data_len);
 		memcpy(oid_data, &openid_usernum, sizeof(long));
 		memcpy(&oid_data[sizeof(long)], openid_url, strlen(openid_url) + 1);
-		cdb_store(CDB_OPENID, openid_url, strlen(openid_url), oid_data, oid_data_len);
+		cdb_store(CDB_EXTAUTH, openid_url, strlen(openid_url), oid_data, oid_data_len);
 		free(oid_data);
 		syslog(LOG_INFO, "Imported OpenID: %s (%ld)", openid_url, openid_usernum);
 	}

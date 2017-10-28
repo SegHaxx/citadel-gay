@@ -786,9 +786,9 @@ int PurgeEuidIndexTable(void) {
 
 
 /*
- * Purge OpenID assocations for missing users (theoretically this will never delete anything)
+ * Purge external auth assocations for missing users (theoretically this will never delete anything)
  */
-int PurgeStaleOpenIDassociations(void) {
+int PurgeStaleExtAuthAssociations(void) {
 	struct cdbdata *cdboi;
 	struct ctdluser usbuf;
 	HashList *keys = NULL;
@@ -804,8 +804,8 @@ int PurgeStaleOpenIDassociations(void) {
 	if (!keys) return(0);
 
 
-	cdb_rewind(CDB_OPENID);
-	while (cdboi = cdb_next_item(CDB_OPENID), cdboi != NULL) {
+	cdb_rewind(CDB_EXTAUTH);
+	while (cdboi = cdb_next_item(CDB_EXTAUTH), cdboi != NULL) {
 		if (cdboi->len > sizeof(long)) {
 			memcpy(&usernum, cdboi->ptr, sizeof(long));
 			if (CtdlGetUserByNumber(&usbuf, usernum) != 0) {
@@ -821,8 +821,8 @@ int PurgeStaleOpenIDassociations(void) {
 	HashPos = GetNewHashPos(keys, 0);
 	while (GetNextHashPos(keys, HashPos, &len, &Key, &Value)!=0)
 	{
-		syslog(LOG_DEBUG, "Deleting associated OpenID <%s>",  (char*)Value);
-		cdb_delete(CDB_OPENID, Value, strlen(Value));
+		syslog(LOG_DEBUG, "Deleting associated external authenticator <%s>",  (char*)Value);
+		cdb_delete(CDB_EXTAUTH, Value, strlen(Value));
 		/* note: don't free(Value) -- deleting the hash list will handle this for us */
 		++num_deleted;
 	}
@@ -883,7 +883,6 @@ void purge_databases(void)
 		ErrMsg = NewStrBuf ();
 		retval = PurgeUseTable(ErrMsg);
        		syslog(LOG_NOTICE, "Purged %d entries from the use table.", retval);
-////TODO: fix errmsg
 		FreeStrBuf(&ErrMsg);
 	}
 
@@ -895,8 +894,8 @@ void purge_databases(void)
 
 	if (!server_shutting_down)
 	{
-		retval = PurgeStaleOpenIDassociations();
-	       	syslog(LOG_NOTICE, "Purged %d stale OpenID associations.", retval);
+		retval = PurgeStaleExtAuthAssociations();
+	       	syslog(LOG_NOTICE, "Purged %d stale external auth associations.", retval);
 	}
 
 	if (!server_shutting_down)

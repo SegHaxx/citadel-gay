@@ -1,7 +1,7 @@
 /* 
  * Main declarations file for the Citadel server
  *
- * Copyright (c) 1987-2015 by the citadel.org team
+ * Copyright (c) 1987-2017 by the citadel.org team
  *
  * This program is open source software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 3.
@@ -210,7 +210,7 @@ enum {
 	CDB_FULLTEXT,		/* full text search index        */
 	CDB_EUIDINDEX,		/* locate msgs by EUID           */
 	CDB_USERSBYNUMBER,	/* index of users by number      */
-	CDB_OPENID,		/* associates OpenIDs with users */
+	CDB_EXTAUTH,		/* associates OpenIDs with users */
 	CDB_CONFIG,		/* system configuration database */
 	MAXCDB			/* total number of CDB's defined */
 };

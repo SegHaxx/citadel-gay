@@ -322,6 +322,9 @@ void initialize_config_system(void) {
 	if (CtdlGetConfigLong("c_pop3_fastest") == 0)	CtdlSetConfigLong("c_pop3_fastest", 3600);	// once per hour default
 	if (CtdlGetConfigLong("c_pop3_fastest") < 300)	CtdlSetConfigLong("c_pop3_fastest", 300);	// 5 minutes min
 
+	/* LDAP sync frequency */
+	if (CtdlGetConfigLong("c_ldap_sync_freq") == 0)	CtdlSetConfigLong("c_ldap_sync_freq", 300);	// every 5 minutes default
+
 	/* "create new user" only works with native authentication mode */
 	if (CtdlGetConfigInt("c_auth_mode") != AUTHMODE_NATIVE) {
 		CtdlSetConfigInt("c_disable_newu", 1);

@@ -19,6 +19,7 @@
 #include "serv_extensions.h"
 #include "room_ops.h"
 #include "internet_addressing.h"
+#include "config.h"
 #include "journaling.h"
 #include "citadel_ldap.h"
 
@@ -127,10 +128,16 @@ void do_housekeeping(void) {
 	/* Then, do the "once per minute" stuff... */
 	if (do_perminute_housekeeping_now) {
 		cdb_check_handles();
-#ifdef HAVE_LDAP
-		CtdlSynchronizeUsersFromLDAP();		// This one isn't from a module so we put it here
-#endif
 		PerformSessionHooks(EVT_TIMER);		// Run all registered TIMER hooks
+
+#ifdef HAVE_LDAP					// LDAP sync isn't in a module so we can put it here
+		static time_t last_ldap_sync = 0L;
+		if ( (now - last_ldap_sync) > (time_t)CtdlGetConfigLong("c_ldap_sync_freq") ) {
+			CtdlSynchronizeUsersFromLDAP();
+			last_ldap_sync = time(NULL);
+		}
+#endif
+
 	}
 
 	/*

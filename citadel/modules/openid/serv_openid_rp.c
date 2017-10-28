@@ -1,7 +1,7 @@
 /*
  * This is an implementation of OpenID 2.0 relying party support in stateless mode.
  *
- * Copyright (c) 2007-2015 by the citadel.org team
+ * Copyright (c) 2007-2017 by the citadel.org team
  *
  * This program is open source software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -82,7 +82,7 @@ void openid_cleanup_function(void) {
 	struct CitContext *CCC = CC;	/* CachedCitContext - performance boost */
 
 	if (CCC->openid_data != NULL) {
-		syslog(LOG_DEBUG, "Clearing OpenID session state");
+		syslog(LOG_DEBUG, "openid: Clearing OpenID session state");
 		Free_ctdl_openid((ctdl_openid **) &CCC->openid_data);
 	}
 }
@@ -127,17 +127,17 @@ int attach_openid(struct ctdluser *who, StrBuf *claimed_id)
 
 	/* Check to see if this OpenID is already in the database */
 
-	cdboi = cdb_fetch(CDB_OPENID, ChrPtr(claimed_id), StrLength(claimed_id));
+	cdboi = cdb_fetch(CDB_EXTAUTH, ChrPtr(claimed_id), StrLength(claimed_id));
 	if (cdboi != NULL) {
 		memcpy(&fetched_usernum, cdboi->ptr, sizeof(long));
 		cdb_free(cdboi);
 
 		if (fetched_usernum == who->usernum) {
-			syslog(LOG_INFO, "%s already associated; no action is taken", ChrPtr(claimed_id));
+			syslog(LOG_INFO, "openid: %s already associated; no action is taken", ChrPtr(claimed_id));
 			return(0);
 		}
 		else {
-			syslog(LOG_INFO, "%s already belongs to another user", ChrPtr(claimed_id));
+			syslog(LOG_INFO, "openid: %s already belongs to another user", ChrPtr(claimed_id));
 			return(3);
 		}
 	}
@@ -150,13 +150,13 @@ int attach_openid(struct ctdluser *who, StrBuf *claimed_id)
 	memcpy(data, &who->usernum, sizeof(long));
 	memcpy(&data[sizeof(long)], ChrPtr(claimed_id), StrLength(claimed_id) + 1);
 
-	cdb_store(CDB_OPENID, ChrPtr(claimed_id), StrLength(claimed_id), data, data_len);
+	cdb_store(CDB_EXTAUTH, ChrPtr(claimed_id), StrLength(claimed_id), data, data_len);
 	free(data);
 
 	snprintf(buf, sizeof buf, "User <%s> (#%ld) has claimed the OpenID URL %s\n",
 		 who->fullname, who->usernum, ChrPtr(claimed_id));
 	CtdlAideMessage(buf, "OpenID claim");
-	syslog(LOG_INFO, "%s", buf);
+	syslog(LOG_INFO, "openid: %s", buf);
 	return(0);
 }
 
@@ -178,8 +178,8 @@ void openid_purge(struct ctdluser *usbuf) {
 	keys = NewHash(1, NULL);
 	if (!keys) return;
 
-	cdb_rewind(CDB_OPENID);
-	while (cdboi = cdb_next_item(CDB_OPENID), cdboi != NULL) {
+	cdb_rewind(CDB_EXTAUTH);
+	while (cdboi = cdb_next_item(CDB_EXTAUTH), cdboi != NULL) {
 		if (cdboi->len > sizeof(long)) {
 			memcpy(&usernum, cdboi->ptr, sizeof(long));
 			if (usernum == usbuf->usernum) {
@@ -195,8 +195,8 @@ void openid_purge(struct ctdluser *usbuf) {
 	HashPos = GetNewHashPos(keys, 0);
 	while (GetNextHashPos(keys, HashPos, &len, &Key, &Value)!=0)
 	{
-		syslog(LOG_DEBUG, "Deleting associated OpenID <%s>", (char*)Value);
-		cdb_delete(CDB_OPENID, Value, strlen(Value));
+		syslog(LOG_DEBUG, "openid: deleting associated OpenID <%s>", (char*)Value);
+		cdb_delete(CDB_EXTAUTH, Value, strlen(Value));
 		/* note: don't free(Value) -- deleting the hash list will handle this for us */
 	}
 	DeleteHashPos(&HashPos);
@@ -219,10 +219,10 @@ void cmd_oidl(char *argbuf) {
 	}
 	if (CtdlAccessCheck(ac_logged_in)) return;
 
-	cdb_rewind(CDB_OPENID);
+	cdb_rewind(CDB_EXTAUTH);
 	cprintf("%d Associated OpenIDs:\n", LISTING_FOLLOWS);
 
-	while (cdboi = cdb_next_item(CDB_OPENID), cdboi != NULL) {
+	while (cdboi = cdb_next_item(CDB_EXTAUTH), cdboi != NULL) {
 		if (cdboi->len > sizeof(long)) {
 			memcpy(&usernum, cdboi->ptr, sizeof(long));
 			if (usernum == CC->user.usernum) {
@@ -250,10 +250,10 @@ void cmd_oida(char *argbuf) {
 		return;
 	}
 	if (CtdlAccessCheck(ac_aide)) return;
-	cdb_rewind(CDB_OPENID);
+	cdb_rewind(CDB_EXTAUTH);
 	cprintf("%d List of all OpenIDs in the database:\n", LISTING_FOLLOWS);
 
-	while (cdboi = cdb_next_item(CDB_OPENID), cdboi != NULL) {
+	while (cdboi = cdb_next_item(CDB_EXTAUTH), cdboi != NULL) {
 		if (cdboi->len > sizeof(long)) {
 			memcpy(&usernum, cdboi->ptr, sizeof(long));
 			if (CtdlGetUserByNumber(&usbuf, usernum) != 0) {
@@ -323,8 +323,8 @@ void cmd_oidd(char *argbuf) {
 		cprintf("%d An empty OpenID URL is not allowed.\n", ERROR + ILLEGAL_VALUE);
 	}
 
-	cdb_rewind(CDB_OPENID);
-	while (cdboi = cdb_next_item(CDB_OPENID), cdboi != NULL) {
+	cdb_rewind(CDB_EXTAUTH);
+	while (cdboi = cdb_next_item(CDB_EXTAUTH), cdboi != NULL) {
 		if (cdboi->len > sizeof(long)) {
 			memcpy(&usernum, cdboi->ptr, sizeof(long));
 			if (usernum == CC->user.usernum) {
@@ -340,7 +340,7 @@ void cmd_oidd(char *argbuf) {
 		return;
 	}
 
-	cdb_delete(CDB_OPENID, id_to_detach, strlen(id_to_detach));
+	cdb_delete(CDB_EXTAUTH, id_to_detach, strlen(id_to_detach));
 	cprintf("%d %s detached from your account.\n", CIT_OK, id_to_detach);
 }
 
@@ -364,7 +364,7 @@ int openid_create_user_via_ax(StrBuf *claimed_id, HashList *sreg_keys)
 
 	HashPos *HashPos = GetNewHashPos(sreg_keys, 0);
 	while (GetNextHashPos(sreg_keys, HashPos, &len, &Key, &Value) != 0) {
-		syslog(LOG_DEBUG, "%s = %s", Key, (char *)Value);
+		syslog(LOG_DEBUG, "openid: %s = %s", Key, (char *)Value);
 
 		if (cbmstrcasestr(Key, "value.nickname") != NULL) {
 			nickname = (char *)Value;
@@ -395,11 +395,11 @@ int openid_create_user_via_ax(StrBuf *claimed_id, HashList *sreg_keys)
 	if (nickname == NULL) {
 		return(4);
 	}
-	syslog(LOG_DEBUG, "The desired account name is <%s>", nickname);
+	syslog(LOG_DEBUG, "openid: the desired account name is <%s>", nickname);
 
 	len = cutuserkey(nickname);
 	if (!CtdlGetUser(&CC->user, nickname)) {
-		syslog(LOG_DEBUG, "<%s> is already taken by another user.", nickname);
+		syslog(LOG_DEBUG, "openid: <%s> is already taken by another user.", nickname);
 		memset(&CC->user, 0, sizeof(struct ctdluser));
 		return(5);
 	}
@@ -429,7 +429,7 @@ int login_via_openid(StrBuf *claimed_id)
 	struct cdbdata *cdboi;
 	long usernum = 0;
 
-	cdboi = cdb_fetch(CDB_OPENID, ChrPtr(claimed_id), StrLength(claimed_id));
+	cdboi = cdb_fetch(CDB_EXTAUTH, ChrPtr(claimed_id), StrLength(claimed_id));
 	if (cdboi == NULL) {
 		return(-1);
 	}
@@ -679,7 +679,7 @@ int parse_xrds_document(StrBuf *ReplyBuf) {
 		XML_ParserFree(xp);
 	}
 	else {
-		syslog(LOG_ALERT, "Cannot create XML parser");
+		syslog(LOG_ERR, "openid: cannot create XML parser");
 	}
 
 	if (xrds.selected_service_priority < INT_MAX) {
@@ -738,7 +738,7 @@ int perform_openid2_discovery(StrBuf *SuppliedURL) {
 	StrBuf *x_xrds_location = NULL;
 
 	if (!SuppliedURL) return(0);
-	syslog(LOG_DEBUG, "perform_openid2_discovery(%s)", ChrPtr(SuppliedURL));
+	syslog(LOG_DEBUG, "openid: perform_openid2_discovery(%s)", ChrPtr(SuppliedURL));
 	if (StrLength(SuppliedURL) == 0) return(0);
 
 	ReplyBuf = NewStrBuf();
@@ -760,7 +760,7 @@ int perform_openid2_discovery(StrBuf *SuppliedURL) {
 
 	result = curl_easy_perform(curl);
 	if (result) {
-		syslog(LOG_DEBUG, "libcurl error %d: %s", result, errmsg);
+		syslog(LOG_DEBUG, "openid: libcurl error %d: %s", result, errmsg);
 	}
 	curl_slist_free_all(my_headers);
 	curl_easy_cleanup(curl);
@@ -787,7 +787,7 @@ int perform_openid2_discovery(StrBuf *SuppliedURL) {
 	if (	(x_xrds_location)
 		&& (strcmp(ChrPtr(x_xrds_location), ChrPtr(SuppliedURL)))
 	) {
-		syslog(LOG_DEBUG, "X-XRDS-Location: %s ... recursing!", ChrPtr(x_xrds_location));
+		syslog(LOG_DEBUG, "openid: X-XRDS-Location: %s ... recursing!", ChrPtr(x_xrds_location));
 		return_value = perform_openid2_discovery(x_xrds_location);
 		FreeStrBuf(&x_xrds_location);
 	}
@@ -842,7 +842,7 @@ void cmd_oids(char *argbuf) {
 
 	CCC->openid_data = oiddata = malloc(sizeof(ctdl_openid));
 	if (oiddata == NULL) {
-		syslog(LOG_ALERT, "malloc() failed: %s", strerror(errno));
+		syslog(LOG_ERR, "openid: malloc() failed: %s", strerror(errno));
 		cprintf("%d malloc failed\n", ERROR + INTERNAL_ERROR);
 		return;
 	}
@@ -857,7 +857,7 @@ void cmd_oids(char *argbuf) {
 	StrBufExtract_NextToken(oiddata->claimed_id, ArgBuf, &Pos, '|');
 	StrBufExtract_NextToken(return_to, ArgBuf, &Pos, '|');
 
-	syslog(LOG_DEBUG, "User-Supplied Identifier is: %s", ChrPtr(oiddata->claimed_id));
+	syslog(LOG_DEBUG, "openid: user-Supplied Identifier is: %s", ChrPtr(oiddata->claimed_id));
 
 	/********** OpenID 2.0 section 7.3 - Discovery **********/
 
@@ -878,7 +878,7 @@ void cmd_oids(char *argbuf) {
 		/*
 		 * If we get to this point we are in possession of a valid OpenID Provider URL.
 		 */
-		syslog(LOG_DEBUG, "OP URI '%s' discovered using method %d",
+		syslog(LOG_DEBUG, "openid: OP URI '%s' discovered using method %d",
 			ChrPtr(oiddata->op_url),
 			discovery_succeeded
 		);
@@ -939,7 +939,7 @@ void cmd_oids(char *argbuf) {
 		StrBufAppendBufPlain(RedirectUrl, HKEY("&openid.ax.type.nickname="), 0);
 		StrBufUrlescAppend(RedirectUrl, NULL, "http://axschema.org/namePerson/nickname");
 
-		syslog(LOG_DEBUG, "OpenID: redirecting client to %s", ChrPtr(RedirectUrl));
+		syslog(LOG_DEBUG, "openid: redirecting client to %s", ChrPtr(RedirectUrl));
 		cprintf("%d %s\n", CIT_OK, ChrPtr(RedirectUrl));
 	}
 	
@@ -1002,7 +1002,7 @@ void cmd_oidf(char *argbuf) {
 	if (	(!GetHash(keys, "ns", 2, (void *) &openid_ns))
 		|| (strcasecmp(openid_ns, "http://specs.openid.net/auth/2.0"))
 	) {
-		syslog(LOG_DEBUG, "This is not an an OpenID assertion");
+		syslog(LOG_DEBUG, "openid: this is not an an OpenID assertion");
 		oiddata->verified = 0;
 	}
 
@@ -1017,11 +1017,11 @@ void cmd_oidf(char *argbuf) {
 	if (GetHash(keys, "claimed_id", 10, (void *) &openid_claimed_id)) {
 		FreeStrBuf(&oiddata->claimed_id);
 		oiddata->claimed_id = NewStrBufPlain(openid_claimed_id, -1);
-		syslog(LOG_DEBUG, "Provider is asserting the Claimed ID '%s'", ChrPtr(oiddata->claimed_id));
+		syslog(LOG_DEBUG, "openid: provider is asserting the Claimed ID '%s'", ChrPtr(oiddata->claimed_id));
 	}
 
 	/* Validate the assertion against the server */
-	syslog(LOG_DEBUG, "Validating...");
+	syslog(LOG_DEBUG, "openid: validating...");
 
 	CURL *curl;
 	CURLcode res;
@@ -1058,19 +1058,18 @@ void cmd_oidf(char *argbuf) {
 
 	res = curl_easy_perform(curl);
 	if (res) {
-		syslog(LOG_DEBUG, "cmd_oidf() libcurl error %d: %s", res, errmsg);
+		syslog(LOG_DEBUG, "openid: cmd_oidf() libcurl error %d: %s", res, errmsg);
 		oiddata->verified = 0;
 	}
 	curl_easy_cleanup(curl);
 	curl_formfree(formpost);
 
-	/* syslog(LOG_DEBUG, "Validation reply: \n%s", ChrPtr(ReplyBuf)); */
 	if (cbmstrcasestr(ChrPtr(ReplyBuf), "is_valid:true") == NULL) {
 		oiddata->verified = 0;
 	}
 	FreeStrBuf(&ReplyBuf);
 
-	syslog(LOG_DEBUG, "OpenID authentication %s", (oiddata->verified ? "succeeded" : "failed") );
+	syslog(LOG_DEBUG, "openid: authentication %s", (oiddata->verified ? "succeeded" : "failed") );
 
 	/* Respond to the client */
 
@@ -1080,11 +1079,11 @@ void cmd_oidf(char *argbuf) {
 		if (CC->logged_in) {
 			if (attach_openid(&CC->user, oiddata->claimed_id) == 0) {
 				cprintf("attach\n");
-				syslog(LOG_DEBUG, "OpenID attach succeeded");
+				syslog(LOG_DEBUG, "openid: attach succeeded");
 			}
 			else {
 				cprintf("fail\n");
-				syslog(LOG_DEBUG, "OpenID attach failed");
+				syslog(LOG_DEBUG, "openid: attach failed");
 			}
 		}
 
@@ -1101,7 +1100,7 @@ void cmd_oidf(char *argbuf) {
 			if (login_via_openid(oiddata->claimed_id) == 0) {
 				cprintf("authenticate\n%s\n%s\n", CC->user.fullname, CC->user.password);
 				logged_in_response();
-				syslog(LOG_DEBUG, "Logged in using previously claimed OpenID");
+				syslog(LOG_DEBUG, "openid: logged in using previously claimed OpenID");
 			}
 
 			/*
@@ -1110,7 +1109,7 @@ void cmd_oidf(char *argbuf) {
 			 */
 			else if (CtdlGetConfigInt("c_disable_newu")) {
 				cprintf("fail\n");
-				syslog(LOG_DEBUG, "Creating user failed due to local policy");
+				syslog(LOG_DEBUG, "openid: creating user failed due to local policy");
 			}
 
 			/*
@@ -1119,7 +1118,7 @@ void cmd_oidf(char *argbuf) {
 			else if (openid_create_user_via_ax(oiddata->claimed_id, keys) == 0) {
 				cprintf("authenticate\n%s\n%s\n", CC->user.fullname, CC->user.password);
 				logged_in_response();
-				syslog(LOG_DEBUG, "Successfully auto-created new user");
+				syslog(LOG_DEBUG, "openid: successfully auto-created new user");
 			}
 
 			/*
@@ -1136,7 +1135,7 @@ void cmd_oidf(char *argbuf) {
 				else {
 					cprintf("\n");
 				}
-				syslog(LOG_DEBUG, "The desired display name is already taken.");
+				syslog(LOG_DEBUG, "openid: the desired display name is already taken.");
 			}
 		}
 	}
