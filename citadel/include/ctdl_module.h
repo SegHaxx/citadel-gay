@@ -386,19 +386,12 @@ int CtdlGetUserLen(struct ctdluser *usbuf, const char *name, long len);
 int CtdlGetUserLock(struct ctdluser *usbuf, char *name);
 void CtdlPutUser(struct ctdluser *usbuf);
 void CtdlPutUserLock(struct ctdluser *usbuf);
-
 int CtdlLockGetCurrentUser(void);
 void CtdlPutCurrentUserLock(void);
-
 int CtdlGetUserByNumber(struct ctdluser *usbuf, long number);
-void CtdlGetRelationship(visit *vbuf,
-                        struct ctdluser *rel_user,
-                        struct ctdlroom *rel_room);
-void CtdlSetRelationship(visit *newvisit,
-                        struct ctdluser *rel_user,
-                        struct ctdlroom *rel_room);
+void CtdlGetRelationship(visit *vbuf, struct ctdluser *rel_user, struct ctdlroom *rel_room);
+void CtdlSetRelationship(visit *newvisit, struct ctdluser *rel_user, struct ctdlroom *rel_room);
 void CtdlMailboxName(char *buf, size_t n, const struct ctdluser *who, const char *prefix);
-
 int CtdlLoginExistingUser(char *authname, const char *username);
 
 /*
@@ -425,13 +418,9 @@ enum {
 
 void CtdlUserLogout(void);
 
-
-
-
 /*
  * Expose API calls from msgbase.c
  */
-
 
 
 /*
@@ -440,5 +429,9 @@ void CtdlUserLogout(void);
 long CtdlLocateMessageByEuid(char *euid, struct ctdlroom *qrbuf);
 
 
+/*
+ * This is from modules/openid/serv_openid_rp.c in order to turn it into a generic external authentication driver
+ */
+int attach_extauth(struct ctdluser *who, StrBuf *claimed_id);
 
 #endif /* CTDL_MODULE_H */

@@ -112,9 +112,9 @@ void openid_cleanup_function(void) {
 
 
 /*
- * Attach an OpenID to a Citadel account
+ * Attach an external authenticator (such as an OpenID) to a Citadel account
  */
-int attach_openid(struct ctdluser *who, StrBuf *claimed_id)
+int attach_extauth(struct ctdluser *who, StrBuf *claimed_id)
 {
 	struct cdbdata *cdboi;
 	long fetched_usernum;
@@ -125,7 +125,7 @@ int attach_openid(struct ctdluser *who, StrBuf *claimed_id)
 	if (!who) return(1);
 	if (StrLength(claimed_id)==0) return(1);
 
-	/* Check to see if this OpenID is already in the database */
+	/* Check to see if this authenticator is already in the database */
 
 	cdboi = cdb_fetch(CDB_EXTAUTH, ChrPtr(claimed_id), StrLength(claimed_id));
 	if (cdboi != NULL) {
@@ -153,19 +153,17 @@ int attach_openid(struct ctdluser *who, StrBuf *claimed_id)
 	cdb_store(CDB_EXTAUTH, ChrPtr(claimed_id), StrLength(claimed_id), data, data_len);
 	free(data);
 
-	snprintf(buf, sizeof buf, "User <%s> (#%ld) has claimed the OpenID URL %s\n",
-		 who->fullname, who->usernum, ChrPtr(claimed_id));
-	CtdlAideMessage(buf, "OpenID claim");
+	snprintf(buf, sizeof buf, "User <%s> (#%ld) is now associated with %s\n", who->fullname, who->usernum, ChrPtr(claimed_id));
+	CtdlAideMessage(buf, "External authenticator claim");
 	syslog(LOG_INFO, "openid: %s", buf);
 	return(0);
 }
 
 
-
 /*
  * When a user is being deleted, we have to delete any OpenID associations
  */
-void openid_purge(struct ctdluser *usbuf) {
+void extauth_purge(struct ctdluser *usbuf) {
 	struct cdbdata *cdboi;
 	HashList *keys = NULL;
 	HashPos *HashPos;
@@ -195,7 +193,7 @@ void openid_purge(struct ctdluser *usbuf) {
 	HashPos = GetNewHashPos(keys, 0);
 	while (GetNextHashPos(keys, HashPos, &len, &Key, &Value)!=0)
 	{
-		syslog(LOG_DEBUG, "openid: deleting associated OpenID <%s>", (char*)Value);
+		syslog(LOG_DEBUG, "openid: deleting associated external authenticator <%s>", (char*)Value);
 		cdb_delete(CDB_EXTAUTH, Value, strlen(Value));
 		/* note: don't free(Value) -- deleting the hash list will handle this for us */
 	}
@@ -213,14 +211,13 @@ void cmd_oidl(char *argbuf) {
 
 	if (CtdlGetConfigInt("c_disable_newu"))
 	{
-		cprintf("%d this system does not support openid.\n",
-			ERROR + CMD_NOT_SUPPORTED);
+		cprintf("%d this system does not support openid.\n", ERROR + CMD_NOT_SUPPORTED);
 		return;
 	}
 	if (CtdlAccessCheck(ac_logged_in)) return;
 
 	cdb_rewind(CDB_EXTAUTH);
-	cprintf("%d Associated OpenIDs:\n", LISTING_FOLLOWS);
+	cprintf("%d Associated external authenticators:\n", LISTING_FOLLOWS);
 
 	while (cdboi = cdb_next_item(CDB_EXTAUTH), cdboi != NULL) {
 		if (cdboi->len > sizeof(long)) {
@@ -296,7 +293,7 @@ void cmd_oidc(char *argbuf) {
 
 	/* Now, if this logged us in, we have to attach the OpenID */
 	if (CC->logged_in) {
-		attach_openid(&CC->user, oiddata->claimed_id);
+		attach_extauth(&CC->user, oiddata->claimed_id);
 	}
 
 }
@@ -414,7 +411,7 @@ int openid_create_user_via_ax(StrBuf *claimed_id, HashList *sreg_keys)
 	CtdlSetPassword(new_password);
 
 	/* Now attach the verified OpenID to this account. */
-	attach_openid(&CC->user, claimed_id);
+	attach_extauth(&CC->user, claimed_id);
 
 	return(0);
 }
@@ -424,7 +421,7 @@ int openid_create_user_via_ax(StrBuf *claimed_id, HashList *sreg_keys)
  * If a user account exists which is associated with the Claimed ID, log it in and return zero.
  * Otherwise it returns nonzero.
  */
-int login_via_openid(StrBuf *claimed_id)
+int login_via_extauth(StrBuf *claimed_id)
 {
 	struct cdbdata *cdboi;
 	long usernum = 0;
@@ -1077,7 +1074,7 @@ void cmd_oidf(char *argbuf) {
 
 		/* If we were already logged in, attach the OpenID to the user's account */
 		if (CC->logged_in) {
-			if (attach_openid(&CC->user, oiddata->claimed_id) == 0) {
+			if (attach_extauth(&CC->user, oiddata->claimed_id) == 0) {
 				cprintf("attach\n");
 				syslog(LOG_DEBUG, "openid: attach succeeded");
 			}
@@ -1097,7 +1094,7 @@ void cmd_oidf(char *argbuf) {
 			 * is associated with the account, they already have password equivalency and can
 			 * login, so they could just as easily change the password, etc.
 			 */
-			if (login_via_openid(oiddata->claimed_id) == 0) {
+			if (login_via_extauth(oiddata->claimed_id) == 0) {
 				cprintf("authenticate\n%s\n%s\n", CC->user.fullname, CC->user.password);
 				logged_in_response();
 				syslog(LOG_DEBUG, "openid: logged in using previously claimed OpenID");
@@ -1165,7 +1162,6 @@ void cmd_oidf(char *argbuf) {
 CTDL_MODULE_INIT(openid_rp)
 {
 	if (!threading) {
-// evcurl call this for us. curl_global_init(CURL_GLOBAL_ALL);
 
 		/* Only enable the OpenID command set when native mode authentication is in use. */
 		if (CtdlGetConfigInt("c_auth_mode") == AUTHMODE_NATIVE) {
@@ -1177,7 +1173,7 @@ CTDL_MODULE_INIT(openid_rp)
 			CtdlRegisterProtoHook(cmd_oida, "OIDA", "List all OpenIDs in the database");
 		}
 		CtdlRegisterSessionHook(openid_cleanup_function, EVT_LOGOUT, PRIO_LOGOUT + 10);
-		CtdlRegisterUserHook(openid_purge, EVT_PURGEUSER);
+		CtdlRegisterUserHook(extauth_purge, EVT_PURGEUSER);
 		openid_level_supported = 1;	/* This module supports OpenID 1.0 only */
 	}
 
