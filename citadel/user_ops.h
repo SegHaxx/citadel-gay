@@ -12,7 +12,7 @@ void rebuild_usersbynumber(void);
 void session_startup (void);
 void logged_in_response(void);
 int purge_user (char *pname);
-int create_user (const char *newusername, long len, int become_user);
+int create_user (const char *newusername, int become_user);
 void do_login(void);
 int CtdlInvtKick(char *iuser, int op);
 void ForEachUser(void (*CallBack)(struct ctdluser *EachUser, void *out_data),
@@ -86,6 +86,6 @@ static INLINE void makeuserkey(char *key, const char *username, long len) {
 }
 
 
-int internal_create_user(char *username, long len, struct ctdluser *usbuf, uid_t uid);
+int internal_create_user(char *username, struct ctdluser *usbuf, uid_t uid);
 
 #endif

@@ -488,7 +488,6 @@ int CtdlLoginExistingUser(char *authname, const char *trythisname)
 {
 	char username[SIZ];
 	int found_user;
-	long len;
 
 	syslog(LOG_DEBUG, "user_ops: CtdlLoginExistingUser(%s, %s)", authname, trythisname);
 
@@ -517,7 +516,6 @@ int CtdlLoginExistingUser(char *authname, const char *trythisname)
 	/* Continue attempting user validation... */
 	safestrncpy(username, trythisname, sizeof (username));
 	striplt(username);
-	len = cutuserkey(username);
 
 	if (IsEmptyStr(username)) {
 		return login_not_found;
@@ -555,8 +553,7 @@ int CtdlLoginExistingUser(char *authname, const char *trythisname)
 		found_user = getuserbyuid(&CC->user, pd.pw_uid);
 		syslog(LOG_DEBUG, "user_ops: found it: uid=%ld, gecos=%s here: %d", (long)pd.pw_uid, pd.pw_gecos, found_user);
 		if (found_user != 0) {
-			len = cutuserkey(username);
-			create_user(username, len, 0);
+			create_user(username, 0);
 			found_user = getuserbyuid(&CC->user, pd.pw_uid);
 		}
 
@@ -578,7 +575,7 @@ int CtdlLoginExistingUser(char *authname, const char *trythisname)
 
 		found_user = getuserbyuid(&CC->user, ldap_uid);
 		if (found_user != 0) {
-			create_user(username, len, 0);
+			create_user(username, 0);
 			found_user = getuserbyuid(&CC->user, ldap_uid);
 		}
 
@@ -1004,7 +1001,7 @@ int purge_user(char pname[])
 }
 
 
-int internal_create_user (char *username, long len, struct ctdluser *usbuf, uid_t uid)
+int internal_create_user(char *username, struct ctdluser *usbuf, uid_t uid)
 {
 	if (!CtdlGetUser(usbuf, username)) {
 		return (ERROR + ALREADY_EXISTS);
@@ -1042,7 +1039,7 @@ int internal_create_user (char *username, long len, struct ctdluser *usbuf, uid_
  * Set 'become_user' to nonzero if this is self-service account creation and we want
  * to actually log in as the user we just created, otherwise set it to 0.
  */
-int create_user(const char *newusername, long len, int become_user)
+int create_user(const char *newusername, int become_user)
 {
 	struct ctdluser usbuf;
 	struct ctdlroom qrbuf;
@@ -1078,7 +1075,6 @@ int create_user(const char *newusername, long len, int become_user)
 			if (IsEmptyStr (username))
 			{
 				safestrncpy(username, pd.pw_name, sizeof username);
-				len = cutuserkey(username);
 			}
 		}
 		else {
@@ -1094,7 +1090,7 @@ int create_user(const char *newusername, long len, int become_user)
 	}
 #endif /* HAVE_LDAP */
 	
-	if ((retval = internal_create_user(username, len, &usbuf, uid)) != 0)
+	if ((retval = internal_create_user(username, &usbuf, uid)) != 0)
 		return retval;
 	
 	/*

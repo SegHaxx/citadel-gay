@@ -93,7 +93,6 @@ void cmd_pass(char *buf)
 void cmd_newu(char *cmdbuf)
 {
 	int a;
-	long len;
 	char username[SIZ];
 
 	if (CtdlGetConfigInt("c_auth_mode") != AUTHMODE_NATIVE) {
@@ -120,7 +119,6 @@ void cmd_newu(char *cmdbuf)
 	}
 	extract_token(username, cmdbuf, 0, '|', sizeof username);
 	strproc(username);
-	len = cutuserkey(username);
 
 	if (IsEmptyStr(username)) {
 		cprintf("%d You must supply a user name.\n", ERROR + USERNAME_REQUIRED);
@@ -134,7 +132,7 @@ void cmd_newu(char *cmdbuf)
 		return;
 	}
 
-	a = create_user(username, len, 1);
+	a = create_user(username, 1);
 
 	if (a == 0) {
 		logged_in_response();
@@ -194,7 +192,6 @@ void cmd_setp(char *new_pw)
 void cmd_creu(char *cmdbuf)
 {
 	int a;
-	long len;
 	char username[SIZ];
 	char password[SIZ];
 	struct ctdluser tmp;
@@ -210,12 +207,10 @@ void cmd_creu(char *cmdbuf)
 		cprintf("%d You must supply a user name.\n", ERROR + USERNAME_REQUIRED);
 		return;
 	}
-	len = cutuserkey(username);
-
 
 	extract_token(password, cmdbuf, 1, '|', sizeof password);
 
-	a = create_user(username, len, 0);
+	a = create_user(username, 0);
 
 	if (a == 0) {
 		if (!IsEmptyStr(password)) {

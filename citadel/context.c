@@ -587,10 +587,10 @@ void CtdlFillSystemContext(CitContext *context, char *name)
 	context->state = CON_SYS;
 	context->ServiceName = name;
 
-	/* internal_create_user has the side effect of loading the user regardless of wether they
+	/* internal_create_user has the side effect of loading the user regardless of whether they
 	 * already existed or needed to be created
 	 */
-	internal_create_user (sysname, len, &(context->user), -1) ;
+	internal_create_user(sysname, &(context->user), -1) ;
 	
 	/* Check to see if the system user needs upgrading */
 	if (context->user.usernum == 0)
