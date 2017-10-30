@@ -13,11 +13,12 @@ void session_startup (void);
 void logged_in_response(void);
 int purge_user (char *pname);
 
-int create_user (const char *newusername, int become_user);
+int create_user(char *newusername, int become_user, uid_t uid);
 enum {
 	CREATE_USER_DO_NOT_BECOME_USER,
 	CREATE_USER_BECOME_USER
 };
+#define NATIVE_AUTH_UID (-1)
 
 void do_login(void);
 int CtdlInvtKick(char *iuser, int op);

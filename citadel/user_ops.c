@@ -551,11 +551,11 @@ int CtdlLoginExistingUser(char *authname, const char *trythisname)
 		 * If not found, make one attempt to create it.
 		 */
 		found_user = getuserbyuid(&CC->user, pd.pw_uid);
-		syslog(LOG_DEBUG, "user_ops: found it: uid=%ld, gecos=%s here: %d", (long)pd.pw_uid, pd.pw_gecos, found_user);
 		if (found_user != 0) {
-			create_user(username, CREATE_USER_DO_NOT_BECOME_USER);
+			create_user(username, CREATE_USER_DO_NOT_BECOME_USER, pd.pw_uid);
 			found_user = getuserbyuid(&CC->user, pd.pw_uid);
 		}
+		syslog(LOG_DEBUG, "user_ops: found it: uid=%ld, gecos=%s here: %d", (long)pd.pw_uid, pd.pw_gecos, found_user);
 
 	}
 
@@ -575,7 +575,7 @@ int CtdlLoginExistingUser(char *authname, const char *trythisname)
 
 		found_user = getuserbyuid(&CC->user, ldap_uid);
 		if (found_user != 0) {
-			create_user(username, CREATE_USER_DO_NOT_BECOME_USER);
+			create_user(username, CREATE_USER_DO_NOT_BECOME_USER, ldap_uid);
 			found_user = getuserbyuid(&CC->user, ldap_uid);
 		}
 
@@ -1036,60 +1036,19 @@ int internal_create_user(char *username, struct ctdluser *usbuf, uid_t uid)
  * create_user()  -  back end processing to create a new user
  *
  * Set 'newusername' to the desired account name.
- * Set 'become_user' to CREATE_USER_BECOME_USER if this is self-service account creation and we want
- * to actually log in as the user we just created, otherwise set it to CREATE_USER_DO_NOT_BECOME_USER
+ * Set 'become_user' to CREATE_USER_BECOME_USER if this is self-service account creation and we want to
+ *                   actually log in as the user we just created, otherwise set it to CREATE_USER_DO_NOT_BECOME_USER
+ * Set 'uid' to some uid_t value to associate the account with an external auth user, or (-1) for native auth
  */
-int create_user(const char *newusername, int become_user)
+int create_user(char *username, int become_user, uid_t uid)
 {
 	struct ctdluser usbuf;
 	struct ctdlroom qrbuf;
-	char username[256];
 	char mailboxname[ROOMNAMELEN];
 	char buf[SIZ];
 	int retval;
-	uid_t uid = (-1);
 
-	safestrncpy(username, newusername, sizeof username);
 	strproc(username);
-	
-	if (CtdlGetConfigInt("c_auth_mode") == AUTHMODE_HOST) {
-
-		/* host auth mode */
-
-		struct passwd pd;
-		struct passwd *tempPwdPtr;
-		char pwdbuffer[SIZ];
-	
-#ifdef HAVE_GETPWNAM_R
-#ifdef SOLARIS_GETPWUID
-		tempPwdPtr = getpwnam_r(username, &pd, pwdbuffer, sizeof(pwdbuffer));
-#else // SOLARIS_GETPWUID
-		getpwnam_r(username, &pd, pwdbuffer, sizeof pwdbuffer, &tempPwdPtr);
-#endif // SOLARIS_GETPWUID
-#else // HAVE_GETPWNAM_R
-		tempPwdPtr = NULL;
-#endif // HAVE_GETPWNAM_R
-		if (tempPwdPtr != NULL) {
-			extract_token(username, pd.pw_gecos, 0, ',', sizeof username);
-			uid = pd.pw_uid;
-			if (IsEmptyStr (username))
-			{
-				safestrncpy(username, pd.pw_name, sizeof username);
-			}
-		}
-		else {
-			return (ERROR + NO_SUCH_USER);
-		}
-	}
-
-#ifdef HAVE_LDAP
-	if ((CtdlGetConfigInt("c_auth_mode") == AUTHMODE_LDAP) || (CtdlGetConfigInt("c_auth_mode") == AUTHMODE_LDAP_AD)) {
-		if (CtdlTryUserLDAP(username, NULL, 0, username, sizeof username, &uid, 0) != 0) {
-			return(ERROR + NO_SUCH_USER);
-		}
-	}
-#endif /* HAVE_LDAP */
-	
 	if ((retval = internal_create_user(username, &usbuf, uid)) != 0)
 		return retval;
 	
