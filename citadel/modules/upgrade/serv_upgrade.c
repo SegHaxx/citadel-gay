@@ -100,13 +100,13 @@ void fix_sys_user_name(void)
 
 
 /* 
- * Back end processing function for convert_ctdluid_to_minusone()
+ * Back end processing function for reindex_uids()
  * Call this function as a ForEachUser backend in order to queue up
  * user names, or call it with a null user to make it do the processing.
  * This allows us to maintain the list as a static instead of passing
  * pointers around.
  */
-void cbtm_backend(struct ctdluser *usbuf, void *data) {
+void reindex_uids_backend(struct ctdluser *usbuf, void *data) {
 	static struct UserProcList *uplist = NULL;
 	struct UserProcList *ptr;
 	struct ctdluser us;
@@ -114,9 +114,10 @@ void cbtm_backend(struct ctdluser *usbuf, void *data) {
 	/* this is the calling mode where we add a user */
 
 	if (usbuf != NULL) {
-		ptr = (struct UserProcList *)
-			malloc(sizeof (struct UserProcList));
-		if (ptr == NULL) return;
+		ptr = (struct UserProcList *) malloc(sizeof (struct UserProcList));
+		if (ptr == NULL) {
+			return;
+		}
 
 		safestrncpy(ptr->user, usbuf->fullname, sizeof ptr->user);
 		ptr->next = uplist;
@@ -129,9 +130,9 @@ void cbtm_backend(struct ctdluser *usbuf, void *data) {
 	while (uplist != NULL) {
 
 		if (CtdlGetUserLock(&us, uplist->user) == 0) {
-			syslog(LOG_DEBUG, "Processing <%s>...", uplist->user);
+			syslog(LOG_DEBUG, "Processing <%s> (%d)", uplist->user, us.uid);
 			if (us.uid == CTDLUID) {
-				us.uid = (-1);
+				us.uid = NATIVE_AUTH_UID;
 			}
 			CtdlPutUserLock(&us);
 		}
@@ -143,12 +144,13 @@ void cbtm_backend(struct ctdluser *usbuf, void *data) {
 }
 
 /*
- * quick fix to change all CTDLUID users to (-1)
+ * Build extauth index of all users with uid-based join (system auth, LDAP auth)
+ * Also changes all users with a uid of CTDLUID to NATIVE_AUTH_UID (-1)
  */
-void convert_ctdluid_to_minusone(void) {
-	syslog(LOG_WARNING, "Applying uid changes");
-	ForEachUser(cbtm_backend, NULL);
-	cbtm_backend(NULL, NULL);
+void reindex_uids(void) {
+	syslog(LOG_WARNING, "upgrade: reindexing and applying uid changes");
+	ForEachUser(reindex_uids_backend, NULL);
+	reindex_uids_backend(NULL, NULL);
 	return;
 }
 
@@ -531,8 +533,8 @@ void check_server_upgrades(void) {
 		syslog(LOG_EMERG, "This database is too old to be upgraded.  Citadel server will exit.");
 		exit(EXIT_FAILURE);
 	}
-	if ((CtdlGetConfigInt("MM_hosted_upgrade_level") > 000) && (CtdlGetConfigInt("MM_hosted_upgrade_level") < 608)) {
-		convert_ctdluid_to_minusone();
+	if ((CtdlGetConfigInt("MM_hosted_upgrade_level") > 000) && (CtdlGetConfigInt("MM_hosted_upgrade_level") < 913)) {
+		reindex_uids();
 	}
 	if ((CtdlGetConfigInt("MM_hosted_upgrade_level") > 000) && (CtdlGetConfigInt("MM_hosted_upgrade_level") < 659)) {
 		rebuild_euid_index();
