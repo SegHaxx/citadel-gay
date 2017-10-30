@@ -1447,15 +1447,15 @@ CTDL_MODULE_INIT(vcard)
 				//fclose(fp);
 				//rv = chown(filename, CTDLUID, (-1));
 				//if (rv == -1) {
-					//syslog(LOG_ERR, "vcard: failed to adjust ownership of %s: %s", filename, strerror(errno));
+					//syslog(LOG_ERR, "vcard: failed to adjust ownership of %s: %m", filename);
 				//}
 				//rv = chmod(filename, 0600);
 				//if (rv == -1) {
-					//syslog(LOG_ERR, "vcard: failed to adjust ownership of %s: %s", filename, strerror(errno));
+					//syslog(LOG_ERR, "vcard: failed to adjust ownership of %s: %m", filename);
 				//}
 			//}
 			//else {
-				//syslog(LOG_ERR, "vcard: cannot create %s: %s", filename, strerror(errno));
+				//syslog(LOG_ERR, "vcard: cannot create %s: %m", filename);
 			//}
 		}
 

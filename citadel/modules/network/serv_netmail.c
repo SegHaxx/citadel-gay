@@ -2,7 +2,7 @@
  * This module handles shared rooms, inter-Citadel mail, and outbound
  * mailing list processing.
  *
- * Copyright (c) 2000-2016 by the citadel.org team
+ * Copyright (c) 2000-2017 by the citadel.org team
  *
  * This program is open source software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 3.
@@ -551,7 +551,7 @@ void network_process_ignetpush(SpoolControl *sc, struct CtdlMessage *omsg, long 
 					fclose(fp);
 				}
 				else {
-					syslog(LOG_ERR, "%s: %s\n", filename, strerror(errno));
+					syslog(LOG_ERR, "%s: %m", filename);
 				}
 
 				/* free the serialized version */

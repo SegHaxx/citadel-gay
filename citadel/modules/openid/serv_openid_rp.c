@@ -839,7 +839,7 @@ void cmd_oids(char *argbuf) {
 
 	CCC->openid_data = oiddata = malloc(sizeof(ctdl_openid));
 	if (oiddata == NULL) {
-		syslog(LOG_ERR, "openid: malloc() failed: %s", strerror(errno));
+		syslog(LOG_ERR, "openid: malloc() failed: %m");
 		cprintf("%d malloc failed\n", ERROR + INTERNAL_ERROR);
 		return;
 	}
