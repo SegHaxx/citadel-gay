@@ -13,24 +13,9 @@
  * References:
  * http://www.ietf.org/rfc/rfc4791.txt
  * http://blogs.nologin.es/rickyepoderi/index.php?/archives/14-Introducing-CalDAV-Part-I.html
-
-Sample query:
-
-PROPFIND /groupdav/calendar/ HTTP/1.1
-Content-type: text/xml; charset=utf-8
-Content-length: 166
-
-<?xml version="1.0" encoding="UTF-8"?>
-<D:propfind xmlns:D="DAV:">
-  <D:prop>
-    <D:getcontenttype/>
-    <D:resourcetype/>
-    <D:getetag/>
-  </D:prop>
-</D:propfind>
-
+ * https://msdn.microsoft.com/en-us/library/aa142960(v=exchg.65).aspx
  *
- * Copyright (c) 2005-2012 by the citadel.org team
+ * Copyright (c) 2005-2017 by the citadel.org team
  *
  * This program is open source software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License version 3.
@@ -725,14 +710,18 @@ void dav_propfind(void)
 	
 			if (!IsEmptyStr(uid)) {
 				wc_printf("<D:response>");
-					wc_printf("<D:href>");
-						dav_identify_host();
-						wc_printf("/groupdav/");
-						urlescputs(ChrPtr(WCC->CurRoom.name));
-						euid_escapize(encoded_uid, uid);
-						wc_printf("/%s", encoded_uid);
-					wc_printf("</D:href>");
-					switch(WCC->CurRoom.defview) {
+				wc_printf("<D:href>");
+				dav_identify_host();
+				wc_printf("/groupdav/");
+				urlescputs(ChrPtr(WCC->CurRoom.name));
+				euid_escapize(encoded_uid, uid);
+				wc_printf("/%s", encoded_uid);
+				wc_printf("</D:href>");
+				wc_printf("<D:propstat>");
+				wc_printf("<D:status>HTTP/1.1 200 OK</D:status>");
+				wc_printf("<D:prop>");
+				wc_printf("<D:getetag>\"%ld\"</D:getetag>", msgs[i]);
+				switch(WCC->CurRoom.defview) {
 					case VIEW_CALENDAR:
 						wc_printf("<D:getcontenttype>text/x-ical</D:getcontenttype>");
 						break;
@@ -742,19 +731,15 @@ void dav_propfind(void)
 					case VIEW_ADDRESSBOOK:
 						wc_printf("<D:getcontenttype>text/x-vcard</D:getcontenttype>");
 						break;
-					}
-					wc_printf("<D:propstat>");
-						wc_printf("<D:status>HTTP/1.1 200 OK</D:status>");
-						wc_printf("<D:prop>");
-							wc_printf("<D:getetag>\"%ld\"</D:getetag>", msgs[i]);
-						if (now > 0L) {
-							http_datestring(datestring, sizeof datestring, now);
-							wc_printf("<D:getlastmodified>");
-							escputs(datestring);
-							wc_printf("</D:getlastmodified>");
-						}
-						wc_printf("</D:prop>");
-					wc_printf("</D:propstat>");
+				}
+				if (now > 0L) {
+					http_datestring(datestring, sizeof datestring, now);
+					wc_printf("<D:getlastmodified>");
+					escputs(datestring);
+					wc_printf("</D:getlastmodified>");
+				}
+				wc_printf("</D:prop>");
+				wc_printf("</D:propstat>");
 				wc_printf("</D:response>");
 			}
 		}
@@ -831,9 +816,9 @@ InitModule_PROPFIND
 		eReadEUIDS,
 		DavUIDL_GetParamsGetServerCall,
 		NULL,
-		NULL, /// TODO: is this right?
+		NULL,
 		ParseMessageListHeaders_EUID,
-		NULL, //// ""
+		NULL,
 		DavUIDL_RenderView_or_Tail,
 		DavUIDL_Cleanup,
 		NULL);

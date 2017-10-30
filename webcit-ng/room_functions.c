@@ -1,7 +1,7 @@
 /*
  * Room functions
  *
- * Copyright (c) 1996-2016 by the citadel.org team
+ * Copyright (c) 1996-2017 by the citadel.org team
  *
  * This program is open source software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3.
@@ -358,6 +358,9 @@ void propfind_the_room_itself(struct http_transaction *h, struct ctdlsession *c)
 				StrBufAppendPrintf(Buf, "/");
 				StrBufXMLEscAppend(Buf, NULL, e, strlen(e), 0);
 				StrBufAppendPrintf(Buf, "</D:href>");
+				StrBufAppendPrintf(Buf, "<D:propstat>");
+				StrBufAppendPrintf(Buf, "<D:status>HTTP/1.1 200 OK</D:status>");
+				StrBufAppendPrintf(Buf, "<D:prop>");
 
 				switch(c->room_default_view) {
 					case VIEW_CALENDAR:
@@ -371,9 +374,6 @@ void propfind_the_room_itself(struct http_transaction *h, struct ctdlsession *c)
 						break;
 				}
 
-				StrBufAppendPrintf(Buf, "<D:propstat>");
-				StrBufAppendPrintf(Buf, "<D:status>HTTP/1.1 200 OK</D:status>");
-				StrBufAppendPrintf(Buf, "<D:prop>");
 				if (timestamp > 0) {
 					char *datestring = http_datestring(timestamp);
 					if (datestring) {
@@ -382,7 +382,7 @@ void propfind_the_room_itself(struct http_transaction *h, struct ctdlsession *c)
 						StrBufAppendPrintf(Buf, "</D:getlastmodified>");
 						free(datestring);
 					}
-					if (enumerate_by_euid) {
+					if (enumerate_by_euid) {		// FIXME ajc 2017oct30 should this really be inside the timestamp conditional?
 						StrBufAppendPrintf(Buf, "<D:getetag>\"%ld\"</D:getetag>", msglist[i]);
 					}
 				}
