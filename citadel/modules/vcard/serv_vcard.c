@@ -223,7 +223,7 @@ void vcard_extract_vcard(char *name, char *filename, char *partnum, char *disp,
 	if (  (!strcasecmp(cbtype, "text/x-vcard"))
 	   || (!strcasecmp(cbtype, "text/vcard")) ) {
 
-		syslog(LOG_DEBUG, "Part %s contains a vCard!  Loading...", partnum);
+		syslog(LOG_DEBUG, "vcard: part %s contains a vCard!  Loading...", partnum);
 		if (*v != NULL) {
 			vcard_free(*v);
 		}
@@ -695,8 +695,7 @@ void cmd_greg(char *argbuf)
 	if (!strcasecmp(who,"_SELF_")) strcpy(who,CCC->curr_user);
 
 	if ((CCC->user.axlevel < AxAideU) && (strcasecmp(who,CCC->curr_user))) {
-		cprintf("%d Higher access required.\n",
-			ERROR + HIGHER_ACCESS_REQUIRED);
+		cprintf("%d Higher access required.\n", ERROR + HIGHER_ACCESS_REQUIRED);
 		return;
 	}
 
@@ -711,11 +710,9 @@ void cmd_greg(char *argbuf)
 	cprintf("%ld\n", usbuf.usernum);
 	cprintf("%s\n", usbuf.password);
 	s = vcard_get_prop(v, "n", 1, 0, 0);
-	cprintf("%s\n", s ? s : " ");	/* name */
-
+	cprintf("%s\n", s ? s : " ");			/* name */
 	s = vcard_get_prop(v, "adr", 1, 0, 0);
-	snprintf(adr, sizeof adr, "%s", s ? s : " ");/* address... */
-
+	snprintf(adr, sizeof adr, "%s", s ? s : " ");	/* address */
 	extract_token(buf, adr, 2, ';', sizeof buf);
 	cprintf("%s\n", buf);				/* street */
 	extract_token(buf, adr, 3, ';', sizeof buf);
@@ -761,7 +758,7 @@ void vcard_newuser(struct ctdluser *usbuf) {
 
 	need_default_vcard =1;
 	vcard_fn_to_n(vname, usbuf->fullname, sizeof vname);
-	syslog(LOG_DEBUG, "Converted <%s> to <%s>", usbuf->fullname, vname);
+	syslog(LOG_DEBUG, "vcard: converted <%s> to <%s>", usbuf->fullname, vname);
 
 	/* Create and save the vCard */
 	v = vcard_new();
@@ -780,7 +777,7 @@ void vcard_newuser(struct ctdluser *usbuf) {
 		if (getpwuid_r(usbuf->uid, &pwd, pwd_buffer, sizeof pwd_buffer) != NULL) {
 #else // SOLARIS_GETPWUID
 		struct passwd *result = NULL;
-		syslog(LOG_DEBUG, "Searching for uid %d", usbuf->uid);
+		syslog(LOG_DEBUG, "vcard: searching for uid %d", usbuf->uid);
 		if (getpwuid_r(usbuf->uid, &pwd, pwd_buffer, sizeof pwd_buffer, &result) == 0) {
 #endif // HAVE_GETPWUID_R
 			snprintf(buf, sizeof buf, "%s@%s", pwd.pw_name, CtdlGetConfigStr("c_fqdn"));
@@ -797,30 +794,29 @@ void vcard_newuser(struct ctdluser *usbuf) {
 	 * into the user's vCard.
 	 */
 	if ((CtdlGetConfigInt("c_auth_mode") == AUTHMODE_LDAP) || (CtdlGetConfigInt("c_auth_mode") == AUTHMODE_LDAP_AD)) {
-            //uid_t ldap_uid;
-	    int found_user;
-            char ldap_cn[512];
-            char ldap_dn[512];
-	    found_user = CtdlTryUserLDAP(usbuf->fullname, ldap_dn, sizeof ldap_dn, ldap_cn, sizeof ldap_cn, &usbuf->uid,1);
-            if (found_user == 0) {
-		if (Ctdl_LDAP_to_vCard(ldap_dn, v)) {
-			/* Allow global address book and internet directory update without login long enough to write this. */
-			CC->vcard_updated_by_ldap++;  /* Otherwise we'll only update the user config. */
-			need_default_vcard = 0;
-			syslog(LOG_DEBUG, "LDAP Created Initial Vcard for %s\n",usbuf->fullname);
+        	//uid_t ldap_uid;
+		int found_user;
+        	char ldap_cn[512];
+        	char ldap_dn[512];
+		found_user = CtdlTryUserLDAP(usbuf->fullname, ldap_dn, sizeof ldap_dn, ldap_cn, sizeof ldap_cn, &usbuf->uid, 1);
+        	if (found_user == 0) {
+			if (Ctdl_LDAP_to_vCard(ldap_dn, v)) {
+				/* Allow global address book and internet directory update without login long enough to write this. */
+				CC->vcard_updated_by_ldap++;  /* Otherwise we'll only update the user config. */
+				need_default_vcard = 0;
+				syslog(LOG_DEBUG, "vcard: LDAP Created Initial vCard for %s\n",usbuf->fullname);
+			}
 		}
-	    }
 	}
 #endif
 	if (need_default_vcard!=0) {
-	  /* Everyone gets an email address based on their display name */
-	  snprintf(buf, sizeof buf, "%s@%s", usbuf->fullname, CtdlGetConfigStr("c_fqdn"));
-	  for (i=0; buf[i]; ++i) {
-		if (buf[i] == ' ') buf[i] = '_';
-	  }
-	  vcard_add_prop(v, "email;internet", buf);
-    }
-
+		/* Everyone gets an email address based on their display name */
+		snprintf(buf, sizeof buf, "%s@%s", usbuf->fullname, CtdlGetConfigStr("c_fqdn"));
+		for (i=0; buf[i]; ++i) {
+			if (buf[i] == ' ') buf[i] = '_';
+		}
+		vcard_add_prop(v, "email;internet", buf);
+	}
 	vcard_write_user(usbuf, v);
 	vcard_free(v);
 }
@@ -850,12 +846,9 @@ void vcard_purge(struct ctdluser *usbuf) {
 	CM_SetField(msg, eNodeName, CtdlGetConfigStr("c_nodename"), strlen(CtdlGetConfigStr("c_nodename")));
 	CM_SetField(msg, eMesageText, HKEY("Purge this vCard\n"));
 
-	len = snprintf(buf, sizeof buf, VCARD_EXT_FORMAT,
-		       msg->cm_fields[eAuthor], NODENAME);
+	len = snprintf(buf, sizeof buf, VCARD_EXT_FORMAT, msg->cm_fields[eAuthor], NODENAME);
 	CM_SetField(msg, eExclusiveID, buf, len);
-
 	CM_SetField(msg, eSpecialField, HKEY("CANCEL"));
-
 	CtdlSubmitMsg(msg, NULL, ADDRESS_BOOK_ROOM, QP_EADDR);
 	CM_Free(msg);
 }
@@ -1090,6 +1083,7 @@ void cmd_qdir(char *argbuf) {
 	cprintf("%d %s\n", CIT_OK, citadel_addr);
 }
 
+
 /*
  * Query Directory, in fact an alias to match postfix tcp auth.
  */
@@ -1101,7 +1095,7 @@ void check_get(void) {
 	time(&CC->lastcmd);
 	memset(cmdbuf, 0, sizeof cmdbuf); /* Clear it, just in case */
 	if (client_getln(cmdbuf, sizeof cmdbuf) < 1) {
-		syslog(LOG_CRIT, "vcard client disconnected: ending session.");
+		syslog(LOG_ERR, "vcard: client disconnected: ending session.");
 		CC->kill_me = KILLME_CLIENT_DISCONNECTED;
 		return;
 	}
@@ -1124,20 +1118,20 @@ void check_get(void) {
 		{
 
 			cprintf("200 OK %s\n", internet_addr);
-			syslog(LOG_INFO, "sending 200 OK for the room %s", rcpt->display_recp);
+			syslog(LOG_INFO, "vcard: sending 200 OK for the room %s", rcpt->display_recp);
 		}
 		else 
 		{
 			cprintf("500 REJECT noone here by that name.\n");
 			
-			syslog(LOG_INFO, "sending 500 REJECT no one here by that name: %s", internet_addr);
+			syslog(LOG_INFO, "vcard: sending 500 REJECT no one here by that name: %s", internet_addr);
 		}
 		if (rcpt != NULL) 
 			free_recipients(rcpt);
 	}
 	else {
 		cprintf("500 REJECT invalid Query.\n");
-		syslog(LOG_INFO, "sending 500 REJECT invalid query: %s", internet_addr);
+		syslog(LOG_INFO, "vcard: sending 500 REJECT invalid query: %s", internet_addr);
 	}
 }
 
@@ -1159,7 +1153,7 @@ void vcard_CtdlCreateRoom(void)
 
 	/* Set expiration policy to manual; otherwise objects will be lost! */
 	if (CtdlGetRoomLock(&qr, USERCONTACTSROOM)) {
-		syslog(LOG_ERR, "Couldn't get the user CONTACTS room!");
+		syslog(LOG_ERR, "vcard: couldn't get the user CONTACTS room!");
 		return;
 	}
 	qr.QRep.expire_mode = EXPIRE_MANUAL;
@@ -1194,7 +1188,7 @@ void vcard_session_login_hook(void) {
 		if (v) {
 			if (Ctdl_LDAP_to_vCard(CCC->ldap_dn, v)) {
 				CCC->vcard_updated_by_ldap++; /* Make sure changes make it to the global address book and internet directory, not just the user config. */
-				syslog(LOG_DEBUG, "LDAP Detected vcard change.\n");
+				syslog(LOG_DEBUG, "vcard: LDAP Detected vcard change");
 				vcard_write_user(&CCC->user, v);
 			}
 		}
@@ -1341,7 +1335,7 @@ void store_this_ha(struct addresses_to_be_filed *aptr) {
 			}
 			vcard_free(v);
 
-			syslog(LOG_DEBUG, "Adding contact: %s", recipient);
+			syslog(LOG_DEBUG, "vcard: adding contact: %s", recipient);
 			CtdlSubmitMsg(vmsg, NULL, aptr->roomname, QP_EADDR);
 			CM_Free(vmsg);
 		}
@@ -1453,15 +1447,15 @@ CTDL_MODULE_INIT(vcard)
 				//fclose(fp);
 				//rv = chown(filename, CTDLUID, (-1));
 				//if (rv == -1) {
-					//syslog(LOG_ERR, "Failed to adjust ownership of %s: %s", filename, strerror(errno));
+					//syslog(LOG_ERR, "vcard: failed to adjust ownership of %s: %s", filename, strerror(errno));
 				//}
 				//rv = chmod(filename, 0600);
 				//if (rv == -1) {
-					//syslog(LOG_ERR, "Failed to adjust ownership of %s: %s", filename, strerror(errno));
+					//syslog(LOG_ERR, "vcard: failed to adjust ownership of %s: %s", filename, strerror(errno));
 				//}
 			//}
 			//else {
-				//syslog(LOG_ERR, "Cannot create %s: %s", filename, strerror(errno));
+				//syslog(LOG_ERR, "vcard: cannot create %s: %s", filename, strerror(errno));
 			//}
 		}
 
