@@ -33,13 +33,14 @@ int chkpwd_read_pipe[2];
 
 
 /*
- * CtdlGetUser()  -  retrieve named user into supplied buffer.
- *	       returns 0 on success
+ * CtdlGetUser()	retrieve named user into supplied buffer.
+ *			returns 0 on success
  */
-int CtdlGetUserLen(struct ctdluser *usbuf, const char *name, long len)
+int CtdlGetUser(struct ctdluser *usbuf, char *name)
 {
 	char usernamekey[USERNAME_SIZE];
 	struct cdbdata *cdbus;
+	long len = cutuserkey(name);
 
 	if (usbuf != NULL) {
 		memset(usbuf, 0, sizeof(struct ctdluser));
@@ -52,26 +53,17 @@ int CtdlGetUserLen(struct ctdluser *usbuf, const char *name, long len)
 		return(1);
 	}
 	if (usbuf != NULL) {
-		memcpy(usbuf, cdbus->ptr,
-			((cdbus->len > sizeof(struct ctdluser)) ?
-			 sizeof(struct ctdluser) : cdbus->len));
+		memcpy(usbuf, cdbus->ptr, ((cdbus->len > sizeof(struct ctdluser)) ?  sizeof(struct ctdluser) : cdbus->len));
 	}
 	cdb_free(cdbus);
-
 	return (0);
-}
-
-
-int CtdlGetUser(struct ctdluser *usbuf, char *name)
-{
-	return CtdlGetUserLen(usbuf, name, cutuserkey(name));
 }
 
 
 int CtdlLockGetCurrentUser(void)
 {
 	CitContext *CCC = CC;
-	return CtdlGetUserLen(&CCC->user, CCC->curr_user, cutuserkey(CCC->curr_user));
+	return CtdlGetUser(&CCC->user, CCC->curr_user);
 }
 
 
@@ -1012,9 +1004,9 @@ int purge_user(char pname[])
 }
 
 
-int internal_create_user (const char *username, long len, struct ctdluser *usbuf, uid_t uid)
+int internal_create_user (char *username, long len, struct ctdluser *usbuf, uid_t uid)
 {
-	if (!CtdlGetUserLen(usbuf, username, len)) {
+	if (!CtdlGetUser(usbuf, username)) {
 		return (ERROR + ALREADY_EXISTS);
 	}
 

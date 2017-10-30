@@ -86,6 +86,6 @@ static INLINE void makeuserkey(char *key, const char *username, long len) {
 }
 
 
-int internal_create_user (const char *username, long len, struct ctdluser *usbuf, uid_t uid);
+int internal_create_user(char *username, long len, struct ctdluser *usbuf, uid_t uid);
 
 #endif
