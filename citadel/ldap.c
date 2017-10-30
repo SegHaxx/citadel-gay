@@ -564,7 +564,7 @@ void CtdlSynchronizeUsersFromLDAP(void)
 		return;		// not running LDAP
 	}
 
-	syslog(LOG_INFO, "ldap: populating Citadel user database from LDAP");
+	syslog(LOG_INFO, "ldap: synchronizing Citadel user database from LDAP");
 
 	if (ctdl_ldap_initialize(&ldserver) != LDAP_SUCCESS) {
 		return;
@@ -626,20 +626,19 @@ void CtdlSynchronizeUsersFromLDAP(void)
 		if (user_dn) {
 			syslog(LOG_DEBUG, "ldap: found %s", user_dn);
 
-			// FIXME now create or update the user begin
 			int fullname_size = 256;
 			char fullname[256] = { 0 } ;
 			uid_t uid = (-1);
 
 			if (CtdlGetConfigInt("c_auth_mode") == AUTHMODE_LDAP_AD) {
-				values = ldap_get_values(ldserver, entry, "displayName");	// AD: fullname = displayName
+				values = ldap_get_values(ldserver, entry, "displayName");	// AD schema: fullname = displayName
 				if (values) {
 					if (values[0]) {
 						safestrncpy(fullname, values[0], fullname_size);
 					}
 					ldap_value_free(values);
 				}
-				values = ldap_get_values(ldserver, entry, "objectGUID");	// AD: uid hashed from objectGUID
+				values = ldap_get_values(ldserver, entry, "objectGUID");	// AD schema: uid hashed from objectGUID
 				if (values) {
 					if (values[0]) {
 						uid = abs(HashLittle(values[0], strlen(values[0])));
@@ -648,14 +647,14 @@ void CtdlSynchronizeUsersFromLDAP(void)
 				}
 			}
 			else {
-				values = ldap_get_values(ldserver, entry, "cn");		// non-AD: fullname = cn
+				values = ldap_get_values(ldserver, entry, "cn");		// POSIX schema: fullname = cn
 				if (values) {
 					if (values[0]) {
 						safestrncpy(fullname, values[0], fullname_size);
 					}
 					ldap_value_free(values);
 				}
-				values = ldap_get_values(ldserver, entry, "uidNumber");		// non-AD: uid = uidNumber
+				values = ldap_get_values(ldserver, entry, "uidNumber");		// POSIX schema: uid = uidNumber
 				if (values) {
 					if (values[0]) {
 						uid = atoi(values[0]);
@@ -666,11 +665,7 @@ void CtdlSynchronizeUsersFromLDAP(void)
 
 			syslog(LOG_DEBUG, "\033[33mldap: display name: <%s> , uid = <%d>\033[0m", fullname, uid);
 
-
-			// FIXME now create or update the user end
-
-
-
+			// FIXME now create or update the user
 
 
 		}
