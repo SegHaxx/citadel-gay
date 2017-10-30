@@ -12,7 +12,13 @@ void rebuild_usersbynumber(void);
 void session_startup (void);
 void logged_in_response(void);
 int purge_user (char *pname);
+
 int create_user (const char *newusername, int become_user);
+enum {
+	CREATE_USER_DO_NOT_BECOME_USER,
+	CREATE_USER_BECOME_USER
+};
+
 void do_login(void);
 int CtdlInvtKick(char *iuser, int op);
 void ForEachUser(void (*CallBack)(struct ctdluser *EachUser, void *out_data),

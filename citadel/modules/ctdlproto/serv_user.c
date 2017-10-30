@@ -132,7 +132,7 @@ void cmd_newu(char *cmdbuf)
 		return;
 	}
 
-	a = create_user(username, 1);
+	a = create_user(username, CREATE_USER_BECOME_USER);
 
 	if (a == 0) {
 		logged_in_response();
@@ -210,7 +210,7 @@ void cmd_creu(char *cmdbuf)
 
 	extract_token(password, cmdbuf, 1, '|', sizeof password);
 
-	a = create_user(username, 0);
+	a = create_user(username, CREATE_USER_DO_NOT_BECOME_USER);
 
 	if (a == 0) {
 		if (!IsEmptyStr(password)) {

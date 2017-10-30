@@ -402,7 +402,7 @@ int openid_create_user_via_ax(StrBuf *claimed_id, HashList *sreg_keys)
 	}
 
 	/* The desired account name is available.  Create the account and log it in! */
-	if (create_user(nickname, 1)) return(6);
+	if (create_user(nickname, CREATE_USER_BECOME_USER)) return(6);
 
 	/* Generate a random password.
 	 * The user doesn't care what the password is since he is using OpenID.

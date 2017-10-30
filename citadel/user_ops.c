@@ -553,7 +553,7 @@ int CtdlLoginExistingUser(char *authname, const char *trythisname)
 		found_user = getuserbyuid(&CC->user, pd.pw_uid);
 		syslog(LOG_DEBUG, "user_ops: found it: uid=%ld, gecos=%s here: %d", (long)pd.pw_uid, pd.pw_gecos, found_user);
 		if (found_user != 0) {
-			create_user(username, 0);
+			create_user(username, CREATE_USER_DO_NOT_BECOME_USER);
 			found_user = getuserbyuid(&CC->user, pd.pw_uid);
 		}
 
@@ -575,7 +575,7 @@ int CtdlLoginExistingUser(char *authname, const char *trythisname)
 
 		found_user = getuserbyuid(&CC->user, ldap_uid);
 		if (found_user != 0) {
-			create_user(username, 0);
+			create_user(username, CREATE_USER_DO_NOT_BECOME_USER);
 			found_user = getuserbyuid(&CC->user, ldap_uid);
 		}
 
@@ -1036,8 +1036,8 @@ int internal_create_user(char *username, struct ctdluser *usbuf, uid_t uid)
  * create_user()  -  back end processing to create a new user
  *
  * Set 'newusername' to the desired account name.
- * Set 'become_user' to nonzero if this is self-service account creation and we want
- * to actually log in as the user we just created, otherwise set it to 0.
+ * Set 'become_user' to CREATE_USER_BECOME_USER if this is self-service account creation and we want
+ * to actually log in as the user we just created, otherwise set it to CREATE_USER_DO_NOT_BECOME_USER
  */
 int create_user(const char *newusername, int become_user)
 {
@@ -1114,7 +1114,7 @@ int create_user(const char *newusername, int become_user)
 	 * creating a user, instead of doing self-service account creation
 	 */
 
-	if (become_user) {
+	if (become_user == CREATE_USER_BECOME_USER) {
 		/* Now become the user we just created */
 		memcpy(&CC->user, &usbuf, sizeof(struct ctdluser));
 		safestrncpy(CC->curr_user, username, sizeof CC->curr_user);
