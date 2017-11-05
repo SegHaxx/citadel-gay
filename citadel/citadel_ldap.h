@@ -12,7 +12,7 @@
  *  GNU General Public License for more details.
  */
 
-int CtdlTryUserLDAP(char *username, char *found_dn, int found_dn_size, char *fullname, int fullname_size, uid_t *found_uid, int lookup_based_on_uid);
+int CtdlTryUserLDAP(char *username, char *found_dn, int found_dn_size, char *fullname, int fullname_size, uid_t *found_uid);
 int CtdlTryPasswordLDAP(char *user_dn, const char *password);
 int Ctdl_LDAP_to_vCard(char *ldap_dn, struct vCard *v);
 int extract_email_addresses_from_ldap(char *ldap_dn, char *emailaddrs);

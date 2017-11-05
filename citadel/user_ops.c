@@ -367,8 +367,7 @@ int is_room_aide(void)
 		return (0);
 	}
 
-	if ((CC->user.axlevel >= AxAideU)
-	    || (CC->room.QRroomaide == CC->user.usernum)) {
+	if ((CC->user.axlevel >= AxAideU) || (CC->room.QRroomaide == CC->user.usernum)) {
 		return (1);
 	} else {
 		return (0);
@@ -568,14 +567,14 @@ int CtdlLoginExistingUser(char *authname, const char *trythisname)
 		char ldap_cn[256];
 		char ldap_dn[256];
 
-		found_user = CtdlTryUserLDAP(username, ldap_dn, sizeof ldap_dn, ldap_cn, sizeof ldap_cn, &ldap_uid, 0);
+		found_user = CtdlTryUserLDAP(username, ldap_dn, sizeof ldap_dn, ldap_cn, sizeof ldap_cn, &ldap_uid);
 		if (found_user != 0) {
 			return login_not_found;
 		}
 
 		found_user = getuserbyuid(&CC->user, ldap_uid);
 		if (found_user != 0) {
-			create_user(username, CREATE_USER_DO_NOT_BECOME_USER, ldap_uid);
+			create_user(ldap_cn, CREATE_USER_DO_NOT_BECOME_USER, ldap_uid);
 			found_user = getuserbyuid(&CC->user, ldap_uid);
 		}
 
@@ -1049,9 +1048,10 @@ int create_user(char *username, int become_user, uid_t uid)
 	int retval;
 
 	strproc(username);
-	if ((retval = internal_create_user(username, &usbuf, uid)) != 0)
+	if ((retval = internal_create_user(username, &usbuf, uid)) != 0) {
 		return retval;
-	
+	}
+
 	/*
 	 * Give the user a private mailbox and a configuration room.
 	 * Make the latter an invisible system room.

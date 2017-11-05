@@ -59,7 +59,6 @@ void derive_fullname_from_ldap_result(char *fullname, int fullname_size, LDAP *l
 			ldap_value_free(values);
 		}
 	}
-	syslog(LOG_DEBUG, "\033[31mldap: display name: <%s> \033[0m", fullname);
 }
 
 
@@ -90,11 +89,8 @@ uid_t derive_uid_from_ldap(LDAP *ldserver, LDAPMessage *entry)
 		}
 	}
 
-	syslog(LOG_DEBUG, "\033[31mldap: uid: <%d> \033[0m", uid);
 	return(uid);
 }
-
-
 
 
 /*
@@ -123,7 +119,7 @@ int ctdl_ldap_initialize(LDAP **ld) {
 int CtdlTryUserLDAP(char *username,
 		char *found_dn, int found_dn_size,
 		char *fullname, int fullname_size,
-		uid_t *uid, int lookup_based_on_username)
+		uid_t *uid)
 {
 	LDAP *ldserver = NULL;
 	int i;
@@ -158,18 +154,11 @@ int CtdlTryUserLDAP(char *username,
 	tv.tv_usec = 0;
 
 	if (CtdlGetConfigInt("c_auth_mode") == AUTHMODE_LDAP_AD) {
-		if (lookup_based_on_username != 0)
-			snprintf(searchstring, sizeof(searchstring), "(displayName=%s)",username);
-		else
-			snprintf(searchstring, sizeof(searchstring), "(sAMAccountName=%s)", username);
+		snprintf(searchstring, sizeof(searchstring), "(sAMAccountName=%s)", username);
 	}
 	else {
-		if (lookup_based_on_username != 0) {
-			snprintf(searchstring, sizeof(searchstring), "(cn=%s)",username);
-		}
-		else {
-			snprintf(searchstring, sizeof(searchstring), "(&(objectclass=posixAccount)(uid=%s))", username);
-		}
+		snprintf(searchstring, sizeof(searchstring), "(&(objectclass=posixAccount)(cn=%s))", username);
+		// snprintf(searchstring, sizeof(searchstring), "(&(objectclass=posixAccount)(uid=%s))", username);
 	}
 
 	syslog(LOG_DEBUG, "ldap: search: %s", searchstring);
@@ -208,12 +197,7 @@ int CtdlTryUserLDAP(char *username,
 		}
 
 		derive_fullname_from_ldap_result(fullname, fullname_size, ldserver, search_result);
-
-		/* If we know the username is the CN/displayName, we already set the uid*/
-		// FIXME old skool crap , fix this
-		if (lookup_based_on_username == 0) {
-			*uid = derive_uid_from_ldap(ldserver, search_result);
-		}
+		*uid = derive_uid_from_ldap(ldserver, search_result);
 	}
 
 	/* free the results */
@@ -538,13 +522,12 @@ int extract_email_addresses_from_ldap(char *ldap_dn, char *emailaddrs)
 	entry = ldap_first_entry(ldserver, search_result);
 	if (entry) {
 		syslog(LOG_DEBUG, "ldap: search got user details");
-		mail=ldap_get_values(ldserver, search_result, "mail");
+		mail = ldap_get_values(ldserver, search_result, "mail");
 
 		if (mail) {
 			int q;
 			for (q=0; q<ldap_count_values(mail); ++q) {
 				if (IsDirectory(mail[q], 0)) {
-					syslog(LOG_DEBUG, "\035FIXME YES DIRECTORY %s\033[0m", mail[q]);
 					if ((strlen(emailaddrs) + strlen(mail[q]) + 2) > 512) {
 						syslog(LOG_ERR, "ldap: can't fit all email addresses into user record");
 					}

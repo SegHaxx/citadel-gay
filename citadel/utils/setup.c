@@ -1,7 +1,7 @@
 /*
  * Citadel setup utility
  *
- * Copyright (c) 1987-2016 by the citadel.org team
+ * Copyright (c) 1987-2017 by the citadel.org team
  *
  * This program is open source software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License version 3.
@@ -1235,29 +1235,33 @@ int main(int argc, char *argv[])
 	/*
 	 * Create the administrator account.  It's ok if the command fails if this user already exists.
 	 */
-	progress(activity, 1, 5);
-	snprintf(buf, sizeof buf, "CREU %s|%s", admin_name, admin_pass);
-	serv_puts(buf);
-	progress(activity, 2, 5);
-	serv_gets(buf);
+	if (getconf_int("c_auth_mode") == AUTHMODE_NATIVE) {
+		progress(activity, 1, 5);
+		snprintf(buf, sizeof buf, "CREU %s|%s", admin_name, admin_pass);
+		serv_puts(buf);
+		progress(activity, 2, 5);
+		serv_gets(buf);
+	}
 	progress(activity, 3, 5);
 
 	/*
 	 * Assign the desired password and access level to the administrator account.
 	 */
-	snprintf(buf, sizeof buf, "AGUP %s", admin_name);
-	serv_puts(buf);
-	progress(activity, 4, 5);
-	serv_gets(buf);
-	if (buf[0] == '2') {
-		int admin_flags = extract_int(&buf[4], 2);
-		int admin_times_called = extract_int(&buf[4], 3);
-		int admin_msgs_posted = extract_int(&buf[4], 4);
-		snprintf(buf, sizeof buf, "ASUP %s|%s|%d|%d|%d|6",
-			admin_name, admin_pass, admin_flags, admin_times_called, admin_msgs_posted
-		);
+	if (getconf_int("c_auth_mode") == AUTHMODE_NATIVE) {
+		snprintf(buf, sizeof buf, "AGUP %s", admin_name);
 		serv_puts(buf);
+		progress(activity, 4, 5);
 		serv_gets(buf);
+		if (buf[0] == '2') {
+			int admin_flags = extract_int(&buf[4], 2);
+			int admin_times_called = extract_int(&buf[4], 3);
+			int admin_msgs_posted = extract_int(&buf[4], 4);
+			snprintf(buf, sizeof buf, "ASUP %s|%s|%d|%d|%d|6",
+				admin_name, admin_pass, admin_flags, admin_times_called, admin_msgs_posted
+			);
+			serv_puts(buf);
+			serv_gets(buf);
+		}
 	}
 	progress(activity, 5, 5);
 

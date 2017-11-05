@@ -798,7 +798,11 @@ void vcard_newuser(struct ctdluser *usbuf) {
 		int found_user;
         	char ldap_cn[512];
         	char ldap_dn[512];
-		found_user = CtdlTryUserLDAP(usbuf->fullname, ldap_dn, sizeof ldap_dn, ldap_cn, sizeof ldap_cn, &usbuf->uid, 1);
+
+syslog(LOG_DEBUG, "\033[31m FIXME BORK BORK BORK try lookup by uid , or maybe dn?\033[0m");
+
+
+		found_user = CtdlTryUserLDAP(usbuf->fullname, ldap_dn, sizeof ldap_dn, ldap_cn, sizeof ldap_cn, &usbuf->uid);
         	if (found_user == 0) {
 			if (Ctdl_LDAP_to_vCard(ldap_dn, v)) {
 				/* Allow global address book and internet directory update without login long enough to write this. */
