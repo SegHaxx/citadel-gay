@@ -63,6 +63,38 @@ void derive_fullname_from_ldap_result(char *fullname, int fullname_size, LDAP *l
 }
 
 
+/*
+ * Utility function, supply a search result and get back the uid from the first result
+ */
+uid_t derive_uid_from_ldap(LDAP *ldserver, LDAPMessage *entry)
+{
+	char **values;
+	uid_t uid = (-1);
+
+	if (CtdlGetConfigInt("c_auth_mode") == AUTHMODE_LDAP_AD) {
+		values = ldap_get_values(ldserver, entry, "objectGUID");	// AD schema: uid hashed from objectGUID
+		if (values) {
+			if (values[0]) {
+				uid = abs(HashLittle(values[0], strlen(values[0])));
+			}
+			ldap_value_free(values);
+		}
+	}
+	else {
+		values = ldap_get_values(ldserver, entry, "uidNumber");		// POSIX schema: uid = uidNumber
+		if (values) {
+			if (values[0]) {
+				uid = atoi(values[0]);
+			}
+			ldap_value_free(values);
+		}
+	}
+
+	syslog(LOG_DEBUG, "\033[31mldap: uid: <%d> \033[0m", uid);
+	return(uid);
+}
+
+
 
 
 /*
@@ -99,7 +131,6 @@ int CtdlTryUserLDAP(char *username,
 	LDAPMessage *entry = NULL;
 	char searchstring[1024];
 	struct timeval tv;
-	char **values;
 	char *user_dn = NULL;
 
 	if (fullname) safestrncpy(fullname, username, fullname_size);
@@ -179,33 +210,10 @@ int CtdlTryUserLDAP(char *username,
 		derive_fullname_from_ldap_result(fullname, fullname_size, ldserver, search_result);
 
 		/* If we know the username is the CN/displayName, we already set the uid*/
-		if (lookup_based_on_username==0) {
-			if (CtdlGetConfigInt("c_auth_mode") == AUTHMODE_LDAP_AD) {
-				values = ldap_get_values(ldserver, search_result, "objectGUID");
-				if (values) {
-					if (values[0]) {
-						if (uid != NULL) {
-							*uid = abs(HashLittle(values[0], strlen(values[0])));
-							syslog(LOG_DEBUG, "ldap: uid hashed from objectGUID = %d", *uid);
-						}
-					}
-					ldap_value_free(values);
-				}
-			}
-			else {
-				values = ldap_get_values(ldserver, search_result, "uidNumber");
-				if (values) {
-					if (values[0]) {
-						syslog(LOG_DEBUG, "ldap: uidNumber = %s", values[0]);
-						if (uid != NULL) {
-							*uid = atoi(values[0]);
-						}
-					}
-					ldap_value_free(values);
-				}
-			}
+		// FIXME old skool crap , fix this
+		if (lookup_based_on_username == 0) {
+			*uid = derive_uid_from_ldap(ldserver, search_result);
 		}
-
 	}
 
 	/* free the results */
@@ -572,7 +580,6 @@ void CtdlSynchronizeUsersFromLDAP(void)
 	char *user_dn = NULL;
 	char searchstring[1024];
 	struct timeval tv;
-	char **values;
 
 	if ((CtdlGetConfigInt("c_auth_mode") != AUTHMODE_LDAP) && (CtdlGetConfigInt("c_auth_mode") != AUTHMODE_LDAP_AD)) {
 		return;		// not running LDAP
@@ -645,26 +652,7 @@ void CtdlSynchronizeUsersFromLDAP(void)
 			uid_t uid = (-1);
 
 			derive_fullname_from_ldap_result(fullname, fullname_size, ldserver, entry);
-
-			if (CtdlGetConfigInt("c_auth_mode") == AUTHMODE_LDAP_AD) {
-				values = ldap_get_values(ldserver, entry, "objectGUID");	// AD schema: uid hashed from objectGUID
-				if (values) {
-					if (values[0]) {
-						uid = abs(HashLittle(values[0], strlen(values[0])));
-					}
-					ldap_value_free(values);
-				}
-			}
-			else {
-				values = ldap_get_values(ldserver, entry, "uidNumber");		// POSIX schema: uid = uidNumber
-				if (values) {
-					if (values[0]) {
-						uid = atoi(values[0]);
-					}
-					ldap_value_free(values);
-				}
-			}
-
+			uid = derive_uid_from_ldap(ldserver, entry);
 			syslog(LOG_DEBUG, "\033[33mldap: display name: <%s> , uid = <%d>\033[0m", fullname, uid);
 
 			// FIXME now create or update the user
