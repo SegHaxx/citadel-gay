@@ -31,6 +31,41 @@ int ctdl_require_ldap_version = 3;
 
 
 /*
+ * Utility function, supply a search result and get back the fullname (display name, common name, etc) from the first result
+ */
+void derive_fullname_from_ldap_result(char *fullname, int fullname_size, LDAP *ldserver, LDAPMessage *search_result)
+{
+	char **values;
+
+	if (fullname == NULL) return;
+
+	if (CtdlGetConfigInt("c_auth_mode") == AUTHMODE_LDAP_AD) {
+		values = ldap_get_values(ldserver, search_result, "displayName");
+		if (values) {
+			if (values[0]) {
+				if (fullname) safestrncpy(fullname, values[0], fullname_size);
+				syslog(LOG_DEBUG, "ldap: displayName = %s", values[0]);
+			}
+			ldap_value_free(values);
+		}
+	}
+	else {
+		values = ldap_get_values(ldserver, search_result, "cn");
+		if (values) {
+			if (values[0]) {
+				if (fullname) safestrncpy(fullname, values[0], fullname_size);
+				syslog(LOG_DEBUG, "ldap: cn = %s", values[0]);
+			}
+			ldap_value_free(values);
+		}
+	}
+	syslog(LOG_DEBUG, "\033[31mldap: display name: <%s> \033[0m", fullname);
+}
+
+
+
+
+/*
  * Wrapper function for ldap_initialize() that consistently fills in the correct fields
  */
 int ctdl_ldap_initialize(LDAP **ld) {
@@ -141,28 +176,7 @@ int CtdlTryUserLDAP(char *username,
 			syslog(LOG_DEBUG, "ldap: dn = %s", user_dn);
 		}
 
-/* begin - centralize this */
-		if (CtdlGetConfigInt("c_auth_mode") == AUTHMODE_LDAP_AD) {
-			values = ldap_get_values(ldserver, search_result, "displayName");
-			if (values) {
-				if (values[0]) {
-					if (fullname) safestrncpy(fullname, values[0], fullname_size);
-					syslog(LOG_DEBUG, "ldap: displayName = %s", values[0]);
-				}
-				ldap_value_free(values);
-			}
-		}
-		else {
-			values = ldap_get_values(ldserver, search_result, "cn");
-			if (values) {
-				if (values[0]) {
-					if (fullname) safestrncpy(fullname, values[0], fullname_size);
-					syslog(LOG_DEBUG, "ldap: cn = %s", values[0]);
-				}
-				ldap_value_free(values);
-			}
-		}
-/* end - centralize this */
+		derive_fullname_from_ldap_result(fullname, fullname_size, ldserver, search_result);
 
 		/* If we know the username is the CN/displayName, we already set the uid*/
 		if (lookup_based_on_username==0) {
@@ -630,14 +644,9 @@ void CtdlSynchronizeUsersFromLDAP(void)
 			char fullname[256] = { 0 } ;
 			uid_t uid = (-1);
 
+			derive_fullname_from_ldap_result(fullname, fullname_size, ldserver, entry);
+
 			if (CtdlGetConfigInt("c_auth_mode") == AUTHMODE_LDAP_AD) {
-				values = ldap_get_values(ldserver, entry, "displayName");	// AD schema: fullname = displayName
-				if (values) {
-					if (values[0]) {
-						safestrncpy(fullname, values[0], fullname_size);
-					}
-					ldap_value_free(values);
-				}
 				values = ldap_get_values(ldserver, entry, "objectGUID");	// AD schema: uid hashed from objectGUID
 				if (values) {
 					if (values[0]) {
@@ -647,13 +656,6 @@ void CtdlSynchronizeUsersFromLDAP(void)
 				}
 			}
 			else {
-				values = ldap_get_values(ldserver, entry, "cn");		// POSIX schema: fullname = cn
-				if (values) {
-					if (values[0]) {
-						safestrncpy(fullname, values[0], fullname_size);
-					}
-					ldap_value_free(values);
-				}
 				values = ldap_get_values(ldserver, entry, "uidNumber");		// POSIX schema: uid = uidNumber
 				if (values) {
 					if (values[0]) {
