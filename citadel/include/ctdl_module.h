@@ -430,7 +430,7 @@ long CtdlLocateMessageByEuid(char *euid, struct ctdlroom *qrbuf);
 
 
 /*
- * This is from modules/openid/serv_openid_rp.c in order to turn it into a generic external authentication driver
+ * Expose API calls from modules/openid/serv_openid_rp.c in order to turn it into a generic external authentication driver
  */
 int attach_extauth(struct ctdluser *who, StrBuf *claimed_id);
 

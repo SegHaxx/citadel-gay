@@ -135,7 +135,11 @@ void reindex_uids_backend(struct ctdluser *usbuf, void *data) {
 				us.uid = NATIVE_AUTH_UID;
 			}
 			CtdlPutUserLock(&us);
-			if (us.uid > 0) {		// if non-native auth , index by uid
+			if ((us.uid > 0) && (us.uid != NATIVE_AUTH_UID)) {		// if non-native auth , index by uid
+
+				syslog(LOG_DEBUG, "\033[31m attaching %d to %s \033[0m", us.uid , us.fullname);
+
+
 				StrBuf *claimed_id = NewStrBuf();
 				StrBufPrintf(claimed_id, "uid:%d", us.uid);
 				attach_extauth(&us, claimed_id);

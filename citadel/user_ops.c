@@ -449,32 +449,32 @@ void rebuild_usersbynumber(void) {
 
 
 /*
- * getuserbyuid()  -     get user by system uid (for PAM mode authentication)
- *		       returns 0 if user was found
- *
- * WARNING:	don't use this function unless you absolutely have to.  It does
- *		a sequential search and therefore is computationally expensive.
- *
- * FIXME:	build an index, dummy.
+ * getuserbyuid()	Get user by system uid (for PAM mode authentication)
+ *			Returns 0 if user was found
+ *			This now uses an extauth index.
  */
 int getuserbyuid(struct ctdluser *usbuf, uid_t number)
 {
-	struct cdbdata *cdbus;
+	struct cdbdata *cdbextauth;
+	long usernum = 0;
+	StrBuf *claimed_id;
 
-	cdb_rewind(CDB_USERS);
-
-	while (cdbus = cdb_next_item(CDB_USERS), cdbus != NULL) {
-		memset(usbuf, 0, sizeof(struct ctdluser));
-		memcpy(usbuf, cdbus->ptr,
-		       ((cdbus->len > sizeof(struct ctdluser)) ?
-			sizeof(struct ctdluser) : cdbus->len));
-		cdb_free(cdbus);
-		if (usbuf->uid == number) {
-			cdb_close_cursor(CDB_USERS);
-			return (0);
-		}
+	claimed_id = NewStrBuf();
+	StrBufPrintf(claimed_id, "uid:%d", number);
+	cdbextauth = cdb_fetch(CDB_EXTAUTH, ChrPtr(claimed_id), StrLength(claimed_id));
+	FreeStrBuf(&claimed_id);
+	if (cdbextauth == NULL) {
+		return(-1);
 	}
-	return (-1);
+
+	memcpy(&usernum, cdbextauth->ptr, sizeof(long));
+	cdb_free(cdbextauth);
+
+	if (!CtdlGetUserByNumber(usbuf, usernum)) {
+		return(0);
+	}
+
+	return(-1);
 }
 
 
@@ -594,9 +594,7 @@ int CtdlLoginExistingUser(char *authname, const char *trythisname)
 		/* First, try to log in as if the supplied name is a display name */
 		found_user = CtdlGetUser(&CC->user, username);
 	
-		/* If that didn't work, try to log in as if the supplied name
-	 	* is an e-mail address
-	 	*/
+		/* If that didn't work, try to log in as if the supplied name * is an e-mail address */
 		if (found_user != 0) {
 			valid = validate_recipients(username, NULL, 0);
 			if (valid != NULL) {
@@ -1028,7 +1026,7 @@ int internal_create_user(char *username, struct ctdluser *usbuf, uid_t uid)
 	cdb_store(CDB_USERSBYNUMBER, &usbuf->usernum, sizeof(long), usbuf->fullname, strlen(usbuf->fullname)+1);
 
 	/* If non-native auth, index by uid */
-	if (usbuf->uid > 0) {
+	if ((usbuf->uid > 0) && (usbuf->uid != NATIVE_AUTH_UID)) {
 		StrBuf *claimed_id = NewStrBuf();
 		StrBufPrintf(claimed_id, "uid:%d", usbuf->uid);
 		attach_extauth(usbuf, claimed_id);
