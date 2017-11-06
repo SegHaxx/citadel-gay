@@ -526,11 +526,6 @@ void check_server_upgrades(void) {
 
 	syslog(LOG_INFO, "Existing database version on disk is %d", CtdlGetConfigInt("MM_hosted_upgrade_level"));
 
-
-
-	reindex_uids();	// FIXME FIXME FIXME remove this line after testing
-
-
 	if (CtdlGetConfigInt("MM_hosted_upgrade_level") < REV_LEVEL) {
 		syslog(LOG_WARNING, "Server hosted updates need to be processed at this time.  Please wait...");
 	}
