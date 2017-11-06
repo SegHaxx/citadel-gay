@@ -135,6 +135,12 @@ void reindex_uids_backend(struct ctdluser *usbuf, void *data) {
 				us.uid = NATIVE_AUTH_UID;
 			}
 			CtdlPutUserLock(&us);
+			if (us.uid > 0) {		// if non-native auth , index by uid
+				StrBuf *claimed_id = NewStrBuf();
+				StrBufPrintf(claimed_id, "uid:%d", us.uid);
+				attach_extauth(&us, claimed_id);
+				FreeStrBuf(&claimed_id);
+			}
 		}
 
 		ptr = uplist;
@@ -520,6 +526,11 @@ void check_server_upgrades(void) {
 
 	syslog(LOG_INFO, "Existing database version on disk is %d", CtdlGetConfigInt("MM_hosted_upgrade_level"));
 
+
+
+	reindex_uids();	// FIXME FIXME FIXME remove this line after testing
+
+
 	if (CtdlGetConfigInt("MM_hosted_upgrade_level") < REV_LEVEL) {
 		syslog(LOG_WARNING, "Server hosted updates need to be processed at this time.  Please wait...");
 	}
@@ -551,10 +562,6 @@ void check_server_upgrades(void) {
 	if (CtdlGetConfigInt("MM_hosted_upgrade_level") < 810) {
 		struct ctdlroom QRoom;
 		if (!CtdlGetRoom(&QRoom, SMTP_SPOOLOUT_ROOM)) {
-			QRoom.QRdefaultview = VIEW_QUEUE;
-			CtdlPutRoom(&QRoom);
-		}
-		if (!CtdlGetRoom(&QRoom, FNBL_QUEUE_ROOM)) {
 			QRoom.QRdefaultview = VIEW_QUEUE;
 			CtdlPutRoom(&QRoom);
 		}
