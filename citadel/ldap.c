@@ -114,25 +114,14 @@ int ctdl_ldap_initialize(LDAP **ld) {
 
 
 /*
- * Look up a user in the directory to see if this is an account that can be authenticated
+ * Bind to the LDAP server and return a working handle
  */
-int CtdlTryUserLDAP(char *username,
-		char *found_dn, int found_dn_size,
-		char *fullname, int fullname_size,
-		uid_t *uid)
-{
+LDAP *ctdl_ldap_bind(void) {
 	LDAP *ldserver = NULL;
 	int i;
-	LDAPMessage *search_result = NULL;
-	LDAPMessage *entry = NULL;
-	char searchstring[1024];
-	struct timeval tv;
-	char *user_dn = NULL;
-
-	if (fullname) safestrncpy(fullname, username, fullname_size);
 
 	if (ctdl_ldap_initialize(&ldserver) != LDAP_SUCCESS) {
-		return(errno);
+		return(NULL);
 	}
 
 	ldap_set_option(ldserver, LDAP_OPT_PROTOCOL_VERSION, &ctdl_require_ldap_version);
@@ -147,9 +136,32 @@ int CtdlTryUserLDAP(char *username,
 	);
 	if (i != LDAP_SUCCESS) {
 		syslog(LOG_ERR, "ldap: Cannot bind: %s (%d)", ldap_err2string(i), i);
-		return(i);
+		return(NULL);
 	}
 
+	return(ldserver);
+}
+
+
+/*
+ * Look up a user in the directory to see if this is an account that can be authenticated
+ */
+int CtdlTryUserLDAP(char *username,
+		char *found_dn, int found_dn_size,
+		char *fullname, int fullname_size,
+		uid_t *uid)
+{
+	LDAP *ldserver = NULL;
+	LDAPMessage *search_result = NULL;
+	LDAPMessage *entry = NULL;
+	char searchstring[1024];
+	struct timeval tv;
+	char *user_dn = NULL;
+
+	ldserver = ctdl_ldap_bind();
+	if (!ldserver) return(-1);
+
+	if (fullname) safestrncpy(fullname, username, fullname_size);
 	tv.tv_sec = 10;
 	tv.tv_usec = 0;
 
@@ -293,7 +305,6 @@ int Ctdl_LDAP_to_vCard(char *ldap_dn, struct vCard *v)
 {
 	int changed_something = 0;
 	LDAP *ldserver = NULL;
-	int i;
 	struct timeval tv;
 	LDAPMessage *search_result = NULL;
 	LDAPMessage *entry = NULL;
@@ -324,24 +335,8 @@ int Ctdl_LDAP_to_vCard(char *ldap_dn, struct vCard *v)
 	if (!ldap_dn) return(0);
 	if (!v) return(0);
 
-	if (ctdl_ldap_initialize(&ldserver) != LDAP_SUCCESS) {
-		return(0);
-	}
-
-	ldap_set_option(ldserver, LDAP_OPT_PROTOCOL_VERSION, &ctdl_require_ldap_version);
-	ldap_set_option(ldserver, LDAP_OPT_REFERRALS, (void *)LDAP_OPT_OFF);
-
-	striplt(CtdlGetConfigStr("c_ldap_bind_dn"));
-	striplt(CtdlGetConfigStr("c_ldap_bind_pw"));
-	syslog(LOG_DEBUG, "ldap: bind DN: %s", CtdlGetConfigStr("c_ldap_bind_dn"));
-	i = ldap_simple_bind_s(ldserver,
-		(!IsEmptyStr(CtdlGetConfigStr("c_ldap_bind_dn")) ? CtdlGetConfigStr("c_ldap_bind_dn") : NULL),
-		(!IsEmptyStr(CtdlGetConfigStr("c_ldap_bind_pw")) ? CtdlGetConfigStr("c_ldap_bind_pw") : NULL)
-	);
-	if (i != LDAP_SUCCESS) {
-		syslog(LOG_ERR, "ldap: Cannot bind: %s (%d)", ldap_err2string(i), i);
-		return(0);
-	}
+	ldserver = ctdl_ldap_bind();
+	if (!ldserver) return(-1);
 
 	tv.tv_sec = 10;
 	tv.tv_usec = 0;
@@ -459,7 +454,6 @@ int Ctdl_LDAP_to_vCard(char *ldap_dn, struct vCard *v)
 int extract_email_addresses_from_ldap(char *ldap_dn, char *emailaddrs)
 {
 	LDAP *ldserver = NULL;
-	int i;
 	struct timeval tv;
 	LDAPMessage *search_result = NULL;
 	LDAPMessage *entry = NULL;
@@ -469,24 +463,8 @@ int extract_email_addresses_from_ldap(char *ldap_dn, char *emailaddrs)
 	if (!ldap_dn) return(1);
 	if (!emailaddrs) return(1);
 
-	if (ctdl_ldap_initialize(&ldserver) != LDAP_SUCCESS) {
-		return(2);
-	}
-
-	ldap_set_option(ldserver, LDAP_OPT_PROTOCOL_VERSION, &ctdl_require_ldap_version);
-	ldap_set_option(ldserver, LDAP_OPT_REFERRALS, (void *)LDAP_OPT_OFF);
-
-	striplt(CtdlGetConfigStr("c_ldap_bind_dn"));
-	striplt(CtdlGetConfigStr("c_ldap_bind_pw"));
-	syslog(LOG_DEBUG, "ldap: bind DN: %s", CtdlGetConfigStr("c_ldap_bind_dn"));
-	i = ldap_simple_bind_s(ldserver,
-		(!IsEmptyStr(CtdlGetConfigStr("c_ldap_bind_dn")) ? CtdlGetConfigStr("c_ldap_bind_dn") : NULL),
-		(!IsEmptyStr(CtdlGetConfigStr("c_ldap_bind_pw")) ? CtdlGetConfigStr("c_ldap_bind_pw") : NULL)
-	);
-	if (i != LDAP_SUCCESS) {
-		syslog(LOG_ERR, "ldap: Cannot bind: %s (%d)", ldap_err2string(i), i);
-		return(3);
-	}
+	ldserver = ctdl_ldap_bind();
+	if (!ldserver) return(-1);
 
 	tv.tv_sec = 10;
 	tv.tv_usec = 0;
@@ -557,7 +535,6 @@ int extract_email_addresses_from_ldap(char *ldap_dn, char *emailaddrs)
 void CtdlSynchronizeUsersFromLDAP(void)
 {
 	LDAP *ldserver = NULL;
-	int i;
 	LDAPMessage *search_result = NULL;
 	LDAPMessage *entry = NULL;
 	char *user_dn = NULL;
@@ -570,24 +547,8 @@ void CtdlSynchronizeUsersFromLDAP(void)
 
 	syslog(LOG_INFO, "ldap: synchronizing Citadel user database from LDAP");
 
-	if (ctdl_ldap_initialize(&ldserver) != LDAP_SUCCESS) {
-		return;
-	}
-
-	ldap_set_option(ldserver, LDAP_OPT_PROTOCOL_VERSION, &ctdl_require_ldap_version);
-	ldap_set_option(ldserver, LDAP_OPT_REFERRALS, (void *)LDAP_OPT_OFF);
-
-	striplt(CtdlGetConfigStr("c_ldap_bind_dn"));
-	striplt(CtdlGetConfigStr("c_ldap_bind_pw"));
-	syslog(LOG_DEBUG, "ldap: bind DN: %s", CtdlGetConfigStr("c_ldap_bind_dn"));
-	i = ldap_simple_bind_s(ldserver,
-		(!IsEmptyStr(CtdlGetConfigStr("c_ldap_bind_dn")) ? CtdlGetConfigStr("c_ldap_bind_dn") : NULL),
-		(!IsEmptyStr(CtdlGetConfigStr("c_ldap_bind_pw")) ? CtdlGetConfigStr("c_ldap_bind_pw") : NULL)
-	);
-	if (i != LDAP_SUCCESS) {
-		syslog(LOG_ERR, "ldap: Cannot bind: %s (%d)", ldap_err2string(i), i);
-		return;
-	}
+	ldserver = ctdl_ldap_bind();
+	if (!ldserver) return;
 
 	tv.tv_sec = 10;
 	tv.tv_usec = 0;
