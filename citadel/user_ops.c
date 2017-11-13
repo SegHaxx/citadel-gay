@@ -654,14 +654,14 @@ void do_login(void)
 	 * If we are using LDAP authentication, extract the user's email addresses from the directory.
 	 * FIXME make this a site configurable setting
 	 */
-	#ifdef HAVE_LDAP
-		if ((CtdlGetConfigInt("c_auth_mode") == AUTHMODE_LDAP) || (CtdlGetConfigInt("c_auth_mode") == AUTHMODE_LDAP_AD)) {
-			char new_emailaddrs[512];
-			if (extract_email_addresses_from_ldap(CCC->ldap_dn, new_emailaddrs) == 0) {
-				strcpy(CCC->user.emailaddrs, new_emailaddrs);
-			}
+#ifdef HAVE_LDAP
+	if ((CtdlGetConfigInt("c_auth_mode") == AUTHMODE_LDAP) || (CtdlGetConfigInt("c_auth_mode") == AUTHMODE_LDAP_AD)) {
+		char new_emailaddrs[512];
+		if (extract_email_addresses_from_ldap(CCC->ldap_dn, new_emailaddrs) == 0) {
+			strcpy(CCC->user.emailaddrs, new_emailaddrs);
 		}
-	#endif
+	}
+#endif
 
 	/*
 	 * No email address for user?  Make one up.
