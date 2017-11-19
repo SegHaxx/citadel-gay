@@ -42,7 +42,7 @@ void mailq_show_this_queue_entry(StrBuf *MsgText) {
 
 int cmd_mailq(int server_socket, char *cmdbuf) {
 	char buf[1024];
-	long *msgs;
+	long *msgs = NULL;
 	int num_msgs = 0;
 	int num_alloc = 0;
 	int i;
@@ -91,7 +91,9 @@ int cmd_mailq(int server_socket, char *cmdbuf) {
 		}
 	}
 
-	free(msgs);
+	if (msgs != NULL) {
+		free(msgs);
+	}
 	FreeStrBuf(&MsgText);
         return(cmdret_ok);
 }
