@@ -600,6 +600,16 @@ void CtdlSynchronizeUsersFromLDAP(void)
 			syslog(LOG_DEBUG, "\033[33mldap: display name: <%s> , uid = <%d>\033[0m", fullname, uid);
 
 			// FIXME now create or update the user
+			int i;
+			struct ctdluser usbuf;
+
+			i = getuserbyuid(&usbuf, uid);
+			if (i == 0) {
+				syslog(LOG_DEBUG, "\033[32m...and that user EXISTZ0RS!!!\033[0m");
+			}
+			else {
+				syslog(LOG_DEBUG, "\033[31m...and that user D0EZ N0T EXISTZ0R!!\033[0m");
+			}
 
 
 		}

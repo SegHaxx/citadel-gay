@@ -12,6 +12,7 @@ void rebuild_usersbynumber(void);
 void session_startup (void);
 void logged_in_response(void);
 int purge_user (char *pname);
+int getuserbyuid(struct ctdluser *usbuf, uid_t number);
 
 int create_user(char *newusername, int become_user, uid_t uid);
 enum {
@@ -22,8 +23,7 @@ enum {
 
 void do_login(void);
 int CtdlInvtKick(char *iuser, int op);
-void ForEachUser(void (*CallBack)(struct ctdluser *EachUser, void *out_data),
-	void *in_data);
+void ForEachUser(void (*CallBack)(struct ctdluser *EachUser, void *out_data), void *in_data);
 void ListThisUser(struct ctdluser *usbuf, void *data);
 int NewMailCount(void);
 int InitialMailCheck(void);
