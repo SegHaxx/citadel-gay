@@ -658,7 +658,7 @@ void do_login(void)
 	if ((CtdlGetConfigInt("c_auth_mode") == AUTHMODE_LDAP) || (CtdlGetConfigInt("c_auth_mode") == AUTHMODE_LDAP_AD)) {
 		char new_emailaddrs[512];
 		if (extract_email_addresses_from_ldap(CCC->ldap_dn, new_emailaddrs) == 0) {
-			strcpy(CCC->user.emailaddrs, new_emailaddrs);
+			CtdlSetEmailAddressesForUser(CCC->user.fullname, new_emailaddrs);
 		}
 	}
 #endif

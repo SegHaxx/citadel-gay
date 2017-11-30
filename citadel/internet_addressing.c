@@ -1718,3 +1718,36 @@ void CtdlRebuildDirectoryIndex(void) {
 	ForEachUser(CtdlRebuildDirectoryIndex_backend, NULL);
 	CtdlRebuildDirectoryIndex_backend(NULL, NULL);
 }
+
+
+/*
+ * Configure Internet email addresses for a user account, updating the Directory Index in the process
+ */
+void CtdlSetEmailAddressesForUser(char *requested_user, char *new_emailaddrs)
+{
+	struct ctdluser usbuf;
+	int i;
+	char buf[SIZ];
+
+	if (CtdlGetUserLock(&usbuf, requested_user) != 0) {	// We are relying on the fact that the DirectoryIndex functions don't lock.
+		return;						// Silently fail here if we can't acquire a lock on the user record.
+	}
+
+	syslog(LOG_DEBUG, "internet_addressing: setting email addresses for <%s> to <%s>", usbuf.fullname, new_emailaddrs);
+
+	/* Delete all of the existing directory index records for the user (easier this way) */
+	for (i=0; i<num_tokens(usbuf.emailaddrs, '|'); ++i) {
+		extract_token(buf, usbuf.emailaddrs, i, '|', sizeof buf);
+		CtdlDirectoryDelUser(buf, requested_user);
+	}
+
+	strcpy(usbuf.emailaddrs, new_emailaddrs);		// make it official.
+
+	/* Index all of the new email addresses (they've already been sanitized) */
+	for (i=0; i<num_tokens(usbuf.emailaddrs, '|'); ++i) {
+		extract_token(buf, usbuf.emailaddrs, i, '|', sizeof buf);
+		CtdlDirectoryAddUser(buf, requested_user);
+	}
+
+	CtdlPutUserLock(&usbuf);
+}

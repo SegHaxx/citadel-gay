@@ -129,7 +129,6 @@ LDAP *ctdl_ldap_bind(void) {
 
 	striplt(CtdlGetConfigStr("c_ldap_bind_dn"));
 	striplt(CtdlGetConfigStr("c_ldap_bind_pw"));
-	syslog(LOG_DEBUG, "ldap: bind DN: %s", CtdlGetConfigStr("c_ldap_bind_dn"));
 	i = ldap_simple_bind_s(ldserver,
 		(!IsEmptyStr(CtdlGetConfigStr("c_ldap_bind_dn")) ? CtdlGetConfigStr("c_ldap_bind_dn") : NULL),
 		(!IsEmptyStr(CtdlGetConfigStr("c_ldap_bind_pw")) ? CtdlGetConfigStr("c_ldap_bind_pw") : NULL)
@@ -594,23 +593,34 @@ void CtdlSynchronizeUsersFromLDAP(void)
 			int fullname_size = 256;
 			char fullname[256] = { 0 } ;
 			uid_t uid = (-1);
+			char new_emailaddrs[512] = { 0 } ;
 
 			derive_fullname_from_ldap_result(fullname, fullname_size, ldserver, entry);
 			uid = derive_uid_from_ldap(ldserver, entry);
-			syslog(LOG_DEBUG, "\033[33mldap: display name: <%s> , uid = <%d>\033[0m", fullname, uid);
+			syslog(LOG_DEBUG, "ldap: display name: <%s> , uid = <%d>", fullname, uid);
 
-			// FIXME now create or update the user
-			int i;
+			// now create or update the user
+			int found_user;
 			struct ctdluser usbuf;
 
-			i = getuserbyuid(&usbuf, uid);
-			if (i == 0) {
-				syslog(LOG_DEBUG, "\033[32m...and that user EXISTZ0RS!!!\033[0m");
-			}
-			else {
-				syslog(LOG_DEBUG, "\033[31m...and that user D0EZ N0T EXISTZ0R!!\033[0m");
+			found_user = getuserbyuid(&usbuf, uid);
+			if (found_user != 0) {
+				create_user(fullname, CREATE_USER_DO_NOT_BECOME_USER, uid);
+				found_user = getuserbyuid(&usbuf, uid);
+				strcpy(fullname, usbuf.fullname);
 			}
 
+			if (found_user == 0) {		// user record exists
+
+				// now update the account email addresses if necessary
+	 			// FIXME make this a site configurable setting
+
+				if (extract_email_addresses_from_ldap(user_dn, new_emailaddrs) == 0) {
+					if (strcmp(usbuf.emailaddrs, new_emailaddrs)) {				// update only if changed
+						CtdlSetEmailAddressesForUser(usbuf.fullname, new_emailaddrs);
+					}
+				}
+			}
 			ldap_memfree(user_dn);
 		}
 

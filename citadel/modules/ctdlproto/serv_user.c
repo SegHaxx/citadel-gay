@@ -701,7 +701,6 @@ void cmd_asea(char *cmdbuf)
 	char buf[SIZ];
 	char whodat[64];
 	char new_emailaddrs[512] = { 0 } ;
-	int i;
 
 	if (CtdlAccessCheck(ac_aide)) return;
 
@@ -729,25 +728,8 @@ void cmd_asea(char *cmdbuf)
 		}
 	}
 
-	if (CtdlGetUserLock(&usbuf, requested_user) != 0) {	// We are relying on the fact that the DirectoryIndex functions don't lock.
-		return;						// Silently fail here if we can't acquire a lock on the user record.
-	}
 
-	/* Delete all of the existing directory index records for the user (easier this way) */
-	for (i=0; i<num_tokens(usbuf.emailaddrs, '|'); ++i) {
-		extract_token(buf, usbuf.emailaddrs, i, '|', sizeof buf);
-		CtdlDirectoryDelUser(buf, requested_user);
-	}
-
-	strcpy(usbuf.emailaddrs, new_emailaddrs);		// make it official.
-
-	/* Index all of the new email addresses (they've already been sanitized) */
-	for (i=0; i<num_tokens(usbuf.emailaddrs, '|'); ++i) {
-		extract_token(buf, usbuf.emailaddrs, i, '|', sizeof buf);
-		CtdlDirectoryAddUser(buf, requested_user);
-	}
-
-	CtdlPutUserLock(&usbuf);
+	CtdlSetEmailAddressesForUser(requested_user, new_emailaddrs);
 }
 
 
