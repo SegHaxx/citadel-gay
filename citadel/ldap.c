@@ -611,7 +611,7 @@ void CtdlSynchronizeUsersFromLDAP(void)
 				syslog(LOG_DEBUG, "\033[31m...and that user D0EZ N0T EXISTZ0R!!\033[0m");
 			}
 
-
+			ldap_memfree(user_dn);
 		}
 
 		entry = ldap_next_entry(ldserver, entry);
