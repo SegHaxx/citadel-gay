@@ -657,8 +657,10 @@ void do_login(void)
 #ifdef HAVE_LDAP
 	if ((CtdlGetConfigInt("c_auth_mode") == AUTHMODE_LDAP) || (CtdlGetConfigInt("c_auth_mode") == AUTHMODE_LDAP_AD)) {
 		char new_emailaddrs[512];
-		if (extract_email_addresses_from_ldap(CCC->ldap_dn, new_emailaddrs) == 0) {
-			CtdlSetEmailAddressesForUser(CCC->user.fullname, new_emailaddrs);
+		if (CtdlGetConfigInt("c_ldap_sync_email_addrs") > 0) {
+			if (extract_email_addresses_from_ldap(CCC->ldap_dn, new_emailaddrs) == 0) {
+				CtdlSetEmailAddressesForUser(CCC->user.fullname, new_emailaddrs);
+			}
 		}
 	}
 #endif

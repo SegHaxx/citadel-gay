@@ -611,13 +611,12 @@ void CtdlSynchronizeUsersFromLDAP(void)
 			}
 
 			if (found_user == 0) {		// user record exists
-
 				// now update the account email addresses if necessary
-	 			// FIXME make this a site configurable setting
-
-				if (extract_email_addresses_from_ldap(user_dn, new_emailaddrs) == 0) {
-					if (strcmp(usbuf.emailaddrs, new_emailaddrs)) {				// update only if changed
-						CtdlSetEmailAddressesForUser(usbuf.fullname, new_emailaddrs);
+				if (CtdlGetConfigInt("c_ldap_sync_email_addrs") > 0) {
+					if (extract_email_addresses_from_ldap(user_dn, new_emailaddrs) == 0) {
+						if (strcmp(usbuf.emailaddrs, new_emailaddrs)) {				// update only if changed
+							CtdlSetEmailAddressesForUser(usbuf.fullname, new_emailaddrs);
+						}
 					}
 				}
 			}
