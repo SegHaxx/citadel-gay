@@ -652,7 +652,6 @@ void do_login(void)
 
 	/*
 	 * If we are using LDAP authentication, extract the user's email addresses from the directory.
-	 * FIXME make this a site configurable setting
 	 */
 #ifdef HAVE_LDAP
 	if ((CtdlGetConfigInt("c_auth_mode") == AUTHMODE_LDAP) || (CtdlGetConfigInt("c_auth_mode") == AUTHMODE_LDAP_AD)) {
