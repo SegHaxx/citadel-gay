@@ -81,6 +81,7 @@
 #include "ctdl_module.h"
 
 #include "smtp_util.h"
+
 enum {				/* Command states for login authentication */
 	smtp_command,
 	smtp_user,
@@ -124,6 +125,7 @@ void registerSmtpCMD(const char *First, long FLen,
 	h->h = H;
 	Put(SMTPCmds, First, FLen, h, NULL);
 }
+
 
 void smtp_cleanup(void)
 {

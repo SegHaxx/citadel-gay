@@ -164,7 +164,7 @@ static size_t upload_source(void *ptr, size_t size, size_t nmemb, void *userp)
 	sendbytes = (size * nmemb);
 
 	if (s->bytes_sent >= s->bytes_total) {
-		return(0);					// we are donez0r
+		return(0);					// no data remaining; we are done
 	}
 
 	if (sendbytes > (s->bytes_total - s->bytes_sent)) {
@@ -405,19 +405,19 @@ void smtp_process_one_msg(long qmsgnum)
 			delete_this_queue = 1;
 		}
 
-		// If it's been more than five days, give up and tell the sender we #failed
+		// If it's been more than five days, give up and tell the sender that delivery failed
 		//
 		else if ((time(NULL) - submitted) > SMTP_DELIVER_FAIL) {
 			smtp_do_bounce(ChrPtr(NewInstr), SDB_BOUNCE_ALL);
 			delete_this_queue = 1;
 		}
 
-		// If it's been more than four hours but less than five days, warn the sender that I've Been Delayed
+		// If it's been more than four hours but less than five days, warn the sender that delivery is delayed
 		//
 		else if ( ((attempted - submitted) < SMTP_DELIVER_WARN) && ((time(NULL) - submitted) >= SMTP_DELIVER_WARN) ) {
 			smtp_do_bounce(ChrPtr(NewInstr), SDB_WARN);
 		}
-	
+
 		if (delete_this_queue) {
 			syslog(LOG_DEBUG, "smtpclient: %ld deleting", qmsgnum);
 			deletes[0] = qmsgnum;

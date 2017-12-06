@@ -56,7 +56,7 @@ int CtdlGetUser(struct ctdluser *usbuf, char *name)
 		memcpy(usbuf, cdbus->ptr, ((cdbus->len > sizeof(struct ctdluser)) ?  sizeof(struct ctdluser) : cdbus->len));
 	}
 	cdb_free(cdbus);
-	return (0);
+	return(0);
 }
 
 
@@ -78,7 +78,7 @@ int CtdlGetUserLock(struct ctdluser *usbuf, char *name)
 	if (retcode == 0) {
 		begin_critical_section(S_USERS);
 	}
-	return (retcode);
+	return(retcode);
 }
 
 
@@ -188,7 +188,7 @@ int GenerateRelationshipIndex(char *IndexBuf,
 	TheIndex.iUserID = UserID;
 
 	memcpy(IndexBuf, &TheIndex, sizeof(TheIndex));
-	return (sizeof(TheIndex));
+	return(sizeof(TheIndex));
 }
 
 
@@ -241,19 +241,14 @@ void CtdlGetRelationship(visit *vbuf,
 	struct cdbdata *cdbvisit;
 
 	/* Generate an index */
-	IndexLen = GenerateRelationshipIndex(IndexBuf,
-					     rel_room->QRnumber,
-					     rel_room->QRgen,
-					     rel_user->usernum);
+	IndexLen = GenerateRelationshipIndex(IndexBuf, rel_room->QRnumber, rel_room->QRgen, rel_user->usernum);
 
 	/* Clear out the buffer */
 	memset(vbuf, 0, sizeof(visit));
 
 	cdbvisit = cdb_fetch(CDB_VISIT, IndexBuf, IndexLen);
 	if (cdbvisit != NULL) {
-		memcpy(vbuf, cdbvisit->ptr,
-		       ((cdbvisit->len > sizeof(visit)) ?
-			sizeof(visit) : cdbvisit->len));
+		memcpy(vbuf, cdbvisit->ptr, ((cdbvisit->len > sizeof(visit)) ?  sizeof(visit) : cdbvisit->len));
 		cdb_free(cdbvisit);
 	}
 	else {
@@ -351,9 +346,9 @@ int CtdlAccessCheck(int required_level)
 int is_aide(void)
 {
 	if (CC->user.axlevel >= AxAideU)
-		return (1);
+		return(1);
 	else
-		return (0);
+		return(0);
 }
 
 
@@ -364,13 +359,13 @@ int is_room_aide(void)
 {
 
 	if (!CC->logged_in) {
-		return (0);
+		return(0);
 	}
 
 	if ((CC->user.axlevel >= AxAideU) || (CC->room.QRroomaide == CC->user.usernum)) {
-		return (1);
+		return(1);
 	} else {
-		return (0);
+		return(0);
 	}
 }
 
@@ -955,12 +950,13 @@ int purge_user(char pname[])
 
 	/* If the name is empty we can't find them in the DB any way so just return */
 	if (IsEmptyStr(pname))
-		return (ERROR + NO_SUCH_USER);
+		return(ERROR + NO_SUCH_USER);
 
 	if (CtdlGetUser(&usbuf, pname) != 0) {
 		syslog(LOG_ERR, "user_ops: cannot purge user <%s> - not found", pname);
-		return (ERROR + NO_SUCH_USER);
+		return(ERROR + NO_SUCH_USER);
 	}
+
 	/* Don't delete a user who is currently logged in.  Instead, just
 	 * set the access level to 0, and let the account get swept up
 	 * during the next purge.
@@ -969,19 +965,10 @@ int purge_user(char pname[])
 		syslog(LOG_WARNING, "user_ops: <%s> is logged in; not deleting", pname);
 		usbuf.axlevel = AxDeleted;
 		CtdlPutUser(&usbuf);
-		return (1);
+		return(1);
 	}
-	syslog(LOG_NOTICE, "user_ops: deleting <%s>", pname);
 
-/*
- * FIXME:
- * This should all be wrapped in a S_USERS mutex.
- * Without the mutex the user could log in before we get to the next function
- * That would truly mess things up :-(
- * I would like to see the S_USERS start before the CtdlIsUserLoggedInByNum() above
- * and end after the user has been deleted from the database, below.
- * Question is should we enter the EVT_PURGEUSER while S_USERS is active?
- */
+	syslog(LOG_NOTICE, "user_ops: deleting <%s>", pname);
 
 	/* Perform any purge functions registered by server extensions */
 	PerformUserHooks(&usbuf, EVT_PURGEUSER);
@@ -995,14 +982,14 @@ int purge_user(char pname[])
 	/* delete the userlog entry */
 	cdb_delete(CDB_USERS, usernamekey, strlen(usernamekey));
 
-	return (0);
+	return(0);
 }
 
 
 int internal_create_user(char *username, struct ctdluser *usbuf, uid_t uid)
 {
 	if (!CtdlGetUser(usbuf, username)) {
-		return (ERROR + ALREADY_EXISTS);
+		return(ERROR + ALREADY_EXISTS);
 	}
 
 	/* Go ahead and initialize a new user record */
@@ -1034,7 +1021,7 @@ int internal_create_user(char *username, struct ctdluser *usbuf, uid_t uid)
 		FreeStrBuf(&claimed_id);
 	}
 
-	return 0;
+	return(0);
 }
 
 
@@ -1088,7 +1075,7 @@ int create_user(char *username, int become_user, uid_t uid)
 	
 		/* Check to make sure we're still who we think we are */
 		if (CtdlGetUser(&CC->user, CC->curr_user)) {
-			return (ERROR + INTERNAL_ERROR);
+			return(ERROR + INTERNAL_ERROR);
 		}
 	}
 	
@@ -1100,7 +1087,7 @@ int create_user(char *username, int become_user, uid_t uid)
 	);
 	CtdlAideMessage(buf, "User Creation Notice");
 	syslog(LOG_NOTICE, "user_ops: <%s> created", username);
-	return (0);
+	return(0);
 }
 
 
@@ -1151,7 +1138,6 @@ int CtdlInvtKick(char *iuser, int op) {
 		(CC->logged_in ? CC->user.fullname : "an administrator")
 	);
 	CtdlAideMessage(bbb,"User Admin Message");
-
 	return(0);
 }
 
@@ -1181,7 +1167,6 @@ int CtdlForgetThisRoom(void) {
 	/* Return to the Lobby, so we don't end up in an undefined room */
 	CtdlUserGoto(CtdlGetConfigStr("c_baseroom"), 0, 0, NULL, NULL, NULL, NULL);
 	return(0);
-
 }
 
 
@@ -1241,11 +1226,9 @@ void ListThisUser(struct ctdluser *usbuf, void *data)
 int NewMailCount()
 {
 	int num_newmsgs = 0;
-
 	num_newmsgs = CC->newmail;
 	CC->newmail = 0;
-
-	return (num_newmsgs);
+	return(num_newmsgs);
 }
 
 
@@ -1265,7 +1248,7 @@ int InitialMailCheck()
 
 	CtdlMailboxName(mailboxname, sizeof mailboxname, &CC->user, MAILROOM);
 	if (CtdlGetRoom(&mailbox, mailboxname) != 0)
-		return (0);
+		return(0);
 	CtdlGetRelationship(&vbuf, &CC->user, &mailbox);
 
 	cdbfr = cdb_fetch(CDB_MSGLISTS, &mailbox.QRnumber, sizeof(long));
@@ -1287,5 +1270,5 @@ int InitialMailCheck()
 	if (msglist != NULL)
 		free(msglist);
 
-	return (num_newmsgs);
+	return(num_newmsgs);
 }
