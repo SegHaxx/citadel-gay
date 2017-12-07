@@ -633,7 +633,7 @@ void cmd_conf(char *argbuf)
 			cprintf("%d %s|\n", CIT_OK, v);
 		}
 		else if ( (v) && (!strcasecmp(cmd, "LOADVAL")) ) {
-			cprintf("%d %d\n", BINARY_FOLLOWS, strlen(v));
+			cprintf("%d %d\n", BINARY_FOLLOWS, (int)strlen(v));
 			client_write(v, strlen(v));
 		}
 		else {
