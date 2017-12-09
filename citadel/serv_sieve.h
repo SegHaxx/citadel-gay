@@ -1,5 +1,4 @@
 
-
 #include <sieve2.h>
 #include <sieve2_error.h>
 
@@ -17,10 +16,10 @@ struct sdm_vacation {
 };
 
 struct sdm_userdata {
-	sieve2_context_t *sieve2_context;	/**< for libsieve's use */
-	long config_msgnum;			/**< confirms that a sieve config was located */
+	sieve2_context_t *sieve2_context;	/* for libsieve's use */
+	long config_msgnum;			/* confirms that a sieve config was located */
 	char config_roomname[ROOMNAMELEN];
-	long lastproc;				/**< last message processed */
+	long lastproc;				/* last message processed */
 	struct sdm_script *first_script;
 	struct sdm_vacation *first_vacation;
 };

@@ -13,7 +13,6 @@
  * GNU General Public License for more details.
  */
 
-
 #include "sysdep.h"
 #include <stdlib.h>
 #include <unistd.h>

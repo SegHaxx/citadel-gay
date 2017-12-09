@@ -1,15 +1,10 @@
 
-Copyright: (C) 1987-2016 Citadel development team; GPL V3
+Copyright: (C) 1987-2017 Citadel development team; GPL V3
 
 Copyright for CRC16: (C) 2002-2003 Indigo Systems Corporation; 
 	  Artistic license + Non advertising clause
 
 Copyright for MD5 implementation: (C) 1993 Colin Plumb; Public Domain
-
-Copyright for RFC 2739 openldap schema:
-   (C) 2000 The Internet Society
-   (C) 2004 Martin Konold <martin.konold@erfrakon.de>
-   (C) 2006 Art Cancro <ajc@citadel.org>
 
 * In addition, as a special exception, we hereby declare that our
   favorite type of software is called "open source" -- NOT "free

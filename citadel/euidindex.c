@@ -1,5 +1,15 @@
-/*
+/* 
  * Index messages by EUID per room.
+ *
+ * Copyright (c) 1987-2017 by the citadel.org team
+ *
+ * This program is open source software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License, version 3.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
  */
 
 #include "sysdep.h"
@@ -22,8 +32,6 @@
  *    (sizeof long)       (sizeof long)       (actual length of euid)
  *
  */
-
-
 
 /*
  * Return nonzero if the supplied room is one which should have
@@ -48,10 +56,6 @@ int DoesThisRoomNeedEuidIndexing(struct ctdlroom *qrbuf) {
 }
 
 
-
-
-
-
 /*
  * Locate a message in a given room with a given euid, and return
  * its message number.
@@ -59,6 +63,7 @@ int DoesThisRoomNeedEuidIndexing(struct ctdlroom *qrbuf) {
 long locate_message_by_euid(char *euid, struct ctdlroom *qrbuf) {
 	return CtdlLocateMessageByEuid (euid, qrbuf);
 }
+
 
 long CtdlLocateMessageByEuid(char *euid, struct ctdlroom *qrbuf) {
 	char *key;
@@ -118,7 +123,6 @@ void index_message_by_euid(char *euid, struct ctdlroom *qrbuf, long msgnum) {
 	free(key);
 	free(data);
 }
-
 
 
 /*
@@ -184,7 +188,6 @@ void rebuild_euid_index(void) {
 }
 
 
-
 /*
  * Server command to fetch a message number given an euid.
  */
@@ -221,6 +224,7 @@ void cmd_euid(char *cmdbuf) {
 
 	cprintf("%d not found\n", ERROR + MESSAGE_NOT_FOUND);
 }
+
 
 CTDL_MODULE_INIT(euidindex)
 {
