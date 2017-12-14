@@ -93,10 +93,10 @@ void utf8ify_rfc822_string(char *buf) {
 	int illegal_non_rfc2047_encoding = 0;
 
 	/* Sometimes, badly formed messages contain strings which were simply
-	 *  written out directly in some foreign character set instead of
-	 *  using RFC2047 encoding.  This is illegal but we will attempt to
-	 *  handle it anyway by converting from a user-specified default
-	 *  charset to UTF-8 if we see any nonprintable characters.
+	 * written out directly in some foreign character set instead of
+	 * using RFC2047 encoding.  This is illegal but we will attempt to
+	 * handle it anyway by converting from a user-specified default
+	 * charset to UTF-8 if we see any nonprintable characters.
 	 */
 	len = strlen(buf);
 	for (i=0; i<len; ++i) {

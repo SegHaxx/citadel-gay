@@ -10,7 +10,6 @@
 #include <time.h>
 #include "genstamp.h"
 
-
 static char *months[] = {
 	"Jan", "Feb", "Mar", "Apr", "May", "Jun",
 	"Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
@@ -19,7 +18,6 @@ static char *months[] = {
 static char *weekdays[] = {
 	"Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"
 };
-
 
 /*
  * Supplied with a unix timestamp, generate an RFC822-compliant textual

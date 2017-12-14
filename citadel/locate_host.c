@@ -1,7 +1,7 @@
 /*
  * Functions which handle hostname/address lookups and resolution
  *
- * Copyright (c) 1987-2011 by the citadel.org team
+ * Copyright (c) 1987-2017 by the citadel.org team
  *
  * This program is open source software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 3.
@@ -20,9 +20,7 @@
 #include <netdb.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
-
 #include <libcitadel.h>
-
 
 #include "context.h"
 #ifdef HAVE_RESOLV_H
@@ -123,15 +121,14 @@ int rblcheck_backend(char *domain, char *txtbuf, int txtbufsize) {
 		return(0);
 	}
 
-	if( len > PACKETSZ )
+	if (len > PACKETSZ)
 	{
 		answer = malloc(len);
 		need_to_free_answer = 1;
 		len = res_query(domain, C_IN, T_A, answer, len);
 		if( len == -1 ) {
 			if (txtbuf != NULL) {
-				snprintf(txtbuf, txtbufsize,
-					 "Message rejected due to known spammer source IP address");
+				snprintf(txtbuf, txtbufsize, "Message rejected due to known spammer source IP address");
 			}
 			if (need_to_free_answer) free(answer);
 			return(1);
@@ -139,15 +136,15 @@ int rblcheck_backend(char *domain, char *txtbuf, int txtbufsize) {
 	}
 	if (server_shutting_down)
 	{
-		if (txtbuf != NULL)
+		if (txtbuf != NULL) {
 			snprintf(txtbuf, txtbufsize, "System shutting down");
+		}
 		if (need_to_free_answer) free(answer);
 		return (1);
 	}
 
 	result = (char *) malloc(RESULT_SIZE);
-	result[ 0 ] = '\0';
-
+	result[0] = '\0';
 
 	/* Make another DNS query for textual data; this shouldn't
 	 * be a performance hit, since it'll now be cached at the
@@ -168,8 +165,7 @@ int rblcheck_backend(char *domain, char *txtbuf, int txtbufsize) {
 	if (len ==(-1))
 	{
 		if (txtbuf != NULL) {
-			snprintf(txtbuf, txtbufsize,
-				 "Message rejected due to known spammer source IP address");
+			snprintf(txtbuf, txtbufsize, "Message rejected due to known spammer source IP address");
 		}
 		if (need_to_free_answer) free(answer);
 		free(result);
@@ -296,11 +292,11 @@ int rbl_check(char *message_to_spammer)
 		for (i=0; i<8; ++i) {
 			char tokbuf[5];
 			extract_token(tokbuf, workbuf, i, ':', sizeof tokbuf);
-
 			memcpy(&tbuf[ (i*4) + (4-strlen(tokbuf)) ], tokbuf, strlen(tokbuf) );
 		}
-		if (strlen(tbuf) != 32)
+		if (strlen(tbuf) != 32) {
 			goto finish_rbl;
+		}
 
 		/* now reverse it and add dots */
 		strcpy(workbuf, tbuf);

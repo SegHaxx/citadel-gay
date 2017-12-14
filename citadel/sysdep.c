@@ -41,6 +41,7 @@
 #include "modules/crypto/serv_crypto.h"	/* Needed for init_ssl, client_write_ssl, client_read_ssl, destruct_ssl */
 #include "housekeeping.h"
 #include "context.h"
+
 /*
  * Signal handler to shut down the server.
  */
@@ -50,16 +51,17 @@ volatile int shutdown_and_halt = 0;
 volatile int restart_server = 0;
 volatile int running_as_daemon = 0;
 
+
 static RETSIGTYPE signal_cleanup(int signum) {
 	syslog(LOG_DEBUG, "sysdep: caught signal %d; shutting down.", signum);
 	exit_signal = signum;
 	server_shutting_down = 1;
 }
 
+
 static RETSIGTYPE signal_exit(int signum) {
 	exit(1);
 }
-
 
 
 /*
@@ -327,7 +329,6 @@ static void flush_client_inbuf(void)
 
 	FlushStrBuf(CCC->ReadBuf);
 	CCC->RecvBuf->ReadWritePointer = NULL;
-
 }
 */
 
@@ -1098,8 +1099,6 @@ void HuntBadSession(void)
 	struct timeval tv;
 	struct ServiceFunctionHook *serviceptr;
 
-
-
 	/* Next, add all of the client sockets. */
 	begin_critical_section(S_SESSION_TABLE);
 	for (ptr = ContextList; ptr != NULL; ptr = ptr->next) {
@@ -1115,13 +1114,12 @@ void HuntBadSession(void)
 		if (	(ptr->state == CON_IDLE)
 			&& (ptr->kill_me == 0)
 			&& (ptr->client_socket > 0)
-			) {
+		) {
 			FD_SET(ptr->client_socket, &readfds);
 			if (ptr->client_socket > highest)
 				highest = ptr->client_socket;
 			
-			if ((select(highest + 1, &readfds, NULL, NULL, &tv) < 0) &&
-			    (errno == EBADF))
+			if ((select(highest + 1, &readfds, NULL, NULL, &tv) < 0) && (errno == EBADF))
 			{
 				/* Gotcha! */
 				syslog(LOG_ERR,
@@ -1130,17 +1128,15 @@ void HuntBadSession(void)
 				       ptr->client_socket,
 				       ptr->is_local_socket,
 				       ptr->curr_user,
-				       ptr->cs_host,ptr->cs_addr);
-
+				       ptr->cs_host,ptr->cs_addr
+				);
 				ptr->kill_me = 1;
 				ptr->client_socket = -1;
 				break;
 			}
 		}
-		
 	}
 	end_critical_section(S_SESSION_TABLE);
-
 
 	/* First, add the various master sockets to the fdset. */
 	for (serviceptr = ServiceHookTable; serviceptr != NULL; serviceptr = serviceptr->next ) {
@@ -1163,11 +1159,9 @@ void HuntBadSession(void)
 			break;
 		}
 	}
-
-
 }
 
-const char *WorkerLogStr = "W";
+
 /* 
  * This loop just keeps going and going and going...
  */
@@ -1190,9 +1184,7 @@ void *worker_thread(void *blah) {
 
 	while (!server_shutting_down) {
 
-		/* make doubly sure we're not holding any stale db handles
-		 * which might cause a deadlock.
-		 */
+		/* make doubly sure we're not holding any stale db handles * which might cause a deadlock */
 		cdb_check_handles();
 do_select:	force_purge = 0;
 		bind_me = NULL;		/* Which session shall we handle? */
@@ -1284,7 +1276,7 @@ do_select:	force_purge = 0;
 			}
 		}
 
-		/* Next, check to see if it's a new client connecting * on a master socket. */
+		/* Next, check to see if it's a new client connecting on a master socket. */
 
 		else if ((retval > 0) && (!server_shutting_down)) for (serviceptr = ServiceHookTable; serviceptr != NULL; serviceptr = serviceptr->next) {
 
@@ -1386,14 +1378,12 @@ SKIP_SELECT:
 				CC->input_waiting = 0;
 			}
 
-			/* If there are asynchronous messages waiting and the
-			 * client supports it, do those now */
-			if ((CC->is_async) && (CC->async_waiting)
-			   && (CC->h_async_function != NULL)) {
+			/* If there are asynchronous messages waiting and the client supports it, do those now */
+			if ((CC->is_async) && (CC->async_waiting) && (CC->h_async_function != NULL)) {
 				CC->h_async_function();
 				CC->async_waiting = 0;
 			}
-			
+
 			force_purge = CC->kill_me;
 			become_session(NULL);
 			bind_me->state = CON_IDLE;
@@ -1420,7 +1410,6 @@ SKIP_SELECT:
 	pthread_mutex_unlock(&ThreadCountMutex);
 	return(NULL);
 }
-
 
 
 /*
