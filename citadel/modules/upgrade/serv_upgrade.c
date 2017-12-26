@@ -55,6 +55,12 @@
 #include "serv_vcard.h"
 #include "internet_addressing.h"
 
+/*
+ * oldver is the version number of Citadel Server which was active on the previous run of the program, learned from the system configuration.
+ * If we are running a new Citadel Server for the first time, oldver will be 0.
+ * We keep this value around for the entire duration of the program run because we'll need it during several stages of startup.
+ */
+int oldver = 0;
 
 /*
  * Fix up the name for Citadel user 0 and try to remove any extra users with number 0
@@ -388,14 +394,10 @@ void ingest_old_roominfo_and_roompic_files(void)
 
 
 /*
- * Perform any upgrades that can be done automatically based on our knowledge of the previous
- * version of Citadel server that was running here.
- *
- * Note that if the previous version was 0 then this is a new installation running for the first time.
+ * For upgrades in which a new config setting appears for the first time, set default values.
+ * For new installations (oldver == 0) also set default values.
  */
 void update_config(void) {
-
-	int oldver = CtdlGetConfigInt("MM_hosted_upgrade_level");
 
 	if (oldver < 606) {
 		CtdlSetConfigInt("c_rfc822_strict_from", 0);
@@ -528,37 +530,37 @@ void move_inet_addrs_from_vcards_to_user_records(void)
  */
 void check_server_upgrades(void) {
 
-	syslog(LOG_INFO, "Existing database version on disk is %d", CtdlGetConfigInt("MM_hosted_upgrade_level"));
+	oldver = CtdlGetConfigInt("MM_hosted_upgrade_level");
+	syslog(LOG_INFO, "Existing database version on disk is %d", oldver);
+	update_config();
 
-	if (CtdlGetConfigInt("MM_hosted_upgrade_level") < REV_LEVEL) {
+	if (oldver < REV_LEVEL) {
 		syslog(LOG_WARNING, "Server hosted updates need to be processed at this time.  Please wait...");
 	}
 	else {
 		return;
 	}
 
-	update_config();
-
-	if ((CtdlGetConfigInt("MM_hosted_upgrade_level") > 000) && (CtdlGetConfigInt("MM_hosted_upgrade_level") < 591)) {
+	if ((oldver > 000) && (oldver < 591)) {
 		syslog(LOG_EMERG, "This database is too old to be upgraded.  Citadel server will exit.");
 		exit(EXIT_FAILURE);
 	}
-	if ((CtdlGetConfigInt("MM_hosted_upgrade_level") > 000) && (CtdlGetConfigInt("MM_hosted_upgrade_level") < 913)) {
+	if ((oldver > 000) && (oldver < 913)) {
 		reindex_uids();
 	}
-	if ((CtdlGetConfigInt("MM_hosted_upgrade_level") > 000) && (CtdlGetConfigInt("MM_hosted_upgrade_level") < 659)) {
+	if ((oldver > 000) && (oldver < 659)) {
 		rebuild_euid_index();
 	}
-	if (CtdlGetConfigInt("MM_hosted_upgrade_level") < 735) {
+	if (oldver < 735) {
 		fix_sys_user_name();
 	}
-	if (CtdlGetConfigInt("MM_hosted_upgrade_level") < 736) {
+	if (oldver < 736) {
 		rebuild_usersbynumber();
 	}
-	if (CtdlGetConfigInt("MM_hosted_upgrade_level") < 790) {
+	if (oldver < 790) {
 		remove_thread_users();
 	}
-	if (CtdlGetConfigInt("MM_hosted_upgrade_level") < 810) {
+	if (oldver < 810) {
 		struct ctdlroom QRoom;
 		if (!CtdlGetRoom(&QRoom, SMTP_SPOOLOUT_ROOM)) {
 			QRoom.QRdefaultview = VIEW_QUEUE;
@@ -566,11 +568,11 @@ void check_server_upgrades(void) {
 		}
 	}
 
-	if ((CtdlGetConfigInt("MM_hosted_upgrade_level") > 000) && (CtdlGetConfigInt("MM_hosted_upgrade_level") < 902)) {
+	if ((oldver > 000) && (oldver < 902)) {
 		ingest_old_roominfo_and_roompic_files();
 	}
 
-	if ((CtdlGetConfigInt("MM_hosted_upgrade_level") > 000) && (CtdlGetConfigInt("MM_hosted_upgrade_level") < 912)) {
+	if ((oldver > 000) && (oldver < 912)) {
 		move_inet_addrs_from_vcards_to_user_records();
 	}
 
