@@ -27,15 +27,13 @@ long config_msgnum = 0;
 HashList *ctdlconfig = NULL;	// new configuration
 
 
-void config_warn_if_port_unset(char *key, int default_port)			\
+void config_warn_if_port_unset(char *key, int default_port)
 {
 	int p = CtdlGetConfigInt(key);
 	if ((p < -1) ||	(p == 0) || (p > UINT16_MAX))
 	{
-		syslog(LOG_ERR,
-			"config: setting %s is not -1 (disabled) or a valid TCP-Port - check your config! Default setting is: %d",
-			key, default_port
-		);
+		syslog(LOG_ERR, "config: setting %s is not -1 (disabled) or a valid TCP port - setting to default %d", key, default_port);
+		CtdlSetConfigInt(key, default_port);
 	}
 }
 
@@ -64,23 +62,23 @@ void validate_config(void) {
 	/*
 	 * Sanity check for port bindings
 	 */
-	config_warn_if_port_unset("c_smtp_port", 25);
-	config_warn_if_port_unset("c_pop3_port", 110);
-	config_warn_if_port_unset("c_imap_port", 143);
-	config_warn_if_port_unset("c_msa_port", 587);
-	config_warn_if_port_unset("c_port_number", 504);
-	config_warn_if_port_unset("c_smtps_port", 465);
-	config_warn_if_port_unset("c_pop3s_port", 995);
-	config_warn_if_port_unset("c_imaps_port", 993);
-	config_warn_if_port_unset("c_pftcpdict_port", -1);
-	config_warn_if_port_unset("c_managesieve_port", 2020);
-	config_warn_if_port_unset("c_xmpp_c2s_port", 5222);
-	config_warn_if_port_unset("c_xmpp_s2s_port", 5269);
-	config_warn_if_port_unset("c_nntp_port", 119);
-	config_warn_if_port_unset("c_nntps_port", 563);
+	config_warn_if_port_unset("c_smtp_port",	25);
+	config_warn_if_port_unset("c_pop3_port",	110);
+	config_warn_if_port_unset("c_imap_port",	143);
+	config_warn_if_port_unset("c_msa_port",		587);
+	config_warn_if_port_unset("c_port_number",	504);
+	config_warn_if_port_unset("c_smtps_port",	465);
+	config_warn_if_port_unset("c_pop3s_port",	995);
+	config_warn_if_port_unset("c_imaps_port",	993);
+	config_warn_if_port_unset("c_pftcpdict_port",	-1);
+	config_warn_if_port_unset("c_managesieve_port",	2020);
+	config_warn_if_port_unset("c_xmpp_c2s_port",	5222);
+	config_warn_if_port_unset("c_xmpp_s2s_port",	5269);
+	config_warn_if_port_unset("c_nntp_port",	119);
+	config_warn_if_port_unset("c_nntps_port",	563);
 
 	if (getpwuid(ctdluid) == NULL) {
-		syslog(LOG_ERR, "config: UID (%d) citadel is configured to use is not defined in your system (/etc/passwd?)!", ctdluid);
+		syslog(LOG_ERR, "config: uid (%d) does not exist ... citserver will run as root", ctdluid);
 	}
 }
 
