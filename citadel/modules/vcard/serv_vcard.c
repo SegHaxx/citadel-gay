@@ -99,8 +99,7 @@ void vcard_extract_internet_addresses(struct CtdlMessage *msg, int (*callback)(c
 
 	if (CM_IsEmpty(msg, eAuthor)) return;
 	if (CM_IsEmpty(msg, eNodeName)) return;
-	snprintf(citadel_address, sizeof citadel_address, "%s @ %s",
-		msg->cm_fields[eAuthor], msg->cm_fields[eNodeName]);
+	snprintf(citadel_address, sizeof citadel_address, "%s @ %s", msg->cm_fields[eAuthor], msg->cm_fields[eNodeName]);
 
 	v = vcard_load(msg->cm_fields[eMesageText]);
 	if (v == NULL) return;
@@ -142,8 +141,8 @@ void vcard_extract_internet_addresses(struct CtdlMessage *msg, int (*callback)(c
 void extract_inet_email_addrs(char *emailaddrbuf, size_t emailaddrbuf_len,
 			      char *secemailaddrbuf, size_t secemailaddrbuf_len,
 			      struct vCard *v,
-			      int local_addrs_only)
-{
+			      int local_addrs_only
+) {
 	struct CitContext *CCC = CC;		/* put this on the stack, just for speed */
 	char *s, *k, *addr;
 	int instance = 0;
@@ -159,6 +158,9 @@ void extract_inet_email_addrs(char *emailaddrbuf, size_t emailaddrbuf_len,
 			striplt(addr);
 			if (!IsEmptyStr(addr)) {
 				IsDirectoryAddress = IsDirectory(addr, 1);
+
+				syslog(LOG_DEBUG, "EVQ: addr=<%s> IsDirectoryAddress=<%d> local_addrs_only=<%d>", addr, IsDirectoryAddress, local_addrs_only);
+
 				if ( IsDirectoryAddress || !local_addrs_only)
 				{
 					++saved_instance;
@@ -801,7 +803,6 @@ void vcard_newuser(struct ctdluser *usbuf) {
 
 syslog(LOG_DEBUG, "\033[31m FIXME BORK BORK BORK try lookup by uid , or maybe dn?\033[0m");
 
-
 		found_user = CtdlTryUserLDAP(usbuf->fullname, ldap_dn, sizeof ldap_dn, ldap_cn, sizeof ldap_cn, &usbuf->uid);
         	if (found_user == 0) {
 			if (Ctdl_LDAP_to_vCard(ldap_dn, v)) {
@@ -1413,7 +1414,6 @@ CTDL_MODULE_INIT(vcard)
 		CtdlRegisterSessionHook(vcard_session_login_hook, EVT_LOGIN, PRIO_LOGIN + 70);
 		CtdlRegisterMessageHook(vcard_upload_beforesave, EVT_BEFORESAVE);
 		CtdlRegisterMessageHook(vcard_upload_aftersave, EVT_AFTERSAVE);
-		CtdlRegisterDeleteHook(vcard_delete_remove);
 		CtdlRegisterProtoHook(cmd_regi, "REGI", "Enter registration info");
 		CtdlRegisterProtoHook(cmd_greg, "GREG", "Get registration info");
 		CtdlRegisterProtoHook(cmd_qdir, "QDIR", "Query Directory");
@@ -1422,7 +1422,10 @@ CTDL_MODULE_INIT(vcard)
 		CtdlRegisterProtoHook(cmd_dvca, "DVCA", "Dump VCard Addresses");
 		CtdlRegisterUserHook(vcard_newuser, EVT_NEWUSER);
 		CtdlRegisterUserHook(vcard_purge, EVT_PURGEUSER);
-		CtdlRegisterNetprocHook(vcard_extract_from_network);
+
+		CtdlRegisterDeleteHook(vcard_delete_remove);			// FIXME this is obsolete, right?
+		CtdlRegisterNetprocHook(vcard_extract_from_network);		// FIXME this is obsolete, right?
+
 		CtdlRegisterSessionHook(store_harvested_addresses, EVT_TIMER, PRIO_CLEANUP + 470);
 		CtdlRegisterFixedOutputHook("text/x-vcard", vcard_fixed_output);
 		CtdlRegisterFixedOutputHook("text/vcard", vcard_fixed_output);
@@ -1435,32 +1438,6 @@ CTDL_MODULE_INIT(vcard)
 			qr.QRep.expire_mode = EXPIRE_MANUAL;
 			qr.QRdefaultview = VIEW_ADDRESSBOOK;	/* 2 = address book view */
 			CtdlPutRoomLock(&qr);
-
-			/*
-			 * Also make sure it has a netconfig file, so the networker runs
-			 * on this room even if we don't share it with any other nodes.
-			 * This allows the CANCEL messages (i.e. "Purge this vCard") to be
-			 * purged.
-			 *
-			 * FIXME this no longer works
-			 *
-			 */
-			//assoc_file_name(filename, sizeof filename, &qr, ctdl_netcfg_dir);
-			//fp = fopen(filename, "a");
-			//if (fp != NULL) {
-				//fclose(fp);
-				//rv = chown(filename, CTDLUID, (-1));
-				//if (rv == -1) {
-					//syslog(LOG_ERR, "vcard: failed to adjust ownership of %s: %m", filename);
-				//}
-				//rv = chmod(filename, 0600);
-				//if (rv == -1) {
-					//syslog(LOG_ERR, "vcard: failed to adjust ownership of %s: %m", filename);
-				//}
-			//}
-			//else {
-				//syslog(LOG_ERR, "vcard: cannot create %s: %m", filename);
-			//}
 		}
 
 		/* for postfix tcpdict */

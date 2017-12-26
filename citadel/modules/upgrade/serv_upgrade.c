@@ -142,10 +142,6 @@ void reindex_uids_backend(struct ctdluser *usbuf, void *data) {
 			}
 			CtdlPutUserLock(&us);
 			if ((us.uid > 0) && (us.uid != NATIVE_AUTH_UID)) {		// if non-native auth , index by uid
-
-				syslog(LOG_DEBUG, "\033[31m attaching %d to %s \033[0m", us.uid , us.fullname);
-
-
 				StrBuf *claimed_id = NewStrBuf();
 				StrBufPrintf(claimed_id, "uid:%d", us.uid);
 				attach_extauth(&us, claimed_id);
@@ -159,6 +155,7 @@ void reindex_uids_backend(struct ctdluser *usbuf, void *data) {
 	}
 }
 
+
 /*
  * Build extauth index of all users with uid-based join (system auth, LDAP auth)
  * Also changes all users with a uid of CTDLUID to NATIVE_AUTH_UID (-1)
@@ -169,7 +166,6 @@ void reindex_uids(void) {
 	reindex_uids_backend(NULL, NULL);
 	return;
 }
-
 
 
 /*
@@ -528,14 +524,14 @@ void move_inet_addrs_from_vcards_to_user_records(void)
  * Based on the server version number reported by the existing database,
  * run in-place data format upgrades until everything is up to date.
  */
-void check_server_upgrades(void) {
+void pre_startup_upgrades(void) {
 
 	oldver = CtdlGetConfigInt("MM_hosted_upgrade_level");
 	syslog(LOG_INFO, "Existing database version on disk is %d", oldver);
 	update_config();
 
 	if (oldver < REV_LEVEL) {
-		syslog(LOG_WARNING, "Server hosted updates need to be processed at this time.  Please wait...");
+		syslog(LOG_WARNING, "Running pre-startup database upgrades.");
 	}
 	else {
 		return;
@@ -572,10 +568,6 @@ void check_server_upgrades(void) {
 		ingest_old_roominfo_and_roompic_files();
 	}
 
-	if ((oldver > 000) && (oldver < 912)) {
-		move_inet_addrs_from_vcards_to_user_records();
-	}
-
 	CtdlSetConfigInt("MM_hosted_upgrade_level", REV_LEVEL);
 
 	/*
@@ -596,10 +588,42 @@ void check_server_upgrades(void) {
 }
 
 
+/*
+ * Based on the server version number reported by the existing database,
+ * run in-place data format upgrades until everything is up to date.
+ */
+void post_startup_upgrades(void) {
+
+	syslog(LOG_INFO, "Existing database version on disk is %d", oldver);
+
+	if (oldver < REV_LEVEL) {
+		syslog(LOG_WARNING, "Running post-startup database upgrades.");
+	}
+	else {
+		return;
+	}
+
+	if ((oldver > 000) && (oldver < 912)) {
+		move_inet_addrs_from_vcards_to_user_records();
+	}
+}
+
+
 CTDL_MODULE_UPGRADE(upgrade)
 {
-	check_server_upgrades();
+	pre_startup_upgrades();
 	
 	/* return our module id for the Log */
 	return "upgrade";
+}
+
+CTDL_MODULE_INIT(upgrade)
+{
+	if(!threading)
+	{
+		post_startup_upgrades();
+	}
+	
+	/* return our module name for the log */
+        return "upgrade";
 }

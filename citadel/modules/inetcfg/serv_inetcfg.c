@@ -125,6 +125,7 @@ void inetcfg_init_backend(long msgnum, void *userdata) {
 
 
 void inetcfg_init(void) {
+	syslog(LOG_DEBUG, "EVQ: called inetcfg_init()");
 	if (CtdlGetRoom(&CC->room, SYSCONFIGROOM) != 0) {
 		return;
 	}
