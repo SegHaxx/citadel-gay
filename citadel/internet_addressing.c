@@ -285,7 +285,6 @@ int CtdlHostAlias(char *fqdn) {
 	char host[256], type[256];
 	int found = 0;
 
-	syslog(LOG_DEBUG, "EVQ: CtdlHostAlias(%s)", fqdn);
 	if (fqdn == NULL)					return(hostalias_nomatch);
 	if (IsEmptyStr(fqdn))					return(hostalias_nomatch);
 	if (!strcasecmp(fqdn, "localhost"))			return(hostalias_localhost);
@@ -294,7 +293,6 @@ int CtdlHostAlias(char *fqdn) {
 	if (inetcfg == NULL)					return(hostalias_nomatch);
 
 	config_lines = num_tokens(inetcfg, '\n');
-	syslog(LOG_DEBUG, "EVQ: inetcfg config_lines is %d", config_lines);
 	for (i=0; i<config_lines; ++i) {
 		extract_token(buf, inetcfg, i, '\n', sizeof buf);
 		extract_token(host, buf, 0, '|', sizeof host);

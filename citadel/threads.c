@@ -146,10 +146,7 @@ void InitializeMasterTSD(void) {
 	memset(&masterTSD, 0, sizeof(struct thread_tsd));
 }
 
-extern void ShutDownEventQueues(void);
 
-int EventQShuttingDown = 0;
-int EVQShutDown = 0;
 /*
  * Initialize the thread system
  */
