@@ -490,16 +490,9 @@ void miafvtur_backend(struct ctdluser *usbuf, void *data) {
 	}
 
 	/* this is the calling mode where we do the processing */
-
 	int i;
-	struct ctdluser u;
-
 	for (i=0; i<num_m; ++i) {
-		syslog(LOG_DEBUG, "<%s> = <%s>", m[i].name, m[i].emails);
-		if (CtdlGetUser(&u, m[i].name) == 0) {
-			safestrncpy(u.emailaddrs, m[i].emails, sizeof u.emailaddrs);
-			CtdlPutUser(&u);
-		}
+		CtdlSetEmailAddressesForUser(m[i].name, m[i].emails);
 	}
 	free(m);
 	num_m = 0;

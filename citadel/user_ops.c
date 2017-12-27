@@ -644,6 +644,7 @@ void do_login(void)
 			CCC->user.axlevel = AxAideU;
 		}
 	}
+	CtdlPutUserLock(&CCC->user);
 
 	/*
 	 * If we are using LDAP authentication, extract the user's email addresses from the directory.
@@ -660,13 +661,12 @@ void do_login(void)
 #endif
 
 	/*
-	 * No email address for user?  Make one up.
-	 */
+	 * No email address for user?  Make one up.	(commented out because it appears to break things)
 	if (IsEmptyStr(CCC->user.emailaddrs)) {
 		sprintf(CCC->user.emailaddrs, "cit%ld@%s", CCC->user.usernum, CtdlGetConfigStr("c_fqdn"));
 	}
+	 */
 	
-	CtdlPutUserLock(&CCC->user);
 
 	/*
 	 * Populate cs_inet_email and cs_inet_other_emails with valid email addresses from the user record
