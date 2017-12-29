@@ -237,7 +237,8 @@ if test "$ok_iconv" = no; then
 			  AC_MSG_RESULT([no])
 			]
 		)
-fi	
+fi
+
 if test "$ok_iconv" != "no"; then
 	AC_MSG_RESULT(Citadel will be built with character set conversion.)
 	AC_DEFINE(HAVE_ICONV,[],[whether we have iconv for charset conversion])
@@ -379,11 +380,11 @@ if test "x$enable_pie" = xyes; then
 fi
 
 AC_MSG_CHECKING([how to create dependancy checks])
-		 if test -n "`$CC -V 2>&1 |grep Sun`"; then 
-		     	DEPEND_FLAG=-xM;
-		 else 
-		        DEPEND_FLAG=-M
-	         fi
+	 if test -n "`$CC -V 2>&1 |grep Sun`"; then 
+	     	DEPEND_FLAG=-xM;
+	 else 
+	        DEPEND_FLAG=-M
+         fi
 AC_SUBST(DEPEND_FLAG)
 
 
@@ -440,25 +441,25 @@ fi
 
 dnl disable backtrace if we don't want it.
 AC_ARG_WITH(backtrace, 
-		    [  --with-backtrace        enable backtrace dumps in the syslog],
-			[ if test "x$withval" != "xno" ; then
-			     CFLAGS="$CFLAGS  -rdynamic "
-			     LDFLAGS="$LDFLAGS  -rdynamic "
-			     SERVER_LDFLAGS="$SERVER_LDFLAGS  -rdynamic "
-                             AC_CHECK_FUNCS(backtrace)
-			  fi
-			]
+    [  --with-backtrace        enable backtrace dumps in the syslog],
+	[ if test "x$withval" != "xno" ; then
+	     CFLAGS="$CFLAGS  -rdynamic "
+	     LDFLAGS="$LDFLAGS  -rdynamic "
+	     SERVER_LDFLAGS="$SERVER_LDFLAGS  -rdynamic "
+                           AC_CHECK_FUNCS(backtrace)
+	  fi
+	]
 )
 
 dnl disable backtrace if we don't want it.
 AC_ARG_WITH(gprof, 
-		    [  --with-gprof            enable profiling],
-			[ if test "x$withval" != "xno" ; then
-			     CFLAGS="$CFLAGS  -pg "
-			     LDFLAGS="$LDFLAGS  -pg "
-			     SERVER_LDFLAGS="$SERVER_LDFLAGS  -pg "
-			  fi
-			]
+	    [  --with-gprof            enable profiling],
+		[ if test "x$withval" != "xno" ; then
+		     CFLAGS="$CFLAGS  -pg "
+		     LDFLAGS="$LDFLAGS  -pg "
+		     SERVER_LDFLAGS="$SERVER_LDFLAGS  -pg "
+		  fi
+		]
 )
 
 if test "$ac_cv_func_gethostbyname" = no; then
@@ -732,11 +733,6 @@ AC_CHECK_HEADER(expat.h,
 )
 
 
-
-
-
-
-
 dnl Checks for libcurl.
 AC_CHECK_HEADER(curl/curl.h,
 	[AC_CHECK_LIB(curl, curl_version,
@@ -752,14 +748,6 @@ AC_CHECK_HEADER(curl/curl.h,
 		AC_MSG_ERROR(curl/curl.h was not found and is required.  More info: http://www.citadel.org/doku.php/installation:start)
 	]
 )
-
-
-
-
-
-
-
-
 
 
 dnl Checks for header files.
