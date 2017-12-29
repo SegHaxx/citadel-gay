@@ -415,7 +415,6 @@ void progress(char *text, long int curr, long int cmax)
 }
 
 
-
 int uds_connectsock(char *sockpath)
 {
 	int s;
@@ -618,16 +617,19 @@ void check_xinetd_entry(void)
 		"	server_args	= -h -L %s/citadel\n"
 		"	log_on_failure	+= USERID\n"
 		"}\n",
-		ctdl_bin_dir);
+		ctdl_bin_dir
+	);
 	fclose(fp);
 
-	/* Now try to restart the service */
-	rv = system("/etc/init.d/xinetd restart >/dev/null 2>&1");
+	/* Now try to restart the service.  This will not have the intended effect on Solaris, but who the hell uses Solaris anymore? */
+	rv = system("systemctl restart xinetd >/dev/null 2>&1");
+	if (rv != 0) {
+		rv = system("service xinetd restart >/dev/null 2>&1");
+	}
 	if (rv != 0) {
 		display_error(_("failed to restart xinetd.\n"));
 	}
 }
-
 
 
 /*
@@ -1275,15 +1277,15 @@ int main(int argc, char *argv[])
 	 * Restart citserver
 	 */
 	activity = _("Restarting Citadel server to apply changes");
-	progress(activity, 0, 41);
+	progress(activity, 0, 51);
 
 	serv_puts("TIME");
 	serv_gets(buf);
 	long original_start_time = extract_long(&buf[4], 3);
 
-	progress(activity, 1, 41);
+	progress(activity, 1, 51);
 	serv_puts("DOWN 1");
-	progress(activity, 2, 41);
+	progress(activity, 2, 51);
 	serv_gets(buf);
 	if (buf[0] != '2') {
 		display_error("%s\n", buf);
@@ -1294,26 +1296,26 @@ int main(int argc, char *argv[])
 	serv_sock = (-1);
 
 	for (i=3; i<=6; ++i) {					/* wait for server to shut down */
-		progress(activity, i, 41);
+		progress(activity, i, 51);
 		sleep(1);
 	}
 
-	for (i=7; ((i<=38) && (serv_sock < 0)) ; ++i) {		/* wait for server to start up */
-		progress(activity, i, 41);
+	for (i=7; ((i<=48) && (serv_sock < 0)) ; ++i) {		/* wait for server to start up */
+		progress(activity, i, 51);
         	serv_sock = uds_connectsock(file_citadel_admin_socket);
 		sleep(1);
 	}
 
-	progress(activity, 39, 41);
+	progress(activity, 49, 51);
 	serv_gets(buf);
 
-	progress(activity, 40, 41);
+	progress(activity, 50, 51);
 	serv_puts("TIME");
 	serv_gets(buf);
 	long new_start_time = extract_long(&buf[4], 3);
 
 	close(serv_sock);
-	progress(activity, 41, 41);
+	progress(activity, 51, 51);
 
 	if (	(original_start_time == new_start_time)
 		|| (new_start_time <= 0)

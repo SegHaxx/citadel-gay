@@ -826,8 +826,7 @@ void network_do_spoolin(HashList *working_ignetcfg, HashList *the_netmap, int *n
 		return;
 	}
 
-	while ((readdir_r(dp, d, &filedir_entry) == 0) &&
-	       (filedir_entry != NULL))
+	while ( (filedir_entry = readdir(filedir)) , (filedir_entry != NULL))
 	{
 #ifdef _DIRENT_HAVE_D_NAMLEN
 		d_namelen = filedir_entry->d_namlen;
@@ -928,8 +927,7 @@ void network_consolidate_spoolout(HashList *working_ignetcfg, HashList *the_netm
 	memset(&FDIO, 0, sizeof(FDIOBuffer));
 	FDIO.IOB = &IOB;
 
-	while ((readdir_r(dp, d, &filedir_entry) == 0) &&
-	       (filedir_entry != NULL))
+	while ( (filedir_entry = readdir(filedir)) , (filedir_entry != NULL))
 	{
 #ifdef _DIRENT_HAVE_D_NAMLEN
 		d_namelen = filedir_entry->d_namlen;
@@ -1060,8 +1058,7 @@ void network_consolidate_spoolout(HashList *working_ignetcfg, HashList *the_netm
 		return;
 	}
 
-	while ((readdir_r(dp, d, &filedir_entry) == 0) &&
-	       (filedir_entry != NULL))
+	while ( (filedir_entry = readdir(filedir)) , (filedir_entry != NULL))
 	{
 #ifdef _DIRENT_HAVE_D_NAMLEN
 		d_namelen = filedir_entry->d_namlen;

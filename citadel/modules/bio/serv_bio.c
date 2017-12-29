@@ -2,7 +2,7 @@
  * This module implementsserver commands related to the display and
  * manipulation of user "bio" files.
  *
- * Copyright (c) 1987-2016 by the citadel.org team
+ * Copyright (c) 1987-2017 by the citadel.org team
  *
  * This program is open source software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -166,8 +166,7 @@ void import_old_bio_files(void)
 		free(d);
 		return;
 	}
-	while ((readdir_r(filedir, d, &filedir_entry) == 0) &&
-	       (filedir_entry != NULL))
+	while ( (filedir_entry = readdir(filedir)) , (filedir_entry != NULL))
 	{
 #ifdef _DIRENT_HAVE_D_NAMLEN
 		d_namelen = filedir_entry->d_namlen;
