@@ -1,6 +1,6 @@
 dnl Process this file with autoconf to produce a configure script.
 AC_PREREQ(2.52)
-AC_INIT([Citadel], [914], [http://www.citadel.org/])
+AC_INIT([Citadel], [915], [http://www.citadel.org/])
 AC_REVISION([$Revision: 5108 $])
 AC_CONFIG_SRCDIR([citserver.c])
 AC_CONFIG_HEADER(sysdep.h)
@@ -260,8 +260,6 @@ AC_ARG_WITH(ssl,
 		fi
 	]
 )
-AC_ARG_WITH(with_ldap, [  --with-ldap             use OpenLDAP client library])
-AC_ARG_WITH(with_gc, [  --with-gc             use the Boehm-Demers-Weiser garbage collection library])
 
 if test "x$with_db" != xno -a "x$with_db" != xyes -a "$with_db"; then
 	db_dir="$with_db"
@@ -560,7 +558,6 @@ AC_CHECK_HEADER(libcitadel.h,
 		AC_MSG_ERROR(libcitadel.h was not found or is not usable.  Please install libcitadel.)
 	]
 )
-
 CFLAGS="$saved_CFLAGS"
 
 
@@ -701,24 +698,21 @@ if test "x$with_db" != xno; then
 fi
 
 
-
-
 dnl Checks for the OpenLDAP client library.
-if test "x$with_ldap" != xno ; then
-	AC_CHECK_HEADERS(ldap.h,
-		[AC_CHECK_LIB(ldap, ldap_initialize,
-			[ok_ldap=yes],,
-	)])
-fi
-
-if test "x$ok_ldap" = xyes ; then
-	SERVER_LIBS="-lldap $SERVER_LIBS"
-	AC_DEFINE(HAVE_LDAP, [], [define this if you have OpenLDAP client available])
-fi
-
-
-
-
+AC_CHECK_HEADER(ldap.h,
+	[AC_CHECK_LIB(ldap, ldap_initialize,
+		[
+			SERVER_LIBS="-lldap $SERVER_LIBS"
+		],
+		[
+			AC_MSG_ERROR(OpenLDAP development library was not found and is required.  More info: http://www.citadel.org/doku.php/installation:start)
+		]
+	,
+	)],
+	[
+		AC_MSG_ERROR(OpenLDAP development headers were not found and are required.  More info: http://www.citadel.org/doku.php/installation:start)
+	]
+)
 
 
 dnl Checks for the Expat XML parser.
@@ -1010,9 +1004,7 @@ fi
 
 
 echo ------------------------------------------------------------------------
-echo 'LDAP support:                    ' $ok_ldap
 echo 'Character set conversion support:' $ok_iconv
-echo 'Boehm-Demers-Weiser support:     ' $ok_gc
 echo 
 echo 'Note: if you are not using Linux, make sure you are using GNU make'
 echo '(gmake) to compile Citadel.'
