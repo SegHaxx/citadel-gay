@@ -146,7 +146,6 @@ void import_old_bio_files(void)
 {
 	DIR *filedir = NULL;
 	struct dirent *filedir_entry;
-	struct dirent *d;
 	size_t d_namelen;
 	struct ctdluser usbuf;
 	long usernum = 0;
@@ -156,14 +155,8 @@ void import_old_bio_files(void)
 
 
 	syslog(LOG_DEBUG, "Importing old style bio files into the message base");
-	d = (struct dirent *)malloc(offsetof(struct dirent, d_name) + PATH_MAX + 2);
-	if (d == NULL) {
-		return;
-	}
-
 	filedir = opendir (ctdl_bio_dir);
 	if (filedir == NULL) {
-		free(d);
 		return;
 	}
 	while ( (filedir_entry = readdir(filedir)) , (filedir_entry != NULL))
@@ -217,7 +210,6 @@ void import_old_bio_files(void)
 			}
 		}
 	}
-	free(d);
 	closedir(filedir);
 	rmdir(ctdl_bio_dir);
 }

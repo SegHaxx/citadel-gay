@@ -826,7 +826,7 @@ void network_do_spoolin(HashList *working_ignetcfg, HashList *the_netmap, int *n
 		return;
 	}
 
-	while ( (filedir_entry = readdir(filedir)) , (filedir_entry != NULL))
+	while ( (filedir_entry = readdir(dp)) , (filedir_entry != NULL))
 	{
 #ifdef _DIRENT_HAVE_D_NAMLEN
 		d_namelen = filedir_entry->d_namlen;
@@ -900,7 +900,6 @@ void network_consolidate_spoolout(HashList *working_ignetcfg, HashList *the_netm
 	FDIOBuffer FDIO;
         int d_namelen;
 	DIR *dp;
-	struct dirent *d;
 	struct dirent *filedir_entry;
 	const char *pch;
 	char spooloutfilename[PATH_MAX];
@@ -913,12 +912,9 @@ void network_consolidate_spoolout(HashList *working_ignetcfg, HashList *the_netm
 	int d_type = 0;
 
 	/* Step 1: consolidate files in the outbound queue into one file per neighbor node */
-	d = (struct dirent *)malloc(offsetof(struct dirent, d_name) + PATH_MAX + 1);
-	if (d == NULL) 	return;
 
 	dp = opendir(ctdl_netout_dir);
 	if (dp == NULL) {
-		free(d);
 		return;
 	}
 
@@ -927,7 +923,7 @@ void network_consolidate_spoolout(HashList *working_ignetcfg, HashList *the_netm
 	memset(&FDIO, 0, sizeof(FDIOBuffer));
 	FDIO.IOB = &IOB;
 
-	while ( (filedir_entry = readdir(filedir)) , (filedir_entry != NULL))
+	while ( (filedir_entry = readdir(dp)) , (filedir_entry != NULL))
 	{
 #ifdef _DIRENT_HAVE_D_NAMLEN
 		d_namelen = filedir_entry->d_namlen;
@@ -1046,7 +1042,6 @@ void network_consolidate_spoolout(HashList *working_ignetcfg, HashList *the_netm
 	if (nFailed > 0) {
 		FreeStrBuf(&NextHop);
 		syslog(LOG_INFO, "netspool: skipping Spoolcleanup because of %d files unprocessed.", nFailed);
-
 		return;
 	}
 
@@ -1054,11 +1049,10 @@ void network_consolidate_spoolout(HashList *working_ignetcfg, HashList *the_netm
 	dp = opendir(ctdl_netout_dir);
 	if (dp == NULL) {
 		FreeStrBuf(&NextHop);
-		free(d);
 		return;
 	}
 
-	while ( (filedir_entry = readdir(filedir)) , (filedir_entry != NULL))
+	while ( (filedir_entry = readdir(dp)) , (filedir_entry != NULL))
 	{
 #ifdef _DIRENT_HAVE_D_NAMLEN
 		d_namelen = filedir_entry->d_namlen;
@@ -1110,7 +1104,6 @@ void network_consolidate_spoolout(HashList *working_ignetcfg, HashList *the_netm
 		}
 	}
 	FreeStrBuf(&NextHop);
-	free(d);
 	closedir(dp);
 }
 
