@@ -1,7 +1,7 @@
 /*
  * citserver's main() function lives here.
  * 
- * Copyright (c) 1987-2017 by the citadel.org team
+ * Copyright (c) 1987-2018 by the citadel.org team
  *
  * This program is open source software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3.
@@ -213,15 +213,22 @@ int main(int argc, char **argv)
 	syslog(LOG_INFO, " ");
 	syslog(LOG_INFO, "*** Citadel server engine ***\n");
  	syslog(LOG_INFO, "Version %d (build %s) ***", REV_LEVEL, svn_revision());
-	syslog(LOG_INFO, "Copyright (C) 1987-2017 by the Citadel development team.");
-	syslog(LOG_INFO, "This program is distributed under the terms of the GNU General Public License.");
+	syslog(LOG_INFO, "Copyright (C) 1987-2018 by the Citadel development team.");
+	syslog(LOG_INFO, " ");
+	syslog(LOG_INFO, "This program is open source software: you can redistribute it and/or");
+	syslog(LOG_INFO, "modify it under the terms of the GNU General Public License, version 3.");
+	syslog(LOG_INFO, " ");
+	syslog(LOG_INFO, "This program is distributed in the hope that it will be useful,");
+	syslog(LOG_INFO, "but WITHOUT ANY WARRANTY; without even the implied warranty of");
+	syslog(LOG_INFO, "MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the");
+	syslog(LOG_INFO, "GNU General Public License for more details.");
 	syslog(LOG_INFO, " ");
 	syslog(LOG_INFO, "%s", libcitadel_version_string());
 
 #ifdef HAVE_RUN_DIR
 	/* on some dists rundir gets purged on startup. so we need to recreate it. */
 
-	if (stat(ctdl_run_dir, &filestats)==-1){
+	if (stat(ctdl_run_dir, &filestats) == -1) {
 #ifdef HAVE_GETPWUID_R
 #ifdef SOLARIS_GETPWUID
 		pwp = getpwuid_r(ctdluid, &pw, pwbuf, sizeof(pwbuf));
@@ -322,13 +329,11 @@ int main(int argc, char **argv)
 		start_chkpwd_daemon();
 	}
 
-
 	/*
 	 * check, whether we're fired up another time after a crash.
 	 * if, post an aide message, so the admin has a chance to react.
 	 */
-	checkcrash ();
-
+	checkcrash();
 
 	/*
 	 * Now that we've bound the sockets, change to the Citadel user id and its
