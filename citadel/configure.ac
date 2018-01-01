@@ -136,17 +136,6 @@ AC_ARG_WITH(rundir,
 )
 
 
-dnl Checks for the Pseudo Random Generator sockets TODO: this keeps being default.
-AC_DEFINE_UNQUOTED(EGD_POOL, "/var/run/egd-pool", [place to keep our pseudo random generator file])
-AC_ARG_WITH(egdpool, 
-			[  --with-egdpool          the socket from Pseudo Random Generator, defaults to /var/run/egd-pool],
-			[ if test "x$withval" != "xno" ; then
-						AC_DEFINE_UNQUOTED(EGD_POOL, "$withval", [the socket from Pseudo Random Generator])
-			  fi
-			]
-)
-
-
 AC_ARG_WITH(docdir,
 			[  --with-docdir           where to install the documentation. default: /usr/local/citadel/],
 			[ if test "x$withval" != "xno" ; then

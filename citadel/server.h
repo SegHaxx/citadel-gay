@@ -81,6 +81,7 @@ typedef struct __recptypes {
 #define CTDLEXIT_LIBCITADEL	106	/* Incorrect version of libcitadel */
 #define CTDL_EXIT_UNSUP_AUTH	107	/* Unsupported auth mode configured */
 #define CTDLEXIT_UNUSER		108	/* Could not determine uid to run as */
+#define CTDLEXIT_CRYPTO		109	/* Problem initializing SSL or TLS */
 
 /*
  * Reasons why a session would be terminated (set CC->kill_me to these values)
