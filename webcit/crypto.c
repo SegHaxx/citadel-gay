@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996-2012 by the citadel.org team
+ * Copyright (c) 1996-2017 by the citadel.org team
  *
  * This program is open source software.  You can redistribute it and/or
  * modify it under the terms of the GNU General Public License, version 3.
@@ -48,6 +48,60 @@ void shutdown_ssl(void)
 	 * free(SSLCritters);
 	 */
 }
+
+
+void generate_key(char *keyfilename)
+{
+	int ret = 0;
+	RSA *rsa = NULL;
+	BIGNUM *bne = NULL;
+	int bits = 2048;
+	unsigned long e = RSA_F4;
+	FILE *fp;
+
+	if (access(file_crpt_file_key, R_OK) == 0) {
+		return;
+	}
+
+	syslog(LOG_INFO, "crypto: generating RSA key pair");
+ 
+	// generate rsa key
+	bne = BN_new();
+	ret = BN_set_word(bne,e);
+	if (ret != 1) {
+		goto free_all;
+	}
+ 
+	rsa = RSA_new();
+	ret = RSA_generate_key_ex(rsa, bits, bne, NULL);
+	if (ret != 1) {
+		goto free_all;
+	}
+
+	// write the key file
+	fp = fopen(keyfilename, "w");
+	if (fp != NULL) {
+		chmod(file_crpt_file_key, 0600);
+		if (PEM_write_RSAPrivateKey(fp,	/* the file */
+					rsa,	/* the key */
+					NULL,	/* no enc */
+					NULL,	/* no passphr */
+					0,	/* no passphr */
+					NULL,	/* no callbk */
+					NULL	/* no callbk */
+		) != 1) {
+			syslog(LOG_ERR, "crypto: cannot write key: %s", ERR_reason_error_string(ERR_get_error()));
+			unlink(file_crpt_file_key);
+		}
+		fclose(fp);
+	}
+
+    // 4. free
+free_all:
+    RSA_free(rsa);
+    BN_free(bne);
+}
+
 
 /*
  * initialize ssl engine, load certs and initialize openssl internals
@@ -146,42 +200,7 @@ void init_ssl(void)
 	/*
 	 * If we still don't have a private key, generate one.
 	 */
-	if (access(CTDL_KEY_PATH, R_OK) != 0) {
-		syslog(LOG_INFO, "Generating RSA key pair.\n");
-		rsa = RSA_generate_key(1024,	/* modulus size */
-					65537,	/* exponent */
-					NULL,	/* no callback */
-					NULL	/* no callback */
-		);
-		if (rsa == NULL) {
-			syslog(LOG_WARNING, "Key generation failed: %s\n", ERR_reason_error_string(ERR_get_error()));
-		}
-		if (rsa != NULL) {
-			fp = fopen(CTDL_KEY_PATH, "w");
-			if (fp != NULL) {
-				chmod(CTDL_KEY_PATH, 0600);
-				if (PEM_write_RSAPrivateKey(fp,	/* the file */
-							rsa,	/* the key */
-							NULL,	/* no enc */
-							NULL,	/* no passphr */
-							0,	/* no passphr */
-							NULL,	/* no callbk */
-							NULL	/* no callbk */
-				) != 1) {
-					syslog(LOG_WARNING, "Cannot write key: %s\n",
-						ERR_reason_error_string(ERR_get_error()));
-					unlink(CTDL_KEY_PATH);
-				}
-				fclose(fp);
-			}
-			else {
-				syslog(LOG_WARNING, "Cannot write key: %s\n", CTDL_KEY_PATH);
-				ShutDownWebcit();
-				exit(0);
-			}
-			RSA_free(rsa);
-		}
-	}
+	generate_key(CTDL_KEY_PATH);
 
 	/*
 	 * If there is no certificate file on disk, we will be generating a self-signed certificate

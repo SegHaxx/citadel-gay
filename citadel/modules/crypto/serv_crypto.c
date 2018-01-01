@@ -123,8 +123,6 @@ free_all:
 }
 
 
-
-
 void init_ssl(void)
 {
 	const SSL_METHOD *ssl_method;
