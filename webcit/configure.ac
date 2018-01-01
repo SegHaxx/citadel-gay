@@ -1,6 +1,6 @@
 dnl Process this file with autoconf to produce a configure script.
 dnl $Id$
-AC_INIT([WebCit], [915], [http://www.citadel.org/])
+AC_INIT([WebCit], [916], [http://www.citadel.org/])
 
 
 AC_SUBST(PROG_SUBDIRS)
