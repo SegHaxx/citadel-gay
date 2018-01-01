@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1987-2017 by the citadel.org team
+ * Copyright (c) 1987-2018 by the citadel.org team
  *
  *  This program is open source software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License version 3.
@@ -2186,8 +2186,7 @@ int CtdlIPCStartEncryption(CtdlIPC *ipc, char *cret)
 	/* New SSL object */
 	temp_ssl = SSL_new(ssl_ctx);
 	if (!temp_ssl) {
-		error_printf("SSL_new failed: %s\n",
-				ERR_reason_error_string(ERR_get_error()));
+		error_printf("SSL_new failed: %s\n", ERR_reason_error_string(ERR_get_error()));
 		return -2;
 	}
 	/* Pointless flag waving */
@@ -2195,35 +2194,18 @@ int CtdlIPCStartEncryption(CtdlIPC *ipc, char *cret)
 	SSL_set_session_id_context(temp_ssl, (const unsigned char*) "Citadel SID", 14);
 #endif
 
-	if (!access(EGD_POOL, F_OK))
-		RAND_egd(EGD_POOL);
-
-	if (!RAND_status()) {
-		error_printf("PRNG not properly seeded\n");
-		return -2;
-	}
-
 	/* Associate network connection with SSL object */
 	if (SSL_set_fd(temp_ssl, ipc->sock) < 1) {
-		error_printf("SSL_set_fd failed: %s\n",
-				ERR_reason_error_string(ERR_get_error()));
+		error_printf("SSL_set_fd failed: %s\n", ERR_reason_error_string(ERR_get_error()));
 		return -2;
 	}
 
-	if (status_hook != NULL)
+	if (status_hook != NULL) {
 		status_hook("Requesting encryption...\r");
+	}
 
 	/* Ready to start SSL/TLS */
-	/* Old code
-	CtdlIPC_putline(ipc, "STLS");
-	CtdlIPC_getline(ipc, buf);
-	if (buf[0] != '2') {
-		error_printf("Server can't start TLS: %s\n", buf);
-		return 0;
-	}
-	*/
-	r = CtdlIPCGenericCommand(ipc,
-				  "STLS", NULL, 0, NULL, NULL, cret);
+	r = CtdlIPCGenericCommand(ipc, "STLS", NULL, 0, NULL, NULL, cret);
 	if (r / 100 != 2) {
 		error_printf("Server can't start TLS: %s\n", buf);
 		endtls(temp_ssl);
@@ -2232,23 +2214,16 @@ int CtdlIPCStartEncryption(CtdlIPC *ipc, char *cret)
 
 	/* Do SSL/TLS handshake */
 	if ((a = SSL_connect(temp_ssl)) < 1) {
-		error_printf("SSL_connect failed: %s\n",
-				ERR_reason_error_string(ERR_get_error()));
+		error_printf("SSL_connect failed: %s\n", ERR_reason_error_string(ERR_get_error()));
 		endtls(temp_ssl);
 		return -2;
 	}
 	ipc->ssl = temp_ssl;
 
-	if (BIO_set_close(ipc->ssl->rbio, BIO_NOCLOSE))
-	{
-		int bits, alg_bits;
-
-		bits = SSL_CIPHER_get_bits(SSL_get_current_cipher(ipc->ssl), &alg_bits);
-		error_printf("Encrypting with %s cipher %s (%d of %d bits)\n",
-				SSL_CIPHER_get_version(SSL_get_current_cipher(ipc->ssl)),
-				SSL_CIPHER_get_name(SSL_get_current_cipher(ipc->ssl)),
-				bits, alg_bits);
-	}
+	error_printf("Encrypting with %s cipher %s\n",
+		SSL_CIPHER_get_version(SSL_get_current_cipher(ipc->ssl)),
+		SSL_CIPHER_get_name(SSL_get_current_cipher(ipc->ssl))
+	);
 	return r;
 #else
 	return 0;
@@ -2996,8 +2971,7 @@ static void CtdlIPC_init_OpenSSL(void)
 	ssl_method = SSLv23_client_method();
 	ssl_ctx = SSL_CTX_new(ssl_method);
 	if (!ssl_ctx) {
-		error_printf("SSL_CTX_new failed: %s\n",
-				ERR_reason_error_string(ERR_get_error()));
+		error_printf("SSL_CTX_new failed: %s\n", ERR_reason_error_string(ERR_get_error()));
 		return;
 	}
 	/* Any reasonable cipher we can get */
@@ -3006,27 +2980,20 @@ static void CtdlIPC_init_OpenSSL(void)
 		return;
 	}
 	SSL_CTX_set_session_cache_mode(ssl_ctx, SSL_SESS_CACHE_BOTH);
-	
+
 	/* Load DH parameters into the context */
 	dh = DH_new();
 	if (!dh) {
-		error_printf("Can't allocate a DH object: %s\n",
-				ERR_reason_error_string(ERR_get_error()));
+		error_printf("Can't allocate a DH object: %s\n", ERR_reason_error_string(ERR_get_error()));
 		return;
 	}
-	if (!(BN_hex2bn(&(dh->p), DH_P))) {
-		error_printf("Can't assign DH_P: %s\n",
-				ERR_reason_error_string(ERR_get_error()));
+
+	if (!(DH_generate_parameters_ex(dh, 128, DH_GENERATOR_2, 0))) {
+		error_printf("Can't generate DH parameters: %s\n", ERR_reason_error_string(ERR_get_error()));
 		DH_free(dh);
 		return;
 	}
-	if (!(BN_hex2bn(&(dh->g), DH_G))) {
-		error_printf("Can't assign DH_G: %s\n",
-				ERR_reason_error_string(ERR_get_error()));
-		DH_free(dh);
-		return;
-	}
-	dh->length = DH_L;
+
 	SSL_CTX_set_tmp_dh(ssl_ctx, dh);
 	DH_free(dh);
 
@@ -3067,7 +3034,6 @@ int
 ReadNetworkChunk(CtdlIPC* ipc)
 {
 	fd_set read_fd;
-/*	int tries;*/
 	int ret = 0;
 	int err = 0;
 	struct timeval tv;
@@ -3084,12 +3050,9 @@ ReadNetworkChunk(CtdlIPC* ipc)
 		FD_SET(ipc->sock, &read_fd);
 		ret = select(ipc->sock+1, &read_fd, NULL, NULL,  &tv);
 		
-//		fprintf(stderr, "\nselect failed: %d %d %s\n", ret,  err, strerror(err));
-		
 		if (ret > 0) {
 			
 			*(ipc->BufPtr) = '\0';
-//			n = read(ipc->sock, ipc->BufPtr, ipc->BufSize  - (ipc->BufPtr - ipc->Buf) - 1);
 			n = recv(ipc->sock, ipc->BufPtr, ipc->BufSize  - (ipc->BufPtr - ipc->Buf) - 1, 0);
 			if (n > 0) {
 				ipc->BufPtr[n]='\0';
@@ -3331,11 +3294,13 @@ CtdlIPC* CtdlIPC_new(int argc, char **argv, char *hostbuf, char *portbuf)
 	strcpy(cithost, DEFAULT_HOST);	/* default host */
 	strcpy(citport, DEFAULT_PORT);	/* default port */
 
-	/* Allow caller to supply our values (Windows) */
-	if (hostbuf && strlen(hostbuf) > 0)
+	/* Allow caller to supply our values */
+	if (hostbuf && strlen(hostbuf) > 0) {
 		strcpy(cithost, hostbuf);
-	if (portbuf && strlen(portbuf) > 0)
+	}
+	if (portbuf && strlen(portbuf) > 0) {
 		strcpy(citport, portbuf);
+	}
 
 	/* Read host/port from command line if present */
 	for (a = 0; a < argc; ++a) {
