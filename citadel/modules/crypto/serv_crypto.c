@@ -277,10 +277,9 @@ void init_ssl(void)
 
 			if (req) {
 				if (cer = X509_new(), cer != NULL) {
-
 					ASN1_INTEGER_set(X509_get_serialNumber(cer), 0);
-					X509_set_issuer_name(cer, req->req_info->subject);
-					X509_set_subject_name(cer, req->req_info->subject);
+					X509_set_issuer_name(cer, X509_REQ_get_subject_name(req));
+					X509_set_subject_name(cer, X509_REQ_get_subject_name(req));
 					X509_gmtime_adj(X509_get_notBefore(cer),0);
 					X509_gmtime_adj(X509_get_notAfter(cer),(long)60*60*24*SIGN_DAYS);
 					req_pkey = X509_REQ_get_pubkey(req);
@@ -605,7 +604,7 @@ void CtdlStartTLS(char *ok_response, char *nosup_response, char *error_response)
 		CC->ssl = NULL;
 		return;
 	}
-	BIO_set_close(CC->ssl->rbio, BIO_NOCLOSE);
+	// BIO_set_close(CC->ssl->rbio, BIO_NOCLOSE); not needed anymore in openssl 1.1 ?
 	bits = SSL_CIPHER_get_bits(SSL_get_current_cipher(CC->ssl), &alg_bits);
 	syslog(LOG_INFO, "crypto: SSL/TLS using %s on %s (%d of %d bits)",
 		SSL_CIPHER_get_name(SSL_get_current_cipher(CC->ssl)),
