@@ -47,6 +47,62 @@ void ssl_lock(int mode, int n, const char *file, int line)
 
 
 /*
+ * Generate a private key for SSL
+ */
+void generate_key(char *keyfilename)
+{
+	int ret = 0;
+	RSA *rsa = NULL;
+	BIGNUM *bne = NULL;
+	int bits = 2048;
+	unsigned long e = RSA_F4;
+	FILE *fp;
+
+	if (access(keyfilename, R_OK) == 0) {
+		return;
+	}
+
+	syslog(LOG_INFO, "crypto: generating RSA key pair");
+ 
+	// generate rsa key
+	bne = BN_new();
+	ret = BN_set_word(bne,e);
+	if (ret != 1) {
+		goto free_all;
+	}
+ 
+	rsa = RSA_new();
+	ret = RSA_generate_key_ex(rsa, bits, bne, NULL);
+	if (ret != 1) {
+		goto free_all;
+	}
+
+	// write the key file
+	fp = fopen(keyfilename, "w");
+	if (fp != NULL) {
+		chmod(keyfilename, 0600);
+		if (PEM_write_RSAPrivateKey(fp,	/* the file */
+					rsa,	/* the key */
+					NULL,	/* no enc */
+					NULL,	/* no passphr */
+					0,	/* no passphr */
+					NULL,	/* no callbk */
+					NULL	/* no callbk */
+		) != 1) {
+			syslog(LOG_ERR, "crypto: cannot write key: %s", ERR_reason_error_string(ERR_get_error()));
+			unlink(keyfilename);
+		}
+		fclose(fp);
+	}
+
+    // 4. free
+free_all:
+    RSA_free(rsa);
+    BN_free(bne);
+}
+
+
+/*
  * Initialize ssl engine, load certs and initialize openssl internals
  */
 void init_ssl(void)
@@ -61,15 +117,6 @@ void init_ssl(void)
 	FILE *fp;
 	char buf[SIZ];
 	int rv = 0;
-
-	if (!access("/var/run/egd-pool", F_OK)) {
-		RAND_egd("/var/run/egd-pool");
-	}
-
-	if (!RAND_status()) {
-		syslog(LOG_WARNING, "PRNG not adequately seeded, won't do SSL/TLS");
-		return;
-	}
 
 	SSLCritters = malloc(CRYPTO_num_locks() * sizeof(pthread_mutex_t *));
 	if (!SSLCritters) {
@@ -117,40 +164,7 @@ void init_ssl(void)
 	/*
 	 * If we still don't have a private key, generate one.
 	 */
-	if (access(CTDL_KEY_PATH, R_OK) != 0) {
-		syslog(LOG_INFO, "Generating RSA key pair.\n");
-		rsa = RSA_generate_key(2048,	/* modulus size */
-					65537,	/* exponent */
-					NULL,	/* no callback */
-					NULL	/* no callback */
-		);
-		if (rsa == NULL) {
-			syslog(LOG_WARNING, "Key generation failed: %s", ERR_reason_error_string(ERR_get_error()));
-		}
-		if (rsa != NULL) {
-			fp = fopen(CTDL_KEY_PATH, "w");
-			if (fp != NULL) {
-				chmod(CTDL_KEY_PATH, 0600);
-				if (PEM_write_RSAPrivateKey(fp,	/* the file */
-							rsa,	/* the key */
-							NULL,	/* no enc */
-							NULL,	/* no passphr */
-							0,	/* no passphr */
-							NULL,	/* no callbk */
-							NULL	/* no callbk */
-				) != 1) {
-					syslog(LOG_WARNING, "Cannot write key: %s", ERR_reason_error_string(ERR_get_error()));
-					unlink(CTDL_KEY_PATH);
-				}
-				fclose(fp);
-			}
-			else {
-				syslog(LOG_WARNING, "Cannot write key: %s", CTDL_KEY_PATH);
-				exit(1);
-			}
-			RSA_free(rsa);
-		}
-	}
+	generate_key(CTDL_KEY_PATH);
 
 	/*
 	 * If there is no certificate file on disk, we will be generating a self-signed certificate
@@ -267,8 +281,8 @@ void init_ssl(void)
 				if (cer = X509_new(), cer != NULL) {
 
 					ASN1_INTEGER_set(X509_get_serialNumber(cer), 0);
-					X509_set_issuer_name(cer, req->req_info->subject);
-					X509_set_subject_name(cer, req->req_info->subject);
+					X509_set_issuer_name(cer, X509_REQ_get_subject_name(req));
+					X509_set_subject_name(cer, X509_REQ_get_subject_name(req));
 					X509_gmtime_adj(X509_get_notBefore(cer), 0);
 					X509_gmtime_adj(X509_get_notAfter(cer),(long)60*60*24*SIGN_DAYS);
 
@@ -368,7 +382,6 @@ void starttls(struct client_handle *ch) {
 	else {
 		syslog(LOG_INFO, "SSL_accept success");
 	}
-	BIO_set_close(ch->ssl_handle->rbio, BIO_NOCLOSE);
 	bits = SSL_CIPHER_get_bits(SSL_get_current_cipher(ch->ssl_handle), &alg_bits);
 	syslog(LOG_INFO, "SSL/TLS using %s on %s (%d of %d bits)",
 		SSL_CIPHER_get_name(SSL_get_current_cipher(ch->ssl_handle)),

@@ -79,7 +79,7 @@ void generate_key(char *keyfilename)
 	unsigned long e = RSA_F4;
 	FILE *fp;
 
-	if (access(file_crpt_file_key, R_OK) == 0) {
+	if (access(keyfilename, R_OK) == 0) {
 		return;
 	}
 
@@ -101,7 +101,7 @@ void generate_key(char *keyfilename)
 	// write the key file
 	fp = fopen(keyfilename, "w");
 	if (fp != NULL) {
-		chmod(file_crpt_file_key, 0600);
+		chmod(keyfilename, 0600);
 		if (PEM_write_RSAPrivateKey(fp,	/* the file */
 					rsa,	/* the key */
 					NULL,	/* no enc */
@@ -111,7 +111,7 @@ void generate_key(char *keyfilename)
 					NULL	/* no callbk */
 		) != 1) {
 			syslog(LOG_ERR, "crypto: cannot write key: %s", ERR_reason_error_string(ERR_get_error()));
-			unlink(file_crpt_file_key);
+			unlink(keyfilename);
 		}
 		fclose(fp);
 	}

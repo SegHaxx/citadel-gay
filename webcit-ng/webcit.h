@@ -1,7 +1,7 @@
 /*
  * webcit.h - "header of headers"
  *
- * Copyright (c) 1996-2017 by the citadel.org team
+ * Copyright (c) 1996-2018 by the citadel.org team
  *
  * This program is open source software.  You can redistribute it and/or
  * modify it under the terms of the GNU General Public License, version 3.
@@ -14,6 +14,7 @@
 #include <syslog.h>
 #include <string.h>
 #include <fcntl.h>
+#include <sys/stat.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>

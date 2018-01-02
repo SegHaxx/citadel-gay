@@ -62,7 +62,7 @@ int client_readline(struct client_handle *ch, char *buf, int maxbytes)
 	int len = 0;
 	int c = 0;
 
-	if (buf == NULL) return;
+	if (buf == NULL) return(-1);
 
 	while (len < maxbytes) {
 		c = client_read(ch, &buf[len], 1);
