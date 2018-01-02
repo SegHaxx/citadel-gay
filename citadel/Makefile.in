@@ -210,12 +210,12 @@ upgrade: install-exec install-doc
 	@echo
 
 install-data:
-	@for i in help messages network/spoolin network/spoolout \
-		 network/systems; do \
+	@for i in messages network/spoolin \
+		 network/spoolout; do \
 		$(srcdir)/mkinstalldirs $(DESTDIR)$(prefix)/$$i; \
 	done
 	@for i in public_clients citadel_urlshorteners.rc \
-		 `find $(srcdir)/help $(srcdir)/messages $(srcdir)/network -type f | grep -v .svn`; do \
+		 `find $(srcdir)/messages $(srcdir)/network -type f | grep -v .svn`; do \
 		echo $(INSTALL_DATA) $$i $(DESTDIR)$(prefix)/$$i; \
 		$(INSTALL_DATA) $$i $(DESTDIR)$(prefix)/$$i; \
 	done
@@ -239,16 +239,8 @@ install-data-new:
 		echo $(INSTALL_DATA) $$i $(DESTDIR)$(STATICDATA_DIR)/$$i; \
 		$(INSTALL_DATA) $$i $(DESTDIR)$(STATICDATA_DIR)/$$i; \
 	done
-
-	$(srcdir)/mkinstalldirs $(DESTDIR)$(HELP_DIR)/help
-	@for i in  notify_about_newmail.js \
-		 `find $(srcdir)/help -type f | grep -v .svn`; do \
-		echo $(INSTALL_DATA) $$i $(DESTDIR)$(HELP_DIR)/$$i; \
-		$(INSTALL_DATA) $$i $(DESTDIR)$(HELP_DIR)/$$i; \
-	done
 	$(srcdir)/mkinstalldirs $(DESTDIR)$(SPOOL_DIR)/network/spoolin
 	$(srcdir)/mkinstalldirs $(DESTDIR)$(SPOOL_DIR)/network/spoolout
-	$(srcdir)/mkinstalldirs $(DESTDIR)$(SPOOL_DIR)/network/systems
 	-@if test -d $(DESTDIR)/etc/pam.d; then \
 		echo $(INSTALL_DATA) $(srcdir)/citadel.pam $(DESTDIR)/etc/pam.d/citadel; \
 		$(INSTALL_DATA) $(srcdir)/citadel.pam $(DESTDIR)/etc/pam.d/citadel; \
