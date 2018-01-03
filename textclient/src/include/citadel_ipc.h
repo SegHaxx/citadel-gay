@@ -18,7 +18,7 @@
 #include <openssl/rand.h>
 #endif
 
-#define CLIENT_VERSION          811
+#define CLIENT_VERSION          916
 #define CLIENT_TYPE               0
 //copycat of: /#include "server.h"
 

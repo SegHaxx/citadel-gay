@@ -1,7 +1,6 @@
 dnl Process this file with autoconf to produce a configure script.
 dnl $Id$
-AC_INIT([WebCit], [916], [http://www.citadel.org/])
-
+AC_INIT([WebCit],m4_esyscmd_s([grep CLIENT_VERSION webcit.h | sed 's/[^0-9]*//g']),[http://uncensored.citadel.org])
 
 AC_SUBST(PROG_SUBDIRS)
 AC_DEFINE(PROG_SUBDIRS, [], [Program dirs])

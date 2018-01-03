@@ -1,6 +1,6 @@
 dnl Process this file with autoconf to produce a configure script.
 AC_PREREQ(2.52)
-AC_INIT([Citadel], [915], [http://www.citadel.org/])
+AC_INIT([CitadelTextClient],m4_esyscmd_s([grep CLIENT_VERSION src/include/citadel_ipc.h | sed 's/[^0-9]*//g']),[http://uncensored.citadel.org])
 AC_REVISION([$Revision: 5108 $])
 
 AC_CONFIG_HEADER(sysdep.h)
