@@ -5,7 +5,7 @@ dnl
 dnl Ensure that libcitadel is configured with autoconf 2.52 or newer
 AC_PREREQ(2.52)
 
-AC_INIT(libcitadel,917, http://uncensored.citadel.org)
+AC_INIT([libcitadel], m4_esyscmd([grep LIBCITADEL_VERSION lib/libcitadel.h | sed 's/[^0-9]*//g' ]))
 
 AC_CONFIG_SRCDIR(Makefile.in)
 AC_CONFIG_AUX_DIR(conftools)
@@ -20,7 +20,7 @@ dnl Set LIBAGE to 0.
 dnl
 
 LIBCURRENT=4
-LIBREVISION=917
+LIBREVISION=m4_esyscmd([grep LIBCITADEL_VERSION lib/libcitadel.h | sed 's/[^0-9]*//g' ])
 LIBAGE=0
 
 sinclude(conftools/libtool.m4)
