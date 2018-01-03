@@ -116,7 +116,7 @@ sed  -i -e "s;^#define REV_LEVEL.*[0-9][0-9][0-9]\(.*\)$;#define REV_LEVEL\t${NE
 ################################################################################
 # textclient
 DebChangeLog textclient/debian/changelog textclient
-sed -i "s;${OLD_PRINTVERSION};${PRINT_VERSION};" textclient/configure.ac
+sed -i "s;${OLD_VERSION};${NEW_VERSION};" textclient/configure.ac
 
 
 
