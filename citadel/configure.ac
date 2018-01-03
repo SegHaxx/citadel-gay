@@ -2,9 +2,11 @@ dnl Process this file with autoconf to produce a configure script.
 AC_PREREQ(2.52)
 
 AC_INIT([Citadel],m4_esyscmd_s([grep REV_LEVEL citadel.h | sed 's/[^0-9]*//g']),[http://uncensored.citadel.org])
-AC_REVISION(m4_esyscmd_s([git log --pretty=%h | head -1])
+
+AC_REVISION(m4_esyscmd_s([git log --pretty=%h | head -1]))
+
 AC_CONFIG_SRCDIR([citserver.c])
-AC_CONFIG_HEADER(sysdep.h)
+AC_CONFIG_HEADER([sysdep.h])
 AC_CONFIG_MACRO_DIR([m4])
 AC_PREFIX_DEFAULT(/usr/local/citadel)
 if test "$prefix" = NONE; then
