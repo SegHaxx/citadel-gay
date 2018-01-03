@@ -35,16 +35,6 @@ extern "C" {
  */
 #define CITADEL	PACKAGE_STRING
 
-/*
- * REV_LEVEL is the current version number (multiplied by 100 to avoid having
- * to fiddle with the decimal).  REV_MIN is the oldest version of Citadel
- * whose data files are compatible with the current version.  If the data files
- * are older than REV_MIN, none of the programs will work until the setup
- * program is run again to bring things up to date.  EXPORT_REV_MIN is the
- * oldest version of Citadel whose export files we can read.  The latter is
- * usually more strict because you're not really supposed to dump/load and
- * upgrade at the same time.
- */
 #define REV_LEVEL	917		// This version
 #define REV_MIN		591		// Oldest compatible database
 #define EXPORT_REV_MIN	760		// Oldest compatible export files
