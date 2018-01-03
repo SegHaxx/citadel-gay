@@ -37,7 +37,6 @@ if test "$1" = 'list'; then
 	exit
 fi
 
-
 if test "$1" = "revert"; then 
 	echo "reverting all changes for version files"
 	git checkout \
