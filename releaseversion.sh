@@ -89,10 +89,12 @@ function DebChangeLog()
 
 DebChangeLog libcitadel/debian/changelog libcitadel
 
-sed  -i -e "s;^#define LIBCITADEL_VERSION_NUMBER.*[0-9][0-9][0-9]\(.*\)$;#define LIBCITADEL_VERSION_NUMBER\t${NEW_VERSION}\1;g" \
+sed -i -e \
+	"s;^#define LIBCITADEL_VERSION_NUMBER.*[0-9][0-9][0-9]\(.*\)$;#define LIBCITADEL_VERSION_NUMBER\t${NEW_VERSION}\1;g" \
 	libcitadel/lib/libcitadel.h
 
 OLD_VERSION=`grep AC_INIT libcitadel/configure.in  |sed "s;.*\(....\), http.*;\1;"`
+echo libcitadel OLD_VERSION is $OLD_VERSION
 
 sed -i -e "s;${OLD_VERSION};${NEW_VERSION};" \
 	-e "s;^LIBREVISION=[0-9][0-9][0-9]\(.*\)$;LIBREVISION=${NEW_VERSION}\1;g" \
@@ -106,6 +108,7 @@ sed -i -e "s;${OLD_VERSION};${NEW_VERSION};" \
 DebChangeLog citadel/debian/changelog citadel
 
 OLD_VERSION=`grep AC_INIT citadel/configure.ac  |sed "s;.*\[\(....\)\],.*;\1;"`
+echo citserver OLD_VERSION is $OLD_VERSION
 
 sed -i "s;${OLD_VERSION};${NEW_VERSION};" citadel/configure.ac
 
@@ -115,14 +118,17 @@ sed  -i -e "s;^#define REV_LEVEL.*[0-9][0-9][0-9]\(.*\)$;#define REV_LEVEL\t${NE
 
 ################################################################################
 # textclient
-DebChangeLog textclient/debian/changelog textclient
-sed -i "s;${OLD_VERSION};${NEW_VERSION};" textclient/configure.ac
 
+DebChangeLog textclient/debian/changelog textclient
+
+sed -i "s;${OLD_VERSION};${NEW_VERSION};" textclient/configure.ac
 
 
 ################################################################################
 # webcit
+
 DebChangeLog webcit/debian/changelog webcit
+
 sed -i "s;${OLD_VERSION};${NEW_VERSION};" webcit/configure.ac
 
 sed  -i -e "s;^#define CLIENT_VERSION.*[0-9][0-9][0-9]\(.*\)$;#define CLIENT_VERSION\t\t${NEW_VERSION}\1;g" \
