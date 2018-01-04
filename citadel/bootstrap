@@ -2,11 +2,8 @@
 #
 # run me after checking Citadel out of the source code repository.
 
-# Remove any vestiges of pre-6.05 build environments
-rm -f .libs modules *.so *.lo *.la 2>/dev/null
-
 echo ... running aclocal ...
-aclocal  -I m4
+aclocal -I m4
 
 echo ... running autoconf ...
 autoconf
@@ -24,6 +21,8 @@ echo ... running mk_svn_revision.sh ...
 
 echo ... running mk_module_init.sh ...
 ./scripts/mk_module_init.sh
+
+grep '#define REV_LEVEL' citadel.h | sed 's/[^0-9]*//g' >package-version.txt
 
 echo
 echo This script has been tested with autoconf 2.53 and

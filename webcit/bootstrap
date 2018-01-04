@@ -35,3 +35,5 @@ if ./scripts/get_ical_data.sh; then
     echo with the same prefix.
     echo
 fi
+
+grep '^#define CLIENT_VERSION' webcit.h | sed 's/[^0-9]*//g' >package-version.txt

@@ -348,7 +348,7 @@ cleaner: clean
 distclean: cleaner
 	find . -name '*~' -o -name '.#*' | xargs rm -vf
 	rm -vf po/Makefile 
-	rm -vf Makefile configure sysdep.h config.cache config.log config.status *.d 
+	rm -vf Makefile configure sysdep.h config.cache config.log config.status *.d package-version.txt
 	rm -vf utils/*.d ;
 	rm -vf utillib/*.d ;
 	for i in $(srcdir)/modules/* ; do \

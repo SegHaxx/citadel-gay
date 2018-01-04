@@ -30,3 +30,5 @@ echo
 echo Also note that autoconf and automake should be configured
 echo with the same prefix.
 echo
+
+grep '^#define CLIENT_VERSION' src/include/citadel_ipc.h | sed 's/[^0-9]*//g' >package-version.txt
