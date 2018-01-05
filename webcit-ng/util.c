@@ -1,7 +1,7 @@
 /*
  * Utility functions
  *
- * Copyright (c) 1996-2016 by the citadel.org team
+ * Copyright (c) 1996-2018 by the citadel.org team
  *
  * This program is open source software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3.

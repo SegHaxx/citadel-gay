@@ -152,8 +152,12 @@ StrBuf *html2html(const char *supplied_charset, int treat_as_wiki, char *roomnam
 void download_mime_component(struct http_transaction *h, struct ctdlsession *c, long msgnum, char *partnum);
 StrBuf *text2html(const char *supplied_charset, int treat_as_wiki, char *roomname, long msgnum, StrBuf *Source);
 StrBuf *variformat2html(StrBuf *Source);
-
-void *mallok(size_t size);
-void phree(void *ptr);
-void *reallok(void *ptr, size_t size);
-
+int ctdl_readline(struct ctdlsession *ctdl, char *buf, int maxbytes);
+void ctdl_c(struct http_transaction *h, struct ctdlsession *c);
+int webserver(char *webserver_interface, int webserver_port, int webserver_protocol);
+void ctdl_printf(struct ctdlsession *ctdl, const char *format,...);
+int webcit_tcp_server(const char *ip_addr, int port_number, int queue_len);
+void do_502(struct http_transaction *h);
+void do_404(struct http_transaction *h);
+void do_412(struct http_transaction *h);
+void UrlizeText(StrBuf* Target, StrBuf *Source, StrBuf *WrkBuf);

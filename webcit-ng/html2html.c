@@ -2,7 +2,7 @@
  * Output an HTML message, modifying it slightly to make sure it plays nice
  * with the rest of our web framework.
  *
- * Copyright (c) 2005-2017 by the citadel.org team
+ * Copyright (c) 2005-2018 by the citadel.org team
  *
  * This program is open source software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 3.

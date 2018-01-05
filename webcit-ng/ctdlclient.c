@@ -1,7 +1,7 @@
 /*
  * Functions that handle communication with a Citadel Server
  *
- * Copyright (c) 1987-2016 by the citadel.org team
+ * Copyright (c) 1987-2018 by the citadel.org team
  *
  * This program is open source software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3.
@@ -28,7 +28,7 @@ int ctdl_readline(struct ctdlsession *ctdl, char *buf, int maxbytes)
 	int len = 0;
 	int c = 0;
 
-	if (buf == NULL) return;
+	if (buf == NULL) return(-1);
 
 	while (len < maxbytes) {
 		c = read(ctdl->sock, &buf[len], 1);

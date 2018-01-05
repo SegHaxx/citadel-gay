@@ -2,7 +2,7 @@
  * This file contains functions which handle all of the CalDAV "REPORT" queries
  * specified in RFC4791 section 7.
  *
- * Copyright (c) 2016 by the citadel.org team
+ * Copyright (c) 2018 by the citadel.org team
  *
  * This program is open source software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3.
@@ -171,7 +171,7 @@ StrBuf *fetch_ical(struct ctdlsession *c, long msgnum)
  * Called by caldav_report() to output a single item.
  * Our policy is to throw away the list of properties the client asked for, and just send everything.
  */
-caldav_response(struct http_transaction *h, struct ctdlsession *c, StrBuf *ReportOut, StrBuf *ThisHref)
+void caldav_response(struct http_transaction *h, struct ctdlsession *c, StrBuf *ReportOut, StrBuf *ThisHref)
 {
 	long msgnum;
 	StrBuf *Caldata = NULL;
