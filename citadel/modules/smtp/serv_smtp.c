@@ -20,7 +20,7 @@
  * The VRFY and EXPN commands have been removed from this implementation
  * because nobody uses these commands anymore, except for spammers.
  *
- * Copyright (c) 1998-2015 by the citadel.org team
+ * Copyright (c) 1998-2018 by the citadel.org team
  *
  * This program is open source software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3.
@@ -159,7 +159,7 @@ void smtp_greeting(int is_msa)
 	 * addresses immediately instead of after they execute a RCPT
 	 */
 	if ( (CtdlGetConfigInt("c_rbl_at_greeting")) && (sSMTP->is_msa == 0) ) {
-		if (rbl_check(message_to_spammer)) {
+		if (rbl_check(CC->cs_addr, message_to_spammer)) {
 			if (server_shutting_down)
 				cprintf("421 %s\r\n", message_to_spammer);
 			else
@@ -739,7 +739,7 @@ void smtp_rcpt(long offset, long flags)
 	if ( (!CCC->logged_in)	/* Don't RBL authenticated users */
 	   && (!sSMTP->is_lmtp) ) {	/* Don't RBL LMTP clients */
 		if (CtdlGetConfigInt("c_rbl_at_greeting") == 0) {	/* Don't RBL again if we already did it */
-			if (rbl_check(message_to_spammer)) {
+			if (rbl_check(CC->cs_addr, message_to_spammer)) {
 				if (server_shutting_down)
 					cprintf("421 %s\r\n", message_to_spammer);
 				else

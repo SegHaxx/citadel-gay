@@ -1,7 +1,7 @@
 /*
  * Functions which handle hostname/address lookups and resolution
  *
- * Copyright (c) 1987-2017 by the citadel.org team
+ * Copyright (c) 1987-2018 by the citadel.org team
  *
  * This program is open source software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 3.
@@ -34,7 +34,7 @@
 #include "domain.h"
 #include "locate_host.h"
 
-/** START:some missing macros on OpenBSD 3.9 */
+/* START: some missing macros on OpenBSD 3.9 */
 #ifndef NS_CMPRSFLGS
 #define NS_CMPRSFLGS   0xc0
 #endif
@@ -48,8 +48,8 @@
 #ifndef NS_GET16
 #  define NS_GET16 GETSHORT
 #endif
+/* END: some missing macros on OpenBSD 3.9 */
 
-/** END:some missing macros on OpenBSD 3.9 */
 
 /*
  * Given an open client socket, return the host name and IP address at the other end.
@@ -238,7 +238,7 @@ int rblcheck_backend(char *domain, char *txtbuf, int txtbufsize) {
  * Check to see if the client host is on some sort of spam list (RBL)
  * If spammer, returns nonzero and places reason in 'message_to_spammer'
  */
-int rbl_check(char *message_to_spammer)
+int rbl_check(char *cs_addr, char *message_to_spammer)
 {
 	char tbuf[256] = "";
 	int suffix_pos = 0;
@@ -254,21 +254,21 @@ int rbl_check(char *message_to_spammer)
 	strcpy(message_to_spammer, "ok");
 	gettimeofday(&tx_start, NULL);		/* start a stopwatch for performance timing */
 
-	if ((strchr(CC->cs_addr, '.')) && (!strchr(CC->cs_addr, ':'))) {
+	if ((strchr(cs_addr, '.')) && (!strchr(cs_addr, ':'))) {
 		int a1, a2, a3, a4;
 
-		sscanf(CC->cs_addr, "%d.%d.%d.%d", &a1, &a2, &a3, &a4);
+		sscanf(cs_addr, "%d.%d.%d.%d", &a1, &a2, &a3, &a4);
 		snprintf(tbuf, sizeof tbuf, "%d.%d.%d.%d.", a4, a3, a2, a1);
 		suffix_pos = strlen(tbuf);
 	}
-	else if ((!strchr(CC->cs_addr, '.')) && (strchr(CC->cs_addr, ':'))) {
+	else if ((!strchr(cs_addr, '.')) && (strchr(cs_addr, ':'))) {
 		int num_colons = 0;
 		int i = 0;
 		char workbuf[sizeof tbuf];
 		char *ptr;
 
 		/* tedious code to expand and reverse an IPv6 address */
-		safestrncpy(tbuf, CC->cs_addr, sizeof tbuf);
+		safestrncpy(tbuf, cs_addr, sizeof tbuf);
 		num_colons = haschar(tbuf, ':');
 		if ((num_colons < 2) || (num_colons > 7))
 			goto finish_rbl;	/* badly formed address */
@@ -324,7 +324,7 @@ int rbl_check(char *message_to_spammer)
 
 		if (rblcheck_backend(tbuf, txt_answer, sizeof txt_answer)) {
 			strcpy(message_to_spammer, txt_answer);
-			syslog(LOG_INFO, "RBL: %s\n", txt_answer);
+			syslog(LOG_INFO, "RBL: %s %s", cs_addr, txt_answer);
 			rc = 1;
 		}
 	}
@@ -332,10 +332,12 @@ finish_rbl:
 	/* How long did this transaction take? */
 	gettimeofday(&tx_finish, NULL);
 
-	syslog(LOG_WARNING, "RBL [%ld.%06ld] %s",
-	       ((tx_finish.tv_sec*1000000 + tx_finish.tv_usec) - (tx_start.tv_sec*1000000 + tx_start.tv_usec)) / 1000000,
-	       ((tx_finish.tv_sec*1000000 + tx_finish.tv_usec) - (tx_start.tv_sec*1000000 + tx_start.tv_usec)) % 1000000,
-	       (rc)?"Found":"none Found");
+	syslog(LOG_WARNING, "rbl: %s [%ld.%06ld] %s",
+		cs_addr,
+		((tx_finish.tv_sec*1000000 + tx_finish.tv_usec) - (tx_start.tv_sec*1000000 + tx_start.tv_usec)) / 1000000,
+		((tx_finish.tv_sec*1000000 + tx_finish.tv_usec) - (tx_start.tv_sec*1000000 + tx_start.tv_usec)) % 1000000,
+		(rc)?"found":"none found"
+	);
 
 	return rc;
 }
