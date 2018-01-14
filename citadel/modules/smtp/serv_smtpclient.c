@@ -112,7 +112,8 @@ int smtp_aftersave(struct CtdlMessage *msg, recptypes *recps)
 			     "bounceto|%s\n",
 			     msg->cm_fields[eVltMsgNum],
 			     (long)time(NULL),
-			     recps->bounce_to);
+			     recps->bounce_to
+		);
 
 		if (recps->envelope_from != NULL) {
 			StrBufAppendBufPlain(SpoolMsg, HKEY("envelope_from|"), 0);
