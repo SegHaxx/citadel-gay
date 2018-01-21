@@ -13,11 +13,12 @@
 function display_login_screen(any_message)
 {
 	document.getElementById("main").innerHTML =
-		"Put the login screen here, dummary<br><br>" +
+		"<center><br><br>Put the login screen here, dummary<br><br>" +
 		any_message + "<br><br>" +
-		_("User name:") + "<input type=\"text\" id=\"username\"><br>" +
-		_("Password:") + "<input type=\"password\" id=\"password\"><br>" +
-		"<a href=\"javascript:login_button()\">" + _("Log in") + "</a>"
+		"<table border=0><tr><td>" +
+		_("User name:") + "</td><td><input type=\"text\" id=\"username\"></td></tr><tr><td>" +
+		_("Password:") + "</td><td><input type=\"password\" id=\"password\"></td></tr></table><br>" +
+		"<a href=\"javascript:login_button()\">" + _("Log in") + "</a></center>"
 	;
 
 	update_banner();

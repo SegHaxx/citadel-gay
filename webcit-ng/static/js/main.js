@@ -112,7 +112,7 @@ function ctdl_startup_2(data) {
 // Display a room list in the main div.
 //
 function display_room_list() {
-	document.getElementById("sidebar").innerHTML = "<img src=\"/ctdl/s/throbber.gif\" />" ;		// show throbber while loading
+	document.getElementById("roomlist").innerHTML = "<img src=\"/ctdl/s/throbber.gif\" />" ;		// show throbber while loading
 
 	var request = new XMLHttpRequest();
 	request.open("GET", "/ctdl/r/", true);
@@ -138,23 +138,23 @@ function display_room_list_renderer(data) {
 		return(a.name < b.name);
 	});
 
-	new_sidebar_text = "<ul>" ;
+	new_roomlist_text = "<ul>" ;
 
 	for (var i in data) {
 		if (i > 0) {
 			if (data[i].floor != data[i-1].floor) {
-				new_sidebar_text = new_sidebar_text + "<li class=\"divider\"></li>" ;
+				new_roomlist_text = new_roomlist_text + "<li class=\"divider\"></li>" ;
 			}
 		}
-		new_sidebar_text = new_sidebar_text +
+		new_roomlist_text = new_roomlist_text +
 			"<li>"
 			+ "<a href=\"javascript:gotoroom('" + escapeJS(escapeHTML(data[i].name)) + "');\">"
 			+ escapeHTML(data[i].name)
 			+ "</a></li>"
 		;
 	}
-	new_sidebar_text = new_sidebar_text + "</ul>";
-	document.getElementById("sidebar").innerHTML = new_sidebar_text ;
+	new_roomlist_text = new_roomlist_text + "</ul>";
+	document.getElementById("roomlist").innerHTML = new_roomlist_text ;
 }
 
 // Update the "banner" div with all relevant info.
