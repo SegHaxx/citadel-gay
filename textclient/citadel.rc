@@ -231,13 +231,10 @@ cmd=70,2,&.,&Admin,&Message edit:
 cmd=78,1,&.,&Admin,&Post
 cmd=80,2,&.,&Admin,&System configuration,&General
 cmd=82,2,&.,&Admin,&System configuration,&Internet
-cmd=88,2,&.,&Admin,&System configuration,&Network
-cmd=92,2,&.,&Admin,&System configuration,network &Filter list
 cmd=85,2,&.,&Admin,&Terminate server,&Now
 cmd=86,2,&.,&Admin,&Terminate server,&Scheduled
 cmd=87,1,&.,&Admin,mailing &List recipients
 cmd=94,1,&.,&Admin,mailing list &Digest recipients
-cmd=89,1,&.,&Admin,&Network room sharing
 
 cmd=29,0,&.,&Terminate,and &Quit
 cmd=30,0,&.,&Terminate,and &Stay online

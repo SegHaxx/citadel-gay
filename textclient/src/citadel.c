@@ -1,7 +1,7 @@
 /*
  * Main source module for the client program.
  *
- * Copyright (c) 1987-2016 by the citadel.org team
+ * Copyright (c) 1987-2018 by the citadel.org team
  *
  * This program is open source software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3.
@@ -1962,26 +1962,11 @@ NEWUSR:	if (IsEmptyStr(rc_password)) {
 				break;
 
 			case 87:
-				network_config_management(ipc, "listrecp",
-							  "Message-by-message mailing list recipients");
+				network_config_management(ipc, "listrecp", "Message-by-message mailing list recipients");
 				break;
 
 			case 94:
-				network_config_management(ipc, "digestrecp",
-							  "Digest mailing list recipients");
-				break;
-
-			case 89:
-				network_config_management(ipc, "ignet_push_share",
-							  "Nodes with which we share this room");
-				break;
-
-			case 88:
-				do_ignet_configuration(ipc);
-				break;
-
-			case 92:
-				do_filterlist_configuration(ipc);
+				network_config_management(ipc, "digestrecp", "Digest mailing list recipients");
 				break;
 
 			case 6:
