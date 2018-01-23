@@ -2,7 +2,7 @@
  * This module handles shared rooms, inter-Citadel mail, and outbound
  * mailing list processing.
  *
- * Copyright (c) 2000-2017 by the citadel.org team
+ * Copyright (c) 2000-2018 by the citadel.org team
  *
  * This program is open source software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 3.
@@ -391,8 +391,6 @@ void network_do_queue(void)
 		network_do_spoolin(working_ignetcfg, the_netmap, &netmap_changed);
 	}
 
-	/* Free the filter list in memory */
-	free_netfilter_list();
 
 	/* Save the network map back to disk */
 	if (netmap_changed) {
