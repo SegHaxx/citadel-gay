@@ -1,7 +1,7 @@
 /*
  * Client-side functions which perform room operations
  *
- * Copyright (c) 1987-2016 by the citadel.org team
+ * Copyright (c) 1987-2018 by the citadel.org team
  *
  * This program is open source software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3.
@@ -122,14 +122,12 @@ void room_tree_list(struct ctdlroomlisting *rp)
 			color(DIM_WHITE);
 		}
 		scr_printf("%s", rmname);
-		if ((f & QR_DIRECTORY) && (f & QR_NETWORK))
-			scr_printf("}  ");
-		else if (f & QR_DIRECTORY)
+		if (f & QR_DIRECTORY) {
 			scr_printf("]  ");
-		else if (f & QR_NETWORK)
-			scr_printf(")  ");
-		else
+		}
+		else {
 			scr_printf(">  ");
+		}
 		c = c + strlen(rmname) + 3;
 	}
 
@@ -399,11 +397,6 @@ void dotknown(CtdlIPC *ipc, int what, char *match)
 	    listrms(listing, LISTRMS_ALL, -1, QR_READONLY, NULL);
     	scr_printf("\n");
 		break;
-    case 6:
-     	scr_printf("\n   Shared rooms:\n");
-	    listrms(listing, LISTRMS_ALL, -1, QR_NETWORK, NULL);
-    	scr_printf("\n");
-		break;
 	}
 
 	/* Free the room list */
@@ -590,8 +583,6 @@ void editthisroom(CtdlIPC *ipc)
 		    set_room_attr(ipc, attr->QRflags,
 						"Visible directory", QR_VISDIR);
 	}
-	attr->QRflags = set_room_attr(ipc, attr->QRflags,
-					"Network shared room", QR_NETWORK);
 	attr->QRflags2 = set_room_attr(ipc, attr->QRflags2,
 				"Self-service list subscribe/unsubscribe",
 				QR2_SELFLIST);

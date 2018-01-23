@@ -69,10 +69,6 @@ int room_prompt(unsigned int qrflags)
 	a = '>';
 	if (qrflags & QR_DIRECTORY)
 		a = ']';
-	if ((a == ']') && (qrflags & QR_NETWORK))
-		a = '}';
-	if ((a == '>') && (qrflags & QR_NETWORK))
-		a = ')';
 	return (a);
 }
 

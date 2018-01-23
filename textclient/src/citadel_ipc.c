@@ -657,12 +657,8 @@ int CtdlIPCGetSingleMessage(CtdlIPC *ipc, long msgnum, int headers, int as_mime,
 					safestrncpy(mret[0]->subject, &aaa[5], SIZ);
 				else if (!strncasecmp(aaa, "rfca=", 5))
 					safestrncpy(mret[0]->email, &aaa[5], SIZ);
-				else if (!strncasecmp(aaa, "hnod=", 5))
-					safestrncpy(mret[0]->hnod, &aaa[5], SIZ);
 				else if (!strncasecmp(aaa, "room=", 5))
 					safestrncpy(mret[0]->room, &aaa[5], SIZ);
-				else if (!strncasecmp(aaa, "node=", 5))
-					safestrncpy(mret[0]->node, &aaa[5], SIZ);
 				else if (!strncasecmp(aaa, "rcpt=", 5))
 					safestrncpy(mret[0]->recipient, &aaa[5], SIZ);
 				else if (!strncasecmp(aaa, "wefw=", 5))

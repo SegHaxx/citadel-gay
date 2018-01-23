@@ -242,8 +242,6 @@ struct ctdlipcmessage {
 	char author[SIZ];		/* Sender of message */
 	char recipient[SIZ];		/* Recipient of message */
 	char room[SIZ];			/* Originating room */
-	char node[SIZ];			/* Short nodename of origin system */
-	char hnod[SIZ];			/* Humannode of origin system */
 	struct parts *attachments;	/* Available attachments */
 	char *text;			/* Message text */
 	int type;			/* Message type */

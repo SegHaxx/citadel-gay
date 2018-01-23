@@ -1,7 +1,7 @@
 /*
  * Text client functions for reading and writing of messages
  *
- * Copyright (c) 1987-2017 by the citadel.org team
+ * Copyright (c) 1987-2018 by the citadel.org team
  *
  * This program is open source software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3.
@@ -493,10 +493,10 @@ int read_message(CtdlIPC *ipc,
 		if (!IsEmptyStr(message->email)) {
 			scr_printf("rfca=%s\n", message->email);
 		}
-		scr_printf("hnod=%s\nroom=%s\nnode=%s\ntime=%s",
-				message->hnod, message->room,
-				message->node, 
-				asctime(localtime(&message->time)));
+		scr_printf("room=%s\ntime=%s",
+			message->room,
+			asctime(localtime(&message->time))
+		);
 		if (!IsEmptyStr(message->recipient)) {
 			scr_printf("rcpt=%s\n", message->recipient);
 		}
@@ -562,35 +562,6 @@ int read_message(CtdlIPC *ipc,
 				scr_printf("> ");
 			}
 		}
-		if (!IsEmptyStr(message->node)) {
-			if ((room_flags & QR_NETWORK)
-			    || ((strcasecmp(message->node, ipc->ServInfo.nodename)
-			     && (strcasecmp(message->node, ipc->ServInfo.fqdn))))) {
-				if (IsEmptyStr(message->email)) {
-					if (dest) {
-						fprintf(dest, "@%s ", message->node);
-					} else {
-						color(DIM_WHITE);
-						scr_printf("@");
-						color(BRIGHT_YELLOW);
-						scr_printf("%s ", message->node);
-					}
-				}
-			}
-		}
-		if (strcasecmp(message->hnod, ipc->ServInfo.humannode)
-		    && (!IsEmptyStr(message->hnod)) && (IsEmptyStr(message->email))) {
-			if (dest) {
-				fprintf(dest, "(%s) ", message->hnod);
-			} else {
-				color(DIM_WHITE);
-				scr_printf("(");
-				color(BRIGHT_WHITE);
-				scr_printf("%s", message->hnod);
-				color(DIM_WHITE);
-				scr_printf(") ");
-			}
-		}
 		if (strcasecmp(message->room, room_name) && (IsEmptyStr(message->email))) {
 			if (dest) {
 				fprintf(dest, "in %s> ", message->room);
@@ -633,8 +604,7 @@ int read_message(CtdlIPC *ipc,
 	/* But if we can't do that, set it to a Citadel address.
 	 */
 	if (!strcmp(reply_to, NO_REPLY_TO)) {
-		snprintf(reply_to, sizeof(reply_to), "%s @ %s",
-			 message->author, message->node);
+		safestrncpy(reply_to, message->author, sizeof(reply_to));
 	}
 
 	if (message->msgid != NULL) {
