@@ -76,22 +76,9 @@
 #include "citadel_dirs.h"
 #include "threads.h"
 #include "context.h"
-
 #include "ctdl_module.h"
-
 #include "netspool.h"
 #include "netmail.h"
-
-
-#ifndef DT_UNKNOWN
-#define DT_UNKNOWN     0
-#define DT_DIR         4
-#define DT_REG         8
-#define DT_LNK         10
-
-#define IFTODT(mode)   (((mode) & 0170000) >> 12)
-#define DTTOIF(dirtype)        ((dirtype) << 12)
-#endif
 
 
 void ParseLastSent(const CfgLineType *ThisOne, StrBuf *Line, const char *LinePos, OneRoomNetCfg *OneRNCFG)
@@ -177,11 +164,12 @@ void Netmap_AddMe(struct CtdlMessage *msg, const char *defl, long defllen)
 	CM_PrependToField(msg, eMessagePath, buf, node_len + 1);
 }
 
+
 void InspectQueuedRoom(SpoolControl **pSC,
 		       RoomProcList *room_to_spool,     
 		       HashList *working_ignetcfg,
-		       HashList *the_netmap)
-{
+		       HashList *the_netmap
+) {
 	SpoolControl *sc;
 	int i = 0;
 
@@ -306,7 +294,7 @@ void CalcListID(SpoolControl *sc)
 		/*
 		 * this used to be:
 		 * roomname <Room-Number.list-id.fqdn>
-		 * according to rfc2919.txt it only has to be a uniq identifier
+		 * according to rfc2919.txt it only has to be a unique identifier
 		 * under the domain of the system; 
 		 * in general MUAs use it to calculate the reply address nowadays.
 		 */
@@ -374,7 +362,6 @@ void network_spoolout_room(SpoolControl *sc)
 		buf[i] = tolower(buf[i]);
 		if (isspace(buf[i])) buf[i] = '_';
 	}
-
 
 	/* If we wrote a digest, deliver it and then close it */
 	if ( (sc->Users[digestrecp] != NULL) && (sc->digestfp != NULL) )

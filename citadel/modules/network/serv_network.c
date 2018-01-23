@@ -95,98 +95,6 @@ typedef struct __roomlists {
  */
 struct RoomProcList *rplist = NULL;
 
-
-/*
- * Send the *entire* contents of the current room to one specific network node,
- * ignoring anything we know about which messages have already undergone
- * network processing.  This can be used to bring a new node into sync.
- */
-int network_sync_to(char *target_node, long len)
-{
-	struct CitContext *CCC = CC;
-	OneRoomNetCfg OneRNCFG;
-	OneRoomNetCfg *pRNCFG;
-	const RoomNetCfgLine *pCfgLine;
-	SpoolControl sc;
-	int num_spooled = 0;
-
-	/* Load the netconfig for this room */
-	pRNCFG = CtdlGetNetCfgForRoom(CCC->room.QRnumber);
-	if (pRNCFG == NULL) {					// no netconfig at all?
-		return -1;
-	}
-	if (pRNCFG->NetConfigs[ignet_push_share] == NULL)	// no ignet push shares?
-	{
-		FreeRoomNetworkStruct(&pRNCFG);
-		return -1;
-	}
-
-	/* Search for an ignet_oush_share configuration bearing the target node's name */
-	for (pCfgLine = pRNCFG->NetConfigs[ignet_push_share]; pCfgLine != NULL; pCfgLine = pCfgLine->next)
-	{
-		if (!strcmp(ChrPtr(pCfgLine->Value[0]), target_node))
-			break;
-	}
-
-	/* If we aren't sharing with that node, bail out */
-	if (pCfgLine == NULL)
-	{
-		FreeRoomNetworkStruct(&pRNCFG);
-		return -1;
-	}
-
-	/* If we got here, we're good to go ... make up a dummy spoolconfig and roll with it */
-
-	begin_critical_section(S_NETCONFIGS);
-	memset(&sc, 0, sizeof(SpoolControl));
-	memset(&OneRNCFG, 0, sizeof(OneRoomNetCfg));
-	sc.RNCfg = &OneRNCFG;
-	sc.RNCfg->NetConfigs[ignet_push_share] = DuplicateOneGenericCfgLine(pCfgLine);
-	sc.Users[ignet_push_share] = NewStrBufPlain(NULL, (StrLength(pCfgLine->Value[0]) + StrLength(pCfgLine->Value[1]) + 10) );
-	StrBufAppendBuf(sc.Users[ignet_push_share], pCfgLine->Value[0], 0);
-	StrBufAppendBufPlain(sc.Users[ignet_push_share], HKEY(","), 0);
-	StrBufAppendBuf(sc.Users[ignet_push_share], pCfgLine->Value[1], 0);
-	CalcListID(&sc);
-	end_critical_section(S_NETCONFIGS);
-
-	sc.working_ignetcfg = CtdlLoadIgNetCfg();
-	sc.the_netmap = CtdlReadNetworkMap();
-
-	/* Send ALL messages */
-	num_spooled = CtdlForEachMessage(MSGS_ALL, 0L, NULL, NULL, NULL, network_spool_msg, &sc);
-
-	/* Concise cleanup because we know there's only one node in the sc */
-	DeleteGenericCfgLine(NULL, &sc.RNCfg->NetConfigs[ignet_push_share]);
-
-	DeleteHash(&sc.working_ignetcfg);
-	DeleteHash(&sc.the_netmap);
-	free_spoolcontrol_struct_members(&sc);
-
-	syslog(LOG_NOTICE, "network: synchronized %d messages to <%s>", num_spooled, target_node);
-	return(num_spooled);
-}
-
-
-/*
- * Implements the NSYN command
- */
-void cmd_nsyn(char *argbuf) {
-	int num_spooled;
-	long len;
-	char target_node[256];
-
-	if (CtdlAccessCheck(ac_aide)) return;
-
-	len = extract_token(target_node, argbuf, 0, '|', sizeof target_node);
-	num_spooled = network_sync_to(target_node, len);
-	if (num_spooled >= 0) {
-		cprintf("%d Spooled %d messages.\n", CIT_OK, num_spooled);
-	}
-	else {
-		cprintf("%d No such room/node share exists.\n", ERROR + ROOM_NOT_FOUND);
-	}
-}
-
 RoomProcList *CreateRoomProcListEntry(struct ctdlroom *qrbuf, OneRoomNetCfg *OneRNCFG)
 {
 	int i;
@@ -447,7 +355,6 @@ CTDL_MODULE_INIT(network)
 		CtdlFillSystemContext(&networker_spool_CC, "CitNetSpool");
 		CtdlRegisterSessionHook(network_cleanup_function, EVT_STOP, PRIO_STOP + 30);
                 CtdlRegisterSessionHook(network_logout_hook, EVT_LOGOUT, PRIO_LOGOUT + 10);
-		CtdlRegisterProtoHook(cmd_nsyn, "NSYN", "Synchronize room to node");
 		CtdlRegisterRoomHook(network_room_handler);
 		CtdlRegisterCleanupHook(destroy_network_queue_room_locked);
 		CtdlRegisterSessionHook(network_do_queue, EVT_TIMER, PRIO_QUEUE + 10);
