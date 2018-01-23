@@ -1,7 +1,7 @@
 /* 
  * Server functions which handle file transfers and room directories.
  *
- * Copyright (c) 1987-2017 by the citadel.org team
+ * Copyright (c) 1987-2018 by the citadel.org team
  *
  * This program is open source software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3.
@@ -406,28 +406,6 @@ void cmd_ucls(char *cmd)
 
 	fclose(CC->upload_fp);
 	CCC->upload_fp = NULL;
-
-	if ((!strcasecmp(cmd, "1")) && (CCC->upload_type != UPL_FILE)) {
-		cprintf("%d Upload completed.\n", CIT_OK);
-
-		if (CCC->upload_type == UPL_NET) {
-			char final_filename[PATH_MAX];
-		        snprintf(final_filename, sizeof final_filename, "%s/%s.%04lx.%04x", ctdl_netin_dir, CCC->net_node, (long)getpid(), ++seq);
-
-			if (link(CCC->upl_path, final_filename) == 0) {
-				syslog(LOG_INFO, "serv_file: ucls updoaded %s", final_filename);
-				unlink(CCC->upl_path);
-			}
-			else {
-				syslog(LOG_INFO, "serv_file: cannot link %s to %s: %s",
-					    CCC->upl_path, final_filename, strerror(errno)
-				);
-			}
-		}
-
-		CCC->upload_type = UPL_FILE;
-		return;
-	}
 
 	if (!strcasecmp(cmd, "1")) {
 		cprintf("%d File '%s' saved.\n", CIT_OK, CCC->upl_path);

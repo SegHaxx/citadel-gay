@@ -769,10 +769,6 @@ void create_spool_dirs(void) {
 		syslog(LOG_EMERG, "netspool: unable to create directory [%s]: %s", ctdl_spool_dir, strerror(errno));
 	if (chown(ctdl_spool_dir, CTDLUID, (-1)) != 0)
 		syslog(LOG_EMERG, "netspool: unable to set the access rights for [%s]: %s", ctdl_spool_dir, strerror(errno));
-	if ((mkdir(ctdl_netin_dir, 0700) != 0) && (errno != EEXIST))
-		syslog(LOG_EMERG, "netspool: unable to create directory [%s]: %s", ctdl_netin_dir, strerror(errno));
-	if (chown(ctdl_netin_dir, CTDLUID, (-1)) != 0)
-		syslog(LOG_EMERG, "netspool: unable to set the access rights for [%s]: %s", ctdl_netin_dir, strerror(errno));
 	if ((mkdir(ctdl_nettmp_dir, 0700) != 0) && (errno != EEXIST))
 		syslog(LOG_EMERG, "netspool: unable to create directory [%s]: %s", ctdl_nettmp_dir, strerror(errno));
 	if (chown(ctdl_nettmp_dir, CTDLUID, (-1)) != 0)

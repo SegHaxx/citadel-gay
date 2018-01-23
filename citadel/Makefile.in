@@ -38,7 +38,7 @@ UTIL_TARGETS=citmail$(EXEEXT) sendcommand$(EXEEXT)
 
 UTILBIN_TARGETS= base64$(EXEEXT) setup$(EXEEXT) \
 	chkpw$(EXEEXT) chkpwd$(EXEEXT) \
-	aidepost$(EXEEXT) msgform$(EXEEXT) \
+	msgform$(EXEEXT) \
 	ctdlmigrate$(EXEEXT)
 
 
@@ -70,7 +70,7 @@ LOCALEDIR=@LOCALEDIR@
 .SILENT:
 
 
-SOURCES=utils/aidepost.c utils/citmail.c \
+SOURCES=utils/citmail.c \
 	utils/setup.c utils/msgform.c utils/chkpw.c \
 	utils/sendcommand.c \
 	utils/ctdlmigrate.c utils/base64.c utils/chkpwd.c \
@@ -144,10 +144,6 @@ citserver$(EXEEXT): $(SERV_OBJS)
 %.o: %.c ${HEADERS}
 	echo "CC $<"
 	$(CC) $(CFLAGS) $(CPPFLAGS) $(DEFS) -c $< -o $@
-
-aidepost$(EXEEXT): utils/aidepost.o utillib/citadel_dirs.o
-	$(CC) utils/aidepost.o utillib/citadel_dirs.o \
-		$(LDFLAGS) -o aidepost$(EXEEXT) $(LIBS)
 
 citmail$(EXEEXT): utils/citmail.o utillib/citadel_dirs.o
 	$(CC) utils/citmail.o utillib/citadel_dirs.o \
