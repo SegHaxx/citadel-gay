@@ -2,7 +2,7 @@
  * This module handles shared rooms, inter-Citadel mail, and outbound
  * mailing list processing.
  *
- * Copyright (c) 2000-2017 by the citadel.org team
+ * Copyright (c) 2000-2018 by the citadel.org team
  *
  * This program is open source software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 3.
@@ -434,137 +434,6 @@ void network_process_participate(SpoolControl *sc, struct CtdlMessage *omsg, lon
 	CM_Free(msg);
 }
 
-void network_process_ignetpush(SpoolControl *sc, struct CtdlMessage *omsg, long *delete_after_send)
-{
-	StrBuf *Recipient;
-	StrBuf *RemoteRoom;
-	const char *Pos = NULL;
-	struct CtdlMessage *msg = NULL;
-	struct CitContext *CCC = CC;
-	struct ser_ret sermsg;
-	char buf[SIZ];
-	char filename[PATH_MAX];
-	FILE *fp;
-	StrBuf *Buf = NULL;
-	int i;
-	int bang = 0;
-	int send = 1;
-
-	if (sc->Users[ignet_push_share] == NULL)
-		return;
-
-	/*
-	 * Process IGnet push shares
-	 */
-	msg = CM_Duplicate(omsg);
-
-	/* Prepend our node name to the Path field whenever
-	 * sending a message to another IGnet node
-	 */
-	Netmap_AddMe(msg, HKEY("username"));
-
-	/*
-	 * Determine if this message is set to be deleted
-	 * after sending out on the network
-	 */
-	if (!CM_IsEmpty(msg, eSpecialField)) {
-		if (!strcasecmp(msg->cm_fields[eSpecialField], "CANCEL")) {
-			*delete_after_send = 1;
-		}
-	}
-
-	/* Now send it to every node */
-	Recipient = NewStrBufPlain(NULL, StrLength(sc->Users[ignet_push_share]));
-	RemoteRoom = NewStrBufPlain(NULL, StrLength(sc->Users[ignet_push_share]));
-	while ((Pos != StrBufNOTNULL) &&
-	       StrBufExtract_NextToken(Recipient, sc->Users[ignet_push_share], &Pos, ','))
-	{
-		StrBufExtract_NextToken(RemoteRoom, sc->Users[ignet_push_share], &Pos, ',');
-		send = 1;
-		NewStrBufDupAppendFlush(&Buf, Recipient, NULL, 1);
-			
-		/* Check for valid node name */
-		if (CtdlIsValidNode(NULL,
-				    NULL,
-				    Buf,
-				    sc->working_ignetcfg,
-				    sc->the_netmap) != 0)
-		{
-			syslog(LOG_ERR, "netmail: invalid node <%s>", ChrPtr(Recipient));
-			send = 0;
-		}
-		
-		/* Check for split horizon */
-		syslog(LOG_DEBUG, "netmail: path is %s", msg->cm_fields[eMessagePath]);
-		bang = num_tokens(msg->cm_fields[eMessagePath], '!');
-		if (bang > 1) {
-			for (i=0; i<(bang-1); ++i) {
-				extract_token(buf,
-					      msg->cm_fields[eMessagePath],
-					      i, '!',
-					      sizeof buf);
-
-				syslog(LOG_DEBUG, "netmail: compare <%s> to <%s>", buf, ChrPtr(Recipient)) ;
-				if (!strcasecmp(buf, ChrPtr(Recipient))) {
-					send = 0;
-					break;
-				}
-			}
-			
-			syslog(LOG_INFO, "netmail: %ssending to %s", (send)?"":"not ", ChrPtr(Recipient));
-		}
-		
-		/* Send the message */
-		if (send == 1)
-		{
-			/*
-			 * Force the message to appear in the correct
-			 * room on the far end by setting the C field
-			 * correctly
-			 */
-			if (StrLength(RemoteRoom) > 0) {
-				CM_SetField(msg, eRemoteRoom, SKEY(RemoteRoom));
-			}
-			else {
-				CM_SetField(msg, eRemoteRoom, CCC->room.QRname, strlen(CCC->room.QRname));
-			}
-			
-			/* serialize it for transmission */
-			CtdlSerializeMessage(&sermsg, msg);
-			if (sermsg.len > 0) {
-				
-				/* write it to a spool file */
-				snprintf(filename,
-					sizeof(filename),
-					"%s/%s@%lx%x-mail",
-					ctdl_netout_dir,
-					ChrPtr(Recipient),
-					time(NULL),
-					rand()
-				);
-					
-				syslog(LOG_DEBUG, "netmail: appending to %s", filename);
-				
-				fp = fopen(filename, "ab");
-				if (fp != NULL) {
-					fwrite(sermsg.ser, sermsg.len, 1, fp);
-					fclose(fp);
-				}
-				else {
-					syslog(LOG_ERR, "%s: %m", filename);
-				}
-
-				/* free the serialized version */
-				free(sermsg.ser);
-			}
-		}
-	}
-	FreeStrBuf(&Buf);
-	FreeStrBuf(&Recipient);
-	FreeStrBuf(&RemoteRoom);
-	CM_Free(msg);
-}
-
 
 /*
  * Spools out one message from the list.
@@ -586,7 +455,6 @@ void network_spool_msg(long msgnum, void *userdata)
 	network_process_list(sc, msg, &delete_after_send);
 	network_process_digest(sc, msg, &delete_after_send);
 	network_process_participate(sc, msg, &delete_after_send);
-	network_process_ignetpush(sc, msg, &delete_after_send);
 	
 	CM_Free(msg);
 

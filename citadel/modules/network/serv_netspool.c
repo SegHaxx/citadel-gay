@@ -412,7 +412,7 @@ void CalcListID(SpoolControl *sc)
 
 
 /*
- * Batch up and send all outbound traffic from the current room
+ * Batch up and send all outbound traffic from the current room (this is definitely used for mailing lists)
  */
 void network_spoolout_room(SpoolControl *sc)
 {
