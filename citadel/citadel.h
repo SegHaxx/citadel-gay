@@ -35,7 +35,7 @@ extern "C" {
  */
 #define CITADEL	PACKAGE_STRING
 
-#define REV_LEVEL	918		// This version
+#define REV_LEVEL	917		// This version
 #define REV_MIN		591		// Oldest compatible database
 #define EXPORT_REV_MIN	760		// Oldest compatible export files
 #define LIBCITADEL_MIN	917		// Minimum required version of libcitadel

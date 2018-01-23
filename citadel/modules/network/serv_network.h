@@ -16,4 +16,6 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
+void free_netfilter_list(void);
+void load_network_filter_list(void);
 void network_queue_room(struct ctdlroom *, void *);

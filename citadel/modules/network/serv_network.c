@@ -391,6 +391,9 @@ void network_do_queue(void)
 		network_do_spoolin(working_ignetcfg, the_netmap, &netmap_changed);
 	}
 
+	/* Free the filter list in memory */
+	free_netfilter_list();
+
 	/* Save the network map back to disk */
 	if (netmap_changed) {
 		StrBuf *MapStr = CtdlSerializeNetworkMap(the_netmap);
