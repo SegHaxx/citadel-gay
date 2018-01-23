@@ -490,44 +490,6 @@ void network_spoolout_room(SpoolControl *sc)
 
 
 /*
- * Check the use table.  This is a list of messages which have recently
- * arrived on the system.  It is maintained and queried to prevent the same
- * message from being entered into the database multiple times if it happens
- * to arrive multiple times by accident.
- */
-int network_usetable(struct CtdlMessage *msg)
-{
-	StrBuf *msgid;
-
-	/* Bail out if we can't generate a message ID */
-	if ((msg == NULL) || CM_IsEmpty(msg, emessageId))
-	{
-		return(0);
-	}
-
-	/* Generate the message ID */
-	msgid = NewStrBufPlain(CM_KEY(msg, emessageId));
-	if (haschar(ChrPtr(msgid), '@') == 0) {
-		StrBufAppendBufPlain(msgid, HKEY("@"), 0);
-		if (!CM_IsEmpty(msg, eNodeName)) {
-			StrBufAppendBufPlain(msgid, CM_KEY(msg, eNodeName), 0);
-		}
-		else {
-			FreeStrBuf(&msgid);
-			return(0);
-		}
-	}
-	if (CheckIfAlreadySeen(msgid)) {
-		FreeStrBuf(&msgid);
-		return(1);
-	}
-	FreeStrBuf(&msgid);
-
-	return(0);
-}
-
-
-/*
  * Step 1: consolidate files in the outbound queue into one file per neighbor node
  * Step 2: delete any files in the outbound queue that were for neighbors who no longer exist.
  */
@@ -789,14 +751,12 @@ CTDL_MODULE_INIT(network_spool)
 		CtdlREGISTERRoomCfgType(subpending,       ParseSubPendingLine,   0, 5, SerializeGeneric,  DeleteGenericCfgLine); /// todo: move this to mailinglist manager
 		CtdlREGISTERRoomCfgType(unsubpending,     ParseUnSubPendingLine, 0, 4, SerializeGeneric,  DeleteGenericCfgLine); /// todo: move this to mailinglist manager
 		CtdlREGISTERRoomCfgType(lastsent,         ParseLastSent,         1, 1, SerializeLastSent, DeleteLastSent);
-		CtdlREGISTERRoomCfgType(ignet_push_share, ParseGeneric,          0, 2, SerializeGeneric,  DeleteGenericCfgLine); // [remotenode|remoteroomname (optional)]// todo: move this to the ignet client
+		CtdlREGISTERRoomCfgType(ignet_push_share, ParseGeneric,          0, 2, SerializeGeneric,  DeleteGenericCfgLine); // [remotenode|remoteroomname (optional)]
 		CtdlREGISTERRoomCfgType(listrecp,         ParseGeneric,          0, 1, SerializeGeneric,  DeleteGenericCfgLine);
 		CtdlREGISTERRoomCfgType(digestrecp,       ParseGeneric,          0, 1, SerializeGeneric,  DeleteGenericCfgLine);
 		CtdlREGISTERRoomCfgType(participate,      ParseGeneric,          0, 1, SerializeGeneric,  DeleteGenericCfgLine);
 		CtdlREGISTERRoomCfgType(roommailalias,    ParseRoomAlias,        0, 1, SerializeGeneric,  DeleteGenericCfgLine);
-
 		create_spool_dirs();
-//////todo		CtdlRegisterCleanupHook(destroy_network_queue_room);
 	}
 	return "network_spool";
 }
