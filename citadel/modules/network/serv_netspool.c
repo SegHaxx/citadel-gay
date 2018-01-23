@@ -2,7 +2,7 @@
  * This module handles shared rooms, inter-Citadel mail, and outbound
  * mailing list processing.
  *
- * Copyright (c) 2000-2017 by the citadel.org team
+ * Copyright (c) 2000-2018 by the citadel.org team
  *
  * This program is open source software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 3.
@@ -94,92 +94,10 @@
 #endif
 
 
-/*
- * Bounce a message back to the sender
- */
-void network_bounce(struct CtdlMessage **pMsg, char *reason)
-{
-	char buf[SIZ];
-	char bouncesource[SIZ];
-	char recipient[SIZ];
-	recptypes *valid = NULL;
-	char force_room[ROOMNAMELEN];
-	static int serialnum = 0;
-	long len;
-	struct CtdlMessage *msg = *pMsg;
-	*pMsg = NULL;
-	syslog(LOG_DEBUG, "netspool: entering network_bounce()");
-
-	if (msg == NULL) return;
-
-	snprintf(bouncesource, sizeof bouncesource, "%s@%s", BOUNCESOURCE, CtdlGetConfigStr("c_nodename"));
-
-	/* 
-	 * Give it a fresh message ID
-	 */
-	len = snprintf(buf, sizeof(buf),
-		       "%ld.%04lx.%04x@%s",
-		       (long)time(NULL),
-		       (long)getpid(),
-		       ++serialnum,
-		       CtdlGetConfigStr("c_fqdn"));
-
-	CM_SetField(msg, emessageId, buf, len);
-
-	/*
-	 * FIXME ... right now we're just sending a bounce; we really want to
-	 * include the text of the bounced message.
-	 */
-	if (!IsEmptyStr(reason)) {
-		CM_SetField(msg, eMesageText, reason, strlen(reason));
-	}
-	msg->cm_format_type = 0;
-
-	/*
-	 * Turn the message around
-	 */
-	CM_FlushField(msg, eRecipient);
-	CM_FlushField(msg, eDestination);
-
-	len = snprintf(recipient, sizeof(recipient), "%s@%s",
-		       msg->cm_fields[eAuthor],
-		       msg->cm_fields[eNodeName]);
-
-	CM_SetField(msg, eAuthor, HKEY(BOUNCESOURCE));
-	CM_SetField(msg, eNodeName, CtdlGetConfigStr("c_nodename"), strlen(CtdlGetConfigStr("c_nodename")));
-	CM_SetField(msg, eMsgSubject, HKEY("Delivery Status Notification (Failure)"));
-
-	Netmap_AddMe(msg, HKEY("unknown_user"));
-
-	/* Now submit the message */
-	valid = validate_recipients(recipient, NULL, 0);
-	if (valid != NULL) if (valid->num_error != 0) {
-		free_recipients(valid);
-		valid = NULL;
-	}
-	if ( (valid == NULL) || (!strcasecmp(recipient, bouncesource)) ) {
-		strcpy(force_room, CtdlGetConfigStr("c_aideroom"));
-	}
-	else {
-		strcpy(force_room, "");
-	}
-	if ( (valid == NULL) && IsEmptyStr(force_room) ) {
-		strcpy(force_room, CtdlGetConfigStr("c_aideroom"));
-	}
-	CtdlSubmitMsg(msg, valid, force_room, 0);
-
-	/* Clean up */
-	if (valid != NULL) free_recipients(valid);
-	CM_Free(msg);
-	syslog(LOG_DEBUG, "netspool: leaving network_bounce()");
-}
-
-
 void ParseLastSent(const CfgLineType *ThisOne, StrBuf *Line, const char *LinePos, OneRoomNetCfg *OneRNCFG)
 {
 	RoomNetCfgLine *nptr;
-	nptr = (RoomNetCfgLine *)
-		malloc(sizeof(RoomNetCfgLine));
+	nptr = (RoomNetCfgLine *) malloc(sizeof(RoomNetCfgLine));
 	memset(nptr, 0, sizeof(RoomNetCfgLine));
 	OneRNCFG->lastsent = extract_long(LinePos, 0);
 	OneRNCFG->NetConfigs[ThisOne->C] = nptr;
@@ -187,8 +105,9 @@ void ParseLastSent(const CfgLineType *ThisOne, StrBuf *Line, const char *LinePos
 
 void ParseRoomAlias(const CfgLineType *ThisOne, StrBuf *Line, const char *LinePos, OneRoomNetCfg *rncfg)
 {
-	if (rncfg->Sender != NULL)
+	if (rncfg->Sender != NULL) {
 		return;
+	}
 
 	ParseGeneric(ThisOne, Line, LinePos, rncfg);
 	rncfg->Sender = NewStrBufDup(rncfg->NetConfigs[roommailalias]->Value[0]);
@@ -226,7 +145,6 @@ static const RoomNetCfg SpoolCfgs [4] = {
 	listrecp,
 	digestrecp,
 	participate,
-	ignet_push_share
 };
 
 static const long SpoolCfgsCopyN [4] = {
@@ -489,229 +407,13 @@ void network_spoolout_room(SpoolControl *sc)
 }
 
 
-/*
- * Step 1: consolidate files in the outbound queue into one file per neighbor node
- * Step 2: delete any files in the outbound queue that were for neighbors who no longer exist.
- */
-void network_consolidate_spoolout(HashList *working_ignetcfg, HashList *the_netmap)
-{
-	IOBuffer IOB;
-	FDIOBuffer FDIO;
-        int d_namelen;
-	DIR *dp;
-	struct dirent *filedir_entry;
-	const char *pch;
-	char spooloutfilename[PATH_MAX];
-	char filename[PATH_MAX];
-	const StrBuf *nexthop;
-	StrBuf *NextHop;
-	int i;
-	struct stat statbuf;
-	int nFailed = 0;
-	int d_type = 0;
-
-	/* Step 1: consolidate files in the outbound queue into one file per neighbor node */
-
-	dp = opendir(ctdl_netout_dir);
-	if (dp == NULL) {
-		return;
-	}
-
-	NextHop = NewStrBuf();
-	memset(&IOB, 0, sizeof(IOBuffer));
-	memset(&FDIO, 0, sizeof(FDIOBuffer));
-	FDIO.IOB = &IOB;
-
-	while ( (filedir_entry = readdir(dp)) , (filedir_entry != NULL))
-	{
-#ifdef _DIRENT_HAVE_D_NAMLEN
-		d_namelen = filedir_entry->d_namlen;
-
-#else
-		d_namelen = strlen(filedir_entry->d_name);
-#endif
-
-#ifdef _DIRENT_HAVE_D_TYPE
-		d_type = filedir_entry->d_type;
-#else
-		d_type = DT_UNKNOWN;
-#endif
-		if (d_type == DT_DIR)
-			continue;
-
-		if ((d_namelen > 1) && filedir_entry->d_name[d_namelen - 1] == '~')
-			continue; /* Ignore backup files... */
-
-		if ((d_namelen == 1) && 
-		    (filedir_entry->d_name[0] == '.'))
-			continue;
-
-		if ((d_namelen == 2) && 
-		    (filedir_entry->d_name[0] == '.') &&
-		    (filedir_entry->d_name[1] == '.'))
-			continue;
-
-		pch = strchr(filedir_entry->d_name, '@');
-		if (pch == NULL)
-			continue;
-
-		snprintf(filename, 
-			 sizeof filename,
-			 "%s/%s",
-			 ctdl_netout_dir,
-			 filedir_entry->d_name);
-
-		StrBufPlain(NextHop,
-			    filedir_entry->d_name,
-			    pch - filedir_entry->d_name);
-
-		snprintf(spooloutfilename,
-			 sizeof spooloutfilename,
-			 "%s/%s",
-			 ctdl_netout_dir,
-			 ChrPtr(NextHop));
-
-		syslog(LOG_DEBUG, "netspool: consolidate %s to %s", filename, ChrPtr(NextHop));
-		if (CtdlNetworkTalkingTo(SKEY(NextHop), NTT_CHECK)) {
-			nFailed++;
-			syslog(LOG_DEBUG, "netspool: currently online with %s - skipping for now", ChrPtr(NextHop));
-		}
-		else {
-			size_t dsize;
-			size_t fsize;
-			int infd, outfd;
-			const char *err = NULL;
-			CtdlNetworkTalkingTo(SKEY(NextHop), NTT_ADD);
-
-			infd = open(filename, O_RDONLY);
-			if (infd == -1) {
-				nFailed++;
-				syslog(LOG_ERR, "%s: %s", filename, strerror(errno));
-				CtdlNetworkTalkingTo(SKEY(NextHop), NTT_REMOVE);
-				continue;				
-			}
-			
-			outfd = open(spooloutfilename,
-				  O_EXCL|O_CREAT|O_NONBLOCK|O_WRONLY, 
-				  S_IRUSR|S_IWUSR);
-			if (outfd == -1)
-			{
-				outfd = open(spooloutfilename,
-					     O_EXCL|O_NONBLOCK|O_WRONLY, 
-					     S_IRUSR | S_IWUSR);
-			}
-			if (outfd == -1) {
-				nFailed++;
-				syslog(LOG_ERR, "%s: %s", spooloutfilename, strerror(errno));
-				close(infd);
-				CtdlNetworkTalkingTo(SKEY(NextHop), NTT_REMOVE);
-				continue;
-			}
-
-			dsize = lseek(outfd, 0, SEEK_END);
-			lseek(outfd, -dsize, SEEK_SET);
-
-			fstat(infd, &statbuf);
-			fsize = statbuf.st_size;
-			IOB.fd = infd;
-			FDIOBufferInit(&FDIO, &IOB, outfd, fsize + dsize);
-			FDIO.ChunkSendRemain = fsize;
-			FDIO.TotalSentAlready = dsize;
-			err = NULL;
-			errno = 0;
-			do {} while ((FileMoveChunked(&FDIO, &err) > 0) && (err == NULL));
-			if (err == NULL) {
-				unlink(filename);
-				syslog(LOG_DEBUG, "netspool: spoolfile %s now "SIZE_T_FMT" KB", spooloutfilename, (dsize + fsize)/1024);
-			}
-			else {
-				nFailed++;
-				syslog(LOG_ERR, "netspool: failed to append to %s [%s]; rolling back..", spooloutfilename, strerror(errno));
-				/* whoops partial append?? truncate spooloutfilename again! */
-				ftruncate(outfd, dsize);
-			}
-			FDIOBufferDelete(&FDIO);
-			close(infd);
-			close(outfd);
-			CtdlNetworkTalkingTo(SKEY(NextHop), NTT_REMOVE);
-		}
-	}
-	closedir(dp);
-
-	if (nFailed > 0) {
-		FreeStrBuf(&NextHop);
-		syslog(LOG_INFO, "netspool: skipping Spoolcleanup because of %d files unprocessed.", nFailed);
-		return;
-	}
-
-	/* Step 2: delete any files in the outbound queue that were for neighbors who no longer exist */
-	dp = opendir(ctdl_netout_dir);
-	if (dp == NULL) {
-		FreeStrBuf(&NextHop);
-		return;
-	}
-
-	while ( (filedir_entry = readdir(dp)) , (filedir_entry != NULL))
-	{
-#ifdef _DIRENT_HAVE_D_NAMLEN
-		d_namelen = filedir_entry->d_namlen;
-
-#else
-		d_namelen = strlen(filedir_entry->d_name);
-#endif
-
-#ifdef _DIRENT_HAVE_D_TYPE
-		d_type = filedir_entry->d_type;
-#else
-		d_type = DT_UNKNOWN;
-#endif
-		if (d_type == DT_DIR)
-			continue;
-
-		if ((d_namelen == 1) && 
-		    (filedir_entry->d_name[0] == '.'))
-			continue;
-
-		if ((d_namelen == 2) && 
-		    (filedir_entry->d_name[0] == '.') &&
-		    (filedir_entry->d_name[1] == '.'))
-			continue;
-
-		pch = strchr(filedir_entry->d_name, '@');
-		if (pch == NULL) /* no @ in name? consolidated file. */
-			continue;
-
-		StrBufPlain(NextHop,
-			    filedir_entry->d_name,
-			    pch - filedir_entry->d_name);
-
-		snprintf(filename, 
-			sizeof filename,
-			"%s/%s",
-			ctdl_netout_dir,
-			filedir_entry->d_name
-		);
-
-		i = CtdlIsValidNode(&nexthop,
-				    NULL,
-				    NextHop,
-				    working_ignetcfg,
-				    the_netmap);
-	
-		if ( (i != 0) || (StrLength(nexthop) > 0) ) {
-			unlink(filename);
-		}
-	}
-	FreeStrBuf(&NextHop);
-	closedir(dp);
-}
-
 void free_spoolcontrol_struct(SpoolControl **sc)
 {
 	free_spoolcontrol_struct_members(*sc);
 	free(*sc);
 	*sc = NULL;
 }
+
 
 void free_spoolcontrol_struct_members(SpoolControl *sc)
 {
@@ -741,6 +443,7 @@ void create_spool_dirs(void) {
 		syslog(LOG_EMERG, "netspool: unable to set the access rights for [%s]: %s", ctdl_netout_dir, strerror(errno));
 }
 
+
 /*
  * Module entry point
  */
@@ -748,10 +451,9 @@ CTDL_MODULE_INIT(network_spool)
 {
 	if (!threading)
 	{
-		CtdlREGISTERRoomCfgType(subpending,       ParseSubPendingLine,   0, 5, SerializeGeneric,  DeleteGenericCfgLine); /// todo: move this to mailinglist manager
-		CtdlREGISTERRoomCfgType(unsubpending,     ParseUnSubPendingLine, 0, 4, SerializeGeneric,  DeleteGenericCfgLine); /// todo: move this to mailinglist manager
+		CtdlREGISTERRoomCfgType(subpending,       ParseSubPendingLine,   0, 5, SerializeGeneric,  DeleteGenericCfgLine);
+		CtdlREGISTERRoomCfgType(unsubpending,     ParseUnSubPendingLine, 0, 4, SerializeGeneric,  DeleteGenericCfgLine);
 		CtdlREGISTERRoomCfgType(lastsent,         ParseLastSent,         1, 1, SerializeLastSent, DeleteLastSent);
-		CtdlREGISTERRoomCfgType(ignet_push_share, ParseGeneric,          0, 2, SerializeGeneric,  DeleteGenericCfgLine); // [remotenode|remoteroomname (optional)]
 		CtdlREGISTERRoomCfgType(listrecp,         ParseGeneric,          0, 1, SerializeGeneric,  DeleteGenericCfgLine);
 		CtdlREGISTERRoomCfgType(digestrecp,       ParseGeneric,          0, 1, SerializeGeneric,  DeleteGenericCfgLine);
 		CtdlREGISTERRoomCfgType(participate,      ParseGeneric,          0, 1, SerializeGeneric,  DeleteGenericCfgLine);

@@ -395,9 +395,6 @@ void network_do_queue(void)
 		free(pMapStr);
 	}
 
-	/* combine single message files into one spool entry per remote node. */
-	network_consolidate_spoolout(working_ignetcfg, the_netmap);
-
 	/* shut down. */
 
 	DeleteHash(&the_netmap);

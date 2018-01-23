@@ -2,7 +2,7 @@
  * This module handles shared rooms, inter-Citadel mail, and outbound
  * mailing list processing.
  *
- * Copyright (c) 2000-2016 by the citadel.org team
+ * Copyright (c) 2000-2018 by the citadel.org team
  *
  * This program is open source software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -56,7 +56,6 @@ int HaveSpoolConfig(OneRoomNetCfg* RNCfg);
 
 void Netmap_AddMe(struct CtdlMessage *msg, const char *defl, long defllen);
 void network_do_spoolin(HashList *working_ignetcfg, HashList *the_netmap, int *netmap_changed);
-void network_consolidate_spoolout(HashList *working_ignetcfg, HashList *the_netmap);
 void free_spoolcontrol_struct(SpoolControl **scc);
 void free_spoolcontrol_struct_members(SpoolControl *scc);
 int writenfree_spoolcontrol_file(SpoolControl **scc, char *filename);
