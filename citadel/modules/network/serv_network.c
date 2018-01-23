@@ -386,11 +386,6 @@ void network_do_queue(void)
 		free_spoolcontrol_struct(&pSC);
 		pSC = sc;
 	}
-	/* If there is anything in the inbound queue, process it */
-	if (!server_shutting_down) {
-		network_do_spoolin(working_ignetcfg, the_netmap, &netmap_changed);
-	}
-
 
 	/* Save the network map back to disk */
 	if (netmap_changed) {
