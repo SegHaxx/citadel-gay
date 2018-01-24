@@ -82,7 +82,6 @@ struct CitContext {
 	int curr_view;		/* The view type for the current user/room */
 	int is_master;		/* Is this session logged in using the master user? */
 
-	char net_node[32]	;/* Is the client another Citadel server? */
 	time_t previous_login;	/* Date/time of previous login */
 	char lastcmdname[5];	/* name of last command executed */
 	unsigned cs_flags;	/* miscellaneous flags */
@@ -115,7 +114,6 @@ struct CitContext {
 	char upl_comment[256];
 	char upl_filedir[PATH_MAX];
 	char upl_mimetype[64];
-	char dl_is_net;
 	char upload_type;
 
 	struct ctdluser user;	/* Database record buffers */

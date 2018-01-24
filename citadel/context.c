@@ -2,7 +2,7 @@
  * Citadel context management stuff.
  * Here's where we (hopefully) have all the code that manipulates contexts.
  *
- * Copyright (c) 1987-2015 by the citadel.org team
+ * Copyright (c) 1987-2018 by the citadel.org team
  *
  * This program is open source software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 3.
@@ -16,7 +16,6 @@
 #include "ctdl_module.h"
 #include "serv_extensions.h"
 #include "ecrash.h"
-
 #include "citserver.h"
 #include "user_ops.h"
 #include "locate_host.h"
@@ -52,6 +51,7 @@ int CtdlTrySingleUser(void)
 	return can_do;
 }
 
+
 void CtdlEndSingleUser(void)
 {
 	begin_critical_section(S_SINGLE_USER);
@@ -65,6 +65,7 @@ int CtdlWantSingleUser(void)
 	return want_single_user;
 }
 
+
 int CtdlIsSingleUser(void)
 {
 	if (want_single_user)
@@ -75,9 +76,6 @@ int CtdlIsSingleUser(void)
 	}
 	return FALSE;
 }
-
-
-
 
 
 /*
@@ -494,7 +492,6 @@ void begin_session(CitContext *con)
 	strcpy(con->lastcmdname, "    ");
 	strcpy(con->cs_clientname, "(unknown)");
 	strcpy(con->curr_user, NLI);
-	*con->net_node = '\0';
 	*con->fake_username = '\0';
 	*con->fake_hostname = '\0';
 	*con->fake_roomname = '\0';
@@ -548,7 +545,6 @@ void begin_session(CitContext *con)
 	}
 	con->cs_flags = 0;
 	con->upload_type = UPL_FILE;
-	con->dl_is_net = 0;
 
 	con->nologin = 0;
 	if (((CtdlGetConfigInt("c_maxsessions") > 0)&&(num_sessions > CtdlGetConfigInt("c_maxsessions"))) || CtdlWantSingleUser()) {

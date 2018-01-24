@@ -367,16 +367,7 @@ int CtdlIsValidNode(const StrBuf **nexthop,
 
 
 
-int CtdlNetworkTalkingTo(const char *nodename, long len, int operation);
 
-/*
- * Operations that can be performed by network_talking_to()
- */
-enum {
-        NTT_ADD,
-        NTT_REMOVE,
-        NTT_CHECK
-};
 
 /*
  * Expose API calls from user_ops.c

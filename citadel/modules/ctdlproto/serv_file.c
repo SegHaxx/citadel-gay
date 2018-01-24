@@ -365,13 +365,6 @@ void cmd_clos(char *cmdbuf)
 
 	fclose(CC->download_fp);
 	CC->download_fp = NULL;
-
-	if (CC->dl_is_net == 1) {
-		CC->dl_is_net = 0;
-		snprintf(buf, sizeof buf, "%s/%s", ctdl_netout_dir, CC->net_node);
-		unlink(buf);
-	}
-
 	cprintf("%d Ok\n", CIT_OK);
 }
 
@@ -521,105 +514,6 @@ void cmd_writ(char *cmdbuf)
 		syslog(LOG_ERR, "serv_file: %s", strerror(errno));
 	}
 	free(buf);
-}
-
-
-/*
- * cmd_ndop() - open a network spool file for downloading
- */
-void cmd_ndop(char *cmdbuf)
-{
-	struct CitContext *CCC = CC;
-	char pathname[256];
-	struct stat statbuf;
-
-	if (IsEmptyStr(CCC->net_node)) {
-		cprintf("%d Not authenticated as a network node.\n",
-			ERROR + NOT_LOGGED_IN);
-		return;
-	}
-
-	if (CCC->download_fp != NULL) {
-		cprintf("%d You already have a download file open.\n",
-			ERROR + RESOURCE_BUSY);
-		return;
-	}
-
-	snprintf(pathname, sizeof pathname, 
-			 "%s/%s",
-			 ctdl_netout_dir,
-			 CCC->net_node);
-
-	/* first open the file in append mode in order to create a
-	 * zero-length file if it doesn't already exist 
-	 */
-	CCC->download_fp = fopen(pathname, "a");
-	if (CCC->download_fp != NULL)
-		fclose(CCC->download_fp);
-
-	/* now open it */
-	CCC->download_fp = fopen(pathname, "r");
-	if (CCC->download_fp == NULL) {
-		cprintf("%d cannot open %s: %s\n",
-			ERROR + INTERNAL_ERROR, pathname, strerror(errno));
-		return;
-	}
-
-
-	/* set this flag so other routines know that the download file
-	 * currently open is a network spool file 
-	 */
-	CCC->dl_is_net = 1;
-
-	stat(pathname, &statbuf);
-	CCC->download_fp_total = statbuf.st_size;
-	cprintf("%d %ld\n", CIT_OK, (long)statbuf.st_size);
-}
-
-
-/*
- * cmd_nuop() - open a network spool file for uploading
- */
-void cmd_nuop(char *cmdbuf)
-{
-	static int seq = 1;
-
-	if (IsEmptyStr(CC->net_node)) {
-		cprintf("%d Not authenticated as a network node.\n",
-			ERROR + NOT_LOGGED_IN);
-		return;
-	}
-
-	if (CC->upload_fp != NULL) {
-		cprintf("%d You already have an upload file open.\n",
-			ERROR + RESOURCE_BUSY);
-		return;
-	}
-
-	snprintf(CC->upl_path, sizeof CC->upl_path,
-		 "%s/%s.%04lx.%04x",
-		 ctdl_nettmp_dir,
-		 CC->net_node, 
-		 (long)getpid(), 
-		 ++seq
-	);
-
-	CC->upload_fp = fopen(CC->upl_path, "r");
-	if (CC->upload_fp != NULL) {
-		fclose(CC->upload_fp);
-		CC->upload_fp = NULL;
-		cprintf("%d '%s' already exists\n", ERROR + ALREADY_EXISTS, CC->upl_path);
-		return;
-	}
-
-	CC->upload_fp = fopen(CC->upl_path, "w");
-	if (CC->upload_fp == NULL) {
-		cprintf("%d Cannot open %s: %s\n", ERROR + INTERNAL_ERROR, CC->upl_path, strerror(errno));
-		return;
-	}
-
-	CC->upload_type = UPL_NET;
-	cprintf("%d Ok\n", CIT_OK);
 }
 
 
@@ -786,8 +680,6 @@ CTDL_MODULE_INIT(file_ops)
 		CtdlRegisterProtoHook(cmd_ucls, "UCLS", "Close an upload file transfer");
 		CtdlRegisterProtoHook(cmd_read, "READ", "File transfer read operation");
 		CtdlRegisterProtoHook(cmd_writ, "WRIT", "File transfer write operation");
-		CtdlRegisterProtoHook(cmd_ndop, "NDOP", "Open a network spool file for download");
-		CtdlRegisterProtoHook(cmd_nuop, "NUOP", "Open a network spool file for upload");
 		CtdlRegisterProtoHook(cmd_oimg, "OIMG", "Open an image file for download");
 		CtdlRegisterProtoHook(cmd_uimg, "UIMG", "Upload an image file");
 		CtdlRegisterProtoHook(cmd_mesg, "MESG", "fetch system banners");

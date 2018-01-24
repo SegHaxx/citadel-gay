@@ -1,7 +1,7 @@
 /*
  * This module handles loading, saving, and parsing of room network configurations.
  *
- * Copyright (c) 2000-2017 by the citadel.org team
+ * Copyright (c) 2000-2018 by the citadel.org team
  *
  * This program is open source software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 3.
@@ -622,76 +622,6 @@ int CtdlNetconfigCheckRoomaccess(char *errmsgbuf, size_t n, const char* RemoteId
 }
 
 
-/*
- * cmd_netp() - authenticate to the server as another Citadel node polling
- *	      for network traffic
- */
-void cmd_netp(char *cmdbuf)
-{
-	struct CitContext *CCC = CC;
-	HashList *working_ignetcfg;
-	char *node;
-	StrBuf *NodeStr;
-	long nodelen;
-	int v;
-
-	const StrBuf *secret = NULL;
-	const StrBuf *nexthop = NULL;
-	char err_buf[SIZ] = "";
-
-	/* Authenticate */
-	node = CCC->curr_user;
-	nodelen = extract_token(CCC->curr_user, cmdbuf, 0, '|', sizeof CCC->curr_user);
-	NodeStr = NewStrBufPlain(node, nodelen);
-	/* load the IGnet Configuration to check node validity */
-	working_ignetcfg = CtdlLoadIgNetCfg();
-	v = CtdlIsValidNode(&nexthop, &secret, NodeStr, working_ignetcfg, NULL);
-	if (v != 0) {
-		snprintf(err_buf, sizeof err_buf,
-			"An unknown Citadel server called \"%s\" attempted to connect from %s [%s].\n",
-			node, CCC->cs_host, CCC->cs_addr
-		);
-		syslog(LOG_WARNING, "netconfig: %s", err_buf);
-		cprintf("%d authentication failed\n", ERROR + PASSWORD_REQUIRED);
-		CtdlAideMessage(err_buf, "IGNet Networking");
-		DeleteHash(&working_ignetcfg);
-		FreeStrBuf(&NodeStr);
-		return;
-	}
-
-	extract_token(CCC->user.password, cmdbuf, 1, '|', sizeof CCC->user.password);
-	if (strcasecmp(CCC->user.password, ChrPtr(secret))) {
-		snprintf(err_buf, sizeof err_buf,
-			"A Citadel server at %s [%s] failed to authenticate as network node \"%s\".\n",
-			CCC->cs_host, CCC->cs_addr, node
-		);
-		syslog(LOG_WARNING, "netconfig: %s", err_buf);
-		cprintf("%d authentication failed\n", ERROR + PASSWORD_REQUIRED);
-
-		CtdlAideMessage(err_buf, "IGNet Networking");
-		DeleteHash(&working_ignetcfg);
-		FreeStrBuf(&NodeStr);
-		return;
-	}
-
-	if (CtdlNetworkTalkingTo(node, nodelen, NTT_CHECK)) {
-		syslog(LOG_WARNING, "netconfig: duplicate session for network node <%s>", node);
-		cprintf("%d Already talking to %s right now\n", ERROR + RESOURCE_BUSY, node);
-		DeleteHash(&working_ignetcfg);
-		FreeStrBuf(&NodeStr);
-		return;
-	}
-	nodelen = safestrncpy(CCC->net_node, node, sizeof CCC->net_node);
-	CtdlNetworkTalkingTo(CCC->net_node, nodelen, NTT_ADD);
-	syslog(LOG_INFO, "netconfig: network node <%s> logged in from %s [%s]",
-		CCC->net_node, CCC->cs_host, CCC->cs_addr
-	);
-	cprintf("%d authenticated as network node '%s'\n", CIT_OK, CCC->net_node);
-	DeleteHash(&working_ignetcfg);
-	FreeStrBuf(&NodeStr);
-}
-
-
 /*-----------------------------------------------------------------------------*
  *                 Network maps: evaluate other nodes                          *
  *-----------------------------------------------------------------------------*/
@@ -942,7 +872,6 @@ CTDL_MODULE_INIT(netconfig)
 		convert_legacy_netcfg_files();
 		CtdlRegisterProtoHook(cmd_gnet, "GNET", "Get network config");
 		CtdlRegisterProtoHook(cmd_snet, "SNET", "Set network config");
-		CtdlRegisterProtoHook(cmd_netp, "NETP", "Identify as network poller");
 	}
 	return "netconfig";
 }

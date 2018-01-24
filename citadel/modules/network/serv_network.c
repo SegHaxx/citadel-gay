@@ -318,31 +318,6 @@ void network_do_queue(void)
 }
 
 
-void network_logout_hook(void)
-{
-	CitContext *CCC = MyContext();
-
-	/*
-	 * If we were talking to a network node, we're not anymore...
-	 */
-	if (!IsEmptyStr(CCC->net_node)) {
-		CtdlNetworkTalkingTo(CCC->net_node, strlen(CCC->net_node), NTT_REMOVE);
-		CCC->net_node[0] = '\0';
-	}
-}
-
-
-void network_cleanup_function(void)
-{
-	struct CitContext *CCC = CC;
-
-	if (!IsEmptyStr(CCC->net_node)) {
-		CtdlNetworkTalkingTo(CCC->net_node, strlen(CCC->net_node), NTT_REMOVE);
-		CCC->net_node[0] = '\0';
-	}
-}
-
-
 /*
  * Module entry point
  */
@@ -353,8 +328,6 @@ CTDL_MODULE_INIT(network)
 	if (!threading)
 	{
 		CtdlFillSystemContext(&networker_spool_CC, "CitNetSpool");
-		CtdlRegisterSessionHook(network_cleanup_function, EVT_STOP, PRIO_STOP + 30);
-                CtdlRegisterSessionHook(network_logout_hook, EVT_LOGOUT, PRIO_LOGOUT + 10);
 		CtdlRegisterRoomHook(network_room_handler);
 		CtdlRegisterCleanupHook(destroy_network_queue_room_locked);
 		CtdlRegisterSessionHook(network_do_queue, EVT_TIMER, PRIO_QUEUE + 10);
