@@ -1,7 +1,7 @@
 /*
  * This file contains miscellaneous housekeeping tasks.
  *
- * Copyright (c) 1987-2017 by the citadel.org team
+ * Copyright (c) 1987-2018 by the citadel.org team
  *
  * This program is open source software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 3.
@@ -72,7 +72,18 @@ void check_ref_counts(void) {
 		lputfloor(&flbuf, a);
 		syslog(LOG_DEBUG, "housekeeping: floor %d has %d rooms", a, new_refcounts[a]);
 	}
-}	
+}
+
+
+/*
+ * Provide hints as to whether we have any memory leaks
+ */
+void keep_an_eye_on_memory_usage(void)
+{
+	static void *original_brk = NULL;
+	if (!original_brk) original_brk = sbrk(0);	// Remember the original program break so we can test for leaks
+	syslog(LOG_DEBUG, "original_brk=%lx, current_brk=%lx, addl=%ld", (long)original_brk, (long)sbrk(0), (long)(sbrk(0)-original_brk));	// FIXME not so noisy please
+}
 
 
 /*
@@ -87,7 +98,6 @@ void do_housekeeping(void) {
 	int do_housekeeping_now = 0;
 	int do_perminute_housekeeping_now = 0;
 	time_t now;
-	static void *original_brk = NULL;
 
 	/*
 	 * We do it this way instead of wrapping the whole loop in an
@@ -100,9 +110,6 @@ void do_housekeeping(void) {
 		housekeeping_in_progress = 1;
 	}
 	end_critical_section(S_HOUSEKEEPING);
-
-	if (!original_brk) original_brk = sbrk(0);	// Remember the original program break so we can test for leaks
-	syslog(LOG_DEBUG, "original_brk=%x, current_brk=%x, addl=%d", (int)original_brk, (int)sbrk(0), (int)(sbrk(0)-original_brk));	// FIXME not so noisy please
 
 	now = time(NULL);
 	if (do_housekeeping_now == 0) {
@@ -142,6 +149,7 @@ void do_housekeeping(void) {
 		}
 #endif
 
+	keep_an_eye_on_memory_usage();
 	}
 
 	/*
