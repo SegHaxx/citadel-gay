@@ -2,7 +2,7 @@
  * A server-side module for Citadel which supports address book information
  * using the standard vCard format.
  * 
- * Copyright (c) 1999-2017 by the citadel.org team
+ * Copyright (c) 1999-2018 by the citadel.org team
  *
  * This program is open source software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3.
@@ -1115,13 +1115,12 @@ void check_get(void) {
 		
 		extract_token(internet_addr, argbuf, 0, '|', sizeof internet_addr);
 		rcpt = validate_recipients(internet_addr, NULL, CHECK_EXISTANCE);
-		if ((rcpt != NULL)&&
+		if (	(rcpt != NULL) &&
 			(
-			 (*rcpt->recp_local != '\0')||
-			 (*rcpt->recp_room != '\0')||
-			 (*rcpt->recp_ignet != '\0')))
-		{
-
+				(*rcpt->recp_local != '\0') ||
+				(*rcpt->recp_room != '\0')
+			)
+		) {
 			cprintf("200 OK %s\n", internet_addr);
 			syslog(LOG_INFO, "vcard: sending 200 OK for the room %s", rcpt->display_recp);
 		}

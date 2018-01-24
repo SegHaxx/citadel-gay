@@ -191,7 +191,7 @@ it is presented for reading.
 non zero for this event will prevent the message being saved to disk in the
 normal manner.
     EVT_AFTERSAVE    Called after the message is saved to disk but before
-any IGnet spooling is carried out.
+any network spooling is carried out.
     EVT_SMTPSCAN     Called during the SMTP reception of a message after the 
 message is received and before the response is sent to the sender. This is
 intended for spam filters and virus checkers. A positive return code will

@@ -54,7 +54,6 @@ typedef struct __recptypes {
 	char *errormsg;
 	char *recp_local;
 	char *recp_internet;
-	char *recp_ignet;
 	char *recp_room;
 	char *recp_orgroom;
 	char *display_recp;

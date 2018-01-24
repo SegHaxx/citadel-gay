@@ -1,7 +1,7 @@
 /*
  * Message journaling functions.
  *
- * Copyright (c) 1987-2015 by the citadel.org team
+ * Copyright (c) 1987-2018 by the citadel.org team
  *
  * This program is open source software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3.
@@ -14,9 +14,7 @@
 
 #include <stdio.h>
 #include <libcitadel.h>
-
 #include "ctdl_module.h"
-
 #include "citserver.h"
 #include "config.h"
 #include "user_ops.h"
@@ -116,7 +114,6 @@ void JournalRunQueueMsg(struct jnlq *jmsg) {
 
 		if (  (journal_recps->num_local > 0)
 		   || (journal_recps->num_internet > 0)
-		   || (journal_recps->num_ignet > 0)
 		   || (journal_recps->num_room > 0)
 		) {
 
@@ -202,77 +199,39 @@ void JournalRunQueueMsg(struct jnlq *jmsg) {
 						   journal_msg->cm_fields[erFc822Addr]);
 			}
 			else if (!CM_IsEmpty(journal_msg, eNodeName)) {
-				StrBufAppendPrintf(message_text, " @ %s",
-						   journal_msg->cm_fields[eNodeName]);
+				StrBufAppendPrintf(message_text, " @ %s", journal_msg->cm_fields[eNodeName]);
 			}
-			else
-				StrBufAppendBufPlain(
-					message_text, 
-					HKEY(" "), 0);
+			else {
+				StrBufAppendBufPlain( message_text, HKEY(" "), 0);
+			}
 
-			StrBufAppendBufPlain(
-				message_text, 
-				HKEY("\r\n"
-				     "Message-ID: <"), 0);
+			StrBufAppendBufPlain(message_text, HKEY("\r\nMessage-ID: <"), 0);
 
 			StrBufAppendBufPlain(message_text, jmsg->msgn, -1, 0);
-			StrBufAppendBufPlain(
-				message_text, 
-				HKEY(">\r\n"
-				     "Recipients:\r\n"), 0);
+			StrBufAppendBufPlain( message_text, HKEY(">\r\nRecipients:\r\n"), 0);
 
 			if (jmsg->recps.num_local > 0) {
 				for (i=0; i<jmsg->recps.num_local; ++i) {
-					extract_token(recipient, jmsg->recps.recp_local,
-							i, '|', sizeof recipient);
+					extract_token(recipient, jmsg->recps.recp_local, i, '|', sizeof recipient);
 					local_to_inetemail(inetemail, recipient, sizeof inetemail);
-					StrBufAppendPrintf(message_text, 
-							   "	%s <%s>\r\n", recipient, inetemail);
-				}
-			}
-
-			if (jmsg->recps.num_ignet > 0) {
-				for (i=0; i<jmsg->recps.num_ignet; ++i) {
-					extract_token(recipient, jmsg->recps.recp_ignet,
-							i, '|', sizeof recipient);
-					StrBufAppendPrintf(message_text, 
-							   "	%s\r\n", recipient);
+					StrBufAppendPrintf(message_text, "	%s <%s>\r\n", recipient, inetemail);
 				}
 			}
 
 			if (jmsg->recps.num_internet > 0) {
 				for (i=0; i<jmsg->recps.num_internet; ++i) {
-					extract_token(recipient, jmsg->recps.recp_internet,
-							i, '|', sizeof recipient);
-					StrBufAppendPrintf(message_text, 
-						"	%s\r\n", recipient);
+					extract_token(recipient, jmsg->recps.recp_internet, i, '|', sizeof recipient);
+					StrBufAppendPrintf(message_text, "	%s\r\n", recipient);
 				}
 			}
 
-			StrBufAppendBufPlain(
-				message_text, 
-				HKEY("\r\n"
-				     "--"), 0);
-
+			StrBufAppendBufPlain(message_text, HKEY("\r\n" "--"), 0);
 			StrBufAppendBufPlain(message_text, mime_boundary, mblen, 0);
-
-			StrBufAppendBufPlain(
-				message_text, 
-				HKEY("\r\n"
-				     "Content-type: message/rfc822\r\n"
-				     "\r\n"), 0);
-
+			StrBufAppendBufPlain(message_text, HKEY("\r\nContent-type: message/rfc822\r\n\r\n"), 0);
 			StrBufAppendBufPlain(message_text, jmsg->rfc822, rfc822len, 0);
-
-			StrBufAppendBufPlain(
-				message_text, 
-				HKEY("--"), 0);
-
+			StrBufAppendBufPlain(message_text, HKEY("--"), 0);
 			StrBufAppendBufPlain(message_text, mime_boundary, mblen, 0);
-
-			StrBufAppendBufPlain(
-				message_text, 
-				HKEY("--\r\n"), 0);
+			StrBufAppendBufPlain(message_text, HKEY("--\r\n"), 0);
 
 			CM_SetAsFieldSB(journal_msg, eMesageText, &message_text);
 			free(jmsg->rfc822);

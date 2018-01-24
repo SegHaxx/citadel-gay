@@ -152,7 +152,6 @@ struct ctdlroom {
 #define MES_ERROR	(-1)		// Can't send message due to bad address
 #define MES_LOCAL	0		// Local message, do no network processing
 #define MES_INTERNET	1		// Convert msg and send as Internet mail
-#define MES_IGNET	2		// Process recipient and send via Cit net
 
 /****************************************************************************/
 

@@ -2,7 +2,7 @@
  * This file contains functions which handle the mapping of Internet addresses
  * to users on the Citadel system.
  *
- * Copyright (c) 1987-2017 by the citadel.org team
+ * Copyright (c) 1987-2018 by the citadel.org team
  *
  * This program is open source software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3.
@@ -482,34 +482,6 @@ int alias(char *name)
 		return(MES_INTERNET);
 	}
 
-	/* Otherwise we look in the IGnet maps for a valid Citadel node.
-	 * Try directly-connected nodes first...
-	 */
-	ignetcfg = CtdlGetSysConfig(IGNETCFG);
-	for (i=0; i<num_tokens(ignetcfg, '\n'); ++i) {
-		extract_token(buf, ignetcfg, i, '\n', sizeof buf);
-		extract_token(testnode, buf, 0, '|', sizeof testnode);
-		if (!strcasecmp(node, testnode)) {
-			free(ignetcfg);
-			return(MES_IGNET);
-		}
-	}
-	free(ignetcfg);
-
-	/*
-	 * Then try nodes that are two or more hops away.
-	 */
-	ignetmap = CtdlGetSysConfig(IGNETMAP);
-	for (i=0; i<num_tokens(ignetmap, '\n'); ++i) {
-		extract_token(buf, ignetmap, i, '\n', sizeof buf);
-		extract_token(testnode, buf, 0, '|', sizeof testnode);
-		if (!strcasecmp(node, testnode)) {
-			free(ignetmap);
-			return(MES_IGNET);
-		}
-	}
-	free(ignetmap);
-
 	/* If we get to this point it's an invalid node name */
 	return (MES_ERROR);
 }
@@ -567,7 +539,6 @@ recptypes *validate_recipients(const char *supplied_recipients, const char *Remo
 	ret->errormsg = malloc(len);
 	ret->recp_local = malloc(len);
 	ret->recp_internet = malloc(len);
-	ret->recp_ignet = malloc(len);
 	ret->recp_room = malloc(len);
 	ret->display_recp = malloc(len);
 	ret->recp_orgroom = malloc(len);
@@ -576,7 +547,6 @@ recptypes *validate_recipients(const char *supplied_recipients, const char *Remo
 	ret->errormsg[0] = 0;
 	ret->recp_local[0] = 0;
 	ret->recp_internet[0] = 0;
-	ret->recp_ignet[0] = 0;
 	ret->recp_room[0] = 0;
 	ret->recp_orgroom[0] = 0;
 	ret->display_recp[0] = 0;
@@ -718,13 +688,6 @@ recptypes *validate_recipients(const char *supplied_recipients, const char *Remo
 				strcat(ret->recp_internet, this_recp);
 			}
 			break;
-		case MES_IGNET:
-			++ret->num_ignet;
-			if (!IsEmptyStr(ret->recp_ignet)) {
-				strcat(ret->recp_ignet, "|");
-			}
-			strcat(ret->recp_ignet, this_recp);
-			break;
 		case MES_ERROR:
 			++ret->num_error;
 			invalid = 1;
@@ -758,14 +721,14 @@ recptypes *validate_recipients(const char *supplied_recipients, const char *Remo
 	}
 	free(org_recp);
 
-	if ((ret->num_local + ret->num_internet + ret->num_ignet +
-	     ret->num_room + ret->num_error) == 0) {
+	if ( (ret->num_local + ret->num_internet + ret->num_room + ret->num_error) == 0)
+	{
 		ret->num_error = (-1);
 		strcpy(ret->errormsg, "No recipients specified.");
 	}
 
-	syslog(LOG_DEBUG, "internet_addressing: validate_recipients() = %d local, %d room, %d SMTP, %d IGnet, %d error",
-		ret->num_local, ret->num_room, ret->num_internet, ret->num_ignet, ret->num_error
+	syslog(LOG_DEBUG, "internet_addressing: validate_recipients() = %d local, %d room, %d SMTP, %d error",
+		ret->num_local, ret->num_room, ret->num_internet, ret->num_error
 	);
 
 	free(recipients);
@@ -790,7 +753,6 @@ void free_recipients(recptypes *valid) {
 	if (valid->errormsg != NULL)		free(valid->errormsg);
 	if (valid->recp_local != NULL)		free(valid->recp_local);
 	if (valid->recp_internet != NULL)	free(valid->recp_internet);
-	if (valid->recp_ignet != NULL)		free(valid->recp_ignet);
 	if (valid->recp_room != NULL)		free(valid->recp_room);
 	if (valid->recp_orgroom != NULL)        free(valid->recp_orgroom);
 	if (valid->display_recp != NULL)	free(valid->display_recp);
