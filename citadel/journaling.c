@@ -47,7 +47,6 @@ void JournalBackgroundSubmit(struct CtdlMessage *msg,
 	memset(jptr, 0, sizeof(struct jnlq));
 	if (recps != NULL) memcpy(&jptr->recps, recps, sizeof(recptypes));
 	if (!CM_IsEmpty(msg, eAuthor)) jptr->from = strdup(msg->cm_fields[eAuthor]);
-	if (!CM_IsEmpty(msg, eNodeName)) jptr->node = strdup(msg->cm_fields[eNodeName]);
 	if (!CM_IsEmpty(msg, erFc822Addr)) jptr->rfca = strdup(msg->cm_fields[erFc822Addr]);
 	if (!CM_IsEmpty(msg, eMsgSubject)) jptr->subj = strdup(msg->cm_fields[eMsgSubject]);
 	if (!CM_IsEmpty(msg, emessageId)) jptr->msgn = strdup(msg->cm_fields[emessageId]);
@@ -63,14 +62,7 @@ void JournalBackgroundSubmit(struct CtdlMessage *msg,
 
 /*
  * Convert a local user name to an internet email address for the journal
- */
- 
-/*
- * TODODRW: change this into a CtdlModuleDo type function that returns alternative address info
- * for this local user. Something like CtdlModuleGoGetAddr(char *localuser, int type, char *alt_addr, size_t alt_addr_len)
- * where type can be ADDR_EMAIL, ADDR_FIDO, ADDR_UUCP, ADDR_WEB, ADDR_POSTAL etc etc.
- * This then begs the question of what should be returned. Is it wise to return a single char* using a comma as a
- * delimiter? Or would it be better to return a linked list of some kind?
+ * FIXME - grab the user's Internet email address from the user record, not from vCard !!!!
  */
 void local_to_inetemail(char *inetemail, char *localuser, size_t inetemail_len) {
 	struct ctdluser us;
@@ -132,10 +124,6 @@ void JournalRunQueueMsg(struct jnlq *jmsg) {
 				CM_SetField(journal_msg, eAuthor, jmsg->from, strlen(jmsg->from));
 			}
 
-			if (!IsEmptyStr(jmsg->node)) {
-				CM_SetField(journal_msg, eNodeName, jmsg->node, strlen(jmsg->node));
-			}
-
 			if (!IsEmptyStr(jmsg->rfca)) {
 				CM_SetField(journal_msg, erFc822Addr, jmsg->rfca, strlen(jmsg->rfca));
 			}
@@ -158,23 +146,25 @@ void JournalRunQueueMsg(struct jnlq *jmsg) {
 
 			/*
 			 * Here is where we begin to compose the journalized message.
-			 * NOTE: the superfluous "Content-Identifer: ExJournalReport" header was
-			 *       requested by a paying customer, and yes, it is intentionally
-			 *       spelled wrong.  Do NOT remove or change it.
+			 * (The "ExJournalReport" header is consumed by some email retention services which assume the journaling agent is Exchange.)
 			 */
 			StrBufAppendBufPlain(
 				message_text, 
-				HKEY("Content-type: multipart/mixed; boundary=\""), 0);
+				HKEY("Content-type: multipart/mixed; boundary=\""),
+				0
+			);
 
 			StrBufAppendBufPlain(message_text, mime_boundary, mblen, 0);
 
 			StrBufAppendBufPlain(
 				message_text, 
 				HKEY("\"\r\n"
-				     "Content-Identifer: ExJournalReport\r\n"
+				     "Content-Identifier: ExJournalReport\r\n"
 				     "MIME-Version: 1.0\r\n"
 				     "\n"
-				     "--"), 0);
+				     "--"),
+				0
+			);
 
 			StrBufAppendBufPlain(message_text, mime_boundary, mblen, 0);
 
@@ -198,17 +188,10 @@ void JournalRunQueueMsg(struct jnlq *jmsg) {
 				StrBufAppendPrintf(message_text, " <%s>",
 						   journal_msg->cm_fields[erFc822Addr]);
 			}
-			else if (!CM_IsEmpty(journal_msg, eNodeName)) {
-				StrBufAppendPrintf(message_text, " @ %s", journal_msg->cm_fields[eNodeName]);
-			}
-			else {
-				StrBufAppendBufPlain( message_text, HKEY(" "), 0);
-			}
 
 			StrBufAppendBufPlain(message_text, HKEY("\r\nMessage-ID: <"), 0);
-
 			StrBufAppendBufPlain(message_text, jmsg->msgn, -1, 0);
-			StrBufAppendBufPlain( message_text, HKEY(">\r\nRecipients:\r\n"), 0);
+			StrBufAppendBufPlain(message_text, HKEY(">\r\nRecipients:\r\n"), 0);
 
 			if (jmsg->recps.num_local > 0) {
 				for (i=0; i<jmsg->recps.num_local; ++i) {
