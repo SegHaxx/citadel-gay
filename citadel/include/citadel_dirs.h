@@ -21,7 +21,6 @@ extern char ctdl_etc_dir[PATH_MAX];
 extern char ctdl_autoetc_dir[PATH_MAX];
 extern char ctdl_run_dir[PATH_MAX];
 extern char ctdl_spool_dir[PATH_MAX];
-extern char ctdl_netout_dir[PATH_MAX];
 extern char ctdl_netdigest_dir[PATH_MAX];
 extern char ctdl_nettmp_dir[PATH_MAX];
 extern char ctdl_netcfg_dir[PATH_MAX];

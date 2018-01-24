@@ -7,4 +7,3 @@ var/lib/citadel/info
 var/lib/citadel/userpics
 var/run/citadel
 var/spool/citadel/network/spoolin
-var/spool/citadel/network/spoolout

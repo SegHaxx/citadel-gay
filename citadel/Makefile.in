@@ -206,8 +206,7 @@ upgrade: install-exec install-doc
 	@echo
 
 install-data:
-	@for i in messages network/spoolin \
-		 network/spoolout; do \
+	@for i in messages network/spoolin ; do
 		$(srcdir)/mkinstalldirs $(DESTDIR)$(prefix)/$$i; \
 	done
 	@for i in public_clients citadel_urlshorteners.rc \
@@ -221,7 +220,7 @@ install-data:
 	fi
 
 install-data-new:
-	@for i in network/spoolin network/spoolout network/systems; do \
+	@for i in network/spoolin network/systems; do \
 		$(srcdir)/mkinstalldirs $(DESTDIR)$(RUN_DIR)/$$i; \
 	done
 	$(srcdir)/mkinstalldirs $(DESTDIR)$(ETC_DIR)/
@@ -236,7 +235,6 @@ install-data-new:
 		$(INSTALL_DATA) $$i $(DESTDIR)$(STATICDATA_DIR)/$$i; \
 	done
 	$(srcdir)/mkinstalldirs $(DESTDIR)$(SPOOL_DIR)/network/spoolin
-	$(srcdir)/mkinstalldirs $(DESTDIR)$(SPOOL_DIR)/network/spoolout
 	-@if test -d $(DESTDIR)/etc/pam.d; then \
 		echo $(INSTALL_DATA) $(srcdir)/citadel.pam $(DESTDIR)/etc/pam.d/citadel; \
 		$(INSTALL_DATA) $(srcdir)/citadel.pam $(DESTDIR)/etc/pam.d/citadel; \

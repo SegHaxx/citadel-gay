@@ -41,7 +41,6 @@ char ctdl_autoetc_dir[PATH_MAX]="";
 /* attention! this may be non volatile on some oses */
 char ctdl_run_dir[PATH_MAX]="";
 char ctdl_spool_dir[PATH_MAX]="network";
-char ctdl_netout_dir[PATH_MAX]="network/spoolout";
 char ctdl_netdigest_dir[PATH_MAX]="network/digest";
 char ctdl_nettmp_dir[PATH_MAX]="network/spooltmp";
 char ctdl_netcfg_dir[PATH_MAX]="netconfigs";
@@ -174,12 +173,10 @@ void calc_dirs_n_files(int relh, int home, const char *relhome, char  *ctdldir, 
 	basedir=SPOOL_DIR;
 #endif
 	COMPUTE_DIRECTORY(ctdl_spool_dir);
-	COMPUTE_DIRECTORY(ctdl_netout_dir);
 	COMPUTE_DIRECTORY(ctdl_netdigest_dir);
 	COMPUTE_DIRECTORY(ctdl_nettmp_dir);
 
 	StripSlashes(ctdl_spool_dir, 1);
-	StripSlashes(ctdl_netout_dir, 1);
 	StripSlashes(ctdl_netdigest_dir, 1);
 	StripSlashes(ctdl_nettmp_dir, 1);
 
@@ -292,7 +289,6 @@ void calc_dirs_n_files(int relh, int home, const char *relhome, char  *ctdldir, 
 	DBG_PRINT(ctdl_etc_dir);
 	DBG_PRINT(ctdl_run_dir);
 	DBG_PRINT(ctdl_spool_dir);
-	DBG_PRINT(ctdl_netout_dir);
 	DBG_PRINT(ctdl_netdigest_dir);
 	DBG_PRINT(ctdl_nettmp_dir);
 	DBG_PRINT(ctdl_netcfg_dir);
@@ -401,7 +397,6 @@ int create_run_directories(long UID, long GID)
 	rv += create_dir(ctdl_message_dir   , S_IRUSR|S_IWUSR|S_IXUSR, UID, -1);
 	rv += create_dir(ctdl_file_dir      , S_IRUSR|S_IWUSR|S_IXUSR, UID, -1);
 	rv += create_dir(ctdl_spool_dir     , S_IRUSR|S_IWUSR|S_IXUSR, UID, -1);
-	rv += create_dir(ctdl_netout_dir    , S_IRUSR|S_IWUSR|S_IXUSR, UID, -1);
 	rv += create_dir(ctdl_netdigest_dir , S_IRUSR|S_IWUSR|S_IXUSR, UID, -1);
 	rv += create_dir(ctdl_nettmp_dir    , S_IRUSR|S_IWUSR|S_IXUSR, UID, -1);
 	rv += create_dir(ctdl_key_dir       , S_IRUSR|S_IWUSR|S_IXUSR, UID, -1);
