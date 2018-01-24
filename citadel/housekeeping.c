@@ -87,6 +87,7 @@ void do_housekeeping(void) {
 	int do_housekeeping_now = 0;
 	int do_perminute_housekeeping_now = 0;
 	time_t now;
+	static void *original_brk = NULL;
 
 	/*
 	 * We do it this way instead of wrapping the whole loop in an
@@ -99,6 +100,9 @@ void do_housekeeping(void) {
 		housekeeping_in_progress = 1;
 	}
 	end_critical_section(S_HOUSEKEEPING);
+
+	if (!original_brk) original_brk = sbrk(0);	// Remember the original program break so we can test for leaks
+	syslog(LOG_DEBUG, "original_brk=%x, current_brk=%x, addl=%d", (int)original_brk, (int)sbrk(0), (int)(sbrk(0)-original_brk));	// FIXME not so noisy please
 
 	now = time(NULL);
 	if (do_housekeeping_now == 0) {
