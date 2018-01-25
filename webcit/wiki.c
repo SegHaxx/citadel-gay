@@ -1,7 +1,7 @@
 /*
  * Functions pertaining to rooms with a wiki view
  *
- * Copyright (c) 2009-2012 by the citadel.org team
+ * Copyright (c) 2009-2018 by the citadel.org team
  *
  * This program is open source software.  You can redistribute it and/or
  * modify it under the terms of the GNU General Public License, version 3.
@@ -126,19 +126,11 @@ void tmplput_display_wiki_history(StrBuf *Target, WCTemplputParams *TP)
 
 			wc_printf("<tr bgcolor=\"%s\">", ((row%2) ? "#FFFFFF" : "#DDDDDD"));
 			wc_printf("<td>%s</td><td>", rev_date_displayed);
-			if (!strcasecmp(ChrPtr(node), (char *)WC->serv_info->serv_nodename)) {
-				escputs(ChrPtr(author));
-				wc_printf(" @ ");
-				escputs(ChrPtr(node));
-			}
-			else {
-				wc_printf("<a href=\"showuser?who=");
-				urlescputs(ChrPtr(author));
-				wc_printf("\">");
-				escputs(ChrPtr(author));
-				wc_printf("</a>");
-			}
-			wc_printf("</td>");
+			wc_printf("<a href=\"showuser?who=");
+			urlescputs(ChrPtr(author));
+			wc_printf("\">");
+			escputs(ChrPtr(author));
+			wc_printf("</a></td>");
 
 			if (row == 0) {
 				wc_printf("<td><a href=\"wiki?page=%s", bstr("page"));
