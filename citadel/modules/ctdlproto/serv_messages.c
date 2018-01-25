@@ -1,7 +1,7 @@
 /*
  * represent messages to the citadel clients
  *
- * Copyright (c) 1987-2017 by the citadel.org team
+ * Copyright (c) 1987-2018 by the citadel.org team
  *
  * This program is open source software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3.
@@ -63,7 +63,7 @@ void headers_listing(long msgnum, void *userdata)
 		msgnum,
 		(!CM_IsEmpty(msg, eTimestamp) ? msg->cm_fields[eTimestamp] : "0"),
 		(!CM_IsEmpty(msg, eAuthor) ? msg->cm_fields[eAuthor] : ""),
-		(!CM_IsEmpty(msg, eNodeName) ? msg->cm_fields[eNodeName] : ""),
+		CtdlGetConfigStr("c_nodename"),						// no more nodenames anymore
 		(!CM_IsEmpty(msg, erFc822Addr) ? msg->cm_fields[erFc822Addr] : ""),
 		(!CM_IsEmpty(msg, eMsgSubject) ? msg->cm_fields[eMsgSubject] : "")
 	);

@@ -2912,12 +2912,12 @@ long CtdlSubmitMsg(struct CtdlMessage *msg,	/* message to save */
 	/* Decide where bounces need to be delivered */
 	if ((recps != NULL) && (recps->bounce_to == NULL))
 	{
-		if (CC->logged_in) 
-			snprintf(bounce_to, sizeof bounce_to, "%s@%s",
-				 CC->user.fullname, CtdlGetConfigStr("c_nodename"));
-		else 
-			snprintf(bounce_to, sizeof bounce_to, "%s@%s",
-				 msg->cm_fields[eAuthor], msg->cm_fields[eNodeName]);
+		if (CC->logged_in) {
+			snprintf(bounce_to, sizeof bounce_to, "%s@%s", CC->user.fullname, CtdlGetConfigStr("c_nodename"));
+		}
+		else {
+			snprintf(bounce_to, sizeof bounce_to, "%s@%s", msg->cm_fields[eAuthor], msg->cm_fields[eNodeName]);
+		}
 		recps->bounce_to = bounce_to;
 	}
 		

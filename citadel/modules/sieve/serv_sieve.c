@@ -2,7 +2,7 @@
  * This module glues libSieve to the Citadel server in order to implement
  * the Sieve mailbox filtering language (RFC 3028).
  *
- * Copyright (c) 1987-2017 by the citadel.org team
+ * Copyright (c) 1987-2018 by the citadel.org team
  *
  * This program is open source software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3.
@@ -577,9 +577,6 @@ void sieve_do_msg(long msgnum, void *userdata) {
 	/* Keep track of the sender so we can use it for REJECT and VACATION responses */
 	if (!CM_IsEmpty(msg, erFc822Addr)) {
 		safestrncpy(my.sender, msg->cm_fields[erFc822Addr], sizeof my.sender);
-	}
-	else if ( (!CM_IsEmpty(msg, eAuthor)) && (!CM_IsEmpty(msg, eNodeName)) ) {
-		snprintf(my.sender, sizeof my.sender, "%s@%s", msg->cm_fields[eAuthor], msg->cm_fields[eNodeName]);
 	}
 	else if (!CM_IsEmpty(msg, eAuthor)) {
 		safestrncpy(my.sender, msg->cm_fields[eAuthor], sizeof my.sender);

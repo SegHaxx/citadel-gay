@@ -1,7 +1,7 @@
 /*
  * Utility functions for the Citadel SMTP implementation
  *
- * Copyright (c) 1998-2017 by the citadel.org team
+ * Copyright (c) 1998-2018 by the citadel.org team
  *
  * This program is open source software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3.
@@ -120,7 +120,6 @@ void smtp_do_bounce(const char *instr, int is_final)
 	bmsg->cm_format_type = FMT_RFC822;
 	CM_SetField(bmsg, eAuthor, HKEY("Citadel"));
 	CM_SetField(bmsg, eOriginalRoom, HKEY(MAILROOM));
-	CM_SetField(bmsg, eNodeName, CtdlGetConfigStr("c_nodename"), strlen(CtdlGetConfigStr("c_nodename")));
 	CM_SetField(bmsg, eMsgSubject, HKEY("Delivery Status Notification (Failure)"));
 	StrBufAppendBufPlain(BounceMB, HKEY("Content-type: multipart/mixed; boundary=\""), 0);
 	StrBufAppendBuf(BounceMB, boundary, 0);

@@ -898,7 +898,6 @@ void smtp_data(long offset, long flags)
 			return;
 		}
 
-		CM_SetField(msg, eNodeName, CtdlGetConfigStr("c_nodename"), strlen(CtdlGetConfigStr("c_nodename")));
 		CM_SetField(msg, eHumanNode, CtdlGetConfigStr("c_humannode"), strlen(CtdlGetConfigStr("c_humannode")));
         	CM_SetField(msg, eOriginalRoom, HKEY(MAILROOM));
 		if (sSMTP->preferred_sender_name != NULL)

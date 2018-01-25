@@ -1,7 +1,7 @@
 /*
  * Server-side module for Wiki rooms.  This handles things like version control. 
  * 
- * Copyright (c) 2009-2017 by the citadel.org team
+ * Copyright (c) 2009-2018 by the citadel.org team
  *
  * This program is open source software.  You can redistribute it and/or
  * modify it under the terms of the GNU General Public License, version 3.
@@ -667,8 +667,6 @@ void wiki_rev(char *pagename, char *rev, char *operation)
 				CM_SetField(msg, eOriginalRoom, CCC->room.QRname, strlen(CCC->room.QRname));
 			}
 
-			CM_SetField(msg, eNodeName, CtdlGetConfigStr("c_nodename"), strlen(CtdlGetConfigStr("c_nodename")));
-			
 			if (!IsEmptyStr(pagename)) {
 				CM_SetField(msg, eExclusiveID, pagename, strlen(pagename));
 			}

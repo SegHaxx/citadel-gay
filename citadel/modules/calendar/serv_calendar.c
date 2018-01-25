@@ -3,7 +3,7 @@
  * room on a Citadel server.  It handles iCalendar objects using the
  * iTIP protocol.  See RFCs 2445 and 2446.
  *
- * Copyright (c) 1987-2015 by the citadel.org team
+ * Copyright (c) 1987-2018 by the citadel.org team
  *
  * This program is open source software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3.
@@ -143,7 +143,6 @@ void ical_write_to_cal(struct ctdluser *u, icalcomponent *cal) {
 		msg->cm_format_type = 4;
 		CM_SetField(msg, eAuthor, CCC->user.fullname, strlen(CCC->user.fullname));
 		CM_SetField(msg, eOriginalRoom, CCC->room.QRname, strlen(CCC->room.QRname));
-		CM_SetField(msg, eNodeName, CtdlGetConfigStr("c_nodename"), strlen(CtdlGetConfigStr("c_nodename")));
 		CM_SetField(msg, eHumanNode, CtdlGetConfigStr("c_humannode"), strlen(CtdlGetConfigStr("c_humannode")));
 
 		MsgBody = NewStrBufPlain(NULL, serlen + 100);
