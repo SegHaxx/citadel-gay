@@ -25,6 +25,8 @@ struct mthread {
 
 
 // Renderer for one message in the threaded view
+// (This will probably work for the flat view too.)
+//
 void thread_render_one_message(struct ctdlsession *c, StrBuf *sj, long msgnum)
 {
 	StrBuf *raw_msg = NULL;
@@ -32,67 +34,105 @@ void thread_render_one_message(struct ctdlsession *c, StrBuf *sj, long msgnum)
 	char buf[1024];
 	char content_transfer_encoding[1024] = { 0 };
 	char content_type[1024] = { 0 };
+	char author[128] = { 0 };
+	char datetime[128] = { 0 } ;
 
 	ctdl_printf(c, "MSG4 %ld", msgnum);
 	ctdl_readline(c, buf, sizeof(buf));
-	if (buf[0] == '1') {
-		while ( (ctdl_readline(c, buf, sizeof(buf)) >= 0) && (strcmp(buf, "text")) && (strcmp(buf, "000")) ) {
-			// citadel header parsing here
-			if (!strncasecmp(buf, "from=", 5)) {
-				StrBufAppendPrintf(sj, "<b>From %s</b><br>", &buf[5]);	// FIXME that was temporary
-			}
-			if (!strncasecmp(buf, "part=", 5)) {
-				//StrBufAppendPrintf(sj, "MIME part: %s<br>", &buf[5]);	// FIXME that was temporary
-			}
+	if (buf[0] != '1') {
+		StrBufAppendPrintf(sj, "<div>ERROR CONDITION FIXME WRITE A BOX</div>");
+		return;
+	}
+
+	while ( (ctdl_readline(c, buf, sizeof(buf)) >= 0) && (strcmp(buf, "text")) && (strcmp(buf, "000")) ) {
+		// citadel header parsing here
+		if (!strncasecmp(buf, "from=", 5)) {
+			safestrncpy(author, &buf[5], sizeof author);
 		}
-		if (!strcmp(buf, "text")) {
-			while ( (ctdl_readline(c, buf, sizeof(buf)) >= 0) && (strcmp(buf, "")) && (strcmp(buf, "000")) ) {
-				// rfc822 header parsing here
-				if (!strncasecmp(buf, "Content-transfer-encoding:", 26)) {
-					strcpy(content_transfer_encoding, &buf[26]);
-					striplt(content_transfer_encoding);
-				}
-				if (!strncasecmp(buf, "Content-type:", 13)) {
-					strcpy(content_type, &buf[13]);
-					striplt(content_type);
-					//StrBufAppendPrintf(sj, "Content-type: %s<br>", content_type);	// FIXME that was temporary
-				}
-			}
-			raw_msg = ctdl_readtextmsg(c);
-		}
-		else {
-			raw_msg = NULL;
-		}
-		if (raw_msg) {
-			if (!strcasecmp(content_transfer_encoding, "base64")) {
-				StrBufDecodeBase64(raw_msg);
-			}
-			if (!strcasecmp(content_transfer_encoding, "quoted-printable")) {
-				StrBufDecodeQP(raw_msg);
-			}
-			if (!strncasecmp(content_type, "text/html", 9)) {
-				sanitized_msg = html2html("UTF-8", 0, c->room, msgnum, raw_msg);
-			}
-			else if (!strncasecmp(content_type, "text/plain", 10)) {
-				sanitized_msg = text2html("UTF-8", 0, c->room, msgnum, raw_msg);
-			}
-			else if (!strncasecmp(content_type, "text/x-citadel-variformat", 25)) {
-				sanitized_msg = variformat2html(raw_msg);
-			}
-			else {
-				sanitized_msg = NewStrBufPlain(HKEY("<i>No renderer for this content type</i><br>"));
-			}
-			//sanitized_msg = NewStrBufDup(raw_msg);
-			FreeStrBuf(&raw_msg);
-			if (sanitized_msg) {
-				StrBufAppendBuf(sj, sanitized_msg, 0);
-				FreeStrBuf(&sanitized_msg);
-			}
+		if (!strncasecmp(buf, "time=", 5)) {
+			time_t tt;
+			struct tm tm;
+			tt = atol(&buf[5]);
+			localtime_r(&tt, &tm);
+			strftime(datetime, sizeof datetime, "%c", &tm);
 		}
 	}
+
+	if (!strcmp(buf, "text")) {
+		while ( (ctdl_readline(c, buf, sizeof(buf)) >= 0) && (strcmp(buf, "")) && (strcmp(buf, "000")) ) {
+			// rfc822 header parsing here
+			if (!strncasecmp(buf, "Content-transfer-encoding:", 26)) {
+				strcpy(content_transfer_encoding, &buf[26]);
+				striplt(content_transfer_encoding);
+			}
+			if (!strncasecmp(buf, "Content-type:", 13)) {
+				strcpy(content_type, &buf[13]);
+				striplt(content_type);
+			}
+		}
+		raw_msg = ctdl_readtextmsg(c);
+	}
+	else {
+		raw_msg = NULL;
+	}
+
+	// begin output
+
+	StrBufAppendPrintf(sj, "<div>");						// begin message wrapper
+	StrBufAppendPrintf(sj, "<div style=\"float:left;padding-right:2px\">");		// begin avatar FIXME move the style to a stylesheet
+	StrBufAppendPrintf(sj, "<i class=\"fa fa-user-circle fa-2x\"></i>");		// FIXME temporary avatar
+	StrBufAppendPrintf(sj, "</div>");						// end avatar
+	StrBufAppendPrintf(sj, "<div>");						// begin content
+	StrBufAppendPrintf(sj, "<div>");						// begin header
+	StrBufAppendPrintf(sj, "<span class=\"ctdl-username\"><a href=\"#\">%s</a></span>", author);	// FIXME link to user profile or whatever
+	StrBufAppendPrintf(sj, "<span class=\"ctdl-msgdate\">%s</span>", datetime);
+	StrBufAppendPrintf(sj, "</div>");						// end header
+	StrBufAppendPrintf(sj, "<div>");						// begin body
+
+	if (raw_msg) {
+
+		// These are the encodings we know how to handle.  Decode in-place.
+
+		if (!strcasecmp(content_transfer_encoding, "base64")) {
+			StrBufDecodeBase64(raw_msg);
+		}
+		if (!strcasecmp(content_transfer_encoding, "quoted-printable")) {
+			StrBufDecodeQP(raw_msg);
+		}
+
+		// At this point, raw_msg contains the decoded message.
+		// Now run through the renderers we have available.
+
+		if (!strncasecmp(content_type, "text/html", 9)) {
+			sanitized_msg = html2html("UTF-8", 0, c->room, msgnum, raw_msg);
+		}
+		else if (!strncasecmp(content_type, "text/plain", 10)) {
+			sanitized_msg = text2html("UTF-8", 0, c->room, msgnum, raw_msg);
+		}
+		else if (!strncasecmp(content_type, "text/x-citadel-variformat", 25)) {
+			sanitized_msg = variformat2html(raw_msg);
+		}
+		else {
+			sanitized_msg = NewStrBufPlain(HKEY("<i>No renderer for this content type</i><br>"));
+		}
+		FreeStrBuf(&raw_msg);
+
+		// If sanitized_msg is not NULL, we have rendered the message and can output it.
+
+		if (sanitized_msg) {
+			StrBufAppendBuf(sj, sanitized_msg, 0);
+			FreeStrBuf(&sanitized_msg);
+		}
+	}
+
+	StrBufAppendPrintf(sj, "</div>");						// end body
+	StrBufAppendPrintf(sj, "</div>");						// end content
+	StrBufAppendPrintf(sj, "</div>");						// end wrapper
 }
 
 
+// Threaded view (recursive section)
+//
 void thread_o_print(struct ctdlsession *c, StrBuf *sj, struct mthread *m, int num_msgs, int where_parent_is, int nesting_level)
 {
 	int i = 0;
@@ -103,13 +143,8 @@ void thread_o_print(struct ctdlsession *c, StrBuf *sj, struct mthread *m, int nu
 		if (m[i].parent == where_parent_is) {
 
 			if (++num_printed == 1) {
-				StrBufAppendPrintf(sj, "<ul>");
-				StrBufAppendPrintf(sj, "<table style=\"border: 1px solid black;\"><tr><td>");	// temporary, for visualization
+				StrBufAppendPrintf(sj, "<ul style=\"list-style-type: none;\">");
 			}
-
-			//for (j=nesting_level; j>0; --j) {
-				//StrBufAppendPrintf(sj, " ");
-			//}
 
 			StrBufAppendPrintf(sj, "<li class=\"post\" id=\"post-%ld\">",  m[i].msgnum);
 			thread_render_one_message(c, sj, m[i].msgnum);
@@ -121,13 +156,13 @@ void thread_o_print(struct ctdlsession *c, StrBuf *sj, struct mthread *m, int nu
 	}
 
 	if (num_printed > 0) {
-		StrBufAppendPrintf(sj, "</td></tr></table>");		// temporary, for visualization
 		StrBufAppendPrintf(sj, "</ul>");
 	}
 }
 
 
-
+// Threaded view (entry point)
+//
 void threaded_view(struct http_transaction *h, struct ctdlsession *c, char *which)
 {
 	int num_msgs = 0;
@@ -202,7 +237,7 @@ void threaded_view(struct http_transaction *h, struct ctdlsession *c, char *whic
 	ctdl_readline(c, buf, sizeof(buf));			// Ignore the response
 	thread_o_print(c, sj, m, num_msgs, 0, 0);		// Render threads recursively and recursively
 
-	// haha h0h0
+	// Garbage collection is for people who aren't smart enough to manage their own memory.
 	if (num_msgs > 0) {
 		free(m);
 	}
@@ -216,5 +251,3 @@ void threaded_view(struct http_transaction *h, struct ctdlsession *c, char *whic
 	h->response_body = SmashStrBuf(&sj);
 	return;
 }
-
-

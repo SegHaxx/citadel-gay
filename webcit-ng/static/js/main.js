@@ -163,6 +163,7 @@ function update_banner() {
 	detect_logged_in();
 	if (current_room) {
 		document.getElementById("ctdl_banner_title").innerHTML = current_room;
+		document.title = current_room;
 	}
 	else {
 		document.getElementById("ctdl_banner_title").innerHTML = serv_info.serv_humannode;
