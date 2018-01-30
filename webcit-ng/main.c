@@ -125,7 +125,7 @@ int main(int argc, char **argv)
 
 	/* Go into the background if we were asked to run as a daemon */
 	if (running_as_daemon) {
-		daemon(0, 0);
+		daemon(1, 0);
 		if (pid_file != NULL) {
 			FILE *pfp = fopen(pid_file, "w");
 			if (pfp) {
