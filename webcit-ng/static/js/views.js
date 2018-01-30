@@ -37,7 +37,7 @@ function render_room_view() {
 	switch(current_view) {
 		case views.VIEW_MAILBOX:						// FIXME view mail rooms as forums for now
 		case views.VIEW_BBS:
-			threads_readmessages();
+			forum_readmessages("flat");
 			break;
 		default:
 			document.getElementById("main").innerHTML = "The view for " + current_room + " is " + current_view + " but there is no renderer." ;
@@ -47,15 +47,16 @@ function render_room_view() {
 }
 
 
-// bbs "threads" view
+// Forum view -- flat or threaded
 // The inner div exists so that if the user clicks away early, the main div doesn't get clobbered when the load completes.
+// The parameter can be set to "flat" or "threads" which is passed directly to the API
 //
-function threads_readmessages() {
+function forum_readmessages(flat_or_threads) {
 	var innerdivname = randomString(5);
 	document.getElementById("main").innerHTML = "<div id=\"" + innerdivname + "\"><img src=\"/ctdl/s/throbber.gif\" />" + _("Loading messages from server, please wait") + "</div>" ;
 
 	var request = new XMLHttpRequest();
-	request.open("GET", "/ctdl/r/" + escapeHTMLURI(current_room) + "/" + "threads", true);
+	request.open("GET", "/ctdl/r/" + escapeHTMLURI(current_room) + "/" + flat_or_threads, true);
 	request.onreadystatechange = function() {
 		if (this.readyState === 4) {
 			if ((this.status / 100) == 2) {

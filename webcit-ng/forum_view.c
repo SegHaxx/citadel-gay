@@ -1,5 +1,5 @@
 /*
- * Threaded message view
+ * Forum view (threaded/flat)
  *
  * Copyright (c) 1996-2018 by the citadel.org team
  *
@@ -27,7 +27,7 @@ struct mthread {
 // Renderer for one message in the threaded view
 // (This will probably work for the flat view too.)
 //
-void thread_render_one_message(struct ctdlsession *c, StrBuf *sj, long msgnum)
+void forum_render_one_message(struct ctdlsession *c, StrBuf *sj, long msgnum)
 {
 	StrBuf *raw_msg = NULL;
 	StrBuf *sanitized_msg = NULL;
@@ -131,6 +131,19 @@ void thread_render_one_message(struct ctdlsession *c, StrBuf *sj, long msgnum)
 }
 
 
+// Commands we need to send to Citadel Server before we begin rendering forum view.
+// These are common to flat and threaded views.
+//
+void setup_for_forum_view(struct ctdlsession *c)
+{
+	char buf[1024];
+	ctdl_printf(c, "MSGP text/html|text/plain");		// Declare the MIME types we know how to render
+	ctdl_readline(c, buf, sizeof(buf));			// Ignore the response
+	ctdl_printf(c, "MSGP dont_decode");			// Tell the server we will decode base64/etc client-side
+	ctdl_readline(c, buf, sizeof(buf));			// Ignore the response
+}
+
+
 // Threaded view (recursive section)
 //
 void thread_o_print(struct ctdlsession *c, StrBuf *sj, struct mthread *m, int num_msgs, int where_parent_is, int nesting_level)
@@ -147,7 +160,7 @@ void thread_o_print(struct ctdlsession *c, StrBuf *sj, struct mthread *m, int nu
 			}
 
 			StrBufAppendPrintf(sj, "<li class=\"post\" id=\"post-%ld\">",  m[i].msgnum);
-			thread_render_one_message(c, sj, m[i].msgnum);
+			forum_render_one_message(c, sj, m[i].msgnum);
 			StrBufAppendPrintf(sj, "</li>\r\n");
 			if (i != 0) {
 				thread_o_print(c, sj, m, num_msgs, i, nesting_level+1);
@@ -231,15 +244,40 @@ void threaded_view(struct http_transaction *h, struct ctdlsession *c, char *whic
 	}
 
 	// Now render it
-	ctdl_printf(c, "MSGP text/html|text/plain");		// Declare the MIME types we know how to render
-	ctdl_readline(c, buf, sizeof(buf));			// Ignore the response
-	ctdl_printf(c, "MSGP dont_decode");			// Tell the server we will decode base64/etc client-side
-	ctdl_readline(c, buf, sizeof(buf));			// Ignore the response
+	setup_for_forum_view(c);
 	thread_o_print(c, sj, m, num_msgs, 0, 0);		// Render threads recursively and recursively
 
 	// Garbage collection is for people who aren't smart enough to manage their own memory.
 	if (num_msgs > 0) {
 		free(m);
+	}
+
+	StrBufAppendPrintf(sj, "</body></html>\r\n");
+
+	add_response_header(h, strdup("Content-type"), strdup("text/html; charset=utf-8"));
+	h->response_code = 200;
+	h->response_string = strdup("OK");
+	h->response_body_length = StrLength(sj);
+	h->response_body = SmashStrBuf(&sj);
+	return;
+}
+
+
+// flat view (entry point)
+//
+void flat_view(struct http_transaction *h, struct ctdlsession *c, char *which)
+{
+	StrBuf *sj = NewStrBuf();
+	StrBufAppendPrintf(sj, "<html><body>\r\n");
+
+	setup_for_forum_view(c);
+	long *msglist = get_msglist(c, "ALL");
+	if (msglist) {
+		int i;
+		for (i=0; (msglist[i] > 0); ++i) {
+			forum_render_one_message(c, sj, msglist[i]);
+		}
+		free(msglist);
 	}
 
 	StrBufAppendPrintf(sj, "</body></html>\r\n");

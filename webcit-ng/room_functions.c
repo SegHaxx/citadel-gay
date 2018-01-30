@@ -136,6 +136,11 @@ void object_in_room(struct http_transaction *h, struct ctdlsession *c)
 		return;
 	}
 
+	if (!strncasecmp(buf, "flat", 5)) {			// Client is requesting a flat view (still kind of fuzzy here)
+		flat_view(h, c, &buf[5]);
+		return;
+	}
+
 	if (	(c->room_default_view == VIEW_CALENDAR)		// room types where objects are referenced by EUID
 		|| (c->room_default_view == VIEW_TASKS)
 		|| (c->room_default_view == VIEW_ADDRESSBOOK)
@@ -382,7 +387,7 @@ void propfind_the_room_itself(struct http_transaction *h, struct ctdlsession *c)
 						StrBufAppendPrintf(Buf, "</D:getlastmodified>");
 						free(datestring);
 					}
-					if (enumerate_by_euid) {		// FIXME ajc 2017oct30 should this really be inside the timestamp conditional?
+					if (enumerate_by_euid) {		// FIXME ajc 2017oct30 should this be inside the timestamp conditional?
 						StrBufAppendPrintf(Buf, "<D:getetag>\"%ld\"</D:getetag>", msglist[i]);
 					}
 				}
