@@ -80,12 +80,12 @@ void thread_render_one_message(struct ctdlsession *c, StrBuf *sj, long msgnum)
 
 	StrBufAppendPrintf(sj, "<div>");						// begin message wrapper
 	StrBufAppendPrintf(sj, "<div style=\"float:left;padding-right:2px\">");		// begin avatar FIXME move the style to a stylesheet
-	StrBufAppendPrintf(sj, "<i class=\"fa fa-user-circle fa-2x\"></i>");		// FIXME temporary avatar
+	StrBufAppendPrintf(sj, "<i class=\"fa fa-user-circle fa-2x\"></i> ");		// FIXME temporary avatar
 	StrBufAppendPrintf(sj, "</div>");						// end avatar
 	StrBufAppendPrintf(sj, "<div>");						// begin content
 	StrBufAppendPrintf(sj, "<div>");						// begin header
-	StrBufAppendPrintf(sj, "<span class=\"ctdl-username\"><a href=\"#\">%s</a></span>", author);	// FIXME link to user profile or whatever
-	StrBufAppendPrintf(sj, "<span class=\"ctdl-msgdate\">%s</span>", datetime);
+	StrBufAppendPrintf(sj, "<span class=\"ctdl-username\"><a href=\"#\">%s</a></span> ", author);	// FIXME link to user profile or whatever
+	StrBufAppendPrintf(sj, "<span class=\"ctdl-msgdate\">%s</span> ", datetime);
 	StrBufAppendPrintf(sj, "</div>");						// end header
 	StrBufAppendPrintf(sj, "<div>");						// begin body
 
