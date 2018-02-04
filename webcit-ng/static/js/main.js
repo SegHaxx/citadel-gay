@@ -18,6 +18,7 @@ var current_view = 0;
 var logged_in = 0;
 var current_user = _("Not logged in.");
 var serv_info;
+var messages_per_page = 20;
 
 
 // Placeholder for when we add i18n later
@@ -30,7 +31,7 @@ function _(x) {
 // Useful for generating one-time-use div names
 //
 function randomString(length) {
-	var chars = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXTZabcdefghiklmnopqrstuvwxyz'.split('');
+	var chars = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghiklmnopqrstuvwxyz'.split('');
 
 	if (! length) {
 		length = Math.floor(Math.random() * chars.length);
