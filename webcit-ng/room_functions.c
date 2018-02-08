@@ -131,6 +131,7 @@ void object_in_room(struct http_transaction *h, struct ctdlsession *c)
 		return;
 	}
 
+#if 0
 	if (!strncasecmp(buf, "threads", 5)) {			// Client is requesting a threaded view (still kind of fuzzy here)
 		threaded_view(h, c, &buf[5]);
 		return;
@@ -140,6 +141,7 @@ void object_in_room(struct http_transaction *h, struct ctdlsession *c)
 		flat_view(h, c, &buf[5]);
 		return;
 	}
+#endif
 
 	if (	(c->room_default_view == VIEW_CALENDAR)		// room types where objects are referenced by EUID
 		|| (c->room_default_view == VIEW_TASKS)
@@ -165,6 +167,11 @@ void object_in_room(struct http_transaction *h, struct ctdlsession *c)
 	 */
 	syslog(LOG_DEBUG, "msgnum is %ld, method is %s", msgnum, h->method);
 
+
+	/*
+	 * Does the client want us to render the message for them?
+	 */
+	// FIXME put that logic here
 
 	/*
 	 * Was the client actually requesting a specific component within the message?

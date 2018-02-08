@@ -173,6 +173,7 @@ void thread_o_print(struct ctdlsession *c, StrBuf *sj, struct mthread *m, int nu
 	}
 }
 
+#if 0
 
 // Threaded view (entry point)
 //
@@ -289,3 +290,5 @@ void flat_view(struct http_transaction *h, struct ctdlsession *c, char *which)
 	h->response_body = SmashStrBuf(&sj);
 	return;
 }
+
+#endif

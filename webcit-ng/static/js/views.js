@@ -38,7 +38,7 @@ function render_room_view()
 	{
 		case views.VIEW_MAILBOX:						// FIXME view mail rooms as forums for now
 		case views.VIEW_BBS:
-			forum_readmessages("flat");
+			forum_readmessages();
 			break;
 		default:
 			document.getElementById("main").innerHTML = "The view for " + current_room + " is " + current_view + " but there is no renderer." ;
@@ -80,9 +80,9 @@ function XX_forum_readmessages(flat_or_threads)
 }
 
 
-// Forum view -- let's have another go at this with the rendering done client-side
+// Forum view (flat) -- let's have another go at this with the rendering done client-side
 //
-function forum_readmessages(flat_or_threads)
+function forum_readmessages()
 {
 	var innerdivname = randomString(5);
 	document.getElementById("main").innerHTML = "<div id=\"" + innerdivname +
@@ -97,13 +97,31 @@ function forum_readmessages(flat_or_threads)
 		{
 			if ((this.status / 100) == 2)
 			{
-				document.getElementById(innerdivname).innerHTML = "Are we logged in? " + logged_in + "<br>" + "Last seen: " + last_seen + "<br><ul>" ;
 				msgs = JSON.parse(this.responseText);
+				document.getElementById(innerdivname).innerHTML =
+					"Are we logged in? " + logged_in + "<br>"
+					+ "Last seen: " + last_seen + "<br>"
+					+ "Number of messages: " + msgs.length + "<br>" ;
+
+				if (msgs.length == 0)
+				{
+						document.getElementById(innerdivname).innerHTML += "FIXME no msgs" ;
+				}
+
+				// show us the last 20 messages and scroll to the bottom (this will become the not-logged-in behavior)
+				else if ((logged_in) | (!logged_in))
+				{
+					if (msgs.length > messages_per_page)
+					{
+						msgs = msgs.slice(msgs.length - messages_per_page);
+						document.getElementById(innerdivname).innerHTML += "link to msgs less than " + msgs[0] + "<br>" ;
+					}
+				}
+
 				for (var i in msgs)
 				{
-					document.getElementById(innerdivname).innerHTML += "<li>" + msgs[i] + "</li>" ;
+					document.getElementById(innerdivname).innerHTML += "message # " + msgs[i] + "<br>" ;
 				}
-				document.getElementById(innerdivname).innerHTML += "</ul>" ;
 			}
 			else
 			{
