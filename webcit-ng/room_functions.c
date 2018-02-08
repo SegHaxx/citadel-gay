@@ -424,6 +424,7 @@ void get_the_room_itself(struct http_transaction *h, struct ctdlsession *c)
 	JsonObjectAppend(j, NewJsonNumber(	HKEY("default_view"),	c->room_default_view	));
 	JsonObjectAppend(j, NewJsonNumber(	HKEY("new_messages"),	c->new_messages		));
 	JsonObjectAppend(j, NewJsonNumber(	HKEY("total_messages"),	c->total_messages	));
+	JsonObjectAppend(j, NewJsonNumber(	HKEY("last_seen"),	c->last_seen		));
 
 	StrBuf *sj = NewStrBuf();
 	SerializeJson(sj, j, 1);			// '1' == free the source array
@@ -553,7 +554,7 @@ void ctdl_r(struct http_transaction *h, struct ctdlsession *c)
                         //	3	(int)info			Info flag: set to nonzero if the user needs to read this room's info file
                         //	4	(int)CCC->room.QRflags		Various flags associated with this room.
                         //	5	(long)CCC->room.QRhighest	The highest message number present in this room
-                        //	6	(long)vbuf.v_lastseen		The highest message number the user has read in this room
+                        c->last_seen = extract_long(&buf[4], 6);	// The highest message number the user has read in this room
                         //	7	(int)rmailflag			Boolean flag: 1 if this is a Mail> room, 0 otherwise.
                         //	8	(int)raideflag			Nonzero if user is either Aide or a Room Aide in this room
                         //	9	(int)newmailcount		The number of new Mail messages the user has

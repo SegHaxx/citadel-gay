@@ -82,6 +82,7 @@ struct ctdlsession {
 	char room[128];				// What room we are currently in
 	int room_current_view;
 	int room_default_view;
+	long last_seen;
 	int new_messages;
 	int total_messages;
 	time_t last_access;			// Timestamp of last request that used this session

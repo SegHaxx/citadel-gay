@@ -97,7 +97,7 @@ function forum_readmessages(flat_or_threads)
 		{
 			if ((this.status / 100) == 2)
 			{
-				document.getElementById(innerdivname).innerHTML = "Are we logged in? " + logged_in + "<ul>" ;
+				document.getElementById(innerdivname).innerHTML = "Are we logged in? " + logged_in + "<br>" + "Last seen: " + last_seen + "<br><ul>" ;
 				msgs = JSON.parse(this.responseText);
 				for (var i in msgs)
 				{

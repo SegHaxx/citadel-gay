@@ -18,6 +18,7 @@ var current_view = 0;
 var logged_in = 0;
 var current_user = _("Not logged in.");
 var serv_info;
+var last_seen = 0;
 var messages_per_page = 20;
 
 
@@ -198,6 +199,7 @@ function gotoroom_2(data) {
 	total_messages = data.total_messages;
 	current_view = data.current_view;
 	default_view = data.default_view;
+	last_seen = data.last_seen;
 	update_banner();
 	render_room_view();
 }
