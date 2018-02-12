@@ -292,3 +292,22 @@ void flat_view(struct http_transaction *h, struct ctdlsession *c, char *which)
 }
 
 #endif
+
+// render one message (entire transaction)
+//
+void html_render_one_message(struct http_transaction *h, struct ctdlsession *c, long msgnum)
+{
+
+	StrBuf *sj = NewStrBuf();
+	StrBufAppendPrintf(sj, "<html><body>\r\n");
+	setup_for_forum_view(c);		// FIXME way too inefficient to do this for every message !!!!!!!!!!!!!
+	forum_render_one_message(c, sj, msgnum);
+	StrBufAppendPrintf(sj, "</body></html>\r\n");
+	add_response_header(h, strdup("Content-type"), strdup("text/html; charset=utf-8"));
+	h->response_code = 200;
+	h->response_string = strdup("OK");
+	h->response_body_length = StrLength(sj);
+	h->response_body = SmashStrBuf(&sj);
+	return;
+}
+

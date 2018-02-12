@@ -30,12 +30,15 @@ long *get_msglist(struct ctdlsession *c, char *which_msgs)
 	ctdl_readline(c, buf, sizeof(buf));
 	if (buf[0] == '1') do
 	{
-		if (num_msgs >= num_alloc) {
-			if (num_alloc == 0) {
+		if (num_msgs >= num_alloc)
+		{
+			if (num_alloc == 0)
+			{
 				num_alloc = 1024;
 				msglist = malloc(num_alloc * sizeof(long));
 			}
-			else {
+			else
+			{
 				num_alloc *= 2;
 				msglist = realloc(msglist, num_alloc * sizeof(long));
 			}
@@ -58,25 +61,30 @@ int match_etags(char *taglist, long msgnum)
 	int i=0;
 	char tag[1024];
 
-	if (msgnum <= 0) {					// no msgnum?  no match.
+	if (msgnum <= 0)			// no msgnum?  no match.
+	{
 		return(0);
 	}
 
-	for (i=0; i<num_tags; ++i) {
+	for (i=0; i<num_tags; ++i)
+	{
 		extract_token(tag, taglist, i, ',', sizeof tag);
 		striplt(tag);
 		char *lq = (strchr(tag, '"'));
 		char *rq = (strrchr(tag, '"'));
-		if (lq < rq) {					// has two double quotes
+		if (lq < rq)					// has two double quotes
+		{
 			strcpy(rq, "");
 			strcpy(tag, ++lq);
 		}
 		striplt(tag);
-		if (!strcmp(tag, "*")) {
-			return(1);				// wildcard match
+		if (!strcmp(tag, "*"))				// wildcard match
+		{
+			return(1);
 		}
 		long tagmsgnum = atol(tag);
-		if ( (tagmsgnum > 0) && (tagmsgnum == msgnum) ) {	// match
+		if ( (tagmsgnum > 0) && (tagmsgnum == msgnum) )	// match
+		{
 			return(1);
 		}
 	}
@@ -94,8 +102,10 @@ void json_msglist(struct http_transaction *h, struct ctdlsession *c, char *which
 	long *msglist = get_msglist(c, which);
 	JsonValue *j = NewJsonArray(HKEY("msgs"));
 
-	if (msglist != NULL) {
-		for (i=0; msglist[i]>0 ; ++i) {
+	if (msglist != NULL)
+	{
+		for (i=0; msglist[i]>0 ; ++i)
+		{
 			JsonArrayAppend(j, NewJsonNumber( HKEY("m"), msglist[i]));
 		}
 		free(msglist);
@@ -126,18 +136,21 @@ void object_in_room(struct http_transaction *h, struct ctdlsession *c)
 
 	extract_token(buf, h->uri, 4, '/', sizeof buf);
 
-	if (!strncasecmp(buf, "msgs.", 5)) {			// Client is requesting a list of message numbers
+	if (!strncasecmp(buf, "msgs.", 5))			// Client is requesting a list of message numbers
+	{
 		json_msglist(h, c, &buf[5]);
 		return;
 	}
 
 #if 0
-	if (!strncasecmp(buf, "threads", 5)) {			// Client is requesting a threaded view (still kind of fuzzy here)
+	if (!strncasecmp(buf, "threads", 5))			// Client is requesting a threaded view (still kind of fuzzy here)
+	{
 		threaded_view(h, c, &buf[5]);
 		return;
 	}
 
-	if (!strncasecmp(buf, "flat", 5)) {			// Client is requesting a flat view (still kind of fuzzy here)
+	if (!strncasecmp(buf, "flat", 5))			// Client is requesting a flat view (still kind of fuzzy here)
+	{
 		flat_view(h, c, &buf[5]);
 		return;
 	}
@@ -151,14 +164,16 @@ void object_in_room(struct http_transaction *h, struct ctdlsession *c)
 		unescape_input(unescaped_euid);
 		msgnum = locate_message_by_uid(c, unescaped_euid);
 	}
-	else {
+	else
+	{
 		msgnum = atol(buf);
 	}
 
 	/*
 	 * All methods except PUT require the message to already exist
 	 */
-	if ( (msgnum <= 0) && (strcasecmp(h->method, "PUT")) ) {
+	if ( (msgnum <= 0) && (strcasecmp(h->method, "PUT")) )
+	{
 		do_404(h);
 	}
 
@@ -167,19 +182,24 @@ void object_in_room(struct http_transaction *h, struct ctdlsession *c)
 	 */
 	syslog(LOG_DEBUG, "msgnum is %ld, method is %s", msgnum, h->method);
 
-
 	/*
-	 * Does the client want us to render the message for them?
+	 * A sixth component in the URL can be one of two things:
+	 * (1) a MIME part specifier, in which case the client wants to download that component within the message
+	 * (2) a content-type, in which ase the client wants us to try to render it a certain way
 	 */
-	// FIXME put that logic here
-
-	/*
-	 * Was the client actually requesting a specific component within the message?
-	 */
-	if (num_tokens(h->uri, '/') == 6) {
+	if (num_tokens(h->uri, '/') == 6)
+	{
 		extract_token(buf, h->uri, 5, '/', sizeof buf);
 		if (!IsEmptyStr(buf)) {
-			download_mime_component(h, c, msgnum, buf);
+			if (!strcasecmp(buf, "html"))
+			{
+				// FIXME render as html
+				html_render_one_message(h, c, msgnum);
+			}
+			else
+			{
+				download_mime_component(h, c, msgnum, buf);
+			}
 			return;
 		}
 	}
@@ -188,13 +208,15 @@ void object_in_room(struct http_transaction *h, struct ctdlsession *c)
 	 * Ok, we want a full message, but first let's check for the if[-none]-match headers.
 	 */
 	char *if_match = header_val(h, "If-Match");
-	if ( (if_match != NULL) && (!match_etags(if_match, msgnum)) ) {
+	if ( (if_match != NULL) && (!match_etags(if_match, msgnum)) )
+	{
 		do_412(h);
 		return;
 	}
 
 	char *if_none_match = header_val(h, "If-None-Match");
-	if ( (if_none_match != NULL) && (match_etags(if_none_match, msgnum)) ) {
+	if ( (if_none_match != NULL) && (match_etags(if_none_match, msgnum)) )
+	{
 		do_412(h);
 		return;
 	}
@@ -203,16 +225,20 @@ void object_in_room(struct http_transaction *h, struct ctdlsession *c)
 	 * DOOOOOO ITTTTT!!!
 	 */
 
-	if (!strcasecmp(h->method, "DELETE")) {
+	if (!strcasecmp(h->method, "DELETE"))
+	{
 		dav_delete_message(h, c, msgnum);
 	}
-	else if (!strcasecmp(h->method, "GET")) {
+	else if (!strcasecmp(h->method, "GET"))
+	{
 		dav_get_message(h, c, msgnum);
 	}
-	else if (!strcasecmp(h->method, "PUT")) {
+	else if (!strcasecmp(h->method, "PUT"))
+	{
 		dav_put_message(h, c, unescaped_euid, msgnum);
 	}
-	else {
+	else
+	{
 		do_404(h);					// Got this far but the method made no sense?  Bummer.
 	}
 
@@ -224,7 +250,8 @@ void object_in_room(struct http_transaction *h, struct ctdlsession *c)
  */
 void report_the_room_itself(struct http_transaction *h, struct ctdlsession *c)
 {
-	if (c->room_default_view == VIEW_CALENDAR) {
+	if (c->room_default_view == VIEW_CALENDAR)
+	{
 		caldav_report(h, c);				// CalDAV REPORTs ... fmgwac
 		return;
 	}
@@ -240,13 +267,16 @@ void options_the_room_itself(struct http_transaction *h, struct ctdlsession *c)
 {
 	h->response_code = 200;
 	h->response_string = strdup("OK");
-	if (c->room_default_view == VIEW_CALENDAR) {
+	if (c->room_default_view == VIEW_CALENDAR)
+	{
 		add_response_header(h, strdup("DAV"), strdup("1, calendar-access"));	// offer CalDAV
 	}
-	else if (c->room_default_view == VIEW_ADDRESSBOOK) {
+	else if (c->room_default_view == VIEW_ADDRESSBOOK)
+	{
 		add_response_header(h, strdup("DAV"), strdup("1, addressbook"));	// offer CardDAV
 	}
-	else {
+	else
+	{
 		add_response_header(h, strdup("DAV"), strdup("1"));			// ordinary WebDAV for all other room types
 	}
 	add_response_header(h, strdup("Allow"), strdup("OPTIONS, PROPFIND, GET, PUT, REPORT, DELETE"));
@@ -289,7 +319,8 @@ void propfind_the_room_itself(struct http_transaction *h, struct ctdlsession *c)
 	StrBufAppendPrintf(Buf, "<D:owner />");		// empty owner ought to be legal; see rfc3744 section 5.1
 
 	StrBufAppendPrintf(Buf, "<D:resourcetype><D:collection />");
-	switch(c->room_default_view) {
+	switch(c->room_default_view)
+	{
 		case VIEW_CALENDAR:
 			StrBufAppendPrintf(Buf, "<C:calendar />");	// RFC4791 section 4.2
 			break;
@@ -297,7 +328,8 @@ void propfind_the_room_itself(struct http_transaction *h, struct ctdlsession *c)
 	StrBufAppendPrintf(Buf, "</D:resourcetype>");
 
 	int enumerate_by_euid = 0;			// nonzero if messages will be retrieved by euid instead of msgnum
-	switch(c->room_default_view) {
+	switch(c->room_default_view)
+	{
 		case VIEW_CALENDAR:			// RFC4791 section 5.2
 			StrBufAppendPrintf(Buf, "<C:supported-calendar-component-set><C:comp name=\"VEVENT\"/></C:supported-calendar-component-set>");
 			StrBufAppendPrintf(Buf, "<C:supported-calendar-data>");
@@ -333,11 +365,14 @@ void propfind_the_room_itself(struct http_transaction *h, struct ctdlsession *c)
 
 	// If a depth greater than zero was specified, transmit the collection listing
 	// BEGIN COLLECTION
-	if (dav_depth > 0) {
+	if (dav_depth > 0)
+	{
 		long *msglist = get_msglist(c, "ALL");
-		if (msglist) {
+		if (msglist)
+		{
 			int i;
-			for (i=0; (msglist[i] > 0); ++i) {
+			for (i=0; (msglist[i] > 0); ++i)
+			{
 				if ((i%10) == 0) syslog(LOG_DEBUG, "PROPFIND enumerated %d messages", i);
 				e = NULL;	// EUID gets stored here
 				timestamp = 0;
@@ -345,18 +380,22 @@ void propfind_the_room_itself(struct http_transaction *h, struct ctdlsession *c)
 				char cbuf[1024];
 				ctdl_printf(c, "MSG0 %ld|3", msglist[i]);
 				ctdl_readline(c, cbuf, sizeof(cbuf));
-				if (cbuf[0] == '1') while (ctdl_readline(c, cbuf, sizeof(cbuf)), strcmp(cbuf, "000")) {
-					if ( (enumerate_by_euid) && (!strncasecmp(cbuf, "exti=", 5)) ) {
+				if (cbuf[0] == '1') while (ctdl_readline(c, cbuf, sizeof(cbuf)), strcmp(cbuf, "000"))
+				{
+					if ( (enumerate_by_euid) && (!strncasecmp(cbuf, "exti=", 5)) )
+					{
 						// e = strdup(&cbuf[5]);
 						int elen = (2 * strlen(&cbuf[5]));
 						e = malloc(elen);
 						urlesc(e, elen, &cbuf[5]);
 					}
-					if (!strncasecmp(cbuf, "time=", 5)) {
+					if (!strncasecmp(cbuf, "time=", 5))
+					{
 						timestamp = atol(&cbuf[5]);
 					}
 				}
-				if (e == NULL) {
+				if (e == NULL)
+				{
 					e = malloc(20);
 					sprintf(e, "%ld", msglist[i]);
 				}
@@ -374,7 +413,8 @@ void propfind_the_room_itself(struct http_transaction *h, struct ctdlsession *c)
 				StrBufAppendPrintf(Buf, "<D:status>HTTP/1.1 200 OK</D:status>");
 				StrBufAppendPrintf(Buf, "<D:prop>");
 
-				switch(c->room_default_view) {
+				switch(c->room_default_view)
+				{
 					case VIEW_CALENDAR:
 						StrBufAppendPrintf(Buf, "<D:getcontenttype>text/calendar; component=vevent</D:getcontenttype>");
 						break;
@@ -386,15 +426,18 @@ void propfind_the_room_itself(struct http_transaction *h, struct ctdlsession *c)
 						break;
 				}
 
-				if (timestamp > 0) {
+				if (timestamp > 0)
+				{
 					char *datestring = http_datestring(timestamp);
-					if (datestring) {
+					if (datestring)
+					{
 						StrBufAppendPrintf(Buf, "<D:getlastmodified>");
 						StrBufXMLEscAppend(Buf, NULL, datestring, strlen(datestring), 0);
 						StrBufAppendPrintf(Buf, "</D:getlastmodified>");
 						free(datestring);
 					}
-					if (enumerate_by_euid) {		// FIXME ajc 2017oct30 should this be inside the timestamp conditional?
+					if (enumerate_by_euid)		// FIXME ajc 2017oct30 should this be inside the timestamp conditional?
+					{
 						StrBufAppendPrintf(Buf, "<D:getetag>\"%ld\"</D:getetag>", msglist[i]);
 					}
 				}
@@ -453,28 +496,32 @@ void the_room_itself(struct http_transaction *h, struct ctdlsession *c)
 {
 	// OPTIONS method on the room itself usually is a DAV client assessing what's here.
 
-	if (!strcasecmp(h->method, "OPTIONS")) {
+	if (!strcasecmp(h->method, "OPTIONS"))
+	{
 		options_the_room_itself(h, c);
 		return;
 	}
 
 	// PROPFIND method on the room itself could be looking for a directory
 
-	if (!strcasecmp(h->method, "PROPFIND")) {
+	if (!strcasecmp(h->method, "PROPFIND"))
+	{
 		propfind_the_room_itself(h, c);
 		return;
 	}
 
 	// REPORT method on the room itself is probably the dreaded CalDAV tower-of-crapola
 
-	if (!strcasecmp(h->method, "REPORT")) {
+	if (!strcasecmp(h->method, "REPORT"))
+	{
 		report_the_room_itself(h, c);
 		return;
 	}
 
 	// GET method on the room itself is an API call, possibly from our JavaScript front end
 
-	if (!strcasecmp(h->method, "get")) {
+	if (!strcasecmp(h->method, "get"))
+	{
 		get_the_room_itself(h, c);
 		return;
 	}
@@ -494,13 +541,15 @@ void room_list(struct http_transaction *h, struct ctdlsession *c)
 
 	ctdl_printf(c, "LKRA");
 	ctdl_readline(c, buf, sizeof(buf));
-	if (buf[0] != '1') {
+	if (buf[0] != '1')
+	{
 		do_502(h);
 		return;
 	}
 
 	JsonValue *j = NewJsonArray(HKEY("lkra"));
-	while (ctdl_readline(c, buf, sizeof(buf)) , strcmp(buf, "000")) {
+	while (ctdl_readline(c, buf, sizeof(buf)) , strcmp(buf, "000"))
+	{
 
 		// name|QRflags|QRfloor|QRorder|QRflags2|ra|current_view|default_view|mtime
 		JsonValue *jr = NewJsonObject(HKEY("room"));
@@ -544,16 +593,19 @@ void ctdl_r(struct http_transaction *h, struct ctdlsession *c)
 	extract_token(requested_roomname, h->uri, 3, '/', sizeof requested_roomname);
 	unescape_input(requested_roomname);
 
-	if (IsEmptyStr(requested_roomname)) {			//	/ctdl/r/
+	if (IsEmptyStr(requested_roomname))			//	/ctdl/r/
+	{
 		room_list(h, c);
 		return;
 	}
 
 	// If not, try to go there.
-	if (strcasecmp(requested_roomname, c->room)) {
+	if (strcasecmp(requested_roomname, c->room))
+	{
 		ctdl_printf(c, "GOTO %s", requested_roomname);
 		ctdl_readline(c, buf, sizeof(buf));
-		if (buf[0] == '2') {
+		if (buf[0] == '2')
+		{
 			// buf[3] will indicate whether any instant messages are waiting
 			extract_token(c->room, &buf[4], 0, '|', sizeof c->room);
 			c->new_messages = extract_int(&buf[4], 1);	
@@ -572,7 +624,8 @@ void ctdl_r(struct http_transaction *h, struct ctdlsession *c)
                         //	14	(int)CCC->room.QRflags2		More flags associated with this room
                         //	15	(long)CCC->room.QRmtime		Timestamp of the last write activity in this room
 		}
-		else {
+		else
+		{
 			do_404(h);
 			return;
 		}
@@ -580,22 +633,27 @@ void ctdl_r(struct http_transaction *h, struct ctdlsession *c)
 
 	// At this point our Citadel client session is "in" the specified room.
 
-	if (num_tokens(h->uri, '/') == 4) {			//	/ctdl/r/roomname
+	if (num_tokens(h->uri, '/') == 4)			//	/ctdl/r/roomname
+	{
 		the_room_itself(h, c);
 		return;
 	}
 
 	extract_token(buf, h->uri, 4, '/', sizeof buf);
-	if (num_tokens(h->uri, '/') == 5) {
-		if (IsEmptyStr(buf)) {
+	if (num_tokens(h->uri, '/') == 5)
+	{
+		if (IsEmptyStr(buf))
+		{
 			the_room_itself(h, c);			//	/ctdl/r/roomname/	( same as /ctdl/r/roomname )
 		}
-		else {
+		else
+		{
 			object_in_room(h, c);			//	/ctdl/r/roomname/object
 		}
 		return;
 	}
-	if (num_tokens(h->uri, '/') == 6) {
+	if (num_tokens(h->uri, '/') == 6)
+	{
 		object_in_room(h, c);				//	/ctdl/r/roomname/object/ or possibly /ctdl/r/roomname/object/component
 		return;
 	}
