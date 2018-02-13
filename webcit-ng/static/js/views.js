@@ -66,6 +66,7 @@ function forum_readmessages(target_div, min_msg, max_msg)
 			if ((this.status / 100) == 2)
 			{
 				msgs = JSON.parse(this.responseText);
+
 				document.getElementById(innerdivname).innerHTML =
 					"Are we logged in? " + logged_in + "<br>"
 					+ "Last seen: " + last_seen + "<br>"
@@ -78,13 +79,20 @@ function forum_readmessages(target_div, min_msg, max_msg)
 						document.getElementById(innerdivname).innerHTML += "FIXME no msgs" ;
 				}
 
+				// If we were given an explicit starting point, by all means start there.
+				// Note that we don't have to remove them from the array because we did a 'msgs gt|xxx' command to Citadel.
+				else if (min_msg > 0)
+				{
+					msgs = msgs.slice(0, msgs_per_page);
+				}
+
 				// show us the last 20 messages and scroll to the bottom (this will become the not-logged-in behavior)
 				else if ((logged_in) | (!logged_in))
 				{
 					if (msgs.length > messages_per_page)
 					{
 						msgs = msgs.slice(msgs.length - messages_per_page);
-						document.getElementById(innerdivname).innerHTML += "link to msgs less than " + msgs[0] + "<br>" ;
+						document.getElementById(innerdivname).innerHTML += "<div id=\"older_msgs\">link to msgs less than " + msgs[0] + "</div>" ;
 					}
 				}
 
@@ -93,6 +101,7 @@ function forum_readmessages(target_div, min_msg, max_msg)
 					document.getElementById(innerdivname).innerHTML +=
 						"<div id=\"ctdl_msg_" + msgs[i] + "\">message #" + msgs[i] + "</div>" ;
 				}
+				document.getElementById(innerdivname).innerHTML += "<div id=\"newer_msgs\">link to msgs greater than " + msgs[msgs.length-1] + "</div>" ;
 			}
 			else
 			{
