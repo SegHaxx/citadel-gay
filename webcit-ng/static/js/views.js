@@ -32,65 +32,33 @@ var views = {
 // This function is the dispatcher that determines the correct view for a room,
 // and calls the correct renderer.
 //
-function render_room_view()
+function render_room_view(min_msg, max_msg)
 {
 	switch(current_view)
 	{
 		case views.VIEW_MAILBOX:						// FIXME view mail rooms as forums for now
 		case views.VIEW_BBS:
-			forum_readmessages();
+			forum_readmessages("ctdl-main", min_msg, max_msg);
 			break;
 		default:
-			document.getElementById("main").innerHTML = "The view for " + current_room + " is " + current_view + " but there is no renderer." ;
+			document.getElementById("ctdl-main").innerHTML = "The view for " + current_room + " is " + current_view + " but there is no renderer." ;
 			break;
 	}
 
 }
 
 
-// Forum view -- flat or threaded
-// The inner div exists so that if the user clicks away early, the main div doesn't get clobbered when the load completes.
-// The parameter can be set to "flat" or "threads" which is passed directly to the API
-//
-function XX_forum_readmessages(flat_or_threads)
-{
-	var innerdivname = randomString(5);
-	document.getElementById("main").innerHTML = "<div id=\"" + innerdivname +
-		"\"><br><br><br><center><h5><i class=\"fas fa-spinner fa-spin\"></i>&nbsp;&nbsp;"
-		+ _("Loading messages from server, please wait") + "</h5></center></div>" ;
-
-	var request = new XMLHttpRequest();
-	request.open("GET", "/ctdl/r/" + escapeHTMLURI(current_room) + "/" + flat_or_threads, true);
-	request.onreadystatechange = function()
-	{
-		if (this.readyState === 4)
-		{
-			if ((this.status / 100) == 2)
-			{
-				document.getElementById(innerdivname).outerHTML = this.responseText;
-			}
-			else
-			{
-				document.getElementById(innerdivname).outerHTML = "ERROR " + this.status ;
-			}
-		}
-	};
-	request.send();
-	request = null;
-}
-
-
 // Forum view (flat) -- let's have another go at this with the rendering done client-side
 //
-function forum_readmessages()
+function forum_readmessages(target_div, min_msg, max_msg)
 {
 	var innerdivname = randomString(5);
-	document.getElementById("main").innerHTML = "<div id=\"" + innerdivname +
+	document.getElementById(target_div).innerHTML = "<div id=\"" + innerdivname +
 		"\"><br><br><br><center><h5><i class=\"fas fa-spinner fa-spin\"></i>&nbsp;&nbsp;"
 		+ _("Loading messages from server, please wait") + "</h5></center></div>" ;
 
 	var request = new XMLHttpRequest();
-	request.open("GET", "/ctdl/r/" + escapeHTMLURI(current_room) + "/msgs.all", true);
+	request.open("GET", "/ctdl/r/" + escapeHTMLURI(current_room) + "/msgs.gt|" + min_msg, true);
 	request.onreadystatechange = function()
 	{
 		if (this.readyState === 4)
@@ -101,7 +69,9 @@ function forum_readmessages()
 				document.getElementById(innerdivname).innerHTML =
 					"Are we logged in? " + logged_in + "<br>"
 					+ "Last seen: " + last_seen + "<br>"
-					+ "Number of messages: " + msgs.length + "<br>" ;
+					+ "Number of messages: " + msgs.length + "<br>"
+					+ "min_msg=" + min_msg + "<br>"
+					+ "max_msg=" + max_msg + "<br>" ;
 
 				if (msgs.length == 0)
 				{
@@ -120,7 +90,8 @@ function forum_readmessages()
 
 				for (var i in msgs)
 				{
-					document.getElementById(innerdivname).innerHTML += "message # " + msgs[i] + "<br>" ;
+					document.getElementById(innerdivname).innerHTML +=
+						"<div id=\"ctdl_msg_" + msgs[i] + "\">message #" + msgs[i] + "</div>" ;
 				}
 			}
 			else

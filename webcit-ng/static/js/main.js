@@ -201,5 +201,5 @@ function gotoroom_2(data) {
 	default_view = data.default_view;
 	last_seen = data.last_seen;
 	update_banner();
-	render_room_view();
+	render_room_view(0, Number.MAX_VALUE);
 }

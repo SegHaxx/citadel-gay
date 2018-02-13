@@ -12,7 +12,7 @@
 
 function display_login_screen(any_message)
 {
-	document.getElementById("main").innerHTML =
+	document.getElementById("ctdl-main").innerHTML =
 		"<center><br><br>Put the login screen here, dummary<br><br>" +
 		any_message + "<br><br>" +
 		"<table border=0><tr><td>" +
@@ -62,7 +62,7 @@ function login_result(data)
 		logged_in = 1;
 		current_user = data.substring(4).split("|")[0];
 		update_banner();
-		document.getElementById("main").innerHTML = "FIXME ok we are logged in as " + current_user + " ... " ;
+		document.getElementById("ctdl-main").innerHTML = "FIXME ok we are logged in as " + current_user + " ... " ;
 	}
 	else {
 		display_login_screen(data.substring(4));
