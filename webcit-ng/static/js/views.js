@@ -52,6 +52,7 @@ function render_room_view(gt_msg, lt_msg)
 //
 function forum_readmessages(target_div, gt_msg, lt_msg)
 {
+	original_text = document.getElementById(target_div).innerHTML;		// in case we need to replace it after an error
 	document.getElementById(target_div).innerHTML = 
 		"<i class=\"fas fa-spinner fa-spin\"></i>&nbsp;&nbsp;"
 		+ _("Loading messages from server, please wait") ;
@@ -130,8 +131,7 @@ function forum_readmessages(target_div, gt_msg, lt_msg)
 			}
 			else
 			{
-				document.getElementById(target_div).innerHTML = "error put it back";
-				alert("ERROR " + this.status + " retrieving messages from server");
+				document.getElementById(target_div).innerHTML = original_text;		// this will make the link reappear so the user can try again
 			}
 		}
 	};
