@@ -58,7 +58,14 @@ function forum_readmessages(target_div, min_msg, max_msg)
 		+ _("Loading messages from server, please wait") + "</h5></center></div>" ;
 
 	var request = new XMLHttpRequest();
-	request.open("GET", "/ctdl/r/" + escapeHTMLURI(current_room) + "/msgs.gt|" + min_msg, true);
+	if (max_msg < 9999999999)
+	{
+		request.open("GET", "/ctdl/r/" + escapeHTMLURI(current_room) + "/msgs.lt|" + max_msg, true);
+	}
+	else
+	{
+		request.open("GET", "/ctdl/r/" + escapeHTMLURI(current_room) + "/msgs.gt|" + min_msg, true);
+	}
 	request.onreadystatechange = function()
 	{
 		if (this.readyState === 4)
@@ -67,41 +74,51 @@ function forum_readmessages(target_div, min_msg, max_msg)
 			{
 				msgs = JSON.parse(this.responseText);
 
-				document.getElementById(innerdivname).innerHTML =
-					"Are we logged in? " + logged_in + "<br>"
-					+ "Last seen: " + last_seen + "<br>"
-					+ "Number of messages: " + msgs.length + "<br>"
-					+ "min_msg=" + min_msg + "<br>"
-					+ "max_msg=" + max_msg + "<br>" ;
+				document.getElementById(innerdivname).innerHTML = "" ;
+					//"Are we logged in? " + logged_in + "<br>"
+					//+ "Last seen: " + last_seen + "<br>"
+					//+ "Number of messages: " + msgs.length + "<br>"
+					//+ "min_msg=" + min_msg + "<br>"
+					//+ "max_msg=" + max_msg + "<br>" ;
 
-				if (msgs.length == 0)
-				{
-						document.getElementById(innerdivname).innerHTML += "FIXME no msgs" ;
-				}
+				//if (msgs.length == 0)
+				//{
+						//document.getElementById(innerdivname).innerHTML += "FIXME no msgs" ;
+				//}
 
 				// If we were given an explicit starting point, by all means start there.
 				// Note that we don't have to remove them from the array because we did a 'msgs gt|xxx' command to Citadel.
-				else if (min_msg > 0)
+				if (min_msg > 0)
 				{
 					msgs = msgs.slice(0, msgs_per_page);
 				}
 
 				// show us the last 20 messages and scroll to the bottom (this will become the not-logged-in behavior)
-				else if ((logged_in) | (!logged_in))
+				else if ((logged_in) | (!logged_in) | (max_msg < 9999999999))
 				{
 					if (msgs.length > messages_per_page)
 					{
 						msgs = msgs.slice(msgs.length - messages_per_page);
-						document.getElementById(innerdivname).innerHTML += "<div id=\"older_msgs\">link to msgs less than " + msgs[0] + "</div>" ;
 					}
+					document.getElementById(innerdivname).innerHTML +=
+						"<div id=\"older_msgs\">" +
+						"<a href=\"javascript:forum_readmessages('older_msgs', 0, " + msgs[0] + ");\">" +
+						"link to msgs less than " + msgs[0] + "</a></div>" ;
 				}
 
+				// It's render time, bitchez!
 				for (var i in msgs)
 				{
 					document.getElementById(innerdivname).innerHTML +=
 						"<div id=\"ctdl_msg_" + msgs[i] + "\">message #" + msgs[i] + "</div>" ;
 				}
-				document.getElementById(innerdivname).innerHTML += "<div id=\"newer_msgs\">link to msgs greater than " + msgs[msgs.length-1] + "</div>" ;
+				if (max_msg == 9999999999)
+				{
+					document.getElementById(innerdivname).innerHTML +=
+						"<div id=\"newer_msgs\">" +
+						"<a href=\"javascript:forum_readmessages('newer_msgs', msgs[msgs.length-1]+1, 9999999999);\">" +
+						"link to msgs greater than " + msgs[msgs.length-1] + "</a></div>" ;
+				}
 			}
 			else
 			{
