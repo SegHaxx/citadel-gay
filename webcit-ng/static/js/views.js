@@ -30,15 +30,15 @@ var views = {
 
 
 // This function is the dispatcher that determines the correct view for a room,
-// and calls the correct renderer.
+// and calls the correct renderer.  Greater/Less than bounds are accepted.
 //
-function render_room_view(min_msg, max_msg)
+function render_room_view(gt_msg, lt_msg)
 {
 	switch(current_view)
 	{
 		case views.VIEW_MAILBOX:						// FIXME view mail rooms as forums for now
 		case views.VIEW_BBS:
-			forum_readmessages("ctdl-main", min_msg, max_msg);
+			forum_readmessages("ctdl-main", gt_msg, lt_msg);
 			break;
 		default:
 			document.getElementById("ctdl-main").innerHTML = "The view for " + current_room + " is " + current_view + " but there is no renderer." ;
@@ -50,7 +50,7 @@ function render_room_view(min_msg, max_msg)
 
 // Forum view (flat) -- let's have another go at this with the rendering done client-side
 //
-function forum_readmessages(target_div, min_msg, max_msg)
+function forum_readmessages(target_div, gt_msg, lt_msg)
 {
 	var innerdivname = randomString(5);
 	document.getElementById(target_div).innerHTML = "<div id=\"" + innerdivname +
@@ -58,13 +58,13 @@ function forum_readmessages(target_div, min_msg, max_msg)
 		+ _("Loading messages from server, please wait") + "</div>" ;
 
 	var request = new XMLHttpRequest();
-	if (max_msg < 9999999999)
+	if (lt_msg < 9999999999)
 	{
-		request.open("GET", "/ctdl/r/" + escapeHTMLURI(current_room) + "/msgs.lt|" + max_msg, true);
+		request.open("GET", "/ctdl/r/" + escapeHTMLURI(current_room) + "/msgs.lt|" + lt_msg, true);
 	}
 	else
 	{
-		request.open("GET", "/ctdl/r/" + escapeHTMLURI(current_room) + "/msgs.gt|" + min_msg, true);
+		request.open("GET", "/ctdl/r/" + escapeHTMLURI(current_room) + "/msgs.gt|" + gt_msg, true);
 	}
 	request.onreadystatechange = function()
 	{
@@ -77,13 +77,13 @@ function forum_readmessages(target_div, min_msg, max_msg)
 
 				// If we were given an explicit starting point, by all means start there.
 				// Note that we don't have to remove them from the array because we did a 'msgs gt|xxx' command to Citadel.
-				if (min_msg > 0)
+				if (gt_msg > 0)
 				{
 					msgs = msgs.slice(0, messages_per_page);
 				}
 
 				// show us the last 20 messages and scroll to the bottom (this will become the not-logged-in behavior)
-				else if ((logged_in) | (!logged_in) | (max_msg < 9999999999))
+				else if ((logged_in) | (!logged_in) | (lt_msg < 9999999999))
 				{
 					if (msgs.length > messages_per_page)
 					{
@@ -92,7 +92,7 @@ function forum_readmessages(target_div, min_msg, max_msg)
 					new_old_div_name = randomString(5);
 					if (msgs.length < 1)
 					{
-						newlt = max_msg;
+						newlt = lt_msg;
 					}
 					else
 					{
@@ -107,17 +107,14 @@ function forum_readmessages(target_div, min_msg, max_msg)
 				// Render the divs (we will fill them in later)
 				for (var i in msgs)
 				{
-					if ((msgs[i] > min_msg) && (msgs[i] < max_msg))
-					{
-						document.getElementById(innerdivname).innerHTML += "<div id=\"ctdl_msg_" + msgs[i] + "\">#" + msgs[i] + "</div>" ;
-					}
+					document.getElementById(innerdivname).innerHTML += "<div id=\"ctdl_msg_" + msgs[i] + "\">#" + msgs[i] + "</div>" ;
 				}
-				if (max_msg == 9999999999)
+				if (lt_msg == 9999999999)
 				{
 					new_new_div_name = randomString(5);
 					if (msgs.length <= 0)
 					{
-						newgt = min_msg;
+						newgt = gt_msg;
 					}
 					else
 					{
@@ -130,14 +127,7 @@ function forum_readmessages(target_div, min_msg, max_msg)
 				}
 
 				// Render the individual messages in the divs
-				for (var i in msgs)
-				{
-					if ((msgs[i] > min_msg) && (msgs[i] < max_msg))
-					{
-						document.getElementById("ctdl_msg_" + msgs[i]).innerHTML = "<b>Message " + msgs[i] + " got rendered!!!</b>";
-					}
-				}
-
+				render_messages(msgs, "ctdl_msg_", views.VIEW_BBS);
 			}
 			else
 			{
@@ -147,4 +137,16 @@ function forum_readmessages(target_div, min_msg, max_msg)
 	};
 	request.send();
 	request = null;
+}
+
+
+// Render a range of messages, in the view specified, with the div prefix specified
+//
+function render_messages(msgs, prefix, view)
+{
+	for (var i in msgs)
+	{
+		document.getElementById(prefix + msgs[i]).innerHTML = "<b>Message " + msgs[i] + " got rendered!!!</b>";
+	}
+
 }
