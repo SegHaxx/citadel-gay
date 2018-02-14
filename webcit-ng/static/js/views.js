@@ -131,7 +131,8 @@ function forum_readmessages(target_div, gt_msg, lt_msg)
 			}
 			else
 			{
-				document.getElementById(innerdivname).innerHTML = "ERROR " + this.status ;		// error message
+				document.getElementById(innerdivname).innerHTML = "error put it back";
+				alert("ERROR " + this.status + " retrieving messages from server");
 			}
 		}
 	};
