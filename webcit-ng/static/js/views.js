@@ -54,8 +54,8 @@ function forum_readmessages(target_div, min_msg, max_msg)
 {
 	var innerdivname = randomString(5);
 	document.getElementById(target_div).innerHTML = "<div id=\"" + innerdivname +
-		"\"><br><br><br><center><h5><i class=\"fas fa-spinner fa-spin\"></i>&nbsp;&nbsp;"
-		+ _("Loading messages from server, please wait") + "</h5></center></div>" ;
+		"\"><i class=\"fas fa-spinner fa-spin\"></i>&nbsp;&nbsp;"
+		+ _("Loading messages from server, please wait") + "</div>" ;
 
 	var request = new XMLHttpRequest();
 	if (max_msg < 9999999999)
@@ -90,19 +90,26 @@ function forum_readmessages(target_div, min_msg, max_msg)
 						msgs = msgs.slice(msgs.length - messages_per_page);
 					}
 					new_old_div_name = randomString(5);
+					if (msgs.length < 1)
+					{
+						newlt = max_msg;
+					}
+					else
+					{
+						newlt = msgs[0];
+					}
 					document.getElementById(innerdivname).innerHTML +=
 						"<div id=\"" + new_old_div_name + "\">" +
-						"<a href=\"javascript:forum_readmessages('" + new_old_div_name + "', 0, " + msgs[0] + ");\">" +
-						"link to msgs less than " + msgs[0] + "</a></div>" ;
+						"<a href=\"javascript:forum_readmessages('" + new_old_div_name + "', 0, " + newlt + ");\">" +
+						"link to msgs less than " + newlt + "</a></div>" ;
 				}
 
-				// It's render time, bitchez!
+				// Render the divs (we will fill them in later)
 				for (var i in msgs)
 				{
 					if ((msgs[i] > min_msg) && (msgs[i] < max_msg))
 					{
-						document.getElementById(innerdivname).innerHTML +=
-							"<div id=\"ctdl_msg_" + msgs[i] + "\">message #" + msgs[i] + "</div>" ;
+						document.getElementById(innerdivname).innerHTML += "<div id=\"ctdl_msg_" + msgs[i] + "\">#" + msgs[i] + "</div>" ;
 					}
 				}
 				if (max_msg == 9999999999)
@@ -121,10 +128,20 @@ function forum_readmessages(target_div, min_msg, max_msg)
 						"<a href=\"javascript:forum_readmessages('" + new_new_div_name + "', " + newgt + ", 9999999999);\">" +
 						"link to msgs greater than " + newgt + "</a></div>" ;
 				}
+
+				// Render the individual messages in the divs
+				for (var i in msgs)
+				{
+					if ((msgs[i] > min_msg) && (msgs[i] < max_msg))
+					{
+						document.getElementById("ctdl_msg_" + msgs[i]).innerHTML = "<b>Message " + msgs[i] + " got rendered!!!</b>";
+					}
+				}
+
 			}
 			else
 			{
-				document.getElementById(innerdivname).innerHTML = this.status ;		// error message
+				document.getElementById(innerdivname).innerHTML = "ERROR " + this.status ;		// error message
 			}
 		}
 	};
