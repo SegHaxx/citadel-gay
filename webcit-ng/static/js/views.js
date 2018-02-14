@@ -52,10 +52,9 @@ function render_room_view(gt_msg, lt_msg)
 //
 function forum_readmessages(target_div, gt_msg, lt_msg)
 {
-	var innerdivname = randomString(5);
-	document.getElementById(target_div).innerHTML = "<div id=\"" + innerdivname +
-		"\"><i class=\"fas fa-spinner fa-spin\"></i>&nbsp;&nbsp;"
-		+ _("Loading messages from server, please wait") + "</div>" ;
+	document.getElementById(target_div).innerHTML = 
+		"<i class=\"fas fa-spinner fa-spin\"></i>&nbsp;&nbsp;"
+		+ _("Loading messages from server, please wait") ;
 
 	var request = new XMLHttpRequest();
 	if (lt_msg < 9999999999)
@@ -73,7 +72,7 @@ function forum_readmessages(target_div, gt_msg, lt_msg)
 			if ((this.status / 100) == 2)
 			{
 				msgs = JSON.parse(this.responseText);
-				document.getElementById(innerdivname).innerHTML = "" ;
+				document.getElementById(target_div).innerHTML = "" ;
 
 				// If we were given an explicit starting point, by all means start there.
 				// Note that we don't have to remove them from the array because we did a 'msgs gt|xxx' command to Citadel.
@@ -98,7 +97,7 @@ function forum_readmessages(target_div, gt_msg, lt_msg)
 					{
 						newlt = msgs[0];
 					}
-					document.getElementById(innerdivname).innerHTML +=
+					document.getElementById(target_div).innerHTML +=
 						"<div id=\"" + new_old_div_name + "\">" +
 						"<a href=\"javascript:forum_readmessages('" + new_old_div_name + "', 0, " + newlt + ");\">" +
 						"link to msgs less than " + newlt + "</a></div>" ;
@@ -107,7 +106,7 @@ function forum_readmessages(target_div, gt_msg, lt_msg)
 				// Render the divs (we will fill them in later)
 				for (var i in msgs)
 				{
-					document.getElementById(innerdivname).innerHTML += "<div id=\"ctdl_msg_" + msgs[i] + "\">#" + msgs[i] + "</div>" ;
+					document.getElementById(target_div).innerHTML += "<div id=\"ctdl_msg_" + msgs[i] + "\">#" + msgs[i] + "</div>" ;
 				}
 				if (lt_msg == 9999999999)
 				{
@@ -120,7 +119,7 @@ function forum_readmessages(target_div, gt_msg, lt_msg)
 					{
 						newgt = msgs[msgs.length-1];
 					}
-					document.getElementById(innerdivname).innerHTML +=
+					document.getElementById(target_div).innerHTML +=
 						"<div id=\"" + new_new_div_name + "\">" +
 						"<a href=\"javascript:forum_readmessages('" + new_new_div_name + "', " + newgt + ", 9999999999);\">" +
 						"link to msgs greater than " + newgt + "</a></div>" ;
@@ -131,7 +130,7 @@ function forum_readmessages(target_div, gt_msg, lt_msg)
 			}
 			else
 			{
-				document.getElementById(innerdivname).innerHTML = "error put it back";
+				document.getElementById(target_div).innerHTML = "error put it back";
 				alert("ERROR " + this.status + " retrieving messages from server");
 			}
 		}
