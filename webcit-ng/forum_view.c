@@ -297,7 +297,6 @@ void flat_view(struct http_transaction *h, struct ctdlsession *c, char *which)
 //
 void html_render_one_message(struct http_transaction *h, struct ctdlsession *c, long msgnum)
 {
-
 	StrBuf *sj = NewStrBuf();
 	StrBufAppendPrintf(sj, "<html><body>\r\n");
 	setup_for_forum_view(c);		// FIXME way too inefficient to do this for every message !!!!!!!!!!!!!

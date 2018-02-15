@@ -144,9 +144,33 @@ function forum_readmessages(target_div, gt_msg, lt_msg)
 //
 function render_messages(msgs, prefix, view)
 {
-	for (var i in msgs)
+	for (i=0; i<msgs.length; ++i)
 	{
-		document.getElementById(prefix + msgs[i]).innerHTML = "<b>Message " + msgs[i] + " got rendered!!!</b>";
+		render_one(prefix+msgs[i], msgs[i], view);
 	}
-
 }
+
+
+// We have to put each XHR for render_messages() into its own stack frame, otherwise it jumbles them together.  I don't know why.
+function render_one(div, msgnum, view)
+{
+	var request = new XMLHttpRequest();
+	request.open("GET", "/ctdl/r/" + escapeHTMLURI(current_room) + "/" + msgs[i] + "/html", true);
+	request.onreadystatechange = function()
+	{
+		if (this.readyState === 4)
+		{
+			if ((this.status / 100) == 2)
+			{
+				document.getElementById(div).innerHTML = this.responseText;	// FIXME don't let the C server render it.  do JSON now.
+			}
+			else
+			{
+				document.getElementById(div).innerHTML = "ERROR";
+			}
+		}
+	};
+	request.send();
+	request = null;
+}
+
