@@ -82,8 +82,8 @@ function forum_readmessages(target_div, gt_msg, lt_msg)
 					msgs = msgs.slice(0, messages_per_page);
 				}
 
-				// show us the last 20 messages and scroll to the bottom (this will become the not-logged-in behavior)
-				else if ((logged_in) | (!logged_in) | (lt_msg < 9999999999))
+				// Otherwise, show us the last 20 messages
+				else
 				{
 					if (msgs.length > messages_per_page)
 					{
