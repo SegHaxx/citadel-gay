@@ -65,7 +65,8 @@ int safestrncpy(char *dest, const char *src, size_t n)
 {
 	int i = 0;
 
-	if (dest == NULL || src == NULL) {
+	if (dest == NULL || src == NULL)
+	{
 		fprintf(stderr, "safestrncpy: NULL argument\n");
 		abort();
 	}
@@ -80,7 +81,6 @@ int safestrncpy(char *dest, const char *src, size_t n)
 }
 
 
-
 /*
  * num_tokens()  -  discover number of parameters/tokens in a string
  */
@@ -89,20 +89,21 @@ int num_tokens(const char *source, char tok)
 	int count = 1;
 	const char *ptr = source;
 
-	if (source == NULL) {
+	if (source == NULL)
+	{
 		return (0);
 	}
 
-	while (*ptr != '\0') {
-		if (*ptr++ == tok) {
+	while (*ptr != '\0')
+	{
+		if (*ptr++ == tok)
+		{
 			++count;
 		}
 	}
 	
 	return (count);
 }
-
-//extern void cit_backtrace(void);
 
 
 /*
@@ -117,88 +118,45 @@ long extract_token(char *dest, const char *source, int parmnum, char separator, 
 
 	s = source;
 
-	if (dest == NULL) {
+	if (dest == NULL)
+	{
 		return(-1);
 	}
 
-	//cit_backtrace();
-	//lprintf (CTDL_DEBUG, "test >: n: %d sep: %c source: %s \n willi \n", parmnum, separator, source);
 	dest[0] = 0;
 
-	if (s == NULL) {
+	if (s == NULL)
+	{
 		return(-1);
 	}
 	
 	maxlen--;
 
-	while (*s) {
-		if (*s == separator) {
+	while (*s)
+	{
+		if (*s == separator)
+		{
 			++current_token;
 		}
-		if ( (current_token == parmnum) && 
-		     (*s != separator) && 
-		     (len < maxlen) ) {
+		if ( (current_token == parmnum) && (*s != separator) && (len < maxlen) )
+		{
 			dest[len] = *s;
 			++len;
 		}
-		else if ((current_token > parmnum) || (len >= maxlen)) {
+		else if ((current_token > parmnum) || (len >= maxlen))
+		{
 			break;
 		}
 		++s;
 	}
 
 	dest[len] = '\0';
-	if (current_token < parmnum) {
-		//lprintf (CTDL_DEBUG,"test <!: %s\n", dest);
+	if (current_token < parmnum)
+	{
 		return(-1);
 	}
-	//lprintf (CTDL_DEBUG,"test <: %d; %s\n", len, dest);
 	return(len);
 }
-//*/
-
-
-/*
- * extract_token() - a string tokenizer
- * /
-long extract_token(char *dest, const char *source, int parmnum, char separator, int maxlen)
-{
-	char *d;		// dest
-	const char *s;		// source
-	int count = 0;
-	int len = 0;
-
-	
-	//cit_backtrace();
-	//lprintf (CTDL_DEBUG, "test >: n: %d sep: %c source: %s \n willi \n", parmnum, separator, source);
-	strcpy(dest, "");
-
-	//  Locate desired parameter 
-	s = source;
-	while (count < parmnum) {
-		//  End of string, bail!
-		if (!*s) {
-			s = NULL;
-			break;
-		}
-		if (*s == separator) {
-			count++;
-		}
-		s++;
-	}
-	if (!s) {
-		//lprintf (CTDL_DEBUG,"test <!: %s\n", dest);
-		return -1;		// Parameter not found
-	}
-	
-	for (d = dest; *s && *s != separator && ++len<maxlen; s++, d++) {
-		*d = *s;
-	}
-	*d = 0;
-	//lprintf (CTDL_DEBUG,"test <: %d; %s\n", len, dest);
-	return 0;
-}
-*/
 
 
 /*
@@ -211,13 +169,15 @@ void remove_token(char *source, int parmnum, char separator)
 
 	/* Find desired parameter */
 	d = source;
-	while (count < parmnum) {
+	while (count < parmnum)
+	{
 		/* End of string, bail! */
 		if (!*d) {
 			d = NULL;
 			break;
 		}
-		if (*d == separator) {
+		if (*d == separator)
+		{
 			count++;
 		}
 		d++;
@@ -226,7 +186,8 @@ void remove_token(char *source, int parmnum, char separator)
 
 	/* Find next parameter */
 	s = d;
-	while (*s && *s != separator) {
+	while (*s && *s != separator)
+	{
 		s++;
 	}
 
@@ -237,12 +198,6 @@ void remove_token(char *source, int parmnum, char separator)
 		*d = 0;
 	else
 		*--d = 0;
-	/*
-	while (*s) {
-		*d++ = *s++;
-	}
-	*d = 0;
-	*/
 }
 
 
@@ -258,6 +213,7 @@ int extract_int(const char *source, int parmnum)
 	else
 		return 0;
 }
+
 
 /*
  * extract_long()  -  extract an long parm w/o supplying a buffer
@@ -286,10 +242,10 @@ unsigned long extract_unsigned_long(const char *source, int parmnum)
 		return 0;
 }
 
+
 size_t CtdlEncodeBase64(char *dest, const char *source, size_t sourcelen, int linebreaks)
 {
-	// linebreaks at 70 are ugly for base64, since 3 bytes in makes 4 bytes out
-	int breaklength = 68;
+	int breaklength = 68;	// must be a multiple of 4
 	int readlength = 3 * breaklength / 4;
 
 	int destoffset;
@@ -405,6 +361,7 @@ void StripSlashes(char *Dir, int TrailingSlash)
 
 }
 
+
 /*
  * Strip leading and trailing spaces from a string
  */
@@ -439,11 +396,11 @@ size_t striplt(char *buf) {
 }
 
 
-/**
- * \brief check for the presence of a character within a string (returns count)
- * \param st the string to examine
- * \param ch the char to search
- * \return the number of times ch appears in st
+/*
+ * check for the presence of a character within a string (returns count)
+ * st	the string to examine
+ * ch	the char to search
+ * returns the number of times ch appears in st
  */
 int haschar(const char *st, int ch)
 {
@@ -465,7 +422,8 @@ int haschar(const char *st, int ch)
  * Determine whether the specified message number is contained within the
  * specified sequence set.
  */
-int is_msg_in_sequence_set(const char *mset, long msgnum) {
+int is_msg_in_sequence_set(const char *mset, long msgnum)
+{
 	int num_sets;
 	int s;
 	char setstr[128], lostr[128], histr[128];
@@ -476,13 +434,16 @@ int is_msg_in_sequence_set(const char *mset, long msgnum) {
 		extract_token(setstr, mset, s, ',', sizeof setstr);
 
 		extract_token(lostr, setstr, 0, ':', sizeof lostr);
-		if (num_tokens(setstr, ':') >= 2) {
+		if (num_tokens(setstr, ':') >= 2)
+		{
 			extract_token(histr, setstr, 1, ':', sizeof histr);
-			if (!strcmp(histr, "*")) {
+			if (!strcmp(histr, "*"))
+			{
 				snprintf(histr, sizeof histr, "%ld", LONG_MAX);
 			}
 		} 
-		else {
+		else
+		{
 			strcpy(histr, lostr);
 		}
 		lo = atol(lostr);
@@ -494,18 +455,18 @@ int is_msg_in_sequence_set(const char *mset, long msgnum) {
 	return(0);
 }
 
-/** 
- * \brief Utility function to "readline" from memory
- * \param start Location in memory from which we are reading.
- * \param buf the buffer to place the string in.
- * \param maxlen Size of string buffer
- * \return Pointer to the source memory right after we stopped reading.
+/* 
+ * Utility function to "readline" from memory
+ * start	Location in memory from which we are reading.
+ * buf		the buffer to place the string in.
+ * maxlen	Size of string buffer
+ * returns pointer to the source memory right after we stopped reading.
  */
 char *memreadline(char *start, char *buf, int maxlen)
 {
 	char ch;
 	char *ptr;
-	int len = 0;		/**< tally our own length to avoid strlen() delays */
+	int len = 0;		/* tally our own length to avoid strlen() delays */
 
 	ptr = start;
 
@@ -522,28 +483,31 @@ char *memreadline(char *start, char *buf, int maxlen)
 }
 
 
-/** 
- * \brief Utility function to "readline" from memory
- * \param start Location in memory from which we are reading.
- * \param buf the buffer to place the string in.
- * \param maxlen Size of string buffer
- * \param retlen the length of the returned string
- * \return Pointer to the source memory right after we stopped reading.
+/*
+ * Utility function to "readline" from memory
+ * start	Location in memory from which we are reading.
+ * buf		the buffer to place the string in.
+ * maxlen	Size of string buffer
+ * retlen	the length of the returned string
+ * returns a pointer to the source memory right after we stopped reading.
  */
 char *memreadlinelen(char *start, char *buf, int maxlen, int *retlen)
 {
 	char ch;
 	char *ptr;
-	int len = 0;		/**< tally our own length to avoid strlen() delays */
+	int len = 0;		/* tally our own length to avoid strlen() delays */
 
 	ptr = start;
 
-	while (1) {
+	while (1)
+	{
 		ch = *ptr++;
-		if ((len + 1 < (maxlen)) && (ch != 13) && (ch != 10)) {
+		if ((len + 1 < (maxlen)) && (ch != 13) && (ch != 10))
+		{
 			buf[len++] = ch;
 		}
-		if ((ch == 10) || (ch == 0)) {
+		if ((ch == 10) || (ch == 0))
+		{
 			buf[len] = 0;
 			*retlen = len;
 			return ptr;
