@@ -163,4 +163,5 @@ void do_502(struct http_transaction *h);
 void do_404(struct http_transaction *h);
 void do_412(struct http_transaction *h);
 void UrlizeText(StrBuf* Target, StrBuf *Source, StrBuf *WrkBuf);
+void json_render_one_message(struct http_transaction *h, struct ctdlsession *c, long msgnum);
 void html_render_one_message(struct http_transaction *h, struct ctdlsession *c, long msgnum);

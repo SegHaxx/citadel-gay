@@ -144,6 +144,11 @@ void setup_for_forum_view(struct ctdlsession *c)
 }
 
 
+#if 0
+
+// This code implements the thread display code.  The thread sorting algorithm is working nicely but we're trying
+// not to do rendering in the C server of webcit.  Maybe move it into the server as "MSGS threaded" or something like that?
+
 // Threaded view (recursive section)
 //
 void thread_o_print(struct ctdlsession *c, StrBuf *sj, struct mthread *m, int num_msgs, int where_parent_is, int nesting_level)
@@ -173,7 +178,6 @@ void thread_o_print(struct ctdlsession *c, StrBuf *sj, struct mthread *m, int nu
 	}
 }
 
-#if 0
 
 // Threaded view (entry point)
 //
@@ -293,7 +297,7 @@ void flat_view(struct http_transaction *h, struct ctdlsession *c, char *which)
 
 #endif
 
-// render one message (entire transaction)
+// render one message (entire transaction)	FIXME EXTERMINATE
 //
 void html_render_one_message(struct http_transaction *h, struct ctdlsession *c, long msgnum)
 {
@@ -310,3 +314,19 @@ void html_render_one_message(struct http_transaction *h, struct ctdlsession *c, 
 	return;
 }
 
+
+// Fetch a single message and return it in JSON format for client-side rendering
+//
+void json_render_one_message(struct http_transaction *h, struct ctdlsession *c, long msgnum)
+{
+	JsonValue *j = NULL;				// FIXME do something useful
+
+	StrBuf *sj = NewStrBuf();
+	SerializeJson(sj, j, 1);			// '1' == free the source object
+
+	add_response_header(h, strdup("Content-type"), strdup("application/json"));
+	h->response_code = 200;
+	h->response_string = strdup("OK");
+	h->response_body_length = StrLength(sj);
+	h->response_body = SmashStrBuf(&sj);
+}

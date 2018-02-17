@@ -120,8 +120,6 @@ void json_msglist(struct http_transaction *h, struct ctdlsession *c, char *which
 	h->response_body_length = StrLength(sj);
 	h->response_body = SmashStrBuf(&sj);
 	return;
-
-
 }
 
 
@@ -191,9 +189,12 @@ void object_in_room(struct http_transaction *h, struct ctdlsession *c)
 	{
 		extract_token(buf, h->uri, 5, '/', sizeof buf);
 		if (!IsEmptyStr(buf)) {
-			if (!strcasecmp(buf, "html"))
+			if (!strcasecmp(buf, "json"))
 			{
-				// FIXME render as html
+				json_render_one_message(h, c, msgnum);
+			}
+			else if (!strcasecmp(buf, "html"))			// FIXME exterminate this, we don't want any server-side rendering
+			{
 				html_render_one_message(h, c, msgnum);
 			}
 			else
