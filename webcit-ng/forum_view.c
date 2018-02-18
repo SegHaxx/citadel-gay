@@ -24,6 +24,20 @@ struct mthread {
 };
 
 
+// Commands we need to send to Citadel Server before we begin rendering forum view.
+// These are common to flat and threaded views.
+//
+void setup_for_forum_view(struct ctdlsession *c)
+{
+	char buf[1024];
+	ctdl_printf(c, "MSGP text/html|text/plain");		// Declare the MIME types we know how to render
+	ctdl_readline(c, buf, sizeof(buf));			// Ignore the response
+	ctdl_printf(c, "MSGP dont_decode");			// Tell the server we will decode base64/etc client-side
+	ctdl_readline(c, buf, sizeof(buf));			// Ignore the response
+}
+
+
+#if 0
 // Renderer for one message in the threaded view
 // (This will probably work for the flat view too.)
 //
@@ -130,21 +144,6 @@ void forum_render_one_message(struct ctdlsession *c, StrBuf *sj, long msgnum)
 	StrBufAppendPrintf(sj, "</div>");						// end wrapper
 }
 
-
-// Commands we need to send to Citadel Server before we begin rendering forum view.
-// These are common to flat and threaded views.
-//
-void setup_for_forum_view(struct ctdlsession *c)
-{
-	char buf[1024];
-	ctdl_printf(c, "MSGP text/html|text/plain");		// Declare the MIME types we know how to render
-	ctdl_readline(c, buf, sizeof(buf));			// Ignore the response
-	ctdl_printf(c, "MSGP dont_decode");			// Tell the server we will decode base64/etc client-side
-	ctdl_readline(c, buf, sizeof(buf));			// Ignore the response
-}
-
-
-#if 0
 
 // This code implements the thread display code.  The thread sorting algorithm is working nicely but we're trying
 // not to do rendering in the C server of webcit.  Maybe move it into the server as "MSGS threaded" or something like that?

@@ -162,7 +162,28 @@ function render_one(div, msgnum, view)
 		{
 			if ((this.status / 100) == 2)
 			{
-				document.getElementById(div).innerHTML = this.responseText;	// FIXME don't let the C server render it.  do JSON now.
+				msg = JSON.parse(this.responseText);
+
+				document.getElementById(div).innerHTML =
+				"<div>"								// begin message wrapper
+				+ "<div style=\"float:left;padding-right:2px\">"		// begin avatar FIXME move to a stylesheet
+				+ "<i class=\"fa fa-user-circle fa-2x\"></i> "			// FIXME temporary avatar
+				+ "</div>"							// end avatar
+				+ "<div>"							// begin content
+				+ "<div>"							// begin header
+				+ "<span class=\"ctdl-username\"><a href=\"#\">"		// FIXME link to user profile
+				+ msg.from
+				+ "</a></span> "
+				+ "<span class=\"ctdl-msgdate\">"
+				+ msg.time
+				+ "</span> "
+				+ "</div>"							// end header
+				+ "<div>"							// begin body
+				+ msg.text
+				+ "</div>"							// end body
+				+ "</div>"							// end content
+				+ "</div>"							// end wrapper
+				;
 			}
 			else
 			{
