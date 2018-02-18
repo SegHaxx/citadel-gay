@@ -165,8 +165,8 @@ function render_one(div, msgnum, view)
 				msg = JSON.parse(this.responseText);
 
 				document.getElementById(div).innerHTML =
-				"<div>"								// begin message wrapper
-				+ "<div style=\"float:left;padding-right:2px\">"		// begin avatar FIXME move to a stylesheet
+				  "<div class=\"ctdl-msg-wrapper\">"				// begin message wrapper
+				+ "<div class=\"ctdl-avatar\">"					// begin avatar
 				+ "<i class=\"fa fa-user-circle fa-2x\"></i> "			// FIXME temporary avatar
 				+ "</div>"							// end avatar
 				+ "<div>"							// begin content
