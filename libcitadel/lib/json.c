@@ -121,7 +121,7 @@ JsonValue *NewJsonBigNumber(const char *Key, long keylen, double Number)
 }
 
 
-JsonValue *NewJsonString(const char *Key, long keylen, StrBuf *CopyMe)
+JsonValue *NewJsonString(const char *Key, long keylen, StrBuf *CopyMe, int copy_or_smash)
 {
 	JsonValue *Ret;
 
@@ -132,7 +132,18 @@ JsonValue *NewJsonString(const char *Key, long keylen, StrBuf *CopyMe)
 	{
 		Ret->Name = NewStrBufPlain(Key, keylen);
 	}
-	Ret->Value = NewStrBufDup(CopyMe);
+	if (copy_or_smash == NEWJSONSTRING_COPYBUF)
+	{
+		Ret->Value = NewStrBufDup(CopyMe);
+	}
+	else if (copy_or_smash == NEWJSONSTRING_SMASHBUF)
+	{
+		Ret->Value = CopyMe;
+	}
+	else
+	{
+		Ret->Value = NULL;		// error condition
+	}
 	return Ret;
 }
 

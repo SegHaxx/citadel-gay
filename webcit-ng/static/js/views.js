@@ -155,7 +155,7 @@ function render_messages(msgs, prefix, view)
 function render_one(div, msgnum, view)
 {
 	var request = new XMLHttpRequest();
-	request.open("GET", "/ctdl/r/" + escapeHTMLURI(current_room) + "/" + msgs[i] + "/html", true);
+	request.open("GET", "/ctdl/r/" + escapeHTMLURI(current_room) + "/" + msgs[i] + "/json", true);
 	request.onreadystatechange = function()
 	{
 		if (this.readyState === 4)

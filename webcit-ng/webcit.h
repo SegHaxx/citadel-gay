@@ -147,8 +147,6 @@ void dav_get_message(struct http_transaction *h, struct ctdlsession *c, long msg
 void dav_put_message(struct http_transaction *h, struct ctdlsession *c, char *euid, long old_msgnum);
 ssize_t ctdl_write(struct ctdlsession *ctdl, const void *buf, size_t count);
 int login_to_citadel(struct ctdlsession *c, char *auth, char *resultbuf);
-void threaded_view(struct http_transaction *h, struct ctdlsession *c, char *which);
-void flat_view(struct http_transaction *h, struct ctdlsession *c, char *which);
 StrBuf *ctdl_readtextmsg(struct ctdlsession *ctdl);
 StrBuf *html2html(const char *supplied_charset, int treat_as_wiki, char *roomname, long msgnum, StrBuf *Source);
 void download_mime_component(struct http_transaction *h, struct ctdlsession *c, long msgnum, char *partnum);
@@ -164,4 +162,3 @@ void do_404(struct http_transaction *h);
 void do_412(struct http_transaction *h);
 void UrlizeText(StrBuf* Target, StrBuf *Source, StrBuf *WrkBuf);
 void json_render_one_message(struct http_transaction *h, struct ctdlsession *c, long msgnum);
-void html_render_one_message(struct http_transaction *h, struct ctdlsession *c, long msgnum);

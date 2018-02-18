@@ -193,10 +193,6 @@ void object_in_room(struct http_transaction *h, struct ctdlsession *c)
 			{
 				json_render_one_message(h, c, msgnum);
 			}
-			else if (!strcasecmp(buf, "html"))			// FIXME exterminate this, we don't want any server-side rendering
-			{
-				html_render_one_message(h, c, msgnum);
-			}
 			else
 			{
 				download_mime_component(h, c, msgnum, buf);

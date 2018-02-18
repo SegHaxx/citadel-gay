@@ -28,7 +28,7 @@
 #include <sys/types.h>
 #include <netinet/in.h>
 
-#define LIBCITADEL_VERSION_NUMBER	917
+#define LIBCITADEL_VERSION_NUMBER	918
 
 /*
  * Here's a bunch of stupid magic to make the MIME parser portable.
@@ -613,7 +613,11 @@ JsonValue *NewJsonNumber(const char *Key, long keylen, long Number);
 
 JsonValue *NewJsonBigNumber(const char *Key, long keylen, double Number);
 
-JsonValue *NewJsonString(const char *Key, long keylen, StrBuf *CopyMe);
+enum {
+	NEWJSONSTRING_COPYBUF,		// make a copy of the StrBuf, source is left alone
+	NEWJSONSTRING_SMASHBUF		// smash the source StrBuf, the json object now owns that memory
+};
+JsonValue *NewJsonString(const char *Key, long keylen, StrBuf *CopyMe, int copy_or_smash);
 
 JsonValue *NewJsonPlainString(const char *Key, long keylen, const char *CopyMe, long len);
 

@@ -58,8 +58,7 @@ JsonValue *WildFireMessage(const char *Filename, long fnlen,
 	JsonArrayAppend(Ret, WFInfo(Filename, fnlen,
 				    LineNo, Type));
 
-	JsonArrayAppend(Ret, 
-			NewJsonString(NULL, 0, Msg));
+	JsonArrayAppend(Ret, NewJsonString(NULL, 0, Msg, NEWJSONSTRING_COPYBUF));
 	return Ret;
 }
 
@@ -275,28 +274,16 @@ JsonValue *WildFireException(const char *Filename, long FileLen,
 	JsonValue *Val;
 	Val = NewJsonArray(NULL, 0);
 
-	JsonArrayAppend(Val, WFInfo(Filename, FileLen,
-				    LineNo, eEXCEPTION));
-
-	ExcClass = NewJsonObject(WF_MsgStrs[eTRACE].Key, 
-				 WF_MsgStrs[eTRACE].len);
-	
+	JsonArrayAppend(Val, WFInfo(Filename, FileLen, LineNo, eEXCEPTION));
+	ExcClass = NewJsonObject(WF_MsgStrs[eTRACE].Key, WF_MsgStrs[eTRACE].len);
 	JsonArrayAppend(Val, ExcClass);
-	JsonObjectAppend(ExcClass, 
-			 NewJsonPlainString(HKEY("Class"), 
-					    HKEY("Exception")));
-	JsonObjectAppend(ExcClass, 
-			 NewJsonString(HKEY("Message"), Message));
-	JsonObjectAppend(ExcClass, 
-			 NewJsonPlainString(HKEY("File"), 
-					    Filename, FileLen));
+	JsonObjectAppend(ExcClass, NewJsonPlainString(HKEY("Class"), HKEY("Exception")));
+	JsonObjectAppend(ExcClass, NewJsonString(HKEY("Message"), Message, NEWJSONSTRING_COPYBUF));
+	JsonObjectAppend(ExcClass, NewJsonPlainString(HKEY("File"), Filename, FileLen));
 /*
-	JsonObjectAppend(ExcClass, 
-			 NewJsonPlainString(HKEY("Type"), 
-					    HKEY("throw")));
+	JsonObjectAppend(ExcClass, NewJsonPlainString(HKEY("Type"), HKEY("throw")));
 */
-	JsonObjectAppend(ExcClass, 
-			 NewJsonNumber(HKEY("Line"), LineNo));
+	JsonObjectAppend(ExcClass, NewJsonNumber(HKEY("Line"), LineNo));
 
 #ifdef HAVE_BACKTRACE
 	{
@@ -338,14 +325,10 @@ JsonValue *WildFireException(const char *Filename, long FileLen,
 
 			Frame = NewJsonObject(NULL, 0);
 			JsonArrayAppend(Trace, Frame);
-			JsonObjectAppend(Frame, 
-					 NewJsonString(HKEY("function"), Function));
-			JsonObjectAppend(Frame, 
-					 NewJsonString(HKEY("file"), FileName));
-			JsonObjectAppend(Frame, 
-					 NewJsonNumber(HKEY("line"), FunctionLine));
-			JsonObjectAppend(Frame, 
-					 NewJsonArray(HKEY("args")));/* not supportet... */
+			JsonObjectAppend(Frame, NewJsonString(HKEY("function"), Function, NEWJSONSTRING_COPYBUF));
+			JsonObjectAppend(Frame, NewJsonString(HKEY("file"), FileName, NEWJSONSTRING_COPYBUF));
+			JsonObjectAppend(Frame, NewJsonNumber(HKEY("line"), FunctionLine));
+			JsonObjectAppend(Frame, NewJsonArray(HKEY("args"))); // not supported
 
 			FunctionLine = 0;
 			FlushStrBuf(FileName);
