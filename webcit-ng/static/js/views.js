@@ -126,8 +126,26 @@ function forum_readmessages(target_div, gt_msg, lt_msg)
 						"link to msgs greater than " + newgt + "</a></div>" ;
 				}
 
+				// Now figure out where to scroll to after rendering.
+				if (gt_msg > 0)
+				{
+					scroll_to = msgs[0];
+				}
+				else if (lt_msg < 9999999999)
+				{
+					scroll_to = msgs[msgs.length-1];
+				}
+				else if ( (logged_in) && (gt_msg == 0) && (lt_msg == 9999999999) )
+				{
+					scroll_to = msgs[msgs.length-1];
+				}
+				else
+				{
+					scroll_to = msgs[0];		// FIXME this is too naive
+				}
+
 				// Render the individual messages in the divs
-				render_messages(msgs, "ctdl_msg_", views.VIEW_BBS);
+				forum_render_messages(msgs, "ctdl_msg_", scroll_to)
 			}
 			else
 			{
@@ -140,22 +158,22 @@ function forum_readmessages(target_div, gt_msg, lt_msg)
 }
 
 
-// Render a range of messages, in the view specified, with the div prefix specified
+// Render a range of messages, with the div prefix specified
 //
-function render_messages(msgs, prefix, view)
+function forum_render_messages(msgs, prefix, scroll_to)
 {
 	for (i=0; i<msgs.length; ++i)
 	{
-		render_one(prefix+msgs[i], msgs[i], view);
+		forum_render_one(prefix+msgs[i], msgs[i], scroll_to)
 	}
 }
 
 
-// We have to put each XHR for render_messages() into its own stack frame, otherwise it jumbles them together.  I don't know why.
-function render_one(div, msgnum, view)
+// We have to put each XHR for forum_render_messages() into its own stack frame, otherwise it jumbles them together.  I don't know why.
+function forum_render_one(div, msgnum, scroll_to)
 {
 	var request = new XMLHttpRequest();
-	request.open("GET", "/ctdl/r/" + escapeHTMLURI(current_room) + "/" + msgs[i] + "/json", true);
+	request.open("GET", "/ctdl/r/" + escapeHTMLURI(current_room) + "/" + msgs[i] + "/json", false);		// false == synchronous
 	request.onreadystatechange = function()
 	{
 		if (this.readyState === 4)
@@ -188,6 +206,10 @@ function render_one(div, msgnum, view)
 			else
 			{
 				document.getElementById(div).innerHTML = "ERROR";
+			}
+			if (msgnum == scroll_to)
+			{
+				window.location.hash = div;
 			}
 		}
 	};
