@@ -173,7 +173,7 @@ function forum_render_messages(msgs, prefix, scroll_to)
 function forum_render_one(div, msgnum, scroll_to)
 {
 	var request = new XMLHttpRequest();
-	request.open("GET", "/ctdl/r/" + escapeHTMLURI(current_room) + "/" + msgs[i] + "/json", false);		// false == synchronous
+	request.open("GET", "/ctdl/r/" + escapeHTMLURI(current_room) + "/" + msgs[i] + "/json", true);
 	request.onreadystatechange = function()
 	{
 		if (this.readyState === 4)
