@@ -20,6 +20,16 @@ div.ctdl-msg-wrapper
 
 div.ctdl-avatar
 {
+	width: 32px;
+}
+
+div.ctdl-msg-content
+{
+	margin-left: 32px;
+}
+
+div.ctdl-avatar
+{
 	float: left;
 	padding-right: 2px;
 }

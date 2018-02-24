@@ -41,7 +41,8 @@ function render_room_view(gt_msg, lt_msg)
 			forum_readmessages("ctdl-main", gt_msg, lt_msg);
 			break;
 		default:
-			document.getElementById("ctdl-main").innerHTML = "The view for " + current_room + " is " + current_view + " but there is no renderer." ;
+			document.getElementById("ctdl-main").innerHTML =
+				"The view for " + current_room + " is " + current_view + " but there is no renderer." ;
 			break;
 	}
 
@@ -107,7 +108,10 @@ function forum_readmessages(target_div, gt_msg, lt_msg)
 				// Render the divs (we will fill them in later)
 				for (var i in msgs)
 				{
-					document.getElementById(target_div).innerHTML += "<div id=\"ctdl_msg_" + msgs[i] + "\">#" + msgs[i] + "</div>" ;
+					document.getElementById(target_div).innerHTML +=
+						"<div id=\"ctdl_msg_"
+						+ msgs[i] + "\">#" + msgs[i]
+						+ "</div>" ;
 				}
 				if (lt_msg == 9999999999)
 				{
@@ -122,8 +126,8 @@ function forum_readmessages(target_div, gt_msg, lt_msg)
 					}
 					document.getElementById(target_div).innerHTML +=
 						"<div id=\"" + new_new_div_name + "\">" +
-						"<a href=\"javascript:forum_readmessages('" + new_new_div_name + "', " + newgt + ", 9999999999);\">" +
-						"link to msgs greater than " + newgt + "</a></div>" ;
+						"<a href=\"javascript:forum_readmessages('" + new_new_div_name + "', " + newgt + ", 9999999999);\">"
+						+ "link to msgs greater than " + newgt + "</a></div>" ;
 				}
 
 				// Now figure out where to scroll to after rendering.
@@ -149,7 +153,8 @@ function forum_readmessages(target_div, gt_msg, lt_msg)
 			}
 			else
 			{
-				document.getElementById(target_div).innerHTML = original_text;		// this will make the link reappear so the user can try again
+				// if xhr fails, this will make the link reappear so the user can try again
+				document.getElementById(target_div).innerHTML = original_text;
 			}
 		}
 	};
@@ -187,8 +192,8 @@ function forum_render_one(div, msgnum, scroll_to)
 				+ "<div class=\"ctdl-avatar\">"					// begin avatar
 				+ "<i class=\"fa fa-user-circle fa-2x\"></i> "			// FIXME temporary avatar
 				+ "</div>"							// end avatar
-				+ "<div>"							// begin content
-				+ "<div>"							// begin header
+				+ "<div class=\"ctdl-msg-content\">"				// begin content
+				+ "<div class=\"ctdl-msg-header\">"				// begin header
 				+ "<span class=\"ctdl-username\"><a href=\"#\">"		// FIXME link to user profile
 				+ msg.from
 				+ "</a></span> "
