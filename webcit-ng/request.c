@@ -92,7 +92,8 @@ void perform_request(struct http_transaction *h)
 	// This is implemented as a series of strncasecmp() calls rather than a
 	// lookup table in order to make the code more readable.
 
-	if (IsEmptyStr(h->uri)) {				// Sanity check
+	if (IsEmptyStr(h->uri))
+	{						// Sanity check
 		do_404(h);
 		return;
 	}
@@ -101,7 +102,8 @@ void perform_request(struct http_transaction *h)
 	// with the /ctdl/ prefix.
 	// Root (/) ...
 
-	if ( (!strcmp(h->uri, "/")) && (!strcasecmp(h->method, "GET")) ) {
+	if ( (!strcmp(h->uri, "/")) && (!strcasecmp(h->method, "GET")) )
+	{
 		http_redirect(h, "/ctdl/s/index.html");
 		return;
 	}
@@ -111,17 +113,20 @@ void perform_request(struct http_transaction *h)
 
 	// Everything below this line is strictly REST URI patterns.
 
-	if (strncasecmp(h->uri, HKEY("/ctdl/"))) {		// Reject non-REST
+	if (strncasecmp(h->uri, HKEY("/ctdl/")))
+	{						// Reject non-REST
 		do_404(h);
 		return;
 	}
 
-	if (!strncasecmp(h->uri, HKEY("/ctdl/s/"))) {		// Static content
+	if (!strncasecmp(h->uri, HKEY("/ctdl/s/")))
+	{						// Static content
 		output_static(h);
 		return;
 	}
 
-	if (h->uri[7] != '/') {
+	if (h->uri[7] != '/')
+	{
 		do_404(h);
 		return;
 	}
@@ -131,14 +136,16 @@ void perform_request(struct http_transaction *h)
 	//	2. Requires a connection to a Citadel server.
 
 	c = connect_to_citadel(h);
-	if (c == NULL) {
+	if (c == NULL)
+	{
 		do_502(h);
 		return;
 	}
 
 	// WebDAV methods like OPTIONS and PROPFIND *require* a logged-in session,
 	// even if the Citadel server allows anonymous access.
-	if (IsEmptyStr(c->auth)) {
+	if (IsEmptyStr(c->auth))
+	{
 		if (	   (!strcasecmp(h->method, "OPTIONS"))
 			|| (!strcasecmp(h->method, "PROPFIND"))
 			|| (!strcasecmp(h->method, "REPORT"))
@@ -152,7 +159,8 @@ void perform_request(struct http_transaction *h)
 
 	// Break down the URI by path and send the request to the appropriate part of the program.
 	//
-	switch(h->uri[6]) {
+	switch(h->uri[6])
+	{
 		case 'a':					// /ctdl/a/ == RESTful path to admin functions
 			ctdl_a(h, c);
 			break;
@@ -170,7 +178,8 @@ void perform_request(struct http_transaction *h)
 	}
 
 	// Are we in an authenticated session?  If so, set a cookie so we stay logged in.
-	if (!IsEmptyStr(c->auth)) {
+	if (!IsEmptyStr(c->auth))
+	{
 		char koekje[AUTH_MAX];
 		char *exp = http_datestring(time(NULL) + (86400 * 30));
 		snprintf(koekje, AUTH_MAX, "wcauth=%s; path=/ctdl/; Expires=%s", c->auth, exp);
