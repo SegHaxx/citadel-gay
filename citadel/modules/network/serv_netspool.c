@@ -146,24 +146,6 @@ int HaveSpoolConfig(OneRoomNetCfg* RNCfg)
 	return interested;
 }
 
-void Netmap_AddMe(struct CtdlMessage *msg, const char *defl, long defllen)
-{
-	long node_len;
-	char buf[SIZ];
-
-	/* prepend our node to the path */
-	if (CM_IsEmpty(msg, eMessagePath)) {
-		CM_SetField(msg, eMessagePath, defl, defllen);
-	}
-	node_len = strlen(CtdlGetConfigStr("c_nodename"));
-	if (node_len >= SIZ) 
-		node_len = SIZ - 1;
-	memcpy(buf, CtdlGetConfigStr("c_nodename"), node_len);
-	buf[node_len] = '!';
-	buf[node_len + 1] = '\0';
-	CM_PrependToField(msg, eMessagePath, buf, node_len + 1);
-}
-
 
 void InspectQueuedRoom(SpoolControl **pSC,
 		       RoomProcList *room_to_spool,     

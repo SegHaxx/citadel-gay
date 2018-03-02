@@ -54,7 +54,6 @@ void InspectQueuedRoom(SpoolControl **pSC,
 
 int HaveSpoolConfig(OneRoomNetCfg* RNCfg);
 
-void Netmap_AddMe(struct CtdlMessage *msg, const char *defl, long defllen);
 void network_do_spoolin(HashList *working_ignetcfg, HashList *the_netmap, int *netmap_changed);
 void free_spoolcontrol_struct(SpoolControl **scc);
 void free_spoolcontrol_struct_members(SpoolControl *scc);
