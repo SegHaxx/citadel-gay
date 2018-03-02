@@ -357,14 +357,6 @@ typedef struct __NetMap {
 
 HashList* CtdlReadNetworkMap(void);
 StrBuf *CtdlSerializeNetworkMap(HashList *Map);
-void NetworkLearnTopology(char *node, char *path, HashList *the_netmap, int *netmap_changed);
-int CtdlIsValidNode(const StrBuf **nexthop,
-		    const StrBuf **secret,
-		    StrBuf *node,
-		    HashList *IgnetCfg,
-		    HashList *the_netmap);
-
-
 
 
 

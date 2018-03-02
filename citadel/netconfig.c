@@ -717,102 +717,6 @@ StrBuf *CtdlSerializeNetworkMap(HashList *Map)
 
 
 /*
- * Learn topology from path fields
- */
-void NetworkLearnTopology(char *node, char *path, HashList *the_netmap, int *netmap_changed)
-{
-	CtdlNetMap *pNM = NULL;
-	void *vptr;
-	char nexthop[256];
-	CtdlNetMap *nmptr;
-
-	if (GetHash(the_netmap, node, strlen(node), &vptr) && 
-	    (vptr != NULL))/* TODO: is the NodeName Uniq? */
-	{
-		pNM = (CtdlNetMap*)vptr;
-		extract_token(nexthop, path, 0, '!', sizeof nexthop);
-		if (!strcmp(nexthop, ChrPtr(pNM->NextHop))) {
-			pNM->lastcontact = time(NULL);
-			(*netmap_changed) ++;
-			return;
-		}
-	}
-
-	/* If we got here then it's not in the map, so add it. */
-	nmptr = (CtdlNetMap *) malloc(sizeof (CtdlNetMap));
-	nmptr->NodeName = NewStrBufPlain(node, -1);
-	nmptr->lastcontact = time(NULL);
-	nmptr->NextHop = NewStrBuf ();
-	StrBufExtract_tokenFromStr(nmptr->NextHop, path, strlen(path), 0, '!');
-	/* TODO: is the NodeName Uniq? */
-	Put(the_netmap, SKEY(nmptr->NodeName), nmptr, DeleteNetMap);
-	(*netmap_changed) ++;
-}
-
-
-/*
- * Check the network map and determine whether the supplied node name is
- * valid.  If it is not a neighbor node, supply the name of a neighbor node
- * which is the next hop.  If it *is* a neighbor node, we also fill in the
- * shared secret.
- */
-int CtdlIsValidNode(const StrBuf **nexthop,
-		    const StrBuf **secret,
-		    StrBuf *node,
-		    HashList *IgnetCfg,
-		    HashList *the_netmap)
-{
-	void *vNetMap;
-	void *vNodeConf;
-	CtdlNodeConf *TheNode;
-	CtdlNetMap *TheNetMap;
-
-	if (StrLength(node) == 0) {
-		return(-1);
-	}
-
-	/*
-	 * First try the neighbor nodes
-	 */
-	if (GetCount(IgnetCfg) == 0) {
-		syslog(LOG_INFO, "netconfig: IgnetCfg is empty!");
-		if (nexthop != NULL) {
-			*nexthop = NULL;
-		}
-		return(-1);
-	}
-
-	/* try to find a neigbour with the name 'node' */
-	if (GetHash(IgnetCfg, SKEY(node), &vNodeConf) && 
-	    (vNodeConf != NULL))
-	{
-		TheNode = (CtdlNodeConf*)vNodeConf;
-		if (secret != NULL)
-			*secret = TheNode->Secret;
-		return 0;		/* yup, it's a direct neighbor */
-	}
-
-	/*
-	 * If we get to this point we have to see if we know the next hop
-	 *//* TODO: is the NodeName Uniq? */
-	if ((GetCount(the_netmap) > 0) &&
-	    (GetHash(the_netmap, SKEY(node), &vNetMap)))
-	{
-		TheNetMap = (CtdlNetMap*)vNetMap;
-		if (nexthop != NULL)
-			*nexthop = TheNetMap->NextHop;
-		return(0);
-	}
-
-	/*
-	 * If we get to this point, the supplied node name is bogus.
-	 */
-	syslog(LOG_ERR, "netconfig: invalid node name <%s>", ChrPtr(node));
-	return(-1);
-}
-
-
-/*
  * Convert any legacy configuration files in the "netconfigs" directory
  */
 void convert_legacy_netcfg_files(void)
@@ -830,26 +734,32 @@ void convert_legacy_netcfg_files(void)
 
 	syslog(LOG_INFO, "netconfig: legacy netconfig files exist - converting them!");
 
-	while (dit = readdir(dh), dit != NULL) {		// yes, we use the non-reentrant version; we're not in threaded mode yet
+	while (dit = readdir(dh), dit != NULL)			// yes, we use the non-reentrant version; we're not in threaded mode yet
+	{
 		roomnum = atol(dit->d_name);
 		if (roomnum > 0) {
 			snprintf(filename, sizeof filename, "%s/%ld", ctdl_netcfg_dir, roomnum);
 			fp = fopen(filename, "r");
-			if (fp) {
+			if (fp)
+			{
 				fseek(fp, 0L, SEEK_END);
 				len = ftell(fp);
-				if (len > 0) {
+				if (len > 0)
+				{
 					v = malloc(len);
-					if (v) {
+					if (v)
+					{
 						rewind(fp);
-						if (fread(v, len, 1, fp)) {
+						if (fread(v, len, 1, fp))
+						{
 							write_netconfig_to_configdb(roomnum, v);
 							unlink(filename);
 						}
 						free(v);
 					}
 				}
-				else {
+				else
+				{
 					unlink(filename);	// zero length netconfig, just delete it
 				}
 				fclose(fp);

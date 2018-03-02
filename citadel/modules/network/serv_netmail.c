@@ -382,7 +382,6 @@ void network_process_participate(SpoolControl *sc, struct CtdlMessage *omsg, lon
 {
 	struct CtdlMessage *msg = NULL;
 	int ok_to_participate = 0;
-	StrBuf *Buf = NULL;
 	recptypes *valid;
 
 	/*
@@ -404,16 +403,6 @@ void network_process_participate(SpoolControl *sc, struct CtdlMessage *omsg, lon
 		{
 			ok_to_participate = 1;
 		}
-		
-		Buf = NewStrBufPlain(CM_KEY(msg, eNodeName));
-		if (CtdlIsValidNode(NULL,
-				    NULL,
-				    Buf,
-				    sc->working_ignetcfg,
-				    sc->the_netmap) == 0)
-		{
-			ok_to_participate = 1;
-		}
 	}
 	if (ok_to_participate)
 	{
@@ -430,7 +419,6 @@ void network_process_participate(SpoolControl *sc, struct CtdlMessage *omsg, lon
 		CtdlSubmitMsg(msg, valid, "", 0);
 		free_recipients(valid);
 	}
-	FreeStrBuf(&Buf);
 	CM_Free(msg);
 }
 
