@@ -2,7 +2,7 @@
  * Tuning of various parameters of the system.
  * Normally you don't want to mess with any of this.
  *
- * Copyright (c) 1987-2017 by the citadel.org team
+ * Copyright (c) 1987-2018 by the citadel.org team
  *
  * This program is open source software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3.
@@ -57,14 +57,6 @@
 #define BOUNCESOURCE		"Citadel Mail Delivery Subsystem"
 
 /*
- * This variable defines the amount of network spool data that may be carried
- * in one server transfer command.  For some reason, some networks get hung
- * up on larger packet sizes.  We don't know why.  In any case, never set the
- * packet size higher than 4096 or your server sessions will crash.
- */
-#define IGNET_PACKET_SIZE	4000
-
-/*
  * The names of rooms which are automatically created by the system
  */
 #define BASEROOM		"Lobby"
@@ -92,7 +84,7 @@
 /*
  * How long (in seconds) to retain message entries in the use table
  */
-#define USETABLE_RETAIN			864000L		/* 10 days */
+#define USETABLE_RETAIN		864000L		/* 10 days */
 
 /*
  * The size of per-thread stacks.  If set too low, citserver will randomly crash.

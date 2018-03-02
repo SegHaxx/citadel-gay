@@ -404,14 +404,10 @@ void remove_any_whitespace_to_the_left_or_right_of_at_symbol(char *name)
 int alias(char *name)
 {				/* process alias and routing info for mail */
 	FILE *fp;
-	int a, i;
+	int a;
 	char aaa[SIZ], bbb[SIZ];
-	char *ignetcfg = NULL;
-	char *ignetmap = NULL;
 	int at = 0;
 	char node[64];
-	char testnode[64];
-	char buf[SIZ];
 
 	char original_name[256];
 	safestrncpy(original_name, name, sizeof original_name);
