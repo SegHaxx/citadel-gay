@@ -1,6 +1,5 @@
 /*
- * This module handles shared rooms, inter-Citadel mail, and outbound
- * mailing list processing.
+ * This module handles network mail and mailing list processing.
  *
  * Copyright (c) 2000-2018 by the citadel.org team
  *
