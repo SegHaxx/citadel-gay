@@ -226,7 +226,7 @@ install-data-new:
 	$(srcdir)/mkinstalldirs $(DESTDIR)$(ETC_DIR)/
 	$(INSTALL_DATA) $(srcdir)/public_clients $(DESTDIR)$(ETC_DIR)/public_clients
 	$(INSTALL_DATA) $(srcdir)/citadel_urlshorteners.rc $(DESTDIR)$(ETC_DIR)/citadel_urlshorteners.rc
-	$(INSTALL_DATA) $(srcdir)/network/mail.aliases $(DESTDIR)$(ETC_DIR)/mail.aliases$
+	$(INSTALL_DATA) $(srcdir)/network/mail.aliases $(DESTDIR)$(ETC_DIR)/mail.aliases
 
 	$(srcdir)/mkinstalldirs $(DESTDIR)$(STATICDATA_DIR)/messages
 	@for i in  \
