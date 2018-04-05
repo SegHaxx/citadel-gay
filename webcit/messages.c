@@ -1,7 +1,7 @@
 /*
  * Functions which deal with the fetching and displaying of messages.
  *
- * Copyright (c) 1996-2012 by the citadel.org team
+ * Copyright (c) 1996-2018 by the citadel.org team
  *
  * This program is open source software.  You can redistribute it and/or
  * modify it under the terms of the GNU General Public License, version 3.
@@ -932,22 +932,12 @@ void post_mime_to_server(void) {
 		serv_printf("\n--%s", alt_boundary);
 	}
 
-	if (havebstr("markdown"))
-	{
-		serv_puts("Content-type: text/x-markdown; charset=utf-8");
-		serv_puts("Content-Transfer-Encoding: quoted-printable");
-		serv_puts("");
-		text_to_server_qp(sbstr("msgtext"));	/* Transmit message in quoted-printable encoding */
-	}
-	else
-	{
-		serv_puts("Content-type: text/html; charset=utf-8");
-		serv_puts("Content-Transfer-Encoding: quoted-printable");
-		serv_puts("");
-		serv_puts("<html><body>\r\n");
-		text_to_server_qp(sbstr("msgtext"));	/* Transmit message in quoted-printable encoding */
-		serv_puts("</body></html>\r\n");
-	}
+	serv_puts("Content-type: text/html; charset=utf-8");
+	serv_puts("Content-Transfer-Encoding: quoted-printable");
+	serv_puts("");
+	serv_puts("<html><body>\r\n");
+	text_to_server_qp(sbstr("msgtext"));	/* Transmit message in quoted-printable encoding */
+	serv_puts("</body></html>\r\n");
 
 	if (include_text_alt) {
 		serv_printf("--%s--", alt_boundary);
@@ -1364,10 +1354,6 @@ void display_enter(void)
 	int i = 0;
 	long replying_to;
 
-	int prefer_md;
-
-	get_pref_yesno("markdown", &prefer_md, 0);
-
 	if (havebstr("force_room")) {
 		gotoroom(sbstr("force_room"));
 	}
@@ -1720,10 +1706,7 @@ void display_enter(void)
 
 	begin_burst();
 	output_headers(1, 0, 0, 0, 1, 0);
-	if ((WCC->CurRoom.defview == VIEW_WIKIMD) || prefer_md)
-		DoTemplate(HKEY("edit_markdown_epic"), NULL, &NoCtx);
-	else
-		DoTemplate(HKEY("edit_message"), NULL, &NoCtx);
+	DoTemplate(HKEY("edit_message"), NULL, &NoCtx);
 	end_burst();
 
 	return;
@@ -2116,8 +2099,6 @@ InitModule_MSG
 			   PRF_STRING, 
 			   NULL);
 	RegisterPreference("mailbox",_("Mailbox view mode"), PRF_STRING, NULL);
-	RegisterPreference("markdown",_("Prefer markdown editing"), PRF_YESNO, NULL);
-
 
 	WebcitAddUrlHandler(HKEY("readnew"), "", 0, h_readnew, ANONYMOUS|NEED_URL);
 	WebcitAddUrlHandler(HKEY("readold"), "", 0, h_readold, ANONYMOUS|NEED_URL);

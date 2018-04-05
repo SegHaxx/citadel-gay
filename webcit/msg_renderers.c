@@ -1209,40 +1209,6 @@ void render_MAIL_html(StrBuf *Target, WCTemplputParams *TP, StrBuf *FoundCharset
 	Mime->Data = Buf;
 }
 
-#ifdef HAVE_MARKDOWN
-/*
-char * MarkdownHandleURL(const char* SourceURL, const int len, void* something)
-{
-
-}
-*/
-void render_MAIL_markdown(StrBuf *Target, WCTemplputParams *TP, StrBuf *FoundCharset)
-{
-#include <mkdio.h>
-	wc_mime_attachment *Mime = (wc_mime_attachment *) CTX(CTX_MIME_ATACH);
-	MMIOT *doc;
-	char *md_as_html = NULL;
-	const char *format;
-
-	if (StrLength(Mime->Data) == 0)
-		return;
-
-	format = bstr("format");
-
-	if ((format == NULL) || 
-	    strcmp(format, "plain"))
-	{
-		doc = mkd_string(ChrPtr(Mime->Data), StrLength(Mime->Data), 0);
-		mkd_basename(doc, "/wiki?page=");
-		mkd_compile(doc, 0);
-		if (mkd_document(doc, &md_as_html) != EOF) {
-			FreeStrBuf(&Mime->Data);
-			Mime->Data = NewStrBufPlain(md_as_html, -1);
-		}
-		mkd_cleanup(doc);
-	}
-}
-#endif
 
 void render_MAIL_UNKNOWN(StrBuf *Target, WCTemplputParams *TP, StrBuf *FoundCharset)
 {
@@ -1586,9 +1552,6 @@ InitModule_MSGRENDERERS
 	RegisterMimeRenderer(HKEY("text/plain"), render_MAIL_text_plain, 1, 3);
 	RegisterMimeRenderer(HKEY("text"), render_MAIL_text_plain, 1, 1);
 	RegisterMimeRenderer(HKEY("text/html"), render_MAIL_html, 1, 100);
-#ifdef HAVE_MARKDOWN
-	RegisterMimeRenderer(HKEY("text/x-markdown"), render_MAIL_markdown, 1, 30);
-#endif
 	RegisterMimeRenderer(HKEY(""), render_MAIL_UNKNOWN, 0, 0);
 
 	/* these headers are citserver replies to MSG4 and friends. one evaluator for each */

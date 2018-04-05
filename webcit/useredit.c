@@ -289,7 +289,7 @@ HashList *iterate_load_userlist(StrBuf *Target, WCTemplputParams *TP)
 	StrBuf_ServGetln(Buf);
 	if (GetServerStatus(Buf, NULL) == 1) {
 		Hash = NewHash(1, Flathash);
-
+		Done = 0;
 		while (!Done) {
 			len = StrBuf_ServGetln(Buf);
 			if ((len <0) || 
@@ -308,14 +308,15 @@ HashList *iterate_load_userlist(StrBuf *Target, WCTemplputParams *TP)
 
 		serv_puts("LBIO 1");
 		StrBuf_ServGetln(Buf);
-		if (GetServerStatus(Buf, NULL) == 1)
+		if (GetServerStatus(Buf, NULL) == 1) {
 			Done = 0;
 			while (!Done) {
-			len = StrBuf_ServGetln(Buf);
-			if ((len <0) || ((len == 3) && !strcmp(ChrPtr(Buf), "000")))
-			{
-				Done = 1;
-				break;
+				len = StrBuf_ServGetln(Buf);
+				if ((len <0) || ((len == 3) && !strcmp(ChrPtr(Buf), "000")))
+				{
+					Done = 1;
+					break;
+				}
 			}
 			UID = atoi(ChrPtr(Buf));
 			if (GetHash(Hash, IKEY(UID), &vData) && vData != 0)

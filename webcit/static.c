@@ -163,13 +163,20 @@ int LoadStaticDir(const char *DirName, HashList *DirList, const char *RelDir)
         int d_namelen;
 	int istoplevel;
 		
+	if (IsEmptyStr(DirName))
+	{
+		return 0;
+	}
+
 	filedir = opendir (DirName);
-	if (filedir == NULL) {
+	if (filedir == NULL)
+	{
 		return 0;
 	}
 
 	d = (struct dirent *)malloc(offsetof(struct dirent, d_name) + PATH_MAX + 1);
-	if (d == NULL) {
+	if (d == NULL)
+	{
 		closedir(filedir);
 		return 0;
 	}
@@ -409,6 +416,5 @@ InitModule_STATIC
 	WebcitAddUrlHandler(HKEY("static.local"), "", 0, output_static_1, ANONYMOUS|COOKIEUNNEEDED|ISSTATIC|LOGCHATTY);
 	WebcitAddUrlHandler(HKEY("tinymce"), "", 0, output_static_2, ANONYMOUS|COOKIEUNNEEDED|ISSTATIC|LOGCHATTY);
 	WebcitAddUrlHandler(HKEY("tiny_mce"), "", 0, output_static_2, ANONYMOUS|COOKIEUNNEEDED|ISSTATIC|LOGCHATTY);
-	WebcitAddUrlHandler(HKEY("markdown"), "", 0, output_static_3, ANONYMOUS|COOKIEUNNEEDED|ISSTATIC|LOGCHATTY);
 	WebcitAddUrlHandler(HKEY("epiceditor"), "", 0, output_static_3, ANONYMOUS|COOKIEUNNEEDED|ISSTATIC|LOGCHATTY);
 }

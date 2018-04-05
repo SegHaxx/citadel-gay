@@ -23,8 +23,7 @@ int allowed_default_views[VIEW_MAX] = {
 	0, /* VIEW_JOURNAL	Journal */
 	0, /* VIEW_DRAFTS	Drafts */
 	1, /* VIEW_BLOG		Blog */
-	0, /* VIEW_QUEUE        Mail Queue */
-	1  /* VIEW_WIKIMD	MarkDown Wiki */
+	0  /* VIEW_QUEUE        Mail Queue */
 };
 
 /*
@@ -43,7 +42,6 @@ ROOM_VIEWS exchangeable_views[VIEW_MAX][VIEW_MAX] = {
 	{ 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0 },	/* journal */
 	{ 1, 1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0 },	/* drafts */
 	{ 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0 },	/* blog */
-	{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 }	/* Markdown wiki */
 };
 
 /*
@@ -61,7 +59,6 @@ void initialize_viewdefs(void) {
 	viewdefs[VIEW_JOURNAL]		= _("Journal");
 	viewdefs[VIEW_DRAFTS]		= _("Drafts");
 	viewdefs[VIEW_BLOG]		= _("Blog");
-	viewdefs[VIEW_WIKIMD]		= _("Markdown Wiki");
 }
 
 
@@ -87,9 +84,6 @@ void tmplput_ROOM_COLLECTIONTYPE(StrBuf *Target, WCTemplputParams *TP)
 		break;
 	case VIEW_WIKI:
 		StrBufAppendBufPlain(Target, HKEY("wiki"), 0);
-		break;
-	case VIEW_WIKIMD:
-		StrBufAppendBufPlain(Target, HKEY("x-markdown"), 0);
 		break;
 	}
 }

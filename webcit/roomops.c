@@ -113,13 +113,11 @@ void dotskip(void) {
 }
 
 void dotgoto(void) {
-	wcsession *WCC = WC;
 	if (!havebstr("room")) {
 		readloop(readnew, eUseDefault);
 		return;
 	}
-	if ((WCC->CurRoom.view != VIEW_MAILBOX)  &&
-	    (WCC->CurRoom.view != WCC->CurRoom.view)) {
+	if (WC->CurRoom.view != VIEW_MAILBOX) {
 		/* dotgoto acts like dotskip when we're in a mailbox view */
 		slrp_highest();
 	}
