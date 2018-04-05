@@ -264,8 +264,6 @@ void display_edit_individual_event(icalcomponent *supplied_vevent, long msgnum, 
 			((yesbstr("alldayevent")) ? 1 : 0),
 			icaltimezone_get_utc_timezone()
 		);
-		t_start.is_utc = 1;
-
 	}
 	display_icaltimetype_as_webform(&t_start, "dtstart", 0);
 
@@ -854,8 +852,8 @@ void save_individual_event(icalcomponent *supplied_vevent, long msgnum, char *fr
 
 		/* Add NOW() to the calendar object... */
 		icalcomponent_set_dtstamp(vevent,
-					  icaltime_from_timet(
-						  time(NULL), 0));
+					  icaltime_from_timet_with_zone(
+						  time(NULL), 0, icaltimezone_get_utc_timezone()));
 
 	 	if (havebstr("summary")) {
 		 	icalcomponent_add_property(vevent,

@@ -198,7 +198,6 @@ void calendar_month_view_display_events(int year, int month, int day)
 	starting_tm.tm_hour = 0;
 	starting_tm.tm_min = 0;
 	today_start_t = icaltime_from_timet_with_zone(mktime(&starting_tm), 0, icaltimezone_get_utc_timezone());
-	today_start_t.is_utc = 1;
 
 	memset(&ending_tm, 0, sizeof(struct tm));
 	ending_tm.tm_year = year - 1900;
@@ -207,7 +206,6 @@ void calendar_month_view_display_events(int year, int month, int day)
 	ending_tm.tm_hour = 23;
 	ending_tm.tm_min = 59;
 	today_end_t = icaltime_from_timet_with_zone(mktime(&ending_tm), 0, icaltimezone_get_utc_timezone());
-	today_end_t.is_utc = 1;
 
 	/*
 	 * Create another one without caring about the timezone for all day events.
@@ -854,7 +852,6 @@ void calendar_day_view_display_events(time_t thetime,
 	starting_tm.tm_hour = 0;
 	starting_tm.tm_min = 0;
 	today_start_t = icaltime_from_timet_with_zone(mktime(&starting_tm), 0, icaltimezone_get_utc_timezone());
-	today_start_t.is_utc = 1;
 
 	memset(&ending_tm, 0, sizeof(struct tm));
 	ending_tm.tm_year = year - 1900;
@@ -863,7 +860,6 @@ void calendar_day_view_display_events(time_t thetime,
 	ending_tm.tm_hour = 23;
 	ending_tm.tm_min = 59;
 	today_end_t = icaltime_from_timet_with_zone(mktime(&ending_tm), 0, icaltimezone_get_utc_timezone());
-	today_end_t.is_utc = 1;
 
 	/*
 	 * Create another one without caring about the timezone for all day events.

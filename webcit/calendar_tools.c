@@ -151,7 +151,6 @@ void icaltime_from_webform(struct icaltimetype *t, char *prefix) {
 	t->minute = IBSTR(vname);
 
 	/* time zone is set to the default zone for this server */
-	t->is_utc = 0;
 	t->is_date = 0;
 	t->zone = get_default_icaltimezone();
 }
@@ -170,7 +169,7 @@ void icaltime_from_webform_dateonly(struct icaltimetype *t, char *prefix) {
 	sscanf((char*)BSTR(prefix), "%04d-%02d-%02d", &t->year, &t->month, &t->day);
 
 	/* time zone is set to the default zone for this server */
-	t->is_utc = 1;
+	t->zone = icaltimezone_get_utc_timezone();
 	t->is_date = 1;
 }
 

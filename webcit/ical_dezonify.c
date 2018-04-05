@@ -116,7 +116,7 @@ void ical_dezonify_backend(icalcomponent *cal,
 	syslog(LOG_DEBUG, "                * Was: %s\n", icaltime_as_ical_string(TheTime));
 #endif
 
-	if (TheTime.is_utc) {
+	if (icaltime_is_utc(TheTime)) {
 #ifdef DBG_ICAL
 		syslog(LOG_DEBUG, "                * This property is ALREADY UTC.\n");
 #endif
@@ -126,7 +126,7 @@ void ical_dezonify_backend(icalcomponent *cal,
 #ifdef DBG_ICAL
 		syslog(LOG_DEBUG, "                * Replacing '%s' TZID with 'Z' suffix.\n", tzid);
 #endif
-		TheTime.is_utc = 1;
+		TheTime.zone = icaltimezone_get_utc_timezone();
 	}
 
 	else {
@@ -146,7 +146,7 @@ void ical_dezonify_backend(icalcomponent *cal,
 			t = get_default_icaltimezone();
 		}
 		icaltimezone_convert_time(&TheTime, t, icaltimezone_get_utc_timezone());
-		TheTime.is_utc = 1;
+		TheTime.zone = icaltimezone_get_utc_timezone();
 	}
 
 	icalproperty_remove_parameter_by_kind(prop, ICAL_TZID_PARAMETER);

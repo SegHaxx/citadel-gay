@@ -234,7 +234,7 @@ void ical_send_a_reply(icalcomponent *request, char *action) {
 		/* We found our own address in the attendee list. */
 		if (me_attend) {
 			/* Change the partstat from NEEDS-ACTION to ACCEPT or DECLINE */
-			icalproperty_remove_parameter(me_attend, ICAL_PARTSTAT_PARAMETER);
+			icalproperty_remove_parameter_by_kind(me_attend, ICAL_PARTSTAT_PARAMETER);
 
 			if (!strcasecmp(action, "accept")) {
 				partstat = icalparameter_new_partstat(ICAL_PARTSTAT_ACCEPTED);
@@ -1369,7 +1369,6 @@ void ical_add_to_freebusy(icalcomponent *fb, icalcomponent *top_level_cal) {
 			if (!icaltime_is_null_time(dtend)) {
 				dtend = icaltime_add(dtstart, dur);
 				dtend.zone = dtstart.zone;
-				dtend.is_utc = dtstart.is_utc;
 			}
 			++num_recur;
 		}
@@ -1519,7 +1518,7 @@ void ical_freebusy(char *who) {
 	icalcomponent_set_method(fb, ICAL_METHOD_PUBLISH);
 
 	/* Set the DTSTAMP to right now. */
-	icalcomponent_set_dtstamp(fb, icaltime_from_timet(time(NULL), 0));
+	icalcomponent_set_dtstamp(fb, icaltime_from_timet_with_zone(time(NULL), 0, icaltimezone_get_utc_timezone()));
 
 	/* Add the user's email address as ORGANIZER */
 	sprintf(buf, "MAILTO:%s", who);
@@ -1540,10 +1539,10 @@ void ical_freebusy(char *who) {
 	 * to yesterday and tomorrow as default values.
 	 */
 	if (icalcomponent_get_first_property(fb, ICAL_DTSTART_PROPERTY) == NULL) {
-		icalcomponent_set_dtstart(fb, icaltime_from_timet(time(NULL)-86400L, 0));
+		icalcomponent_set_dtstart(fb, icaltime_from_timet_with_zone(time(NULL)-86400L, 0, icaltimezone_get_utc_timezone()));
 	}
 	if (icalcomponent_get_first_property(fb, ICAL_DTEND_PROPERTY) == NULL) {
-		icalcomponent_set_dtend(fb, icaltime_from_timet(time(NULL)+86400L, 0));
+		icalcomponent_set_dtend(fb, icaltime_from_timet_with_zone(time(NULL)+86400L, 0, icaltimezone_get_utc_timezone()));
 	}
 
 	/* Put the freebusy component into the calendar component */
