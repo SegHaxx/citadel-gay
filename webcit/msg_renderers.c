@@ -1551,6 +1551,7 @@ InitModule_MSGRENDERERS
 	RegisterMimeRenderer(HKEY("text/x-citadel-variformat"), render_MAIL_variformat, 1, 2);
 	RegisterMimeRenderer(HKEY("text/plain"), render_MAIL_text_plain, 1, 3);
 	RegisterMimeRenderer(HKEY("text"), render_MAIL_text_plain, 1, 1);
+	RegisterMimeRenderer(HKEY("text/x-markdown"), render_MAIL_text_plain, 1, 1);
 	RegisterMimeRenderer(HKEY("text/html"), render_MAIL_html, 1, 100);
 	RegisterMimeRenderer(HKEY(""), render_MAIL_UNKNOWN, 0, 0);
 
