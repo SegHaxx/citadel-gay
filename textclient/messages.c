@@ -12,44 +12,7 @@
  * GNU General Public License for more details.
  */
 
-#include "sysdep.h"
-#include <stdlib.h>
-#include <unistd.h>
-#include <sys/types.h>
-#include <fcntl.h>
-#include <stdio.h>
-#include <ctype.h>
-#include <string.h>
-#include <signal.h>
-#include <errno.h>
-#include <limits.h>
-#include <sys/wait.h>
-#include <sys/stat.h>
-
-#if TIME_WITH_SYS_TIME
-# include <sys/time.h>
-# include <time.h>
-#else
-# if HAVE_SYS_TIME_H
-#  include <sys/time.h>
-# else
-#  include <time.h>
-# endif
-#endif
-
-#ifdef HAVE_PTHREAD_H
-#include <pthread.h>
-#endif
-
-#include <stdarg.h>
-#include <libcitadel.h>
-#include "citadel_ipc.h"
-#include "citadel_decls.h"
-#include "messages.h"
-#include "commands.h"
-#include "tuiconfig.h"
-#include "rooms.h"
-#include "screen.h"
+#include "textclient.h"
 
 #define MAXWORDBUF SIZ
 #define NO_REPLY_TO	"nobody ... xxxxxx"
@@ -257,7 +220,6 @@ void citedit(FILE *fp)
 	finished = 0;
 	prev = (appending ? 13 : (-1));
 	strcpy(wordbuf, "");
-	async_ka_start();
 	do {
 		a = inkey();
 		if (a == 10)
@@ -342,7 +304,6 @@ void citedit(FILE *fp)
 		}
 		prev = a;
 	} while (finished == 0);
-	async_ka_end();
 
 	/* write the buffer back to disk */
 	fseek(fp, 0L, 0);
@@ -651,6 +612,11 @@ int read_message(CtdlIPC *ipc,
 
 	/* Text/plain is a different type */
 	if (!strcasecmp(message->content_type, "text/plain")) {
+		format_type = 1;
+	}
+
+	/* Render text/x-markdown as plain text */
+	if (!strcasecmp(message->content_type, "text/x-markdown")) {
 		format_type = 1;
 	}
 

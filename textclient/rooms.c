@@ -12,27 +12,7 @@
  * GNU General Public License for more details.
  */
 
-#include "sysdep.h"
-#include <stdlib.h>
-#include <unistd.h>
-#include <fcntl.h>
-#include <stdio.h>
-#include <ctype.h>
-#include <string.h>
-#include <signal.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <sys/wait.h>
-#include <errno.h>
-#include <stdarg.h>
-#include <libcitadel.h>
-#include "citadel_ipc.h"
-#include "citadel_decls.h"
-#include "rooms.h"
-#include "commands.h"
-#include "messages.h"
-#include "tuiconfig.h"
-#include "screen.h"
+#include "textclient.h"
 
 #define IFNEXPERT if ((userflags&US_EXPERT)==0)
 

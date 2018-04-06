@@ -12,45 +12,7 @@
  * GNU General Public License for more details.
  */
 
-#include <stdlib.h>
-#include <unistd.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-#include <stdio.h>
-#include <ctype.h>
-#include <string.h>
-#include <limits.h>
-
-#if TIME_WITH_SYS_TIME
-# include <sys/time.h>
-# include <time.h>
-#else
-# if HAVE_SYS_TIME_H
-#  include <sys/time.h>
-# else
-#  include <time.h>
-# endif
-#endif
-
-#include <signal.h>
-#include <pwd.h>
-#include <errno.h>
-#include <stdarg.h>
-#include <libcitadel.h>
-#include "sysdep.h"
-#include "citadel_ipc.h"
-#include "citadel_decls.h"
-#include "tuiconfig.h"
-#include "messages.h"
-#include "routines.h"
-#include "commands.h"
-#include "screen.h"
-
-/* work around solaris include files */
-#ifdef reg
-#undef reg
-#endif
+#include "textclient.h"
 
 extern char temp[];
 extern char tempdir[];

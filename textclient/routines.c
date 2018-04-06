@@ -12,46 +12,7 @@
  *  GNU General Public License for more details.
  */
 
-#include "sysdep.h"
-#include <stdlib.h>
-#include <unistd.h>
-#include <fcntl.h>
-#include <stdio.h>
-#include <ctype.h>
-#include <string.h>
-#include <sys/types.h>
-#include <sys/ioctl.h>
-#include <pwd.h>
-#include <signal.h>
-#include <dirent.h>
-#include <errno.h>
-
-#if TIME_WITH_SYS_TIME
-# include <sys/time.h>
-# include <time.h>
-#else
-# if HAVE_SYS_TIME_H
-#  include <sys/time.h>
-# else
-#  include <time.h>
-# endif
-#endif
-
-#ifdef HAVE_LIMITS_H
-#include <limits.h>
-#endif
-
-#include <libcitadel.h>
-#include "citadel_ipc.h"
-#include "screen.h"
-
-#define ROUTINES_C
-
-#include "routines.h"
-#include "commands.h"
-#include "citadel_decls.h"
-#include "routines2.h"
-#include "tuiconfig.h"
+#include "textclient.h"
 
 #define IFAIDE if(axlevel>=AxAideU)
 #define IFNAIDE if (axlevel<AxAideU)

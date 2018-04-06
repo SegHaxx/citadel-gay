@@ -12,41 +12,7 @@
  * GNU General Public License for more details.
  */
 
-#include "sysdep.h"
-#include <stdlib.h>
-#include <unistd.h>
-#include <stdio.h>
-#include <fcntl.h>
-#include <ctype.h>
-#include <string.h>
-#include <signal.h>
-#include <errno.h>
-
-#if TIME_WITH_SYS_TIME
-# include <sys/time.h>
-# include <time.h>
-#else
-# if HAVE_SYS_TIME_H
-#  include <sys/time.h>
-# else
-#  include <time.h>
-# endif
-#endif
-
-#include <sys/types.h>
-#ifdef HAVE_SYS_SELECT_H
-#include <sys/select.h>
-#endif
-#include <stdarg.h>
-#include <libcitadel.h>
-#include "citadel_ipc.h"
-#include "client_chat.h"
-#include "commands.h"
-#include "routines.h"
-#include "citadel_decls.h"
-#include "rooms.h"
-#include "messages.h"
-#include "screen.h"
+#include "textclient.h"
 
 #define MIN(a, b) ((a) < (b) ? (a) : (b))
 

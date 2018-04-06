@@ -1,7 +1,7 @@
 /*
  * Screen output handling
  *
- * Copyright (c) 1987-2016 by the citadel.org team
+ * Copyright (c) 1987-2018 by the citadel.org team
  *
  * This program is open source software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3.
@@ -12,22 +12,8 @@
  * GNU General Public License for more details.
  */
 
+#include "textclient.h"
 
-#include <stdlib.h>
-#include <unistd.h>
-#include <stdio.h>
-#include <signal.h>
-#include <string.h>
-#include <stdarg.h>
-#include <ctype.h>
-#include <sys/types.h>
-#include <sys/ioctl.h>
-#include "sysdep.h"
-#include <libcitadel.h>
-#include "citadel_ipc.h"
-#include "citadel_decls.h"
-#include "commands.h"
-#include "screen.h"
 
 int enable_status_line = 0;
 char status_line[1024] = "     ";
@@ -230,7 +216,7 @@ static volatile int caught_sigwinch = 0;
  * scr_winch() handles window size changes from SIGWINCH
  * resizes all our windows for us
  */
-RETSIGTYPE scr_winch(int signum)
+sighandler_t scr_winch(int signum)
 {
 	/* if we receive this signal, we must be running
 	 * in a terminal that supports resizing.

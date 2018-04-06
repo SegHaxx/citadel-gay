@@ -1,0 +1,57 @@
+#!/bin/sh
+
+echo 
+echo 
+echo Running the configure script to create config.mk
+echo
+
+# Parse the command line arguments
+for x in $*
+do
+	a=$1
+	k=`echo $a | awk -F= ' { print $1 } '`
+	v=`echo $a | awk -F= ' { print $2 } '`
+
+	case $k in
+		--prefix)
+			PREFIX=$v
+		;;
+		--bindir)
+			BINDIR=$v
+		;;
+		--ctdldir)
+			CTDLDIR=$v
+		;;
+		*)
+			echo $0 : unknown option $k
+			echo
+			echo Valid options are:
+			echo '	--prefix=PREFIX		Install files in PREFIX [/usr/local]'
+			echo '	--bindir=DIR		Install executables in DIR [PREFIX/bin]'
+			echo '	--ctdldir=DIR		Look for Citadel server in DIR [/usr/local/citadel]'
+			exit 1
+		;;
+	esac
+	shift
+done
+
+# Set any missing values
+
+[ "$PREFIX" = "" ] 	&& PREFIX=/usr/local
+[ "$BINDIR" = "" ]	&& BINDIR=${PREFIX}/bin
+[ "$CTDLDIR" = "" ]	&& CTDLDIR=/usr/local/citadel
+[ "$CFLAGS" = "" ]	&& CFLAGS='-ggdb'
+[ "$LDFLAGS" = "" ]	&& LDFLAGS=''
+
+# Output the config.mk
+
+(
+	echo "CFLAGS := ${CFLAGS}"
+	echo "LDFLAGS := ${LDFLAGS}"
+	echo "PREFIX := ${PREFIX}"
+	echo "BINDIR := ${BINDIR}"
+	echo "CTDLDIR := ${CTDLDIR}"
+) >config.mk
+
+cat config.mk
+echo

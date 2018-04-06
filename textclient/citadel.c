@@ -12,53 +12,7 @@
  * GNU General Public License for more details.
  */
 
-#include "sysdep.h"
-#include <stdlib.h>
-#include <unistd.h>
-#include <fcntl.h>
-#include <stdio.h>
-#include <ctype.h>
-#include <string.h>
-
-#if TIME_WITH_SYS_TIME
-# include <sys/time.h>
-# include <time.h>
-#else
-# if HAVE_SYS_TIME_H
-#  include <sys/time.h>
-# else
-#  include <time.h>
-# endif
-#endif
-
-#include <limits.h>
-#include <sys/types.h>
-#include <sys/wait.h>
-#include <sys/stat.h>
-#include <sys/ioctl.h>
-#include <signal.h>
-#include <pwd.h>
-#include <stdarg.h>
-#include <errno.h>
-#include <libcitadel.h>
-#include "citadel_ipc.h"
-#include "routines.h"
-#include "routines2.h"
-#include "tuiconfig.h"
-#include "rooms.h"
-#include "messages.h"
-#include "commands.h"
-#include "client_chat.h"
-#include "client_passwords.h"
-#include "citadel_decls.h"
-#include "sysdep.h"
-#ifndef HAVE_SNPRINTF
-#include "snprintf.h"
-#endif
-#include "screen.h"
-
-#include "ecrash.h"
-#include "md5.h"
+#include "textclient.h"
 
 #define IFEXPERT if (userflags&US_EXPERT)
 #define IFNEXPERT if ((userflags&US_EXPERT)==0)
@@ -1098,7 +1052,7 @@ void get_serv_info(CtdlIPC *ipc, char *supplied_hostname)
 
 	/* be nice and identify ourself to the server */
 	CtdlIPCIdentifySoftware(ipc, CLIENT_TYPE, 0, CLIENT_VERSION,
-		 (ipc->isLocal ? "local" : PACKAGE_STRING),
+		 (ipc->isLocal ? "local" : "Citadel text mode client"),
 		 (supplied_hostname) ? supplied_hostname : 
 		 /* Look up the , in the bible if you're confused */
 		 (locate_host(ipc, buf), buf), buf);
@@ -1407,10 +1361,6 @@ int main(int argc, char **argv)
 	char relhome[PATH_MAX]="";
 	char ctdldir[PATH_MAX]=CTDLDIR;
     int lp; 
-#ifdef HAVE_BACKTRACE
-	eCrashParameters params;
-//	eCrashSymbolTable symbol_table;
-#endif
 	calc_dirs_n_files(relh, home, relhome, ctdldir, 0);
 
 #ifdef HAVE_BACKTRACE

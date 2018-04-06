@@ -10,48 +10,12 @@
  *  GNU General Public License for more details.
  */
 
-#include "sysdep.h"
-#if TIME_WITH_SYS_TIME
-# include <sys/time.h>
-# include <time.h>
-#else
-# if HAVE_SYS_TIME_H
-#  include <sys/time.h>
-# else
-#  include <time.h>
-# endif
-#endif
-#include <unistd.h>
-#include <stdio.h>
-#include <sys/types.h>
-#include <string.h>
-#ifdef HAVE_MALLOC_H
-#include <malloc.h>
-#endif
-#include <stdlib.h>
-#include <ctype.h>
-#include <sys/socket.h>
-#include <arpa/inet.h>
-#include <netinet/in.h>
-#include <netdb.h>
-#include <sys/un.h>
-#include <errno.h>
-#ifdef THREADED_CLIENT
-#include <pthread.h>
-#endif
-#include <libcitadel.h>
-#include "citadel_ipc.h"
-#ifdef THREADED_CLIENT
-pthread_mutex_t rwlock;
-#endif
+#include "textclient.h"
 
 #ifdef HAVE_OPENSSL
 static SSL_CTX *ssl_ctx;
 char arg_encrypt;
 char rc_encrypt;
-#ifdef THREADED_CLIENT
-pthread_mutex_t **Critters;			/* Things that need locking */
-#endif /* THREADED_CLIENT */
 
 #endif /* HAVE_OPENSSL */
 
@@ -90,17 +54,11 @@ char *axdefs[]={
 void CtdlIPC_lock(CtdlIPC *ipc)
 {
 	if (ipc->network_status_cb) ipc->network_status_cb(1);
-#ifdef THREADED_CLIENT
-	pthread_mutex_lock(&(ipc->mutex));
-#endif
 }
 
 
 void CtdlIPC_unlock(CtdlIPC *ipc)
 {
-#ifdef THREADED_CLIENT
-	pthread_mutex_unlock(&(ipc->mutex));
-#endif
 	if (ipc->network_status_cb) ipc->network_status_cb(0);
 }
 
@@ -200,9 +158,6 @@ static void serv_write(CtdlIPC *ipc, const char *buf, unsigned int nbytes);
 static void serv_read_ssl(CtdlIPC *ipc, char *buf, unsigned int bytes);
 static void serv_write_ssl(CtdlIPC *ipc, const char *buf, unsigned int nbytes);
 static void endtls(SSL *ssl);
-#ifdef THREADED_CLIENT
-static unsigned long id_callback(void);
-#endif /* THREADED_CLIENT */
 #endif /* HAVE_OPENSSL */
 static void CtdlIPC_getline(CtdlIPC* ipc, char *buf);
 static void CtdlIPC_putline(CtdlIPC *ipc, const char *buf);
@@ -2934,15 +2889,6 @@ static void serv_write_ssl(CtdlIPC *ipc, const char *buf, unsigned int nbytes)
 }
 
 
-#ifdef THREADED_CLIENT
-static void ssl_lock(int mode, int n, const char *file, int line)
-{
-	if (mode & CRYPTO_LOCK)
-		pthread_mutex_lock(Critters[n]);
-	else
-		pthread_mutex_unlock(Critters[n]);
-}
-#endif /* THREADED_CLIENT */
 
 
 static void CtdlIPC_init_OpenSSL(void)
@@ -2992,37 +2938,8 @@ static void CtdlIPC_init_OpenSSL(void)
 
 	SSL_CTX_set_tmp_dh(ssl_ctx, dh);
 	DH_free(dh);
-
-#ifdef THREADED_CLIENT
-	/* OpenSSL requires callbacks for threaded clients */
-	CRYPTO_set_locking_callback(ssl_lock);
-	CRYPTO_set_id_callback(id_callback);
-
-	/* OpenSSL requires us to do semaphores for threaded clients */
-	Critters = malloc(CRYPTO_num_locks() * sizeof (pthread_mutex_t *));
-	if (!Critters) {
-		perror("malloc failed");
-		exit(1);
-	} else {
-		for (a = 0; a < CRYPTO_num_locks(); a++) {
-			Critters[a] = malloc(sizeof (pthread_mutex_t));
-			if (!Critters[a]) {
-				perror("malloc failed");
-				exit(1);
-			}
-			pthread_mutex_init(Critters[a], NULL);
-		}
-	}
-#endif /* THREADED_CLIENT */       
 }
 
-
-
-#ifdef THREADED_CLIENT
-static unsigned long id_callback(void) {
-	return (unsigned long)pthread_self();
-}
-#endif /* THREADED_CLIENT */
 #endif /* HAVE_OPENSSL */
 
 
@@ -3266,16 +3183,13 @@ CtdlIPC* CtdlIPC_new(int argc, char **argv, char *hostbuf, char *portbuf)
 	char sockpath[SIZ];
 	CtdlIPC* ipc;
 
-	ipc = ialloc(CtdlIPC);
+	ipc = malloc(sizeof(struct _CtdlIPC));
 	if (!ipc) {
 		return 0;
 	}
 #if defined(HAVE_OPENSSL)
 	ipc->ssl = NULL;
 	CtdlIPC_init_OpenSSL();
-#endif
-#if defined(HAVE_PTHREAD_H)
-	pthread_mutex_init(&(ipc->mutex), NULL); /* Default fast mutex */
 #endif
 	ipc->sock = -1;			/* Not connected */
 	ipc->isLocal = 0;		/* Not local, of course! */
@@ -3309,7 +3223,7 @@ CtdlIPC* CtdlIPC_new(int argc, char **argv, char *hostbuf, char *portbuf)
 		} else {
 			error_printf("%s: usage: ",argv[0]);
 			error_printf("%s [host] [port] ",argv[0]);
-			ifree(ipc);
+			free(ipc);
 			errno = EINVAL;
 			return 0;
    		}
@@ -3330,7 +3244,7 @@ CtdlIPC* CtdlIPC_new(int argc, char **argv, char *hostbuf, char *portbuf)
 		printf("[%s]\n", sockpath);
 		ipc->sock = uds_connectsock(&(ipc->isLocal), sockpath);
 		if (ipc->sock == -1) {
-			ifree(ipc);
+			free(ipc);
 			return 0;
 		}
 		if (hostbuf != NULL) strcpy(hostbuf, cithost);
@@ -3343,7 +3257,7 @@ CtdlIPC* CtdlIPC_new(int argc, char **argv, char *hostbuf, char *portbuf)
 	printf("[%s:%s]\n", cithost, citport);
 	ipc->sock = tcp_connectsock(cithost, citport);
 	if (ipc->sock == -1) {
-		ifree(ipc);
+		free(ipc);
 		return 0;
 	}
 
@@ -3392,7 +3306,7 @@ void CtdlIPC_delete(CtdlIPC* ipc)
 		free (ipc->Buf);
 	ipc->Buf = NULL;
 	ipc->BufPtr = NULL;
-	ifree(ipc);
+	free(ipc);
 }
 
 

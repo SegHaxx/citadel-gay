@@ -15,11 +15,7 @@
  * will fill a supplied 16-byte array with the digest.
  */
 
-#include <stdio.h>
-#include <sys/types.h>
-#include <ctype.h>
-#include <string.h>		/* for memcpy() */
-#include "md5.h"
+#include "textclient.h"
 
 #ifndef HIGHFIRST
 #define byteReverse(buf, len)	/* Nothing */
@@ -32,11 +28,11 @@ void byteReverse(unsigned char *buf, unsigned longs);
  */
 void byteReverse(unsigned char *buf, unsigned longs)
 {
-    cit_uint32_t t;
+    uint32_t t;
     do {
-	t = (cit_uint32_t) ((unsigned) buf[3] << 8 | buf[2]) << 16 |
+	t = (uint32_t) ((unsigned) buf[3] << 8 | buf[2]) << 16 |
 	    ((unsigned) buf[1] << 8 | buf[0]);
-	*(cit_uint32_t *) buf = t;
+	*(uint32_t *) buf = t;
 	buf += 4;
     } while (--longs);
 }
@@ -66,12 +62,12 @@ void MD5Init(struct MD5Context *ctx)
  */
 void MD5Update(struct MD5Context *ctx, unsigned char const *buf, unsigned len)
 {
-    cit_uint32_t t;
+    uint32_t t;
 
     /* Update bitcount */
 
     t = ctx->bits[0];
-    if ((ctx->bits[0] = t + ((cit_uint32_t) len << 3)) < t)
+    if ((ctx->bits[0] = t + ((uint32_t) len << 3)) < t)
 	ctx->bits[1]++;		/* Carry from low to high */
     ctx->bits[1] += len >> 29;
 
@@ -144,10 +140,10 @@ void MD5Final(unsigned char digest[16], struct MD5Context *ctx)
     byteReverse(ctx->in, 14);
 
     /* Append length in bits and transform */
-    ((cit_uint32_t *) ctx->in)[14] = ctx->bits[0];
-    ((cit_uint32_t *) ctx->in)[15] = ctx->bits[1];
+    ((uint32_t *) ctx->in)[14] = ctx->bits[0];
+    ((uint32_t *) ctx->in)[15] = ctx->bits[1];
 
-    MD5Transform(ctx->buf, (cit_uint32_t *) ctx->in);
+    MD5Transform(ctx->buf, (uint32_t *) ctx->in);
     byteReverse((unsigned char *) ctx->buf, 4);
     memcpy(digest, ctx->buf, 16);
     memset(ctx, 0, sizeof(ctx));	/* In case it's sensitive */
@@ -177,9 +173,9 @@ void MD5Final(unsigned char digest[16], struct MD5Context *ctx)
  * reflect the addition of 16 longwords of new data.  MD5Update blocks
  * the data and converts bytes into longwords for this routine.
  */
-void MD5Transform(cit_uint32_t buf[4], cit_uint32_t const in[16])
+void MD5Transform(uint32_t buf[4], uint32_t const in[16])
 {
-    register cit_uint32_t a, b, c, d;
+    register uint32_t a, b, c, d;
 
     a = buf[0];
     b = buf[1];

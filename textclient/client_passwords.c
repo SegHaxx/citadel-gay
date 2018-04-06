@@ -13,20 +13,7 @@
  *  GNU General Public License for more details.
  */
 
-#include "sysdep.h"
-#include <stdlib.h>
-#include <unistd.h>
-#include <string.h>
-#include <ctype.h>
-#include <pwd.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <limits.h>
-#include <stdio.h>
-#include <libcitadel.h>
-#include "citadel_ipc.h"
-#include "commands.h"
-#include "client_passwords.h"
+#include "textclient.h"
 
 #define PWFILENAME "%s/.citadel.passwords"
 
