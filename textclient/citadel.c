@@ -1073,7 +1073,7 @@ void get_serv_info(CtdlIPC *ipc, char *supplied_hostname)
 	 * isn't really all that great, it's probably better to just go with
 	 * the plain text when we have it available.
 	 */
-	if ((CtdlIPCSpecifyPreferredFormats(ipc, buf, "text/plain|text/html") / 100 ) != 2) {
+	if ((CtdlIPCSpecifyPreferredFormats(ipc, buf, "text/plain|text/html|text/x-markdown") / 100 ) != 2) {
 		scr_printf("ERROR: Extremely old server; MSG4 framework not supported.\n");
 		logoff(ipc, 0);
 	}
