@@ -1,3 +1,4 @@
 #!/bin/sh
 
+grep '^#define CLIENT_VERSION' textclient.h | sed 's/[^0-9]*//g' >package-version.txt
 exit 0

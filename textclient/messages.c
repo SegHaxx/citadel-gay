@@ -431,14 +431,20 @@ int read_message(CtdlIPC *ipc,
 		return (0);
 	}
 
-	if (dest) {
+	if (dest)
+	{
 		fprintf(dest, "\n ");
-	} else {
+	}
+	else
+	{
 		scr_printf("\n");
 		if (pagin != 2)
+		{
 			scr_printf(" ");
+		}
 	}
-	if (pagin == 1 && !dest) {
+	if (pagin == 1 && !dest)
+	{
 		color(BRIGHT_CYAN);
 	}
 
