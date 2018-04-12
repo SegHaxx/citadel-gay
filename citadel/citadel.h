@@ -35,10 +35,10 @@ extern "C" {
  */
 #define CITADEL	PACKAGE_STRING
 
-#define REV_LEVEL	917		// This version
+#define REV_LEVEL	920		// This version
 #define REV_MIN		591		// Oldest compatible database
 #define EXPORT_REV_MIN	760		// Oldest compatible export files
-#define LIBCITADEL_MIN	917		// Minimum required version of libcitadel
+#define LIBCITADEL_MIN	920		// Minimum required version of libcitadel
 
 #define SERVER_TYPE 0			// zero for stock Citadel; other developers please
 					// obtain SERVER_TYPE codes for your implementations

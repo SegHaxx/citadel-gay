@@ -182,10 +182,30 @@ static size_t upload_source(void *ptr, size_t size, size_t nmemb, void *userp)
 
 
 /*
+ * The libcurl API doesn't provide a way to capture the actual SMTP result message returned
+ * by the remote server.  This is an ugly way to extract it, by capturing debug data from
+ * the library and filtering on the lines we want.
+ */
+int ctdl_libcurl_smtp_debug_callback(CURL *handle, curl_infotype type, char *data, size_t size, void *userptr)
+{
+	if (type != CURLINFO_HEADER_IN) return 0;
+	if (!userptr) return 0;
+	char *debugbuf = (char *)userptr;
+
+	int len = strlen(debugbuf);
+	if (len + size > SIZ) return 0;
+
+	memcpy(&debugbuf[len], data, size);
+	debugbuf[len+size] = 0;
+	return 0;
+}
+
+
+/*
  * Attempt a delivery to one recipient.
  * Returns a three-digit SMTP status code.
  */
-int smtp_attempt_delivery(long msgid, char *recp, char *envelope_from)
+int smtp_attempt_delivery(long msgid, char *recp, char *envelope_from, char *response)
 {
 	struct smtpmsgsrc s;
 	char *fromaddr = NULL;
@@ -224,6 +244,7 @@ int smtp_attempt_delivery(long msgid, char *recp, char *envelope_from)
 
 		curl = curl_easy_init();
 		if (curl) {
+			response[0] = 0;
 
 			if (!IsEmptyStr(envelope_from)) {
 				curl_easy_setopt(curl, CURLOPT_MAIL_FROM, envelope_from);
@@ -244,6 +265,9 @@ int smtp_attempt_delivery(long msgid, char *recp, char *envelope_from)
 			curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0L);
 			curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 0L);
 			// curl_easy_setopt(curl, CURLOPT_ERRORBUFFER, curl_error_buffer);
+			curl_easy_setopt(curl, CURLOPT_DEBUGFUNCTION, ctdl_libcurl_smtp_debug_callback);
+			curl_easy_setopt(curl, CURLOPT_DEBUGDATA, (void *)response);
+			curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L);
 
 			// Construct an SMTP URL in the form of:
 			// 	smtp[s]://target_host/source_host
@@ -273,6 +297,25 @@ int smtp_attempt_delivery(long msgid, char *recp, char *envelope_from)
 			recipients = NULL;								// this gets reused; avoid double-free
 			curl_easy_cleanup(curl);
 			curl = NULL;									// this gets reused; avoid double-free
+
+			/* Trim the error message buffer down to just the actual message */
+			char response_code_str[4];
+			snprintf(response_code_str, sizeof response_code_str, "%ld", response_code);
+			char *respstart = strstr(response, response_code_str);
+			if (respstart == NULL)
+			{
+				strcpy(response, smtpstatus(response_code));
+			}
+			else {
+				strcpy(response, respstart);
+				char *p;
+				for (p=response; *p!=0; ++p)
+				{
+					if (*p == '\n') *p = ' ';
+					if (*p == '\r') *p = ' ';
+					if (!isprint(*p)) *p = ' ';
+				}
+			}
 		}
 	}
 
@@ -295,6 +338,7 @@ void smtp_process_one_msg(long qmsgnum)
 	int num_delayed = 0;
 	long deletes[2];
 	int delete_this_queue = 0;
+	char server_response[SIZ];
 
 	msg = CtdlFetchMessage(qmsgnum, 1, 1);
 	if (msg == NULL) {
@@ -366,8 +410,8 @@ void smtp_process_one_msg(long qmsgnum)
 				if ((previous_result == 0) || (previous_result == 4)) {
 					int new_result = 421;
 					extract_token(recp, cfgline, 1, '|', sizeof recp);
-					new_result = smtp_attempt_delivery(msgid, recp, envelope_from);
-					syslog(LOG_DEBUG, "smtpclient: recp: <%s> , result: %d (%s)", recp, new_result, smtpstatus(new_result));
+					new_result = smtp_attempt_delivery(msgid, recp, envelope_from, server_response);
+					syslog(LOG_DEBUG, "smtpclient: recp: <%s> , result: %d (%s)", recp, new_result, server_response);
 					if ((new_result / 100) == 2) {
 						++num_success;
 					}
@@ -379,7 +423,7 @@ void smtp_process_one_msg(long qmsgnum)
 							++num_delayed;
 						}
 						StrBufAppendPrintf(NewInstr, "remote|%s|%ld|%ld (%s)\n",
-							recp, (new_result / 100) , new_result, smtpstatus(new_result)
+							recp, (new_result / 100) , new_result, server_response
 						);
 					}
 				}
