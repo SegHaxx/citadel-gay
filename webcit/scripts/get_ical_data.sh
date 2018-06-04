@@ -1,4 +1,8 @@
 #!/bin/sh
+
+echo Running $0
+
+
 ICAL=/usr/local/ctdlsupport/include/libical/ical.h
 if test -f /usr/include/libical/ical.h; then 
     ICAL=/usr/include/libical/ical.h
