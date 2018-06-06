@@ -206,7 +206,7 @@ upgrade: install-exec install-doc
 	@echo
 
 install-data:
-	@for i in messages network/spoolin ; do
+	@for i in messages ; do
 		$(srcdir)/mkinstalldirs $(DESTDIR)$(prefix)/$$i; \
 	done
 	@for i in public_clients citadel_urlshorteners.rc \
@@ -220,9 +220,6 @@ install-data:
 	fi
 
 install-data-new:
-	@for i in network/spoolin network/systems; do \
-		$(srcdir)/mkinstalldirs $(DESTDIR)$(RUN_DIR)/$$i; \
-	done
 	$(srcdir)/mkinstalldirs $(DESTDIR)$(ETC_DIR)/
 	$(INSTALL_DATA) $(srcdir)/public_clients $(DESTDIR)$(ETC_DIR)/public_clients
 	$(INSTALL_DATA) $(srcdir)/citadel_urlshorteners.rc $(DESTDIR)$(ETC_DIR)/citadel_urlshorteners.rc
@@ -234,12 +231,11 @@ install-data-new:
 		echo $(INSTALL_DATA) $$i $(DESTDIR)$(STATICDATA_DIR)/$$i; \
 		$(INSTALL_DATA) $$i $(DESTDIR)$(STATICDATA_DIR)/$$i; \
 	done
-	$(srcdir)/mkinstalldirs $(DESTDIR)$(SPOOL_DIR)/network/spoolin
 	-@if test -d $(DESTDIR)/etc/pam.d; then \
 		echo $(INSTALL_DATA) $(srcdir)/citadel.pam $(DESTDIR)/etc/pam.d/citadel; \
 		$(INSTALL_DATA) $(srcdir)/citadel.pam $(DESTDIR)/etc/pam.d/citadel; \
 	fi
-	@for i in bio files images info userpics; do \
+	@for i in files; do \
 		$(srcdir)/mkinstalldirs $(DESTDIR)$(DATA_DIR)/$$i; \
 	done
 
@@ -271,7 +267,7 @@ install-doc-new:
 	$(INSTALL_DATA) README.txt $(DESTDIR)$(DOC_DIR)/README.txt
 
 install-exec: all
-	@for i in bio files images info userpics; do \
+	@for i in files; do \
 		$(srcdir)/mkinstalldirs $(DESTDIR)$(prefix)/$$i; \
 	done
 	@for i in $(SERVER_TARGETS) $(UTIL_TARGETS) $(UTILBIN_TARGETS); do \
