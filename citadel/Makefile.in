@@ -178,7 +178,8 @@ msgform$(EXEEXT): utils/msgform.o
 .PHONY: install-data install-doc install-exec clean cleaner distclean
 
 install-locale:
-	cd po/citadel-setup; $(MAKE)
+	cd po/citadel-setup
+	$(MAKE)
 	for i in `find locale -type d | grep -v .svn` \
 		; do \
 		test -d $(DESTDIR)$(LOCALEDIR)/$$i || mkdir -p $(DESTDIR)$(LOCALEDIR)/$$i; \
@@ -206,9 +207,7 @@ upgrade: install-exec install-doc
 	@echo
 
 install-data:
-	@for i in messages ; do
-		$(srcdir)/mkinstalldirs $(DESTDIR)$(prefix)/$$i; \
-	done
+	$(srcdir)/mkinstalldirs $(DESTDIR)$(prefix)/messages
 	@for i in public_clients citadel_urlshorteners.rc \
 		 `find $(srcdir)/messages $(srcdir)/network -type f | grep -v .svn`; do \
 		echo $(INSTALL_DATA) $$i $(DESTDIR)$(prefix)/$$i; \
@@ -242,11 +241,6 @@ install-data-new:
 install-doc:
 	@$(srcdir)/mkinstalldirs $(DESTDIR)$(prefix)/docs
 	@for i in `find $(srcdir)/docs -type f | grep -v .svn`; do \
-		echo $(INSTALL_DATA) $$i $(DESTDIR)$(prefix)/$$i; \
-		$(INSTALL_DATA) $$i $(DESTDIR)$(prefix)/$$i; \
-	done
-	@$(srcdir)/mkinstalldirs $(DESTDIR)$(prefix)/techdoc
-	@for i in `find $(srcdir)/techdoc -type f | grep -v .svn`; do \
 		echo $(INSTALL_DATA) $$i $(DESTDIR)$(prefix)/$$i; \
 		$(INSTALL_DATA) $$i $(DESTDIR)$(prefix)/$$i; \
 	done
