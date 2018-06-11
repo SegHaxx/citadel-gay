@@ -28,7 +28,6 @@
 #include "serv_extensions.h"
 #include "citadel_dirs.h"
 #include "user_ops.h"
-#include "ecrash.h"
 
 uid_t ctdluid = 0;
 const char *CitadelServiceUDS="citadel-UDS";
@@ -87,10 +86,6 @@ int main(int argc, char **argv)
 	struct passwd *p = NULL;
 #ifdef HAVE_RUN_DIR
 	struct stat filestats;
-#endif
-#ifdef HAVE_BACKTRACE
-	eCrashParameters params;
-//	eCrashSymbolTable symbol_table;
 #endif
 
 	/* initialize the master context */

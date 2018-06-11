@@ -376,7 +376,6 @@ int client_write(const char *buf, int nbytes)
 		fd = fopen(fn, "a+");
 		if (fd == NULL) {
 			syslog(LOG_ERR, "%s: %m", fn);
-			cit_backtrace();
 			exit(1);
 		}
 		fprintf(fd, "Sending: BufSize: %d BufContent: [", nbytes);
@@ -419,7 +418,6 @@ int client_write(const char *buf, int nbytes)
 					}
 				} else {
 					syslog(LOG_ERR, "sysdep: client_write(%d bytes) select failed: %m", nbytes - bytes_written);
-					cit_backtrace();
 					client_close();
 					Ctx->kill_me = KILLME_SELECT_FAILED;
 					return -1;
@@ -430,7 +428,6 @@ int client_write(const char *buf, int nbytes)
 		retval = write(Ctx->client_socket, &buf[bytes_written], nbytes - bytes_written);
 		if (retval < 1) {
 			syslog(LOG_ERR, "sysdep: client_write(%d bytes) failed: %m", nbytes - bytes_written);
-			cit_backtrace();
 			client_close();
 			Ctx->kill_me = KILLME_WRITE_FAILED;
 			return -1;
@@ -492,7 +489,6 @@ int client_read_blob(StrBuf *Target, int bytes, int timeout)
 		fd = fopen(fn, "a+");
 		if (fd == NULL) {
 			syslog(LOG_ERR, "%s: %m", fn);
-			cit_backtrace();
 			exit(1);
 		}
 		fprintf(fd, "Reading BLOB: BufSize: %d ", bytes);
@@ -512,7 +508,6 @@ int client_read_blob(StrBuf *Target, int bytes, int timeout)
 		fd = fopen(fn, "a+");
 		if (fd == NULL) {
 			syslog(LOG_ERR, "%s: %m", fn);
-			cit_backtrace();
 			exit(1);
 		}
 		fprintf(fd, "Read: %d BufContent: [", StrLength(Target));
@@ -534,7 +529,6 @@ int client_read_blob(StrBuf *Target, int bytes, int timeout)
 		fd = fopen(fn, "a+");
 		if (fd == NULL) {
 			syslog(LOG_ERR, "%s: %m", fn);
-			cit_backtrace();
 			exit(1);
 		}
 		fprintf(fd, "Reading BLOB: BufSize: %d ",
@@ -563,7 +557,6 @@ int client_read_blob(StrBuf *Target, int bytes, int timeout)
 		fd = fopen(fn, "a+");
 		if (fd == NULL) {
 			syslog(LOG_ERR, "%s: %m", fn);
-			cit_backtrace();
 			exit(1);
 		}
 		fprintf(fd, "Read: %d BufContent: [",
@@ -622,7 +615,6 @@ int client_read_random_blob(StrBuf *Target, int timeout)
 				fd = fopen(fn, "a+");
 				if (fd == NULL) {
 					syslog(LOG_ERR, "%s: %m", fn);
-					cit_backtrace();
 					exit(1);
 				}
 				fprintf(fd, "Read: BufSize: %d BufContent: [",
@@ -707,7 +699,6 @@ int CtdlClientGetLine(StrBuf *Target)
 		fd = fopen(fn, "a+");
 		if (fd == NULL) {
 			syslog(LOG_ERR, "%s: %m", fn);
-			cit_backtrace();
 			exit(1);
 		}
 		pch = ChrPtr(CCC->RecvBuf.Buf);
@@ -765,7 +756,6 @@ int CtdlClientGetLine(StrBuf *Target)
 		fd = fopen(fn, "a+");
 		if (fd == NULL) {
 			syslog(LOG_ERR, "%s: %m", fn);
-			cit_backtrace();
 			exit(1);
 		}
 		pch = ChrPtr(CCC->RecvBuf.Buf);
@@ -941,9 +931,6 @@ void sysdep_master_cleanup(void) {
 	CtdlDestroyServiceHook();
 	CtdlDestroyRoomHooks();
 	CtdlDestroySearchHooks();
-	#ifdef HAVE_BACKTRACE
-///	eCrash_Uninit();
-	#endif
 }
 
 

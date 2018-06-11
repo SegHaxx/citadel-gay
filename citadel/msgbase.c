@@ -2093,7 +2093,6 @@ int CtdlOutputPreLoadedMsg(
 
 	if (!CM_IsValidMsg(TheMessage)) {
 		syslog(LOG_ERR, "msgbase: error; invalid preloaded message for output");
-		cit_backtrace ();
 	 	return(om_no_such_msg);
 	}
 

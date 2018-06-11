@@ -116,7 +116,9 @@ void registerSmtpCMD(const char *First, long FLen,
 	smtp_handler_hook *h;
 
 	if (FLen >= MaxSMTPCmdLen)
-		cit_panic_backtrace (0);
+	{
+		abort();
+	}
 
 	h = (smtp_handler_hook*) malloc(sizeof(smtp_handler_hook));
 	memset(h, 0, sizeof(smtp_handler_hook));
@@ -1022,7 +1024,7 @@ void smtp_command_loop(void)
 
 	if (sSMTP == NULL) {
 		syslog(LOG_EMERG, "Session SMTP data is null.  WTF?  We will crash now.");
-		return cit_panic_backtrace (0);
+		abort();
 	}
 
 	time(&CCC->lastcmd);
