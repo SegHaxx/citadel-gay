@@ -302,7 +302,7 @@ void open_databases(void)
 		exit(CTDLEXIT_DB);
 	}
 
-	flags = DB_CREATE | DB_INIT_MPOOL | DB_PRIVATE | DB_INIT_TXN | DB_INIT_LOCK | DB_THREAD | DB_RECOVER;
+	flags = DB_CREATE | DB_INIT_MPOOL | DB_PRIVATE | DB_INIT_TXN | DB_INIT_LOCK | DB_THREAD | DB_INIT_LOG;
 	syslog(LOG_DEBUG, "db: dbenv->open(dbenv, %s, %d, 0)", ctdl_data_dir, flags);
 	ret = dbenv->open(dbenv, ctdl_data_dir, flags, 0);
 	if (ret == DB_RUNRECOVERY) {
