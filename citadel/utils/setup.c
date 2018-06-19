@@ -1,7 +1,7 @@
 /*
  * Citadel setup utility
  *
- * Copyright (c) 1987-2017 by the citadel.org team
+ * Copyright (c) 1987-2018 by the citadel.org team
  *
  * This program is open source software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License version 3.
@@ -36,9 +36,6 @@
 #include "axdefs.h"
 #include "sysdep.h"
 #include "citadel_dirs.h"
-#if HAVE_BACKTRACE
-#include <execinfo.h>
-#endif
 
 #ifdef ENABLE_NLS
 #ifdef HAVE_XLOCALE_H

@@ -15,7 +15,6 @@
 
 #include "ctdl_module.h"
 #include "serv_extensions.h"
-#include "ecrash.h"
 #include "citserver.h"
 #include "user_ops.h"
 #include "locate_host.h"
@@ -72,9 +71,9 @@ int CtdlIsSingleUser(void)
 	{
 		/* check for only one context here */
 		if (num_sessions == 1)
-			return TRUE;
+			return 1;
 	}
-	return FALSE;
+	return 0;
 }
 
 
@@ -293,7 +292,6 @@ void RemoveContext (CitContext *con)
 		c = "WTF?";
 	}
 	syslog(LOG_DEBUG, "context: RemoveContext(%s) session %d", c, con->cs_pid);
-///	cit_backtrace();
 
 	/* Run any cleanup routines registered by loadable modules.
 	 * Note: We have to "become_session()" because the cleanup functions

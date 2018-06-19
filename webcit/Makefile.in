@@ -46,6 +46,7 @@ clean:
 distclean: clean
 	rm -f Makefile config.cache config.log config.status \
 		po/webcit/Makefile \
+		ical_maps.c \
 		$(srcdir)/TAGS
 
 setup: setup.o gettext.o
@@ -86,6 +87,9 @@ webcit: webserver.o context_loop.o ical_dezonify.o \
 	gettext.o downloads.o addressbook_popup.o pushemail.o sysdep.o decode.o \
 	paramhandling.o utils.o ical_maps.o ical_subst.o static.o feed_generator.o \
 	$(LIBS)
+
+ical_maps.c: scripts/get_ical_data.sh
+	sh scripts/get_ical_data.sh
 
 %.o: %.c ${HEADERS}
 	echo "CC $<"

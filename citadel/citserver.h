@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1987-2015 by the citadel.org team
+ * Copyright (c) 1987-2018 by the citadel.org team
  *
  * This program is open source software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3.
@@ -35,9 +35,6 @@ struct UserProcList {
 
 #define CTDLUSERIP      (IsEmptyStr(CC->cs_addr) ?  CC->cs_clientinfo: CC->cs_addr)
 
-void cit_backtrace(void);
-void cit_oneline_backtrace(void);
-void cit_panic_backtrace(int SigNum);
 void master_startup (void);
 int master_cleanup (int exitcode);
 void set_wtmpsupp (char *newtext);

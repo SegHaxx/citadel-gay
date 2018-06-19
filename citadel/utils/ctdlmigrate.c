@@ -5,7 +5,7 @@
  * The scope of this program isn't wide enough to make a difference.  If you don't like
  * it you can rewrite it.
  *
- * Copyright (c) 2009-2016 citadel.org
+ * Copyright (c) 2009-2018 citadel.org
  *
  * This program is open source software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3.
@@ -41,9 +41,6 @@
 #include "sysdep.h"
 #include "config.h"
 #include "citadel_dirs.h"
-#if HAVE_BACKTRACE
-#include <execinfo.h>
-#endif
 
 
 

@@ -18,9 +18,6 @@
 #include <sys/stat.h>
 #include "sysdep.h"
 #include <time.h>
-#if HAVE_BACKTRACE
-#include <execinfo.h>
-#endif
 #include <libcitadel.h>
 
 #include "ctdl_module.h"
@@ -37,84 +34,6 @@ time_t server_startup_time;
 int panic_fd;
 int openid_level_supported = 0;
 
-/*
- * print the actual stack frame.
- */
-void cit_backtrace(void)
-{
-#ifdef HAVE_BACKTRACE
-	void *stack_frames[50];
-	size_t size, i;
-	char **strings;
-
-	const char *p = IOSTR;
-	if (p == NULL) p = "";
-	size = backtrace(stack_frames, sizeof(stack_frames) / sizeof(void*));
-	strings = backtrace_symbols(stack_frames, size);
-	for (i = 0; i < size; i++) {
-		if (strings != NULL) {
-			syslog(LOG_DEBUG, "citserver: %s %s", p, strings[i]);
-		}
-		else {
-			syslog(LOG_DEBUG, "citserver: %s %p", p, stack_frames[i]);
-		}
-	}
-	free(strings);
-#endif
-}
-
-void cit_oneline_backtrace(void)
-{
-#ifdef HAVE_BACKTRACE
-	void *stack_frames[50];
-	size_t size, i;
-	char **strings;
-	StrBuf *Buf;
-
-	size = backtrace(stack_frames, sizeof(stack_frames) / sizeof(void*));
-	strings = backtrace_symbols(stack_frames, size);
-	if (size > 0)
-	{
-		Buf = NewStrBuf();
-		for (i = 1; i < size; i++) {
-			if (strings != NULL)
-				StrBufAppendPrintf(Buf, "%s : ", strings[i]);
-			else
-				StrBufAppendPrintf(Buf, "%p : ", stack_frames[i]);
-		}
-		free(strings);
-		syslog(LOG_DEBUG, "citserver: %s %s", IOSTR, ChrPtr(Buf));
-		FreeStrBuf(&Buf);
-	}
-#endif
-}
-
-
-/*
- * print the actual stack frame.
- */
-void cit_panic_backtrace(int SigNum)
-{
-#ifdef HAVE_BACKTRACE
-	void *stack_frames[10];
-	size_t size, i;
-	char **strings;
-
-	printf("caught signal 11\n");
-	size = backtrace(stack_frames, sizeof(stack_frames) / sizeof(void*));
-	strings = backtrace_symbols(stack_frames, size);
-	for (i = 0; i < size; i++) {
-		if (strings != NULL) {
-			syslog(LOG_DEBUG, "%s", strings[i]);
-		}
-		else {
-			syslog(LOG_DEBUG, "%p", stack_frames[i]);
-		}
-	}
-	free(strings);
-#endif
-	exit(-1);
-}
 
 /*
  * Various things that need to be initialized at startup

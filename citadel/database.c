@@ -63,7 +63,6 @@ void cdb_abort(void) {
 		geteuid(),
 		getegid()
 	);
-	cit_backtrace();
 	exit(CTDLEXIT_DB);
 }
 
@@ -73,7 +72,6 @@ void cdb_verbose_log(const DB_ENV *dbenv, const char *msg)
 {
 	if (!IsEmptyStr(msg)) {
 		syslog(LOG_DEBUG, "db: %s", msg);
-		cit_backtrace();
 	}
 }
 
@@ -83,7 +81,6 @@ void cdb_verbose_err(const DB_ENV *dbenv, const char *errpfx, const char *msg)
 {
 	int *FOO = NULL;
 	syslog(LOG_ERR, "db: %s", msg);
-	cit_backtrace();
 	*FOO = 1;
 }
 
@@ -130,7 +127,6 @@ static void txbegin(DB_TXN ** tid)
 static void dbpanic(DB_ENV * env, int errval)
 {
 	syslog(LOG_ERR, "db: PANIC: %s", db_strerror(errval));
-	cit_backtrace();
 }
 
 static void cclose(DBC * cursor)

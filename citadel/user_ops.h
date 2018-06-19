@@ -66,7 +66,6 @@ static INLINE long cutuserkey(char *username) {
 	if (len >= USERNAME_SIZE)
 	{
 		syslog(LOG_INFO, "Username too long: %s", username);
-		cit_backtrace ();
 		len = USERNAME_SIZE - 1; 
 		username[len]='\0';
 	}
@@ -84,7 +83,6 @@ static INLINE void makeuserkey(char *key, const char *username, long len) {
 	if (len >= USERNAME_SIZE)
 	{
 		syslog(LOG_INFO, "Username too long: %s", username);
-		cit_backtrace ();
 		len = USERNAME_SIZE - 1; 
 	}
 	for (i=0; i<=len; ++i) {
