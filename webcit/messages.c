@@ -1808,90 +1808,60 @@ void postpart(StrBuf *partnum, StrBuf *filename, int force_download)
  * Generic function to output an arbitrary MIME part from an arbitrary
  * message number on the server.
  *
- * msgnum		Number of the item on the citadel server
- * partnum		The MIME part to be output
+ * msgnum		message number on the citadel server
+ * partnum		MIME part number to be output
  * force_download	Nonzero to force set the Content-Type: header to "application/octet-stream"
  */
-void mimepart(int force_download)
+void view_or_download_mimepart(int force_download)
 {
-	int detect_mime = 0;
 	long msgnum;
-	long ErrorDetail;
-	StrBuf *att;
-	wcsession *WCC = WC;
-	StrBuf *Buf;
 	off_t bytes;
-	StrBuf *ContentType = NewStrBufPlain(HKEY("application/octet-stream"));
-	const char *CT;
+	StrBuf *Buf;
+	StrBuf *ContentType;
+	StrBuf *PartNum;
 
-	att = Buf = NewStrBuf();
-	msgnum = StrBufExtract_long(WCC->Hdr->HR.ReqLine, 0, '/');
-	StrBufExtract_token(att, WCC->Hdr->HR.ReqLine, 1, '/');
+	PartNum = NewStrBuf();
 
-	serv_printf("OPNA %ld|%s", msgnum, ChrPtr(att));
+	msgnum = StrBufExtract_long(WC->Hdr->HR.ReqLine, 0, '/');
+	StrBufExtract_token(PartNum, WC->Hdr->HR.ReqLine, 1, '/');
+
+	Buf = NewStrBuf();
+	serv_printf("DLAT %ld|%s", msgnum, ChrPtr(PartNum));	// DLAT will return: 6XX length|-1|filename|cbtype|cbcharset
 	StrBuf_ServGetln(Buf);
-	if (GetServerStatus(Buf, &ErrorDetail) == 2) {
-		StrBufCutLeft(Buf, 4);
-		bytes = StrBufExtract_long(Buf, 0, '|');
-		StrBufExtract_token(ContentType, Buf, 3, '|');
-		CheckGZipCompressionAllowed (SKEY(ContentType));
-		if (force_download)
-		{
-			FlushStrBuf(ContentType);
-			detect_mime = 0;
-		}
-		else
-		{
-			if (!strcasecmp(ChrPtr(ContentType), "application/octet-stream"))
-			{
-				StrBufExtract_token(Buf, WCC->Hdr->HR.ReqLine, 2, '/');
-				CT = GuessMimeByFilename(SKEY(Buf));
-				StrBufPlain(ContentType, CT, -1);
-			}
-			if (!strcasecmp(ChrPtr(ContentType), "application/octet-stream"))
-			{
-				detect_mime = 1;
-			}
-		}
-		serv_read_binary_to_http(ContentType, bytes, 0, detect_mime);
+	FreeStrBuf(&PartNum);
 
-		serv_read_binary(WCC->WBuf, bytes, Buf);
-		serv_puts("CLOS");
-		StrBuf_ServGetln(Buf);
-		CT = ChrPtr(ContentType);
-	} else {
-		StrBufCutLeft(Buf, 4);
-		switch (ErrorDetail) {
-		default:
-		case ERROR + MESSAGE_NOT_FOUND:
-			hprintf("HTTP/1.1 404 %s\n", ChrPtr(Buf));
-			break;
-		case ERROR + NOT_LOGGED_IN:
-			hprintf("HTTP/1.1 401 %s\n", ChrPtr(Buf));
-			break;
-
-		case ERROR + HIGHER_ACCESS_REQUIRED:
-			hprintf("HTTP/1.1 403 %s\n", ChrPtr(Buf));
-			break;
-		case ERROR + INTERNAL_ERROR:
-		case ERROR + TOO_BIG:
-			hprintf("HTTP/1.1 500 %s\n", ChrPtr(Buf));
-			break;
-		}
-
-		hprintf("Pragma: no-cache\r\n"
+	if (GetServerStatus(Buf, NULL) != 6) {
+		FreeStrBuf(&Buf);
+		hprintf("HTTP/1.1 500 error\r\n"
+			"Pragma: no-cache\r\n"
 			"Cache-Control: no-store\r\n"
 			"Expires: -1\r\n"
+			"Content-Type: text/plain\r\n"
 		);
-
-		hprintf("Content-Type: text/plain\r\n");
 		begin_burst();
-		wc_printf(_("An error occurred while retrieving this part: %s\n"), 
-			ChrPtr(Buf));
-		end_burst();
+		wc_printf(_("An error occurred while retrieving this part: %s\n"), "--");
+		return;
 	}
-	FreeStrBuf(&ContentType);
+
+	StrBufCutLeft(Buf, 4);
+	bytes = StrBufExtract_long(Buf, 0, '|');
+
+	if (force_download) {
+		ContentType = NewStrBufPlain(HKEY("application/octet-stream"));
+	}
+	else {
+		ContentType = NewStrBuf();
+		StrBufExtract_token(ContentType, Buf, 3, '|');
+	}
+
 	FreeStrBuf(&Buf);
+	Buf = NewStrBuf();
+	StrBuf_ServGetBLOBBuffered(Buf, bytes);
+
+	WC->WBuf = Buf;
+	Buf = NULL;
+	http_transmit_thing(ChrPtr(ContentType), 0);
+	FreeStrBuf(&ContentType);
 }
 
 
@@ -1928,7 +1898,6 @@ void MimeLoadData(wc_mime_attachment *Mime)
 	StrBuf *Buf;
 	const char *Ptr;
 	off_t bytes;
-	/* TODO: is there a chance the content type is different from the one we know? */
 
 	serv_printf("DLAT %ld|%s", Mime->msgnum, ChrPtr(Mime->PartNum));
 	Buf = NewStrBuf();
@@ -1940,24 +1909,24 @@ void MimeLoadData(wc_mime_attachment *Mime)
 		if (Mime->Charset == NULL) Mime->Charset = NewStrBuf();
 		StrBufExtract_NextToken(Mime->Charset, Buf, &Ptr, '|');
 		
-		if (Mime->Data == NULL)
+		if (Mime->Data == NULL) {
 			Mime->Data = NewStrBufPlain(NULL, bytes);
+		}
 		StrBuf_ServGetBLOBBuffered(Mime->Data, bytes);
 	}
 	else {
 		FlushStrBuf(Mime->Data);
-		/* TODO XImportant message */
 	}
 	FreeStrBuf(&Buf);
 }
 
 
 void view_mimepart(void) {
-	mimepart(0);
+	view_or_download_mimepart(0);
 }
 
 void download_mimepart(void) {
-	mimepart(1);
+	view_or_download_mimepart(1);
 }
 
 void view_postpart(void) {

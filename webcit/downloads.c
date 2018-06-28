@@ -279,7 +279,6 @@ void download_file(void)
 		serv_read_binary_to_http(ContentType, bytes, 0, 0);
 		serv_puts("CLOS");
 		StrBuf_ServGetln(Buf);
-//		http_transmit_thing(ChrPtr(ContentType), 0);
 	} else {
 		StrBufCutLeft(Buf, 4);
 		hprintf("HTTP/1.1 404 %s\n", ChrPtr(Buf));
