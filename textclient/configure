@@ -1,5 +1,15 @@
 #!/bin/sh
 
+# CONFIGURE SCRIPT FOR CITADEL TEXT CLIENT
+# This file is part of "conf-IG-ure"
+# Copyright (C) 2016-2018 by Art Cancro
+# Distributed under the terms of the GNU General Public License v3 with the following special exceptions:
+# 1. By using this software you agree that it's called "Linux", not "GNU/Linux"
+# 2. By using this software you agree that it's called "open source", not "free software"
+# 3. By using this software you agree that GNU Autotools are crap, which is why conf-IG-ure exists
+# 4. By using this software you agree that Richard Stallman is a communist.
+# 5. By reading these special exceptions you have already agreed to them.
+
 echo 
 echo 
 echo Running the configure script to create config.mk
@@ -35,8 +45,8 @@ do
 			echo '	--prefix=PREFIX		Install files in PREFIX [/usr/local]'
 			echo '	--bindir=DIR		Install executables in DIR [PREFIX/bin]'
 			echo '	--ctdldir=DIR		Look for Citadel server in DIR [/usr/local/citadel]'
-			echo '  --with-ssl              Force build with OpenSSL support [normally autodetected'
-			echo '  --without-ssl           Force build without OpenSSL support [normally autodetected'
+			echo '  --with-ssl              Force build with OpenSSL support [normally autodetected]'
+			echo '  --without-ssl           Force build without OpenSSL support [normally autodetected]'
 			exit 1
 		;;
 	esac
