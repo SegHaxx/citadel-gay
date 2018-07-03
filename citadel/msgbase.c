@@ -1,7 +1,7 @@
 /*
  * Implements the message store.
  *
- * Copyright (c) 1987-2017 by the citadel.org team
+ * Copyright (c) 1987-2018 by the citadel.org team
  *
  * This program is open source software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3.
@@ -3602,8 +3602,6 @@ void AdjRefCountList(long *msgnum, long nmsg, int incr)
 	struct arcq *new_arcq;
 	int rv = 0;
 
-	syslog(LOG_DEBUG, "msgbase: AdjRefCountList() msg %ld ref count delta %+d", nmsg, incr);
-
 	begin_critical_section(S_SUPPMSGMAIN);
 	if (arcfp == NULL) {
 		arcfp = fopen(file_arcq, "ab+");
@@ -3624,6 +3622,7 @@ void AdjRefCountList(long *msgnum, long nmsg, int incr)
 	the_size = sizeof(struct arcq) * nmsg;
 	new_arcq = malloc(the_size);
 	for (i = 0; i < nmsg; i++) {
+		syslog(LOG_DEBUG, "msgbase: AdjRefCountList() msg %ld ref count delta %+d", msgnum[i], incr);
 		new_arcq[i].arcq_msgnum = msgnum[i];
 		new_arcq[i].arcq_delta = incr;
 	}
