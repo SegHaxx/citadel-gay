@@ -11,6 +11,7 @@
 #define CIT_CIPHERS	"ALL:RC4+RSA:+SSLv2:+TLSv1:!MD5:@STRENGTH"	/* see ciphers(1) */
 
 #ifdef HAVE_OPENSSL
+#define OPENSSL_NO_KRB5		/* work around redhat b0rken ssl headers */
 void destruct_ssl(void);
 void init_ssl(void);
 void client_write_ssl (const char *buf, int nbytes);
