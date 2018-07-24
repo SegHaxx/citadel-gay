@@ -1,15 +1,13 @@
 ====== SMTP Client ======
 ===== source files involved: =====
 
-event_client.h - AsyncIO structure, interfaces to event Queue
-
 
 modules/smtp/smtp_clienthandlers.h - SMTP-Client Context struct & functions.
 modules/smtp/smtpqueue.h - parsing of Queue mails & respective structures
 
 modules/smtp/serv_smtpqueue.c - queue handling executed by housekeeping thread; de/serialization of Queue-control-messages
 modules/smtp/serv_smtpeventclient.c - business logic 
-modules/smtp/smtp_clienthandlers.c - Protocoll logic
+modules/smtp/smtp_clienthandlers.c - Protocol logic
 
 msgbase.c - writes spool messages + spoolcontrol files
 
@@ -18,7 +16,7 @@ event_client.c - base event functions
 modules/eventclient/serv_eventclient.c - the event queue
 modules/c-ares-dns/serv_c-ares-dns.c - nameserver lookup
 
-===== Spool Controll =====
+===== Spool Control =====
 Citadel stores two messages for mail deliveries; the spool control message format is described in delivery-list.txt; its generated in msgbase.c, and de/serialized in serv_smtpqueue.c.
 The for Spool-control structures are kept in memory as OneQueItem per Spool-Control-File, and MailQEntry per Recipient of the message.
 For each MailQEntry which is still to be delivered, one SmtpOutMsg (containing the AsyncIO context) is spawned. The Jobs are processed in paralell, each job finished triggers an update of the spool control message, so we don't accidently deliver a message twice to one recipient. If the last recipient has succeeded, or permanently failed, the spool-file and the mail-file are removed from the spool room.

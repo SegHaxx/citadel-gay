@@ -1,6 +1,6 @@
 Some notes on the build process...
   
- Oct 28 01:57 1998 from LoanShark @uncnsrd 
+ Oct 28 01:57 1998 from LoanShark
 
   autodependency generation is implemented by generating a bunch of .d  
 files (with another suffix rule) using $(CC) - M and "-include"-ing them 
@@ -11,7 +11,7 @@ GNU make, but the Makefile should still work on other versions of Unix
 make, just without the autodependency stuff. 
 
 
- Oct 28 20:49 1998 from LoanShark @uncnsrd 
+ Oct 28 20:49 1998 from LoanShark
 one thing I forgot to mention about the autodependency generation: for a 
 file to be included in the autodepend process, it must be listed in the 
 SOURCES macro near the top of Makefile.in. 
