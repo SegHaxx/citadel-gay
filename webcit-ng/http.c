@@ -21,8 +21,7 @@ int client_write(struct client_handle *ch, char *buf, int nbytes)
 {
 	if (is_https) {
 		return client_write_ssl(ch, buf, nbytes);
-	}
-	else {
+	} else {
 		return write(ch->sock, buf, nbytes);
 	}
 }
@@ -36,18 +35,17 @@ int client_read(struct client_handle *ch, char *buf, int nbytes)
 {
 	if (is_https) {
 		return client_read_ssl(ch, buf, nbytes);
-	}
-	else {
+	} else {
 		int bytes_received = 0;
 		int bytes_this_block = 0;
 		while (bytes_received < nbytes) {
-			bytes_this_block = read(ch->sock, &buf[bytes_received], nbytes-bytes_received);
+			bytes_this_block = read(ch->sock, &buf[bytes_received], nbytes - bytes_received);
 			if (bytes_this_block < 1) {
-				return(-1);
+				return (-1);
 			}
 			bytes_received += bytes_this_block;
 		}
-		return(nbytes);
+		return (nbytes);
 	}
 }
 
@@ -62,31 +60,32 @@ int client_readline(struct client_handle *ch, char *buf, int maxbytes)
 	int len = 0;
 	int c = 0;
 
-	if (buf == NULL) return(-1);
+	if (buf == NULL)
+		return (-1);
 
 	while (len < maxbytes) {
 		c = client_read(ch, &buf[len], 1);
 		if (c <= 0) {
 			syslog(LOG_DEBUG, "Socket error or zero-length read");
-			return(-1);
+			return (-1);
 		}
 		if (buf[len] == '\n') {
-			if ( (len >0) && (buf[len-1] == '\r') ) {
+			if ((len > 0) && (buf[len - 1] == '\r')) {
 				--len;
 			}
 			buf[len] = 0;
-			return(len);
+			return (len);
 		}
 		++len;
 	}
-	return(len);
+	return (len);
 }
 
 
 /*
  * printf() type function to send data to the web client.
  */
-void client_printf(struct client_handle *ch, const char *format,...)
+void client_printf(struct client_handle *ch, const char *format, ...)
 {
 	va_list arg_ptr;
 	StrBuf *Buf = NewStrBuf();
@@ -95,7 +94,7 @@ void client_printf(struct client_handle *ch, const char *format,...)
 	StrBufVAppendPrintf(Buf, format, arg_ptr);
 	va_end(arg_ptr);
 
-	client_write(ch, (char *)ChrPtr(Buf), StrLength(Buf));
+	client_write(ch, (char *) ChrPtr(Buf), StrLength(Buf));
 	FreeStrBuf(&Buf);
 }
 
@@ -126,20 +125,19 @@ void perform_one_http_transaction(struct client_handle *ch)
 	struct http_transaction h;
 	char *c, *d;
 	struct sockaddr_in sin;
-	struct http_header *clh;						// general purpose iterator variable
+	struct http_header *clh;		// general purpose iterator variable
 
 	memset(&h, 0, sizeof h);
 
-	while (len = client_readline(ch, buf, sizeof buf), (len > 0) ) {
+	while (len = client_readline(ch, buf, sizeof buf), (len > 0)) {
 		++lines_read;
 
-		if (lines_read == 1) {						// First line is method and URI.
-			c = strchr(buf, ' ');					// IGnore the HTTP-version.
+		if (lines_read == 1) {		// First line is method and URI.
+			c = strchr(buf, ' ');	// IGnore the HTTP-version.
 			if (c == NULL) {
 				h.method = strdup("NULL");
 				h.uri = strdup("/");
-			}
-			else {
+			} else {
 				*c = 0;
 				h.method = strdup(buf);
 				++c;
@@ -151,9 +149,8 @@ void perform_one_http_transaction(struct client_handle *ch)
 				++c;
 				h.uri = strdup(d);
 			}
-		}
-		else {								// Subsequent lines are headers.
-			c = strchr(buf, ':');					// Header line folding is obsolete so we don't support it.
+		} else {			// Subsequent lines are headers.
+			c = strchr(buf, ':');	// Header line folding is obsolete so we don't support it.
 			if (c != NULL) {
 				struct http_header *new_request_header = malloc(sizeof(struct http_header));
 				*c = 0;
@@ -179,21 +176,18 @@ void perform_one_http_transaction(struct client_handle *ch)
 	char *hostheader = header_val(&h, "Host");
 	if (hostheader) {
 		strcat(h.site_prefix, hostheader);
-	}
-	else {
+	} else {
 		strcat(h.site_prefix, "127.0.0.1");
 	}
 	socklen_t llen = sizeof(sin);
-	if (getsockname(ch->sock, (struct sockaddr *)&sin, &llen) >= 0) {
+	if (getsockname(ch->sock, (struct sockaddr *) &sin, &llen) >= 0) {
 		sprintf(&h.site_prefix[strlen(h.site_prefix)], ":%d", ntohs(sin.sin_port));
 	}
-
 	// Now try to read in the request body (if one is present)
 
 	if (len < 0) {
 		syslog(LOG_DEBUG, "Client disconnected");
-	}
-	else {
+	} else {
 		syslog(LOG_DEBUG, "< %s %s", h.method, h.uri);
 
 		// If there is a request body, read it now.
@@ -211,7 +205,6 @@ void perform_one_http_transaction(struct client_handle *ch)
 			//write(2, HKEY("\033[0m\n"));
 
 		}
-
 		// Now pass control up to the next layer to perform the request.
 		perform_request(&h);
 
@@ -230,7 +223,7 @@ void perform_one_http_transaction(struct client_handle *ch)
 			free(datestring);
 		}
 
-		client_printf(ch, "Content-encoding: identity\r\n");			// change if we gzip/deflate
+		client_printf(ch, "Content-encoding: identity\r\n");	// change if we gzip/deflate
 		for (clh = h.response_headers; clh != NULL; clh = clh->next) {
 #ifdef DEBUG_HTTP
 			syslog(LOG_DEBUG, "} %s: %s", clh->key, clh->val);
@@ -245,24 +238,33 @@ void perform_one_http_transaction(struct client_handle *ch)
 
 	// free the transaction memory
 	while (h.request_headers) {
-		if (h.request_headers->key) free(h.request_headers->key);
-		if (h.request_headers->val) free(h.request_headers->val);
+		if (h.request_headers->key)
+			free(h.request_headers->key);
+		if (h.request_headers->val)
+			free(h.request_headers->val);
 		clh = h.request_headers->next;
 		free(h.request_headers);
 		h.request_headers = clh;
 	}
 	while (h.response_headers) {
-		if (h.response_headers->key) free(h.response_headers->key);
-		if (h.response_headers->val) free(h.response_headers->val);
+		if (h.response_headers->key)
+			free(h.response_headers->key);
+		if (h.response_headers->val)
+			free(h.response_headers->val);
 		clh = h.response_headers->next;
 		free(h.response_headers);
 		h.response_headers = clh;
 	}
-	if (h.method) free(h.method);
-	if (h.uri) free(h.uri);
-	if (h.request_body) free(h.request_body);
-	if (h.response_string) free(h.response_string);
-	if (h.site_prefix) free(h.site_prefix);
+	if (h.method)
+		free(h.method);
+	if (h.uri)
+		free(h.uri);
+	if (h.request_body)
+		free(h.request_body);
+	if (h.response_string)
+		free(h.response_string);
+	if (h.site_prefix)
+		free(h.site_prefix);
 }
 
 
@@ -274,11 +276,11 @@ void perform_one_http_transaction(struct client_handle *ch)
  */
 char *header_val(struct http_transaction *h, char *requested_header)
 {
-	struct http_header *clh;						// general purpose iterator variable
+	struct http_header *clh;	// general purpose iterator variable
 	for (clh = h->request_headers; clh != NULL; clh = clh->next) {
 		if (!strcasecmp(clh->key, requested_header)) {
-			return(clh->val);
+			return (clh->val);
 		}
 	}
-	return(NULL);
+	return (NULL);
 }

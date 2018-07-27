@@ -28,26 +28,27 @@ int ctdl_readline(struct ctdlsession *ctdl, char *buf, int maxbytes)
 	int len = 0;
 	int c = 0;
 
-	if (buf == NULL) return(-1);
+	if (buf == NULL)
+		return (-1);
 
 	while (len < maxbytes) {
 		c = read(ctdl->sock, &buf[len], 1);
 		if (c <= 0) {
 			syslog(LOG_DEBUG, "Socket error or zero-length read");
-			return(-1);
+			return (-1);
 		}
 		if (buf[len] == '\n') {
-			if ( (len >0) && (buf[len-1] == '\r') ) {
+			if ((len > 0) && (buf[len - 1] == '\r')) {
 				--len;
 			}
 			buf[len] = 0;
 			// syslog(LOG_DEBUG, "\033[33m[ %s\033[0m", buf);
-			return(len);
+			return (len);
 		}
 		++len;
 	}
 	// syslog(LOG_DEBUG, "\033[33m[ %s\033[0m", buf);
-	return(len);
+	return (len);
 }
 
 
@@ -56,7 +57,7 @@ int ctdl_readline(struct ctdlsession *ctdl, char *buf, int maxbytes)
  * Implemented in terms of ctdl_readline() and is therefore transparent...
  * Returns a newly allocated StrBuf or NULL for error.
  */
-StrBuf *ctdl_readtextmsg(struct ctdlsession *ctdl)
+StrBuf *ctdl_readtextmsg(struct ctdlsession * ctdl)
 {
 	char buf[1024];
 	StrBuf *sj = NewStrBuf();
@@ -64,7 +65,7 @@ StrBuf *ctdl_readtextmsg(struct ctdlsession *ctdl)
 		return NULL;
 	}
 
-	while ( (ctdl_readline(ctdl, buf, sizeof(buf)) >= 0) && (strcmp(buf, "000")) ) {
+	while ((ctdl_readline(ctdl, buf, sizeof(buf)) >= 0) && (strcmp(buf, "000"))) {
 		StrBufAppendPrintf(sj, "%s\n", buf);
 	}
 
@@ -76,7 +77,8 @@ StrBuf *ctdl_readtextmsg(struct ctdlsession *ctdl)
  * Write to the Citadel server.  For now we're just wrapping write() in case we
  * need to add anything else later.
  */
-ssize_t ctdl_write(struct ctdlsession *ctdl, const void *buf, size_t count) {
+ssize_t ctdl_write(struct ctdlsession * ctdl, const void *buf, size_t count)
+{
 	return write(ctdl->sock, buf, count);
 }
 
@@ -84,7 +86,7 @@ ssize_t ctdl_write(struct ctdlsession *ctdl, const void *buf, size_t count) {
 /*
  * printf() type function to send data to the Citadel Server.
  */
-void ctdl_printf(struct ctdlsession *ctdl, const char *format,...)
+void ctdl_printf(struct ctdlsession *ctdl, const char *format, ...)
 {
 	va_list arg_ptr;
 	StrBuf *Buf = NewStrBuf();
@@ -94,7 +96,7 @@ void ctdl_printf(struct ctdlsession *ctdl, const char *format,...)
 	va_end(arg_ptr);
 
 	syslog(LOG_DEBUG, "\033[32m] %s\033[0m", ChrPtr(Buf));
-	ctdl_write(ctdl, (char *)ChrPtr(Buf), StrLength(Buf));
+	ctdl_write(ctdl, (char *) ChrPtr(Buf), StrLength(Buf));
 	ctdl_write(ctdl, "\n", 1);
 	FreeStrBuf(&Buf);
 }
@@ -115,13 +117,13 @@ int uds_connectsock(char *sockpath)
 	s = socket(AF_UNIX, SOCK_STREAM, 0);
 	if (s < 0) {
 		syslog(LOG_WARNING, "Can't create socket [%s]: %s", sockpath, strerror(errno));
-		return(-1);
+		return (-1);
 	}
 
 	if (connect(s, (struct sockaddr *) &addr, sizeof(addr)) < 0) {
 		syslog(LOG_WARNING, "Can't connect [%s]: %s", sockpath, strerror(errno));
 		close(s);
-		return(-1);
+		return (-1);
 	}
 	return s;
 }
@@ -155,12 +157,12 @@ int tcp_connectsock(char *host, char *service)
 	 * Handle numeric IPv4 and IPv6 addresses
 	 */
 	rc = inet_pton(AF_INET, host, &serveraddr);
-	if (rc == 1) {						/* dotted quad */
+	if (rc == 1) {		/* dotted quad */
 		hints.ai_family = AF_INET;
 		hints.ai_flags |= AI_NUMERICHOST;
 	} else {
 		rc = inet_pton(AF_INET6, host, &serveraddr);
-		if (rc == 1) {					/* IPv6 address */
+		if (rc == 1) {	/* IPv6 address */
 			hints.ai_family = AF_INET6;
 			hints.ai_flags |= AI_NUMERICHOST;
 		}
@@ -172,7 +174,7 @@ int tcp_connectsock(char *host, char *service)
 	if (rc != 0) {
 		syslog(LOG_DEBUG, "%s: %s", host, gai_strerror(rc));
 		freeaddrinfo(res);
-		return(-1);
+		return (-1);
 	}
 
 	/*
@@ -180,15 +182,18 @@ int tcp_connectsock(char *host, char *service)
 	 */
 	for (ai = res; ai != NULL; ai = ai->ai_next) {
 
-		if (ai->ai_family == AF_INET) syslog(LOG_DEBUG, "Trying IPv4");
-		else if (ai->ai_family == AF_INET6) syslog(LOG_DEBUG, "Trying IPv6");
-		else syslog(LOG_WARNING, "This is going to fail.");
+		if (ai->ai_family == AF_INET)
+			syslog(LOG_DEBUG, "Trying IPv4");
+		else if (ai->ai_family == AF_INET6)
+			syslog(LOG_DEBUG, "Trying IPv6");
+		else
+			syslog(LOG_WARNING, "This is going to fail.");
 
 		s = socket(ai->ai_family, ai->ai_socktype, ai->ai_protocol);
 		if (s < 0) {
 			syslog(LOG_WARNING, "socket() failed: %s", strerror(errno));
 			freeaddrinfo(res);
-			return(-1);
+			return (-1);
 		}
 		rc = connect(s, ai->ai_addr, ai->ai_addrlen);
 		if (rc >= 0) {
@@ -197,32 +202,25 @@ int tcp_connectsock(char *host, char *service)
 
 			fdflags = fcntl(rc, F_GETFL);
 			if (fdflags < 0) {
-				syslog(LOG_ERR,
-				       "unable to get socket %d flags! %s",
-				       rc,
-				       strerror(errno));
+				syslog(LOG_ERR, "unable to get socket %d flags! %s", rc, strerror(errno));
 				close(rc);
 				return -1;
 			}
 			fdflags = fdflags | O_NONBLOCK;
 			if (fcntl(rc, F_SETFL, fdflags) < 0) {
-				syslog(LOG_ERR,
-				       "unable to set socket %d nonblocking flags! %s",
-				       rc,
-				       strerror(errno));
+				syslog(LOG_ERR, "unable to set socket %d nonblocking flags! %s", rc, strerror(errno));
 				close(s);
 				return -1;
 			}
 
-			return(s);
-		}
-		else {
+			return (s);
+		} else {
 			syslog(LOG_WARNING, "connect() failed: %s", strerror(errno));
 			close(s);
 		}
 	}
-        freeaddrinfo(res);
-	return(-1);
+	freeaddrinfo(res);
+	return (-1);
 }
 
 
@@ -232,14 +230,15 @@ int tcp_connectsock(char *host, char *service)
  */
 void extract_auth(struct http_transaction *h, char *authbuf, int authbuflen)
 {
-	if (authbuf == NULL) return;
+	if (authbuf == NULL)
+		return;
 	authbuf[0] = 0;
 
 	char *authheader = header_val(h, "Authorization");
 	if (authheader) {
 		if (!strncasecmp(authheader, "Basic ", 6)) {
 			safestrncpy(authbuf, &authheader[6], authbuflen);
-			return;		// HTTP-AUTH was found -- stop here
+			return;	// HTTP-AUTH was found -- stop here
 		}
 	}
 
@@ -255,10 +254,9 @@ void extract_auth(struct http_transaction *h, char *authbuf, int authbuflen)
 			if (strlen(authbuf) < 3) {	// impossibly small
 				authbuf[0] = 0;
 			}
-			return;		// Cookie auth was found -- stop here
+			return;	// Cookie auth was found -- stop here
 		}
 	}
-
 	// no authorization found in headers ... this is an anonymous session
 }
 
@@ -281,21 +279,20 @@ int login_to_citadel(struct ctdlsession *c, char *auth, char *resultbuf)
 
 	if (resultbuf != NULL) {
 		buf = resultbuf;
-	}
-	else {
+	} else {
 		buf = localbuf;
 	}
 
 	buflen = CtdlDecodeBase64(buf, auth, strlen(auth));
 	extract_token(supplied_username, buf, 0, ':', sizeof supplied_username);
 	extract_token(supplied_password, buf, 1, ':', sizeof supplied_password);
-	syslog(LOG_DEBUG, "Supplied credentials: username=%s, pwlen=%d", supplied_username, (int)strlen(supplied_password));
+	syslog(LOG_DEBUG, "Supplied credentials: username=%s, pwlen=%d", supplied_username, (int) strlen(supplied_password));
 
 	ctdl_printf(c, "USER %s", supplied_username);
 	ctdl_readline(c, buf, 1024);
 	if (buf[0] != '3') {
 		syslog(LOG_DEBUG, "No such user: %s", buf);
-		return(1);				// no such user; resultbuf will explain why
+		return (1);	// no such user; resultbuf will explain why
 	}
 
 	ctdl_printf(c, "PASS %s", supplied_password);
@@ -305,18 +302,19 @@ int login_to_citadel(struct ctdlsession *c, char *auth, char *resultbuf)
 		strcpy(c->auth, auth);
 		extract_token(c->whoami, &buf[4], 0, '|', sizeof c->whoami);
 		syslog(LOG_DEBUG, "Login succeeded: %s", buf);
-		return(0);
+		return (0);
 	}
 
 	syslog(LOG_DEBUG, "Login failed: %s", buf);
-	return(1);					// login failed; resultbuf will explain why
+	return (1);		// login failed; resultbuf will explain why
 }
 
 
 /*
  * Hunt for, or create, a connection to our Citadel Server
  */
-struct ctdlsession *connect_to_citadel(struct http_transaction *h) {
+struct ctdlsession *connect_to_citadel(struct http_transaction *h)
+{
 	struct ctdlsession *cptr = NULL;
 	struct ctdlsession *my_session = NULL;
 	int is_new_session = 0;
@@ -326,16 +324,17 @@ struct ctdlsession *connect_to_citadel(struct http_transaction *h) {
 
 	// Does the request carry a username and password?
 	extract_auth(h, auth, sizeof auth);
-	syslog(LOG_DEBUG, "Session auth: %s", auth);		// remove this log when development is done
+	syslog(LOG_DEBUG, "Session auth: %s", auth);	// remove this log when development is done
 
 	// Lock the connection pool while we claim our connection
 	pthread_mutex_lock(&cpool_mutex);
-	if (cpool != NULL) for (cptr = cpool; ((cptr != NULL) && (my_session == NULL)); cptr = cptr->next) {
-		if ( (cptr->is_bound == 0) && (!strcmp(cptr->auth, auth)) ) {
-			my_session = cptr;
-			my_session->is_bound = 1;
+	if (cpool != NULL)
+		for (cptr = cpool; ((cptr != NULL) && (my_session == NULL)); cptr = cptr->next) {
+			if ((cptr->is_bound == 0) && (!strcmp(cptr->auth, auth))) {
+				my_session = cptr;
+				my_session->is_bound = 1;
+			}
 		}
-	}
 	if (my_session == NULL) {
 		syslog(LOG_DEBUG, "No qualifying sessions , starting a new one");
 		my_session = malloc(sizeof(struct ctdlsession));
@@ -349,13 +348,12 @@ struct ctdlsession *connect_to_citadel(struct http_transaction *h) {
 	}
 	pthread_mutex_unlock(&cpool_mutex);
 	if (my_session == NULL) {
-		return(NULL);					// oh well
+		return (NULL);	// oh well
 	}
 
 	if (my_session->sock < 3) {
 		is_new_session = 1;
-	}
-	else {							// make sure our Citadel session is still good
+	} else {		// make sure our Citadel session is still good
 		int test_conn;
 		test_conn = ctdl_write(my_session, HKEY("NOOP\n"));
 		if (test_conn < 5) {
@@ -363,8 +361,7 @@ struct ctdlsession *connect_to_citadel(struct http_transaction *h) {
 			close(my_session->sock);
 			my_session->sock = 0;
 			is_new_session = 1;
-		}
-		else {
+		} else {
 			test_conn = ctdl_readline(my_session, buf, sizeof(buf));
 			if (test_conn < 1) {
 				syslog(LOG_DEBUG, "Citadel session is broken , must reconnect");
@@ -389,14 +386,15 @@ struct ctdlsession *connect_to_citadel(struct http_transaction *h) {
 	my_session->last_access = time(NULL);
 	++my_session->num_requests_handled;
 
-	return(my_session);
+	return (my_session);
 }
 
 
 /*
  * Release our Citadel Server connection back into the pool.
  */
-void disconnect_from_citadel(struct ctdlsession *ctdl) {
+void disconnect_from_citadel(struct ctdlsession *ctdl)
+{
 	pthread_mutex_lock(&cpool_mutex);
 	ctdl->is_bound = 0;
 	pthread_mutex_unlock(&cpool_mutex);

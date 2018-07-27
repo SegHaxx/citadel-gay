@@ -50,7 +50,9 @@ void do_502(struct http_transaction *h)
 	h->response_code = 502;
 	h->response_string = strdup("bad gateway");
 	add_response_header(h, strdup("Content-type"), strdup("text/plain"));
-	h->response_body = strdup(_("This program was unable to connect or stay connected to the Citadel server.  Please report this problem to your system administrator."));
+	h->response_body =
+	    strdup(_
+		   ("This program was unable to connect or stay connected to the Citadel server.  Please report this problem to your system administrator."));
 	h->response_body_length = strlen(h->response_body);
 }
 
@@ -92,101 +94,86 @@ void perform_request(struct http_transaction *h)
 	// This is implemented as a series of strncasecmp() calls rather than a
 	// lookup table in order to make the code more readable.
 
-	if (IsEmptyStr(h->uri))
-	{						// Sanity check
+	if (IsEmptyStr(h->uri)) {	// Sanity check
 		do_404(h);
 		return;
 	}
-
 	// Right about here is where we should try to handle anything that doesn't start
 	// with the /ctdl/ prefix.
 	// Root (/) ...
 
-	if ( (!strcmp(h->uri, "/")) && (!strcasecmp(h->method, "GET")) )
-	{
+	if ((!strcmp(h->uri, "/")) && (!strcasecmp(h->method, "GET"))) {
 		http_redirect(h, "/ctdl/s/index.html");
 		return;
 	}
-
 	// Legacy URI patterns (/readnew?gotoroom=xxx&start_reading_at=yyy) ...
 	// Direct room name (/my%20blog) ...
 
 	// Everything below this line is strictly REST URI patterns.
 
-	if (strncasecmp(h->uri, HKEY("/ctdl/")))
-	{						// Reject non-REST
+	if (strncasecmp(h->uri, HKEY("/ctdl/"))) {	// Reject non-REST
 		do_404(h);
 		return;
 	}
 
-	if (!strncasecmp(h->uri, HKEY("/ctdl/s/")))
-	{						// Static content
+	if (!strncasecmp(h->uri, HKEY("/ctdl/s/"))) {	// Static content
 		output_static(h);
 		return;
 	}
 
-	if (h->uri[7] != '/')
-	{
+	if (h->uri[7] != '/') {
 		do_404(h);
 		return;
 	}
-
 	// Anything below this line:
-	//	1. Is in the format of /ctdl/?/*
-	//	2. Requires a connection to a Citadel server.
+	//      1. Is in the format of /ctdl/?/*
+	//      2. Requires a connection to a Citadel server.
 
 	c = connect_to_citadel(h);
-	if (c == NULL)
-	{
+	if (c == NULL) {
 		do_502(h);
 		return;
 	}
-
 	// WebDAV methods like OPTIONS and PROPFIND *require* a logged-in session,
 	// even if the Citadel server allows anonymous access.
-	if (IsEmptyStr(c->auth))
-	{
-		if (	   (!strcasecmp(h->method, "OPTIONS"))
-			|| (!strcasecmp(h->method, "PROPFIND"))
-			|| (!strcasecmp(h->method, "REPORT"))
-			|| (!strcasecmp(h->method, "DELETE"))
-		) {
+	if (IsEmptyStr(c->auth)) {
+		if ((!strcasecmp(h->method, "OPTIONS"))
+		    || (!strcasecmp(h->method, "PROPFIND"))
+		    || (!strcasecmp(h->method, "REPORT"))
+		    || (!strcasecmp(h->method, "DELETE"))
+		    ) {
 			request_http_authenticate(h);
 			disconnect_from_citadel(c);
 			return;
 		}
 	}
-
 	// Break down the URI by path and send the request to the appropriate part of the program.
 	//
-	switch(h->uri[6])
-	{
-		case 'a':					// /ctdl/a/ == RESTful path to admin functions
-			ctdl_a(h, c);
-			break;
-		case 'c':					// /ctdl/c/ == misc Citadel server commands
-			ctdl_c(h, c);
-			break;
-		case 'r':					// /ctdl/r/ == RESTful path to rooms
-			ctdl_r(h, c);
-			break;
-		case 'u':					// /ctdl/u/ == RESTful path to users
-			do_404(h);
-			break;
-		default:
-			do_404(h);
+	switch (h->uri[6]) {
+	case 'a':		// /ctdl/a/ == RESTful path to admin functions
+		ctdl_a(h, c);
+		break;
+	case 'c':		// /ctdl/c/ == misc Citadel server commands
+		ctdl_c(h, c);
+		break;
+	case 'r':		// /ctdl/r/ == RESTful path to rooms
+		ctdl_r(h, c);
+		break;
+	case 'u':		// /ctdl/u/ == RESTful path to users
+		do_404(h);
+		break;
+	default:
+		do_404(h);
 	}
 
 	// Are we in an authenticated session?  If so, set a cookie so we stay logged in.
-	if (!IsEmptyStr(c->auth))
-	{
+	if (!IsEmptyStr(c->auth)) {
 		char koekje[AUTH_MAX];
 		char *exp = http_datestring(time(NULL) + (86400 * 30));
 		snprintf(koekje, AUTH_MAX, "wcauth=%s; path=/ctdl/; Expires=%s", c->auth, exp);
 		free(exp);
 		add_response_header(h, strdup("Set-Cookie"), strdup(koekje));
 	}
-
 	// During development we are foiling the browser cache completely.  In production we'll be more selective.
 	add_response_header(h, strdup("Cache-Control"), strdup("no-store, must-revalidate"));
 	add_response_header(h, strdup("Pragma"), strdup("no-cache"));

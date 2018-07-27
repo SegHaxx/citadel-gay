@@ -30,7 +30,8 @@ int main(int argc, char **argv)
 	char *pid_file = NULL;
 
 	/* Parse command line */
-	while ((a = getopt(argc, argv, "u:h:i:p:t:T:B:x:g:dD:G:cfsS:Z:v:")) != EOF) switch(a) {
+	while ((a = getopt(argc, argv, "u:h:i:p:t:T:B:x:g:dD:G:cfsS:Z:v:")) != EOF)
+		switch (a) {
 		case 'u':
 			setuid(atoi(optarg));
 			break;
@@ -88,11 +89,9 @@ int main(int argc, char **argv)
 				"[-d] [-Z] [-G i18ndumpfile] "
 				"[-u uid] [-h homedirectory] "
 				"[-D daemonizepid] [-v] "
-				"[-g defaultlandingpage] [-B basesize] "
-				"[-s] [-S cipher_suites]"
-				"[remotehost [remoteport]]\n");
+				"[-g defaultlandingpage] [-B basesize] " "[-s] [-S cipher_suites]" "[remotehost [remoteport]]\n");
 			return 1;
-	}
+		}
 
 	if (optind < argc) {
 		ctdlhost = argv[optind];
@@ -101,7 +100,7 @@ int main(int argc, char **argv)
 	}
 
 	/* Start the logger */
-	openlog("webcit", ( running_as_daemon ? (LOG_PID) : (LOG_PID | LOG_PERROR) ), LOG_DAEMON);
+	openlog("webcit", (running_as_daemon ? (LOG_PID) : (LOG_PID | LOG_PERROR)), LOG_DAEMON);
 
 	/* Tell 'em who's in da house */
 	syslog(LOG_NOTICE, "MAKE WEBCIT GREAT AGAIN!");
@@ -118,9 +117,9 @@ int main(int argc, char **argv)
 
 	/* Ensure that we are linked to the correct version of libcitadel */
 	if (libcitadel_version_number() < LIBCITADEL_VERSION_NUMBER) {
-		syslog(LOG_INFO, " You are running libcitadel version %d", libcitadel_version_number() );
-		syslog(LOG_INFO, "WebCit was compiled against version %d", LIBCITADEL_VERSION_NUMBER );
-		return(1);
+		syslog(LOG_INFO, " You are running libcitadel version %d", libcitadel_version_number());
+		syslog(LOG_INFO, "WebCit was compiled against version %d", LIBCITADEL_VERSION_NUMBER);
+		return (1);
 	}
 
 	/* Go into the background if we were asked to run as a daemon */

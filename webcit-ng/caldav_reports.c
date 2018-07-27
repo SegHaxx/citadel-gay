@@ -19,8 +19,7 @@
 /*
  * A CalDAV REPORT can only be one type.  This is stored in the report_type member.
  */
-enum cr_type
-{
+enum cr_type {
 	cr_calendar_query,
 	cr_calendar_multiget,
 	cr_freebusy_query
@@ -45,13 +44,13 @@ struct cr_parms {
  */
 void caldav_xml_start(void *data, const char *el, const char **attr)
 {
-	struct cr_parms *crp = (struct cr_parms *)data;
+	struct cr_parms *crp = (struct cr_parms *) data;
 	int i;
 
 	// syslog(LOG_DEBUG, "CALDAV ELEMENT START: <%s> %d", el, crp->tag_nesting_level);
 
-	for (i=0; attr[i] != NULL; i+=2) {
-		syslog(LOG_DEBUG, "                    Attribute '%s' = '%s'", attr[i], attr[i+1]);
+	for (i = 0; attr[i] != NULL; i += 2) {
+		syslog(LOG_DEBUG, "                    Attribute '%s' = '%s'", attr[i], attr[i + 1]);
 	}
 
 	if (!strcasecmp(el, "urn:ietf:params:xml:ns:caldav:calendar-multiget")) {
@@ -75,7 +74,7 @@ void caldav_xml_start(void *data, const char *el, const char **attr)
  */
 void caldav_xml_end(void *data, const char *el)
 {
-	struct cr_parms *crp = (struct cr_parms *)data;
+	struct cr_parms *crp = (struct cr_parms *) data;
 	--crp->tag_nesting_level;
 
 	if (crp->Chardata != NULL) {
@@ -83,18 +82,17 @@ void caldav_xml_end(void *data, const char *el)
 	}
 	// syslog(LOG_DEBUG, "CALDAV ELEMENT END  : <%s> %d", el, crp->tag_nesting_level);
 
-	if ( (!strcasecmp(el, "DAV::href")) || (!strcasecmp(el, "DAV:href")) ) {
-		if (crp->Hrefs == NULL) {		// append crp->Chardata to crp->Hrefs
+	if ((!strcasecmp(el, "DAV::href")) || (!strcasecmp(el, "DAV:href"))) {
+		if (crp->Hrefs == NULL) {	// append crp->Chardata to crp->Hrefs
 			crp->Hrefs = NewStrBuf();
-		}
-		else {
+		} else {
 			StrBufAppendBufPlain(crp->Hrefs, HKEY("|"), 0);
 		}
 		StrBufAppendBuf(crp->Hrefs, crp->Chardata, 0);
 	}
 
-	if (crp->Chardata != NULL) {			// Tag is closed; chardata is now out of scope.
-		FreeStrBuf(&crp->Chardata);		// Free the buffer.
+	if (crp->Chardata != NULL) {		// Tag is closed; chardata is now out of scope.
+		FreeStrBuf(&crp->Chardata);	// Free the buffer.
 		crp->Chardata = NULL;
 	}
 }
@@ -103,9 +101,9 @@ void caldav_xml_end(void *data, const char *el)
 /*
  * XML parser callback
  */
-void caldav_xml_chardata(void *data, const XML_Char *s, int len)
+void caldav_xml_chardata(void *data, const XML_Char * s, int len)
 {
-	struct cr_parms *crp = (struct cr_parms *)data;
+	struct cr_parms *crp = (struct cr_parms *) data;
 
 	if (crp->Chardata == NULL) {
 		crp->Chardata = NewStrBuf();
@@ -124,7 +122,7 @@ void caldav_xml_chardata(void *data, const XML_Char *s, int len)
  * NOTE: this function expects that "MSGP text/calendar" was issued at the beginning
  * of a REPORT operation to set our preferred MIME type to calendar data.
  */
-StrBuf *fetch_ical(struct ctdlsession *c, long msgnum)
+StrBuf *fetch_ical(struct ctdlsession * c, long msgnum)
 {
 	char buf[1024];
 	StrBuf *Buf = NULL;
@@ -136,10 +134,9 @@ StrBuf *fetch_ical(struct ctdlsession *c, long msgnum)
 	}
 
 	while (ctdl_readline(c, buf, sizeof(buf)), strcmp(buf, "000")) {
-		if (Buf != NULL) {							// already in body
+		if (Buf != NULL) {	// already in body
 			StrBufAppendPrintf(Buf, "%s\n", buf);
-		}
-		else if (IsEmptyStr(buf)) {						// beginning of body
+		} else if (IsEmptyStr(buf)) {	// beginning of body
 			Buf = NewStrBuf();
 		}
 	}
@@ -171,7 +168,7 @@ StrBuf *fetch_ical(struct ctdlsession *c, long msgnum)
  * Called by caldav_report() to output a single item.
  * Our policy is to throw away the list of properties the client asked for, and just send everything.
  */
-void caldav_response(struct http_transaction *h, struct ctdlsession *c, StrBuf *ReportOut, StrBuf *ThisHref)
+void caldav_response(struct http_transaction *h, struct ctdlsession *c, StrBuf * ReportOut, StrBuf * ThisHref)
 {
 	long msgnum;
 	StrBuf *Caldata = NULL;
@@ -180,20 +177,20 @@ void caldav_response(struct http_transaction *h, struct ctdlsession *c, StrBuf *
 	euid = strrchr(ChrPtr(ThisHref), '/');
 	if (euid != NULL) {
 		++euid;
-	}
-	else {
-		euid = (char *)ChrPtr(ThisHref);
+	} else {
+		euid = (char *) ChrPtr(ThisHref);
 	}
 
 	char *unescaped_euid = strdup(euid);
-	if (!unescaped_euid) return;
+	if (!unescaped_euid)
+		return;
 	unescape_input(unescaped_euid);
 
 	StrBufAppendPrintf(ReportOut, "<D:response>");
-	StrBufAppendPrintf(ReportOut,	"<D:href>");
-	StrBufXMLEscAppend(ReportOut,	ThisHref, NULL, 0, 0);
-	StrBufAppendPrintf(ReportOut,	"</D:href>");
-	StrBufAppendPrintf(ReportOut,	"<D:propstat>");
+	StrBufAppendPrintf(ReportOut, "<D:href>");
+	StrBufXMLEscAppend(ReportOut, ThisHref, NULL, 0, 0);
+	StrBufAppendPrintf(ReportOut, "</D:href>");
+	StrBufAppendPrintf(ReportOut, "<D:propstat>");
 
 	msgnum = locate_message_by_uid(c, unescaped_euid);
 	free(unescaped_euid);
@@ -201,31 +198,29 @@ void caldav_response(struct http_transaction *h, struct ctdlsession *c, StrBuf *
 		Caldata = fetch_ical(c, msgnum);
 	}
 
-	if (Caldata != NULL)
-	{
+	if (Caldata != NULL) {
 		// syslog(LOG_DEBUG, "caldav_response(%s) 200 OK", ChrPtr(ThisHref));
-		StrBufAppendPrintf(ReportOut,	"<D:status>");
-		StrBufAppendPrintf(ReportOut,		"HTTP/1.1 200 OK");
-		StrBufAppendPrintf(ReportOut,	"</D:status>");
-		StrBufAppendPrintf(ReportOut,	"<D:prop>");
-		StrBufAppendPrintf(ReportOut,		"<D:getetag>");
-		StrBufAppendPrintf(ReportOut,			"%ld", msgnum);
-		StrBufAppendPrintf(ReportOut,		"</D:getetag>");
-		StrBufAppendPrintf(ReportOut,		"<C:calendar-data>");
-		StrBufXMLEscAppend(ReportOut,  			 Caldata, NULL, 0, 0);
-		StrBufAppendPrintf(ReportOut,		"</C:calendar-data>");
-		StrBufAppendPrintf(ReportOut,	"</D:prop>");
+		StrBufAppendPrintf(ReportOut, "<D:status>");
+		StrBufAppendPrintf(ReportOut, "HTTP/1.1 200 OK");
+		StrBufAppendPrintf(ReportOut, "</D:status>");
+		StrBufAppendPrintf(ReportOut, "<D:prop>");
+		StrBufAppendPrintf(ReportOut, "<D:getetag>");
+		StrBufAppendPrintf(ReportOut, "%ld", msgnum);
+		StrBufAppendPrintf(ReportOut, "</D:getetag>");
+		StrBufAppendPrintf(ReportOut, "<C:calendar-data>");
+		StrBufXMLEscAppend(ReportOut, Caldata, NULL, 0, 0);
+		StrBufAppendPrintf(ReportOut, "</C:calendar-data>");
+		StrBufAppendPrintf(ReportOut, "</D:prop>");
 		FreeStrBuf(&Caldata);
 		Caldata = NULL;
-	}
-	else {
+	} else {
 		// syslog(LOG_DEBUG, "caldav_response(%s) 404 not found", ChrPtr(ThisHref));
-		StrBufAppendPrintf(ReportOut,	"<D:status>");
-		StrBufAppendPrintf(ReportOut,		"HTTP/1.1 404 not found");
-		StrBufAppendPrintf(ReportOut,	"</D:status>");
+		StrBufAppendPrintf(ReportOut, "<D:status>");
+		StrBufAppendPrintf(ReportOut, "HTTP/1.1 404 not found");
+		StrBufAppendPrintf(ReportOut, "</D:status>");
 	}
 
-	StrBufAppendPrintf(ReportOut,	"</D:propstat>");
+	StrBufAppendPrintf(ReportOut, "</D:propstat>");
 	StrBufAppendPrintf(ReportOut, "</D:response>");
 }
 
@@ -252,11 +247,11 @@ void caldav_report(struct http_transaction *h, struct ctdlsession *c)
 	XML_SetElementHandler(xp, caldav_xml_start, caldav_xml_end);
 	XML_SetCharacterDataHandler(xp, caldav_xml_chardata);
 	XML_SetUserData(xp, &crp);
-	XML_SetDefaultHandler(xp, NULL);		// Disable internal entity expansion to prevent "billion laughs attack"
+	XML_SetDefaultHandler(xp, NULL);	// Disable internal entity expansion to prevent "billion laughs attack"
 	XML_Parse(xp, h->request_body, h->request_body_length, 1);
 	XML_ParserFree(xp);
 
-	if (crp.Chardata != NULL) {			// Discard any trailing chardata ... normally nothing here
+	if (crp.Chardata != NULL) {	// Discard any trailing chardata ... normally nothing here
 		FreeStrBuf(&crp.Chardata);
 		crp.Chardata = NULL;
 	}
@@ -274,13 +269,9 @@ void caldav_report(struct http_transaction *h, struct ctdlsession *c)
 	syslog(LOG_DEBUG, "CalDAV REPORT type is: %d", crp.report_type);
 	StrBuf *ReportOut = NewStrBuf();
 	StrBufAppendPrintf(ReportOut, "<?xml version=\"1.0\" encoding=\"utf-8\"?>"
-     		"<D:multistatus "
-			"xmlns:D=\"DAV:\" "
-			"xmlns:C=\"urn:ietf:params:xml:ns:caldav\""
-		">"
-	);
+			   "<D:multistatus " "xmlns:D=\"DAV:\" " "xmlns:C=\"urn:ietf:params:xml:ns:caldav\"" ">");
 
-	if (crp.Hrefs != NULL) {			// Output all qualifying calendar items!
+	if (crp.Hrefs != NULL) {	// Output all qualifying calendar items!
 		StrBuf *ThisHref = NewStrBuf();
 		const char *pvset = NULL;
 		while (StrBufExtract_NextToken(ThisHref, crp.Hrefs, &pvset, '|') >= 0) {
@@ -291,7 +282,7 @@ void caldav_report(struct http_transaction *h, struct ctdlsession *c)
 		crp.Hrefs = NULL;
 	}
 
-	StrBufAppendPrintf(ReportOut, "</D:multistatus>\n");			// End the REPORT.
+	StrBufAppendPrintf(ReportOut, "</D:multistatus>\n");	// End the REPORT.
 
 	add_response_header(h, strdup("Content-type"), strdup("text/xml"));
 	h->response_code = 207;

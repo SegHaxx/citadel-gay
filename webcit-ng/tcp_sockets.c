@@ -71,61 +71,55 @@ int webcit_tcp_server(const char *ip_addr, int port_number, int queue_len)
 	int s, i, b;
 	int ip_version = 6;
 
-retry:
+      retry:
 	memset(&sin6, 0, sizeof(sin6));
 	memset(&sin4, 0, sizeof(sin4));
 	sin6.sin6_family = AF_INET6;
 	sin4.sin_family = AF_INET;
 
-	if (	(ip_addr == NULL)							/* any IPv6 */
-		|| (IsEmptyStr(ip_addr))
-		|| (!strcmp(ip_addr, "*"))
-	) {
+	if ((ip_addr == NULL)	/* any IPv6 */
+	    ||(IsEmptyStr(ip_addr))
+	    || (!strcmp(ip_addr, "*"))
+	    ) {
 		IsDefault = 1;
 		ip_version = 6;
 		sin6.sin6_addr = in6addr_any;
-	}
-	else if (!strcmp(ip_addr, "0.0.0.0"))						/* any IPv4 */
-	{
+	} else if (!strcmp(ip_addr, "0.0.0.0")) {	/* any IPv4 */
 		ip_version = 4;
 		sin4.sin_addr.s_addr = INADDR_ANY;
-	}
-	else if ((strchr(ip_addr, '.')) && (!strchr(ip_addr, ':')))			/* specific IPv4 */
-	{
+	} else if ((strchr(ip_addr, '.')) && (!strchr(ip_addr, ':'))) {	/* specific IPv4 */
 		ip_version = 4;
 		if (inet_pton(AF_INET, ip_addr, &sin4.sin_addr) <= 0) {
 			syslog(LOG_WARNING, "Error binding to [%s] : %s\n", ip_addr, strerror(errno));
-			return(-1);
+			return (-1);
 		}
-	}
-	else										/* specific IPv6 */
-	{
+	} else {		/* specific IPv6 */
+
 		ip_version = 6;
 		if (inet_pton(AF_INET6, ip_addr, &sin6.sin6_addr) <= 0) {
 			syslog(LOG_WARNING, "Error binding to [%s] : %s\n", ip_addr, strerror(errno));
-			return(-1);
+			return (-1);
 		}
 	}
 
 	if (port_number == 0) {
 		syslog(LOG_WARNING, "Cannot start: no port number specified.\n");
-		return(-1);
+		return (-1);
 	}
 	sin6.sin6_port = htons((u_short) port_number);
 	sin4.sin_port = htons((u_short) port_number);
 
 	p = getprotobyname("tcp");
 
-	s = socket( ((ip_version == 6) ? PF_INET6 : PF_INET), SOCK_STREAM, (p->p_proto));
+	s = socket(((ip_version == 6) ? PF_INET6 : PF_INET), SOCK_STREAM, (p->p_proto));
 	if (s < 0) {
-		if (IsDefault && (errno == EAFNOSUPPORT))
-		{
+		if (IsDefault && (errno == EAFNOSUPPORT)) {
 			s = 0;
 			ip_addr = ipv4broadcast;
 			goto retry;
 		}
 		syslog(LOG_WARNING, "Can't create a listening socket: %s\n", strerror(errno));
-		return(-1);
+		return (-1);
 	}
 	/* Set some socket options that make sense. */
 	i = 1;
@@ -133,21 +127,20 @@ retry:
 
 	if (ip_version == 6) {
 		b = bind(s, (struct sockaddr *) &sin6, sizeof(sin6));
-	}
-	else {
+	} else {
 		b = bind(s, (struct sockaddr *) &sin4, sizeof(sin4));
 	}
 
 	if (b < 0) {
 		syslog(LOG_ERR, "Can't bind: %s\n", strerror(errno));
 		close(s);
-		return(-1);
+		return (-1);
 	}
 
 	if (listen(s, queue_len) < 0) {
 		syslog(LOG_ERR, "Can't listen: %s\n", strerror(errno));
 		close(s);
-		return(-1);
+		return (-1);
 	}
 	return (s);
 }
@@ -166,12 +159,13 @@ int webcit_uds_server(char *sockpath, int queue_len)
 	int actual_queue_len;
 
 	actual_queue_len = queue_len;
-	if (actual_queue_len < 5) actual_queue_len = 5;
+	if (actual_queue_len < 5)
+		actual_queue_len = 5;
 
 	i = unlink(sockpath);
 	if ((i != 0) && (errno != ENOENT)) {
 		syslog(LOG_WARNING, "webcit: can't unlink %s: %s", sockpath, strerror(errno));
-		return(-1);
+		return (-1);
 	}
 
 	memset(&addr, 0, sizeof(addr));
@@ -181,21 +175,21 @@ int webcit_uds_server(char *sockpath, int queue_len)
 	s = socket(AF_UNIX, SOCK_STREAM, 0);
 	if (s < 0) {
 		syslog(LOG_WARNING, "webcit: Can't create a unix domain socket: %s", strerror(errno));
-		return(-1);
+		return (-1);
 	}
 
-	if (bind(s, (struct sockaddr *)&addr, sizeof(addr)) < 0) {
+	if (bind(s, (struct sockaddr *) &addr, sizeof(addr)) < 0) {
 		syslog(LOG_WARNING, "webcit: Can't bind: %s", strerror(errno));
 		close(s);
-		return(-1);
+		return (-1);
 	}
 
 	if (listen(s, actual_queue_len) < 0) {
 		syslog(LOG_WARNING, "webcit: Can't listen: %s", strerror(errno));
 		close(s);
-		return(-1);
+		return (-1);
 	}
 
 	chmod(sockpath, 0777);
-	return(s);
+	return (s);
 }

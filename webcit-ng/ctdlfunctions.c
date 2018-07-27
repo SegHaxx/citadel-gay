@@ -24,8 +24,7 @@ void ctdl_delete_msgs(struct ctdlsession *c, long *msgnums, int num_msgs)
 	int i = 0;
 	char buf[1024];
 
-	if ( (c == NULL) || (msgnums == NULL) || (num_msgs < 1) )
-	{
+	if ((c == NULL) || (msgnums == NULL) || (num_msgs < 1)) {
 		return;
 	}
 
@@ -33,14 +32,13 @@ void ctdl_delete_msgs(struct ctdlsession *c, long *msgnums, int num_msgs)
 	strcpy(buf, "DELE ");
 	do {
 		sprintf(&buf[strlen(buf)], "%ld", msgnums[i]);
-		if ( (((i+1)%50)==0) || (i==num_msgs-1))		// delete up to 50 messages with one server command
+		if ((((i + 1) % 50) == 0) || (i == num_msgs - 1))	// delete up to 50 messages with one server command
 		{
 			syslog(LOG_DEBUG, "%s", buf);
 			ctdl_printf(c, "%s", buf);
 			ctdl_readline(c, buf, sizeof(buf));
 			syslog(LOG_DEBUG, "%s", buf);
-		}
-		else {
+		} else {
 			strcat(buf, ",");
 		}
 	} while (++i < num_msgs);

@@ -18,33 +18,33 @@
 /*
  * Convert a text/plain message to text/html
  */
-StrBuf *text2html(const char *supplied_charset, int treat_as_wiki, char *roomname, long msgnum, StrBuf *Source)
+StrBuf *text2html(const char *supplied_charset, int treat_as_wiki, char *roomname, long msgnum, StrBuf * Source)
 {
 	StrBuf *sj = NULL;
 
 	sj = NewStrBuf();
 	if (!sj) {
-		return(sj);
+		return (sj);
 	}
 
 	StrBufAppendPrintf(sj, "<pre>");
-	StrEscAppend(sj, Source, NULL, 0, 0);		// FIXME - add code here to activate links
+	StrEscAppend(sj, Source, NULL, 0, 0);	// FIXME - add code here to activate links
 	StrBufAppendPrintf(sj, "</pre>\n");
 
-	return(sj);
+	return (sj);
 }
 
 
 /*
  * Convert a text/x-citadel-variformat message to text/html
  */
-StrBuf *variformat2html(StrBuf *Source)
+StrBuf *variformat2html(StrBuf * Source)
 {
 	StrBuf *Target = NULL;
 
 	Target = NewStrBuf();
 	if (!Target) {
-		return(Target);
+		return (Target);
 	}
 
 	const char *ptr, *pte;
@@ -58,9 +58,8 @@ StrBuf *variformat2html(StrBuf *Source)
 	long len;
 	int intext = 0;
 
-	if (StrLength(Source) > 0) 
-		do 
-		{
+	if (StrLength(Source) > 0)
+		do {
 			StrBufSipLine(Line, Source, &BufPtr);
 			bq = 0;
 			i = 0;
@@ -77,7 +76,7 @@ StrBuf *variformat2html(StrBuf *Source)
 					if (*ptr == '>') {
 						bq++;
 					}
-					ptr ++;
+					ptr++;
 					i++;
 				}
 			}
@@ -87,11 +86,12 @@ StrBuf *variformat2html(StrBuf *Source)
 			 * different colour.  This code understands Citadel-style
 			 * " >" quotes and will convert to <BLOCKQUOTE> tags.
 			 */
-			if (i > 0) StrBufCutLeft(Line, i);
+			if (i > 0)
+				StrBufCutLeft(Line, i);
 
-			for (i = bn; i < bq; i++)				
+			for (i = bn; i < bq; i++)
 				StrBufAppendBufPlain(Target, HKEY("<blockquote>"), 0);
-			for (i = bq; i < bn; i++)				
+			for (i = bq; i < bn; i++)
 				StrBufAppendBufPlain(Target, HKEY("</blockquote>"), 0);
 			bn = bq;
 
@@ -105,8 +105,7 @@ StrBuf *variformat2html(StrBuf *Source)
 
 			StrBufAppendBufPlain(Target, HKEY("\n"), 0);
 		}
-		while ((BufPtr != StrBufNOTNULL) &&
-		       (BufPtr != NULL));
+		while ((BufPtr != StrBufNOTNULL) && (BufPtr != NULL));
 
 	for (i = 0; i < bn; i++) {
 		StrBufAppendBufPlain(Target, HKEY("</blockquote>"), 0);
@@ -115,7 +114,5 @@ StrBuf *variformat2html(StrBuf *Source)
 	FreeStrBuf(&Line);
 	FreeStrBuf(&Line1);
 	FreeStrBuf(&Line2);
-	return(Target);
+	return (Target);
 }
-
-

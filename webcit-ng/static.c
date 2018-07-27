@@ -25,12 +25,12 @@ void output_static(struct http_transaction *h)
 
 	snprintf(filename, sizeof filename, "static/%s", &h->uri[8]);
 
-	if (strstr(filename, "../")) {			// 100% guaranteed attacker.
-		do_404(h);				// Die in a car fire.
+	if (strstr(filename, "../")) {	// 100% guaranteed attacker.
+		do_404(h);	// Die in a car fire.
 		return;
 	}
 
-	FILE *fp = fopen(filename, "r");		// Try to open the requested file.
+	FILE *fp = fopen(filename, "r");	// Try to open the requested file.
 	if (fp == NULL) {
 		do_404(h);
 		return;
@@ -41,11 +41,10 @@ void output_static(struct http_transaction *h)
 	h->response_body = malloc(h->response_body_length);
 	if (h->response_body != NULL) {
 		fread(h->response_body, h->response_body_length, 1, fp);
-	}
-	else {
+	} else {
 		h->response_body_length = 0;
 	}
-	fclose(fp);					// Content is now in memory.
+	fclose(fp);		// Content is now in memory.
 
 	h->response_code = 200;
 	h->response_string = strdup("OK");
