@@ -27,403 +27,380 @@ char *helpnames[] = {
 
 char *helptexts[] = {
 
-"                          Citadel Help Menu\n"
-"  \n"
-" ?         Help. (Typing a '?' will give you a menu almost anywhere)\n"
-" A         Abandon this room where you stopped reading, goto next room.\n"
-" C         Chat (multiuser chat, where available)\n"
-" D         Prints directory, if there is one in the current room.\n"
-" E         Enter a message.\n"
-" F         Read all messages in the room, forward.\n"
-" G         Goto next room which has UNREAD messages.\n"
-" H         Help. Same as '?'\n"
-" I         Reads the Information file for this room.\n"
-" K         List of Known rooms.\n"
-" L         Reads the last five messages in the room.\n"
-" N         Reads all new messages in the room.\n"
-" O         Reads all old messages, backwards.\n"
-" P         Page another user (send an instant message)\n"
-" R         Reads all messages in the room, in reverse order.\n"
-" S         Skips current room without making its messages old.\n"
-" T         Terminate (logout)\n"
-" U         Ungoto (returns to the last room you were in)\n"
-" W         Displays who is currently logged in.\n"
-" X         Toggle eXpert mode (menus and help blurbs on/off)\n"
-" Z         Zap (forget) room. (Removes the room from your list)\n"
-" + -       Goto next, previous room on current floor.\n"
-" > <       Goto next, previous floor.\n"
-" *         Enter any locally installed 'doors'.\n"
-"   \n"
-" In addition, there are dot commands. You hit the . (dot), then press the\n"
-"first letter of each word of the command. As you hit the letters, the words\n"
-"pop onto your screen. Exceptions: after you hit .Help or .Goto, the remainder\n"
-"of the command is a help file name or room name.\n"
-"    \n"
-"      *** USE  .<H>elp ?    for additional help *** \n"
+	"                          Citadel Help Menu\n"
+	    "  \n"
+	    " ?         Help. (Typing a '?' will give you a menu almost anywhere)\n"
+	    " A         Abandon this room where you stopped reading, goto next room.\n"
+	    " C         Chat (multiuser chat, where available)\n"
+	    " D         Prints directory, if there is one in the current room.\n"
+	    " E         Enter a message.\n"
+	    " F         Read all messages in the room, forward.\n"
+	    " G         Goto next room which has UNREAD messages.\n"
+	    " H         Help. Same as '?'\n"
+	    " I         Reads the Information file for this room.\n"
+	    " K         List of Known rooms.\n"
+	    " L         Reads the last five messages in the room.\n"
+	    " N         Reads all new messages in the room.\n"
+	    " O         Reads all old messages, backwards.\n"
+	    " P         Page another user (send an instant message)\n"
+	    " R         Reads all messages in the room, in reverse order.\n"
+	    " S         Skips current room without making its messages old.\n"
+	    " T         Terminate (logout)\n"
+	    " U         Ungoto (returns to the last room you were in)\n"
+	    " W         Displays who is currently logged in.\n"
+	    " X         Toggle eXpert mode (menus and help blurbs on/off)\n"
+	    " Z         Zap (forget) room. (Removes the room from your list)\n"
+	    " + -       Goto next, previous room on current floor.\n"
+	    " > <       Goto next, previous floor.\n"
+	    " *         Enter any locally installed 'doors'.\n"
+	    "   \n"
+	    " In addition, there are dot commands. You hit the . (dot), then press the\n"
+	    "first letter of each word of the command. As you hit the letters, the words\n"
+	    "pop onto your screen. Exceptions: after you hit .Help or .Goto, the remainder\n"
+	    "of the command is a help file name or room name.\n" "    \n" "      *** USE  .<H>elp ?    for additional help *** \n",
 
-,
+	"The following commands are available only to Admins.  A subset of these\n"
+	    "commands are available to room aides when they are currently in the room\n"
+	    "they are room aide for.\n"
+	    "\n"
+	    " <.> <A>dmin <K>ill this room   (Delete the current room)\n"
+	    " <.> <A>dmin <E>dit this room   (Edit the current room's parameters)\n"
+	    " <.> <A>dmin <W>ho knows room   (List users with access to this room)\n"
+	    " <.> <A>dmin edit <U>ser        (Change user's access level, password, etc.)\n"
+	    " <.> <A>dmin <V>alidate new users   (Process new user registrations)\n"
+	    " <.> <A>dmin enter <I>nfo file      (Create/change this room's banner)\n"
+	    " <.> <A>dmin <R>oom <I>nvite user   (Grant access to an invitation-only room)\n"
+	    " <.> <A>dmin <R>oom <K>ick out user (Revoke access to an invitation-only room)\n"
+	    " <.> <A>dmin <F>ile <D>elete        (Delete a file from the room's directory)\n"
+	    " <.> <A>dmin <F>ile <S>end over net (Transmit a file to another node)\n"
+	    " <.> <A>dmin <F>ile <M>ove          (Move a file to another room's directory)\n"
+	    " <.> <A>dmin <M>essage edit:        (Edit system banners)\n"
+	    " <.> <A>dmin <P>ost                 (Post a message on behalf of another user)\n"
+	    " <.> <A>dmin <S>ystem configuration <G>eneral   (Edit global site config)\n"
+	    " <.> <A>dmin <S>ystem configuration <I>nternet  (Edit Internet domains)\n"
+	    " <.> <A>dmin <S>ystem configuration check <M>essage base   (Internal checks)\n"
+	    " <.> <A>dmin <S>ystem configuration <N>etwork   (Netting with other Citadels)\n"
+	    " <.> <A>dmin <S>ystem configuration network <F>ilter list\n"
+	    " <.> <A>dmin <T>erminate server <N>ow          (Shut down Citadel server now)\n"
+	    " <.> <A>dmin <T>erminate server <S>cheduled    (Shut down Citadel server later)\n"
+	    " <.> <A>dmin mailing <L>ist recipients         (For mailing list rooms)\n"
+	    " <.> <A>dmin mailing list <D>igest recipients  (For mailing list rooms)\n"
+	    " <.> <A>dmin <N>etwork room sharing     (Replication with other Citadels)\n"
+	    " \n" " In addition, the <M>ove and <D>elete commands are available at the\n" "message prompt.\n",
 
-"The following commands are available only to Admins.  A subset of these\n"
-"commands are available to room aides when they are currently in the room\n"
-"they are room aide for.\n"
-"\n"
-" <.> <A>dmin <K>ill this room   (Delete the current room)\n"
-" <.> <A>dmin <E>dit this room   (Edit the current room's parameters)\n"
-" <.> <A>dmin <W>ho knows room   (List users with access to this room)\n"
-" <.> <A>dmin edit <U>ser        (Change user's access level, password, etc.)\n"
-" <.> <A>dmin <V>alidate new users   (Process new user registrations)\n"
-" <.> <A>dmin enter <I>nfo file      (Create/change this room's banner)\n"
-" <.> <A>dmin <R>oom <I>nvite user   (Grant access to an invitation-only room)\n"
-" <.> <A>dmin <R>oom <K>ick out user (Revoke access to an invitation-only room)\n"
-" <.> <A>dmin <F>ile <D>elete        (Delete a file from the room's directory)\n"
-" <.> <A>dmin <F>ile <S>end over net (Transmit a file to another node)\n"
-" <.> <A>dmin <F>ile <M>ove          (Move a file to another room's directory)\n"
-" <.> <A>dmin <M>essage edit:        (Edit system banners)\n"
-" <.> <A>dmin <P>ost                 (Post a message on behalf of another user)\n"
-" <.> <A>dmin <S>ystem configuration <G>eneral   (Edit global site config)\n"
-" <.> <A>dmin <S>ystem configuration <I>nternet  (Edit Internet domains)\n"
-" <.> <A>dmin <S>ystem configuration check <M>essage base   (Internal checks)\n"
-" <.> <A>dmin <S>ystem configuration <N>etwork   (Netting with other Citadels)\n"
-" <.> <A>dmin <S>ystem configuration network <F>ilter list\n"
-" <.> <A>dmin <T>erminate server <N>ow          (Shut down Citadel server now)\n"
-" <.> <A>dmin <T>erminate server <S>cheduled    (Shut down Citadel server later)\n"
-" <.> <A>dmin mailing <L>ist recipients         (For mailing list rooms)\n"
-" <.> <A>dmin mailing list <D>igest recipients  (For mailing list rooms)\n"
-" <.> <A>dmin <N>etwork room sharing     (Replication with other Citadels)\n"
-" \n"
-" In addition, the <M>ove and <D>elete commands are available at the\n"
-"message prompt.\n"
+	" Floors\n"
+	    " ------\n"
+	    "   Floors in Citadel are used to group rooms into related subject areas,\n"
+	    "just as rooms are used to group messages into manageable groups.\n"
+	    " \n"
+	    "   You, as a user, do NOT have to use floors.  If you choose not to, you suffer\n"
+	    "no penalty; you will not lose access to any rooms.  You may use .EC or ;C (the\n"
+	    "latter is easier to use) to decide if you want to use floors.  Feel free to\n"
+	    "experiment.\n"
+	    " \n"
+	    "   Floor options are accessed two ways.  First, if you are in floor mode, the\n"
+	    "<G>oto and <S>kip commands take you to the next room with new messages on the\n"
+	    "current floor; if there are none left, then the system will automatically\n"
+	    "switch floors (and let you know) and put you in the first room with new messages\n"
+	    "on that level.  (Notice that your pattern of basic use of Citadel therefore\n"
+	    "doesn't really change.)\n"
+	    " \n"
+	    "   Direct access to floor options is via the use of a ';' command.\n"
+	    "The following commands are currently available (more can be\n"
+	    "added if needed):\n"
+	    " \n"
+	    " <;C>onfigure\n"
+	    " This command toggles your floor mode.\n"
+	    " \n"
+	    " <;G>oto FLOORNAME\n"
+	    " This command causes the system to take you to the named floor.\n"
+	    " \n"
+	    " <;K>nown rooms on floors\n"
+	    " List all rooms on all floors.  This is a very readable way to get a list of\n"
+	    "all rooms on the system.\n"
+	    " \n"
+	    " <;S>kip FLOORNAME\n"
+	    " This command causes the system to mark all rooms on the current floor as\n"
+	    "Skipped and takes you to the floor that you specify.\n"
+	    " \n"
+	    " <;Z>Forget floor\n"
+	    "   This command causes you to forget all the rooms currently on the current\n"
+	    "floor.  Unfortunately, it doesn't apply to rooms that are subsequently created\n"
+	    "or moved to this floor.  (Sorry.)\n"
+	    " \n"
+	    "   Feel free to experiment, you can't hurt yourself or the system with the\n"
+	    "floor stuff unless you ZForget a floor by accident.\n",
 
-,
+	"                  New User's Introduction to the site\n"
+	    "  \n"
+	    " This is an introduction to the Citadel BBS concept.  It is intended\n"
+	    "for new users so that they can more easily become acquainted to using\n"
+	    "Citadel when accessing it in the form of a text-based BBS.  Of\n"
+	    "course, old users might learn something new each time they read\n"
+	    "through it.\n"
+	    " \n"
+	    " Full help for the BBS commands can be obtained by typing <.H>elp SUMMARY\n"
+	    "  \n"
+	    " The CITADEL BBS room concept\n"
+	    " ----------------------------\n"
+	    "   The term BBS stands for 'Bulletin Board System'.  The analogy is\n"
+	    "appropriate: one posts messages so that others may read them.  In\n"
+	    "order to organize the posts, people can post in different areas of the\n"
+	    "BBS, called rooms.\n"
+	    "   In order to post in a certain room, you need to be 'in' that room.\n"
+	    "Your current prompt is usually the room that you are in, followed the\n"
+	    "greater-than-sign, such as:\n"
+	    " \n"
+	    " Lobby>\n"
+	    " \n"
+	    " The easiest way to traverse the room structure is with the 'Goto'\n"
+	    "command, on the 'G' key.  Pressing 'G' will take you to the next room\n"
+	    "in the 'march list' (see below) that has new messages in it.  You can\n"
+	    "read these new messages with the 'N' key.\n"
+	    " Once you've 'Gotoed' every room in the system (or all of the ones\n"
+	    "you choose to read) you return to the 'Lobby,' the first and last room\n"
+	    "in the system.  If new messages get posted to rooms you've already\n"
+	    "read during your session you will be brought BACK to those rooms so\n"
+	    "you can read them.\n"
+	    " \n"
+	    " March List\n"
+	    " ----------\n"
+	    "   All the room names are stored in a march list, which is just a\n"
+	    "list containing all the room names.  When you <G>oto or <S>kip a\n"
+	    "room, you are placed in the next room in your march list THAT HAS NEW\n"
+	    "MESSAGES.  If you have no new messages in any of the rooms on your\n"
+	    "march list, you will keep going to the Lobby>.  You can choose not to\n"
+	    "read certain rooms (that don't interest you) by 'Z'apping them.  When\n"
+	    "you <Z>ap a room, you are merely deleting it from your march list (but\n"
+	    "not from anybody else's).\n"
+	    " \n"
+	    "   You can use the <.G>oto (note the period before the G.  You can also use\n"
+	    "<J>ump on some systems) to go to any room in the\n"
+	    "system.  You don't have to type in the complete name of a room to\n"
+	    "'jump' to it; you merely need to type in enough to distinguish it from\n"
+	    "the other rooms.  Left-aligned matches carry a heavier weight, so if you\n"
+	    "typed (for example) '.Goto TECH', you might be taken to a room called\n"
+	    "'Tech Area>' even if it found a room called 'Biotech/Ethics>' first.\n"
+	    " \n"
+	    "  To return to a room you have previously <Z>apped, use the <.G>oto command\n"
+	    "to enter it, and it will be re-inserted into your march list.  In the case\n"
+	    "of returning to Zapped rooms, you must type the room name in its entirety.\n"
+	    "REMEMBER, rooms with no new messages will not show on your\n"
+	    "march list!  You must <.G>oto to a room with no new messages.\n"
+	    "Incidentally, you cannot change the order of the rooms on your march list.\n"
+	    "It's the same for everybody.\n"
+	    " \n"
+	    " Special rooms\n"
+	    " -------------\n"
+	    "   There are two special rooms on a Citadel that you should know about.\n"
+	    "  \n"
+	    "   The first is the Lobby>.  It's used for system announcements and other\n"
+	    "such administrativia.  You cannot <Z>ap the Lobby>.  Each time you first\n"
+	    "login, you will be placed in the Lobby>.\n"
+	    " \n"
+	    "   The second is Mail>.  In Mail>, when you post a messages, you are\n"
+	    "prompted to enter the screen name of the person who you want to send the\n"
+	    "message to.  Only the person who you send the message to can read the\n"
+	    "message.  NO ONE else can read it, not even the admins.  Mail> is the\n"
+	    "first room on the march list, and is un-<Z>appable, so you can be sure\n"
+	    "that the person will get the message.\n"
+	    "   \n"
+	    " System admins\n"
+	    " -------------\n"
+	    "   These people, along with the room admins, keep the site running smoothly.\n"
+	    "\n"
+	    "   Among the many things that admins do are: create rooms, delete\n"
+	    "rooms, set access levels, invite users, check registration, grant\n"
+	    "room admin status, and countless other things.  They have access to the\n"
+	    "Aide> room, a special room only for admins.\n"
+	    " \n"
+	    "   If you enter a mail message to 'Sysop' it will be placed in the\n"
+	    "Aide> room so that the next admin online will read it and deal with it.\n"
+	    "Admins cannot <Z>ap rooms.  All the rooms are always on each admin's\n"
+	    "march list.  Admins can read *any* and *every* room, but they *CAN* *NOT*\n"
+	    "read other users' Mail!\n"
+	    "  \n"
+	    " Room admins\n"
+	    " -----------\n"
+	    "   Room admins are granted special privileges in specific rooms.\n"
+	    "They are *NOT* true system admins; their power extends only over the\n"
+	    "rooms that they control, and they answer to the system admins.\n"
+	    "  \n"
+	    "   A room admin's job is to keep the topic of the their room on track,\n"
+	    "with nudges in the right direction now and then.  A room admin can also\n"
+	    "move an off topic post to another room, or delete a post, if he/she\n"
+	    "feels it is necessary. \n"
+	    "  \n"
+	    "   Currently, very few rooms have room admins.  Most rooms do not need\n"
+	    "their own specific room admin.  Being a room admin requires a certain\n"
+	    "amount of trust, due to the additional privileges granted.\n"
+	    "  \n"
+	    " Citadel messages\n"
+	    " ----------------\n"
+	    "   Most of the time, the BBS code does not print a lot of messages\n"
+	    "to your screen.  This is a great benefit once you become familiar\n"
+	    "with the system, because you do not have endless menus and screens\n"
+	    "to navigate through.  nevertheless, there are some messages which you\n"
+	    "might see from time to time.\n"
+	    "  \n"
+	    "  'There were messages posted while you were entering.'\n"
+	    "  \n"
+	    "   This is also known as 'simulposting.'  When you start entering a \n"
+	    "message, the system knows where you last left off.  When you save\n"
+	    "your message, the system checks to see if any messages were entered\n"
+	    "while you were typing.  This is so that you know whether you need\n"
+	    "to go back and re-read the last few messages.  This message may appear\n"
+	    "in any room.\n"
+	    "   \n"
+	    " '*** You have new mail'\n"
+	    "  \n"
+	    "   This message is essentially the same as the above message, but can\n"
+	    "appear at any time.  It simply means that new mail has arrived for you while\n"
+	    "you are logged in.  Simply go to the Mail> room to read it.\n"
+	    "  \n"
+	    " Who list\n"
+	    " --------\n"
+	    "   The <W>ho command shows you the names of all users who are currently\n"
+	    "online.  It also shows you the name of the room they are currently in.  If\n"
+	    "they are in any type of private room, however, the room name will simply\n"
+	    "display as '<private room>'.  Along with this information is displayed the\n"
+	    "name of the host computer the user is logged in from.\n",
 
-" Floors\n"
-" ------\n"
-"   Floors in Citadel are used to group rooms into related subject areas,\n"
-"just as rooms are used to group messages into manageable groups.\n"
-" \n"
-"   You, as a user, do NOT have to use floors.  If you choose not to, you suffer\n"
-"no penalty; you will not lose access to any rooms.  You may use .EC or ;C (the\n"
-"latter is easier to use) to decide if you want to use floors.  Feel free to\n"
-"experiment.\n"
-" \n"
-"   Floor options are accessed two ways.  First, if you are in floor mode, the\n"
-"<G>oto and <S>kip commands take you to the next room with new messages on the\n"
-"current floor; if there are none left, then the system will automatically\n"
-"switch floors (and let you know) and put you in the first room with new messages\n"
-"on that level.  (Notice that your pattern of basic use of Citadel therefore\n"
-"doesn't really change.)\n"
-" \n"
-"   Direct access to floor options is via the use of a ';' command.\n"
-"The following commands are currently available (more can be\n"
-"added if needed):\n"
-" \n"
-" <;C>onfigure\n"
-" This command toggles your floor mode.\n"
-" \n"
-" <;G>oto FLOORNAME\n"
-" This command causes the system to take you to the named floor.\n"
-" \n"
-" <;K>nown rooms on floors\n"
-" List all rooms on all floors.  This is a very readable way to get a list of\n"
-"all rooms on the system.\n"
-" \n"
-" <;S>kip FLOORNAME\n"
-" This command causes the system to mark all rooms on the current floor as\n"
-"Skipped and takes you to the floor that you specify.\n"
-" \n"
-" <;Z>Forget floor\n"
-"   This command causes you to forget all the rooms currently on the current\n"
-"floor.  Unfortunately, it doesn't apply to rooms that are subsequently created\n"
-"or moved to this floor.  (Sorry.)\n"
-" \n"
-"   Feel free to experiment, you can't hurt yourself or the system with the\n"
-"floor stuff unless you ZForget a floor by accident.\n"
+	"To send mail on this system, go to the Mail> room (using the command .G Mail)\n"
+	    "and press E to enter a message.  You will be prompted with:\n"
+	    " \n"
+	    " Enter Recipient:\n"
+	    " \n"
+	    "   At this point you may enter the name of another user on the system.  Private\n"
+	    "mail is only readable by the sender and recipient.  There is no need to delete\n"
+	    "mail after it is read; it will scroll out automatically.\n"
+	    "  \n"
+	    "   To send mail to another user on the Citadel network, simply type the\n"
+	    "user's name, followed by @ and then the system name. For example,\n"
+	    "  \n"
+	    " Enter Recipient: Joe Schmoe @ citadrool\n"
+	    "  \n"
+	    "  If your account is enabled for Internet mail, you can also send email to\n"
+	    "anyone on the Internet here.  Simply enter their address at the prompt:\n"
+	    "  \n" " Enter Recipient: ajc@herring.fishnet.com\n",
 
-,
+	"  Welcome to the network. Messages entered in a network room will appear in\n"
+	    "that room on all other systems carrying it (The name of the room, however,\n" "may be different on other systems).\n",
 
-"                  New User's Introduction to the site\n"
-"  \n"
-" This is an introduction to the Citadel BBS concept.  It is intended\n"
-"for new users so that they can more easily become acquainted to using\n"
-"Citadel when accessing it in the form of a text-based BBS.  Of\n"
-"course, old users might learn something new each time they read\n"
-"through it.\n"
-" \n"
-" Full help for the BBS commands can be obtained by typing <.H>elp SUMMARY\n"
-"  \n"
-" The CITADEL BBS room concept\n"
-" ----------------------------\n"
-"   The term BBS stands for 'Bulletin Board System'.  The analogy is\n"
-"appropriate: one posts messages so that others may read them.  In\n"
-"order to organize the posts, people can post in different areas of the\n"
-"BBS, called rooms.\n"
-"   In order to post in a certain room, you need to be 'in' that room.\n"
-"Your current prompt is usually the room that you are in, followed the\n"
-"greater-than-sign, such as:\n"
-" \n"
-" Lobby>\n"
-" \n"
-" The easiest way to traverse the room structure is with the 'Goto'\n"
-"command, on the 'G' key.  Pressing 'G' will take you to the next room\n"
-"in the 'march list' (see below) that has new messages in it.  You can\n"
-"read these new messages with the 'N' key.\n"
-" Once you've 'Gotoed' every room in the system (or all of the ones\n"
-"you choose to read) you return to the 'Lobby,' the first and last room\n"
-"in the system.  If new messages get posted to rooms you've already\n"
-"read during your session you will be brought BACK to those rooms so\n"
-"you can read them.\n"
-" \n"
-" March List\n"
-" ----------\n"
-"   All the room names are stored in a march list, which is just a\n"
-"list containing all the room names.  When you <G>oto or <S>kip a\n"
-"room, you are placed in the next room in your march list THAT HAS NEW\n"
-"MESSAGES.  If you have no new messages in any of the rooms on your\n"
-"march list, you will keep going to the Lobby>.  You can choose not to\n"
-"read certain rooms (that don't interest you) by 'Z'apping them.  When\n"
-"you <Z>ap a room, you are merely deleting it from your march list (but\n"
-"not from anybody else's).\n"
-" \n"
-"   You can use the <.G>oto (note the period before the G.  You can also use\n"
-"<J>ump on some systems) to go to any room in the\n"
-"system.  You don't have to type in the complete name of a room to\n"
-"'jump' to it; you merely need to type in enough to distinguish it from\n"
-"the other rooms.  Left-aligned matches carry a heavier weight, so if you\n"
-"typed (for example) '.Goto TECH', you might be taken to a room called\n"
-"'Tech Area>' even if it found a room called 'Biotech/Ethics>' first.\n"
-" \n"
-"  To return to a room you have previously <Z>apped, use the <.G>oto command\n"
-"to enter it, and it will be re-inserted into your march list.  In the case\n"
-"of returning to Zapped rooms, you must type the room name in its entirety.\n"
-"REMEMBER, rooms with no new messages will not show on your\n"
-"march list!  You must <.G>oto to a room with no new messages.\n"
-"Incidentally, you cannot change the order of the rooms on your march list.\n"
-"It's the same for everybody.\n"
-" \n"
-" Special rooms\n"
-" -------------\n"
-"   There are two special rooms on a Citadel that you should know about.\n"
-"  \n"
-"   The first is the Lobby>.  It's used for system announcements and other\n"
-"such administrativia.  You cannot <Z>ap the Lobby>.  Each time you first\n"
-"login, you will be placed in the Lobby>.\n"
-" \n"
-"   The second is Mail>.  In Mail>, when you post a messages, you are\n"
-"prompted to enter the screen name of the person who you want to send the\n"
-"message to.  Only the person who you send the message to can read the\n"
-"message.  NO ONE else can read it, not even the admins.  Mail> is the\n"
-"first room on the march list, and is un-<Z>appable, so you can be sure\n"
-"that the person will get the message.\n"
-"   \n"
-" System admins\n"
-" -------------\n"
-"   These people, along with the room admins, keep the site running smoothly.\n"
-"\n"
-"   Among the many things that admins do are: create rooms, delete\n"
-"rooms, set access levels, invite users, check registration, grant\n"
-"room admin status, and countless other things.  They have access to the\n"
-"Aide> room, a special room only for admins.\n"
-" \n"
-"   If you enter a mail message to 'Sysop' it will be placed in the\n"
-"Aide> room so that the next admin online will read it and deal with it.\n"
-"Admins cannot <Z>ap rooms.  All the rooms are always on each admin's\n"
-"march list.  Admins can read *any* and *every* room, but they *CAN* *NOT*\n"
-"read other users' Mail!\n"
-"  \n"
-" Room admins\n"
-" -----------\n"
-"   Room admins are granted special privileges in specific rooms.\n"
-"They are *NOT* true system admins; their power extends only over the\n"
-"rooms that they control, and they answer to the system admins.\n"
-"  \n"
-"   A room admin's job is to keep the topic of the their room on track,\n"
-"with nudges in the right direction now and then.  A room admin can also\n"
-"move an off topic post to another room, or delete a post, if he/she\n"
-"feels it is necessary. \n"
-"  \n"
-"   Currently, very few rooms have room admins.  Most rooms do not need\n"
-"their own specific room admin.  Being a room admin requires a certain\n"
-"amount of trust, due to the additional privileges granted.\n"
-"  \n"
-" Citadel messages\n"
-" ----------------\n"
-"   Most of the time, the BBS code does not print a lot of messages\n"
-"to your screen.  This is a great benefit once you become familiar\n"
-"with the system, because you do not have endless menus and screens\n"
-"to navigate through.  nevertheless, there are some messages which you\n"
-"might see from time to time.\n"
-"  \n"
-"  'There were messages posted while you were entering.'\n"
-"  \n"
-"   This is also known as 'simulposting.'  When you start entering a \n"
-"message, the system knows where you last left off.  When you save\n"
-"your message, the system checks to see if any messages were entered\n"
-"while you were typing.  This is so that you know whether you need\n"
-"to go back and re-read the last few messages.  This message may appear\n"
-"in any room.\n"
-"   \n"
-" '*** You have new mail'\n"
-"  \n"
-"   This message is essentially the same as the above message, but can\n"
-"appear at any time.  It simply means that new mail has arrived for you while\n"
-"you are logged in.  Simply go to the Mail> room to read it.\n"
-"  \n"
-" Who list\n"
-" --------\n"
-"   The <W>ho command shows you the names of all users who are currently\n"
-"online.  It also shows you the name of the room they are currently in.  If\n"
-"they are in any type of private room, however, the room name will simply\n"
-"display as '<private room>'.  Along with this information is displayed the\n"
-"name of the host computer the user is logged in from.\n"
+	"   Citadel is the premier 'online community' (i.e. Bulletin Board System)\n"
+	    "software.  It runs on all POSIX-compliant systems, including Linux.  It is an\n"
+	    "advanced client/server application, and is being actively maintained.\n"
+	    " \n" "   For more info, visit UNCENSORED! BBS at uncensored.citadel.org\n",
 
-,
-
-"To send mail on this system, go to the Mail> room (using the command .G Mail)\n"
-"and press E to enter a message.  You will be prompted with:\n"
-" \n"
-" Enter Recipient:\n"
-" \n"
-"   At this point you may enter the name of another user on the system.  Private\n"
-"mail is only readable by the sender and recipient.  There is no need to delete\n"
-"mail after it is read; it will scroll out automatically.\n"
-"  \n"
-"   To send mail to another user on the Citadel network, simply type the\n"
-"user's name, followed by @ and then the system name. For example,\n"
-"  \n"
-" Enter Recipient: Joe Schmoe @ citadrool\n"
-"  \n"
-"  If your account is enabled for Internet mail, you can also send email to\n"
-"anyone on the Internet here.  Simply enter their address at the prompt:\n"
-"  \n"
-" Enter Recipient: ajc@herring.fishnet.com\n"
-
-,
-
-"  Welcome to the network. Messages entered in a network room will appear in\n"
-"that room on all other systems carrying it (The name of the room, however,\n"
-"may be different on other systems).\n"
-
-,
-
-"   Citadel is the premier 'online community' (i.e. Bulletin Board System)\n"
-"software.  It runs on all POSIX-compliant systems, including Linux.  It is an\n"
-"advanced client/server application, and is being actively maintained.\n"
-" \n"
-"   For more info, visit UNCENSORED! BBS at uncensored.citadel.org\n"
-
-,
-
-"Extended commands are available using the period ( . ) key. To use\n"
-"a dot command, press the . key, and then enter the first letter of\n"
-"each word in the command. The words will appear as you enter the keys.\n"
-"You can also backspace over partially entered commands. The following\n"
-"commands are available:\n"
-"\n"
-" <.> <H>elp:    Displays help files.  Type .H followed by a help file\n"
-"                name.  You are now reading <.H>elp SUMMARY\n"
-" \n"
-" <.> <G>oto:    Jumps directly to the room you specify.  You can also\n"
-"                type a partial room name, just enough to make it unique,\n"
-"                and it'll find the room you're looking for.  As with the\n"
-"                regular <G>oto command, messages in the current room will\n"
-"                be marked as read.\n"
-" \n"
-" <.> <S>kip, goto:    This is similar to <.G>oto, except it doesn't mark\n"
-"                      messages in the current room as read.\n"
-" \n"
-" <.> list <Z>apped rooms      Shows all rooms you've <Z>apped (forgotten)\n"
-"\n"
-"  \n"
-" Terminate (logoff) commands:\n"
-" \n"
-" <.> <T>erminate and <Q>uit               Log off and disconnect.\n"
-" <.> <T>erminate and <S>tay online        Log in as a different user.\n"
-" \n"
-" \n"
-" Read commands:\n"
-"\n"
-" <.> <R>ead <N>ew messages                Same as <N>ew\n"
-" <.> <R>ead <O>ld msgs reverse            Same as <O>ld\n"
-" <.> <R>ead <L>ast five msgs              Same as <L>ast5\n"
-" <.> read <L>ast:                         Allows you to specify how many\n"
-"                                          messages you wish to read.\n"
-"\n"
-" <.> <R>ead <U>ser listing:               Lists all users on the system if\n"
-"                                          you just hit enter, otherwise\n"
-"                                          you can specify a partial match\n"
-"\n"
-" <.> <R>ead <T>extfile formatted          File 'download' commands.\n"
-" <.> <R>ead file using <X>modem   \n"
-" <.> <R>ead file using <Y>modem   \n"
-" <.> <R>ead file using <Z>modem   \n"
-" <.> <R>ead <F>ile unformatted   \n"
-" <.> <R>ead <D>irectory   \n"
-"\n"
-" <.> <R>ead <I>nfo file                   Read the room info file.\n"
-" <.> <R>ead <B>io                         Read other users' 'bio' files.\n"
-" <.> <R>ead <C>onfiguration               Display your 'preferences'.\n"
-" <.> <R>ead <S>ystem info                 Display system statistics.\n"
-"\n"
-" \n"
-" Enter commands:\n"
-"\n"
-" <.> <E>nter <M>essage                    Post a message in this room.\n"
-" <.> <E>nter message with <E>ditor        Post using a full-screen editor.\n"
-" <.> <E>nter <A>SCII message              Post 'raw' (use this when 'pasting'\n"
-"                                          a message from your clipboard).\n"
-"\n"
-" <.> <E>nter <P>assword                   Change your password.\n"
-" <.> <E>nter <C>onfiguration              Change your 'preferences'.\n"
-" <.> <E>nter a new <R>oom                 Create a new room.\n"
-" <.> <E>nter re<G>istration               Register (name, address, etc.)\n"
-" <.> <E>nter <B>io                        Enter/change your 'bio' file.\n"
-"\n"
-" <.> <E>nter <T>extfile                   File 'upload' commands.\n"
-" <.> <E>nter file using <X>modem   \n"
-" <.> <E>nter file using <Y>modem   \n"
-" <.> <E>nter file using <Z>modem   \n"
-"  \n"
-"  \n"
-"  Wholist commands:\n"
-" \n"
-" <.> <W>holist <L>ong             Same as <W>ho is online, but displays\n"
-"                                  more detailed information.\n"
-" <.> <W>holist <R>oomname         Masquerade your room name (other users\n"
-"                                  see the name you enter rather than the\n"
-"                                  actual name of the room you're in)\n"
-" <.> <W>holist <H>ostname         Masquerade your host name\n"
-" <.> <E>nter <U>sername           Masquerade your user name (Admins only)\n"
-" <.> <W>holist <S>tealth mode     Enter/exit 'stealth mode' (when in stealth\n"
-"                                  mode you are invisible on the wholist)\n"
-" \n"
-" \n"
-" Floor commands (if using floor mode)\n"
-" ;<C>onfigure floor mode            - turn floor mode on or off\n"
-" ;<G>oto floor:                     - jump to a specific floor\n"
-" ;<K>nown rooms                     - list all rooms on all floors\n"
-" ;<S>kip to floor:                  - skip current floor, jump to another\n"
-" ;<Z>ap floor                       - zap (forget) all rooms on this floor\n"
-" \n"
-" \n"
-" Administrative commands: \n"
-" \n"
-" <.> <A>dmin <K>ill this room   \n"
-" <.> <A>dmin <E>dit this room   \n"
-" <.> <A>dmin <W>ho knows room   \n"
-" <.> <A>dmin edit <U>ser   \n"
-" <.> <A>dmin <V>alidate new users   \n"
-" <.> <A>dmin enter <I>nfo file   \n"
-" <.> <A>dmin <R>oom <I>nvite user  \n"
-" <.> <A>dmin <R>oom <K>ick out user  \n"
-" <.> <A>dmin <F>ile <D>elete  \n"
-" <.> <A>dmin <F>ile <S>end over net  \n"
-" <.> <A>dmin <F>ile <M>ove  \n"
-" <.> <A>dmin <M>essage edit:   \n"
-" <.> <A>dmin <P>ost   \n"
-" <.> <A>dmin <S>ystem configuration   \n"
-" <.> <A>dmin <T>erminate server <N>ow\n"
-" <.> <A>dmin <T>erminate server <S>cheduled\n"
-
+	"Extended commands are available using the period ( . ) key. To use\n"
+	    "a dot command, press the . key, and then enter the first letter of\n"
+	    "each word in the command. The words will appear as you enter the keys.\n"
+	    "You can also backspace over partially entered commands. The following\n"
+	    "commands are available:\n"
+	    "\n"
+	    " <.> <H>elp:    Displays help files.  Type .H followed by a help file\n"
+	    "                name.  You are now reading <.H>elp SUMMARY\n"
+	    " \n"
+	    " <.> <G>oto:    Jumps directly to the room you specify.  You can also\n"
+	    "                type a partial room name, just enough to make it unique,\n"
+	    "                and it'll find the room you're looking for.  As with the\n"
+	    "                regular <G>oto command, messages in the current room will\n"
+	    "                be marked as read.\n"
+	    " \n"
+	    " <.> <S>kip, goto:    This is similar to <.G>oto, except it doesn't mark\n"
+	    "                      messages in the current room as read.\n"
+	    " \n"
+	    " <.> list <Z>apped rooms      Shows all rooms you've <Z>apped (forgotten)\n"
+	    "\n"
+	    "  \n"
+	    " Terminate (logoff) commands:\n"
+	    " \n"
+	    " <.> <T>erminate and <Q>uit               Log off and disconnect.\n"
+	    " <.> <T>erminate and <S>tay online        Log in as a different user.\n"
+	    " \n"
+	    " \n"
+	    " Read commands:\n"
+	    "\n"
+	    " <.> <R>ead <N>ew messages                Same as <N>ew\n"
+	    " <.> <R>ead <O>ld msgs reverse            Same as <O>ld\n"
+	    " <.> <R>ead <L>ast five msgs              Same as <L>ast5\n"
+	    " <.> read <L>ast:                         Allows you to specify how many\n"
+	    "                                          messages you wish to read.\n"
+	    "\n"
+	    " <.> <R>ead <U>ser listing:               Lists all users on the system if\n"
+	    "                                          you just hit enter, otherwise\n"
+	    "                                          you can specify a partial match\n"
+	    "\n"
+	    " <.> <R>ead <T>extfile formatted          File 'download' commands.\n"
+	    " <.> <R>ead file using <X>modem   \n"
+	    " <.> <R>ead file using <Y>modem   \n"
+	    " <.> <R>ead file using <Z>modem   \n"
+	    " <.> <R>ead <F>ile unformatted   \n"
+	    " <.> <R>ead <D>irectory   \n"
+	    "\n"
+	    " <.> <R>ead <I>nfo file                   Read the room info file.\n"
+	    " <.> <R>ead <B>io                         Read other users' 'bio' files.\n"
+	    " <.> <R>ead <C>onfiguration               Display your 'preferences'.\n"
+	    " <.> <R>ead <S>ystem info                 Display system statistics.\n"
+	    "\n"
+	    " \n"
+	    " Enter commands:\n"
+	    "\n"
+	    " <.> <E>nter <M>essage                    Post a message in this room.\n"
+	    " <.> <E>nter message with <E>ditor        Post using a full-screen editor.\n"
+	    " <.> <E>nter <A>SCII message              Post 'raw' (use this when 'pasting'\n"
+	    "                                          a message from your clipboard).\n"
+	    "\n"
+	    " <.> <E>nter <P>assword                   Change your password.\n"
+	    " <.> <E>nter <C>onfiguration              Change your 'preferences'.\n"
+	    " <.> <E>nter a new <R>oom                 Create a new room.\n"
+	    " <.> <E>nter re<G>istration               Register (name, address, etc.)\n"
+	    " <.> <E>nter <B>io                        Enter/change your 'bio' file.\n"
+	    "\n"
+	    " <.> <E>nter <T>extfile                   File 'upload' commands.\n"
+	    " <.> <E>nter file using <X>modem   \n"
+	    " <.> <E>nter file using <Y>modem   \n"
+	    " <.> <E>nter file using <Z>modem   \n"
+	    "  \n"
+	    "  \n"
+	    "  Wholist commands:\n"
+	    " \n"
+	    " <.> <W>holist <L>ong             Same as <W>ho is online, but displays\n"
+	    "                                  more detailed information.\n"
+	    " <.> <W>holist <R>oomname         Masquerade your room name (other users\n"
+	    "                                  see the name you enter rather than the\n"
+	    "                                  actual name of the room you're in)\n"
+	    " <.> <W>holist <H>ostname         Masquerade your host name\n"
+	    " <.> <E>nter <U>sername           Masquerade your user name (Admins only)\n"
+	    " <.> <W>holist <S>tealth mode     Enter/exit 'stealth mode' (when in stealth\n"
+	    "                                  mode you are invisible on the wholist)\n"
+	    " \n"
+	    " \n"
+	    " Floor commands (if using floor mode)\n"
+	    " ;<C>onfigure floor mode            - turn floor mode on or off\n"
+	    " ;<G>oto floor:                     - jump to a specific floor\n"
+	    " ;<K>nown rooms                     - list all rooms on all floors\n"
+	    " ;<S>kip to floor:                  - skip current floor, jump to another\n"
+	    " ;<Z>ap floor                       - zap (forget) all rooms on this floor\n"
+	    " \n"
+	    " \n"
+	    " Administrative commands: \n"
+	    " \n"
+	    " <.> <A>dmin <K>ill this room   \n"
+	    " <.> <A>dmin <E>dit this room   \n"
+	    " <.> <A>dmin <W>ho knows room   \n"
+	    " <.> <A>dmin edit <U>ser   \n"
+	    " <.> <A>dmin <V>alidate new users   \n"
+	    " <.> <A>dmin enter <I>nfo file   \n"
+	    " <.> <A>dmin <R>oom <I>nvite user  \n"
+	    " <.> <A>dmin <R>oom <K>ick out user  \n"
+	    " <.> <A>dmin <F>ile <D>elete  \n"
+	    " <.> <A>dmin <F>ile <S>end over net  \n"
+	    " <.> <A>dmin <F>ile <M>ove  \n"
+	    " <.> <A>dmin <M>essage edit:   \n"
+	    " <.> <A>dmin <P>ost   \n"
+	    " <.> <A>dmin <S>ystem configuration   \n"
+	    " <.> <A>dmin <T>erminate server <N>ow\n" " <.> <A>dmin <T>erminate server <S>cheduled\n"
 };
 
 
@@ -446,7 +423,7 @@ int rc_remember_passwords;
 int rc_ansi_color;
 int rc_color_use_bg;
 int rc_prompt_control = 0;
-time_t rc_idle_threshold = (time_t)900;
+time_t rc_idle_threshold = (time_t) 900;
 char rc_url_cmd[SIZ];
 char rc_open_cmd[SIZ];
 char rc_gotmail_cmd[SIZ];
@@ -462,9 +439,9 @@ struct citcmd *cmdlist = NULL;
 
 /* these variables are local to this module */
 char keepalives_enabled = KA_YES;	/* send NOOPs to server when idle */
-int ok_to_interrupt = 0;		/* print instant msgs asynchronously */
-time_t AnsiDetect;			/* when did we send the detect code? */
-int enable_color = 0;			/* nonzero for ANSI color */
+int ok_to_interrupt = 0;	/* print instant msgs asynchronously */
+time_t AnsiDetect;		/* when did we send the detect code? */
+int enable_color = 0;		/* nonzero for ANSI color */
 
 
 
@@ -472,7 +449,8 @@ int enable_color = 0;			/* nonzero for ANSI color */
 /*
  * If an interesting key has been pressed, return its value, otherwise 0
  */
-char was_a_key_pressed(void) {
+char was_a_key_pressed(void)
+{
 	fd_set rfds;
 	struct timeval tv;
 	int the_character;
@@ -482,7 +460,7 @@ char was_a_key_pressed(void) {
 	FD_SET(0, &rfds);
 	tv.tv_sec = 0;
 	tv.tv_usec = 0;
-	retval = select(1, &rfds, NULL, NULL, &tv); 
+	retval = select(1, &rfds, NULL, NULL, &tv);
 
 	/* Careful!  Disable keepalives during keyboard polling; we're probably
 	 * in the middle of a data transfer from the server, in which case
@@ -492,11 +470,10 @@ char was_a_key_pressed(void) {
 		set_keepalives(KA_NO);
 		the_character = inkey();
 		set_keepalives(KA_YES);
-	}
-	else {
+	} else {
 		the_character = 0;
 	}
-	return(the_character);
+	return (the_character);
 }
 
 
@@ -528,19 +505,19 @@ void print_instant(void)
 		color(BRIGHT_RED);
 		scr_printf("\r---");
 	}
-	
+
 	while (instant_msgs != 0) {
 		r = CtdlIPCGetInstantMessage(ipc_for_signal_handlers, &listing, buf);
 		if (r / 100 != 1)
 			return;
-	
+
 		instant_msgs = extract_int(buf, 0);
 		timestamp = extract_long(buf, 1);
 		flags = extract_int(buf, 2);
 		extract_token(sender, buf, 3, '|', sizeof sender);
 		extract_token(node, buf, 4, '|', sizeof node);
 		strcpy(last_paged, sender);
-	
+
 		localtime_r(&timestamp, &stamp);
 
 		/* If the page is a Logoff Request, honor it. */
@@ -548,14 +525,13 @@ void print_instant(void)
 			termn8 = 1;
 			return;
 		}
-	
+
 		if (!IsEmptyStr(rc_exp_cmd)) {
 			outpipe = popen(rc_exp_cmd, "w");
 			if (outpipe != NULL) {
 				/* Header derived from flags */
 				if (flags & 2)
-					fprintf(outpipe,
-					       "Please log off now, as requested ");
+					fprintf(outpipe, "Please log off now, as requested ");
 				else if (flags & 1)
 					fprintf(outpipe, "Broadcast message ");
 				else if (flags & 4)
@@ -564,16 +540,11 @@ void print_instant(void)
 					fprintf(outpipe, "Message ");
 				/* Timestamp.  Can this be improved? */
 				if (stamp.tm_hour == 0 || stamp.tm_hour == 12)
-					fprintf(outpipe, "at 12:%02d%cm",
-						stamp.tm_min, 
-						stamp.tm_hour ? 'p' : 'a');
-				else if (stamp.tm_hour > 12)		/* pm */
-					fprintf(outpipe, "at %d:%02dpm",
-						stamp.tm_hour - 12,
-						stamp.tm_min);
-				else					/* am */
-					fprintf(outpipe, "at %d:%02dam",
-						stamp.tm_hour, stamp.tm_min);
+					fprintf(outpipe, "at 12:%02d%cm", stamp.tm_min, stamp.tm_hour ? 'p' : 'a');
+				else if (stamp.tm_hour > 12)	/* pm */
+					fprintf(outpipe, "at %d:%02dpm", stamp.tm_hour - 12, stamp.tm_min);
+				else	/* am */
+					fprintf(outpipe, "at %d:%02dam", stamp.tm_hour, stamp.tm_min);
 				fprintf(outpipe, " from %s", sender);
 				if (strncmp(ipc_for_signal_handlers->ServInfo.nodename, node, 32))
 					fprintf(outpipe, " @%s", node);
@@ -596,24 +567,22 @@ void print_instant(void)
 			scr_printf("Chat request ");
 		else
 			scr_printf("Message ");
-	
+
 		/* Timestamp.  Can this be improved? */
-		if (stamp.tm_hour == 0 || stamp.tm_hour == 12)/* 12am/12pm */
-			scr_printf("at 12:%02d%cm", stamp.tm_min, 
-				stamp.tm_hour ? 'p' : 'a');
-		else if (stamp.tm_hour > 12)			/* pm */
-			scr_printf("at %d:%02dpm",
-				stamp.tm_hour - 12, stamp.tm_min);
-		else						/* am */
+		if (stamp.tm_hour == 0 || stamp.tm_hour == 12)	/* 12am/12pm */
+			scr_printf("at 12:%02d%cm", stamp.tm_min, stamp.tm_hour ? 'p' : 'a');
+		else if (stamp.tm_hour > 12)	/* pm */
+			scr_printf("at %d:%02dpm", stamp.tm_hour - 12, stamp.tm_min);
+		else		/* am */
 			scr_printf("at %d:%02dam", stamp.tm_hour, stamp.tm_min);
-		
+
 		/* Sender */
 		scr_printf(" from %s", sender);
-	
+
 		/* Remote node, if any */
 		if (strncmp(ipc_for_signal_handlers->ServInfo.nodename, node, 32))
 			scr_printf(" @%s", node);
-	
+
 		scr_printf(":\n");
 		fmout(screenwidth, NULL, listing, NULL, 0);
 		free(listing);
@@ -636,7 +605,8 @@ void set_keepalives(int s)
  */
 
 static time_t idlet = 0;
-static void really_do_keepalive(void) {
+static void really_do_keepalive(void)
+{
 
 	time(&idlet);
 
@@ -655,8 +625,7 @@ static void really_do_keepalive(void) {
 			if (ok_to_interrupt == 1) {
 				scr_printf("\r%64s\r", "");
 				print_instant();
-				scr_printf("%s%c ", room_name,
-				       room_prompt(room_flags));
+				scr_printf("%s%c ", room_name, room_prompt(room_flags));
 				scr_flush();
 			}
 		}
@@ -665,8 +634,8 @@ static void really_do_keepalive(void) {
 	/* If half keepalives are enabled, send a QNOP to the server (if the
 	 * server supports it) and then do nothing.
 	 */
-	if ( (keepalives_enabled == KA_HALF)
-	   && (ipc_for_signal_handlers->ServInfo.supports_qnop > 0) ) {
+	if ((keepalives_enabled == KA_HALF)
+	    && (ipc_for_signal_handlers->ServInfo.supports_qnop > 0)) {
 		CtdlIPC_chat_send(ipc_for_signal_handlers, "QNOP");
 	}
 }
@@ -680,8 +649,7 @@ void do_keepalive(void)
 	time_t now;
 
 	time(&now);
-	if ((now - idlet) < ((long) S_KEEPALIVE))
-	{
+	if ((now - idlet) < ((long) S_KEEPALIVE)) {
 		return;
 	}
 
@@ -795,41 +763,46 @@ int ctdl_getline(char *string, int lim, int noshow, int bs)
 		while (num_stars--) {
 			scr_putc('*');
 		}
-	}
-	else {
+	} else {
 		scr_printf("%s", string);
 	}
 
-	while(1) {
+	while (1) {
 		ch = inkey();
 
-		if ((ch == 8)  && (pos > 0)) {				/* backspace */
+		if ((ch == 8) && (pos > 0)) {	/* backspace */
 			--pos;
-			scr_putc(8); scr_putc(32); scr_putc(8);
+			scr_putc(8);
+			scr_putc(32);
+			scr_putc(8);
 		}
 
-		else if ((ch == 8) && (pos == 0) && (bs)) {		/* backspace out of the prompt */
-			return(-1);
+		else if ((ch == 8) && (pos == 0) && (bs)) {	/* backspace out of the prompt */
+			return (-1);
 		}
 
-		else if ((ch == 23) && (pos > 0)) {			/* Ctrl-W deletes a word */
+		else if ((ch == 23) && (pos > 0)) {	/* Ctrl-W deletes a word */
 			while ((pos > 0) && !isspace(string[pos])) {
 				--pos;
-				scr_putc(8); scr_putc(32); scr_putc(8);
+				scr_putc(8);
+				scr_putc(32);
+				scr_putc(8);
 			}
-			while ((pos > 0) && !isspace(string[pos-1])) {
+			while ((pos > 0) && !isspace(string[pos - 1])) {
 				--pos;
-				scr_putc(8); scr_putc(32); scr_putc(8);
+				scr_putc(8);
+				scr_putc(32);
+				scr_putc(8);
 			}
 		}
 
-		else if (ch == 10) {					/* return */
+		else if (ch == 10) {	/* return */
 			string[pos] = 0;
 			scr_printf("\n");
-			return(pos);
+			return (pos);
 		}
 
-		else if (isprint(ch)) {					/* payload characters */
+		else if (isprint(ch)) {	/* payload characters */
 			scr_putc((noshow ? '*' : ch));
 			string[pos] = ch;
 			++pos;
@@ -851,7 +824,7 @@ void strprompt(char *prompt, char *str, int len)
 	color(DIM_WHITE);
 	scr_printf(": ");
 	color(BRIGHT_CYAN);
-	ctdl_getline(str, abs(len), (len<0), 0);
+	ctdl_getline(str, abs(len), (len < 0), 0);
 	color(DIM_WHITE);
 }
 
@@ -892,9 +865,9 @@ int intprompt(char *prompt, int ival, int imin, int imax)
 		snprintf(buf, sizeof buf, "%d", i);
 		strprompt(prompt, buf, 15);
 		i = atoi(buf);
-		for (p=0; !IsEmptyStr(&buf[p]); ++p) {
-			if ( (!isdigit(buf[p]))
-			   && ( (buf[p]!='-') || (p!=0) )  )
+		for (p = 0; !IsEmptyStr(&buf[p]); ++p) {
+			if ((!isdigit(buf[p]))
+			    && ((buf[p] != '-') || (p != 0)))
 				i = imin - 1;
 		}
 		if (i < imin)
@@ -916,7 +889,7 @@ void newprompt(char *prompt, char *str, int len)
 	color(BRIGHT_MAGENTA);
 	scr_printf("%s", prompt);
 	color(DIM_MAGENTA);
-	ctdl_getline(str, abs(len), (len<0), 0);
+	ctdl_getline(str, abs(len), (len < 0), 0);
 	color(DIM_WHITE);
 }
 
@@ -1001,8 +974,7 @@ void load_command_set(void)
 #ifdef HAVE_OPENSSL
 			else if (!strcasecmp(&buf[8], "no")) {
 				rc_encrypt = RC_NO;
-			}
-			else if (!strcasecmp(&buf[8], "default")) {
+			} else if (!strcasecmp(&buf[8], "default")) {
 				rc_encrypt = RC_DEFAULT;
 			}
 #endif
@@ -1164,7 +1136,7 @@ char *cmd_expand(char *strbuf, int mode)
 		if (strbuf[a] == '&') {
 
 			/* dont echo these non mnemonic command keys */
-			int noecho = strbuf[a+1] == '<' || strbuf[a+1] == '>' || strbuf[a+1] == '+' || strbuf[a+1] == '-';
+			int noecho = strbuf[a + 1] == '<' || strbuf[a + 1] == '>' || strbuf[a + 1] == '+' || strbuf[a + 1] == '-';
 
 			if (mode == 0) {
 				strcpy(&exp[a], &exp[a + 1 + noecho]);
@@ -1239,7 +1211,7 @@ int requires_string(struct citcmd *cptr, int ncomp)
  * This function returns an integer command number.  If the command prompts
  * for a string then it is placed in the supplied buffer.
  */
-int getcmd(CtdlIPC *ipc, char *argbuf)
+int getcmd(CtdlIPC * ipc, char *argbuf)
 {
 	char cmdbuf[5];
 	int cmdspaces[5];
@@ -1315,8 +1287,7 @@ int getcmd(CtdlIPC *ipc, char *argbuf)
 				if (cptr->c_cmdnum == this_lazy_cmd) {
 					for (a = 0; a < 5; ++a)
 						if (cptr->c_keys[a][0] != 0)
-							scr_printf("%s ", cmd_expand(
-											cptr->c_keys[a], 0));
+							scr_printf("%s ", cmd_expand(cptr->c_keys[a], 0));
 					scr_printf("\n");
 					return (this_lazy_cmd);
 				}
@@ -1331,8 +1302,7 @@ int getcmd(CtdlIPC *ipc, char *argbuf)
 			if (cmdmatch(cmdbuf, cptr, cmdpos + 1)) {
 
 				scr_printf("%s", cmd_expand(cptr->c_keys[cmdpos], 0));
-				cmdspaces[cmdpos] = strlen(
-				    cmd_expand(cptr->c_keys[cmdpos], 0));
+				cmdspaces[cmdpos] = strlen(cmd_expand(cptr->c_keys[cmdpos], 0));
 				if (cmdpos < 4)
 					if ((cptr->c_keys[cmdpos + 1]) != 0)
 						scr_putc(' ');
@@ -1379,21 +1349,20 @@ int getcmd(CtdlIPC *ipc, char *argbuf)
 			for (cptr = cmdlist; cptr != NULL; cptr = cptr->next) {
 				if (cmdmatch(cmdbuf, cptr, cmdpos)) {
 					for (a = 0; a < 5; ++a) {
-					   keyopt(cmd_expand(cptr->c_keys[a], 1));
-    				   scr_printf(" ");
+						keyopt(cmd_expand(cptr->c_keys[a], 1));
+						scr_printf(" ");
 					}
 					scr_printf("\n");
 				}
 			}
-        	sigcaught = 0;
+			sigcaught = 0;
 
 			scr_printf("\n%s%c ", room_name, room_prompt(room_flags));
 			got = 0;
 			for (cptr = cmdlist; cptr != NULL; cptr = cptr->next) {
 				if ((got == 0) && (cmdmatch(cmdbuf, cptr, cmdpos))) {
 					for (a = 0; a < cmdpos; ++a) {
-						scr_printf("%s ",
-						       cmd_expand(cptr->c_keys[a], 0));
+						scr_printf("%s ", cmd_expand(cptr->c_keys[a], 0));
 					}
 					got = 1;
 				}
@@ -1490,12 +1459,12 @@ void stty_ctdl(int cmd)
 /*
  * display_help()  -  help text viewer
  */
-void display_help(CtdlIPC *ipc, char *name)
+void display_help(CtdlIPC * ipc, char *name)
 {
 	int i;
-	int num_helps = sizeof(helpnames) / sizeof(char *) ;
+	int num_helps = sizeof(helpnames) / sizeof(char *);
 
-	for (i=0; i<num_helps; ++i) {
+	for (i = 0; i < num_helps; ++i) {
 		if (!strcasecmp(name, helpnames[i])) {
 			fmout(screenwidth, NULL, helptexts[i], NULL, 0);
 			return;
@@ -1503,7 +1472,7 @@ void display_help(CtdlIPC *ipc, char *name)
 	}
 
 	scr_printf("'%s' not found.  Enter one of:\n", name);
-	for (i=0; i<num_helps; ++i) {
+	for (i = 0; i < num_helps; ++i) {
 		scr_printf("  %s\n", helpnames[i]);
 	}
 }
@@ -1512,13 +1481,11 @@ void display_help(CtdlIPC *ipc, char *name)
 /*
  * fmout() - Citadel text formatter and paginator
  */
-int fmout(
-	int width,	/* screen width to use */
-	FILE *fpin,	/* file to read from, or NULL to format given text */
-	char *text,	/* text to be formatted (when fpin is NULL */
-	FILE *fpout,	/* file to write to, or NULL to write to screen */
-	int subst)	/* nonzero if we should use hypertext mode */
-{
+int fmout(int width,		/* screen width to use */
+	  FILE * fpin,		/* file to read from, or NULL to format given text */
+	  char *text,		/* text to be formatted (when fpin is NULL */
+	  FILE * fpout,		/* file to write to, or NULL to write to screen */
+	  int subst) {		/* nonzero if we should use hypertext mode */
 	char *buffer = NULL;	/* The current message */
 	char *word = NULL;	/* What we are about to actually print */
 	char *e;		/* Pointer to position in text */
@@ -1527,10 +1494,9 @@ int fmout(
 	size_t i;		/* Generic counter */
 
 	/* Space for a single word, which can be at most screenwidth */
-	word = (char *)calloc(1, width);
+	word = (char *) calloc(1, width);
 	if (!word) {
-		scr_printf("Can't alloc memory to print message: %s!\n",
-				strerror(errno));
+		scr_printf("Can't alloc memory to print message: %s!\n", strerror(errno));
 		logoff(NULL, 3);
 	}
 
@@ -1538,8 +1504,7 @@ int fmout(
 	if (fpin) {
 		buffer = load_message_from_file(fpin);
 		if (!buffer) {
-			scr_printf("Can't print message: %s!\n",
-					strerror(errno));
+			scr_printf("Can't print message: %s!\n", strerror(errno));
 			logoff(NULL, 3);
 		}
 	} else {
@@ -1564,7 +1529,7 @@ int fmout(
 					scr_printf("\n");
 				}
 				column = 0;
-			} else if (old != ' ') {/* Don't print two spaces */
+			} else if (old != ' ') {	/* Don't print two spaces */
 				if (fpout) {
 					fprintf(fpout, " ");
 				} else {
@@ -1579,10 +1544,10 @@ int fmout(
 		/* Are we looking at a nonprintable?
 		 * (This section is now commented out because we could be displaying
 		 * a character set like UTF-8 or ISO-8859-1.)
-		if ( (*e < 32) || (*e > 126) ) {
-			e++;
-			continue;
-		} */
+		 if ( (*e < 32) || (*e > 126) ) {
+		 e++;
+		 continue;
+		 } */
 
 		/* Or are we looking at a space? */
 		if (*e == ' ') {
@@ -1626,7 +1591,7 @@ int fmout(
 
 		/* Break up really long words */
 		/* TODO: auto-hyphenation someday? */
-		if (i >= width)	
+		if (i >= width)
 			i = width - 1;
 		strncpy(word, e, i);
 		word[i] = 0;
@@ -1696,10 +1661,7 @@ void color(int colornum)
 		if (colornum == ORIGINAL_PAIR)
 			printf("\033[0;39;49m");
 		else
-			printf("\033[%d;3%d;4%dm", 
-					(colornum & 8) ? 1 : 0,
-					(colornum & 7),
-					rc_color_use_bg);
+			printf("\033[%d;3%d;4%dm", (colornum & 8) ? 1 : 0, (colornum & 7), rc_color_use_bg);
 
 	}
 }
@@ -1707,8 +1669,7 @@ void color(int colornum)
 void cls(int colornum)
 {
 	if (enable_color) {
-		printf("\033[4%dm\033[2J\033[H\033[0m",
-				colornum ? colornum : rc_color_use_bg);
+		printf("\033[4%dm\033[2J\033[H\033[0m", colornum ? colornum : rc_color_use_bg);
 	}
 }
 
@@ -1758,8 +1719,7 @@ void look_for_ansi(void)
 				abuf[strlen(abuf) + 1] = 0;
 				rv = read(0, &abuf[strlen(abuf)], 1);
 				if (rv < 0) {
-					scr_printf("failed to read after select: %s", 
-						   strerror(errno));
+					scr_printf("failed to read after select: %s", strerror(errno));
 					break;
 				}
 			}
@@ -1778,16 +1738,17 @@ void look_for_ansi(void)
 /*
  * Display key options (highlight hotkeys inside angle brackets)
  */
-void keyopt(char *buf) {
+void keyopt(char *buf)
+{
 	int i;
 
 	color(DIM_WHITE);
-	for (i=0; !IsEmptyStr(&buf[i]); ++i) {
-		if (buf[i]=='<') {
+	for (i = 0; !IsEmptyStr(&buf[i]); ++i) {
+		if (buf[i] == '<') {
 			scr_printf("%c", buf[i]);
 			color(BRIGHT_MAGENTA);
 		} else {
-			if (buf[i]=='>'&& buf[i+1] != '>') {
+			if (buf[i] == '>' && buf[i + 1] != '>') {
 				color(DIM_WHITE);
 			}
 			scr_printf("%c", buf[i]);
@@ -1801,7 +1762,8 @@ void keyopt(char *buf) {
 /*
  * Present a key-menu line choice type of thing
  */
-char keymenu(char *menuprompt, char *menustring) {
+char keymenu(char *menuprompt, char *menustring)
+{
 	int i, c, a;
 	int choices;
 	int do_prompt = 0;
@@ -1811,16 +1773,17 @@ char keymenu(char *menuprompt, char *menustring) {
 
 	choices = num_tokens(menustring, '|');
 
-	if (menuprompt != NULL) do_prompt = 1;
-	if ((menuprompt != NULL) && (IsEmptyStr(menuprompt))) do_prompt = 0;
+	if (menuprompt != NULL)
+		do_prompt = 1;
+	if ((menuprompt != NULL) && (IsEmptyStr(menuprompt)))
+		do_prompt = 0;
 
 	while (1) {
 		if (display_prompt) {
 			if (do_prompt) {
 				scr_printf("%s ", menuprompt);
-			} 
-			else {
-				for (i=0; i<choices; ++i) {
+			} else {
+				for (i = 0; i < choices; ++i) {
 					extract_token(buf, menustring, i, '|', sizeof buf);
 					keyopt(buf);
 					scr_printf(" ");
@@ -1830,11 +1793,11 @@ char keymenu(char *menuprompt, char *menustring) {
 			display_prompt = 0;
 		}
 		ch = lkey();
-	
-		if ( (do_prompt) && (ch=='?') ) {
+
+		if ((do_prompt) && (ch == '?')) {
 			scr_printf("\rOne of...                               ");
 			scr_printf("                                      \n");
-			for (i=0; i<choices; ++i) {
+			for (i = 0; i < choices; ++i) {
 				extract_token(buf, menustring, i, '|', sizeof buf);
 				scr_printf("   ");
 				keyopt(buf);
@@ -1844,14 +1807,14 @@ char keymenu(char *menuprompt, char *menustring) {
 			display_prompt = 1;
 		}
 
-		for (i=0; i<choices; ++i) {
+		for (i = 0; i < choices; ++i) {
 			extract_token(buf, menustring, i, '|', sizeof buf);
-			for (c=1; !IsEmptyStr(&buf[c]); ++c) {
-				if ( (ch == tolower(buf[c]))
-				   && (buf[c-1]=='<')
-				   && (buf[c+1]=='>') ) {
-					for (a=0; !IsEmptyStr(&buf[a]); ++a) {
-						if ( (a!=(c-1)) && (a!=(c+1))) {
+			for (c = 1; !IsEmptyStr(&buf[c]); ++c) {
+				if ((ch == tolower(buf[c]))
+				    && (buf[c - 1] == '<')
+				    && (buf[c + 1] == '>')) {
+					for (a = 0; !IsEmptyStr(&buf[a]); ++a) {
+						if ((a != (c - 1)) && (a != (c + 1))) {
 							scr_putc(buf[a]);
 						}
 					}

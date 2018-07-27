@@ -70,10 +70,11 @@ void screen_new(void)
 /*
  * Beep.
  */
-void ctdl_beep(void) {
+void ctdl_beep(void)
+{
 	putc(7, stdout);
 }
-	
+
 
 
 
@@ -92,7 +93,7 @@ int scr_printf(char *fmt, ...)
 	va_end(ap);
 
 	len = strlen(outbuf);
-	for (i=0; i<len; ++i) {
+	for (i = 0; i < len; ++i) {
 		scr_putc(outbuf[i]);
 	}
 	return retval;
@@ -109,7 +110,7 @@ int scr_getc(int delay)
 	scr_flush();
 
 	buf = '\0';
-	if (!read (0, &buf, 1))
+	if (!read(0, &buf, 1))
 		logoff(NULL, 3);
 
 	lines_printed = 0;
@@ -119,20 +120,21 @@ int scr_getc(int delay)
 /*
  * Issue the paginator prompt (more / hit any key to continue)
  */
-void hit_any_key(void) {
+void hit_any_key(void)
+{
 	int a, b;
 
 	color(COLOR_PUSH);
 	color(DIM_RED);
 	scr_printf("%s\r", moreprompt);
 	color(COLOR_POP);
-	b=inkey();
-	for (a=0; a<screenwidth; ++a) {
+	b = inkey();
+	for (a = 0; a < screenwidth; ++a) {
 		scr_putc(' ');
 	}
 	scr_printf("\r");
 
-	if ( (rc_prompt_control == 1) || ((rc_prompt_control == 3) && (userflags & US_PROMPTCTL)) ) {
+	if ((rc_prompt_control == 1) || ((rc_prompt_control == 3) && (userflags & US_PROMPTCTL))) {
 		if (b == 'q' || b == 'Q' || b == 's' || b == 'S') {
 			b = STOP_KEY;
 		}
@@ -141,8 +143,10 @@ void hit_any_key(void) {
 		}
 	}
 
-	if (b==NEXT_KEY) sigcaught = SIGINT;
-	if (b==STOP_KEY) sigcaught = SIGQUIT;
+	if (b == NEXT_KEY)
+		sigcaught = SIGINT;
+	if (b == STOP_KEY)
+		sigcaught = SIGQUIT;
 }
 
 
@@ -156,7 +160,7 @@ int scr_putc(int c)
 		do {
 			scr_putc(' ');
 		} while ((cols_printed % 8) != 0);
-		return(c);
+		return (c);
 	}
 
 	/* Output the character... */
@@ -167,11 +171,9 @@ int scr_putc(int c)
 	if (c == '\n') {
 		++lines_printed;
 		cols_printed = 0;
-	}
-	else if (c == '\r') {
+	} else if (c == '\r') {
 		cols_printed = 0;
-	}
-	else if (isprint(c)) {
+	} else if (isprint(c)) {
 		++cols_printed;
 		if ((screenwidth > 0) && (cols_printed > screenwidth)) {
 			++lines_printed;
@@ -182,10 +184,10 @@ int scr_putc(int c)
 	/* How many lines output before stopping for the paginator?
 	 * Depends on whether we are displaying a status line.
 	 */
-	int height_offset = ( ((enable_color) && (screenwidth > 0) && (enable_status_line)) ? (3) : (2) ) ;
+	int height_offset = (((enable_color) && (screenwidth > 0) && (enable_status_line)) ? (3) : (2));
 
 	/* Ok, go check it.  Stop and display the paginator prompt if necessary. */
-	if ((screenheight > 0) && (lines_printed > (screenheight-height_offset))) {
+	if ((screenheight > 0) && (lines_printed > (screenheight - height_offset))) {
 		lines_printed = 0;
 		hit_any_key();
 		lines_printed = 0;
@@ -231,28 +233,29 @@ sighandler_t scr_winch(int signum)
 /*
  * Display a 3270-style "wait" indicator at the bottom of the screen
  */
-void scr_wait_indicator(int state) {
+void scr_wait_indicator(int state)
+{
 	int sp = (screenwidth - 2);
 
-	if (!enable_status_line) return;
+	if (!enable_status_line)
+		return;
 
 	if (screenwidth > 0) {
 		switch (state) {
-			default:
-			case 0:	 /* Idle */
-				status_line[sp] = ' ';
-				break;
-			case 1:	 /* Waiting */
-				status_line[sp] = 'X';
-				break;
-			case 2:	 /* Receiving */
-				status_line[sp] = '<';
-				break;
-			case 3:	 /* Sending */
-				status_line[sp] = '>';
-				break;
+		default:
+		case 0:	/* Idle */
+			status_line[sp] = ' ';
+			break;
+		case 1:	/* Waiting */
+			status_line[sp] = 'X';
+			break;
+		case 2:	/* Receiving */
+			status_line[sp] = '<';
+			break;
+		case 3:	/* Sending */
+			status_line[sp] = '>';
+			break;
 		}
 		scr_flush();
 	}
 }
-

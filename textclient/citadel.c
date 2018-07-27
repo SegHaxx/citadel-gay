@@ -34,11 +34,11 @@ unsigned room_flags;
 unsigned room_flags2;
 int entmsg_ok = 0;
 char room_name[ROOMNAMELEN];
-char *uglist[UGLISTLEN]; /* size of the ungoto list */
-long uglistlsn[UGLISTLEN]; /* current read position for all the ungoto's. Not going to make any friends with this one. */
+char *uglist[UGLISTLEN];	/* size of the ungoto list */
+long uglistlsn[UGLISTLEN];	/* current read position for all the ungoto's. Not going to make any friends with this one. */
 int uglistsize = 0;
 char is_mail = 0;		/* nonzero when we're in a mail room */
-char axlevel = AxDeleted;		/* access level */
+char axlevel = AxDeleted;	/* access level */
 char is_room_aide = 0;		/* boolean flag, 1 if room admin */
 int timescalled;
 int posted;
@@ -71,7 +71,7 @@ int enable_syslog = 0;
 /*
  * here is our 'clean up gracefully and exit' routine
  */
-void ctdl_logoff(char *file, int line, CtdlIPC *ipc, int code)
+void ctdl_logoff(char *file, int line, CtdlIPC * ipc, int code)
 {
 	int lp;
 
@@ -110,8 +110,8 @@ void ctdl_logoff(char *file, int line, CtdlIPC *ipc, int code)
 	stty_ctdl(SB_RESTORE);	/* return the old terminal settings */
 	/* 
 	 * uncomment the following if you need to know why Citadel exited
-	printf("*** Exit code %d at %s:%d\n", code, file, line);
-	sleep(2);
+	 printf("*** Exit code %d at %s:%d\n", code, file, line);
+	 sleep(2);
 	 */
 	exit(code);		/* exit with the proper exit code */
 }
@@ -142,7 +142,7 @@ void catch_sigcont(int signum)
 /* general purpose routines */
 
 /* display a file */
-void formout(CtdlIPC *ipc, char *name)
+void formout(CtdlIPC * ipc, char *name)
 {
 	int r;			/* IPC return code */
 	char buf[SIZ];
@@ -160,13 +160,13 @@ void formout(CtdlIPC *ipc, char *name)
 }
 
 
-void userlist(CtdlIPC *ipc, char *patn)
+void userlist(CtdlIPC * ipc, char *patn)
 {
 	char buf[SIZ];
 	char fl[SIZ];
 	struct tm tmbuf;
 	time_t lc;
-	int r;				/* IPC response code */
+	int r;			/* IPC response code */
 	char *listing = NULL;
 
 	r = CtdlIPCUserListing(ipc, patn, &listing, buf);
@@ -177,27 +177,24 @@ void userlist(CtdlIPC *ipc, char *patn)
 
 	scr_printf("       User Name           Num  L Last Visit Logins Messages\n");
 	scr_printf("------------------------- ----- - ---------- ------ --------\n");
-	if (listing != NULL) while (!IsEmptyStr(listing)) {
-		extract_token(buf, listing, 0, '\n', sizeof buf);
-		remove_token(listing, 0, '\n');
+	if (listing != NULL)
+		while (!IsEmptyStr(listing)) {
+			extract_token(buf, listing, 0, '\n', sizeof buf);
+			remove_token(listing, 0, '\n');
 
-		if (sigcaught == 0) {
-		    extract_token(fl, buf, 0, '|', sizeof fl);
-		    if (pattern(fl, patn) >= 0) {
-			scr_printf("%-25s ", fl);
-			scr_printf("%5ld %d ", extract_long(buf, 2),
-			       extract_int(buf, 1));
-			lc = extract_long(buf, 3);
-			localtime_r(&lc, &tmbuf);
-			scr_printf("%02d/%02d/%04d ",
-			       (tmbuf.tm_mon + 1),
-			       tmbuf.tm_mday,
-			       (tmbuf.tm_year + 1900));
-			scr_printf("%6ld %8ld\n", extract_long(buf, 4), extract_long(buf, 5));
-		    }
+			if (sigcaught == 0) {
+				extract_token(fl, buf, 0, '|', sizeof fl);
+				if (pattern(fl, patn) >= 0) {
+					scr_printf("%-25s ", fl);
+					scr_printf("%5ld %d ", extract_long(buf, 2), extract_int(buf, 1));
+					lc = extract_long(buf, 3);
+					localtime_r(&lc, &tmbuf);
+					scr_printf("%02d/%02d/%04d ", (tmbuf.tm_mon + 1), tmbuf.tm_mday, (tmbuf.tm_year + 1900));
+					scr_printf("%6ld %8ld\n", extract_long(buf, 4), extract_long(buf, 5));
+				}
 
+			}
 		}
-	}
 	free(listing);
 	scr_printf("\n");
 }
@@ -291,7 +288,7 @@ char *pop_march(int desired_floor, struct march *_march)
 /*
  * jump directly to a room
  */
-void dotgoto(CtdlIPC *ipc, char *towhere, int display_name, int fromungoto)
+void dotgoto(CtdlIPC * ipc, char *towhere, int display_name, int fromungoto)
 {
 	char aaa[SIZ], bbb[SIZ];
 	static long ls = 0L;
@@ -299,30 +296,30 @@ void dotgoto(CtdlIPC *ipc, char *towhere, int display_name, int fromungoto)
 	int partial_match, best_match;
 	char from_floor;
 	int ugpos = uglistsize;
-	int r;				/* IPC result code */
+	int r;			/* IPC result code */
 	struct ctdlipcroom *room = NULL;
 	int rv = 0;
 
 	/* store ungoto information */
 	if (fromungoto == 0) {
 		/* sloppy slide them all down, hey it's the client, who cares. :-) */
-        	if (uglistsize >= (UGLISTLEN-1)) {
+		if (uglistsize >= (UGLISTLEN - 1)) {
 			int lp;
-			free (uglist[0]);
-			for (lp = 0; lp < (UGLISTLEN-1); lp++) {
-				uglist[lp] = uglist[lp+1];
-				uglistlsn[lp] = uglistlsn[lp+1];
+			free(uglist[0]);
+			for (lp = 0; lp < (UGLISTLEN - 1); lp++) {
+				uglist[lp] = uglist[lp + 1];
+				uglistlsn[lp] = uglistlsn[lp + 1];
 			}
 			ugpos--;
 		} else {
 			uglistsize++;
 		}
-        
-		uglist[ugpos] = malloc(strlen(room_name)+1);
+
+		uglist[ugpos] = malloc(strlen(room_name) + 1);
 		strcpy(uglist[ugpos], room_name);
 		uglistlsn[ugpos] = ls;
 	}
-      
+
 	/* first try an exact match */
 	r = CtdlIPCGotoRoom(ipc, towhere, "", &room, aaa);
 	if (r / 10 == 54) {
@@ -332,7 +329,7 @@ void dotgoto(CtdlIPC *ipc, char *towhere, int display_name, int fromungoto)
 			scr_printf("Wrong password.\n");
 			return;
 		}
-	}	
+	}
 
 	/*
 	 * If a match is not found, try a partial match.
@@ -390,15 +387,15 @@ void dotgoto(CtdlIPC *ipc, char *towhere, int display_name, int fromungoto)
 	/* Determine, based on the room's default view, whether an <E>nter message
 	 * command will be valid here.
 	 */
-	switch(room->RRdefaultview) {
-		case VIEW_BBS:
-		case VIEW_MAILBOX:
-		case VIEW_BLOG:
-					entmsg_ok = 1;
-					break;
-		default:
-					entmsg_ok = 0;
-					break;
+	switch (room->RRdefaultview) {
+	case VIEW_BBS:
+	case VIEW_MAILBOX:
+	case VIEW_BLOG:
+		entmsg_ok = 1;
+		break;
+	default:
+		entmsg_ok = 0;
+		break;
 	}
 
 	remove_march(room_name, 0);
@@ -443,28 +440,22 @@ void dotgoto(CtdlIPC *ipc, char *towhere, int display_name, int fromungoto)
 		color(BRIGHT_RED);
 		if (newmailcount == 1) {
 			scr_printf("*** A new mail message has arrived.\n");
-		}
-		else {
-			scr_printf("*** %d new mail messages have arrived.\n",
-					newmailcount);
+		} else {
+			scr_printf("*** %d new mail messages have arrived.\n", newmailcount);
 		}
 		color(DIM_WHITE);
 		if (!IsEmptyStr(rc_gotmail_cmd)) {
 			rv = system(rc_gotmail_cmd);
-			if (rv) 
-				scr_printf("*** failed to check for mail calling %s Reason %d.\n",
-					   rc_gotmail_cmd, rv);
+			if (rv)
+				scr_printf("*** failed to check for mail calling %s Reason %d.\n", rc_gotmail_cmd, rv);
 		}
 	}
 	free(room);
 
-	if (screenwidth>5) snprintf(&status_line[1], screenwidth-1, "%s  |  %s  |  %s  |  %s  |  %d new mail  |",
-		(secure ? "Encrypted" : "Unencrypted"),
-		ipc->ServInfo.humannode,
-		ipc->ServInfo.site_location,
-		room_name,
-		newmailcount
-	);
+	if (screenwidth > 5)
+		snprintf(&status_line[1], screenwidth - 1, "%s  |  %s  |  %s  |  %s  |  %d new mail  |",
+			 (secure ? "Encrypted" : "Unencrypted"),
+			 ipc->ServInfo.humannode, ipc->ServInfo.site_location, room_name, newmailcount);
 }
 
 /* Goto next room having unread messages.
@@ -472,7 +463,7 @@ void dotgoto(CtdlIPC *ipc, char *towhere, int display_name, int fromungoto)
  * user back to the lobby when done.  The room we end up in is placed in
  * newroom - which is set to 0 (the lobby) initially.
  */
-void gotonext(CtdlIPC *ipc)
+void gotonext(CtdlIPC * ipc)
 {
 	char buf[SIZ];
 	struct march *mptr, *mptr2;
@@ -482,8 +473,7 @@ void gotonext(CtdlIPC *ipc)
 	 * If it is, pop the first room off the list and go there.
 	 */
 	if (marchptr == NULL) {
-		CtdlIPCKnownRooms(ipc, SubscribedRoomsWithNewMessages,
-				  AllFloors, &marchptr, buf);
+		CtdlIPCKnownRooms(ipc, SubscribedRoomsWithNewMessages, AllFloors, &marchptr, buf);
 
 /* add _BASEROOM_ to the end of the march list, so the user will end up
  * in the system base room (usually the Lobby>) at the end of the loop
@@ -491,7 +481,7 @@ void gotonext(CtdlIPC *ipc)
 		mptr = (struct march *) malloc(sizeof(struct march));
 		mptr->next = NULL;
 		mptr->march_order = 0;
- 	   	mptr->march_floor = 0;
+		mptr->march_floor = 0;
 		strcpy(mptr->march_name, "_BASEROOM_");
 		if (marchptr == NULL) {
 			marchptr = mptr;
@@ -519,13 +509,13 @@ void gotonext(CtdlIPC *ipc)
 /*
  * forget all rooms on a given floor
  */
-void forget_all_rooms_on(CtdlIPC *ipc, int ffloor)
+void forget_all_rooms_on(CtdlIPC * ipc, int ffloor)
 {
 	char buf[SIZ];
 	struct march *flist = NULL;
 	struct march *fptr = NULL;
 	struct ctdlipcroom *room = NULL;
-	int r;				/* IPC response code */
+	int r;			/* IPC response code */
 
 	scr_printf("Forgetting all rooms on %s...\n", &floorlist[ffloor][0]);
 	remove_march("_FLOOR_", ffloor);
@@ -547,28 +537,27 @@ void forget_all_rooms_on(CtdlIPC *ipc, int ffloor)
 		flist = flist->next;
 		free(fptr);
 	}
-	if (room) free(room);
+	if (room)
+		free(room);
 }
 
 
 /*
  * routine called by gotofloor() to move to a new room on a new floor
  */
-void gf_toroom(CtdlIPC *ipc, char *towhere, int mode)
+void gf_toroom(CtdlIPC * ipc, char *towhere, int mode)
 {
 	int floor_being_left;
 
 	floor_being_left = curr_floor;
 
-	if (mode == GF_GOTO) {		/* <;G>oto mode */
+	if (mode == GF_GOTO) {	/* <;G>oto mode */
 		updatels(ipc);
 		dotgoto(ipc, towhere, 1, 0);
-	}
-	else if (mode == GF_SKIP) {	/* <;S>kip mode */
+	} else if (mode == GF_SKIP) {	/* <;S>kip mode */
 		dotgoto(ipc, towhere, 1, 0);
 		remove_march("_FLOOR_", floor_being_left);
-	}
-	else if (mode == GF_ZAP) {	/* <;Z>ap mode */
+	} else if (mode == GF_ZAP) {	/* <;Z>ap mode */
 		dotgoto(ipc, towhere, 1, 0);
 		remove_march("_FLOOR_", floor_being_left);
 		forget_all_rooms_on(ipc, floor_being_left);
@@ -579,10 +568,10 @@ void gf_toroom(CtdlIPC *ipc, char *towhere, int mode)
 /*
  * go to a new floor
  */
-void gotofloor(CtdlIPC *ipc, char *towhere, int mode)
+void gotofloor(CtdlIPC * ipc, char *towhere, int mode)
 {
 	int a, tofloor;
-	int r;		/* IPC response code */
+	int r;			/* IPC response code */
 	struct march *mptr;
 	char buf[SIZ], targ[SIZ];
 
@@ -626,7 +615,7 @@ void gotofloor(CtdlIPC *ipc, char *towhere, int mode)
 
 		/*. . . according to room order */
 		if (mptr)
-    	    strcpy(targ, pop_march(tofloor, mptr));
+			strcpy(targ, pop_march(tofloor, mptr));
 		while (mptr) {
 			tmp = mptr->next;
 			free(mptr);
@@ -645,8 +634,8 @@ void gotofloor(CtdlIPC *ipc, char *towhere, int mode)
 	r = CtdlIPCKnownRooms(ipc, AllAccessibleRooms, tofloor, &mptr, buf);
 	if (r / 100 == 1) {
 		struct march *tmp = mptr;
-		
-        /*. . . according to room order */
+
+		/*. . . according to room order */
 		if (mptr)
 			strcpy(targ, pop_march(tofloor, mptr));
 		while (mptr) {
@@ -710,11 +699,11 @@ void room_tree_list_query(struct ctdlroomlisting *rp, char *findrmname, int find
 /*
  * step through rooms on current floor
  */
-void  gotoroomstep(CtdlIPC *ipc, int direction, int mode)
+void gotoroomstep(CtdlIPC * ipc, int direction, int mode)
 {
 	struct march *listing = NULL;
 	struct march *mptr;
-	int r;		/* IPC response code */
+	int r;			/* IPC response code */
 	char buf[SIZ];
 	struct ctdlroomlisting *rl = NULL;
 	struct ctdlroomlisting *rp;
@@ -735,8 +724,7 @@ void  gotoroomstep(CtdlIPC *ipc, int direction, int mode)
 	for (mptr = listing; mptr != NULL; mptr = mptr->next) {
 		list_it = 1;
 
-		if ( floor_mode 
-			 && (mptr->march_floor != curr_floor))
+		if (floor_mode && (mptr->march_floor != curr_floor))
 			list_it = 0;
 
 		if (list_it) {
@@ -775,19 +763,19 @@ void  gotoroomstep(CtdlIPC *ipc, int direction, int mode)
 
 	/* Find position of current room */
 	room_tree_list_query(NULL, NULL, 0, NULL, NULL, NULL);
-	room_tree_list_query(rl,  room_name, 0, NULL, &rmslot, &rmtotal);
+	room_tree_list_query(rl, room_name, 0, NULL, &rmslot, &rmtotal);
 
-	if (direction == 0) { /* Previous room */
+	if (direction == 0) {	/* Previous room */
 		/* If we're at the first room, wrap to the last room */
 		if (rmslot == 0) {
 			rmslot = rmtotal - 1;
 		} else {
 			rmslot--;
 		}
-	} else {		 /* Next room */
+	} else {		/* Next room */
 		/* If we're at the last room, wrap to the first room */
 		if (rmslot == rmtotal - 1) {
-			rmslot = 0; 
+			rmslot = 0;
 		} else {
 			rmslot++;
 		}
@@ -795,13 +783,13 @@ void  gotoroomstep(CtdlIPC *ipc, int direction, int mode)
 
 	/* Get name of next/previous room */
 	room_tree_list_query(NULL, NULL, 0, NULL, NULL, NULL);
-	room_tree_list_query(rl,  NULL, rmslot, rmname, NULL, NULL);
+	room_tree_list_query(rl, NULL, rmslot, rmname, NULL, NULL);
 
 	/* Free the tree */
 	room_tree_list_query(rl, NULL, 0, NULL, NULL, NULL);
 
-	if (mode == 0) { /* not skipping */
-	    updatels(ipc);
+	if (mode == 0) {	/* not skipping */
+		updatels(ipc);
 	}
 
 	/* Free the room list */
@@ -818,55 +806,62 @@ void  gotoroomstep(CtdlIPC *ipc, int direction, int mode)
 /*
  * step through floors on system
  */
-void  gotofloorstep(CtdlIPC *ipc, int direction, int mode)
+void gotofloorstep(CtdlIPC * ipc, int direction, int mode)
 {
-	int  tofloor;
+	int tofloor;
 
 	if (floorlist[0][0] == 0)
 		load_floorlist(ipc);
 
-	empty_keep_going:
+      empty_keep_going:
 
-	if (direction == 0) { /* Previous floor */
-		if (curr_floor)	tofloor = curr_floor - 1;
-		else tofloor = 127;
+	if (direction == 0) {	/* Previous floor */
+		if (curr_floor)
+			tofloor = curr_floor - 1;
+		else
+			tofloor = 127;
 
-		while (!floorlist[tofloor][0]) tofloor--;
-	} else {		   /* Next floor */
-		if (curr_floor < 127) tofloor = curr_floor + 1;
-		else tofloor = 0;
+		while (!floorlist[tofloor][0])
+			tofloor--;
+	} else {		/* Next floor */
+		if (curr_floor < 127)
+			tofloor = curr_floor + 1;
+		else
+			tofloor = 0;
 
-		while (!floorlist[tofloor][0] && tofloor < 127)	tofloor++;
-		if (!floorlist[tofloor][0])	tofloor = 0;
+		while (!floorlist[tofloor][0] && tofloor < 127)
+			tofloor++;
+		if (!floorlist[tofloor][0])
+			tofloor = 0;
 	}
 	/* ;g works when not in floor mode so . . . */
 	if (!floor_mode) {
-		scr_printf("(%s)\n", floorlist[tofloor] );
+		scr_printf("(%s)\n", floorlist[tofloor]);
 	}
 
 	gotofloor(ipc, floorlist[tofloor], mode);
-	if (curr_floor != tofloor) { /* gotofloor failed */
-	     curr_floor = tofloor;
-	     goto empty_keep_going;
-	}	     
+	if (curr_floor != tofloor) {	/* gotofloor failed */
+		curr_floor = tofloor;
+		goto empty_keep_going;
+	}
 }
 
 /* 
  * Display user 'preferences'.
  */
 extern int rc_prompt_control;
-void read_config(CtdlIPC *ipc)
+void read_config(CtdlIPC * ipc)
 {
 	char buf[SIZ];
 	char *resp = NULL;
 	int r;			/* IPC response code */
-    char _fullname[USERNAME_SIZE];
+	char _fullname[USERNAME_SIZE];
 	long _usernum;
 	int _axlevel, _timescalled, _posted;
 	time_t _lastcall;
 	struct ctdluser *user = NULL;
 
-	/* get misc user info */   
+	/* get misc user info */
 	r = CtdlIPCGetBio(ipc, fullname, &resp, buf);
 	if (r / 100 != 1) {
 		scr_printf("%s\n", buf);
@@ -876,11 +871,11 @@ void read_config(CtdlIPC *ipc)
 	_usernum = extract_long(buf, 2);
 	_axlevel = extract_int(buf, 3);
 	_lastcall = extract_long(buf, 4);
-    _timescalled = extract_int(buf, 5);
+	_timescalled = extract_int(buf, 5);
 	_posted = extract_int(buf, 6);
 	free(resp);
 	resp = NULL;
-   
+
 	/* get preferences */
 	r = CtdlIPCGetConfig(ipc, &user, buf);
 	if (r / 100 != 2) {
@@ -891,35 +886,62 @@ void read_config(CtdlIPC *ipc)
 
 	/* show misc user info */
 	scr_printf("%s\nAccess level: %d (%s)\n"
-		   "User #%ld / %d Calls / %d Posts",
-		   _fullname, _axlevel, axdefs[(int) _axlevel],
-		   _usernum, _timescalled, _posted);
+		   "User #%ld / %d Calls / %d Posts", _fullname, _axlevel, axdefs[(int) _axlevel], _usernum, _timescalled, _posted);
 	if (_lastcall > 0L) {
-		scr_printf(" / Curr login: %s",
-			   asctime(localtime(&_lastcall)));
+		scr_printf(" / Curr login: %s", asctime(localtime(&_lastcall)));
 	}
 	scr_printf("\n");
 
 	/* show preferences */
-	scr_printf("Are you an experienced Citadel user: ");                   color(BRIGHT_CYAN); scr_printf("%s\n", (user->flags & US_EXPERT) ? "Yes" : "No");     color(DIM_WHITE);
-	scr_printf("Print last old message on New message request: ");         color(BRIGHT_CYAN); scr_printf("%s\n", (user->flags & US_LASTOLD)? "Yes" : "No");     color(DIM_WHITE);
-	scr_printf("Prompt after each message: ");                             color(BRIGHT_CYAN); scr_printf("%s\n", (!(user->flags & US_NOPROMPT))? "Yes" : "No"); color(DIM_WHITE);
+	scr_printf("Are you an experienced Citadel user: ");
+	color(BRIGHT_CYAN);
+	scr_printf("%s\n", (user->flags & US_EXPERT) ? "Yes" : "No");
+	color(DIM_WHITE);
+	scr_printf("Print last old message on New message request: ");
+	color(BRIGHT_CYAN);
+	scr_printf("%s\n", (user->flags & US_LASTOLD) ? "Yes" : "No");
+	color(DIM_WHITE);
+	scr_printf("Prompt after each message: ");
+	color(BRIGHT_CYAN);
+	scr_printf("%s\n", (!(user->flags & US_NOPROMPT)) ? "Yes" : "No");
+	color(DIM_WHITE);
 	if ((user->flags & US_NOPROMPT) == 0) {
-    	scr_printf("Use 'disappearing' prompts: ");                        color(BRIGHT_CYAN); scr_printf("%s\n", (user->flags & US_DISAPPEAR)? "Yes" : "No");   color(DIM_WHITE);
+		scr_printf("Use 'disappearing' prompts: ");
+		color(BRIGHT_CYAN);
+		scr_printf("%s\n", (user->flags & US_DISAPPEAR) ? "Yes" : "No");
+		color(DIM_WHITE);
 	}
-	scr_printf("Pause after each screenful of text: ");                    color(BRIGHT_CYAN); scr_printf("%s\n", (user->flags & US_PAGINATOR)? "Yes" : "No");   color(DIM_WHITE);
-    if (rc_prompt_control == 3 && (user->flags & US_PAGINATOR)) {
-    	scr_printf("<N>ext and <S>top work at paginator prompt: ");        color(BRIGHT_CYAN); scr_printf("%s\n", (user->flags & US_PROMPTCTL)? "Yes" : "No");   color(DIM_WHITE);
+	scr_printf("Pause after each screenful of text: ");
+	color(BRIGHT_CYAN);
+	scr_printf("%s\n", (user->flags & US_PAGINATOR) ? "Yes" : "No");
+	color(DIM_WHITE);
+	if (rc_prompt_control == 3 && (user->flags & US_PAGINATOR)) {
+		scr_printf("<N>ext and <S>top work at paginator prompt: ");
+		color(BRIGHT_CYAN);
+		scr_printf("%s\n", (user->flags & US_PROMPTCTL) ? "Yes" : "No");
+		color(DIM_WHITE);
 	}
-    if (rc_floor_mode == RC_DEFAULT) {
-    	scr_printf("View rooms by floor: ");                               color(BRIGHT_CYAN); scr_printf("%s\n", (user->flags & US_FLOORS)? "Yes" : "No");	     color(DIM_WHITE);
+	if (rc_floor_mode == RC_DEFAULT) {
+		scr_printf("View rooms by floor: ");
+		color(BRIGHT_CYAN);
+		scr_printf("%s\n", (user->flags & US_FLOORS) ? "Yes" : "No");
+		color(DIM_WHITE);
 	}
-	if (rc_ansi_color == 3)	{
-	    scr_printf("Enable color support: ");                              color(BRIGHT_CYAN); scr_printf("%s\n", (user->flags & US_COLOR)? "Yes" : "No");	     color(DIM_WHITE);
+	if (rc_ansi_color == 3) {
+		scr_printf("Enable color support: ");
+		color(BRIGHT_CYAN);
+		scr_printf("%s\n", (user->flags & US_COLOR) ? "Yes" : "No");
+		color(DIM_WHITE);
 	}
-	scr_printf("Be unlisted in userlog: ");                                color(BRIGHT_CYAN); scr_printf("%s\n", (user->flags & US_UNLISTED)? "Yes" : "No");    color(DIM_WHITE);
+	scr_printf("Be unlisted in userlog: ");
+	color(BRIGHT_CYAN);
+	scr_printf("%s\n", (user->flags & US_UNLISTED) ? "Yes" : "No");
+	color(DIM_WHITE);
 	if (!IsEmptyStr(editor_path)) {
-    	scr_printf("Always enter messages with the full-screen editor: "); color(BRIGHT_CYAN); scr_printf("%s\n", (user->flags & US_EXTEDIT)? "Yes" : "No");     color(DIM_WHITE);
+		scr_printf("Always enter messages with the full-screen editor: ");
+		color(BRIGHT_CYAN);
+		scr_printf("%s\n", (user->flags & US_EXTEDIT) ? "Yes" : "No");
+		color(DIM_WHITE);
 	}
 	free(user);
 }
@@ -927,12 +949,12 @@ void read_config(CtdlIPC *ipc)
 /*
  * Display system statistics.
  */
-void system_info(CtdlIPC *ipc)
+void system_info(CtdlIPC * ipc)
 {
 	char buf[SIZ];
 	char *resp = NULL;
 	size_t bytes;
-	int mrtg_users, mrtg_active_users; 
+	int mrtg_users, mrtg_active_users;
 	char mrtg_server_uptime[40];
 	long mrtg_himessage;
 
@@ -956,8 +978,8 @@ void system_info(CtdlIPC *ipc)
 	CtdlIPCServerInfo(ipc, buf);
 
 	scr_printf("You are connected to %s (%s) @%s\n", ipc->ServInfo.nodename, ipc->ServInfo.humannode, ipc->ServInfo.fqdn);
-	scr_printf("running %s with text client v%.2f,\n", ipc->ServInfo.software, (float)CLIENT_VERSION/100);
-	scr_printf("server build %s,\n", ipc->ServInfo.svn_revision, (float)CLIENT_VERSION/100);
+	scr_printf("running %s with text client v%.2f,\n", ipc->ServInfo.software, (float) CLIENT_VERSION / 100);
+	scr_printf("server build %s,\n", ipc->ServInfo.svn_revision, (float) CLIENT_VERSION / 100);
 	scr_printf("and located in %s.\n", ipc->ServInfo.site_location);
 	scr_printf("Connected users %d / Active users %d / Highest message #%ld\n", mrtg_users, mrtg_active_users, mrtg_himessage);
 	scr_printf("Server uptime: %s\n", mrtg_server_uptime);
@@ -967,7 +989,7 @@ void system_info(CtdlIPC *ipc)
 /*
  * forget all rooms on current floor
  */
-void forget_this_floor(CtdlIPC *ipc)
+void forget_this_floor(CtdlIPC * ipc)
 {
 	if (curr_floor == 0) {
 		scr_printf("Can't forget this floor.\n");
@@ -976,8 +998,7 @@ void forget_this_floor(CtdlIPC *ipc)
 	if (floorlist[0][0] == 0) {
 		load_floorlist(ipc);
 	}
-	scr_printf("Are you sure you want to forget all rooms on %s? ",
-	       &floorlist[(int) curr_floor][0]);
+	scr_printf("Are you sure you want to forget all rooms on %s? ", &floorlist[(int) curr_floor][0]);
 	if (yesno() == 0) {
 		return;
 	}
@@ -989,7 +1010,7 @@ void forget_this_floor(CtdlIPC *ipc)
 /*
  * set floor mode depending on client, server, and user settings
  */
-void set_floor_mode(CtdlIPC* ipc)
+void set_floor_mode(CtdlIPC * ipc)
 {
 	if (ipc->ServInfo.ok_floors == 0) {
 		floor_mode = 0;	/* Don't use floors if the server */
@@ -1011,7 +1032,7 @@ void set_floor_mode(CtdlIPC* ipc)
 /*
  * Set or change the user's password
  */
-int set_password(CtdlIPC *ipc)
+int set_password(CtdlIPC * ipc)
 {
 	char pass1[20];
 	char pass2[20];
@@ -1043,7 +1064,7 @@ int set_password(CtdlIPC *ipc)
 /*
  * get info about the server we've connected to
  */
-void get_serv_info(CtdlIPC *ipc, char *supplied_hostname)
+void get_serv_info(CtdlIPC * ipc, char *supplied_hostname)
 {
 	char buf[SIZ];
 
@@ -1052,15 +1073,14 @@ void get_serv_info(CtdlIPC *ipc, char *supplied_hostname)
 
 	/* be nice and identify ourself to the server */
 	CtdlIPCIdentifySoftware(ipc, CLIENT_TYPE, 0, CLIENT_VERSION,
-		 (ipc->isLocal ? "local" : "Citadel text mode client"),
-		 (supplied_hostname) ? supplied_hostname : 
-		 /* Look up the , in the bible if you're confused */
-		 (locate_host(ipc, buf), buf), buf);
+				(ipc->isLocal ? "local" : "Citadel text mode client"), (supplied_hostname) ? supplied_hostname :
+				/* Look up the , in the bible if you're confused */
+				(locate_host(ipc, buf), buf), buf);
 
 	/* Indicate to the server that we prefer to decode Base64 and
 	 * quoted-printable on the client side.
 	 */
-	if ((CtdlIPCSpecifyPreferredFormats(ipc, buf, "dont_decode") / 100 ) != 2) {
+	if ((CtdlIPCSpecifyPreferredFormats(ipc, buf, "dont_decode") / 100) != 2) {
 		scr_printf("ERROR: Extremely old server; MSG4 framework not supported.\n");
 		logoff(ipc, 0);
 	}
@@ -1073,7 +1093,7 @@ void get_serv_info(CtdlIPC *ipc, char *supplied_hostname)
 	 * isn't really all that great, it's probably better to just go with
 	 * the plain text when we have it available.
 	 */
-	if ((CtdlIPCSpecifyPreferredFormats(ipc, buf, "text/plain|text/html|text/x-markdown") / 100 ) != 2) {
+	if ((CtdlIPCSpecifyPreferredFormats(ipc, buf, "text/plain|text/html|text/x-markdown") / 100) != 2) {
 		scr_printf("ERROR: Extremely old server; MSG4 framework not supported.\n");
 		logoff(ipc, 0);
 	}
@@ -1084,28 +1104,32 @@ void get_serv_info(CtdlIPC *ipc, char *supplied_hostname)
 /*
  * Session username compare function for SortOnlineUsers()
  */
-int rwho_username_cmp(const void *rec1, const void *rec2) {
+int rwho_username_cmp(const void *rec1, const void *rec2)
+{
 	char *u1, *u2;
 
 	u1 = strchr(rec1, '|');
 	u2 = strchr(rec2, '|');
 
-	return strcasecmp( (u1?++u1:"") , (u2?++u2:"") );
+	return strcasecmp((u1 ? ++u1 : ""), (u2 ? ++u2 : ""));
 }
 
 
 /*
  * Idle time compare function for SortOnlineUsers()
  */
-int idlecmp(const void *rec1, const void *rec2) {
+int idlecmp(const void *rec1, const void *rec2)
+{
 	time_t i1, i2;
 
 	i1 = extract_long(rec1, 5);
 	i2 = extract_long(rec2, 5);
 
-	if (i1 < i2) return(1);
-	if (i1 > i2) return(-1);
-	return(0);
+	if (i1 < i2)
+		return (1);
+	if (i1 > i2)
+		return (-1);
+	return (0);
 }
 
 
@@ -1117,7 +1141,8 @@ int idlecmp(const void *rec1, const void *rec2) {
  * If 'condense' is nonzero, multiple sessions for the same user will be
  * combined into one for brevity.
  */
-char *SortOnlineUsers(char *listing, int condense) {
+char *SortOnlineUsers(char *listing, int condense)
+{
 	int rows;
 	char *sortbuf;
 	char *retbuf;
@@ -1126,18 +1151,19 @@ char *SortOnlineUsers(char *listing, int condense) {
 
 	rows = num_tokens(listing, '\n');
 	sortbuf = malloc(rows * SIZ);
-	if (sortbuf == NULL) return(listing);
+	if (sortbuf == NULL)
+		return (listing);
 	retbuf = malloc(rows * SIZ);
 	if (retbuf == NULL) {
 		free(sortbuf);
-		return(listing);
+		return (listing);
 	}
 
 	/* Copy the list into a fixed-record-size array for sorting */
-	for (i=0; i<rows; ++i) {
+	for (i = 0; i < rows; ++i) {
 		memset(buf, 0, SIZ);
 		extract_token(buf, listing, i, '\n', sizeof buf);
-		memcpy(&sortbuf[i*SIZ], buf, (size_t)SIZ);
+		memcpy(&sortbuf[i * SIZ], buf, (size_t) SIZ);
 	}
 
 	/* Sort by idle time */
@@ -1146,32 +1172,35 @@ char *SortOnlineUsers(char *listing, int condense) {
 	/* Combine multiple sessions for the same user */
 	if (condense) {
 		qsort(sortbuf, rows, SIZ, rwho_username_cmp);
-		if (rows > 1) for (i=1; i<rows; ++i) if (i>0) {
-			char u1[USERNAME_SIZE];
-			char u2[USERNAME_SIZE];
-			extract_token(u1, &sortbuf[(i-1)*SIZ], 1, '|', sizeof u1);
-			extract_token(u2, &sortbuf[i*SIZ], 1, '|', sizeof u2);
-			if (!strcasecmp(u1, u2)) {
-				memcpy(&sortbuf[i*SIZ], &sortbuf[(i+1)*SIZ], (rows-i-1)*SIZ);
-				--rows;
-				--i;
-			}
-		}
+		if (rows > 1)
+			for (i = 1; i < rows; ++i)
+				if (i > 0) {
+					char u1[USERNAME_SIZE];
+					char u2[USERNAME_SIZE];
+					extract_token(u1, &sortbuf[(i - 1) * SIZ], 1, '|', sizeof u1);
+					extract_token(u2, &sortbuf[i * SIZ], 1, '|', sizeof u2);
+					if (!strcasecmp(u1, u2)) {
+						memcpy(&sortbuf[i * SIZ], &sortbuf[(i + 1) * SIZ], (rows - i - 1) * SIZ);
+						--rows;
+						--i;
+					}
+				}
 
 		qsort(sortbuf, rows, SIZ, idlecmp);	/* idle sort again */
 	}
 
 	/* Copy back to a \n delimited list */
 	strcpy(retbuf, "");
-	for (i=0; i<rows; ++i) {
-		if (!IsEmptyStr(&sortbuf[i*SIZ])) {
-			strcat(retbuf, &sortbuf[i*SIZ]);
-			if (i<(rows-1)) strcat(retbuf, "\n");
+	for (i = 0; i < rows; ++i) {
+		if (!IsEmptyStr(&sortbuf[i * SIZ])) {
+			strcat(retbuf, &sortbuf[i * SIZ]);
+			if (i < (rows - 1))
+				strcat(retbuf, "\n");
 		}
 	}
 	free(listing);
 	free(sortbuf);
-	return(retbuf);
+	return (retbuf);
 }
 
 
@@ -1179,7 +1208,7 @@ char *SortOnlineUsers(char *listing, int condense) {
 /*
  * Display list of users currently logged on to the server
  */
-void who_is_online(CtdlIPC *ipc, int longlist)
+void who_is_online(CtdlIPC * ipc, int longlist)
 {
 	char buf[SIZ], username[SIZ], roomname[SIZ], fromhost[SIZ];
 	char flags[SIZ];
@@ -1190,8 +1219,8 @@ void who_is_online(CtdlIPC *ipc, int longlist)
 	int last_session = (-1);
 	int skipidle = 0;
 	char *listing = NULL;
-	int r;				/* IPC response code */
-    
+	int r;			/* IPC response code */
+
 	if (longlist == 2) {
 		longlist = 0;
 		skipidle = 1;
@@ -1200,11 +1229,13 @@ void who_is_online(CtdlIPC *ipc, int longlist)
 	if (!longlist) {
 		color(BRIGHT_WHITE);
 		scr_printf("           User Name               Room          ");
-		if (screenwidth >= 80) scr_printf(" Idle        From host");
+		if (screenwidth >= 80)
+			scr_printf(" Idle        From host");
 		scr_printf("\n");
 		color(DIM_WHITE);
 		scr_printf("   ------------------------- --------------------");
-		if (screenwidth >= 80) scr_printf(" ---- ------------------------");
+		if (screenwidth >= 80)
+			scr_printf(" ---- ------------------------");
 		scr_printf("\n");
 	}
 	r = CtdlIPCOnlineUsers(ipc, &listing, &timenow, buf);
@@ -1212,7 +1243,7 @@ void who_is_online(CtdlIPC *ipc, int longlist)
 	if (r / 100 == 1) {
 		while (!IsEmptyStr(listing)) {
 			int isidle = 0;
-			
+
 			/* Get another line */
 			extract_token(buf, listing, 0, '\n', sizeof buf);
 			remove_token(listing, 0, '\n');
@@ -1245,37 +1276,34 @@ void who_is_online(CtdlIPC *ipc, int longlist)
 				scr_printf("In room: %s\n", roomname);
 				scr_printf("   Host: %s\n", fromhost);
 				scr_printf(" Client: %s\n", clientsoft);
-				scr_printf("   Idle: %ld:%02ld:%02ld\n",
-					(long) idlehours,
-					(long) idlemins,
-					(long) idlesecs);
+				scr_printf("   Idle: %ld:%02ld:%02ld\n", (long) idlehours, (long) idlemins, (long) idlesecs);
 
-				if ( (!IsEmptyStr(actual_user)&&
-				      !IsEmptyStr(actual_room)&&
-				      !IsEmptyStr(actual_host))) {
+				if ((!IsEmptyStr(actual_user) && !IsEmptyStr(actual_room) && !IsEmptyStr(actual_host))) {
 					scr_printf("(really ");
-					if (!IsEmptyStr(actual_user)) scr_printf("<%s> ", actual_user);
-					if (!IsEmptyStr(actual_room)) scr_printf("in <%s> ", actual_room);
-					if (!IsEmptyStr(actual_host)) scr_printf("from <%s> ", actual_host);
+					if (!IsEmptyStr(actual_user))
+						scr_printf("<%s> ", actual_user);
+					if (!IsEmptyStr(actual_room))
+						scr_printf("in <%s> ", actual_room);
+					if (!IsEmptyStr(actual_host))
+						scr_printf("from <%s> ", actual_host);
 					scr_printf(")\n");
 				}
 				scr_printf("\n");
 
 			} else {
 				if (isidle == 0) {
-    					if (extract_int(buf, 0) == last_session) {
-    						scr_printf("        ");
-    					}
-					else {
-    						color(BRIGHT_MAGENTA);
-    						scr_printf("%-3s", flags);
-    					}
-    					last_session = extract_int(buf, 0);
-    					color(BRIGHT_CYAN);
-    					scr_printf("%-25s ", username);
-    					color(BRIGHT_MAGENTA);
-    					roomname[20] = 0;
-    					scr_printf("%-20s", roomname);
+					if (extract_int(buf, 0) == last_session) {
+						scr_printf("        ");
+					} else {
+						color(BRIGHT_MAGENTA);
+						scr_printf("%-3s", flags);
+					}
+					last_session = extract_int(buf, 0);
+					color(BRIGHT_CYAN);
+					scr_printf("%-25s ", username);
+					color(BRIGHT_MAGENTA);
+					roomname[20] = 0;
+					scr_printf("%-20s", roomname);
 
 					if (screenwidth >= 80) {
 						scr_printf(" ");
@@ -1283,38 +1311,34 @@ void who_is_online(CtdlIPC *ipc, int longlist)
 							/* over 1000d, must be gone fishing */
 							if (idlehours > 23999) {
 								scr_printf("fish");
-							/* over 10 days */
+								/* over 10 days */
 							} else if (idlehours > 239) {
 								scr_printf("%3ldd", idlehours / 24);
-							/* over 10 hours */
+								/* over 10 hours */
 							} else if (idlehours > 9) {
-								scr_printf("%1ldd%02ld",
-									idlehours / 24,
-									idlehours % 24);
-							/* less than 10 hours */
-							}
-							else {
+								scr_printf("%1ldd%02ld", idlehours / 24, idlehours % 24);
+								/* less than 10 hours */
+							} else {
 								scr_printf("%1ld:%02ld", idlehours, idlemins);
 							}
-						}
-						else {
+						} else {
 							scr_printf("    ");
 						}
 						scr_printf(" ");
-    						color(BRIGHT_CYAN);
-    						fromhost[24] = '\0';
-    						scr_printf("%-24s", fromhost);
+						color(BRIGHT_CYAN);
+						fromhost[24] = '\0';
+						scr_printf("%-24s", fromhost);
 					}
 					scr_printf("\n");
-    					color(DIM_WHITE);
-    	  			}
+					color(DIM_WHITE);
+				}
 			}
 		}
 	}
 	free(listing);
 }
 
-void enternew(CtdlIPC *ipc, char *desc, char *buf, int maxlen)
+void enternew(CtdlIPC * ipc, char *desc, char *buf, int maxlen)
 {
 	char bbb[128];
 	snprintf(bbb, sizeof bbb, "Enter in your new %s: ", desc);
@@ -1323,17 +1347,19 @@ void enternew(CtdlIPC *ipc, char *desc, char *buf, int maxlen)
 
 
 
-int shift(int argc, char **argv, int start, int count) {
+int shift(int argc, char **argv, int start, int count)
+{
 	int i;
 
-	for (i=start; i<(argc-count); ++i) {
-		argv[i] = argv[i+count];
+	for (i = start; i < (argc - count); ++i) {
+		argv[i] = argv[i + count];
 	}
 	argc = argc - count;
 	return argc;
 }
 
-static void statusHook(char *s) {
+static void statusHook(char *s)
+{
 	scr_printf(s);
 }
 
@@ -1343,7 +1369,7 @@ static void statusHook(char *s) {
 int main(int argc, char **argv)
 {
 	int a, b, mcmd;
-	char aaa[100], bbb[100];/* general purpose variables */
+	char aaa[100], bbb[100];	/* general purpose variables */
 	char argbuf[64];	/* command line buf */
 	char nonce[NONCE_SIZE];
 	char *telnet_client_host = NULL;
@@ -1352,15 +1378,15 @@ int main(int argc, char **argv)
 	char password[SIZ];
 	struct ctdlipcmisc chek;
 	struct ctdluser *myself = NULL;
-	CtdlIPC* ipc;			/* Our server connection */
-	int r;				/* IPC result code */
-	int rv = 0;			/* fetch but ignore syscall return value to suppress warnings */
+	CtdlIPC *ipc;		/* Our server connection */
+	int r;			/* IPC result code */
+	int rv = 0;		/* fetch but ignore syscall return value to suppress warnings */
 
-	int relh=0;
-	int home=0;
-	char relhome[PATH_MAX]="";
-	char ctdldir[PATH_MAX]=CTDLDIR;
-    int lp; 
+	int relh = 0;
+	int home = 0;
+	char relhome[PATH_MAX] = "";
+	char ctdldir[PATH_MAX] = CTDLDIR;
+	int lp;
 	calc_dirs_n_files(relh, home, relhome, ctdldir, 0);
 
 #ifdef HAVE_BACKTRACE
@@ -1368,17 +1394,17 @@ int main(int argc, char **argv)
 	params.debugLevel = ECRASH_DEBUG_VERBOSE;
 	params.dumpAllThreads = TRUE;
 	params.useBacktraceSymbols = 1;
-	params.signals[0]=SIGSEGV;
-	params.signals[1]=SIGILL;
-	params.signals[2]=SIGBUS;
-	params.signals[3]=SIGABRT;
-#endif	
+	params.signals[0] = SIGSEGV;
+	params.signals[1] = SIGILL;
+	params.signals[2] = SIGBUS;
+	params.signals[3] = SIGABRT;
+#endif
 	setIPCErrorPrintf(scr_printf);
 	setCryptoStatusHook(statusHook);
-	
-	stty_ctdl(SB_SAVE);		/* Store the old terminal parameters */
-	load_command_set();		/* parse the citadel.rc file */
-	stty_ctdl(SB_NO_INTR);		/* Install the new ones */
+
+	stty_ctdl(SB_SAVE);	/* Store the old terminal parameters */
+	load_command_set();	/* parse the citadel.rc file */
+	stty_ctdl(SB_NO_INTR);	/* Install the new ones */
 	signal(SIGPIPE, dropcarr);	/* Cleanup gracefully if local conn. dropped */
 	signal(SIGTERM, dropcarr);	/* Cleanup gracefully if terminated */
 	signal(SIGCONT, catch_sigcont);	/* Catch SIGCONT so we can reset terminal */
@@ -1394,9 +1420,9 @@ int main(int argc, char **argv)
 	 * Handle command line options as if we were called like /bin/login
 	 * (i.e. from in.telnetd)
 	 */
-	for (a=0; a<argc; ++a) {
-		if ((argc > a+1) && (!strcmp(argv[a], "-h")) ) {
-			telnet_client_host = argv[a+1];
+	for (a = 0; a < argc; ++a) {
+		if ((argc > a + 1) && (!strcmp(argv[a], "-h"))) {
+			telnet_client_host = argv[a + 1];
 			argc = shift(argc, argv, a, 2);
 		}
 		if (!strcmp(argv[a], "-x")) {
@@ -1419,7 +1445,7 @@ int main(int argc, char **argv)
 			argc = shift(argc, argv, a, 1);
 		}
 	}
-	
+
 	screen_new();
 	/* Get screen dimensions.  First we go to a default of 80x24.
 	 * Then attempt to read the actual screen size from the terminal.
@@ -1455,24 +1481,18 @@ int main(int argc, char **argv)
 	/* If there is a [nonce] at the end, put the nonce in <nonce>, else nonce
 	 * is zeroized.
 	 */
-	
-	if ((sptr = strchr(aaa, '<')) == NULL)
-		{
+
+	if ((sptr = strchr(aaa, '<')) == NULL) {
+		nonce[0] = '\0';
+	} else {
+		if ((sptr2 = strchr(sptr, '>')) == NULL) {
 			nonce[0] = '\0';
+		} else {
+			sptr2++;
+			*sptr2 = '\0';
+			strncpy(nonce, sptr, (size_t) NONCE_SIZE);
 		}
-	else
-		{
-			if ((sptr2 = strchr(sptr, '>')) == NULL)
-				{
-					nonce[0] = '\0';
-				}
-			else
-				{
-					sptr2++;
-					*sptr2 = '\0';
-					strncpy(nonce, sptr, (size_t)NONCE_SIZE);
-				}
-		}
+	}
 
 #ifdef HAVE_OPENSSL
 	/* Evaluate encryption preferences */
@@ -1486,22 +1506,23 @@ int main(int argc, char **argv)
 #endif
 
 	get_serv_info(ipc, telnet_client_host);
-	scr_printf("%-24s\n%s\n%s\n", ipc->ServInfo.software, ipc->ServInfo.humannode,
-		   ipc->ServInfo.site_location);
+	scr_printf("%-24s\n%s\n%s\n", ipc->ServInfo.software, ipc->ServInfo.humannode, ipc->ServInfo.site_location);
 
 	scr_printf(" pause    next    stop\n");
 	scr_printf(" ctrl-s  ctrl-o  ctrl-c\n\n");
 	formout(ipc, "hello");	/* print the opening greeting */
 	scr_printf("\n");
 
- GSTA:	/* See if we have a username and password on disk */
+      GSTA:			/* See if we have a username and password on disk */
 	if (rc_remember_passwords) {
 		get_stored_password(hostbuf, portbuf, fullname, password);
 		if (!IsEmptyStr(fullname)) {
 			r = CtdlIPCTryLogin(ipc, fullname, aaa);
 			if (r / 100 == 3) {
 				if (*nonce) {
-					r = CtdlIPCTryApopPassword(ipc, make_apop_string(password, nonce, hexstring, sizeof hexstring), aaa);
+					r = CtdlIPCTryApopPassword(ipc,
+								   make_apop_string(password, nonce, hexstring, sizeof hexstring),
+								   aaa);
 				} else {
 					r = CtdlIPCTryPassword(ipc, password, aaa);
 				}
@@ -1528,8 +1549,7 @@ int main(int argc, char **argv)
 		if (!strcasecmp(fullname, "new")) {	/* just in case */
 			scr_printf("Please enter the name you wish to log in with.\n");
 		}
-	} while (
-		 (!strcasecmp(fullname, "bbs"))
+	} while ((!strcasecmp(fullname, "bbs"))
 		 || (!strcasecmp(fullname, "new"))
 		 || (IsEmptyStr(fullname)));
 
@@ -1539,7 +1559,7 @@ int main(int argc, char **argv)
 	}
 
 	/* FIXME this is a stupid way to do guest mode but it's a reasonable test harness FIXME */
-	if ( (ipc->ServInfo.guest_logins) && (!strcasecmp(fullname, "guest")) ) {
+	if ((ipc->ServInfo.guest_logins) && (!strcasecmp(fullname, "guest"))) {
 		goto PWOK;
 	}
 
@@ -1552,7 +1572,7 @@ int main(int argc, char **argv)
 	if (!IsEmptyStr(rc_password)) {
 		strcpy(password, rc_password);
 	} else {
-		newprompt("\rPlease enter your password: ", password, -(SIZ-1));
+		newprompt("\rPlease enter your password: ", password, -(SIZ - 1));
 	}
 
 	if (*nonce) {
@@ -1568,11 +1588,10 @@ int main(int argc, char **argv)
 			r = CtdlIPCTryPassword(ipc, password, aaa);
 		}
 	}
-	
+
 	if (r / 100 == 2) {
 		load_user_info(aaa);
-		offer_to_remember_password(ipc, hostbuf, portbuf,
-					   fullname, password);
+		offer_to_remember_password(ipc, hostbuf, portbuf, fullname, password);
 		goto PWOK;
 	}
 	scr_printf("<< wrong password >>\n");
@@ -1580,14 +1599,13 @@ int main(int argc, char **argv)
 		logoff(ipc, 2);
 	goto GSTA;
 
-NEWUSR:	if (IsEmptyStr(rc_password)) {
+      NEWUSR:if (IsEmptyStr(rc_password)) {
 		scr_printf("'%s' not found.\n", fullname);
 		scr_printf("Type 'off' if you would like to exit.\n");
 		if (ipc->ServInfo.newuser_disabled == 1) {
 			goto GSTA;
 		}
-		scr_printf("Do you want to create a new user account called '%s'? ",
-			fullname);
+		scr_printf("Do you want to create a new user account called '%s'? ", fullname);
 		if (yesno() == 0) {
 			goto GSTA;
 		}
@@ -1605,7 +1623,7 @@ NEWUSR:	if (IsEmptyStr(rc_password)) {
 
 	enter_config(ipc, 1);
 
- PWOK:
+      PWOK:
 	/* Switch color support on or off if we're in user mode */
 	if (rc_ansi_color == 3) {
 		if (userflags & US_COLOR)
@@ -1616,12 +1634,9 @@ NEWUSR:	if (IsEmptyStr(rc_password)) {
 
 	color(BRIGHT_WHITE);
 	scr_printf("\n%s\nAccess level: %d (%s)\n"
-		   "User #%ld / Login #%d",
-		   fullname, axlevel, axdefs[(int) axlevel],
-		   usernum, timescalled);
+		   "User #%ld / Login #%d", fullname, axlevel, axdefs[(int) axlevel], usernum, timescalled);
 	if (lastcall > 0L) {
-		scr_printf(" / Last login: %s",
-			   asctime(localtime(&lastcall)));
+		scr_printf(" / Last login: %s", asctime(localtime(&lastcall)));
 	}
 	scr_printf("\n");
 
@@ -1638,8 +1653,7 @@ NEWUSR:	if (IsEmptyStr(rc_password)) {
 			if (!IsEmptyStr(rc_gotmail_cmd)) {
 				rv = system(rc_gotmail_cmd);
 				if (rv)
-					scr_printf("*** failed to check for mail calling %s Reason %d.\n",
-						   rc_gotmail_cmd, rv);
+					scr_printf("*** failed to check for mail calling %s Reason %d.\n", rc_gotmail_cmd, rv);
 
 			}
 		}
@@ -1667,7 +1681,7 @@ NEWUSR:	if (IsEmptyStr(rc_password)) {
 	dotgoto(ipc, "_BASEROOM_", 1, 0);
 
 	/* Main loop for the system... user is logged in. */
-    free(uglist[0]);
+	free(uglist[0]);
 	uglistsize = 0;
 
 	if (newnow == 1)
@@ -1680,7 +1694,7 @@ NEWUSR:	if (IsEmptyStr(rc_password)) {
 		mcmd = getcmd(ipc, argbuf);	/* Get keyboard command */
 
 #ifdef TIOCGWINSZ
-		check_screen_dims();		/* get screen size */
+		check_screen_dims();	/* get screen size */
 #endif
 
 		if (termn8 == 0)
@@ -1700,17 +1714,17 @@ NEWUSR:	if (IsEmptyStr(rc_password)) {
 			case 78:
 				entmsg(ipc, 0, ((userflags & US_EXTEDIT) ? 2 : 0), 1);
 				break;
-			case 5:				/* <G>oto */
+			case 5:	/* <G>oto */
 				updatels(ipc);
 				gotonext(ipc);
 				break;
-			case 47:			/* <A>bandon */
+			case 47:	/* <A>bandon */
 				gotonext(ipc);
 				break;
-			case 90:			/* <.A>bandon */
+			case 90:	/* <.A>bandon */
 				dotgoto(ipc, argbuf, 0, 0);
 				break;
-			case 58:			/* <M>ail */
+			case 58:	/* <M>ail */
 				updatelsa(ipc);
 				dotgoto(ipc, "_MAIL_", 1, 0);
 				break;
@@ -1725,7 +1739,7 @@ NEWUSR:	if (IsEmptyStr(rc_password)) {
 					dotgoto(ipc, argbuf, 0, 0);
 				}
 				break;
-			case 95: /* what exactly is the numbering scheme supposed to be anyway? --Ford, there isn't one. -IO */
+			case 95:	/* what exactly is the numbering scheme supposed to be anyway? --Ford, there isn't one. -IO */
 				dotungoto(ipc, argbuf);
 				break;
 			case 10:
@@ -1744,8 +1758,7 @@ NEWUSR:	if (IsEmptyStr(rc_password)) {
 				readmsgs(ipc, OldMessages, ReadReverse, 0);
 				break;
 			case 71:
-				readmsgs(ipc, LastMessages, ReadForward,
-						atoi(argbuf));
+				readmsgs(ipc, LastMessages, ReadForward, atoi(argbuf));
 				break;
 			case 7:
 				forget(ipc);
@@ -1879,8 +1892,7 @@ NEWUSR:	if (IsEmptyStr(rc_password)) {
 				break;
 
 			case 85:
-				scr_printf("All users will be disconnected!  "
-					   "Really terminate the server? ");
+				scr_printf("All users will be disconnected!  " "Really terminate the server? ");
 				if (yesno() == 1) {
 					updatels(ipc);
 					r = CtdlIPCTerminateServerNow(ipc, aaa);
@@ -1893,19 +1905,15 @@ NEWUSR:	if (IsEmptyStr(rc_password)) {
 				break;
 
 			case 86:
-				scr_printf("Do you really want to schedule a "
-					   "server shutdown? ");
+				scr_printf("Do you really want to schedule a " "server shutdown? ");
 				if (yesno() == 1) {
 					r = CtdlIPCTerminateServerScheduled(ipc, 1, aaa);
 					if (r / 100 == 2) {
 						if (atoi(aaa)) {
-							scr_printf(
-								   "The Citadel server will terminate when all users are logged off.\n"
-								   );
+							scr_printf
+							    ("The Citadel server will terminate when all users are logged off.\n");
 						} else {
-							scr_printf(
-								   "The Citadel server will not terminate.\n"
-								   );
+							scr_printf("The Citadel server will not terminate.\n");
 						}
 					}
 				}
@@ -1938,7 +1946,7 @@ NEWUSR:	if (IsEmptyStr(rc_password)) {
 			case 91:
 				who_is_online(ipc, 2);
 				break;
-                
+
 			case 80:
 				do_system_configuration(ipc);
 				break;
@@ -2044,79 +2052,79 @@ NEWUSR:	if (IsEmptyStr(rc_password)) {
 				page_user(ipc);
 				break;
 
-            case 110:           /* <+> Next room */
-   				 gotoroomstep(ipc, 1, 0);
-			     break;
+			case 110:	/* <+> Next room */
+				gotoroomstep(ipc, 1, 0);
+				break;
 
-            case 111:           /* <-> Previous room */
-                 gotoroomstep(ipc, 0, 0);
-			     break;
+			case 111:	/* <-> Previous room */
+				gotoroomstep(ipc, 0, 0);
+				break;
 
-			case 112:           /* <>> Next floor */
-                 gotofloorstep(ipc, 1, GF_GOTO);
-			     break;
+			case 112:	/* <>> Next floor */
+				gotofloorstep(ipc, 1, GF_GOTO);
+				break;
 
-			case 113:           /* <<> Previous floor */
-                 gotofloorstep(ipc, 0, GF_GOTO);
-				 break;
+			case 113:	/* <<> Previous floor */
+				gotofloorstep(ipc, 0, GF_GOTO);
+				break;
 
-            case 116:           /* <.> skip to <+> Next room */
-                 gotoroomstep(ipc, 1, 1);
-			     break;
+			case 116:	/* <.> skip to <+> Next room */
+				gotoroomstep(ipc, 1, 1);
+				break;
 
-            case 117:           /* <.> skip to <-> Previous room */
-                 gotoroomstep(ipc, 0, 1);
-			     break;
+			case 117:	/* <.> skip to <-> Previous room */
+				gotoroomstep(ipc, 0, 1);
+				break;
 
-			case 118:           /* <.> skip to <>> Next floor */
-                 gotofloorstep(ipc, 1, GF_SKIP);
-			     break;
+			case 118:	/* <.> skip to <>> Next floor */
+				gotofloorstep(ipc, 1, GF_SKIP);
+				break;
 
-			case 119:           /* <.> skip to <<> Previous floor */
-                 gotofloorstep(ipc, 0, GF_SKIP);
-				 break;
+			case 119:	/* <.> skip to <<> Previous floor */
+				gotofloorstep(ipc, 0, GF_SKIP);
+				break;
 
-			case 114:           
-                 read_config(ipc);
-				 break;
+			case 114:
+				read_config(ipc);
+				break;
 
-			case 115:           
-                 system_info(ipc);
-				 break;
+			case 115:
+				system_info(ipc);
+				break;
 
-			case 120:           /* .KAnonymous */
-    			 dotknown(ipc, 0, NULL);
-				 break;
+			case 120:	/* .KAnonymous */
+				dotknown(ipc, 0, NULL);
+				break;
 
-			case 121:           /* .KDirectory */
-    			 dotknown(ipc, 1, NULL);
-				 break;
+			case 121:	/* .KDirectory */
+				dotknown(ipc, 1, NULL);
+				break;
 
-			case 122:           /* .KMatch */
-    			 dotknown(ipc, 2, argbuf);
-				 break;
+			case 122:	/* .KMatch */
+				dotknown(ipc, 2, argbuf);
+				break;
 
-			case 123:           /* .KpreferredOnly */
-    			 dotknown(ipc, 3, NULL);
-				 break;
+			case 123:	/* .KpreferredOnly */
+				dotknown(ipc, 3, NULL);
+				break;
 
-			case 124:           /* .KPrivate */
-    			 dotknown(ipc, 4, NULL);
-				 break;
+			case 124:	/* .KPrivate */
+				dotknown(ipc, 4, NULL);
+				break;
 
-			case 125:           /* .KRead only */
-    			 dotknown(ipc, 5, NULL);
-				 break;
+			case 125:	/* .KRead only */
+				dotknown(ipc, 5, NULL);
+				break;
 
-			case 126:           /* .KShared */
-    			 dotknown(ipc, 6, NULL);
-				 break;
+			case 126:	/* .KShared */
+				dotknown(ipc, 6, NULL);
+				break;
 
-			case 127:           /* Configure POP3 aggregation */
+			case 127:	/* Configure POP3 aggregation */
 				do_pop3client_configuration(ipc);
 				break;
 
-			case 128:           /* Configure XML/RSS feed retrieval */
+			case 128:	/* Configure XML/RSS feed retrieval */
 				do_rssclient_configuration(ipc);
 				break;
 
@@ -2125,7 +2133,7 @@ NEWUSR:	if (IsEmptyStr(rc_password)) {
 			}	/* end switch */
 	} while (termn8 == 0);
 
-TERMN8:	scr_printf("%s logged out.", fullname);
+      TERMN8:scr_printf("%s logged out.", fullname);
 	termn8 = 0;
 	color(ORIGINAL_PAIR);
 	scr_printf("\n");
@@ -2145,8 +2153,7 @@ TERMN8:	scr_printf("%s logged out.", fullname);
 	for (lp = 0; lp < uglistsize; lp++) {
 		free(uglist[lp]);
 	}
-    uglistsize = 0;
+	uglistsize = 0;
 	goto GSTA;
 
-}	/* end main() */
-
+}				/* end main() */

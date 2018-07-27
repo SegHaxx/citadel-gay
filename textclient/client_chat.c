@@ -19,7 +19,7 @@
 extern char temp[];
 char last_paged[SIZ] = "";
 
-void chatmode(CtdlIPC *ipc)
+void chatmode(CtdlIPC * ipc)
 {
 	char wbuf[SIZ];
 	char buf[SIZ];
@@ -46,7 +46,7 @@ void chatmode(CtdlIPC *ipc)
 
 	strcpy(buf, "");
 	strcpy(wbuf, "");
-	strcpy(last_user, ""); 
+	strcpy(last_user, "");
 	color(BRIGHT_YELLOW);
 	scr_printf("\n");
 	scr_printf("> ");
@@ -138,7 +138,7 @@ void chatmode(CtdlIPC *ipc)
 		snprintf(buf, sizeof buf, "RCHT poll|%d", seq);
 		CtdlIPC_chat_send(ipc, buf);
 		CtdlIPC_chat_recv(ipc, response);
-	
+
 		if (response[0] == '1') {
 			seq = extract_int(&response[4], 0);
 			extract_token(c_user, &response[4], 2, '|', sizeof c_user);
@@ -180,7 +180,7 @@ void chatmode(CtdlIPC *ipc)
 /*
  * send an instant message
  */
-void page_user(CtdlIPC *ipc)
+void page_user(CtdlIPC * ipc)
 {
 	char buf[SIZ], touser[SIZ], msg[SIZ];
 	FILE *pagefp;
@@ -234,7 +234,7 @@ void page_user(CtdlIPC *ipc)
 }
 
 
-void quiet_mode(CtdlIPC *ipc)
+void quiet_mode(CtdlIPC * ipc)
 {
 	static int quiet = 0;
 	char cret[SIZ];
@@ -243,16 +243,14 @@ void quiet_mode(CtdlIPC *ipc)
 	r = CtdlIPCEnableInstantMessageReceipt(ipc, !quiet, cret);
 	if (r / 100 == 2) {
 		quiet = !quiet;
-		scr_printf("Quiet mode %sabled (%sother users may page you)\n",
-				(quiet) ? "en" : "dis",
-				(quiet) ? "no " : "");
+		scr_printf("Quiet mode %sabled (%sother users may page you)\n", (quiet) ? "en" : "dis", (quiet) ? "no " : "");
 	} else {
 		scr_printf("Unable to change quiet mode: %s\n", cret);
 	}
 }
 
 
-void stealth_mode(CtdlIPC *ipc)
+void stealth_mode(CtdlIPC * ipc)
 {
 	static int stealth = 0;
 	char cret[SIZ];
@@ -262,8 +260,7 @@ void stealth_mode(CtdlIPC *ipc)
 	if (r / 100 == 2) {
 		stealth = !stealth;
 		scr_printf("Stealth mode %sabled (you are %s)\n",
-				(stealth) ? "en" : "dis",
-				(stealth) ? "invisible" : "listed as online");
+			   (stealth) ? "en" : "dis", (stealth) ? "invisible" : "listed as online");
 	} else {
 		scr_printf("Unable to change stealth mode: %s\n", cret);
 	}

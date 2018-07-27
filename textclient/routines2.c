@@ -44,7 +44,7 @@ int room_prompt(unsigned int qrflags)
 /*
  * Register with name and address
  */
-void entregis(CtdlIPC *ipc)
+void entregis(CtdlIPC * ipc)
 {
 
 	char buf[SIZ];
@@ -61,7 +61,7 @@ void entregis(CtdlIPC *ipc)
 	char holdemail[SIZ];
 	char *reg = NULL;
 	int ok = 0;
-	int r;				/* IPC response code */
+	int r;			/* IPC response code */
 
 	strcpy(tmpname, "");
 	strcpy(tmpaddr, "");
@@ -119,13 +119,9 @@ void entregis(CtdlIPC *ipc)
 			striplt(diruser);
 			striplt(dirnode);
 			if ((strcasecmp(diruser, fullname))
-			   || (strcasecmp(dirnode, ipc->ServInfo.nodename))) {
-				scr_printf(
-					"\nYou can't use %s as your address.\n",
-					tmpemail);
-				scr_printf(
-					"It is already in use by %s @ %s.\n",
-					diruser, dirnode);
+			    || (strcasecmp(dirnode, ipc->ServInfo.nodename))) {
+				scr_printf("\nYou can't use %s as your address.\n", tmpemail);
+				scr_printf("It is already in use by %s @ %s.\n", diruser, dirnode);
 				ok = 0;
 				safestrncpy(tmpemail, holdemail, sizeof tmpemail);
 			}
@@ -133,11 +129,10 @@ void entregis(CtdlIPC *ipc)
 	} while (ok == 0);
 
 	/* now send the registration info back to the server */
-	reg = (char *)realloc(reg, SIZ);
+	reg = (char *) realloc(reg, SIZ);
 	if (reg) {
 		sprintf(reg, "%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n",
-			tmpname, tmpaddr, tmpcity, tmpstate,
-			tmpzip, tmpphone, tmpemail, tmpcountry);
+			tmpname, tmpaddr, tmpcity, tmpstate, tmpzip, tmpphone, tmpemail, tmpcountry);
 		r = CtdlIPCSetRegistration(ipc, reg, buf);
 		if (r / 100 != 4)
 			scr_printf("%s\n", buf);
@@ -149,12 +144,12 @@ void entregis(CtdlIPC *ipc)
 /*
  * make all messages old in current room
  */
-void updatels(CtdlIPC *ipc)
+void updatels(CtdlIPC * ipc)
 {
 	char buf[256];
-	int r;				/* IPC response code */
+	int r;			/* IPC response code */
 
-	r = CtdlIPCSetLastRead(ipc, (maxmsgnum > highest_msg_read) ?  maxmsgnum : highest_msg_read, buf);
+	r = CtdlIPCSetLastRead(ipc, (maxmsgnum > highest_msg_read) ? maxmsgnum : highest_msg_read, buf);
 
 	if (r / 100 != 2)
 		scr_printf("%s\n", buf);
@@ -163,10 +158,10 @@ void updatels(CtdlIPC *ipc)
 /*
  * only make messages old in this room that have been read
  */
-void updatelsa(CtdlIPC *ipc)
+void updatelsa(CtdlIPC * ipc)
 {
 	char buf[256];
-	int r;				/* IPC response code */
+	int r;			/* IPC response code */
 
 	r = CtdlIPCSetLastRead(ipc, highest_msg_read, buf);
 	if (r / 100 != 2)
@@ -177,13 +172,13 @@ void updatelsa(CtdlIPC *ipc)
 /*
  * client-based uploads (for users with their own clientware)
  */
-void cli_upload(CtdlIPC *ipc)
+void cli_upload(CtdlIPC * ipc)
 {
 	char flnm[PATH_MAX];
 	char desc[151];
 	char buf[256];
 	char tbuf[256];
-	int r;		/* IPC response code */
+	int r;			/* IPC response code */
 	int a;
 	int fd;
 
@@ -206,10 +201,7 @@ void cli_upload(CtdlIPC *ipc)
 		/* basename of filename */
 		strcpy(tbuf, flnm);
 		if (haschar(tbuf, '/'))
-			extract_token(tbuf, flnm,
-				num_tokens(tbuf, '/') - 1,
-				'/', sizeof tbuf
-			);
+			extract_token(tbuf, flnm, num_tokens(tbuf, '/') - 1, '/', sizeof tbuf);
 		/* filename.1, filename.2, etc */
 		if (a > 0) {
 			sprintf(&tbuf[strlen(tbuf)], ".%d", a);
@@ -222,14 +214,15 @@ void cli_upload(CtdlIPC *ipc)
 			break;
 		++a;
 	}
-	if (a > 0) scr_printf("Saved as '%s'\n", tbuf);
+	if (a > 0)
+		scr_printf("Saved as '%s'\n", tbuf);
 }
 
 
 /*
  * Function used for various image upload commands
  */
-void cli_image_upload(CtdlIPC *ipc, char *keyname)
+void cli_image_upload(CtdlIPC * ipc, char *keyname)
 {
 	char flnm[PATH_MAX];
 	char buf[256];
@@ -255,7 +248,7 @@ void cli_image_upload(CtdlIPC *ipc, char *keyname)
 /*
  * protocol-based uploads (Xmodem, Ymodem, Zmodem)
  */
-void upload(CtdlIPC *ipc, int c)
+void upload(CtdlIPC * ipc, int c)
 {				/* c = upload mode */
 	char flnm[PATH_MAX];
 	char desc[151];
@@ -284,8 +277,7 @@ void upload(CtdlIPC *ipc, int c)
 
 	/* create a temporary directory... */
 	if (mkdir(tempdir, 0700) != 0) {
-		scr_printf("*** Could not create temporary directory %s: %s\n",
-		       tempdir, strerror(errno));
+		scr_printf("*** Could not create temporary directory %s: %s\n", tempdir, strerror(errno));
 		return;
 	}
 	/* now do the transfer ... in a separate process */
@@ -293,9 +285,7 @@ void upload(CtdlIPC *ipc, int c)
 	if (xfer_pid == 0) {
 		rv = chdir(tempdir);
 		if (rv < 0) {
-			scr_printf("failed to change into %s Reason %s\nAborting now.\n", 
-				   tempdir, 
-				   strerror(errno));
+			scr_printf("failed to change into %s Reason %s\nAborting now.\n", tempdir, strerror(errno));
 			nukedir(tempdir);
 			return;
 		}
@@ -346,9 +336,7 @@ void upload(CtdlIPC *ipc, int c)
 	if (lsfp != NULL) {
 		while (fgets(flnm, sizeof flnm, lsfp) != NULL) {
 			flnm[strlen(flnm) - 1] = 0;	/* chop newline */
-			snprintf(buf, sizeof buf,
-				 "Enter a short description of '%s':\n: ",
-				 flnm);
+			snprintf(buf, sizeof buf, "Enter a short description of '%s':\n: ", flnm);
 			newprompt(buf, desc, 150);
 			snprintf(buf, sizeof buf, "%s/%s", tempdir, flnm);
 			CtdlIPCFileUpload(ipc, flnm, desc, buf, progress, tbuf);
@@ -362,7 +350,7 @@ void upload(CtdlIPC *ipc, int c)
 /* 
  * validate a user (returns 0 for successful validation, nonzero if quitting)
  */
-int val_user(CtdlIPC *ipc, char *user, int do_validate)
+int val_user(CtdlIPC * ipc, char *user, int do_validate)
 {
 	int a;
 	char cmd[256];
@@ -370,7 +358,7 @@ int val_user(CtdlIPC *ipc, char *user, int do_validate)
 	char *resp = NULL;
 	int ax = 0;
 	char answer[2];
-	int r;				/* IPC response code */
+	int r;			/* IPC response code */
 
 	scr_printf("\n");
 	r = CtdlIPCGetUserRegistration(ipc, user, &resp, cmd);
@@ -383,7 +371,7 @@ int val_user(CtdlIPC *ipc, char *user, int do_validate)
 			if (a == 1)
 				scr_printf("User #%s - %s  ", buf, cmd);
 			if (a == 2)
-				scr_printf("PW: %s\n", (IsEmptyStr(buf) ? "<NOT SET>" : "<SET>") );
+				scr_printf("PW: %s\n", (IsEmptyStr(buf) ? "<NOT SET>" : "<SET>"));
 			if (a == 3)
 				scr_printf("%s\n", buf);
 			if (a == 4)
@@ -412,47 +400,46 @@ int val_user(CtdlIPC *ipc, char *user, int do_validate)
 	} else {
 		scr_printf("%s\n%s\n", user, &cmd[4]);
 	}
-	if (resp) free(resp);
+	if (resp)
+		free(resp);
 
 	if (do_validate) {
 		/* now set the access level */
-		while(1) {
+		while (1) {
 			sprintf(answer, "%d", ax);
-			strprompt("New access level (? for help, q to quit)",
-				answer, 1);
+			strprompt("New access level (? for help, q to quit)", answer, 1);
 			if ((answer[0] >= '0') && (answer[0] <= '6')) {
 				ax = atoi(answer);
 				r = CtdlIPCValidateUser(ipc, user, ax, cmd);
 				if (r / 100 != 2)
-				scr_printf("%s\n\n", cmd);
-				return(0);
+					scr_printf("%s\n\n", cmd);
+				return (0);
 			}
 			if (tolower(answer[0]) == 'q') {
 				scr_printf("*** Aborted.\n\n");
-				return(1);
+				return (1);
 			}
 			if (answer[0] == '?') {
 				scr_printf("Available access levels:\n");
-				for (a=0; a<7; ++a) {
-					scr_printf("%d - %s\n",
-						a, axdefs[a]);
+				for (a = 0; a < 7; ++a) {
+					scr_printf("%d - %s\n", a, axdefs[a]);
 				}
 			}
 		}
 	}
-	return(0);
+	return (0);
 }
 
 
 /*
  * Validate new users
  */
-void validate(CtdlIPC *ipc)
+void validate(CtdlIPC * ipc)
 {
 	char cmd[256];
 	char buf[256];
 	int finished = 0;
-	int r;				/* IPC response code */
+	int r;			/* IPC response code */
 
 	do {
 		r = CtdlIPCNextUnvalidatedUser(ipc, cmd);
@@ -462,7 +449,8 @@ void validate(CtdlIPC *ipc)
 			scr_printf("%s\n", cmd);
 		if (r / 100 == 3) {
 			extract_token(buf, cmd, 0, '|', sizeof buf);
-			if (val_user(ipc, buf, 1) != 0) finished = 1;
+			if (val_user(ipc, buf, 1) != 0)
+				finished = 1;
 		}
 	} while (finished == 0);
 }
@@ -489,7 +477,7 @@ void subshell(void)
 /*
  * <.A>ide <F>ile <D>elete command
  */
-void deletefile(CtdlIPC *ipc)
+void deletefile(CtdlIPC * ipc)
 {
 	char filename[32];
 	char buf[256];
@@ -505,7 +493,7 @@ void deletefile(CtdlIPC *ipc)
 /*
  * <.A>ide <F>ile <M>ove command
  */
-void movefile(CtdlIPC *ipc)
+void movefile(CtdlIPC * ipc)
 {
 	char filename[64];
 	char newroom[ROOMNAMELEN];
@@ -523,7 +511,7 @@ void movefile(CtdlIPC *ipc)
 /* 
  * list of users who have filled out a bio
  */
-void list_bio(CtdlIPC *ipc)
+void list_bio(CtdlIPC * ipc)
 {
 	char buf[256];
 	char *resp = NULL;
@@ -546,14 +534,15 @@ void list_bio(CtdlIPC *ipc)
 		pos = pos + strlen(buf) + 2;
 	}
 	scr_printf("%c%c  \n\n", 8, 8);
-	if (resp) free(resp);
+	if (resp)
+		free(resp);
 }
 
 
 /*
  * read bio
  */
-void read_bio(CtdlIPC *ipc)
+void read_bio(CtdlIPC * ipc)
 {
 	char who[256];
 	char buf[256];
@@ -577,5 +566,6 @@ void read_bio(CtdlIPC *ipc)
 		remove_token(resp, 0, '\n');
 		scr_printf("%s\n", buf);
 	}
-	if (resp) free(resp);
+	if (resp)
+		free(resp);
 }

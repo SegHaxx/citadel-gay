@@ -30,7 +30,7 @@ struct cittext {
 void stty_ctdl(int cmd);
 int haschar(const char *st, int ch);
 int file_checksum(char *filename);
-void progress(CtdlIPC* ipc, unsigned long curr, unsigned long cmax);
+void progress(CtdlIPC * ipc, unsigned long curr, unsigned long cmax);
 
 unsigned long *msg_arr = NULL;
 int msg_arr_size = 0;
@@ -62,7 +62,7 @@ extern CtdlIPC *ipc_for_signal_handlers;	/* KLUDGE cover your eyes */
 int num_urls = 0;
 char urls[MAXURLS][SIZ];
 char imagecmd[SIZ];
-int has_images = 0;				/* Current msg has images */
+int has_images = 0;		/* Current msg has images */
 struct parts *last_message_parts = NULL;	/* Parts from last msg */
 
 
@@ -178,7 +178,7 @@ void add_word(struct cittext *textlist, char *wordbuf)
 /*
  * begin editing of an opened file pointed to by fp
  */
-void citedit(FILE *fp)
+void citedit(FILE * fp)
 {
 	int a, prev, finished, b, last_space;
 	int appending = 0;
@@ -261,10 +261,8 @@ void citedit(FILE *fp)
 				for (b = 0; b < strlen(wordbuf); ++b)
 					if (wordbuf[b] == 32) {
 						wordbuf[b] = 0;
-						add_word(textlist,
-							 wordbuf);
-						strcpy(wordbuf,
-						       &wordbuf[b + 1]);
+						add_word(textlist, wordbuf);
+						strcpy(wordbuf, &wordbuf[b + 1]);
 						b = 0;
 					}
 				add_word(textlist, wordbuf);
@@ -284,10 +282,8 @@ void citedit(FILE *fp)
 				for (b = 0; b < strlen(wordbuf); ++b)
 					if (wordbuf[b] == 32) {
 						wordbuf[b] = 0;
-						add_word(textlist,
-							 wordbuf);
-						strcpy(wordbuf,
-						       &wordbuf[b + 1]);
+						add_word(textlist, wordbuf);
+						strcpy(wordbuf, &wordbuf[b + 1]);
 						b = 0;
 					}
 				for (b = 0; b < strlen(wordbuf); ++b) {
@@ -316,7 +312,7 @@ void citedit(FILE *fp)
 	if (rv < 0)
 		scr_printf("failed to set message buffer: %s\n", strerror(errno));
 
-	
+
 	/* and deallocate the memory we used */
 	while (textlist != NULL) {
 		ptr = textlist->next;
@@ -347,16 +343,21 @@ void free_parts(struct parts *p)
  * This is a mini RFC2047 decoder.
  * It only handles strings encoded from UTF-8 as Quoted-printable.
  */
-void mini_2047_decode(char *s) {
-	if (!s) return;
+void mini_2047_decode(char *s)
+{
+	if (!s)
+		return;
 
 	char *qstart = strstr(s, "=?UTF-8?Q?");
-	if (!qstart) return;
+	if (!qstart)
+		return;
 
 	char *qend = strstr(s, "?=");
-	if (!qend) return;
+	if (!qend)
+		return;
 
-	if (qend <= qstart) return;
+	if (qend <= qstart)
+		return;
 
 	strcpy(qstart, &qstart[10]);
 	qend -= 10;
@@ -380,7 +381,7 @@ void mini_2047_decode(char *s) {
 		if (p[0] == '_') {
 			p[0] = ' ';
 		}
-		
+
 		++p;
 	}
 
@@ -390,18 +391,17 @@ void mini_2047_decode(char *s) {
 /*
  * Read a message from the server
  */
-int read_message(CtdlIPC *ipc,
-	long num,   /* message number */
-	int pagin, /* 0 = normal read, 1 = read with pagination, 2 = header */
-	FILE *dest) /* Destination file, NULL for screen */
-{
+int read_message(CtdlIPC * ipc, long num,	/* message number */
+		 int pagin,	/* 0 = normal read, 1 = read with pagination, 2 = header */
+		 FILE * dest)
+{				/* Destination file, NULL for screen */
 	char buf[SIZ];
 	char now[256];
 	int format_type = 0;
 	int fr = 0;
 	int nhdr = 0;
 	struct ctdlipcmessage *message = NULL;
-	int r;				/* IPC response code */
+	int r;			/* IPC response code */
 	char *converted_text = NULL;
 	char *lineptr;
 	char *nextline;
@@ -431,39 +431,30 @@ int read_message(CtdlIPC *ipc,
 		return (0);
 	}
 
-	if (dest)
-	{
+	if (dest) {
 		fprintf(dest, "\n ");
-	}
-	else
-	{
+	} else {
 		scr_printf("\n");
-		if (pagin != 2)
-		{
+		if (pagin != 2) {
 			scr_printf(" ");
 		}
 	}
-	if (pagin == 1 && !dest)
-	{
+	if (pagin == 1 && !dest) {
 		color(BRIGHT_CYAN);
 	}
 
 	/* View headers only */
 	if (pagin == 2) {
 		scr_printf("nhdr=%s\nfrom=%s\ntype=%d\nmsgn=%s\n",
-				message->nhdr ? "yes" : "no",
-				message->author, message->type,
-				message->msgid);
+			   message->nhdr ? "yes" : "no", message->author, message->type, message->msgid);
 		if (!IsEmptyStr(message->subject)) {
 			scr_printf("subj=%s\n", message->subject);
 		}
 		if (!IsEmptyStr(message->email)) {
 			scr_printf("rfca=%s\n", message->email);
 		}
-		scr_printf("room=%s\ntime=%s",
-			message->room,
-			asctime(localtime(&message->time))
-		);
+		scr_printf("room=%s\ntime=%s", message->room, asctime(localtime(&message->time))
+		    );
 		if (!IsEmptyStr(message->recipient)) {
 			scr_printf("rcpt=%s\n", message->recipient);
 		}
@@ -472,10 +463,7 @@ int read_message(CtdlIPC *ipc,
 
 			for (ptr = message->attachments; ptr; ptr = ptr->next) {
 				scr_printf("part=%s|%s|%s|%s|%s|%ld\n",
-					ptr->name, ptr->filename, ptr->number,
-					ptr->disposition, ptr->mimetype,
-					ptr->length
-				);
+					   ptr->name, ptr->filename, ptr->number, ptr->disposition, ptr->mimetype, ptr->length);
 			}
 		}
 		scr_printf("\n");
@@ -525,7 +513,7 @@ int read_message(CtdlIPC *ipc,
 				scr_printf("<");
 				color(BRIGHT_BLUE);
 				scr_printf("%s", message->email);
-					color(DIM_WHITE);
+				color(DIM_WHITE);
 				scr_printf("> ");
 			}
 		}
@@ -550,7 +538,7 @@ int read_message(CtdlIPC *ipc,
 			}
 		}
 	}
-	
+
 	if (dest) {
 		fprintf(dest, "\n");
 	} else {
@@ -562,8 +550,7 @@ int read_message(CtdlIPC *ipc,
 	if ((message->email != NULL) && (!IsEmptyStr(message->email))) {
 		if (!IsEmptyStr(message->author)) {
 			snprintf(reply_to, sizeof reply_to, "%s <%s>", message->author, message->email);
-		}
-		else {
+		} else {
 			safestrncpy(reply_to, message->email, sizeof reply_to);
 		}
 	}
@@ -578,9 +565,10 @@ int read_message(CtdlIPC *ipc,
 		safestrncpy(reply_inreplyto, message->msgid, sizeof reply_inreplyto);
 	}
 
-	if (message->references != NULL) if (!IsEmptyStr(message->references)) {
-		safestrncpy(reply_references, message->references, sizeof reply_references);
-	}
+	if (message->references != NULL)
+		if (!IsEmptyStr(message->references)) {
+			safestrncpy(reply_references, message->references, sizeof reply_references);
+		}
 
 	if (message->subject != NULL) {
 		safestrncpy(reply_subject, message->subject, sizeof reply_subject);
@@ -633,17 +621,16 @@ int read_message(CtdlIPC *ipc,
 		"ftp://"
 	};
 	int p = 0;
-	num_urls = 0;	/* Start with a clean slate */
-	for (p=0; p<(sizeof urlprefixes / sizeof(char *)); ++p) {
+	num_urls = 0;		/* Start with a clean slate */
+	for (p = 0; p < (sizeof urlprefixes / sizeof(char *)); ++p) {
 		searchptr = message->text;
-		while ( (searchptr != NULL) && (num_urls < MAXURLS) ) {
+		while ((searchptr != NULL) && (num_urls < MAXURLS)) {
 			searchptr = strstr(searchptr, urlprefixes[p]);
 			if (searchptr != NULL) {
 				safestrncpy(urls[num_urls], searchptr, sizeof(urls[num_urls]));
 				for (i = 0; i < strlen(urls[num_urls]); i++) {
 					ch = urls[num_urls][i];
-					if (ch == '>' || ch == '\"' || ch == ')' ||
-					    ch == ' ' || ch == '\n') {
+					if (ch == '>' || ch == '\"' || ch == ')' || ch == ' ' || ch == '\n') {
 						urls[num_urls][i] = 0;
 						break;
 					}
@@ -669,12 +656,13 @@ int read_message(CtdlIPC *ipc,
 			if (nextline != NULL) {
 				*nextline = 0;
 				++nextline;
-				if (*nextline == 0) nextline = NULL;
+				if (*nextline == 0)
+					nextline = NULL;
 			}
 
 			if (sigcaught == 0) {
 				linelen = strlen(lineptr);
-				if (linelen && (lineptr[linelen-1] == '\r')) {
+				if (linelen && (lineptr[linelen - 1] == '\r')) {
 					lineptr[--linelen] = 0;
 				}
 				if (dest) {
@@ -683,8 +671,10 @@ int read_message(CtdlIPC *ipc,
 					scr_printf("%s\n", lineptr);
 				}
 			}
-			if (lineptr[0] == 0) final_line_is_blank = 1;
-			else final_line_is_blank = 0;
+			if (lineptr[0] == 0)
+				final_line_is_blank = 1;
+			else
+				final_line_is_blank = 0;
 			lineptr = nextline;
 		} while (nextline);
 		fr = sigcaught;
@@ -692,25 +682,24 @@ int read_message(CtdlIPC *ipc,
 	if (!final_line_is_blank) {
 		if (dest) {
 			fprintf(dest, "\n");
-		}
-		else {
+		} else {
 			scr_printf("\n");
-			fr = sigcaught;		
+			fr = sigcaught;
 		}
 	}
 
 	/* Enumerate any attachments */
-	if ( (pagin == 1) && (message->attachments) ) {
+	if ((pagin == 1) && (message->attachments)) {
 		struct parts *ptr;
 
 		for (ptr = message->attachments; ptr; ptr = ptr->next) {
-			if ( (!strcasecmp(ptr->disposition, "attachment"))
-			   || (!strcasecmp(ptr->disposition, "inline"))
-			   || (!strcasecmp(ptr->disposition, ""))
-			) {
-				if ( (strcasecmp(ptr->number, message->mime_chosen))
-				   && (!IsEmptyStr(ptr->mimetype))
-				) {
+			if ((!strcasecmp(ptr->disposition, "attachment"))
+			    || (!strcasecmp(ptr->disposition, "inline"))
+			    || (!strcasecmp(ptr->disposition, ""))
+			    ) {
+				if ((strcasecmp(ptr->number, message->mime_chosen))
+				    && (!IsEmptyStr(ptr->mimetype))
+				    ) {
 					color(DIM_WHITE);
 					scr_printf("Part ");
 					color(BRIGHT_MAGENTA);
@@ -758,12 +747,12 @@ void replace_string(char *filename, long int startpos)
 	long msglen = 0L;
 	int rv;
 
-	newprompt("Enter text to be replaced: ", srch_str, (sizeof(srch_str)-1) );
+	newprompt("Enter text to be replaced: ", srch_str, (sizeof(srch_str) - 1));
 	if (IsEmptyStr(srch_str)) {
 		return;
 	}
 
-	newprompt("Enter text to replace it with: ", rplc_str, (sizeof(rplc_str)-1) );
+	newprompt("Enter text to replace it with: ", rplc_str, (sizeof(rplc_str) - 1));
 
 	fp = fopen(filename, "r+");
 	if (fp == NULL) {
@@ -790,7 +779,7 @@ void replace_string(char *filename, long int startpos)
 			rv = fwrite((char *) buf, 128, 1, fp);
 			if (rv < 0) {
 				scr_printf("failed to replace string: %s\n", strerror(errno));
-				break; /*whoopsi! */
+				break;	/*whoopsi! */
 			}
 			strcpy(buf, &buf[128]);
 			wpos = ftell(fp);
@@ -810,15 +799,11 @@ void replace_string(char *filename, long int startpos)
 /*
  * Function to begin composing a new message
  */
-int client_make_message(CtdlIPC *ipc,
-			char *filename,		/* temporary file name */
+int client_make_message(CtdlIPC * ipc, char *filename,	/* temporary file name */
 			char *recipient,	/* NULL if it's not mail */
-			int is_anonymous,
-			int format_type,
-			int mode,
-			char *subject, 		/* buffer to store subject line */
-			int subject_required
-) {
+			int is_anonymous, int format_type, int mode, char *subject,	/* buffer to store subject line */
+			int subject_required)
+{
 	FILE *fp;
 	int a, b, e_ex_code;
 	long beg;
@@ -826,7 +811,7 @@ int client_make_message(CtdlIPC *ipc,
 	char header[SIZ];
 	int cksum = 0;
 
-	if ( (mode == 2) && (IsEmptyStr(editor_path)) ) {
+	if ((mode == 2) && (IsEmptyStr(editor_path))) {
 		scr_printf("*** No editor available; using built-in editor.\n");
 		mode = 0;
 	}
@@ -839,25 +824,21 @@ int client_make_message(CtdlIPC *ipc,
 
 	if (room_flags & QR_ANONONLY && !recipient) {
 		snprintf(header, sizeof header, " ****");
-	}
-	else {
-		snprintf(header, sizeof header,
-			" %s from %s",
-			datestr,
-			(is_anonymous ? "[anonymous]" : fullname)
-			);
+	} else {
+		snprintf(header, sizeof header, " %s from %s", datestr, (is_anonymous ? "[anonymous]" : fullname)
+		    );
 		if (!IsEmptyStr(recipient)) {
 			size_t tmp = strlen(header);
-			snprintf(&header[tmp], sizeof header - tmp,
-				" to %s", recipient);
+			snprintf(&header[tmp], sizeof header - tmp, " to %s", recipient);
 		}
 	}
 	scr_printf("%s\n", header);
-	if (subject != NULL) if (!IsEmptyStr(subject)) {
-		scr_printf("Subject: %s\n", subject);
-	}
-	
-	if ( (subject_required) && (IsEmptyStr(subject)) ) {
+	if (subject != NULL)
+		if (!IsEmptyStr(subject)) {
+			scr_printf("Subject: %s\n", subject);
+		}
+
+	if ((subject_required) && (IsEmptyStr(subject))) {
 		newprompt("Subject: ", subject, 70);
 	}
 
@@ -871,30 +852,27 @@ int client_make_message(CtdlIPC *ipc,
 			fmout(screenwidth, fp, NULL, NULL, 0);
 			beg = ftell(fp);
 			if (beg < 0)
-				scr_printf("failed to get stream position %s\n", 
-					   strerror(errno));
+				scr_printf("failed to get stream position %s\n", strerror(errno));
 			fclose(fp);
 		} else {
 			fp = fopen(filename, "w");
 			if (fp == NULL) {
-				scr_printf("*** Error opening temp file!\n    %s: %s\n",
-					filename, strerror(errno)
-				);
-			return(1);
+				scr_printf("*** Error opening temp file!\n    %s: %s\n", filename, strerror(errno)
+				    );
+				return (1);
 			}
 			fclose(fp);
 		}
 	}
 
-ME1:	switch (mode) {
+      ME1:switch (mode) {
 
 	case 0:
 		fp = fopen(filename, "r+");
 		if (fp == NULL) {
-			scr_printf("*** Error opening temp file!\n    %s: %s\n",
-				filename, strerror(errno)
-			);
-			return(1);
+			scr_printf("*** Error opening temp file!\n    %s: %s\n", filename, strerror(errno)
+			    );
+			return (1);
 		}
 		citedit(fp);
 		fclose(fp);
@@ -903,10 +881,8 @@ ME1:	switch (mode) {
 	case 1:
 		fp = fopen(filename, "a");
 		if (fp == NULL) {
-			scr_printf("*** Error opening temp file!\n"
-				"    %s: %s\n",
-				filename, strerror(errno));
-			return(1);
+			scr_printf("*** Error opening temp file!\n" "    %s: %s\n", filename, strerror(errno));
+			return (1);
 		}
 		do {
 			a = inkey();
@@ -925,7 +901,7 @@ ME1:	switch (mode) {
 		break;
 
 	case 2:
-	default:	/* allow 2+ modes */
+	default:		/* allow 2+ modes */
 		e_ex_code = 1;	/* start with a failed exit code */
 		stty_ctdl(SB_RESTORE);
 		editor_pid = fork();
@@ -949,7 +925,7 @@ ME1:	switch (mode) {
 		break;
 	}
 
-MECR:	if (mode >= 2) {
+      MECR:if (mode >= 2) {
 		if (file_checksum(filename) == cksum) {
 			scr_printf("*** Aborted message.\n");
 			e_ex_code = 1;
@@ -961,34 +937,31 @@ MECR:	if (mode >= 2) {
 	}
 
 	b = keymenu("Entry command (? for options)",
-		"<A>bort|"
-		"<C>ontinue|"
-		"<S>ave message|"
-		"<P>rint formatted|"
-		"add s<U>bject|"
-		"<R>eplace string|"
-		"<H>old message"
-	);
+		    "<A>bort|"
+		    "<C>ontinue|" "<S>ave message|" "<P>rint formatted|" "add s<U>bject|" "<R>eplace string|" "<H>old message");
 
-	if (b == 'a') goto MEABT;
-	if (b == 'c') goto ME1;
-	if (b == 's') goto MEFIN;
+	if (b == 'a')
+		goto MEABT;
+	if (b == 'c')
+		goto ME1;
+	if (b == 's')
+		goto MEFIN;
 	if (b == 'p') {
 		scr_printf(" %s from %s", datestr, fullname);
 		if (!IsEmptyStr(recipient)) {
 			scr_printf(" to %s", recipient);
 		}
 		scr_printf("\n");
-		if (subject != NULL) if (!IsEmptyStr(subject)) {
-			scr_printf("Subject: %s\n", subject);
-		}
+		if (subject != NULL)
+			if (!IsEmptyStr(subject)) {
+				scr_printf("Subject: %s\n", subject);
+			}
 		fp = fopen(filename, "r");
 		if (fp != NULL) {
 			fmout(screenwidth, fp, NULL, NULL, 0);
 			beg = ftell(fp);
 			if (beg < 0)
-				scr_printf("failed to get stream position %s\n", 
-					   strerror(errno));
+				scr_printf("failed to get stream position %s\n", strerror(errno));
 			fclose(fp);
 		}
 		goto MECR;
@@ -1007,13 +980,13 @@ MECR:	if (mode >= 2) {
 		goto MECR;
 	}
 
-MEFIN:	return (0);
+      MEFIN:return (0);
 
-MEABT:	scr_printf("Are you sure? ");
+      MEABT:scr_printf("Are you sure? ");
 	if (yesno() == 0) {
 		goto ME1;
 	}
-MEABT2:	unlink(filename);
+      MEABT2:unlink(filename);
 	return (2);
 }
 
@@ -1021,11 +994,11 @@ MEABT2:	unlink(filename);
 /*
  * Make sure there's room in msg_arr[] for at least one more.
  */
-void check_msg_arr_size(void) {
+void check_msg_arr_size(void)
+{
 	if ((num_msgs + 1) > msg_arr_size) {
 		msg_arr_size += 512;
-		msg_arr = realloc(msg_arr,
-			((sizeof(long)) * msg_arr_size) );
+		msg_arr = realloc(msg_arr, ((sizeof(long)) * msg_arr_size));
 	}
 }
 
@@ -1034,7 +1007,8 @@ void check_msg_arr_size(void) {
  * break_big_lines()  -  break up lines that are >1024 characters
  *                       otherwise the server will truncate
  */
-void break_big_lines(char *msg) {
+void break_big_lines(char *msg)
+{
 	char *ptr;
 	char *break_here;
 
@@ -1058,11 +1032,11 @@ void break_big_lines(char *msg) {
  * entmsg()  -  edit and create a message
  *              returns 0 if message was saved
  */
-int entmsg(CtdlIPC *ipc,
-		int is_reply,	/* nonzero if this was a <R>eply command */
-		int c,		/* mode */
-		int masquerade	/* prompt for a non-default display name? */
-) {
+int entmsg(CtdlIPC * ipc, int is_reply,	/* nonzero if this was a <R>eply command */
+	   int c,		/* mode */
+	   int masquerade	/* prompt for a non-default display name? */
+    )
+{
 	char buf[SIZ];
 	int a, b;
 	int need_recp = 0;
@@ -1077,13 +1051,12 @@ int entmsg(CtdlIPC *ipc,
 
 	if (!entmsg_ok) {
 		scr_printf("You may not enter messages in this type of room.\n");
-		return(1);
+		return (1);
 	}
 
 	if (c > 0) {
 		mode = 1;
-	}
-	else {
+	} else {
 		mode = 0;
 	}
 
@@ -1097,7 +1070,7 @@ int entmsg(CtdlIPC *ipc,
 	strcpy(message.author, "");
 	strcpy(message.subject, "");
 	strcpy(message.references, "");
-	message.text = "";		/* point to "", changes later */
+	message.text = "";	/* point to "", changes later */
 	message.anonymous = 0;
 	message.type = mode;
 
@@ -1108,15 +1081,10 @@ int entmsg(CtdlIPC *ipc,
 	if (is_reply) {
 
 		if (!IsEmptyStr(reply_subject)) {
-			if (!strncasecmp(reply_subject,
-			   "Re: ", 3)) {
+			if (!strncasecmp(reply_subject, "Re: ", 3)) {
 				strcpy(message.subject, reply_subject);
-			}
-			else {
-				snprintf(message.subject,
-					sizeof message.subject,
-					"Re: %s",
-					reply_subject);
+			} else {
+				snprintf(message.subject, sizeof message.subject, "Re: %s", reply_subject);
 			}
 		}
 
@@ -1125,15 +1093,12 @@ int entmsg(CtdlIPC *ipc,
 		 */
 		int rrtok = num_tokens(reply_references, '|');
 		int rrlen = strlen(reply_references);
-		if ( ((rrtok >= 3) && (rrlen > 900)) || (rrtok > 10) ) {
+		if (((rrtok >= 3) && (rrlen > 900)) || (rrtok > 10)) {
 			remove_token(reply_references, 1, '|');
 		}
 
 		snprintf(message.references, sizeof message.references, "%s%s%s",
-			reply_references,
-			(IsEmptyStr(reply_references) ? "" : "|"),
-			reply_inreplyto
-		);
+			 reply_references, (IsEmptyStr(reply_references) ? "" : "|"), reply_inreplyto);
 	}
 
 	r = CtdlIPCPostMessage(ipc, 0, &subject_required, &message, buf);
@@ -1165,7 +1130,7 @@ int entmsg(CtdlIPC *ipc,
 			if (is_reply) {
 				strcpy(buf, reply_to);
 			} else {
-				newprompt("Enter recipient: ", buf, SIZ-100);
+				newprompt("Enter recipient: ", buf, SIZ - 100);
 				if (IsEmptyStr(buf)) {
 					return (1);
 				}
@@ -1183,7 +1148,7 @@ int entmsg(CtdlIPC *ipc,
 
 	/* If it's mail, we've got to check the validity of the recipient... */
 	if (!IsEmptyStr(message.recipient)) {
-		r = CtdlIPCPostMessage(ipc, 0, &subject_required,  &message, buf);
+		r = CtdlIPCPostMessage(ipc, 0, &subject_required, &message, buf);
 		if (r / 100 != 2) {
 			scr_printf("%s\n", buf);
 			return (1);
@@ -1191,21 +1156,20 @@ int entmsg(CtdlIPC *ipc,
 	}
 
 	/* Learn the number of the newest message in in the room, so we can
- 	 * tell upon saving whether someone else has posted too.
- 	 */
+	 * tell upon saving whether someone else has posted too.
+	 */
 	num_msgs = 0;
 	r = CtdlIPCGetMessages(ipc, LastMessages, 1, NULL, &msgarr, buf);
 	if (r / 100 != 1) {
 		scr_printf("%s\n", buf);
 	} else {
-		for (num_msgs = 0; msgarr[num_msgs]; num_msgs++)
-			;
+		for (num_msgs = 0; msgarr[num_msgs]; num_msgs++);
 	}
 
 	/* Now compose the message... */
-	if (client_make_message(ipc, temp, message.recipient,
-	   message.anonymous, 0, c, message.subject, subject_required) != 0) {
-	    if (msgarr) free(msgarr);	
+	if (client_make_message(ipc, temp, message.recipient, message.anonymous, 0, c, message.subject, subject_required) != 0) {
+		if (msgarr)
+			free(msgarr);
 		return (2);
 	}
 
@@ -1213,14 +1177,13 @@ int entmsg(CtdlIPC *ipc,
 	fp = fopen(temp, "r");
 
 	if (!fp || !(message.text = load_message_from_file(fp))) {
-		scr_printf("*** Internal error while trying to save message!\n"
-			"%s: %s\n",
-			temp, strerror(errno));
+		scr_printf("*** Internal error while trying to save message!\n" "%s: %s\n", temp, strerror(errno));
 		unlink(temp);
-		return(errno);
+		return (errno);
 	}
 
-	if (fp) fclose(fp);
+	if (fp)
+		fclose(fp);
 
 	/* Break lines that are >1024 characters, otherwise the server
 	 * will truncate them.
@@ -1237,16 +1200,17 @@ int entmsg(CtdlIPC *ipc,
 	/* Yes, unlink it now, so it doesn't stick around if we crash */
 	unlink(temp);
 
-	if (num_msgs >= 1) highmsg = msgarr[num_msgs - 1];
+	if (num_msgs >= 1)
+		highmsg = msgarr[num_msgs - 1];
 
-	if (msgarr) free(msgarr);
+	if (msgarr)
+		free(msgarr);
 	msgarr = NULL;
 	r = CtdlIPCGetMessages(ipc, NewMessages, 0, NULL, &msgarr, buf);
 	if (r / 100 != 1) {
 		scr_printf("%s\n", buf);
 	} else {
-		for (num_msgs = 0; msgarr[num_msgs]; num_msgs++)
-			;
+		for (num_msgs = 0; msgarr[num_msgs]; num_msgs++);
 	}
 
 	/* get new highest message number in room to set lrp for goto... */
@@ -1259,7 +1223,8 @@ int entmsg(CtdlIPC *ipc,
 			++b;
 		}
 	}
-	if (msgarr) free(msgarr);
+	if (msgarr)
+		free(msgarr);
 	msgarr = NULL;
 
 	/* In the Mail> room, this algorithm always counts one message
@@ -1270,16 +1235,13 @@ int entmsg(CtdlIPC *ipc,
 	}
 
 	if (b == 1) {
-		scr_printf("*** 1 additional message has been entered "
-			"in this room by another user.\n");
+		scr_printf("*** 1 additional message has been entered " "in this room by another user.\n");
+	} else if (b > 1) {
+		scr_printf("*** %d additional messages have been entered " "in this room by other users.\n", b);
 	}
-	else if (b > 1) {
-		scr_printf("*** %d additional messages have been entered "
-			"in this room by other users.\n", b);
-	}
-    free(message.text);
+	free(message.text);
 
-	return(0);
+	return (0);
 }
 
 /*
@@ -1330,7 +1292,7 @@ void process_quote(void)
 /*
  * List the URL's which were embedded in the previous message
  */
-void list_urls(CtdlIPC *ipc)
+void list_urls(CtdlIPC * ipc)
 {
 	int i;
 	char cmd[SIZ];
@@ -1350,7 +1312,7 @@ void list_urls(CtdlIPC *ipc)
 
 	snprintf(cmd, sizeof cmd, rc_url_cmd, urls[i - 1]);
 	rv = system(cmd);
-	if (rv != 0) 
+	if (rv != 0)
 		scr_printf("failed to '%s' by %d\n", cmd, rv);
 	scr_printf("\n");
 }
@@ -1413,7 +1375,7 @@ int do_image_view(const char *filename)
 		waitpid(childpid, &retcode, 0);
 		return retcode;
 	}
-	
+
 	return -1;
 }
 
@@ -1421,7 +1383,7 @@ int do_image_view(const char *filename)
 /*
  * View an image attached to a message
  */
-void image_view(CtdlIPC *ipc, unsigned long msg)
+void image_view(CtdlIPC * ipc, unsigned long msg)
 {
 	struct parts *ptr = last_message_parts;
 	char part[SIZ];
@@ -1430,8 +1392,8 @@ void image_view(CtdlIPC *ipc, unsigned long msg)
 	/* Run through available parts */
 	for (ptr = last_message_parts; ptr; ptr = ptr->next) {
 		if ((!strcasecmp(ptr->disposition, "attachment")
-		   || !strcasecmp(ptr->disposition, "inline"))
-		   && !strncmp(ptr->mimetype, "image/", 6)) {
+		     || !strcasecmp(ptr->disposition, "inline"))
+		    && !strncmp(ptr->mimetype, "image/", 6)) {
 			found++;
 			if (found == 1) {
 				strcpy(part, ptr->number);
@@ -1441,18 +1403,18 @@ void image_view(CtdlIPC *ipc, unsigned long msg)
 
 	while (found > 0) {
 		if (found > 1)
-			strprompt("View which part (0 when done)", part, SIZ-1);
+			strprompt("View which part (0 when done)", part, SIZ - 1);
 		found = -found;
 		for (ptr = last_message_parts; ptr; ptr = ptr->next) {
 			if ((!strcasecmp(ptr->disposition, "attachment")
-			   || !strcasecmp(ptr->disposition, "inline"))
-			   && !strncmp(ptr->mimetype, "image/", 6)
-			   && !strcasecmp(ptr->number, part)) {
+			     || !strcasecmp(ptr->disposition, "inline"))
+			    && !strncmp(ptr->mimetype, "image/", 6)
+			    && !strcasecmp(ptr->number, part)) {
 				char tmp[PATH_MAX];
 				char buf[SIZ];
-				void *file = NULL; /* The downloaded file */
+				void *file = NULL;	/* The downloaded file */
 				int r;
-	
+
 				/* view image */
 				found = -found;
 				r = CtdlIPCAttachmentDownload(ipc, msg, ptr->number, &file, progress, buf);
@@ -1460,8 +1422,8 @@ void image_view(CtdlIPC *ipc, unsigned long msg)
 					scr_printf("%s\n", buf);
 				} else {
 					size_t len;
-	
-					len = (size_t)extract_long(buf, 0);
+
+					len = (size_t) extract_long(buf, 0);
 					progress(ipc, len, len);
 					scr_flush();
 					CtdlMakeTempFileName(tmp, sizeof tmp);
@@ -1477,16 +1439,16 @@ void image_view(CtdlIPC *ipc, unsigned long msg)
 			break;
 	}
 }
- 
+
 
 /*
  * Read the messages in the current room
  */
-void readmsgs(CtdlIPC *ipc,
-	enum MessageList c,		/* see listing in citadel_ipc.h */
-	enum MessageDirection rdir,	/* 1=Forward (-1)=Reverse */
-	int q		/* Number of msgs to read (if c==3) */
-) {
+void readmsgs(CtdlIPC * ipc, enum MessageList c,	/* see listing in citadel_ipc.h */
+	      enum MessageDirection rdir,	/* 1=Forward (-1)=Reverse */
+	      int q		/* Number of msgs to read (if c==3) */
+    )
+{
 	int a, e, f, g, start;
 	int savedpos;
 	int hold_sw = 0;
@@ -1500,10 +1462,10 @@ void readmsgs(CtdlIPC *ipc,
 	char filename[PATH_MAX];
 	char save_to[PATH_MAX];
 	void *attachment = NULL;	/* Downloaded attachment */
-	FILE *dest = NULL;		/* Alternate destination other than screen */
-	int r;				/* IPC response code */
-	static int att_seq = 0;		/* Attachment download sequence number */
-	int rv = 0;			/* silence the stupid warn_unused_result warnings */
+	FILE *dest = NULL;	/* Alternate destination other than screen */
+	int r;			/* IPC response code */
+	static int att_seq = 0;	/* Attachment download sequence number */
+	int rv = 0;		/* silence the stupid warn_unused_result warnings */
 
 	CtdlMakeTempFileName(prtfile, sizeof prtfile);
 
@@ -1515,15 +1477,17 @@ void readmsgs(CtdlIPC *ipc,
 	if (r / 100 != 1) {
 		scr_printf("%s\n", cmd);
 	} else {
-		for (num_msgs = 0; msg_arr[num_msgs]; num_msgs++)
-			;
+		for (num_msgs = 0; msg_arr[num_msgs]; num_msgs++);
 	}
 
 	if (num_msgs == 0) {	/* TODO look at this later */
-		if (c == LastMessages) return;
+		if (c == LastMessages)
+			return;
 		scr_printf("*** There are no ");
-		if (c == NewMessages) scr_printf("new ");
-		if (c == OldMessages) scr_printf("old ");
+		if (c == NewMessages)
+			scr_printf("new ");
+		if (c == OldMessages)
+			scr_printf("old ");
 		scr_printf("messages in this room.\n");
 		return;
 	}
@@ -1537,7 +1501,7 @@ void readmsgs(CtdlIPC *ipc,
 				return;
 		}
 
-RAGAIN:		pagin = ((arcflag == 0)
+	      RAGAIN:pagin = ((arcflag == 0)
 			 && (quotflag == 0)
 			 && (userflags & US_PAGINATOR)) ? 1 : 0;
 
@@ -1564,7 +1528,7 @@ RAGAIN:		pagin = ((arcflag == 0)
 		if ((quotflag) || (arcflag)) {
 			screenwidth = hold_sw;
 		}
-RMSGREAD:
+	      RMSGREAD:
 		highest_msg_read = msg_arr[a];
 		if (quotflag) {
 			fclose(dest);
@@ -1600,7 +1564,7 @@ RMSGREAD:
 		if (e == SIGQUIT)
 			return;
 		if (((userflags & US_NOPROMPT) || (e == SIGINT))
-			&& (((room_flags & QR_MAILBOX) == 0)
+		    && (((room_flags & QR_MAILBOX) == 0)
 			|| (rc_force_mail_prompts == 0))) {
 			e = 'n';
 		} else {
@@ -1626,10 +1590,10 @@ RMSGREAD:
 /* space key same as <N> */ if (e == 32)
 					e = 'n';
 /* del/move for aides only */
-				    if (  (!is_room_aide)
-				       && ((room_flags & QR_MAILBOX) == 0)
-				       && ((room_flags2 & QR2_COLLABDEL) == 0)
-				       ) {
+				if ((!is_room_aide)
+				    && ((room_flags & QR_MAILBOX) == 0)
+				    && ((room_flags2 & QR2_COLLABDEL) == 0)
+				    ) {
 					if ((e == 'd') || (e == 'm'))
 						e = 0;
 				}
@@ -1637,22 +1601,22 @@ RMSGREAD:
 				if ((e == 'p') && (IsEmptyStr(printcmd)))
 					e = 0;
 /* can't file if not allowed */
-				    if ((e == 'f')
-					&& (rc_allow_attachments == 0))
+				if ((e == 'f')
+				    && (rc_allow_attachments == 0))
 					e = 0;
 /* link only if browser avail*/
-				    if ((e == 'u')
-					&& (IsEmptyStr(rc_url_cmd)))
+				if ((e == 'u')
+				    && (IsEmptyStr(rc_url_cmd)))
 					e = 0;
 				if ((e == 'i')
-					&& (IsEmptyStr(imagecmd) || !has_images))
+				    && (IsEmptyStr(imagecmd) || !has_images))
 					e = 0;
 			} while ((e != 'a') && (e != 'n') && (e != 's')
 				 && (e != 'd') && (e != 'm') && (e != 'p')
 				 && (e != 'q') && (e != 'b') && (e != 'h')
 				 && (e != 'r') && (e != 'f') && (e != '?')
 				 && (e != 'u') && (e != 'c') && (e != 'y')
-				 && (e != 'i') && (e != 'o') );
+				 && (e != 'i') && (e != 'o'));
 			switch (e) {
 			case 's':
 				scr_printf("Stop");
@@ -1710,28 +1674,26 @@ RMSGREAD:
 			else
 				scr_printf("\n");
 		}
-DONE_QUOTING:	switch (e) {
+	      DONE_QUOTING:switch (e) {
 		case '?':
 			scr_printf("Options available here:\n"
-				" ?  Help (prints this message)\n"
-				" S  Stop reading immediately\n"
-				" A  Again (repeats last message)\n"
-				" N  Next (continue with next message)\n"
-				" Y  My Next (continue with next message you authored)\n"
-				" B  Back (go back to previous message)\n");
-			if (  (is_room_aide)
-			   || (room_flags & QR_MAILBOX)
-			   || (room_flags2 & QR2_COLLABDEL)
-			) {
-				scr_printf(" D  Delete this message\n"
-					" M  Move message to another room\n");
+				   " ?  Help (prints this message)\n"
+				   " S  Stop reading immediately\n"
+				   " A  Again (repeats last message)\n"
+				   " N  Next (continue with next message)\n"
+				   " Y  My Next (continue with next message you authored)\n"
+				   " B  Back (go back to previous message)\n");
+			if ((is_room_aide)
+			    || (room_flags & QR_MAILBOX)
+			    || (room_flags2 & QR2_COLLABDEL)
+			    ) {
+				scr_printf(" D  Delete this message\n" " M  Move message to another room\n");
 			}
 			scr_printf(" C  Copy message to another room\n");
 			if (!IsEmptyStr(printcmd))
 				scr_printf(" P  Print this message\n");
-			scr_printf(
-				" Q  Reply to this message, quoting portions of it\n"
-				" H  Headers (display message headers only)\n");
+			scr_printf(" Q  Reply to this message, quoting portions of it\n"
+				   " H  Headers (display message headers only)\n");
 			if (is_mail)
 				scr_printf(" R  Reply to this message\n");
 			if (rc_allow_attachments) {
@@ -1767,11 +1729,9 @@ DONE_QUOTING:	switch (e) {
 			break;
 		case 'm':
 		case 'c':
-			newprompt("Enter target room: ",
-				  targ, ROOMNAMELEN - 1);
+			newprompt("Enter target room: ", targ, ROOMNAMELEN - 1);
 			if (!IsEmptyStr(targ)) {
-				r = CtdlIPCMoveMessage(ipc, (e == 'c' ? 1 : 0),
-						       msg_arr[a], targ, cmd);
+				r = CtdlIPCMoveMessage(ipc, (e == 'c' ? 1 : 0), msg_arr[a], targ, cmd);
 				scr_printf("%s\n", cmd);
 				if (r / 100 == 2)
 					msg_arr[a] = 0L;
@@ -1784,8 +1744,7 @@ DONE_QUOTING:	switch (e) {
 		case 'o':
 		case 'f':
 			newprompt("Which section? ", filename, ((sizeof filename) - 1));
-			r = CtdlIPCAttachmentDownload(ipc, msg_arr[a],
-					filename, &attachment, progress, cmd);
+			r = CtdlIPCAttachmentDownload(ipc, msg_arr[a], filename, &attachment, progress, cmd);
 			if (r / 100 != 2) {
 				scr_printf("%s\n", cmd);
 			} else {
@@ -1797,19 +1756,15 @@ DONE_QUOTING:	switch (e) {
 				if (IsEmptyStr(filename)) {
 					strcpy(filename, reply_subject);
 				}
-				if (e == 'o') {		/* open attachment */
+				if (e == 'o') {	/* open attachment */
 					mkdir(tempdir, 0700);
-					snprintf(save_to, sizeof save_to, "%s/%04x.%s",
-						tempdir,
-						++att_seq,
-						filename);
+					snprintf(save_to, sizeof save_to, "%s/%04x.%s", tempdir, ++att_seq, filename);
 					save_buffer(attachment, extract_unsigned_long(cmd, 0), save_to);
 					snprintf(cmd, sizeof cmd, rc_open_cmd, save_to);
 					rv = system(cmd);
 					if (rv != 0)
 						scr_printf("failed to save %s Reason %d\n", cmd, rv);
-				}
-				else {			/* save attachment to disk */
+				} else {	/* save attachment to disk */
 					destination_directory(save_to, filename);
 					save_buffer(attachment, extract_unsigned_long(cmd, 0), save_to);
 				}
@@ -1844,34 +1799,33 @@ DONE_QUOTING:	switch (e) {
 		case 'i':
 			image_view(ipc, msg_arr[a]);
 			goto RMSGREAD;
-	    case 'y':
-          { /* hack hack hack */
-            /* find the next message by me, stay here if we find nothing */
-            int finda;
-            int lasta = a;
-            for (finda = (a + rdir); ((finda < num_msgs) && (finda >= 0)); finda += rdir)
-              {
-		/* This is repetitively dumb, but that's what computers are for.
-		   We have to load up messages until we find one by us */
-		char buf[SIZ];
-		int founda = 0;
-		struct ctdlipcmessage *msg = NULL;
-                
-		/* read the header so we can get 'from=' */
-		r = CtdlIPCGetSingleMessage(ipc, msg_arr[finda], 1, 0, &msg, buf);
-		if (!strncasecmp(msg->author, fullname, sizeof(fullname))) {
-			a = lasta; /* meesa current */
-			founda = 1;
-		}
+		case 'y':
+			{	/* hack hack hack */
+				/* find the next message by me, stay here if we find nothing */
+				int finda;
+				int lasta = a;
+				for (finda = (a + rdir); ((finda < num_msgs) && (finda >= 0)); finda += rdir) {
+					/* This is repetitively dumb, but that's what computers are for.
+					   We have to load up messages until we find one by us */
+					char buf[SIZ];
+					int founda = 0;
+					struct ctdlipcmessage *msg = NULL;
 
-		free(msg);
+					/* read the header so we can get 'from=' */
+					r = CtdlIPCGetSingleMessage(ipc, msg_arr[finda], 1, 0, &msg, buf);
+					if (!strncasecmp(msg->author, fullname, sizeof(fullname))) {
+						a = lasta;	/* meesa current */
+						founda = 1;
+					}
 
-		if (founda)
-			break; /* for */
-		lasta = finda; /* keep one behind or we skip on the reentrance to the for */
-              } /* for */
-          } /* case 'y' */
-      } /* switch */
+					free(msg);
+
+					if (founda)
+						break;	/* for */
+					lasta = finda;	/* keep one behind or we skip on the reentrance to the for */
+				}	/* for */
+			}	/* case 'y' */
+		}		/* switch */
 	}			/* end for loop */
 }				/* end read routine */
 
@@ -1881,7 +1835,7 @@ DONE_QUOTING:	switch (e) {
 /*
  * View and edit a system message
  */
-void edit_system_message(CtdlIPC *ipc, char *which_message)
+void edit_system_message(CtdlIPC * ipc, char *which_message)
 {
 	char desc[SIZ];
 	char read_cmd[SIZ];
@@ -1900,7 +1854,7 @@ void edit_system_message(CtdlIPC *ipc, char *which_message)
  * Loads the contents of a file into memory.  Caller must free the allocated
  * memory.
  */
-char *load_message_from_file(FILE *src)
+char *load_message_from_file(FILE * src)
 {
 	size_t i;
 	size_t got = 0;
@@ -1910,7 +1864,7 @@ char *load_message_from_file(FILE *src)
 	i = ftell(src);
 	rewind(src);
 
-	dest = (char *)calloc(1, i + 1);
+	dest = (char *) calloc(1, i + 1);
 	if (!dest)
 		return NULL;
 

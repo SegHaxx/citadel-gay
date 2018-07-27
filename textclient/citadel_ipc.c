@@ -17,58 +17,57 @@ static SSL_CTX *ssl_ctx;
 char arg_encrypt;
 char rc_encrypt;
 
-#endif /* HAVE_OPENSSL */
+#endif				/* HAVE_OPENSSL */
 
 #ifndef INADDR_NONE
 #define INADDR_NONE 0xffffffff
 #endif
 
-static void (*status_hook)(char *s) = NULL;
-char ctdl_autoetc_dir[PATH_MAX]="";
-char file_citadel_rc[PATH_MAX]="";
-char ctdl_run_dir[PATH_MAX]="";
-char ctdl_etc_dir[PATH_MAX]="";
+static void (*status_hook) (char *s) = NULL;
+char ctdl_autoetc_dir[PATH_MAX] = "";
+char file_citadel_rc[PATH_MAX] = "";
+char ctdl_run_dir[PATH_MAX] = "";
+char ctdl_etc_dir[PATH_MAX] = "";
 char ctdl_home_directory[PATH_MAX] = "";
-char file_citadel_socket[PATH_MAX]="";
+char file_citadel_socket[PATH_MAX] = "";
 
-char *viewdefs[]={
-        "Messages",
-        "Summary",
-        "Address book",
-        "Calendar",
-        "Tasks"
+char *viewdefs[] = {
+	"Messages",
+	"Summary",
+	"Address book",
+	"Calendar",
+	"Tasks"
 };
 
-char *axdefs[]={
-        "Deleted",
-        "New User",
-        "Problem User",
-        "Local User",
-        "Network User",
-        "Preferred User",
-        "Admin",
-        "Admin"
-        };
+char *axdefs[] = {
+	"Deleted",
+	"New User",
+	"Problem User",
+	"Local User",
+	"Network User",
+	"Preferred User",
+	"Admin",
+	"Admin"
+};
 
 
-void CtdlIPC_lock(CtdlIPC *ipc)
+void CtdlIPC_lock(CtdlIPC * ipc)
 {
-	if (ipc->network_status_cb) ipc->network_status_cb(1);
+	if (ipc->network_status_cb)
+		ipc->network_status_cb(1);
 }
 
 
-void CtdlIPC_unlock(CtdlIPC *ipc)
+void CtdlIPC_unlock(CtdlIPC * ipc)
 {
-	if (ipc->network_status_cb) ipc->network_status_cb(0);
+	if (ipc->network_status_cb)
+		ipc->network_status_cb(0);
 }
 
-#ifdef __cplusplus
-}
-#endif
 
-
-char *libcitadelclient_version_string(void) {
-        return "libcitadelclient(unnumbered)";
+char *libcitadelclient_version_string(void)
+{
+	return "libcitadelclient(unnumbered)";
 }
 
 
@@ -87,51 +86,45 @@ char *libcitadelclient_version_string(void) {
 #define DBG_PRINT(A) if (dbg==1) fprintf (stderr,"%s : %s \n", #A, A)
 
 
-void calc_dirs_n_files(int relh, int home, const char *relhome, char  *ctdldir, int dbg)
+void calc_dirs_n_files(int relh, int home, const char *relhome, char *ctdldir, int dbg)
 {
-	const char* basedir = "";
+	const char *basedir = "";
 	char dirbuffer[PATH_MAX] = "";
 
 	StripSlashes(ctdldir, 1);
 
 #ifndef HAVE_RUN_DIR
-	basedir=ctdldir;
+	basedir = ctdldir;
 #else
-	basedir=RUN_DIR;
+	basedir = RUN_DIR;
 #endif
 	COMPUTE_DIRECTORY(ctdl_run_dir);
 	StripSlashes(ctdl_run_dir, 1);
 
 
 #ifndef HAVE_AUTO_ETC_DIR
-	basedir=ctdldir;
+	basedir = ctdldir;
 #else
-	basedir=AUTO_ETC_DIR;
+	basedir = AUTO_ETC_DIR;
 #endif
 	COMPUTE_DIRECTORY(ctdl_autoetc_dir);
 	StripSlashes(ctdl_autoetc_dir, 1);
 
 
 #ifndef HAVE_ETC_DIR
-	basedir=ctdldir;
+	basedir = ctdldir;
 #else
-	basedir=ETC_DIR;
+	basedir = ETC_DIR;
 #endif
 	COMPUTE_DIRECTORY(ctdl_etc_dir);
 	StripSlashes(ctdl_etc_dir, 1);
 
 
 
-	snprintf(file_citadel_rc, 
-			 sizeof file_citadel_rc,
-			 "%scitadel.rc",
-			 ctdl_etc_dir);
+	snprintf(file_citadel_rc, sizeof file_citadel_rc, "%scitadel.rc", ctdl_etc_dir);
 	StripSlashes(file_citadel_rc, 0);
 
-	snprintf(file_citadel_socket, 
-			 sizeof file_citadel_socket,
-				"%scitadel.socket",
-			 ctdl_run_dir);
+	snprintf(file_citadel_socket, sizeof file_citadel_socket, "%scitadel.socket", ctdl_run_dir);
 	StripSlashes(file_citadel_socket, 0);
 
 	DBG_PRINT(ctdl_run_dir);
@@ -140,11 +133,13 @@ void calc_dirs_n_files(int relh, int home, const char *relhome, char  *ctdldir, 
 	DBG_PRINT(file_citadel_rc);
 }
 
-void setCryptoStatusHook(void (*hook)(char *s)) {
+void setCryptoStatusHook(void (*hook) (char *s))
+{
 	status_hook = hook;
 }
 
-void CtdlIPC_SetNetworkStatusCallback(CtdlIPC *ipc, void (*hook)(int state)) {
+void CtdlIPC_SetNetworkStatusCallback(CtdlIPC * ipc, void (*hook) (int state))
+{
 	ipc->network_status_cb = hook;
 }
 
@@ -152,15 +147,15 @@ void CtdlIPC_SetNetworkStatusCallback(CtdlIPC *ipc, void (*hook)(int state)) {
 char instant_msgs = 0;
 
 
-static void serv_read(CtdlIPC *ipc, char *buf, unsigned int bytes);
-static void serv_write(CtdlIPC *ipc, const char *buf, unsigned int nbytes);
+static void serv_read(CtdlIPC * ipc, char *buf, unsigned int bytes);
+static void serv_write(CtdlIPC * ipc, const char *buf, unsigned int nbytes);
 #ifdef HAVE_OPENSSL
-static void serv_read_ssl(CtdlIPC *ipc, char *buf, unsigned int bytes);
-static void serv_write_ssl(CtdlIPC *ipc, const char *buf, unsigned int nbytes);
-static void endtls(SSL *ssl);
-#endif /* HAVE_OPENSSL */
-static void CtdlIPC_getline(CtdlIPC* ipc, char *buf);
-static void CtdlIPC_putline(CtdlIPC *ipc, const char *buf);
+static void serv_read_ssl(CtdlIPC * ipc, char *buf, unsigned int bytes);
+static void serv_write_ssl(CtdlIPC * ipc, const char *buf, unsigned int nbytes);
+static void endtls(SSL * ssl);
+#endif				/* HAVE_OPENSSL */
+static void CtdlIPC_getline(CtdlIPC * ipc, char *buf);
+static void CtdlIPC_putline(CtdlIPC * ipc, const char *buf);
 
 
 
@@ -169,7 +164,7 @@ const char *svn_revision(void);
 /*
  * Does nothing.  The server should always return 200.
  */
-int CtdlIPCNoop(CtdlIPC *ipc)
+int CtdlIPCNoop(CtdlIPC * ipc)
 {
 	char aaa[128];
 
@@ -181,16 +176,19 @@ int CtdlIPCNoop(CtdlIPC *ipc)
  * Does nothing interesting.  The server should always return 200
  * along with your string.
  */
-int CtdlIPCEcho(CtdlIPC *ipc, const char *arg, char *cret)
+int CtdlIPCEcho(CtdlIPC * ipc, const char *arg, char *cret)
 {
 	int ret;
 	char *aaa;
-	
-	if (!arg) return -2;
-	if (!cret) return -2;
 
-	aaa = (char *)malloc((size_t)(strlen(arg) + 6));
-	if (!aaa) return -1;
+	if (!arg)
+		return -2;
+	if (!cret)
+		return -2;
+
+	aaa = (char *) malloc((size_t) (strlen(arg) + 6));
+	if (!aaa)
+		return -1;
 
 	sprintf(aaa, "ECHO %s", arg);
 	ret = CtdlIPCGenericCommand(ipc, aaa, NULL, 0, NULL, NULL, cret);
@@ -203,10 +201,10 @@ int CtdlIPCEcho(CtdlIPC *ipc, const char *arg, char *cret)
  * Asks the server to close the connecction.
  * Should always return 200.
  */
-int CtdlIPCQuit(CtdlIPC *ipc)
+int CtdlIPCQuit(CtdlIPC * ipc)
 {
 	int ret = 221;		/* Default to successful quit */
-	char aaa[SIZ]; 
+	char aaa[SIZ];
 
 	CtdlIPC_lock(ipc);
 	if (ipc->sock > -1) {
@@ -231,7 +229,7 @@ int CtdlIPCQuit(CtdlIPC *ipc)
  * Asks the server to log out.  Should always return 200, even if no user
  * was logged in.  The user will not be logged in after this!
  */
-int CtdlIPCLogout(CtdlIPC *ipc)
+int CtdlIPCLogout(CtdlIPC * ipc)
 {
 	int ret;
 	char aaa[SIZ];
@@ -250,16 +248,19 @@ int CtdlIPCLogout(CtdlIPC *ipc)
  * username is able to log in, with the username correctly spelled in cret.
  * Returns various 500 error codes if the user doesn't exist, etc.
  */
-int CtdlIPCTryLogin(CtdlIPC *ipc, const char *username, char *cret)
+int CtdlIPCTryLogin(CtdlIPC * ipc, const char *username, char *cret)
 {
 	int ret;
 	char *aaa;
 
-	if (!username) return -2;
-	if (!cret) return -2;
+	if (!username)
+		return -2;
+	if (!cret)
+		return -2;
 
-	aaa = (char *)malloc((size_t)(strlen(username) + 6));
-	if (!aaa) return -1;
+	aaa = (char *) malloc((size_t) (strlen(username) + 6));
+	if (!aaa)
+		return -1;
 
 	sprintf(aaa, "USER %s", username);
 	ret = CtdlIPCGenericCommand(ipc, aaa, NULL, 0, NULL, NULL, cret);
@@ -272,16 +273,19 @@ int CtdlIPCTryLogin(CtdlIPC *ipc, const char *username, char *cret)
  * Second stage of authentication - provide password.  The server returns
  * 200 and several arguments in cret relating to the user's account.
  */
-int CtdlIPCTryPassword(CtdlIPC *ipc, const char *passwd, char *cret)
+int CtdlIPCTryPassword(CtdlIPC * ipc, const char *passwd, char *cret)
 {
 	int ret;
 	char *aaa;
 
-	if (!passwd) return -2;
-	if (!cret) return -2;
+	if (!passwd)
+		return -2;
+	if (!cret)
+		return -2;
 
-	aaa = (char *)malloc((size_t)(strlen(passwd) + 6));
-	if (!aaa) return -1;
+	aaa = (char *) malloc((size_t) (strlen(passwd) + 6));
+	if (!aaa)
+		return -1;
 
 	sprintf(aaa, "PASS %s", passwd);
 	ret = CtdlIPCGenericCommand(ipc, aaa, NULL, 0, NULL, NULL, cret);
@@ -294,16 +298,19 @@ int CtdlIPCTryPassword(CtdlIPC *ipc, const char *passwd, char *cret)
  * Second stage of authentication - provide password.  The server returns
  * 200 and several arguments in cret relating to the user's account.
  */
-int CtdlIPCTryApopPassword(CtdlIPC *ipc, const char *response, char *cret)
+int CtdlIPCTryApopPassword(CtdlIPC * ipc, const char *response, char *cret)
 {
 	int ret;
 	char *aaa;
 
-	if (!response) return -2;
-	if (!cret) return -2;
+	if (!response)
+		return -2;
+	if (!cret)
+		return -2;
 
-	aaa = (char *)malloc((size_t)(strlen(response) + 6));
-	if (!aaa) return -1;
+	aaa = (char *) malloc((size_t) (strlen(response) + 6));
+	if (!aaa)
+		return -1;
 
 	sprintf(aaa, "PAS2 %s", response);
 	ret = CtdlIPCGenericCommand(ipc, aaa, NULL, 0, NULL, NULL, cret);
@@ -319,18 +326,21 @@ int CtdlIPCTryApopPassword(CtdlIPC *ipc, const char *response, char *cret)
  * user - intended for use by system administrators to create accounts on
  * behalf of other users.
  */
-int CtdlIPCCreateUser(CtdlIPC *ipc, const char *username, int selfservice, char *cret)
+int CtdlIPCCreateUser(CtdlIPC * ipc, const char *username, int selfservice, char *cret)
 {
 	int ret;
 	char *aaa;
 
-	if (!username) return -2;
-	if (!cret) return -2;
+	if (!username)
+		return -2;
+	if (!cret)
+		return -2;
 
-	aaa = (char *)malloc((size_t)(strlen(username) + 6));
-	if (!aaa) return -1;
+	aaa = (char *) malloc((size_t) (strlen(username) + 6));
+	if (!aaa)
+		return -1;
 
-	sprintf(aaa, "%s %s", selfservice ? "NEWU" : "CREU",  username);
+	sprintf(aaa, "%s %s", selfservice ? "NEWU" : "CREU", username);
 	ret = CtdlIPCGenericCommand(ipc, aaa, NULL, 0, NULL, NULL, cret);
 	free(aaa);
 	return ret;
@@ -340,16 +350,19 @@ int CtdlIPCCreateUser(CtdlIPC *ipc, const char *username, int selfservice, char 
 /*
  * Changes the user's password.  Returns 200 if changed, errors otherwise.
  */
-int CtdlIPCChangePassword(CtdlIPC *ipc, const char *passwd, char *cret)
+int CtdlIPCChangePassword(CtdlIPC * ipc, const char *passwd, char *cret)
 {
 	int ret;
 	char *aaa;
 
-	if (!passwd) return -2;
-	if (!cret) return -2;
+	if (!passwd)
+		return -2;
+	if (!cret)
+		return -2;
 
-	aaa = (char *)malloc((size_t)(strlen(passwd) + 6));
-	if (!aaa) return -1;
+	aaa = (char *) malloc((size_t) (strlen(passwd) + 6));
+	if (!aaa)
+		return -1;
 
 	sprintf(aaa, "SETP %s", passwd);
 	ret = CtdlIPCGenericCommand(ipc, aaa, NULL, 0, NULL, NULL, cret);
@@ -362,21 +375,24 @@ int CtdlIPCChangePassword(CtdlIPC *ipc, const char *passwd, char *cret)
 /* Caller must free the march list */
 /* Room types are defined in enum RoomList; keep these in sync! */
 /* floor is -1 for all, or floornum */
-int CtdlIPCKnownRooms(CtdlIPC *ipc, enum RoomList which, int floor, struct march **listing, char *cret)
+int CtdlIPCKnownRooms(CtdlIPC * ipc, enum RoomList which, int floor, struct march **listing, char *cret)
 {
 	int ret;
 	struct march *march = NULL;
-	static char *proto[] =
-		{"LKRA", "LKRN", "LKRO", "LZRM", "LRMS", "LPRM" };
+	static char *proto[] = { "LKRA", "LKRN", "LKRO", "LZRM", "LRMS", "LPRM" };
 	char aaa[SIZ];
 	char *bbb = NULL;
 	size_t bbb_len;
 
-	if (!listing) return -2;
-	if (*listing) return -2;	/* Free the listing first */
-	if (!cret) return -2;
+	if (!listing)
+		return -2;
+	if (*listing)
+		return -2;	/* Free the listing first */
+	if (!cret)
+		return -2;
 	/* if (which < 0 || which > 4) return -2; */
-	if (floor < -1) return -2;	/* Can't validate upper bound, sorry */
+	if (floor < -1)
+		return -2;	/* Can't validate upper bound, sorry */
 
 	sprintf(aaa, "%s %d", proto[which], floor);
 	ret = CtdlIPCGenericCommand(ipc, aaa, NULL, 0, &bbb, &bbb_len, cret);
@@ -389,7 +405,7 @@ int CtdlIPCKnownRooms(CtdlIPC *ipc, enum RoomList which, int floor, struct march
 			extract_token(aaa, bbb, 0, '\n', sizeof aaa);
 			a = strlen(aaa);
 			memmove(bbb, bbb + a + 1, strlen(bbb) - a);
-			mptr = (struct march *) malloc(sizeof (struct march));
+			mptr = (struct march *) malloc(sizeof(struct march));
 			if (mptr) {
 				mptr->next = NULL;
 				extract_token(mptr->march_name, aaa, 0, '|', sizeof mptr->march_name);
@@ -412,21 +428,26 @@ int CtdlIPCKnownRooms(CtdlIPC *ipc, enum RoomList which, int floor, struct march
 		}
 	}
 	*listing = march;
-	if (bbb) free(bbb);
+	if (bbb)
+		free(bbb);
 	return ret;
 }
 
 
 /* GETU */
 /* Caller must free the struct ctdluser; caller may pass an existing one */
-int CtdlIPCGetConfig(CtdlIPC *ipc, struct ctdluser **uret, char *cret)
+int CtdlIPCGetConfig(CtdlIPC * ipc, struct ctdluser **uret, char *cret)
 {
 	int ret;
 
-	if (!cret) return -2;
-	if (!uret) return -2;
-	if (!*uret) *uret = (struct ctdluser *)calloc(1, sizeof (struct ctdluser));
-	if (!*uret) return -1;
+	if (!cret)
+		return -2;
+	if (!uret)
+		return -2;
+	if (!*uret)
+		*uret = (struct ctdluser *) calloc(1, sizeof(struct ctdluser));
+	if (!*uret)
+		return -1;
 
 	ret = CtdlIPCGenericCommand(ipc, "GETU", NULL, 0, NULL, NULL, cret);
 	if (ret / 100 == 2) {
@@ -437,30 +458,32 @@ int CtdlIPCGetConfig(CtdlIPC *ipc, struct ctdluser **uret, char *cret)
 
 
 /* SETU */
-int CtdlIPCSetConfig(CtdlIPC *ipc, struct ctdluser *uret, char *cret)
+int CtdlIPCSetConfig(CtdlIPC * ipc, struct ctdluser *uret, char *cret)
 {
 	char aaa[48];
 
-	if (!uret) return -2;
-	if (!cret) return -2;
+	if (!uret)
+		return -2;
+	if (!cret)
+		return -2;
 
-	sprintf(aaa,
-		"SETU 80|24|%d",
-		uret->flags
-	);
+	sprintf(aaa, "SETU 80|24|%d", uret->flags);
 	return CtdlIPCGenericCommand(ipc, aaa, NULL, 0, NULL, NULL, cret);
 }
 
 
 /* RENU */
-int CtdlIPCRenameUser(CtdlIPC *ipc, char *oldname, char *newname, char *cret)
+int CtdlIPCRenameUser(CtdlIPC * ipc, char *oldname, char *newname, char *cret)
 {
 	int ret;
 	char cmd[256];
 
-	if (!oldname) return -2;
-	if (!newname) return -2;
-	if (!cret) return -2;
+	if (!oldname)
+		return -2;
+	if (!newname)
+		return -2;
+	if (!cret)
+		return -2;
 
 	snprintf(cmd, sizeof cmd, "RENU %s|%s", oldname, newname);
 	ret = CtdlIPCGenericCommand(ipc, cmd, NULL, 0, NULL, NULL, cret);
@@ -469,26 +492,29 @@ int CtdlIPCRenameUser(CtdlIPC *ipc, char *oldname, char *newname, char *cret)
 
 
 /* GOTO */
-int CtdlIPCGotoRoom(CtdlIPC *ipc, const char *room, const char *passwd,
-		struct ctdlipcroom **rret, char *cret)
+int CtdlIPCGotoRoom(CtdlIPC * ipc, const char *room, const char *passwd, struct ctdlipcroom **rret, char *cret)
 {
 	int ret;
 	char *aaa;
 
-	if (!cret) return -2;
-	if (!rret) return -2;
-	if (!*rret) *rret = (struct ctdlipcroom *)calloc(1, sizeof (struct ctdlipcroom));
-	if (!*rret) return -1;
+	if (!cret)
+		return -2;
+	if (!rret)
+		return -2;
+	if (!*rret)
+		*rret = (struct ctdlipcroom *) calloc(1, sizeof(struct ctdlipcroom));
+	if (!*rret)
+		return -1;
 
 	if (passwd) {
-		aaa = (char *)malloc(strlen(room) + strlen(passwd) + 7);
+		aaa = (char *) malloc(strlen(room) + strlen(passwd) + 7);
 		if (!aaa) {
 			free(*rret);
 			return -1;
 		}
 		sprintf(aaa, "GOTO %s|%s", room, passwd);
 	} else {
-		aaa = (char *)malloc(strlen(room) + 6);
+		aaa = (char *) malloc(strlen(room) + 6);
 		if (!aaa) {
 			free(*rret);
 			return -1;
@@ -524,41 +550,41 @@ int CtdlIPCGotoRoom(CtdlIPC *ipc, const char *room, const char *passwd,
 /* MSGS */
 /* which is 0 = all, 1 = old, 2 = new, 3 = last, 4 = first, 5 = gt, 6 = lt */
 /* whicharg is number of messages, applies to last, first, gt, lt */
-int CtdlIPCGetMessages(CtdlIPC *ipc, enum MessageList which, int whicharg,
-		const char *mtemplate, unsigned long **mret, char *cret)
+int CtdlIPCGetMessages(CtdlIPC * ipc, enum MessageList which, int whicharg, const char *mtemplate, unsigned long **mret, char *cret)
 {
 	int ret;
 	unsigned long count = 0;
-	static char *proto[] =
-		{ "ALL", "OLD", "NEW", "LAST", "FIRST", "GT", "LT" };
+	static char *proto[] = { "ALL", "OLD", "NEW", "LAST", "FIRST", "GT", "LT" };
 	char aaa[33];
 	char *bbb = NULL;
 	size_t bbb_len;
 
-	if (!cret) return -2;
-	if (!mret) return -2;
-	if (*mret) return -2;
-	if (which < 0 || which > 6) return -2;
+	if (!cret)
+		return -2;
+	if (!mret)
+		return -2;
+	if (*mret)
+		return -2;
+	if (which < 0 || which > 6)
+		return -2;
 
 	if (which <= 2)
-		sprintf(aaa, "MSGS %s||%d", proto[which],
-				(mtemplate) ? 1 : 0);
+		sprintf(aaa, "MSGS %s||%d", proto[which], (mtemplate) ? 1 : 0);
 	else
-		sprintf(aaa, "MSGS %s|%d|%d", proto[which], whicharg,
-				(mtemplate) ? 1 : 0);
-	if (mtemplate) count = strlen(mtemplate);
+		sprintf(aaa, "MSGS %s|%d|%d", proto[which], whicharg, (mtemplate) ? 1 : 0);
+	if (mtemplate)
+		count = strlen(mtemplate);
 	ret = CtdlIPCGenericCommand(ipc, aaa, mtemplate, count, &bbb, &bbb_len, cret);
 	if (ret / 100 != 1)
 		return ret;
 	count = 0;
-	*mret = (unsigned long *)calloc(1, sizeof(unsigned long));
+	*mret = (unsigned long *) calloc(1, sizeof(unsigned long));
 	if (!*mret)
 		return -1;
 	while (bbb && strlen(bbb)) {
 		extract_token(aaa, bbb, 0, '\n', sizeof aaa);
 		remove_token(bbb, 0, '\n');
-		*mret = (unsigned long *)realloc(*mret, (size_t)((count + 2) *
-					sizeof (unsigned long)));
+		*mret = (unsigned long *) realloc(*mret, (size_t) ((count + 2) * sizeof(unsigned long)));
 		if (*mret) {
 			(*mret)[count++] = atol(aaa);
 			(*mret)[count] = 0L;
@@ -566,14 +592,14 @@ int CtdlIPCGetMessages(CtdlIPC *ipc, enum MessageList which, int whicharg,
 			break;
 		}
 	}
-	if (bbb) free(bbb);
+	if (bbb)
+		free(bbb);
 	return ret;
 }
 
 
 /* MSG0, MSG2 */
-int CtdlIPCGetSingleMessage(CtdlIPC *ipc, long msgnum, int headers, int as_mime,
-		struct ctdlipcmessage **mret, char *cret)
+int CtdlIPCGetSingleMessage(CtdlIPC * ipc, long msgnum, int headers, int as_mime, struct ctdlipcmessage **mret, char *cret)
 {
 	int ret;
 	char aaa[SIZ];
@@ -583,11 +609,16 @@ int CtdlIPCGetSingleMessage(CtdlIPC *ipc, long msgnum, int headers, int as_mime,
 	char multipart_prefix[128];
 	char encoding[256];
 
-	if (!cret) return -1;
-	if (!mret) return -1;
-	if (!*mret) *mret = (struct ctdlipcmessage *)calloc(1, sizeof (struct ctdlipcmessage));
-	if (!*mret) return -1;
-	if (!msgnum) return -1;
+	if (!cret)
+		return -1;
+	if (!mret)
+		return -1;
+	if (!*mret)
+		*mret = (struct ctdlipcmessage *) calloc(1, sizeof(struct ctdlipcmessage));
+	if (!*mret)
+		return -1;
+	if (!msgnum)
+		return -1;
 
 	strcpy(encoding, "");
 	strcpy(mret[0]->content_type, "");
@@ -626,23 +657,20 @@ int CtdlIPCGetSingleMessage(CtdlIPC *ipc, long msgnum, int headers, int as_mime,
 				 */
 				else if (!strncasecmp(aaa, "pref=", 5)) {
 					extract_token(multipart_prefix, &aaa[5], 1, '|', sizeof multipart_prefix);
-					if (!strcasecmp(multipart_prefix,
-					   "multipart/alternative")) {
+					if (!strcasecmp(multipart_prefix, "multipart/alternative")) {
 						++multipart_hunting;
 					}
-				}
-				else if (!strncasecmp(aaa, "suff=", 5)) {
+				} else if (!strncasecmp(aaa, "suff=", 5)) {
 					extract_token(multipart_prefix, &aaa[5], 1, '|', sizeof multipart_prefix);
-					if (!strcasecmp(multipart_prefix,
-					   "multipart/alternative")) {
+					if (!strcasecmp(multipart_prefix, "multipart/alternative")) {
 						++multipart_hunting;
 					}
 				}
 
 				else if (!strncasecmp(aaa, "part=", 5)) {
 					struct parts *ptr, *chain;
-	
-					ptr = (struct parts *)calloc(1, sizeof (struct parts));
+
+					ptr = (struct parts *) calloc(1, sizeof(struct parts));
 					if (ptr) {
 
 						/* Fill the buffers for the caller */
@@ -663,12 +691,9 @@ int CtdlIPCGetSingleMessage(CtdlIPC *ipc, long msgnum, int headers, int as_mime,
 
 						/* Now handle multipart/alternative */
 						if (multipart_hunting > 0) {
-							if ( (!strcasecmp(ptr->mimetype,
-							     "text/plain"))
-							   || (!strcasecmp(ptr->mimetype,
-							      "text/html")) ) {
-								strcpy(mret[0]->mime_chosen,
-									ptr->number);
+							if ((!strcasecmp(ptr->mimetype, "text/plain"))
+							    || (!strcasecmp(ptr->mimetype, "text/html"))) {
+								strcpy(mret[0]->mime_chosen, ptr->number);
 							}
 						}
 
@@ -714,14 +739,13 @@ int CtdlIPCGetSingleMessage(CtdlIPC *ipc, long msgnum, int headers, int as_mime,
 		}
 		if (strlen(bbb)) {
 
-			if ( (!strcasecmp(encoding, "base64")) || (!strcasecmp(encoding, "quoted-printable")) ) {
+			if ((!strcasecmp(encoding, "base64")) || (!strcasecmp(encoding, "quoted-printable"))) {
 				char *ccc = NULL;
 				int bytes_decoded = 0;
 				ccc = malloc(strlen(bbb) + 32768);
 				if (!strcasecmp(encoding, "base64")) {
 					bytes_decoded = CtdlDecodeBase64(ccc, bbb, strlen(bbb));
-				}
-				else if (!strcasecmp(encoding, "quoted-printable")) {
+				} else if (!strcasecmp(encoding, "quoted-printable")) {
 					bytes_decoded = CtdlDecodeQuotedPrintable(ccc, bbb, strlen(bbb));
 				}
 				ccc[bytes_decoded] = 0;
@@ -730,10 +754,10 @@ int CtdlIPCGetSingleMessage(CtdlIPC *ipc, long msgnum, int headers, int as_mime,
 			}
 
 			/* FIXME: Strip trailing whitespace */
-			bbb = (char *)realloc(bbb, (size_t)(strlen(bbb) + 1));
+			bbb = (char *) realloc(bbb, (size_t) (strlen(bbb) + 1));
 
 		} else {
-			bbb = (char *)realloc(bbb, 1);
+			bbb = (char *) realloc(bbb, 1);
 			*bbb = '\0';
 		}
 		mret[0]->text = bbb;
@@ -743,14 +767,17 @@ int CtdlIPCGetSingleMessage(CtdlIPC *ipc, long msgnum, int headers, int as_mime,
 
 
 /* WHOK */
-int CtdlIPCWhoKnowsRoom(CtdlIPC *ipc, char **listing, char *cret)
+int CtdlIPCWhoKnowsRoom(CtdlIPC * ipc, char **listing, char *cret)
 {
 	int ret;
 	size_t bytes;
 
-	if (!cret) return -2;
-	if (!listing) return -2;
-	if (*listing) return -2;
+	if (!cret)
+		return -2;
+	if (!listing)
+		return -2;
+	if (*listing)
+		return -2;
 
 	ret = CtdlIPCGenericCommand(ipc, "WHOK", NULL, 0, listing, &bytes, cret);
 	return ret;
@@ -758,14 +785,15 @@ int CtdlIPCWhoKnowsRoom(CtdlIPC *ipc, char **listing, char *cret)
 
 
 /* INFO */
-int CtdlIPCServerInfo(CtdlIPC *ipc, char *cret)
+int CtdlIPCServerInfo(CtdlIPC * ipc, char *cret)
 {
 	int ret;
 	size_t bytes;
 	char *listing = NULL;
 	char buf[SIZ];
 
-	if (!cret) return -2;
+	if (!cret)
+		return -2;
 
 	ret = CtdlIPCGenericCommand(ipc, "INFO", NULL, 0, &listing, &bytes, cret);
 	if (ret / 100 == 1) {
@@ -775,68 +803,94 @@ int CtdlIPCServerInfo(CtdlIPC *ipc, char *cret)
 			extract_token(buf, listing, 0, '\n', sizeof buf);
 			remove_token(listing, 0, '\n');
 			switch (line++) {
-			case 0:		ipc->ServInfo.pid = atoi(buf);
-					break;
-			case 1:		strcpy(ipc->ServInfo.nodename,buf);
-					break;
-			case 2:		strcpy(ipc->ServInfo.humannode,buf);
-					break;
-			case 3:		strcpy(ipc->ServInfo.fqdn,buf);
-					break;
-			case 4:		strcpy(ipc->ServInfo.software,buf);
-					break;
-			case 5:		ipc->ServInfo.rev_level = atoi(buf);
-					break;
-			case 6:		strcpy(ipc->ServInfo.site_location,buf);
-					break;
-			case 7:		strcpy(ipc->ServInfo.sysadm,buf);
-					break;
-			case 9:		strcpy(ipc->ServInfo.moreprompt,buf);
-					break;
-			case 10:	ipc->ServInfo.ok_floors = atoi(buf);
-					break;
-			case 11:	ipc->ServInfo.paging_level = atoi(buf);
-					break;
-			case 13:	ipc->ServInfo.supports_qnop = atoi(buf);
-					break;
-			case 14:	ipc->ServInfo.supports_ldap = atoi(buf);
-					break;
-			case 15:	ipc->ServInfo.newuser_disabled = atoi(buf);
-					break;
-			case 16:	strcpy(ipc->ServInfo.default_cal_zone, buf);
-					break;
-			case 17:	ipc->ServInfo.load_avg = atof(buf);
-					break;
-			case 18:	ipc->ServInfo.worker_avg = atof(buf);
-					break;
-			case 19:	ipc->ServInfo.thread_count = atoi(buf);
-					break;
-			case 20:	ipc->ServInfo.has_sieve = atoi(buf);
-					break;
-			case 21:	ipc->ServInfo.fulltext_enabled = atoi(buf);
-					break;
-			case 22:	strcpy(ipc->ServInfo.svn_revision, buf);
-					break;
-			case 24:	ipc->ServInfo.guest_logins = atoi(buf);
-					break;
+			case 0:
+				ipc->ServInfo.pid = atoi(buf);
+				break;
+			case 1:
+				strcpy(ipc->ServInfo.nodename, buf);
+				break;
+			case 2:
+				strcpy(ipc->ServInfo.humannode, buf);
+				break;
+			case 3:
+				strcpy(ipc->ServInfo.fqdn, buf);
+				break;
+			case 4:
+				strcpy(ipc->ServInfo.software, buf);
+				break;
+			case 5:
+				ipc->ServInfo.rev_level = atoi(buf);
+				break;
+			case 6:
+				strcpy(ipc->ServInfo.site_location, buf);
+				break;
+			case 7:
+				strcpy(ipc->ServInfo.sysadm, buf);
+				break;
+			case 9:
+				strcpy(ipc->ServInfo.moreprompt, buf);
+				break;
+			case 10:
+				ipc->ServInfo.ok_floors = atoi(buf);
+				break;
+			case 11:
+				ipc->ServInfo.paging_level = atoi(buf);
+				break;
+			case 13:
+				ipc->ServInfo.supports_qnop = atoi(buf);
+				break;
+			case 14:
+				ipc->ServInfo.supports_ldap = atoi(buf);
+				break;
+			case 15:
+				ipc->ServInfo.newuser_disabled = atoi(buf);
+				break;
+			case 16:
+				strcpy(ipc->ServInfo.default_cal_zone, buf);
+				break;
+			case 17:
+				ipc->ServInfo.load_avg = atof(buf);
+				break;
+			case 18:
+				ipc->ServInfo.worker_avg = atof(buf);
+				break;
+			case 19:
+				ipc->ServInfo.thread_count = atoi(buf);
+				break;
+			case 20:
+				ipc->ServInfo.has_sieve = atoi(buf);
+				break;
+			case 21:
+				ipc->ServInfo.fulltext_enabled = atoi(buf);
+				break;
+			case 22:
+				strcpy(ipc->ServInfo.svn_revision, buf);
+				break;
+			case 24:
+				ipc->ServInfo.guest_logins = atoi(buf);
+				break;
 			}
 		}
 
 	}
-	if (listing) free(listing);
+	if (listing)
+		free(listing);
 	return ret;
 }
 
 
 /* RDIR */
-int CtdlIPCReadDirectory(CtdlIPC *ipc, char **listing, char *cret)
+int CtdlIPCReadDirectory(CtdlIPC * ipc, char **listing, char *cret)
 {
 	int ret;
 	size_t bytes;
 
-	if (!cret) return -2;
-	if (!listing) return -2;
-	if (*listing) return -2;
+	if (!cret)
+		return -2;
+	if (!listing)
+		return -2;
+	if (*listing)
+		return -2;
 
 	ret = CtdlIPCGenericCommand(ipc, "RDIR", NULL, 0, listing, &bytes, cret);
 	return ret;
@@ -846,17 +900,17 @@ int CtdlIPCReadDirectory(CtdlIPC *ipc, char **listing, char *cret)
 /*
  * Set last-read pointer in this room to msgnum, or 0 for HIGHEST.
  */
-int CtdlIPCSetLastRead(CtdlIPC *ipc, long msgnum, char *cret)
+int CtdlIPCSetLastRead(CtdlIPC * ipc, long msgnum, char *cret)
 {
 	int ret;
 	char aaa[64];
 
-	if (!cret) return -2;
+	if (!cret)
+		return -2;
 
 	if (msgnum) {
 		sprintf(aaa, "SLRP %ld", msgnum);
-	}
-	else {
+	} else {
 		sprintf(aaa, "SLRP HIGHEST");
 	}
 	ret = CtdlIPCGenericCommand(ipc, aaa, NULL, 0, NULL, NULL, cret);
@@ -865,16 +919,19 @@ int CtdlIPCSetLastRead(CtdlIPC *ipc, long msgnum, char *cret)
 
 
 /* INVT */
-int CtdlIPCInviteUserToRoom(CtdlIPC *ipc, const char *username, char *cret)
+int CtdlIPCInviteUserToRoom(CtdlIPC * ipc, const char *username, char *cret)
 {
 	int ret;
 	char *aaa;
 
-	if (!cret) return -2;
-	if (!username) return -2;
+	if (!cret)
+		return -2;
+	if (!username)
+		return -2;
 
-	aaa = (char *)malloc(strlen(username) + 6);
-	if (!aaa) return -1;
+	aaa = (char *) malloc(strlen(username) + 6);
+	if (!aaa)
+		return -1;
 
 	sprintf(aaa, "INVT %s", username);
 	ret = CtdlIPCGenericCommand(ipc, aaa, NULL, 0, NULL, NULL, cret);
@@ -884,15 +941,17 @@ int CtdlIPCInviteUserToRoom(CtdlIPC *ipc, const char *username, char *cret)
 
 
 /* KICK */
-int CtdlIPCKickoutUserFromRoom(CtdlIPC *ipc, const char *username, char *cret)
+int CtdlIPCKickoutUserFromRoom(CtdlIPC * ipc, const char *username, char *cret)
 {
 	int ret;
 	char *aaa;
 
-	if (!cret) return -1;
-	if (!username) return -1;
+	if (!cret)
+		return -1;
+	if (!username)
+		return -1;
 
-	aaa = (char *)malloc(strlen(username) + 6);
+	aaa = (char *) malloc(strlen(username) + 6);
 
 	sprintf(aaa, "KICK %s", username);
 	ret = CtdlIPCGenericCommand(ipc, aaa, NULL, 0, NULL, NULL, cret);
@@ -902,14 +961,18 @@ int CtdlIPCKickoutUserFromRoom(CtdlIPC *ipc, const char *username, char *cret)
 
 
 /* GETR */
-int CtdlIPCGetRoomAttributes(CtdlIPC *ipc, struct ctdlroom **qret, char *cret)
+int CtdlIPCGetRoomAttributes(CtdlIPC * ipc, struct ctdlroom **qret, char *cret)
 {
 	int ret;
 
-	if (!cret) return -2;
-	if (!qret) return -2;
-	if (!*qret) *qret = (struct ctdlroom *)calloc(1, sizeof (struct ctdlroom));
-	if (!*qret) return -1;
+	if (!cret)
+		return -2;
+	if (!qret)
+		return -2;
+	if (!*qret)
+		*qret = (struct ctdlroom *) calloc(1, sizeof(struct ctdlroom));
+	if (!*qret)
+		return -1;
 
 	ret = CtdlIPCGenericCommand(ipc, "GETR", NULL, 0, NULL, NULL, cret);
 	if (ret / 100 == 2) {
@@ -928,22 +991,23 @@ int CtdlIPCGetRoomAttributes(CtdlIPC *ipc, struct ctdlroom **qret, char *cret)
 
 /* SETR */
 /* set forget to kick all users out of room */
-int CtdlIPCSetRoomAttributes(CtdlIPC *ipc, int forget, struct ctdlroom *qret, char *cret)
+int CtdlIPCSetRoomAttributes(CtdlIPC * ipc, int forget, struct ctdlroom *qret, char *cret)
 {
 	int ret;
 	char *aaa;
 
-	if (!cret) return -2;
-	if (!qret) return -2;
+	if (!cret)
+		return -2;
+	if (!qret)
+		return -2;
 
-	aaa = (char *)malloc(strlen(qret->QRname) + strlen(qret->QRpasswd) +
-			strlen(qret->QRdirname) + 64);
-	if (!aaa) return -1;
+	aaa = (char *) malloc(strlen(qret->QRname) + strlen(qret->QRpasswd) + strlen(qret->QRdirname) + 64);
+	if (!aaa)
+		return -1;
 
 	sprintf(aaa, "SETR %s|%s|%s|%d|%d|%d|%d|%d|%d",
-			qret->QRname, qret->QRpasswd, qret->QRdirname,
-			qret->QRflags, forget, qret->QRfloor, qret->QRorder,
-			qret->QRdefaultview, qret->QRflags2);
+		qret->QRname, qret->QRpasswd, qret->QRdirname,
+		qret->QRflags, forget, qret->QRfloor, qret->QRorder, qret->QRdefaultview, qret->QRflags2);
 	ret = CtdlIPCGenericCommand(ipc, aaa, NULL, 0, NULL, NULL, cret);
 	free(aaa);
 	return ret;
@@ -951,25 +1015,29 @@ int CtdlIPCSetRoomAttributes(CtdlIPC *ipc, int forget, struct ctdlroom *qret, ch
 
 
 /* GETA */
-int CtdlIPCGetRoomAide(CtdlIPC *ipc, char *cret)
+int CtdlIPCGetRoomAide(CtdlIPC * ipc, char *cret)
 {
-	if (!cret) return -1;
+	if (!cret)
+		return -1;
 
 	return CtdlIPCGenericCommand(ipc, "GETA", NULL, 0, NULL, NULL, cret);
 }
 
 
 /* SETA */
-int CtdlIPCSetRoomAide(CtdlIPC *ipc, const char *username, char *cret)
+int CtdlIPCSetRoomAide(CtdlIPC * ipc, const char *username, char *cret)
 {
 	int ret;
 	char *aaa;
 
-	if (!cret) return -2;
-	if (!username) return -2;
+	if (!cret)
+		return -2;
+	if (!username)
+		return -2;
 
-	aaa = (char *)malloc(strlen(username) + 6);
-	if (!aaa) return -1;
+	aaa = (char *) malloc(strlen(username) + 6);
+	if (!aaa)
+		return -1;
 
 	sprintf(aaa, "SETA %s", username);
 	ret = CtdlIPCGenericCommand(ipc, aaa, NULL, 0, NULL, NULL, cret);
@@ -979,58 +1047,65 @@ int CtdlIPCSetRoomAide(CtdlIPC *ipc, const char *username, char *cret)
 
 
 /* ENT0 */
-int CtdlIPCPostMessage(CtdlIPC *ipc, int flag, int *subject_required,  struct ctdlipcmessage *mr, char *cret)
+int CtdlIPCPostMessage(CtdlIPC * ipc, int flag, int *subject_required, struct ctdlipcmessage *mr, char *cret)
 {
 	int ret;
 	char cmd[SIZ];
 	char *ptr;
 
-	if (!cret) return -2;
-	if (!mr) return -2;
+	if (!cret)
+		return -2;
+	if (!mr)
+		return -2;
 
 	if (mr->references) {
-		for (ptr=mr->references; *ptr != 0; ++ptr) {
-			if (*ptr == '|') *ptr = '!';
+		for (ptr = mr->references; *ptr != 0; ++ptr) {
+			if (*ptr == '|')
+				*ptr = '!';
 		}
 	}
 
 	snprintf(cmd, sizeof cmd,
-			"ENT0 %d|%s|%d|%d|%s|%s||||||%s|", flag, mr->recipient,
-			mr->anonymous, mr->type, mr->subject, mr->author, mr->references);
-	ret = CtdlIPCGenericCommand(ipc, cmd, mr->text, strlen(mr->text), NULL,
-			NULL, cret);
+		 "ENT0 %d|%s|%d|%d|%s|%s||||||%s|", flag, mr->recipient,
+		 mr->anonymous, mr->type, mr->subject, mr->author, mr->references);
+	ret = CtdlIPCGenericCommand(ipc, cmd, mr->text, strlen(mr->text), NULL, NULL, cret);
 	if ((flag == 0) && (subject_required != NULL)) {
 		/* Is the server strongly recommending that the user enter a message subject? */
 		if ((cret[3] != '\0') && (cret[4] != '\0')) {
 			*subject_required = extract_int(&cret[4], 1);
 		}
 
-		
+
 	}
 	return ret;
 }
 
 
 /* RINF */
-int CtdlIPCRoomInfo(CtdlIPC *ipc, char **iret, char *cret)
+int CtdlIPCRoomInfo(CtdlIPC * ipc, char **iret, char *cret)
 {
 	size_t bytes;
 
-	if (!cret) return -2;
-	if (!iret) return -2;
-	if (*iret) return -2;
+	if (!cret)
+		return -2;
+	if (!iret)
+		return -2;
+	if (*iret)
+		return -2;
 
 	return CtdlIPCGenericCommand(ipc, "RINF", NULL, 0, iret, &bytes, cret);
 }
 
 
 /* DELE */
-int CtdlIPCDeleteMessage(CtdlIPC *ipc, long msgnum, char *cret)
+int CtdlIPCDeleteMessage(CtdlIPC * ipc, long msgnum, char *cret)
 {
 	char aaa[64];
 
-	if (!cret) return -2;
-	if (!msgnum) return -2;
+	if (!cret)
+		return -2;
+	if (!msgnum)
+		return -2;
 
 	sprintf(aaa, "DELE %ld", msgnum);
 	return CtdlIPCGenericCommand(ipc, aaa, NULL, 0, NULL, NULL, cret);
@@ -1038,17 +1113,21 @@ int CtdlIPCDeleteMessage(CtdlIPC *ipc, long msgnum, char *cret)
 
 
 /* MOVE */
-int CtdlIPCMoveMessage(CtdlIPC *ipc, int copy, long msgnum, const char *destroom, char *cret)
+int CtdlIPCMoveMessage(CtdlIPC * ipc, int copy, long msgnum, const char *destroom, char *cret)
 {
 	int ret;
 	char *aaa;
 
-	if (!cret) return -2;
-	if (!destroom) return -2;
-	if (!msgnum) return -2;
+	if (!cret)
+		return -2;
+	if (!destroom)
+		return -2;
+	if (!msgnum)
+		return -2;
 
-	aaa = (char *)malloc(strlen(destroom) + 28);
-	if (!aaa) return -1;
+	aaa = (char *) malloc(strlen(destroom) + 28);
+	if (!aaa)
+		return -1;
 
 	sprintf(aaa, "MOVE %ld|%s|%d", msgnum, destroom, copy);
 	ret = CtdlIPCGenericCommand(ipc, aaa, NULL, 0, NULL, NULL, cret);
@@ -1058,11 +1137,12 @@ int CtdlIPCMoveMessage(CtdlIPC *ipc, int copy, long msgnum, const char *destroom
 
 
 /* KILL */
-int CtdlIPCDeleteRoom(CtdlIPC *ipc, int for_real, char *cret)
+int CtdlIPCDeleteRoom(CtdlIPC * ipc, int for_real, char *cret)
 {
 	char aaa[64];
 
-	if (!cret) return -2;
+	if (!cret)
+		return -2;
 
 	sprintf(aaa, "KILL %d", for_real);
 	return CtdlIPCGenericCommand(ipc, aaa, NULL, 0, NULL, NULL, cret);
@@ -1070,25 +1150,26 @@ int CtdlIPCDeleteRoom(CtdlIPC *ipc, int for_real, char *cret)
 
 
 /* CRE8 */
-int CtdlIPCCreateRoom(CtdlIPC *ipc, int for_real, const char *roomname, int type,
-		const char *password, int floor, char *cret)
+int CtdlIPCCreateRoom(CtdlIPC * ipc, int for_real, const char *roomname, int type, const char *password, int floor, char *cret)
 {
 	int ret;
 	char *aaa;
 
-	if (!cret) return -2;
-	if (!roomname) return -2;
+	if (!cret)
+		return -2;
+	if (!roomname)
+		return -2;
 
 	if (password) {
-		aaa = (char *)malloc(strlen(roomname) + strlen(password) + 40);
-		if (!aaa) return -1;
-		sprintf(aaa, "CRE8 %d|%s|%d|%s|%d", for_real, roomname, type,
-				password, floor);
+		aaa = (char *) malloc(strlen(roomname) + strlen(password) + 40);
+		if (!aaa)
+			return -1;
+		sprintf(aaa, "CRE8 %d|%s|%d|%s|%d", for_real, roomname, type, password, floor);
 	} else {
-		aaa = (char *)malloc(strlen(roomname) + 40);
-		if (!aaa) return -1;
-		sprintf(aaa, "CRE8 %d|%s|%d||%d", for_real, roomname, type,
-				floor);
+		aaa = (char *) malloc(strlen(roomname) + 40);
+		if (!aaa)
+			return -1;
+		sprintf(aaa, "CRE8 %d|%s|%d||%d", for_real, roomname, type, floor);
 	}
 	ret = CtdlIPCGenericCommand(ipc, aaa, NULL, 0, NULL, NULL, cret);
 	free(aaa);
@@ -1097,28 +1178,34 @@ int CtdlIPCCreateRoom(CtdlIPC *ipc, int for_real, const char *roomname, int type
 
 
 /* FORG */
-int CtdlIPCForgetRoom(CtdlIPC *ipc, char *cret)
+int CtdlIPCForgetRoom(CtdlIPC * ipc, char *cret)
 {
-	if (!cret) return -2;
+	if (!cret)
+		return -2;
 
 	return CtdlIPCGenericCommand(ipc, "FORG", NULL, 0, NULL, NULL, cret);
 }
 
 
 /* MESG */
-int CtdlIPCSystemMessage(CtdlIPC *ipc, const char *message, char **mret, char *cret)
+int CtdlIPCSystemMessage(CtdlIPC * ipc, const char *message, char **mret, char *cret)
 {
 	int ret;
 	char *aaa;
 	size_t bytes;
 
-	if (!cret) return -2;
-	if (!mret) return -2;
-	if (*mret) return -2;
-	if (!message) return -2;
+	if (!cret)
+		return -2;
+	if (!mret)
+		return -2;
+	if (*mret)
+		return -2;
+	if (!message)
+		return -2;
 
-	aaa = (char *)malloc(strlen(message) + 6);
-	if (!aaa) return -1;
+	aaa = (char *) malloc(strlen(message) + 6);
+	if (!aaa)
+		return -1;
 
 	sprintf(aaa, "MESG %s", message);
 	ret = CtdlIPCGenericCommand(ipc, aaa, NULL, 0, mret, &bytes, cret);
@@ -1128,30 +1215,35 @@ int CtdlIPCSystemMessage(CtdlIPC *ipc, const char *message, char **mret, char *c
 
 
 /* GNUR */
-int CtdlIPCNextUnvalidatedUser(CtdlIPC *ipc, char *cret)
+int CtdlIPCNextUnvalidatedUser(CtdlIPC * ipc, char *cret)
 {
-	if (!cret) return -2;
+	if (!cret)
+		return -2;
 
 	return CtdlIPCGenericCommand(ipc, "GNUR", NULL, 0, NULL, NULL, cret);
 }
 
 
 /* GREG */
-int CtdlIPCGetUserRegistration(CtdlIPC *ipc, const char *username, char **rret, char *cret)
+int CtdlIPCGetUserRegistration(CtdlIPC * ipc, const char *username, char **rret, char *cret)
 {
 	int ret;
 	char *aaa;
 	size_t bytes;
 
-	if (!cret) return -2;
-	if (!rret) return -2;
-	if (*rret) return -2;
+	if (!cret)
+		return -2;
+	if (!rret)
+		return -2;
+	if (*rret)
+		return -2;
 
 	if (username)
-		aaa = (char *)malloc(strlen(username) + 6);
+		aaa = (char *) malloc(strlen(username) + 6);
 	else
-		aaa = (char *)malloc(12);
-	if (!aaa) return -1;
+		aaa = (char *) malloc(12);
+	if (!aaa)
+		return -1;
 
 	if (username)
 		sprintf(aaa, "GREG %s", username);
@@ -1164,17 +1256,21 @@ int CtdlIPCGetUserRegistration(CtdlIPC *ipc, const char *username, char **rret, 
 
 
 /* VALI */
-int CtdlIPCValidateUser(CtdlIPC *ipc, const char *username, int axlevel, char *cret)
+int CtdlIPCValidateUser(CtdlIPC * ipc, const char *username, int axlevel, char *cret)
 {
 	int ret;
 	char *aaa;
 
-	if (!cret) return -2;
-	if (!username) return -2;
-	if (axlevel < AxDeleted || axlevel > AxAideU) return -2;
+	if (!cret)
+		return -2;
+	if (!username)
+		return -2;
+	if (axlevel < AxDeleted || axlevel > AxAideU)
+		return -2;
 
-	aaa = (char *)malloc(strlen(username) + 17);
-	if (!aaa) return -1;
+	aaa = (char *) malloc(strlen(username) + 17);
+	if (!aaa)
+		return -1;
 
 	sprintf(aaa, "VALI %s|%d", username, axlevel);
 	ret = CtdlIPCGenericCommand(ipc, aaa, NULL, 0, NULL, NULL, cret);
@@ -1184,12 +1280,14 @@ int CtdlIPCValidateUser(CtdlIPC *ipc, const char *username, int axlevel, char *c
 
 
 /* EINF */
-int CtdlIPCSetRoomInfo(CtdlIPC *ipc, int for_real, const char *info, char *cret)
+int CtdlIPCSetRoomInfo(CtdlIPC * ipc, int for_real, const char *info, char *cret)
 {
 	char aaa[64];
 
-	if (!cret) return -1;
-	if (!info) return -1;
+	if (!cret)
+		return -1;
+	if (!info)
+		return -1;
 
 	sprintf(aaa, "EINF %d", for_real);
 	return CtdlIPCGenericCommand(ipc, aaa, NULL, 0, NULL, NULL, cret);
@@ -1197,44 +1295,51 @@ int CtdlIPCSetRoomInfo(CtdlIPC *ipc, int for_real, const char *info, char *cret)
 
 
 /* LIST */
-int CtdlIPCUserListing(CtdlIPC *ipc, char *searchstring, char **listing, char *cret)
+int CtdlIPCUserListing(CtdlIPC * ipc, char *searchstring, char **listing, char *cret)
 {
 	size_t bytes;
 	char *cmd;
 	int ret;
 
-	if (!cret) return -1;
-	if (!listing) return -1;
-	if (*listing) return -1;
-	if (!searchstring) return -1;
+	if (!cret)
+		return -1;
+	if (!listing)
+		return -1;
+	if (*listing)
+		return -1;
+	if (!searchstring)
+		return -1;
 
 	cmd = malloc(strlen(searchstring) + 10);
 	sprintf(cmd, "LIST %s", searchstring);
 
 	ret = CtdlIPCGenericCommand(ipc, cmd, NULL, 0, listing, &bytes, cret);
 	free(cmd);
-	return(ret);
+	return (ret);
 }
 
 
 /* REGI */
-int CtdlIPCSetRegistration(CtdlIPC *ipc, const char *info, char *cret)
+int CtdlIPCSetRegistration(CtdlIPC * ipc, const char *info, char *cret)
 {
-	if (!cret) return -1;
-	if (!info) return -1;
+	if (!cret)
+		return -1;
+	if (!info)
+		return -1;
 
-	return CtdlIPCGenericCommand(ipc, "REGI", info, strlen(info),
-			NULL, NULL, cret);
+	return CtdlIPCGenericCommand(ipc, "REGI", info, strlen(info), NULL, NULL, cret);
 }
 
 
 /* CHEK */
-int CtdlIPCMiscCheck(CtdlIPC *ipc, struct ctdlipcmisc *chek, char *cret)
+int CtdlIPCMiscCheck(CtdlIPC * ipc, struct ctdlipcmisc *chek, char *cret)
 {
 	int ret;
 
-	if (!cret) return -1;
-	if (!chek) return -1;
+	if (!cret)
+		return -1;
+	if (!chek)
+		return -1;
 
 	ret = CtdlIPCGenericCommand(ipc, "CHEK", NULL, 0, NULL, NULL, cret);
 	if (ret / 100 == 2) {
@@ -1247,16 +1352,19 @@ int CtdlIPCMiscCheck(CtdlIPC *ipc, struct ctdlipcmisc *chek, char *cret)
 
 
 /* DELF */
-int CtdlIPCDeleteFile(CtdlIPC *ipc, const char *filename, char *cret)
+int CtdlIPCDeleteFile(CtdlIPC * ipc, const char *filename, char *cret)
 {
 	int ret;
 	char *aaa;
 
-	if (!cret) return -2;
-	if (!filename) return -2;
-	
-	aaa = (char *)malloc(strlen(filename) + 6);
-	if (!aaa) return -1;
+	if (!cret)
+		return -2;
+	if (!filename)
+		return -2;
+
+	aaa = (char *) malloc(strlen(filename) + 6);
+	if (!aaa)
+		return -1;
 
 	sprintf(aaa, "DELF %s", filename);
 	ret = CtdlIPCGenericCommand(ipc, aaa, NULL, 0, NULL, NULL, cret);
@@ -1266,17 +1374,21 @@ int CtdlIPCDeleteFile(CtdlIPC *ipc, const char *filename, char *cret)
 
 
 /* MOVF */
-int CtdlIPCMoveFile(CtdlIPC *ipc, const char *filename, const char *destroom, char *cret)
+int CtdlIPCMoveFile(CtdlIPC * ipc, const char *filename, const char *destroom, char *cret)
 {
 	int ret;
 	char *aaa;
 
-	if (!cret) return -2;
-	if (!filename) return -2;
-	if (!destroom) return -2;
+	if (!cret)
+		return -2;
+	if (!filename)
+		return -2;
+	if (!destroom)
+		return -2;
 
-	aaa = (char *)malloc(strlen(filename) + strlen(destroom) + 7);
-	if (!aaa) return -1;
+	aaa = (char *) malloc(strlen(filename) + strlen(destroom) + 7);
+	if (!aaa)
+		return -1;
 
 	sprintf(aaa, "MOVF %s|%s", filename, destroom);
 	ret = CtdlIPCGenericCommand(ipc, aaa, NULL, 0, NULL, NULL, cret);
@@ -1286,14 +1398,17 @@ int CtdlIPCMoveFile(CtdlIPC *ipc, const char *filename, const char *destroom, ch
 
 
 /* RWHO */
-int CtdlIPCOnlineUsers(CtdlIPC *ipc, char **listing, time_t *stamp, char *cret)
+int CtdlIPCOnlineUsers(CtdlIPC * ipc, char **listing, time_t * stamp, char *cret)
 {
 	int ret;
 	size_t bytes;
 
-	if (!cret) return -1;
-	if (!listing) return -1;
-	if (*listing) return -1;
+	if (!cret)
+		return -1;
+	if (!listing)
+		return -1;
+	if (*listing)
+		return -1;
 
 	*stamp = CtdlIPCServerTime(ipc, cret);
 	if (!*stamp)
@@ -1304,11 +1419,8 @@ int CtdlIPCOnlineUsers(CtdlIPC *ipc, char **listing, time_t *stamp, char *cret)
 
 
 /* OPEN */
-int CtdlIPCFileDownload(CtdlIPC *ipc, const char *filename, void **buf,
-		size_t resume,
-		void (*progress_gauge_callback)
-			(CtdlIPC*, unsigned long, unsigned long),
-		char *cret)
+int CtdlIPCFileDownload(CtdlIPC * ipc, const char *filename, void **buf, size_t resume, void (*progress_gauge_callback)
+			 (CtdlIPC *, unsigned long, unsigned long), char *cret)
 {
 	int ret;
 	size_t bytes;
@@ -1316,14 +1428,20 @@ int CtdlIPCFileDownload(CtdlIPC *ipc, const char *filename, void **buf,
 	char mimetype[SIZ];
 	char *aaa;
 
-	if (!cret) return -2;
-	if (!filename) return -2;
-	if (!buf) return -2;
-	if (*buf) return -2;
-	if (ipc->downloading) return -2;
+	if (!cret)
+		return -2;
+	if (!filename)
+		return -2;
+	if (!buf)
+		return -2;
+	if (*buf)
+		return -2;
+	if (ipc->downloading)
+		return -2;
 
-	aaa = (char *)malloc(strlen(filename) + 6);
-	if (!aaa) return -1;
+	aaa = (char *) malloc(strlen(filename) + 6);
+	if (!aaa)
+		return -1;
 
 	sprintf(aaa, "OPEN %s", filename);
 	ret = CtdlIPCGenericCommand(ipc, aaa, NULL, 0, NULL, NULL, cret);
@@ -1334,28 +1452,23 @@ int CtdlIPCFileDownload(CtdlIPC *ipc, const char *filename, void **buf,
 		last_mod = extract_int(cret, 1);
 		extract_token(mimetype, cret, 2, '|', sizeof mimetype);
 
-		ret = CtdlIPCReadDownload(ipc, buf, bytes, resume,
-					progress_gauge_callback, cret);
+		ret = CtdlIPCReadDownload(ipc, buf, bytes, resume, progress_gauge_callback, cret);
 		/*
-		ret = CtdlIPCHighSpeedReadDownload(ipc, buf, bytes, resume,
-					progress_gauge_callback, cret);
-		*/
+		   ret = CtdlIPCHighSpeedReadDownload(ipc, buf, bytes, resume,
+		   progress_gauge_callback, cret);
+		 */
 
 		ret = CtdlIPCEndDownload(ipc, cret);
 		if (ret / 100 == 2)
-			sprintf(cret, "%d|%ld|%s|%s", (int)bytes, last_mod,
-					filename, mimetype);
+			sprintf(cret, "%d|%ld|%s|%s", (int) bytes, last_mod, filename, mimetype);
 	}
 	return ret;
 }
 
 
 /* OPNA */
-int CtdlIPCAttachmentDownload(CtdlIPC *ipc, long msgnum, const char *part,
-		void **buf,
-		void (*progress_gauge_callback)
-			(CtdlIPC*, unsigned long, unsigned long),
-		char *cret)
+int CtdlIPCAttachmentDownload(CtdlIPC * ipc, long msgnum, const char *part, void **buf, void (*progress_gauge_callback)
+			       (CtdlIPC *, unsigned long, unsigned long), char *cret)
 {
 	int ret;
 	size_t bytes;
@@ -1364,12 +1477,18 @@ int CtdlIPCAttachmentDownload(CtdlIPC *ipc, long msgnum, const char *part,
 	char mimetype[SIZ];
 	char aaa[SIZ];
 
-	if (!cret) return -2;
-	if (!buf) return -2;
-	if (*buf) return -2;
-	if (!part) return -2;
-	if (!msgnum) return -2;
-	if (ipc->downloading) return -2;
+	if (!cret)
+		return -2;
+	if (!buf)
+		return -2;
+	if (*buf)
+		return -2;
+	if (!part)
+		return -2;
+	if (!msgnum)
+		return -2;
+	if (ipc->downloading)
+		return -2;
 
 	sprintf(aaa, "OPNA %ld|%s", msgnum, part);
 	ret = CtdlIPCGenericCommand(ipc, aaa, NULL, 0, NULL, NULL, cret);
@@ -1383,18 +1502,15 @@ int CtdlIPCAttachmentDownload(CtdlIPC *ipc, long msgnum, const char *part,
 		ret = CtdlIPCHighSpeedReadDownload(ipc, buf, bytes, 0, progress_gauge_callback, cret);
 		ret = CtdlIPCEndDownload(ipc, cret);
 		if (ret / 100 == 2)
-			sprintf(cret, "%d|%ld|%s|%s", (int)bytes, last_mod,
-					filename, mimetype);
+			sprintf(cret, "%d|%ld|%s|%s", (int) bytes, last_mod, filename, mimetype);
 	}
 	return ret;
 }
 
 
 /* OIMG */
-int CtdlIPCImageDownload(CtdlIPC *ipc, const char *filename, void **buf,
-		void (*progress_gauge_callback)
-			(CtdlIPC*, unsigned long, unsigned long),
-		char *cret)
+int CtdlIPCImageDownload(CtdlIPC * ipc, const char *filename, void **buf, void (*progress_gauge_callback)
+			  (CtdlIPC *, unsigned long, unsigned long), char *cret)
 {
 	int ret;
 	size_t bytes;
@@ -1402,14 +1518,20 @@ int CtdlIPCImageDownload(CtdlIPC *ipc, const char *filename, void **buf,
 	char mimetype[SIZ];
 	char *aaa;
 
-	if (!cret) return -1;
-	if (!buf) return -1;
-	if (*buf) return -1;
-	if (!filename) return -1;
-	if (ipc->downloading) return -1;
+	if (!cret)
+		return -1;
+	if (!buf)
+		return -1;
+	if (*buf)
+		return -1;
+	if (!filename)
+		return -1;
+	if (ipc->downloading)
+		return -1;
 
-	aaa = (char *)malloc(strlen(filename) + 6);
-	if (!aaa) return -1;
+	aaa = (char *) malloc(strlen(filename) + 6);
+	if (!aaa)
+		return -1;
 
 	sprintf(aaa, "OIMG %s", filename);
 	ret = CtdlIPCGenericCommand(ipc, aaa, NULL, 0, NULL, NULL, cret);
@@ -1423,19 +1545,15 @@ int CtdlIPCImageDownload(CtdlIPC *ipc, const char *filename, void **buf,
 		ret = CtdlIPCHighSpeedReadDownload(ipc, buf, bytes, 0, progress_gauge_callback, cret);
 		ret = CtdlIPCEndDownload(ipc, cret);
 		if (ret / 100 == 2)
-			sprintf(cret, "%d|%ld|%s|%s", (int)bytes, last_mod,
-					filename, mimetype);
+			sprintf(cret, "%d|%ld|%s|%s", (int) bytes, last_mod, filename, mimetype);
 	}
 	return ret;
 }
 
 
 /* UOPN */
-int CtdlIPCFileUpload(CtdlIPC *ipc, const char *save_as, const char *comment, 
-		const char *path, 
-		void (*progress_gauge_callback)
-			(CtdlIPC*, unsigned long, unsigned long),
-		char *cret)
+int CtdlIPCFileUpload(CtdlIPC * ipc, const char *save_as, const char *comment, const char *path, void (*progress_gauge_callback)
+		       (CtdlIPC *, unsigned long, unsigned long), char *cret)
 {
 	int ret;
 	char *aaa;
@@ -1444,26 +1562,34 @@ int CtdlIPCFileUpload(CtdlIPC *ipc, const char *save_as, const char *comment,
 	const char *MimeType;
 	long len;
 
-	if (!cret) return -1;
-	if (!save_as) return -1;
-	if (!comment) return -1;
-	if (!path) return -1;
-	if (!*path) return -1;
-	if (ipc->uploading) return -1;
+	if (!cret)
+		return -1;
+	if (!save_as)
+		return -1;
+	if (!comment)
+		return -1;
+	if (!path)
+		return -1;
+	if (!*path)
+		return -1;
+	if (ipc->uploading)
+		return -1;
 
 	uploadFP = fopen(path, "r");
-	if (!uploadFP) return -2;
+	if (!uploadFP)
+		return -2;
 
 	len = fread(&MimeTestBuf[0], 1, 64, uploadFP);
-	rewind (uploadFP);
-	if (len < 0) 
+	rewind(uploadFP);
+	if (len < 0)
 		return -3;
 
 	MimeType = GuessMimeType(&MimeTestBuf[0], len);
-	aaa = (char *)malloc(strlen(save_as) + strlen(MimeType) + strlen(comment) + 7);
-	if (!aaa) return -1;
+	aaa = (char *) malloc(strlen(save_as) + strlen(MimeType) + strlen(comment) + 7);
+	if (!aaa)
+		return -1;
 
-	sprintf(aaa, "UOPN %s|%s|%s", save_as, MimeType,  comment);
+	sprintf(aaa, "UOPN %s|%s|%s", save_as, MimeType, comment);
 	ret = CtdlIPCGenericCommand(ipc, aaa, NULL, 0, NULL, NULL, cret);
 	free(aaa);
 	if (ret / 100 == 2) {
@@ -1477,11 +1603,8 @@ int CtdlIPCFileUpload(CtdlIPC *ipc, const char *save_as, const char *comment,
 
 
 /* UIMG */
-int CtdlIPCImageUpload(CtdlIPC *ipc, int for_real, const char *path,
-		const char *save_as,
-		void (*progress_gauge_callback)
-			(CtdlIPC*, unsigned long, unsigned long),
-		char *cret)
+int CtdlIPCImageUpload(CtdlIPC * ipc, int for_real, const char *path, const char *save_as, void (*progress_gauge_callback)
+		        (CtdlIPC *, unsigned long, unsigned long), char *cret)
 {
 	int ret;
 	FILE *uploadFP;
@@ -1490,21 +1613,28 @@ int CtdlIPCImageUpload(CtdlIPC *ipc, int for_real, const char *path,
 	const char *MimeType;
 	long len;
 
-	if (!cret) return -1;
-	if (!save_as) return -1;
-	if (!path && for_real) return -1;
-	if (!*path && for_real) return -1;
-	if (ipc->uploading) return -1;
+	if (!cret)
+		return -1;
+	if (!save_as)
+		return -1;
+	if (!path && for_real)
+		return -1;
+	if (!*path && for_real)
+		return -1;
+	if (ipc->uploading)
+		return -1;
 
-	aaa = (char *)malloc(strlen(save_as) + 17);
-	if (!aaa) return -1;
+	aaa = (char *) malloc(strlen(save_as) + 17);
+	if (!aaa)
+		return -1;
 
 	uploadFP = fopen(path, "r");
-	if (!uploadFP) return -2;
+	if (!uploadFP)
+		return -2;
 
 	len = fread(&MimeTestBuf[0], 1, 64, uploadFP);
-	rewind (uploadFP);
-	if (len < 0) 
+	rewind(uploadFP);
+	if (len < 0)
 		return -3;
 	MimeType = GuessMimeType(&MimeTestBuf[0], 64);
 
@@ -1522,16 +1652,19 @@ int CtdlIPCImageUpload(CtdlIPC *ipc, int for_real, const char *path,
 
 
 /* QUSR */
-int CtdlIPCQueryUsername(CtdlIPC *ipc, const char *username, char *cret)
+int CtdlIPCQueryUsername(CtdlIPC * ipc, const char *username, char *cret)
 {
 	int ret;
 	char *aaa;
 
-	if (!cret) return -2;
-	if (!username) return -2;
+	if (!cret)
+		return -2;
+	if (!username)
+		return -2;
 
-	aaa = (char *)malloc(strlen(username) + 6);
-	if (!aaa) return -1;
+	aaa = (char *) malloc(strlen(username) + 6);
+	if (!aaa)
+		return -1;
 
 	sprintf(aaa, "QUSR %s", username);
 	ret = CtdlIPCGenericCommand(ipc, aaa, NULL, 0, NULL, NULL, cret);
@@ -1541,26 +1674,31 @@ int CtdlIPCQueryUsername(CtdlIPC *ipc, const char *username, char *cret)
 
 
 /* LFLR */
-int CtdlIPCFloorListing(CtdlIPC *ipc, char **listing, char *cret)
+int CtdlIPCFloorListing(CtdlIPC * ipc, char **listing, char *cret)
 {
 	size_t bytes;
 
-	if (!cret) return -2;
-	if (!listing) return -2;
-	if (*listing) return -2;
+	if (!cret)
+		return -2;
+	if (!listing)
+		return -2;
+	if (*listing)
+		return -2;
 
 	return CtdlIPCGenericCommand(ipc, "LFLR", NULL, 0, listing, &bytes, cret);
 }
 
 
 /* CFLR */
-int CtdlIPCCreateFloor(CtdlIPC *ipc, int for_real, const char *name, char *cret)
+int CtdlIPCCreateFloor(CtdlIPC * ipc, int for_real, const char *name, char *cret)
 {
 	int ret;
 	char aaa[SIZ];
 
-	if (!cret) return -2;
-	if (!name) return -2;
+	if (!cret)
+		return -2;
+	if (!name)
+		return -2;
 
 	sprintf(aaa, "CFLR %s|%d", name, for_real);
 	ret = CtdlIPCGenericCommand(ipc, aaa, NULL, 0, NULL, NULL, cret);
@@ -1569,12 +1707,14 @@ int CtdlIPCCreateFloor(CtdlIPC *ipc, int for_real, const char *name, char *cret)
 
 
 /* KFLR */
-int CtdlIPCDeleteFloor(CtdlIPC *ipc, int for_real, int floornum, char *cret)
+int CtdlIPCDeleteFloor(CtdlIPC * ipc, int for_real, int floornum, char *cret)
 {
 	char aaa[SIZ];
 
-	if (!cret) return -1;
-	if (floornum < 0) return -1;
+	if (!cret)
+		return -1;
+	if (floornum < 0)
+		return -1;
 
 	sprintf(aaa, "KFLR %d|%d", floornum, for_real);
 	return CtdlIPCGenericCommand(ipc, aaa, NULL, 0, NULL, NULL, cret);
@@ -1582,14 +1722,17 @@ int CtdlIPCDeleteFloor(CtdlIPC *ipc, int for_real, int floornum, char *cret)
 
 
 /* EFLR */
-int CtdlIPCEditFloor(CtdlIPC *ipc, int floornum, const char *floorname, char *cret)
+int CtdlIPCEditFloor(CtdlIPC * ipc, int floornum, const char *floorname, char *cret)
 {
 	int ret;
 	char aaa[SIZ];
 
-	if (!cret) return -2;
-	if (!floorname) return -2;
-	if (floornum < 0) return -2;
+	if (!cret)
+		return -2;
+	if (!floorname)
+		return -2;
+	if (floornum < 0)
+		return -2;
 
 	sprintf(aaa, "EFLR %d|%s", floornum, floorname);
 	ret = CtdlIPCGenericCommand(ipc, aaa, NULL, 0, NULL, NULL, cret);
@@ -1603,27 +1746,26 @@ int CtdlIPCEditFloor(CtdlIPC *ipc, int floornum, const char *floorname, char *cr
  * You only need to fill out hostname, the defaults will be used if any of the
  * other fields are not set properly.
  */
-int CtdlIPCIdentifySoftware(CtdlIPC *ipc, int developerid, int clientid,
-		int revision, const char *software_name, const char *hostname,
-		char *cret)
+int CtdlIPCIdentifySoftware(CtdlIPC * ipc, int developerid, int clientid,
+			    int revision, const char *software_name, const char *hostname, char *cret)
 {
 	int ret;
 	char *aaa;
 
-	if (developerid < 0 || clientid < 0 || revision < 0 ||
-	    !software_name) {
+	if (developerid < 0 || clientid < 0 || revision < 0 || !software_name) {
 		developerid = 8;
 		clientid = 0;
 		revision = CLIENT_VERSION - 600;
 		software_name = "Citadel (libcitadel)";
 	}
-	if (!hostname) return -2;
+	if (!hostname)
+		return -2;
 
-	aaa = (char *)malloc(strlen(software_name) + strlen(hostname) + 29);
-	if (!aaa) return -1;
+	aaa = (char *) malloc(strlen(software_name) + strlen(hostname) + 29);
+	if (!aaa)
+		return -1;
 
-	sprintf(aaa, "IDEN %d|%d|%d|%s|%s", developerid, clientid,
-			revision, software_name, hostname);
+	sprintf(aaa, "IDEN %d|%d|%d|%s|%s", developerid, clientid, revision, software_name, hostname);
 	ret = CtdlIPCGenericCommand(ipc, aaa, NULL, 0, NULL, NULL, cret);
 	free(aaa);
 	return ret;
@@ -1631,22 +1773,23 @@ int CtdlIPCIdentifySoftware(CtdlIPC *ipc, int developerid, int clientid,
 
 
 /* SEXP */
-int CtdlIPCSendInstantMessage(CtdlIPC *ipc, const char *username, const char *text,
-		char *cret)
+int CtdlIPCSendInstantMessage(CtdlIPC * ipc, const char *username, const char *text, char *cret)
 {
 	int ret;
 	char *aaa;
 
-	if (!cret) return -2;
-	if (!username) return -2;
+	if (!cret)
+		return -2;
+	if (!username)
+		return -2;
 
-	aaa = (char *)malloc(strlen(username) + 8);
-	if (!aaa) return -1;
+	aaa = (char *) malloc(strlen(username) + 8);
+	if (!aaa)
+		return -1;
 
 	if (text) {
 		sprintf(aaa, "SEXP %s|-", username);
-		ret = CtdlIPCGenericCommand(ipc, aaa, text, strlen(text),
-				NULL, NULL, cret);
+		ret = CtdlIPCGenericCommand(ipc, aaa, text, strlen(text), NULL, NULL, cret);
 	} else {
 		sprintf(aaa, "SEXP %s||", username);
 		ret = CtdlIPCGenericCommand(ipc, aaa, NULL, 0, NULL, NULL, cret);
@@ -1657,13 +1800,16 @@ int CtdlIPCSendInstantMessage(CtdlIPC *ipc, const char *username, const char *te
 
 
 /* GEXP */
-int CtdlIPCGetInstantMessage(CtdlIPC *ipc, char **listing, char *cret)
+int CtdlIPCGetInstantMessage(CtdlIPC * ipc, char **listing, char *cret)
 {
 	size_t bytes;
 
-	if (!cret) return -2;
-	if (!listing) return -2;
-	if (*listing) return -2;
+	if (!cret)
+		return -2;
+	if (!listing)
+		return -2;
+	if (*listing)
+		return -2;
 
 	return CtdlIPCGenericCommand(ipc, "GEXP", NULL, 0, listing, &bytes, cret);
 }
@@ -1671,11 +1817,12 @@ int CtdlIPCGetInstantMessage(CtdlIPC *ipc, char **listing, char *cret)
 
 /* DEXP */
 /* mode is 0 = enable, 1 = disable, 2 = status */
-int CtdlIPCEnableInstantMessageReceipt(CtdlIPC *ipc, int mode, char *cret)
+int CtdlIPCEnableInstantMessageReceipt(CtdlIPC * ipc, int mode, char *cret)
 {
 	char aaa[64];
 
-	if (!cret) return -2;
+	if (!cret)
+		return -2;
 
 	sprintf(aaa, "DEXP %d", mode);
 	return CtdlIPCGenericCommand(ipc, aaa, NULL, 0, NULL, NULL, cret);
@@ -1683,30 +1830,36 @@ int CtdlIPCEnableInstantMessageReceipt(CtdlIPC *ipc, int mode, char *cret)
 
 
 /* EBIO */
-int CtdlIPCSetBio(CtdlIPC *ipc, char *bio, char *cret)
+int CtdlIPCSetBio(CtdlIPC * ipc, char *bio, char *cret)
 {
-	if (!cret) return -2;
-	if (!bio) return -2;
+	if (!cret)
+		return -2;
+	if (!bio)
+		return -2;
 
-	return CtdlIPCGenericCommand(ipc, "EBIO", bio, strlen(bio),
-			NULL, NULL, cret);
+	return CtdlIPCGenericCommand(ipc, "EBIO", bio, strlen(bio), NULL, NULL, cret);
 }
 
 
 /* RBIO */
-int CtdlIPCGetBio(CtdlIPC *ipc, const char *username, char **listing, char *cret)
+int CtdlIPCGetBio(CtdlIPC * ipc, const char *username, char **listing, char *cret)
 {
 	int ret;
 	size_t bytes;
 	char *aaa;
 
-	if (!cret) return -2;
-	if (!username) return -2;
-	if (!listing) return -2;
-	if (*listing) return -2;
+	if (!cret)
+		return -2;
+	if (!username)
+		return -2;
+	if (!listing)
+		return -2;
+	if (*listing)
+		return -2;
 
-	aaa = (char *)malloc(strlen(username) + 6);
-	if (!aaa) return -1;
+	aaa = (char *) malloc(strlen(username) + 6);
+	if (!aaa)
+		return -1;
 
 	sprintf(aaa, "RBIO %s", username);
 	ret = CtdlIPCGenericCommand(ipc, aaa, NULL, 0, listing, &bytes, cret);
@@ -1716,24 +1869,28 @@ int CtdlIPCGetBio(CtdlIPC *ipc, const char *username, char **listing, char *cret
 
 
 /* LBIO */
-int CtdlIPCListUsersWithBios(CtdlIPC *ipc, char **listing, char *cret)
+int CtdlIPCListUsersWithBios(CtdlIPC * ipc, char **listing, char *cret)
 {
 	size_t bytes;
 
-	if (!cret) return -2;
-	if (!listing) return -2;
-	if (*listing) return -2;
+	if (!cret)
+		return -2;
+	if (!listing)
+		return -2;
+	if (*listing)
+		return -2;
 
 	return CtdlIPCGenericCommand(ipc, "LBIO", NULL, 0, listing, &bytes, cret);
 }
 
 
 /* STEL */
-int CtdlIPCStealthMode(CtdlIPC *ipc, int mode, char *cret)
+int CtdlIPCStealthMode(CtdlIPC * ipc, int mode, char *cret)
 {
 	char aaa[64];
 
-	if (!cret) return -1;
+	if (!cret)
+		return -1;
 
 	sprintf(aaa, "STEL %d", mode ? 1 : 0);
 	return CtdlIPCGenericCommand(ipc, aaa, NULL, 0, NULL, NULL, cret);
@@ -1741,11 +1898,12 @@ int CtdlIPCStealthMode(CtdlIPC *ipc, int mode, char *cret)
 
 
 /* TERM */
-int CtdlIPCTerminateSession(CtdlIPC *ipc, int sid, char *cret)
+int CtdlIPCTerminateSession(CtdlIPC * ipc, int sid, char *cret)
 {
 	char aaa[64];
 
-	if (!cret) return -1;
+	if (!cret)
+		return -1;
 
 	sprintf(aaa, "TERM %d", sid);
 	return CtdlIPCGenericCommand(ipc, aaa, NULL, 0, NULL, NULL, cret);
@@ -1753,20 +1911,22 @@ int CtdlIPCTerminateSession(CtdlIPC *ipc, int sid, char *cret)
 
 
 /* DOWN */
-int CtdlIPCTerminateServerNow(CtdlIPC *ipc, char *cret)
+int CtdlIPCTerminateServerNow(CtdlIPC * ipc, char *cret)
 {
-	if (!cret) return -1;
+	if (!cret)
+		return -1;
 
 	return CtdlIPCGenericCommand(ipc, "DOWN", NULL, 0, NULL, NULL, cret);
 }
 
 
 /* SCDN */
-int CtdlIPCTerminateServerScheduled(CtdlIPC *ipc, int mode, char *cret)
+int CtdlIPCTerminateServerScheduled(CtdlIPC * ipc, int mode, char *cret)
 {
 	char aaa[16];
 
-	if (!cret) return -1;
+	if (!cret)
+		return -1;
 
 	sprintf(aaa, "SCDN %d", mode ? 1 : 0);
 	return CtdlIPCGenericCommand(ipc, aaa, NULL, 0, NULL, NULL, cret);
@@ -1774,18 +1934,21 @@ int CtdlIPCTerminateServerScheduled(CtdlIPC *ipc, int mode, char *cret)
 
 
 /* EMSG */
-int CtdlIPCEnterSystemMessage(CtdlIPC *ipc, const char *filename, const char *text,
-		char *cret)
+int CtdlIPCEnterSystemMessage(CtdlIPC * ipc, const char *filename, const char *text, char *cret)
 {
 	int ret;
 	char *aaa;
 
-	if (!cret) return -2;
-	if (!text) return -2;
-	if (!filename) return -2;
+	if (!cret)
+		return -2;
+	if (!text)
+		return -2;
+	if (!filename)
+		return -2;
 
-	aaa = (char *)malloc(strlen(filename) + 6);
-	if (!aaa) return -1;
+	aaa = (char *) malloc(strlen(filename) + 6);
+	if (!aaa)
+		return -1;
 
 	sprintf(aaa, "EMSG %s", filename);
 	ret = CtdlIPCGenericCommand(ipc, aaa, text, strlen(text), NULL, NULL, cret);
@@ -1795,16 +1958,19 @@ int CtdlIPCEnterSystemMessage(CtdlIPC *ipc, const char *filename, const char *te
 
 
 /* HCHG */
-int CtdlIPCChangeHostname(CtdlIPC *ipc, const char *hostname, char *cret)
+int CtdlIPCChangeHostname(CtdlIPC * ipc, const char *hostname, char *cret)
 {
 	int ret;
 	char *aaa;
 
-	if (!cret) return -2;
-	if (!hostname) return -2;
+	if (!cret)
+		return -2;
+	if (!hostname)
+		return -2;
 
-	aaa = (char *)malloc(strlen(hostname) + 6);
-	if (!aaa) return -1;
+	aaa = (char *) malloc(strlen(hostname) + 6);
+	if (!aaa)
+		return -1;
 
 	sprintf(aaa, "HCHG %s", hostname);
 	ret = CtdlIPCGenericCommand(ipc, aaa, NULL, 0, NULL, NULL, cret);
@@ -1814,16 +1980,19 @@ int CtdlIPCChangeHostname(CtdlIPC *ipc, const char *hostname, char *cret)
 
 
 /* RCHG */
-int CtdlIPCChangeRoomname(CtdlIPC *ipc, const char *roomname, char *cret)
+int CtdlIPCChangeRoomname(CtdlIPC * ipc, const char *roomname, char *cret)
 {
 	int ret;
 	char *aaa;
 
-	if (!cret) return -2;
-	if (!roomname) return -2;
+	if (!cret)
+		return -2;
+	if (!roomname)
+		return -2;
 
-	aaa = (char *)malloc(strlen(roomname) + 6);
-	if (!aaa) return -1;
+	aaa = (char *) malloc(strlen(roomname) + 6);
+	if (!aaa)
+		return -1;
 
 	sprintf(aaa, "RCHG %s", roomname);
 	ret = CtdlIPCGenericCommand(ipc, aaa, NULL, 0, NULL, NULL, cret);
@@ -1833,16 +2002,19 @@ int CtdlIPCChangeRoomname(CtdlIPC *ipc, const char *roomname, char *cret)
 
 
 /* UCHG */
-int CtdlIPCChangeUsername(CtdlIPC *ipc, const char *username, char *cret)
+int CtdlIPCChangeUsername(CtdlIPC * ipc, const char *username, char *cret)
 {
 	int ret;
 	char *aaa;
 
-	if (!cret) return -2;
-	if (!username) return -2;
+	if (!cret)
+		return -2;
+	if (!username)
+		return -2;
 
-	aaa = (char *)malloc(strlen(username) + 6);
-	if (!aaa) return -1;
+	aaa = (char *) malloc(strlen(username) + 6);
+	if (!aaa)
+		return -1;
 
 	sprintf(aaa, "UCHG %s", username);
 	ret = CtdlIPCGenericCommand(ipc, aaa, NULL, 0, NULL, NULL, cret);
@@ -1853,7 +2025,7 @@ int CtdlIPCChangeUsername(CtdlIPC *ipc, const char *username, char *cret)
 
 /* TIME */
 /* This function returns the actual server time reported, or 0 if error */
-time_t CtdlIPCServerTime(CtdlIPC *ipc, char *cret)
+time_t CtdlIPCServerTime(CtdlIPC * ipc, char *cret)
 {
 	time_t tret;
 	int ret;
@@ -1869,15 +2041,19 @@ time_t CtdlIPCServerTime(CtdlIPC *ipc, char *cret)
 
 
 /* AGUP */
-int CtdlIPCAideGetUserParameters(CtdlIPC *ipc, const char *who, struct ctdluser **uret, char *cret)
+int CtdlIPCAideGetUserParameters(CtdlIPC * ipc, const char *who, struct ctdluser **uret, char *cret)
 {
 	int ret;
 	char aaa[SIZ];
 
-	if (!cret) return -2;
-	if (!uret) return -2;
-	if (!*uret) *uret = (struct ctdluser *)calloc(1, sizeof(struct ctdluser));
-	if (!*uret) return -1;
+	if (!cret)
+		return -2;
+	if (!uret)
+		return -2;
+	if (!*uret)
+		*uret = (struct ctdluser *) calloc(1, sizeof(struct ctdluser));
+	if (!*uret)
+		return -1;
 
 	sprintf(aaa, "AGUP %s", who);
 	ret = CtdlIPCGenericCommand(ipc, aaa, NULL, 0, NULL, NULL, cret);
@@ -1898,21 +2074,23 @@ int CtdlIPCAideGetUserParameters(CtdlIPC *ipc, const char *who, struct ctdluser 
 
 
 /* ASUP */
-int CtdlIPCAideSetUserParameters(CtdlIPC *ipc, const struct ctdluser *uret, char *cret)
+int CtdlIPCAideSetUserParameters(CtdlIPC * ipc, const struct ctdluser *uret, char *cret)
 {
 	int ret;
 	char *aaa;
 
-	if (!cret) return -2;
-	if (!uret) return -2;
+	if (!cret)
+		return -2;
+	if (!uret)
+		return -2;
 
-	aaa = (char *)malloc(strlen(uret->fullname) + strlen(uret->password) + 84);
-	if (!aaa) return -1;
+	aaa = (char *) malloc(strlen(uret->fullname) + strlen(uret->password) + 84);
+	if (!aaa)
+		return -1;
 
 	sprintf(aaa, "ASUP %s|%s|%d|%ld|%ld|%d|%ld|%ld|%d",
 		uret->fullname, uret->password, uret->flags, uret->timescalled,
-		uret->posted, uret->axlevel, uret->usernum, uret->lastcall, uret->USuserpurge
-	);
+		uret->posted, uret->axlevel, uret->usernum, uret->lastcall, uret->USuserpurge);
 	ret = CtdlIPCGenericCommand(ipc, aaa, NULL, 0, NULL, NULL, cret);
 	free(aaa);
 	return ret;
@@ -1920,7 +2098,7 @@ int CtdlIPCAideSetUserParameters(CtdlIPC *ipc, const struct ctdluser *uret, char
 
 
 /* AGEA */
-int CtdlIPCAideGetEmailAddresses(CtdlIPC *ipc, const char *who, char *target_buf, char *cret)
+int CtdlIPCAideGetEmailAddresses(CtdlIPC * ipc, const char *who, char *target_buf, char *cret)
 {
 	int ret;
 	char aaa[SIZ];
@@ -1943,14 +2121,17 @@ int CtdlIPCAideGetEmailAddresses(CtdlIPC *ipc, const char *who, char *target_buf
 
 
 /* ASEA */
-int CtdlIPCAideSetEmailAddresses(CtdlIPC *ipc, const char *who, char *emailaddrs, char *cret)
+int CtdlIPCAideSetEmailAddresses(CtdlIPC * ipc, const char *who, char *emailaddrs, char *cret)
 {
 	char aaa[SIZ];
 	int ret;
 
-	if (!who) return -2;
-	if (!emailaddrs) return -2;
-	if (!cret) return -2;
+	if (!who)
+		return -2;
+	if (!emailaddrs)
+		return -2;
+	if (!cret)
+		return -2;
 
 	sprintf(aaa, "ASEA %s", who);
 	ret = CtdlIPCGenericCommand(ipc, aaa, emailaddrs, 0, NULL, NULL, cret);
@@ -1961,8 +2142,7 @@ int CtdlIPCAideSetEmailAddresses(CtdlIPC *ipc, const char *who, char *emailaddrs
 /* GPEX */
 /* which is 0 = room, 1 = floor, 2 = site, 3 = default for mailboxes */
 /* caller must free the struct ExpirePolicy */
-int CtdlIPCGetMessageExpirationPolicy(CtdlIPC *ipc, GPEXWhichPolicy which,
-		struct ExpirePolicy **policy, char *cret)
+int CtdlIPCGetMessageExpirationPolicy(CtdlIPC * ipc, GPEXWhichPolicy which, struct ExpirePolicy **policy, char *cret)
 {
 	static char *proto[] = {
 		strof(roompolicy),
@@ -1973,12 +2153,17 @@ int CtdlIPCGetMessageExpirationPolicy(CtdlIPC *ipc, GPEXWhichPolicy which,
 	char cmd[256];
 	int ret;
 
-	if (!cret) return -2;
-	if (!policy) return -2;
-	if (!*policy) *policy = (struct ExpirePolicy *)calloc(1, sizeof(struct ExpirePolicy));
-	if (!*policy) return -1;
-	if (which < 0 || which > 3) return -2;
-	
+	if (!cret)
+		return -2;
+	if (!policy)
+		return -2;
+	if (!*policy)
+		*policy = (struct ExpirePolicy *) calloc(1, sizeof(struct ExpirePolicy));
+	if (!*policy)
+		return -1;
+	if (which < 0 || which > 3)
+		return -2;
+
 	sprintf(cmd, "GPEX %s", proto[which]);
 	ret = CtdlIPCGenericCommand(ipc, cmd, NULL, 0, NULL, NULL, cret);
 	if (ret / 100 == 2) {
@@ -1992,63 +2177,74 @@ int CtdlIPCGetMessageExpirationPolicy(CtdlIPC *ipc, GPEXWhichPolicy which,
 /* SPEX */
 /* which is 0 = room, 1 = floor, 2 = site, 3 = default for mailboxes */
 /* policy is 0 = inherit, 1 = no purge, 2 = by count, 3 = by age (days) */
-int CtdlIPCSetMessageExpirationPolicy(CtdlIPC *ipc, int which,
-		struct ExpirePolicy *policy, char *cret)
+int CtdlIPCSetMessageExpirationPolicy(CtdlIPC * ipc, int which, struct ExpirePolicy *policy, char *cret)
 {
 	char aaa[38];
 	char *whichvals[] = { "room", "floor", "site", "mailboxes" };
 
-	if (!cret) return -2;
-	if (which < 0 || which > 3) return -2;
-	if (!policy) return -2;
-	if (policy->expire_mode < 0 || policy->expire_mode > 3) return -2;
-	if (policy->expire_mode >= 2 && policy->expire_value < 1) return -2;
+	if (!cret)
+		return -2;
+	if (which < 0 || which > 3)
+		return -2;
+	if (!policy)
+		return -2;
+	if (policy->expire_mode < 0 || policy->expire_mode > 3)
+		return -2;
+	if (policy->expire_mode >= 2 && policy->expire_value < 1)
+		return -2;
 
-	sprintf(aaa, "SPEX %s|%d|%d", whichvals[which],
-			policy->expire_mode, policy->expire_value);
+	sprintf(aaa, "SPEX %s|%d|%d", whichvals[which], policy->expire_mode, policy->expire_value);
 	return CtdlIPCGenericCommand(ipc, aaa, NULL, 0, NULL, NULL, cret);
 }
 
 
 /* CONF GET */
-int CtdlIPCGetSystemConfig(CtdlIPC *ipc, char **listing, char *cret)
+int CtdlIPCGetSystemConfig(CtdlIPC * ipc, char **listing, char *cret)
 {
 	size_t bytes;
 
-	if (!cret) return -2;
-	if (!listing) return -2;
-	if (*listing) return -2;
+	if (!cret)
+		return -2;
+	if (!listing)
+		return -2;
+	if (*listing)
+		return -2;
 
-	return CtdlIPCGenericCommand(ipc, "CONF GET", NULL, 0,
-			listing, &bytes, cret);
+	return CtdlIPCGenericCommand(ipc, "CONF GET", NULL, 0, listing, &bytes, cret);
 }
 
 
 /* CONF SET */
-int CtdlIPCSetSystemConfig(CtdlIPC *ipc, const char *listing, char *cret)
+int CtdlIPCSetSystemConfig(CtdlIPC * ipc, const char *listing, char *cret)
 {
-	if (!cret) return -2;
-	if (!listing) return -2;
+	if (!cret)
+		return -2;
+	if (!listing)
+		return -2;
 
-	return CtdlIPCGenericCommand(ipc, "CONF SET", listing, strlen(listing),
-			NULL, NULL, cret);
+	return CtdlIPCGenericCommand(ipc, "CONF SET", listing, strlen(listing), NULL, NULL, cret);
 }
 
 
 /* CONF GETSYS */
-int CtdlIPCGetSystemConfigByType(CtdlIPC *ipc, const char *mimetype, char **listing, char *cret)
+int CtdlIPCGetSystemConfigByType(CtdlIPC * ipc, const char *mimetype, char **listing, char *cret)
 {
 	int ret;
 	char *aaa;
 	size_t bytes;
 
-	if (!cret) return -2;
-	if (!mimetype) return -2;
-	if (!listing) return -2;
-	if (*listing) return -2;
+	if (!cret)
+		return -2;
+	if (!mimetype)
+		return -2;
+	if (!listing)
+		return -2;
+	if (*listing)
+		return -2;
 
 	aaa = malloc(strlen(mimetype) + 13);
-	if (!aaa) return -1;
+	if (!aaa)
+		return -1;
 	sprintf(aaa, "CONF GETSYS|%s", mimetype);
 	ret = CtdlIPCGenericCommand(ipc, aaa, NULL, 0, listing, &bytes, cret);
 	free(aaa);
@@ -2057,17 +2253,21 @@ int CtdlIPCGetSystemConfigByType(CtdlIPC *ipc, const char *mimetype, char **list
 
 
 /* CONF PUTSYS */
-int CtdlIPCSetSystemConfigByType(CtdlIPC *ipc, const char *mimetype, const char *listing, char *cret)
+int CtdlIPCSetSystemConfigByType(CtdlIPC * ipc, const char *mimetype, const char *listing, char *cret)
 {
 	int ret;
 	char *aaa;
 
-	if (!cret) return -2;
-	if (!mimetype) return -2;
-	if (!listing) return -2;
+	if (!cret)
+		return -2;
+	if (!mimetype)
+		return -2;
+	if (!listing)
+		return -2;
 
 	aaa = malloc(strlen(mimetype) + 13);
-	if (!aaa) return -1;
+	if (!aaa)
+		return -1;
 	sprintf(aaa, "CONF PUTSYS|%s", mimetype);
 	ret = CtdlIPCGenericCommand(ipc, aaa, listing, strlen(listing), NULL, NULL, cret);
 	free(aaa);
@@ -2076,35 +2276,42 @@ int CtdlIPCSetSystemConfigByType(CtdlIPC *ipc, const char *mimetype, const char 
 
 
 /* GNET */
-int CtdlIPCGetRoomNetworkConfig(CtdlIPC *ipc, char **listing, char *cret)
+int CtdlIPCGetRoomNetworkConfig(CtdlIPC * ipc, char **listing, char *cret)
 {
 	size_t bytes;
 
-	if (!cret) return -2;
-	if (!listing) return -2;
-	if (*listing) return -2;
+	if (!cret)
+		return -2;
+	if (!listing)
+		return -2;
+	if (*listing)
+		return -2;
 
 	return CtdlIPCGenericCommand(ipc, "GNET", NULL, 0, listing, &bytes, cret);
 }
 
 
 /* SNET */
-int CtdlIPCSetRoomNetworkConfig(CtdlIPC *ipc, const char *listing, char *cret)
+int CtdlIPCSetRoomNetworkConfig(CtdlIPC * ipc, const char *listing, char *cret)
 {
-	if (!cret) return -2;
-	if (!listing) return -2;
+	if (!cret)
+		return -2;
+	if (!listing)
+		return -2;
 
 	return CtdlIPCGenericCommand(ipc, "SNET", listing, strlen(listing), NULL, NULL, cret);
 }
 
 
 /* REQT */
-int CtdlIPCRequestClientLogout(CtdlIPC *ipc, int session, char *cret)
+int CtdlIPCRequestClientLogout(CtdlIPC * ipc, int session, char *cret)
 {
 	char aaa[64];
 
-	if (!cret) return -2;
-	if (session < 0) return -2;
+	if (!cret)
+		return -2;
+	if (session < 0)
+		return -2;
 
 	sprintf(aaa, "REQT %d", session);
 	return CtdlIPCGenericCommand(ipc, aaa, NULL, 0, NULL, NULL, cret);
@@ -2112,12 +2319,14 @@ int CtdlIPCRequestClientLogout(CtdlIPC *ipc, int session, char *cret)
 
 
 /* SEEN */
-int CtdlIPCSetMessageSeen(CtdlIPC *ipc, long msgnum, int seen, char *cret)
+int CtdlIPCSetMessageSeen(CtdlIPC * ipc, long msgnum, int seen, char *cret)
 {
 	char aaa[27];
 
-	if (!cret) return -2;
-	if (msgnum < 0) return -2;
+	if (!cret)
+		return -2;
+	if (msgnum < 0)
+		return -2;
 
 	sprintf(aaa, "SEEN %ld|%d", msgnum, seen ? 1 : 0);
 	return CtdlIPCGenericCommand(ipc, aaa, NULL, 0, NULL, NULL, cret);
@@ -2125,7 +2334,7 @@ int CtdlIPCSetMessageSeen(CtdlIPC *ipc, long msgnum, int seen, char *cret)
 
 
 /* STLS */
-int CtdlIPCStartEncryption(CtdlIPC *ipc, char *cret)
+int CtdlIPCStartEncryption(CtdlIPC * ipc, char *cret)
 {
 	int a;
 	int r;
@@ -2142,7 +2351,7 @@ int CtdlIPCStartEncryption(CtdlIPC *ipc, char *cret)
 	}
 	/* Pointless flag waving */
 #if SSLEAY_VERSION_NUMBER >= 0x0922
-	SSL_set_session_id_context(temp_ssl, (const unsigned char*) "Citadel SID", 14);
+	SSL_set_session_id_context(temp_ssl, (const unsigned char *) "Citadel SID", 14);
 #endif
 
 	/* Associate network connection with SSL object */
@@ -2172,18 +2381,17 @@ int CtdlIPCStartEncryption(CtdlIPC *ipc, char *cret)
 	ipc->ssl = temp_ssl;
 
 	error_printf("Encrypting with %s cipher %s\n",
-		SSL_CIPHER_get_version(SSL_get_current_cipher(ipc->ssl)),
-		SSL_CIPHER_get_name(SSL_get_current_cipher(ipc->ssl))
-	);
+		     SSL_CIPHER_get_version(SSL_get_current_cipher(ipc->ssl)), SSL_CIPHER_get_name(SSL_get_current_cipher(ipc->ssl))
+	    );
 	return r;
 #else
 	return 0;
-#endif /* HAVE_OPENSSL */
+#endif				/* HAVE_OPENSSL */
 }
 
 
 #ifdef HAVE_OPENSSL
-static void endtls(SSL *ssl)
+static void endtls(SSL * ssl)
 {
 	if (ssl) {
 		SSL_shutdown(ssl);
@@ -2194,16 +2402,19 @@ static void endtls(SSL *ssl)
 
 
 /* QDIR */
-int CtdlIPCDirectoryLookup(CtdlIPC *ipc, const char *address, char *cret)
+int CtdlIPCDirectoryLookup(CtdlIPC * ipc, const char *address, char *cret)
 {
 	int ret;
 	char *aaa;
 
-	if (!address) return -2;
-	if (!cret) return -2;
+	if (!address)
+		return -2;
+	if (!cret)
+		return -2;
 
-	aaa = (char *)malloc(strlen(address) + 6);
-	if (!aaa) return -1;
+	aaa = (char *) malloc(strlen(address) + 6);
+	if (!aaa)
+		return -1;
 
 	sprintf(aaa, "QDIR %s", address);
 	ret = CtdlIPCGenericCommand(ipc, aaa, NULL, 0, NULL, NULL, cret);
@@ -2213,11 +2424,12 @@ int CtdlIPCDirectoryLookup(CtdlIPC *ipc, const char *address, char *cret)
 
 
 /* IPGM */
-int CtdlIPCInternalProgram(CtdlIPC *ipc, int secret, char *cret)
+int CtdlIPCInternalProgram(CtdlIPC * ipc, int secret, char *cret)
 {
 	char aaa[30];
 
-	if (!cret) return -2;
+	if (!cret)
+		return -2;
 	sprintf(aaa, "IPGM %d", secret);
 	return CtdlIPCGenericCommand(ipc, aaa, NULL, 0, NULL, NULL, cret);
 }
@@ -2231,7 +2443,7 @@ int CtdlIPCInternalProgram(CtdlIPC *ipc, int secret, char *cret)
 
 
 /* Read a listing from the server up to 000.  Append to dest if it exists */
-char *CtdlIPCReadListing(CtdlIPC *ipc, char *dest)
+char *CtdlIPCReadListing(CtdlIPC * ipc, char *dest)
 {
 	size_t length = 0;
 	size_t linelength;
@@ -2247,7 +2459,7 @@ char *CtdlIPCReadListing(CtdlIPC *ipc, char *dest)
 
 	while (CtdlIPC_getline(ipc, aaa), strcmp(aaa, "000")) {
 		linelength = strlen(aaa);
-		ret = (char *)realloc(ret, (size_t)(length + linelength + 2));
+		ret = (char *) realloc(ret, (size_t) (length + linelength + 2));
 		if (ret) {
 			strcpy(&ret[length], aaa);
 			length += linelength;
@@ -2255,16 +2467,16 @@ char *CtdlIPCReadListing(CtdlIPC *ipc, char *dest)
 		}
 	}
 
-	return(ret);
+	return (ret);
 }
 
 
 /* Send a listing to the server; generate the ending 000. */
-int CtdlIPCSendListing(CtdlIPC *ipc, const char *listing)
+int CtdlIPCSendListing(CtdlIPC * ipc, const char *listing)
 {
 	char *text;
 
-	text = (char *)malloc(strlen(listing) + 6);
+	text = (char *) malloc(strlen(listing) + 6);
 	if (text) {
 		strcpy(text, listing);
 		while (text[strlen(text) - 1] == '\n')
@@ -2284,27 +2496,30 @@ int CtdlIPCSendListing(CtdlIPC *ipc, const char *listing)
 
 
 /* Partial read of file from server */
-size_t CtdlIPCPartialRead(CtdlIPC *ipc, void **buf, size_t offset, size_t bytes, char *cret)
+size_t CtdlIPCPartialRead(CtdlIPC * ipc, void **buf, size_t offset, size_t bytes, char *cret)
 {
 	size_t len = 0;
 	char aaa[SIZ];
 
-	if (!buf) return 0;
-	if (!cret) return 0;
-	if (bytes < 1) return 0;
+	if (!buf)
+		return 0;
+	if (!cret)
+		return 0;
+	if (bytes < 1)
+		return 0;
 
 	CtdlIPC_lock(ipc);
-	sprintf(aaa, "READ %d|%d", (int)offset, (int)bytes);
+	sprintf(aaa, "READ %d|%d", (int) offset, (int) bytes);
 	CtdlIPC_putline(ipc, aaa);
 	CtdlIPC_getline(ipc, aaa);
 	if (aaa[0] != '6')
 		strcpy(cret, &aaa[4]);
 	else {
 		len = extract_long(&aaa[4], 0);
-		*buf = (void *)realloc(*buf, (size_t)(offset + len));
+		*buf = (void *) realloc(*buf, (size_t) (offset + len));
 		if (*buf) {
 			/* I know what I'm doing */
-			serv_read(ipc, ((char *)(*buf) + offset), len);
+			serv_read(ipc, ((char *) (*buf) + offset), len);
 		} else {
 			/* We have to read regardless */
 			serv_read(ipc, aaa, len);
@@ -2317,12 +2532,14 @@ size_t CtdlIPCPartialRead(CtdlIPC *ipc, void **buf, size_t offset, size_t bytes,
 
 
 /* CLOS */
-int CtdlIPCEndDownload(CtdlIPC *ipc, char *cret)
+int CtdlIPCEndDownload(CtdlIPC * ipc, char *cret)
 {
 	int ret;
 
-	if (!cret) return -2;
-	if (!ipc->downloading) return -2;
+	if (!cret)
+		return -2;
+	if (!ipc->downloading)
+		return -2;
 
 	ret = CtdlIPCGenericCommand(ipc, "CLOS", NULL, 0, NULL, NULL, cret);
 	if (ret / 100 == 2)
@@ -2332,10 +2549,11 @@ int CtdlIPCEndDownload(CtdlIPC *ipc, char *cret)
 
 
 /* MSGP */
-int CtdlIPCSpecifyPreferredFormats(CtdlIPC *ipc, char *cret, char *formats) {
+int CtdlIPCSpecifyPreferredFormats(CtdlIPC * ipc, char *cret, char *formats)
+{
 	int ret;
 	char cmd[SIZ];
-	
+
 	snprintf(cmd, sizeof cmd, "MSGP %s", formats);
 	ret = CtdlIPCGenericCommand(ipc, cmd, NULL, 0, NULL, NULL, cret);
 	return ret;
@@ -2344,17 +2562,19 @@ int CtdlIPCSpecifyPreferredFormats(CtdlIPC *ipc, char *cret, char *formats) {
 
 
 /* READ */
-int CtdlIPCReadDownload(CtdlIPC *ipc, void **buf, size_t bytes, size_t resume,
-		void (*progress_gauge_callback)
-			(CtdlIPC*, unsigned long, unsigned long),
-	       char *cret)
+int CtdlIPCReadDownload(CtdlIPC * ipc, void **buf, size_t bytes, size_t resume, void (*progress_gauge_callback)
+			 (CtdlIPC *, unsigned long, unsigned long), char *cret)
 {
 	size_t len;
 
-	if (!cret) return -1;
-	if (!buf) return -1;
-	if (*buf) return -1;
-	if (!ipc->downloading) return -1;
+	if (!cret)
+		return -1;
+	if (!buf)
+		return -1;
+	if (*buf)
+		return -1;
+	if (!ipc->downloading)
+		return -1;
 
 	len = resume;
 	if (progress_gauge_callback)
@@ -2375,24 +2595,26 @@ int CtdlIPCReadDownload(CtdlIPC *ipc, void **buf, size_t bytes, size_t resume,
 }
 
 /* READ - pipelined */
-int CtdlIPCHighSpeedReadDownload(CtdlIPC *ipc, void **buf, size_t bytes,
-	       size_t resume,
-		void (*progress_gauge_callback)
-			(CtdlIPC*, unsigned long, unsigned long),
-	       char *cret)
+int CtdlIPCHighSpeedReadDownload(CtdlIPC * ipc, void **buf, size_t bytes, size_t resume, void (*progress_gauge_callback)
+				  (CtdlIPC *, unsigned long, unsigned long), char *cret)
 {
 	size_t len;
-	int calls;	/* How many calls in the pipeline */
-	int i;		/* iterator */
+	int calls;		/* How many calls in the pipeline */
+	int i;			/* iterator */
 	char aaa[4096];
 
-	if (!cret) return -1;
-	if (!buf) return -1;
-	if (*buf) return -1;
-	if (!ipc->downloading) return -1;
+	if (!cret)
+		return -1;
+	if (!buf)
+		return -1;
+	if (*buf)
+		return -1;
+	if (!ipc->downloading)
+		return -1;
 
-	*buf = (void *)realloc(*buf, bytes - resume);
-	if (!*buf) return -1;
+	*buf = (void *) realloc(*buf, bytes - resume);
+	if (!*buf)
+		return -1;
 
 	len = 0;
 	CtdlIPC_lock(ipc);
@@ -2401,11 +2623,12 @@ int CtdlIPCHighSpeedReadDownload(CtdlIPC *ipc, void **buf, size_t bytes,
 
 	/* How many calls will be in the pipeline? */
 	calls = (bytes - resume) / 4096;
-	if ((bytes - resume) % 4096) calls++;
+	if ((bytes - resume) % 4096)
+		calls++;
 
 	/* Send all requests at once */
 	for (i = 0; i < calls; i++) {
-		sprintf(aaa, "READ %d|4096", (int)(i * 4096 + resume) );
+		sprintf(aaa, "READ %d|4096", (int) (i * 4096 + resume));
 		CtdlIPC_putline(ipc, aaa);
 	}
 
@@ -2417,7 +2640,7 @@ int CtdlIPCHighSpeedReadDownload(CtdlIPC *ipc, void **buf, size_t bytes,
 		else {
 			len = extract_long(&aaa[4], 0);
 			/* I know what I'm doing */
-			serv_read(ipc, ((char *)(*buf) + (i * 4096)), len);
+			serv_read(ipc, ((char *) (*buf) + (i * 4096)), len);
 		}
 		if (progress_gauge_callback)
 			progress_gauge_callback(ipc, i * 4096 + len, bytes);
@@ -2428,13 +2651,15 @@ int CtdlIPCHighSpeedReadDownload(CtdlIPC *ipc, void **buf, size_t bytes,
 
 
 /* UCLS */
-int CtdlIPCEndUpload(CtdlIPC *ipc, int discard, char *cret)
+int CtdlIPCEndUpload(CtdlIPC * ipc, int discard, char *cret)
 {
 	int ret;
 	char cmd[8];
 
-	if (!cret) return -1;
-	if (!ipc->uploading) return -1;
+	if (!cret)
+		return -1;
+	if (!ipc->uploading)
+		return -1;
 
 	sprintf(cmd, "UCLS %d", discard ? 0 : 1);
 	ret = CtdlIPCGenericCommand(ipc, cmd, NULL, 0, NULL, NULL, cret);
@@ -2444,10 +2669,8 @@ int CtdlIPCEndUpload(CtdlIPC *ipc, int discard, char *cret)
 
 
 /* WRIT */
-int CtdlIPCWriteUpload(CtdlIPC *ipc, FILE *uploadFP,
-		void (*progress_gauge_callback)
-			(CtdlIPC*, unsigned long, unsigned long),
-		char *cret)
+int CtdlIPCWriteUpload(CtdlIPC * ipc, FILE * uploadFP, void (*progress_gauge_callback)
+		        (CtdlIPC *, unsigned long, unsigned long), char *cret)
 {
 	int ret = -1;
 	size_t offset = 0;
@@ -2457,7 +2680,8 @@ int CtdlIPCWriteUpload(CtdlIPC *ipc, FILE *uploadFP,
 	FILE *fd = uploadFP;
 	int ferr;
 
-	if (!cret) return -1;
+	if (!cret)
+		return -1;
 
 	fseek(fd, 0L, SEEK_END);
 	bytes = ftell(fd);
@@ -2472,23 +2696,24 @@ int CtdlIPCWriteUpload(CtdlIPC *ipc, FILE *uploadFP,
 		/* Read some data in */
 		to_write = fread(buf, 1, 4096, fd);
 		if (!to_write) {
-			if (feof(fd) || ferror(fd)) break;
+			if (feof(fd) || ferror(fd))
+				break;
 		}
-		sprintf(aaa, "WRIT %d", (int)to_write);
+		sprintf(aaa, "WRIT %d", (int) to_write);
 		CtdlIPC_putline(ipc, aaa);
 		CtdlIPC_getline(ipc, aaa);
 		strcpy(cret, &aaa[4]);
 		ret = atoi(aaa);
 		if (aaa[0] == '7') {
 			to_write = extract_long(&aaa[4], 0);
-			
+
 			serv_write(ipc, buf, to_write);
 			offset += to_write;
 			if (progress_gauge_callback)
 				progress_gauge_callback(ipc, offset, bytes);
 			/* Detect short reads and back up if needed */
 			/* offset will never be negative anyway */
-			fseek(fd, (signed)offset, SEEK_SET);
+			fseek(fd, (signed) offset, SEEK_SET);
 		} else {
 			break;
 		}
@@ -2528,16 +2753,17 @@ int CtdlIPCWriteUpload(CtdlIPC *ipc, FILE *uploadFP,
  * protocol_response as described above.  Some commands send additional
  * data in this string.
  */
-int CtdlIPCGenericCommand(CtdlIPC *ipc,
-		const char *command, const char *to_send,
-		size_t bytes_to_send, char **to_receive, 
-		size_t *bytes_to_receive, char *proto_response)
+int CtdlIPCGenericCommand(CtdlIPC * ipc,
+			  const char *command, const char *to_send,
+			  size_t bytes_to_send, char **to_receive, size_t * bytes_to_receive, char *proto_response)
 {
 	char buf[SIZ];
 	int ret;
 
-	if (!command) return -2;
-	if (!proto_response) return -2;
+	if (!command)
+		return -2;
+	if (!proto_response)
+		return -2;
 
 	CtdlIPC_lock(ipc);
 	CtdlIPC_putline(ipc, command);
@@ -2548,21 +2774,21 @@ int CtdlIPCGenericCommand(CtdlIPC *ipc,
 		ret = atoi(proto_response);
 		strcpy(proto_response, &proto_response[4]);
 		switch (ret / 100) {
-		default:			/* Unknown, punt */
-		case 2:				/* OK */
-		case 3:				/* MORE_DATA */
-		case 5:				/* ERROR */
+		default:	/* Unknown, punt */
+		case 2:	/* OK */
+		case 3:	/* MORE_DATA */
+		case 5:	/* ERROR */
 			/* Don't need to do anything */
 			break;
-		case 1:				/* LISTING_FOLLOWS */
+		case 1:	/* LISTING_FOLLOWS */
 			if (to_receive && !*to_receive && bytes_to_receive) {
 				*to_receive = CtdlIPCReadListing(ipc, NULL);
-			} else { /* Drain */
-				while (CtdlIPC_getline(ipc, buf), strcmp(buf, "000")) ;
+			} else {	/* Drain */
+				while (CtdlIPC_getline(ipc, buf), strcmp(buf, "000"));
 				ret = -ret;
 			}
 			break;
-		case 4:				/* SEND_LISTING */
+		case 4:	/* SEND_LISTING */
 			if (to_send) {
 				CtdlIPCSendListing(ipc, to_send);
 			} else {
@@ -2571,17 +2797,15 @@ int CtdlIPCGenericCommand(CtdlIPC *ipc,
 				ret = -ret;
 			}
 			break;
-		case 6:				/* BINARY_FOLLOWS */
+		case 6:	/* BINARY_FOLLOWS */
 			if (to_receive && !*to_receive && bytes_to_receive) {
-				*bytes_to_receive =
-					extract_long(proto_response, 0);
+				*bytes_to_receive = extract_long(proto_response, 0);
 				*to_receive = (char *)
-					malloc((size_t)*bytes_to_receive);
+				    malloc((size_t) * bytes_to_receive);
 				if (!*to_receive) {
 					ret = -1;
 				} else {
-					serv_read(ipc, *to_receive,
-							*bytes_to_receive);
+					serv_read(ipc, *to_receive, *bytes_to_receive);
 				}
 			} else {
 				/* Drain */
@@ -2596,7 +2820,7 @@ int CtdlIPCGenericCommand(CtdlIPC *ipc,
 				ret = -ret;
 			}
 			break;
-		case 7:				/* SEND_BINARY */
+		case 7:	/* SEND_BINARY */
 			if (to_send && bytes_to_send) {
 				serv_write(ipc, to_send, bytes_to_send);
 			} else if (bytes_to_send) {
@@ -2611,9 +2835,9 @@ int CtdlIPCGenericCommand(CtdlIPC *ipc,
 				}
 				serv_write(ipc, buf, fake);
 				ret = -ret;
-			} /* else who knows?  DANGER WILL ROBINSON */
+			}	/* else who knows?  DANGER WILL ROBINSON */
 			break;
-		case 8:				/* START_CHAT_MODE */
+		case 8:	/* START_CHAT_MODE */
 			if (!strncasecmp(command, "CHAT", 4)) {
 				/* Don't call chatmode with generic! */
 				CtdlIPC_putline(ipc, "/quit");
@@ -2627,17 +2851,15 @@ int CtdlIPCGenericCommand(CtdlIPC *ipc,
 					CtdlIPC_putline(ipc, "000");
 					ret = -ret;
 				}
-				if (to_receive && !*to_receive
-						&& bytes_to_receive) {
+				if (to_receive && !*to_receive && bytes_to_receive) {
 					*to_receive = CtdlIPCReadListing(ipc, NULL);
-				} else { /* Drain */
-					while (CtdlIPC_getline(ipc, buf),
-							strcmp(buf, "000")) ;
+				} else {	/* Drain */
+					while (CtdlIPC_getline(ipc, buf), strcmp(buf, "000"));
 					ret = -ret;
 				}
 			}
 			break;
-		case 9:				/* ASYNC_MSG */
+		case 9:	/* ASYNC_MSG */
 			/* CtdlIPCDoAsync(ret, proto_response); */
 			free(CtdlIPCReadListing(ipc, NULL));	/* STUB FIXME */
 			break;
@@ -2663,10 +2885,10 @@ static int tcp_connectsock(char *host, char *service)
 	int sock = (-1);
 
 	if ((host == NULL) || IsEmptyStr(host)) {
-		service = DEFAULT_HOST ;
+		service = DEFAULT_HOST;
 	}
 	if ((service == NULL) || IsEmptyStr(service)) {
-		service = DEFAULT_PORT ;
+		service = DEFAULT_PORT;
 	}
 
 	memset(&hints, 0x00, sizeof(hints));
@@ -2678,13 +2900,12 @@ static int tcp_connectsock(char *host, char *service)
 	 * Handle numeric IPv4 and IPv6 addresses
 	 */
 	rc = inet_pton(AF_INET, host, &serveraddr);
-	if (rc == 1) {						/* dotted quad */
+	if (rc == 1) {		/* dotted quad */
 		hints.ai_family = AF_INET;
 		hints.ai_flags |= AI_NUMERICHOST;
-	}
-	else {
+	} else {
 		rc = inet_pton(AF_INET6, host, &serveraddr);
-		if (rc == 1) {					/* IPv6 address */
+		if (rc == 1) {	/* IPv6 address */
 			hints.ai_family = AF_INET6;
 			hints.ai_flags |= AI_NUMERICHOST;
 		}
@@ -2694,7 +2915,7 @@ static int tcp_connectsock(char *host, char *service)
 
 	rc = getaddrinfo(host, service, &hints, &res);
 	if (rc != 0) {
-		return(-1);
+		return (-1);
 	}
 
 	/*
@@ -2702,18 +2923,18 @@ static int tcp_connectsock(char *host, char *service)
 	 */
 	for (ai = res; ai != NULL; ai = ai->ai_next) {
 		sock = socket(ai->ai_family, ai->ai_socktype, ai->ai_protocol);
-		if (sock < 0) return(-1);
+		if (sock < 0)
+			return (-1);
 
 		rc = connect(sock, ai->ai_addr, ai->ai_addrlen);
 		if (rc >= 0) {
-			return(sock);		/* Connected! */
-		}
-		else {
-			close(sock);		/* Failed.  Close the socket to avoid fd leak! */
+			return (sock);	/* Connected! */
+		} else {
+			close(sock);	/* Failed.  Close the socket to avoid fd leak! */
 		}
 	}
 
-	return(-1);
+	return (-1);
 }
 
 
@@ -2750,7 +2971,7 @@ static int uds_connectsock(int *isLocal, char *sockpath)
 /*
  * input binary data from socket
  */
-static void serv_read(CtdlIPC *ipc, char *buf, unsigned int bytes)
+static void serv_read(CtdlIPC * ipc, char *buf, unsigned int bytes)
 {
 	unsigned int len, rlen;
 
@@ -2775,7 +2996,7 @@ static void serv_read(CtdlIPC *ipc, char *buf, unsigned int bytes)
 /*
  * send binary to server
  */
-void serv_write(CtdlIPC *ipc, const char *buf, unsigned int nbytes)
+void serv_write(CtdlIPC * ipc, const char *buf, unsigned int nbytes)
 {
 	unsigned int bytes_written = 0;
 	int retval;
@@ -2787,8 +3008,7 @@ void serv_write(CtdlIPC *ipc, const char *buf, unsigned int nbytes)
 	}
 #endif
 	while (bytes_written < nbytes) {
-		retval = write(ipc->sock, &buf[bytes_written],
-			       nbytes - bytes_written);
+		retval = write(ipc->sock, &buf[bytes_written], nbytes - bytes_written);
 		if (retval < 1) {
 			connection_died(ipc, 0);
 			return;
@@ -2802,7 +3022,7 @@ void serv_write(CtdlIPC *ipc, const char *buf, unsigned int nbytes)
 /*
  * input binary data from encrypted connection
  */
-static void serv_read_ssl(CtdlIPC* ipc, char *buf, unsigned int bytes)
+static void serv_read_ssl(CtdlIPC * ipc, char *buf, unsigned int bytes)
 {
 	int len, rlen;
 	char junk[1];
@@ -2820,8 +3040,7 @@ static void serv_read_ssl(CtdlIPC* ipc, char *buf, unsigned int bytes)
 			long errval;
 
 			errval = SSL_get_error(ipc->ssl, rlen);
-			if (errval == SSL_ERROR_WANT_READ ||
-					errval == SSL_ERROR_WANT_WRITE) {
+			if (errval == SSL_ERROR_WANT_READ || errval == SSL_ERROR_WANT_WRITE) {
 				sleep(1);
 				continue;
 			}
@@ -2836,8 +3055,7 @@ static void serv_read_ssl(CtdlIPC* ipc, char *buf, unsigned int bytes)
 				return;
 			}
  ***/
-			error_printf("SSL_read in serv_read: %s\n",
-					ERR_reason_error_string(ERR_peek_error()));
+			error_printf("SSL_read in serv_read: %s\n", ERR_reason_error_string(ERR_peek_error()));
 			connection_died(ipc, 1);
 			return;
 		}
@@ -2849,7 +3067,7 @@ static void serv_read_ssl(CtdlIPC* ipc, char *buf, unsigned int bytes)
 /*
  * send binary to server encrypted
  */
-static void serv_write_ssl(CtdlIPC *ipc, const char *buf, unsigned int nbytes)
+static void serv_write_ssl(CtdlIPC * ipc, const char *buf, unsigned int nbytes)
 {
 	unsigned int bytes_written = 0;
 	int retval;
@@ -2862,25 +3080,20 @@ static void serv_write_ssl(CtdlIPC *ipc, const char *buf, unsigned int nbytes)
 				ERR_print_errors_fp(stderr);
 			}
 		}
-		retval = SSL_write(ipc->ssl, &buf[bytes_written],
-				nbytes - bytes_written);
+		retval = SSL_write(ipc->ssl, &buf[bytes_written], nbytes - bytes_written);
 		if (retval < 1) {
 			long errval;
 
 			errval = SSL_get_error(ipc->ssl, retval);
-			if (errval == SSL_ERROR_WANT_READ ||
-					errval == SSL_ERROR_WANT_WRITE) {
+			if (errval == SSL_ERROR_WANT_READ || errval == SSL_ERROR_WANT_WRITE) {
 				sleep(1);
 				continue;
 			}
-			if (errval == SSL_ERROR_ZERO_RETURN ||
-					errval == SSL_ERROR_SSL) {
-				serv_write(ipc, &buf[bytes_written],
-						nbytes - bytes_written);
+			if (errval == SSL_ERROR_ZERO_RETURN || errval == SSL_ERROR_SSL) {
+				serv_write(ipc, &buf[bytes_written], nbytes - bytes_written);
 				return;
 			}
-			error_printf("SSL_write in serv_write: %s\n",
-					ERR_reason_error_string(ERR_peek_error()));
+			error_printf("SSL_write in serv_write: %s\n", ERR_reason_error_string(ERR_peek_error()));
 			connection_died(ipc, 1);
 			return;
 		}
@@ -2896,7 +3109,7 @@ static void CtdlIPC_init_OpenSSL(void)
 	int a;
 	const SSL_METHOD *ssl_method;
 	DH *dh;
-	
+
 	/* already done init */
 	if (ssl_ctx) {
 		return;
@@ -2940,11 +3153,10 @@ static void CtdlIPC_init_OpenSSL(void)
 	DH_free(dh);
 }
 
-#endif /* HAVE_OPENSSL */
+#endif				/* HAVE_OPENSSL */
 
 
-int
-ReadNetworkChunk(CtdlIPC* ipc)
+int ReadNetworkChunk(CtdlIPC * ipc)
 {
 	fd_set read_fd;
 	int ret = 0;
@@ -2956,44 +3168,41 @@ ReadNetworkChunk(CtdlIPC* ipc)
 	tv.tv_usec = 1000;
 	/*tries = 0; */
 	n = 0;
-	while (1)
-	{
-		errno=0;
+	while (1) {
+		errno = 0;
 		FD_ZERO(&read_fd);
 		FD_SET(ipc->sock, &read_fd);
-		ret = select(ipc->sock+1, &read_fd, NULL, NULL,  &tv);
-		
+		ret = select(ipc->sock + 1, &read_fd, NULL, NULL, &tv);
+
 		if (ret > 0) {
-			
+
 			*(ipc->BufPtr) = '\0';
-			n = recv(ipc->sock, ipc->BufPtr, ipc->BufSize  - (ipc->BufPtr - ipc->Buf) - 1, 0);
+			n = recv(ipc->sock, ipc->BufPtr, ipc->BufSize - (ipc->BufPtr - ipc->Buf) - 1, 0);
 			if (n > 0) {
-				ipc->BufPtr[n]='\0';
+				ipc->BufPtr[n] = '\0';
 				ipc->BufUsed += n;
 				return n;
-			}
-			else 
+			} else
 				return n;
-		}
-		else if (ret < 0) {
+		} else if (ret < 0) {
 			if (!(errno == EINTR || errno == EAGAIN))
-				error_printf( "\nselect failed: %d %s\n", err, strerror(err));
+				error_printf("\nselect failed: %d %s\n", err, strerror(err));
 			return -1;
-		}/*
-		else {
-			tries ++;
-			if (tries >= 10)
-			n = read(ipc->sock, ipc->BufPtr, ipc->BufSize  - (ipc->BufPtr - ipc->Buf) - 1);
-			if (n > 0) {
-				ipc->BufPtr[n]='\0';
-				ipc->BufUsed += n;
-				return n;
-			}
-			else {
-				connection_died(ipc, 0);
-				return -1;
-			}
-			}*/
+		}		/*
+				   else {
+				   tries ++;
+				   if (tries >= 10)
+				   n = read(ipc->sock, ipc->BufPtr, ipc->BufSize  - (ipc->BufPtr - ipc->Buf) - 1);
+				   if (n > 0) {
+				   ipc->BufPtr[n]='\0';
+				   ipc->BufUsed += n;
+				   return n;
+				   }
+				   else {
+				   connection_died(ipc, 0);
+				   return -1;
+				   }
+				   } */
 	}
 }
 
@@ -3002,141 +3211,132 @@ ReadNetworkChunk(CtdlIPC* ipc)
  */
 #ifdef CHUNKED_READ
 
-static void CtdlIPC_getline(CtdlIPC* ipc, char *buf)
+static void CtdlIPC_getline(CtdlIPC * ipc, char *buf)
 {
 	int i, ntries;
 	char *aptr, *bptr, *aeptr, *beptr;
 
-//	error_printf("---\n");
+//      error_printf("---\n");
 
 	beptr = buf + SIZ;
 #if defined(HAVE_OPENSSL)
- 	if (ipc->ssl) {
-		
+	if (ipc->ssl) {
+
 		/* Read one character at a time. */
- 		for (i = 0;; i++) {
- 			serv_read(ipc, &buf[i], 1);
- 			if (buf[i] == '\n' || i == (SIZ-1))
- 				break;
- 		}
-		
+		for (i = 0;; i++) {
+			serv_read(ipc, &buf[i], 1);
+			if (buf[i] == '\n' || i == (SIZ - 1))
+				break;
+		}
+
 		/* If we got a long line, discard characters until the newline. */
- 		if (i == (SIZ-1))
- 			while (buf[i] != '\n')
- 				serv_read(ipc, &buf[i], 1);
-		
+		if (i == (SIZ - 1))
+			while (buf[i] != '\n')
+				serv_read(ipc, &buf[i], 1);
+
 		/* Strip the trailing newline (and carriage return, if present) */
- 		if (i>=0 && buf[i] == 10) buf[i--] = 0;
- 		if (i>=0 && buf[i] == 13) buf[i--] = 0;
- 	}
- 	else
+		if (i >= 0 && buf[i] == 10)
+			buf[i--] = 0;
+		if (i >= 0 && buf[i] == 13)
+			buf[i--] = 0;
+	} else
 #endif
 	{
-		if (ipc->Buf == NULL)
-		{
+		if (ipc->Buf == NULL) {
 			ipc->BufSize = SIZ;
-			ipc->Buf = (char*) malloc(ipc->BufSize + 10);
+			ipc->Buf = (char *) malloc(ipc->BufSize + 10);
 			*(ipc->Buf) = '\0';
 			ipc->BufPtr = ipc->Buf;
 		}
 
 		ntries = 0;
-//		while ((ipc->BufUsed == 0)||(ntries++ > 10))
+//              while ((ipc->BufUsed == 0)||(ntries++ > 10))
 		if (ipc->BufUsed == 0)
 			ReadNetworkChunk(ipc);
 
-////		if (ipc->BufUsed != 0) while (1)
+////            if (ipc->BufUsed != 0) while (1)
 		bptr = buf;
 
-		while (1)
-		{
+		while (1) {
 			aptr = ipc->BufPtr;
 			aeptr = ipc->Buf + ipc->BufSize;
-			while ((aptr < aeptr) && 
-			       (bptr < beptr) &&
-			       (*aptr != '\0') && 
-			       (*aptr != '\n'))
+			while ((aptr < aeptr) && (bptr < beptr) && (*aptr != '\0') && (*aptr != '\n'))
 				*(bptr++) = *(aptr++);
-			if ((*aptr == '\n') && (aptr < aeptr))
-			{
+			if ((*aptr == '\n') && (aptr < aeptr)) {
 				/* Terminate it right, remove the line breaks */
 				while ((aptr < aeptr) && ((*aptr == '\n') || (*aptr == '\r')))
-					aptr ++;
-				while ((aptr < aeptr ) && (*(aptr + 1) == '\0') )
-					aptr ++;
+					aptr++;
+				while ((aptr < aeptr) && (*(aptr + 1) == '\0'))
+					aptr++;
 				*(bptr++) = '\0';
-//				fprintf(stderr, "parsing %d %d %d - %d %d %d %s\n", ipc->BufPtr - ipc->Buf, aptr - ipc->BufPtr, ipc->BufUsed , *aptr, *(aptr-1), *(aptr+1), buf);
-				if ((bptr > buf + 1) && (*(bptr-1) == '\r'))
+//                              fprintf(stderr, "parsing %d %d %d - %d %d %d %s\n", ipc->BufPtr - ipc->Buf, aptr - ipc->BufPtr, ipc->BufUsed , *aptr, *(aptr-1), *(aptr+1), buf);
+				if ((bptr > buf + 1) && (*(bptr - 1) == '\r'))
 					*(--bptr) = '\0';
-				
+
 				/* is there more in the buffer we need to read later? */
-				if (ipc->Buf + ipc->BufUsed > aptr)
-				{
+				if (ipc->Buf + ipc->BufUsed > aptr) {
 					ipc->BufPtr = aptr;
-				}
-				else
-				{
+				} else {
 					ipc->BufUsed = 0;
 					ipc->BufPtr = ipc->Buf;
 				}
-//				error_printf("----bla6\n");
+//                              error_printf("----bla6\n");
 				return;
-				
-			}/* should we move our read stuf to the bufferstart so we have more space at the end? */
-			else if ((ipc->BufPtr != ipc->Buf) && 
-				 (ipc->BufUsed > (ipc->BufSize  - (ipc->BufSize / 4))))
-			{
+
+			} /* should we move our read stuf to the bufferstart so we have more space at the end? */
+			else if ((ipc->BufPtr != ipc->Buf) && (ipc->BufUsed > (ipc->BufSize - (ipc->BufSize / 4)))) {
 				size_t NewBufSize = ipc->BufSize * 2;
 				int delta = (ipc->BufPtr - ipc->Buf);
 				char *NewBuf;
 
 				/* if the line would end after our buffer, we should use a bigger buffer. */
-				NewBuf = (char *)malloc (NewBufSize + 10);
-				memcpy (NewBuf, ipc->BufPtr, ipc->BufUsed - delta);
+				NewBuf = (char *) malloc(NewBufSize + 10);
+				memcpy(NewBuf, ipc->BufPtr, ipc->BufUsed - delta);
 				free(ipc->Buf);
 				ipc->Buf = ipc->BufPtr = NewBuf;
 				ipc->BufUsed -= delta;
 				ipc->BufSize = NewBufSize;
 			}
-			if (ReadNetworkChunk(ipc) <0)
-			{
-//				error_printf("----bla\n");
+			if (ReadNetworkChunk(ipc) < 0) {
+//                              error_printf("----bla\n");
 				return;
 			}
 		}
-///		error_printf("----bl45761%s\nipc->BufUsed");
+///             error_printf("----bl45761%s\nipc->BufUsed");
 	}
-//	error_printf("----bla1\n");
+//      error_printf("----bla1\n");
 }
 
-#else	/* CHUNKED_READ */
+#else				/* CHUNKED_READ */
 
-static void CtdlIPC_getline(CtdlIPC* ipc, char *buf)
+static void CtdlIPC_getline(CtdlIPC * ipc, char *buf)
 {
 	int i;
 
 	/* Read one character at a time. */
 	for (i = 0;; i++) {
 		serv_read(ipc, &buf[i], 1);
-		if (buf[i] == '\n' || i == (SIZ-1))
+		if (buf[i] == '\n' || i == (SIZ - 1))
 			break;
 	}
 
 	/* If we got a long line, discard characters until the newline. */
-	if (i == (SIZ-1))
+	if (i == (SIZ - 1))
 		while (buf[i] != '\n')
 			serv_read(ipc, &buf[i], 1);
 
 	/* Strip the trailing newline (and carriage return, if present) */
-	if (i>=0 && buf[i] == 10) buf[i--] = 0;
-	if (i>=0 && buf[i] == 13) buf[i--] = 0;
+	if (i >= 0 && buf[i] == 10)
+		buf[i--] = 0;
+	if (i >= 0 && buf[i] == 13)
+		buf[i--] = 0;
 }
 
 
-#endif	/* CHUNKED_READ */
+#endif				/* CHUNKED_READ */
 
 
-void CtdlIPC_chat_recv(CtdlIPC* ipc, char* buf)
+void CtdlIPC_chat_recv(CtdlIPC * ipc, char *buf)
 {
 	CtdlIPC_getline(ipc, buf);
 }
@@ -3144,7 +3344,7 @@ void CtdlIPC_chat_recv(CtdlIPC* ipc, char* buf)
 /*
  * send line to server - implemented in terms of serv_write()
  */
-static void CtdlIPC_putline(CtdlIPC *ipc, const char *buf)
+static void CtdlIPC_putline(CtdlIPC * ipc, const char *buf)
 {
 	char *cmd = NULL;
 	int len;
@@ -3166,7 +3366,7 @@ static void CtdlIPC_putline(CtdlIPC *ipc, const char *buf)
 	ipc->last_command_sent = time(NULL);
 }
 
-void CtdlIPC_chat_send(CtdlIPC* ipc, const char* buf)
+void CtdlIPC_chat_send(CtdlIPC * ipc, const char *buf)
 {
 	CtdlIPC_putline(ipc, buf);
 }
@@ -3175,13 +3375,13 @@ void CtdlIPC_chat_send(CtdlIPC* ipc, const char* buf)
 /*
  * attach to server
  */
-CtdlIPC* CtdlIPC_new(int argc, char **argv, char *hostbuf, char *portbuf)
+CtdlIPC *CtdlIPC_new(int argc, char **argv, char *hostbuf, char *portbuf)
 {
 	int a;
 	char cithost[SIZ];
 	char citport[SIZ];
 	char sockpath[SIZ];
-	CtdlIPC* ipc;
+	CtdlIPC *ipc;
 
 	ipc = malloc(sizeof(struct _CtdlIPC));
 	if (!ipc) {
@@ -3191,8 +3391,8 @@ CtdlIPC* CtdlIPC_new(int argc, char **argv, char *hostbuf, char *portbuf)
 	ipc->ssl = NULL;
 	CtdlIPC_init_OpenSSL();
 #endif
-	ipc->sock = -1;			/* Not connected */
-	ipc->isLocal = 0;		/* Not local, of course! */
+	ipc->sock = -1;		/* Not connected */
+	ipc->isLocal = 0;	/* Not local, of course! */
 	ipc->downloading = 0;
 	ipc->uploading = 0;
 	ipc->last_command_sent = 0L;
@@ -3221,12 +3421,12 @@ CtdlIPC* CtdlIPC_new(int argc, char **argv, char *hostbuf, char *portbuf)
 		} else if (a == 2) {
 			strcpy(citport, argv[a]);
 		} else {
-			error_printf("%s: usage: ",argv[0]);
-			error_printf("%s [host] [port] ",argv[0]);
+			error_printf("%s: usage: ", argv[0]);
+			error_printf("%s [host] [port] ", argv[0]);
 			free(ipc);
 			errno = EINVAL;
 			return 0;
-   		}
+		}
 	}
 
 	if ((!strcmp(cithost, "localhost")) || (!strcmp(cithost, "127.0.0.1"))) {
@@ -3237,8 +3437,7 @@ CtdlIPC* CtdlIPC_new(int argc, char **argv, char *hostbuf, char *portbuf)
 	if (!strcmp(cithost, UDS)) {
 		if (!strcasecmp(citport, DEFAULT_PORT)) {
 			snprintf(sockpath, sizeof sockpath, "%s", file_citadel_socket);
-		}
-		else {
+		} else {
 			snprintf(sockpath, sizeof sockpath, "%s/%s", citport, "citadel.socket");
 		}
 		printf("[%s]\n", sockpath);
@@ -3247,8 +3446,10 @@ CtdlIPC* CtdlIPC_new(int argc, char **argv, char *hostbuf, char *portbuf)
 			free(ipc);
 			return 0;
 		}
-		if (hostbuf != NULL) strcpy(hostbuf, cithost);
-		if (portbuf != NULL) strcpy(portbuf, sockpath);
+		if (hostbuf != NULL)
+			strcpy(hostbuf, cithost);
+		if (portbuf != NULL)
+			strcpy(portbuf, sockpath);
 		strcpy(ipc->ip_hostname, "");
 		strcpy(ipc->ip_address, "");
 		return ipc;
@@ -3270,18 +3471,16 @@ CtdlIPC* CtdlIPC_new(int argc, char **argv, char *hostbuf, char *portbuf)
 	ipc->ip_hostname[0] = 0;
 	ipc->ip_address[0] = 0;
 
-	getpeername(ipc->sock, (struct sockaddr *)&clientaddr, &addrlen);
-	getnameinfo((struct sockaddr *)&clientaddr, addrlen,
-		ipc->ip_hostname, sizeof ipc->ip_hostname, NULL, 0, 0
-	);
-	getnameinfo((struct sockaddr *)&clientaddr, addrlen,
-		ipc->ip_address, sizeof ipc->ip_address, NULL, 0, NI_NUMERICHOST
-	);
+	getpeername(ipc->sock, (struct sockaddr *) &clientaddr, &addrlen);
+	getnameinfo((struct sockaddr *) &clientaddr, addrlen, ipc->ip_hostname, sizeof ipc->ip_hostname, NULL, 0, 0);
+	getnameinfo((struct sockaddr *) &clientaddr, addrlen, ipc->ip_address, sizeof ipc->ip_address, NULL, 0, NI_NUMERICHOST);
 
 	/* stuff other things elsewhere */
 
-	if (hostbuf != NULL) strcpy(hostbuf, cithost);
-	if (portbuf != NULL) strcpy(portbuf, citport);
+	if (hostbuf != NULL)
+		strcpy(hostbuf, cithost);
+	if (portbuf != NULL)
+		strcpy(portbuf, citport);
 	return ipc;
 }
 
@@ -3289,7 +3488,7 @@ CtdlIPC* CtdlIPC_new(int argc, char **argv, char *hostbuf, char *portbuf)
 /*
  * Disconnect and delete the IPC class (destructor)
  */
-void CtdlIPC_delete(CtdlIPC* ipc)
+void CtdlIPC_delete(CtdlIPC * ipc)
 {
 #ifdef HAVE_OPENSSL
 	if (ipc->ssl) {
@@ -3303,7 +3502,7 @@ void CtdlIPC_delete(CtdlIPC* ipc)
 		ipc->sock = -1;
 	}
 	if (ipc->Buf != NULL)
-		free (ipc->Buf);
+		free(ipc->Buf);
 	ipc->Buf = NULL;
 	ipc->BufPtr = NULL;
 	free(ipc);
@@ -3314,7 +3513,7 @@ void CtdlIPC_delete(CtdlIPC* ipc)
  * Disconnect and delete the IPC class (destructor)
  * Also NULLs out the pointer
  */
-void CtdlIPC_delete_ptr(CtdlIPC** pipc)
+void CtdlIPC_delete_ptr(CtdlIPC ** pipc)
 {
 	CtdlIPC_delete(*pipc);
 	*pipc = NULL;
@@ -3327,7 +3526,7 @@ void CtdlIPC_delete_ptr(CtdlIPC** pipc)
  * FIXME: This is only used in chat mode; eliminate it when chat mode gets
  * rewritten...
  */
-int CtdlIPC_getsockfd(CtdlIPC* ipc)
+int CtdlIPC_getsockfd(CtdlIPC * ipc)
 {
 	return ipc->sock;
 }
@@ -3339,7 +3538,7 @@ int CtdlIPC_getsockfd(CtdlIPC* ipc)
  * FIXME: This is only used in chat mode; eliminate it when chat mode gets
  * rewritten...
  */
-char CtdlIPC_get(CtdlIPC* ipc)
+char CtdlIPC_get(CtdlIPC * ipc)
 {
 	char buf[2];
 	char ch;

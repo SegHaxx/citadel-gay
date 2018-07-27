@@ -17,11 +17,13 @@
 
 #define PWFILENAME "%s/.citadel.passwords"
 
-void determine_pwfilename(char *pwfile, size_t n) {
+void determine_pwfilename(char *pwfile, size_t n)
+{
 	struct passwd *p;
 
 	p = getpwuid(getuid());
-	if (p == NULL) strcpy(pwfile, "");
+	if (p == NULL)
+		strcpy(pwfile, "");
 	snprintf(pwfile, n, PWFILENAME, p->pw_dir);
 }
 
@@ -30,11 +32,8 @@ void determine_pwfilename(char *pwfile, size_t n) {
  * Check the password file for a host/port match; if found, stuff the user
  * name and password into the user/pass buffers
  */
-void get_stored_password(
-		char *host,
-		char *port,
-		char *username,
-		char *password) {
+void get_stored_password(char *host, char *port, char *username, char *password)
+{
 
 	char pwfile[PATH_MAX];
 	FILE *fp;
@@ -46,10 +45,12 @@ void get_stored_password(
 	strcpy(password, "");
 
 	determine_pwfilename(pwfile, sizeof pwfile);
-	if (IsEmptyStr(pwfile)) return;
+	if (IsEmptyStr(pwfile))
+		return;
 
 	fp = fopen(pwfile, "r");
-	if (fp == NULL) return;
+	if (fp == NULL)
+		return;
 	while (fgets(buf64, sizeof buf64, fp) != NULL) {
 		CtdlDecodeBase64(buf, buf64, sizeof(buf64));
 		extract_token(hostbuf, buf, 0, '|', sizeof hostbuf);
@@ -71,11 +72,8 @@ void get_stored_password(
 /*
  * Set (or clear) stored passwords.
  */
-void set_stored_password(
-		char *host,
-		char *port,
-		char *username,
-		char *password) {
+void set_stored_password(char *host, char *port, char *username, char *password)
+{
 
 	char pwfile[PATH_MAX];
 	FILE *fp, *oldfp;
@@ -84,13 +82,16 @@ void set_stored_password(
 	char hostbuf[256], portbuf[256], ubuf[256], pbuf[256];
 
 	determine_pwfilename(pwfile, sizeof pwfile);
-	if (IsEmptyStr(pwfile)) return;
+	if (IsEmptyStr(pwfile))
+		return;
 
 	oldfp = fopen(pwfile, "r");
-	if (oldfp == NULL) oldfp = fopen("/dev/null", "r");
+	if (oldfp == NULL)
+		oldfp = fopen("/dev/null", "r");
 	unlink(pwfile);
 	fp = fopen(pwfile, "w");
-	if (fp == NULL) fp = fopen("/dev/null", "w");
+	if (fp == NULL)
+		fp = fopen("/dev/null", "w");
 	while (fgets(buf64, sizeof buf64, oldfp) != NULL) {
 		CtdlDecodeBase64(buf, buf64, sizeof(buf64));
 		extract_token(hostbuf, buf, 0, '|', sizeof hostbuf);
@@ -98,17 +99,15 @@ void set_stored_password(
 		extract_token(ubuf, buf, 2, '|', sizeof ubuf);
 		extract_token(pbuf, buf, 3, '|', sizeof pbuf);
 
-		if ( (strcasecmp(hostbuf, host)) 
-		   || (strcasecmp(portbuf, port)) ) {
-			snprintf(buf, sizeof buf, "%s|%s|%s|%s|",
-				hostbuf, portbuf, ubuf, pbuf);
+		if ((strcasecmp(hostbuf, host))
+		    || (strcasecmp(portbuf, port))) {
+			snprintf(buf, sizeof buf, "%s|%s|%s|%s|", hostbuf, portbuf, ubuf, pbuf);
 			CtdlEncodeBase64(buf64, buf, strlen(buf), 0);
 			fprintf(fp, "%s\n", buf64);
 		}
 	}
 	if (!IsEmptyStr(username)) {
-		snprintf(buf, sizeof buf, "%s|%s|%s|%s|",
-			host, port, username, password);
+		snprintf(buf, sizeof buf, "%s|%s|%s|%s|", host, port, username, password);
 		CtdlEncodeBase64(buf64, buf, strlen(buf), 0);
 		fprintf(fp, "%s\n", buf64);
 	}
@@ -121,17 +120,13 @@ void set_stored_password(
 /*
  * Set the password if the user wants to, clear it otherwise 
  */
-void offer_to_remember_password(CtdlIPC *ipc,
-		char *host,
-		char *port,
-		char *username,
-		char *password) {
+void offer_to_remember_password(CtdlIPC * ipc, char *host, char *port, char *username, char *password)
+{
 
 	if (rc_remember_passwords) {
 		if (boolprompt("Remember username/password for this site", 0)) {
 			set_stored_password(host, port, username, password);
-		}
-		else {
+		} else {
 			set_stored_password(host, port, "", "");
 		}
 	}
