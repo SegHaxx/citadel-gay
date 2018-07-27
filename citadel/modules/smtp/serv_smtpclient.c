@@ -3,7 +3,7 @@
  *
  * This is the new, exciting, clever version that makes libcurl do all the work  :)
  *
- * Copyright (c) 1997-2017 by the citadel.org team
+ * Copyright (c) 1997-2018 by the citadel.org team
  *
  * This program is open source software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License as published
@@ -259,12 +259,11 @@ int smtp_attempt_delivery(long msgid, char *recp, char *envelope_from, char *res
 			curl_easy_setopt(curl, CURLOPT_READDATA, &s);
 			curl_easy_setopt(curl, CURLOPT_UPLOAD, 1);						// tell libcurl we are uploading
 			curl_easy_setopt(curl, CURLOPT_TIMEOUT, 20L);						// Time out after 20 seconds
-			if (CtdlGetConfigInt("c_smtpclient_try_starttls") != 0) {
+			if (CtdlGetConfigInt("c_smtpclient_disable_starttls") == 0) {
 				curl_easy_setopt(curl, CURLOPT_USE_SSL, CURLUSESSL_TRY);			// Attempt STARTTLS if offered
 			}
 			curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0L);
 			curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 0L);
-			// curl_easy_setopt(curl, CURLOPT_ERRORBUFFER, curl_error_buffer);
 			curl_easy_setopt(curl, CURLOPT_DEBUGFUNCTION, ctdl_libcurl_smtp_debug_callback);
 			curl_easy_setopt(curl, CURLOPT_DEBUGDATA, (void *)response);
 			curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L);
@@ -302,15 +301,13 @@ int smtp_attempt_delivery(long msgid, char *recp, char *envelope_from, char *res
 			char response_code_str[4];
 			snprintf(response_code_str, sizeof response_code_str, "%ld", response_code);
 			char *respstart = strstr(response, response_code_str);
-			if (respstart == NULL)
-			{
+			if (respstart == NULL) {
 				strcpy(response, smtpstatus(response_code));
 			}
 			else {
 				strcpy(response, respstart);
 				char *p;
-				for (p=response; *p!=0; ++p)
-				{
+				for (p=response; *p!=0; ++p) {
 					if (*p == '\n') *p = ' ';
 					if (*p == '\r') *p = ' ';
 					if (!isprint(*p)) *p = ' ';
