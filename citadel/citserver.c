@@ -38,7 +38,8 @@ int openid_level_supported = 0;
 /*
  * Various things that need to be initialized at startup
  */
-void master_startup(void) {
+void master_startup(void)
+{
 	struct timeval tv;
 	unsigned int seed;
 	FILE *urandom;
@@ -46,7 +47,7 @@ void master_startup(void) {
 	int rv;
 	struct passwd *pw;
 	gid_t gid;
-	
+
 	syslog(LOG_DEBUG, "master_startup() started");
 	time(&server_startup_time);
 
@@ -74,22 +75,22 @@ void master_startup(void) {
 	check_ref_counts();
 
 	syslog(LOG_INFO, "Creating base rooms (if necessary)");
-	CtdlCreateRoom(CtdlGetConfigStr("c_baseroom"),	0, "", 0, 1, 0, VIEW_BBS);
-	CtdlCreateRoom(AIDEROOM,			3, "", 0, 1, 0, VIEW_BBS);
-	CtdlCreateRoom(SYSCONFIGROOM,			3, "", 0, 1, 0, VIEW_BBS);
-	CtdlCreateRoom(CtdlGetConfigStr("c_twitroom"),	0, "", 0, 1, 0, VIEW_BBS);
+	CtdlCreateRoom(CtdlGetConfigStr("c_baseroom"), 0, "", 0, 1, 0, VIEW_BBS);
+	CtdlCreateRoom(AIDEROOM, 3, "", 0, 1, 0, VIEW_BBS);
+	CtdlCreateRoom(SYSCONFIGROOM, 3, "", 0, 1, 0, VIEW_BBS);
+	CtdlCreateRoom(CtdlGetConfigStr("c_twitroom"), 0, "", 0, 1, 0, VIEW_BBS);
 
 	/* The "Local System Configuration" room doesn't need to be visible */
-        if (CtdlGetRoomLock(&qrbuf, SYSCONFIGROOM) == 0) {
-                qrbuf.QRflags2 |= QR2_SYSTEM;
-                CtdlPutRoomLock(&qrbuf);
-        }
+	if (CtdlGetRoomLock(&qrbuf, SYSCONFIGROOM) == 0) {
+		qrbuf.QRflags2 |= QR2_SYSTEM;
+		CtdlPutRoomLock(&qrbuf);
+	}
 
 	/* Aide needs to be public postable, else we're not RFC conformant. */
-        if (CtdlGetRoomLock(&qrbuf, AIDEROOM) == 0) {
-                qrbuf.QRflags2 |= QR2_SMTP_PUBLIC;
-                CtdlPutRoomLock(&qrbuf);
-        }
+	if (CtdlGetRoomLock(&qrbuf, AIDEROOM) == 0) {
+		qrbuf.QRflags2 |= QR2_SMTP_PUBLIC;
+		CtdlPutRoomLock(&qrbuf);
+	}
 
 	syslog(LOG_INFO, "Seeding the pseudo-random number generator...");
 	urandom = fopen("/dev/urandom", "r");
@@ -99,8 +100,7 @@ void master_startup(void) {
 			syslog(LOG_ERR, "citserver: failed to read random seed: %m");
 		}
 		fclose(urandom);
-	}
-	else {
+	} else {
 		gettimeofday(&tv, NULL);
 		seed = tv.tv_usec;
 	}
@@ -114,16 +114,19 @@ void master_startup(void) {
 /*
  * Cleanup routine to be called when the server is shutting down.  Returns the needed exit code.
  */
-int master_cleanup(int exitcode) {
+int master_cleanup(int exitcode)
+{
 	struct CleanupFunctionHook *fcn;
 	static int already_cleaning_up = 0;
 
-	if (already_cleaning_up) while(1) usleep(1000000);
+	if (already_cleaning_up)
+		while (1)
+			usleep(1000000);
 	already_cleaning_up = 1;
 
 	/* Run any cleanup routines registered by loadable modules */
 	for (fcn = CleanupHookTable; fcn != NULL; fcn = fcn->next) {
-		(*fcn->h_function_pointer)();
+		(*fcn->h_function_pointer) ();
 	}
 
 	/* Close the AdjRefCount queue file */
@@ -134,7 +137,7 @@ int master_cleanup(int exitcode) {
 
 	/* Close the configuration system */
 	shutdown_config_system();
-	
+
 	/* Close databases */
 	syslog(LOG_INFO, "Closing databases\n");
 	close_databases();
@@ -142,23 +145,24 @@ int master_cleanup(int exitcode) {
 	/* If the operator requested a halt but not an exit, halt here. */
 	if (shutdown_and_halt) {
 		syslog(LOG_ERR, "citserver: Halting server without exiting.");
-		fflush(stdout); fflush(stderr);
-		while(1) {
+		fflush(stdout);
+		fflush(stderr);
+		while (1) {
 			sleep(32767);
 		}
 	}
-	
+
 	/* Now go away. */
 	syslog(LOG_ERR, "citserver: Exiting with status %d", exitcode);
-	fflush(stdout); fflush(stderr);
-	
+	fflush(stdout);
+	fflush(stderr);
+
 	if (restart_server != 0) {
 		exitcode = 1;
-	}
-	else if ((running_as_daemon != 0) && ((exitcode == 0) )) {
+	} else if ((running_as_daemon != 0) && ((exitcode == 0))) {
 		exitcode = CTDLEXIT_SHUTDOWN;
 	}
-	return(exitcode);
+	return (exitcode);
 }
 
 
@@ -167,12 +171,12 @@ int master_cleanup(int exitcode) {
  * returns an asterisk if there are any instant messages waiting,
  * space otherwise.
  */
-char CtdlCheckExpress(void) {
+char CtdlCheckExpress(void)
+{
 	if (CC->FirstExpressMessage == NULL) {
-		return(' ');
-	}
-	else {
-		return('*');
+		return (' ');
+	} else {
+		return ('*');
 	}
 }
 
@@ -210,7 +214,7 @@ int CtdlIsPublicClient(void)
 	if (stat(public_clients_file, &statbuf) != 0) {
 		/* No public_clients file exists, so bail out */
 		syslog(LOG_WARNING, "Warning: '%s' does not exist", public_clients_file);
-		return(0);
+		return (0);
 	}
 
 	if (statbuf.st_mtime > pc_timestamp) {
@@ -221,80 +225,78 @@ int CtdlIsPublicClient(void)
 		public_clientsend = public_clientspos + SIZ;
 		safestrncpy(public_clientspos, LOCALHOSTSTR, sizeof public_clients);
 		public_clientspos += sizeof(LOCALHOSTSTR) - 1;
-		
+
 		if (hostname_to_dotted_quad(addrbuf, CtdlGetConfigStr("c_fqdn")) == 0) {
 			*(public_clientspos++) = '|';
 			paddr = &addrbuf[0];
-			while (!IsEmptyStr (paddr) && 
-			       (public_clientspos < public_clientsend))
+			while (!IsEmptyStr(paddr) && (public_clientspos < public_clientsend))
 				*(public_clientspos++) = *(paddr++);
 		}
 
 		fp = fopen(public_clients_file, "r");
-		if (fp != NULL) 
-			while ((fgets(buf, sizeof buf, fp)!=NULL) &&
-			       (public_clientspos < public_clientsend)){
+		if (fp != NULL)
+			while ((fgets(buf, sizeof buf, fp) != NULL) && (public_clientspos < public_clientsend)) {
 				char *ptr;
 				ptr = buf;
 				while (!IsEmptyStr(ptr)) {
 					if (*ptr == '#') {
 						*ptr = 0;
 						break;
-					}
-				else ptr++;
+					} else
+						ptr++;
 				}
 				ptr--;
-				while (ptr>buf && isspace(*ptr)) {
+				while (ptr > buf && isspace(*ptr)) {
 					*(ptr--) = 0;
 				}
 				if (hostname_to_dotted_quad(addrbuf, buf) == 0) {
 					*(public_clientspos++) = '|';
 					paddr = addrbuf;
-					while (!IsEmptyStr(paddr) && 
-					       (public_clientspos < public_clientsend)){
+					while (!IsEmptyStr(paddr) && (public_clientspos < public_clientsend)) {
 						*(public_clientspos++) = *(paddr++);
 					}
 				}
 			}
-		if (fp != NULL) fclose(fp);
+		if (fp != NULL)
+			fclose(fp);
 		pc_timestamp = time(NULL);
 		end_critical_section(S_PUBLIC_CLIENTS);
 	}
 
 	syslog(LOG_DEBUG, "Checking whether %s is a local or public client", CC->cs_addr);
-	for (i=0; i<num_parms(public_clients); ++i) {
+	for (i = 0; i < num_parms(public_clients); ++i) {
 		extract_token(addrbuf, public_clients, i, '|', sizeof addrbuf);
 		if (!strcasecmp(CC->cs_addr, addrbuf)) {
 			syslog(LOG_DEBUG, "... yes its local.");
-			return(1);
+			return (1);
 		}
 	}
 
 	/* No hits.  This is not a public client. */
 	syslog(LOG_DEBUG, "... no it isn't.");
-	return(0);
+	return (0);
 }
 
 
 
 
 
-void citproto_begin_session() {
-	if (CC->nologin==1) {
+void citproto_begin_session()
+{
+	if (CC->nologin == 1) {
 		cprintf("%d %s: Too many users are already online (maximum is %d)\n",
-			ERROR + MAX_SESSIONS_EXCEEDED,
-			CtdlGetConfigStr("c_nodename"), CtdlGetConfigInt("c_maxsessions")
-		);
+			ERROR + MAX_SESSIONS_EXCEEDED, CtdlGetConfigStr("c_nodename"), CtdlGetConfigInt("c_maxsessions")
+		    );
 		CC->kill_me = KILLME_MAX_SESSIONS_EXCEEDED;
-	}
-	else {
+	} else {
 		cprintf("%d %s Citadel server ready.\n", CIT_OK, CtdlGetConfigStr("c_nodename"));
 		CC->can_receive_im = 1;
 	}
 }
 
 
-void citproto_begin_admin_session() {
+void citproto_begin_admin_session()
+{
 	CC->internal_pgm = 1;
 	cprintf("%d %s Citadel server ADMIN CONNECTION ready.\n", CIT_OK, CtdlGetConfigStr("c_nodename"));
 }
@@ -303,7 +305,7 @@ void citproto_begin_admin_session() {
 /*
  * This loop performs all asynchronous functions.
  */
-void do_async_loop(void) {
+void do_async_loop(void)
+{
 	PerformSessionHooks(EVT_ASYNC);
 }
-
