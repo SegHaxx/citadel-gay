@@ -7,7 +7,8 @@
 
 #include "ctdlsh.h"
 
-int cmd_datetime(int server_socket, char *cmdbuf) {
+int cmd_datetime(int server_socket, char *cmdbuf)
+{
 	char buf[1024];
 	time_t now;
 
@@ -15,9 +16,5 @@ int cmd_datetime(int server_socket, char *cmdbuf) {
 	sock_getln(server_socket, buf, sizeof buf);
 	now = atol(&buf[4]);
 	printf("%s", asctime(localtime(&now)));
-	return(cmdret_ok);
+	return (cmdret_ok);
 }
-
-
-
-

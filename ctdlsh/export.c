@@ -5,7 +5,8 @@
 
 #include "ctdlsh.h"
 
-int cmd_export(int server_socket, char *cmdbuf) {
+int cmd_export(int server_socket, char *cmdbuf)
+{
 	char buf[1024];
 	char export_file_name[1024];
 
@@ -19,7 +20,7 @@ int cmd_export(int server_socket, char *cmdbuf) {
 
 	if (buf[0] != '1') {
 		fprintf(stderr, "%s\n", &buf[4]);
-		return(cmdret_error);
+		return (cmdret_error);
 	}
 
 	while (sock_getln(server_socket, buf, sizeof buf), strcmp(buf, "000")) {
@@ -31,9 +32,5 @@ int cmd_export(int server_socket, char *cmdbuf) {
 
 
 
-	return(cmdret_ok);
+	return (cmdret_ok);
 }
-
-
-
-

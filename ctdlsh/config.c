@@ -8,17 +8,18 @@
 #include "ctdlsh.h"
 
 
-int show_full_config(int server_socket) {
+int show_full_config(int server_socket)
+{
 	char buf[1024];
 
-        sock_puts(server_socket, "CONF listval");
-        sock_getln(server_socket, buf, sizeof buf);
+	sock_puts(server_socket, "CONF listval");
+	sock_getln(server_socket, buf, sizeof buf);
 	if (buf[0] != '1') {
-        	printf("%s\n", &buf[4]);
-		return(cmdret_error);
+		printf("%s\n", &buf[4]);
+		return (cmdret_error);
 	}
 
-        while (sock_getln(server_socket, buf, sizeof buf), strcmp(buf, "000")) {
+	while (sock_getln(server_socket, buf, sizeof buf), strcmp(buf, "000")) {
 		char *val = NULL;
 		char *p = strchr(buf, '|');
 		if (p != NULL) {
@@ -29,43 +30,46 @@ int show_full_config(int server_socket) {
 		printf("%-30s = %s\n", buf, val);
 	}
 
-	return(cmdret_ok);
+	return (cmdret_ok);
 }
 
 
-int show_single_config(int server_socket, char *keyname) {
+int show_single_config(int server_socket, char *keyname)
+{
 	char buf[1024];
 
 	sock_printf(server_socket, "CONF getval|%s\n", keyname);
-        sock_getln(server_socket, buf, sizeof buf);
+	sock_getln(server_socket, buf, sizeof buf);
 	if (buf[0] == '2') {
 		char *v = &buf[4];
 		char *t = NULL;
-		while(t = strrchr(v, '|'), t!=NULL) t[0]=0;
+		while (t = strrchr(v, '|'), t != NULL)
+			t[0] = 0;
 		printf("%-30s = %s\n", keyname, v);
-		return(cmdret_ok);
-	}
-	else {
+		return (cmdret_ok);
+	} else {
 		printf("\n");
-		return(cmdret_error);
+		return (cmdret_error);
 	}
 }
 
 
-int set_single_config(int server_socket, char *keyname, char *val) {
+int set_single_config(int server_socket, char *keyname, char *val)
+{
 	char buf[1024];
 
 	sock_printf(server_socket, "CONF putval|%s|%s\n", keyname, val);
-        sock_getln(server_socket, buf, sizeof buf);
+	sock_getln(server_socket, buf, sizeof buf);
 	if (buf[0] != '2') {
 		printf("%s\n", buf);
-		return(cmdret_error);
+		return (cmdret_error);
 	}
-	return(show_single_config(server_socket, keyname));
+	return (show_single_config(server_socket, keyname));
 }
 
 
-int cmd_config(int server_socket, char *cmdbuf) {
+int cmd_config(int server_socket, char *cmdbuf)
+{
 
 	char buf[4096];
 	strncpy(buf, cmdbuf, sizeof buf);
@@ -74,7 +78,8 @@ int cmd_config(int server_socket, char *cmdbuf) {
 		return show_full_config(server_socket);
 	}
 
-	while (k[0]==' ') ++k;
+	while (k[0] == ' ')
+		++k;
 
 	if (strlen(k) == 0) {
 		return show_full_config(server_socket);
@@ -85,7 +90,7 @@ int cmd_config(int server_socket, char *cmdbuf) {
 		printf("config ?               Display this message\n");
 		printf("config [key]           Print value of configuration key 'key'\n");
 		printf("config [key] [value]   Set configuration key 'key' to 'value'\n");
-		return(cmdret_ok);
+		return (cmdret_ok);
 	}
 
 	char *v = strchr(k, ' ');
@@ -95,7 +100,8 @@ int cmd_config(int server_socket, char *cmdbuf) {
 
 	v[0] = 0;
 	++v;
-	while (v[0]==' ') ++v;
+	while (v[0] == ' ')
+		++v;
 
 	if (strlen(v) == 0) {
 		return show_single_config(server_socket, k);

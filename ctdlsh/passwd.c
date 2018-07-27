@@ -5,7 +5,8 @@
 
 #include "ctdlsh.h"
 
-int cmd_passwd(int server_socket, char *cmdbuf) {
+int cmd_passwd(int server_socket, char *cmdbuf)
+{
 	char buf[1024];
 	time_t now;
 	char account_name[1024];
@@ -20,30 +21,24 @@ int cmd_passwd(int server_socket, char *cmdbuf) {
 	sock_getln(server_socket, buf, sizeof buf);
 	if (buf[0] != '2') {
 		fprintf(stderr, "No such user.\n");
-		return(cmdret_error);
+		return (cmdret_error);
 	}
 
 	p1 = readline("Enter new password: ");
 	p2 = readline("Enter it again: ");
 
 	if (strcmp(p1, p2)) {
-		fprintf(stderr, "The passwords you entered do not match."
-				"The account password remains unchanged.\n"
-		);
-		return(cmdret_error);
+		fprintf(stderr, "The passwords you entered do not match." "The account password remains unchanged.\n");
+		return (cmdret_error);
 	}
 
 	sock_printf(server_socket, "ASUP %s|%s\n", account_name, p2);
 	sock_getln(server_socket, buf, sizeof buf);
 	if (buf[0] != '2') {
 		fprintf(stderr, "%s\n", &buf[4]);
-		return(cmdret_error);
+		return (cmdret_error);
 	}
 
 	printf("Password has been changed.\n");
-	return(cmdret_ok);
+	return (cmdret_ok);
 }
-
-
-
-
