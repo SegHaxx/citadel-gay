@@ -1,7 +1,7 @@
 /*
  * This is a data store backend for the Citadel server which uses Berkeley DB.
  *
- * Copyright (c) 1987-2017 by the citadel.org team
+ * Copyright (c) 1987-2018 by the citadel.org team
  *
  * This program is open source software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License version 3.
@@ -56,19 +56,17 @@ static DB *dbp[MAXCDB];		/* One DB handle for each Citadel database */
 static DB_ENV *dbenv;		/* The DB environment (global) */
 
 
-void cdb_abort(void) {
+void cdb_abort(void)
+{
 	syslog(LOG_DEBUG, "db: citserver is stopping in order to prevent data loss. uid=%d gid=%d euid=%d egid=%d",
-		getuid(),
-		getgid(),
-		geteuid(),
-		getegid()
+		getuid(), getgid(), geteuid(), getegid()
 	);
 	exit(CTDLEXIT_DB);
 }
 
 
 /* Verbose logging callback */
-void cdb_verbose_log(const DB_ENV *dbenv, const char *msg)
+void cdb_verbose_log(const DB_ENV * dbenv, const char *msg)
 {
 	if (!IsEmptyStr(msg)) {
 		syslog(LOG_DEBUG, "db: %s", msg);
@@ -77,11 +75,9 @@ void cdb_verbose_log(const DB_ENV *dbenv, const char *msg)
 
 
 /* Verbose logging callback */
-void cdb_verbose_err(const DB_ENV *dbenv, const char *errpfx, const char *msg)
+void cdb_verbose_err(const DB_ENV * dbenv, const char *errpfx, const char *msg)
 {
-	int *FOO = NULL;
 	syslog(LOG_ERR, "db: %s", msg);
-	*FOO = 1;
 }
 
 
@@ -98,6 +94,7 @@ static void txabort(DB_TXN * tid)
 	}
 }
 
+
 /* this one is even more helpful than the last. */
 static void txcommit(DB_TXN * tid)
 {
@@ -110,6 +107,7 @@ static void txcommit(DB_TXN * tid)
 		cdb_abort();
 	}
 }
+
 
 /* are you sensing a pattern yet? */
 static void txbegin(DB_TXN ** tid)
@@ -124,10 +122,12 @@ static void txbegin(DB_TXN ** tid)
 	}
 }
 
+
 static void dbpanic(DB_ENV * env, int errval)
 {
 	syslog(LOG_ERR, "db: PANIC: %s", db_strerror(errval));
 }
+
 
 static void cclose(DBC * cursor)
 {
@@ -138,6 +138,7 @@ static void cclose(DBC * cursor)
 		cdb_abort();
 	}
 }
+
 
 static void bailIfCursor(DBC ** cursors, const char *msg)
 {
@@ -168,6 +169,7 @@ void cdb_check_handles(void)
  */
 void cdb_cull_logs(void)
 {
+#ifndef DB_LOG_AUTO_REMOVE
 	u_int32_t flags;
 	int ret;
 	char **file, **list;
@@ -193,13 +195,13 @@ void cdb_cull_logs(void)
 					 "database log file '%s' because of the "
 					 "following error:\n \n %s\n \n"
 					 " This log file is no longer in use "
-					 "and may be safely deleted.\n",
-					 *file, strerror(errno));
+					 "and may be safely deleted.\n", *file, strerror(errno));
 				CtdlAideMessage(errmsg, "Database Warning Message");
 			}
 		}
 		free(list);
 	}
+#endif /* DB_LOG_AUTO_REMOVE */
 }
 
 
@@ -221,9 +223,10 @@ void cdb_checkpoint(void)
 	/* After a successful checkpoint, we can cull the unused logs */
 	if (CtdlGetConfigInt("c_auto_cull")) {
 #ifdef DB_LOG_AUTO_REMOVE
-		ret = dbenv->log_set_config(dbenv, DB_LOG_AUTO_REMOVE, 1);	// This version of Berkeley DB can cull the logs on its own!
+		// This version of Berkeley DB can cull the logs on its own!
+		ret = dbenv->log_set_config(dbenv, DB_LOG_AUTO_REMOVE, 1);
 #else
-		cdb_cull_logs();						// Citadel knows how to do it too.
+		cdb_cull_logs();	// Citadel knows how to do it too.
 #endif
 	}
 #ifdef DB_LOG_AUTO_REMOVE
@@ -232,7 +235,6 @@ void cdb_checkpoint(void)
 	}
 #endif
 }
-
 
 
 /*
@@ -258,13 +260,13 @@ void open_databases(void)
 	 * Silently try to create the database subdirectory.  If it's
 	 * already there, no problem.
 	 */
-	if ((mkdir(ctdl_data_dir, 0700) != 0) && (errno != EEXIST)){
+	if ((mkdir(ctdl_data_dir, 0700) != 0) && (errno != EEXIST)) {
 		syslog(LOG_ERR, "db: unable to create database directory [%s]: %m", ctdl_data_dir);
 	}
-	if (chmod(ctdl_data_dir, 0700) != 0){
+	if (chmod(ctdl_data_dir, 0700) != 0) {
 		syslog(LOG_ERR, "db: unable to set database directory accessrights [%s]: %m", ctdl_data_dir);
 	}
-	if (chown(ctdl_data_dir, CTDLUID, (-1)) != 0){
+	if (chown(ctdl_data_dir, CTDLUID, (-1)) != 0) {
 		syslog(LOG_ERR, "db: unable to set the owner for [%s]: %m", ctdl_data_dir);
 	}
 	syslog(LOG_DEBUG, "db: Setting up DB environment\n");
@@ -343,18 +345,12 @@ void open_databases(void)
 		 */
 		snprintf(dbfilename, sizeof dbfilename, "cdb.%02x", i);
 
-		ret = dbp[i]->open(dbp[i],
-				   NULL,
-				   dbfilename,
-				   NULL,
-				   DB_BTREE,
-				   DB_CREATE | DB_AUTO_COMMIT | DB_THREAD,
-				   0600
-		);
+		ret = dbp[i]->open(dbp[i], NULL, dbfilename, NULL, DB_BTREE, DB_CREATE | DB_AUTO_COMMIT | DB_THREAD, 0600);
 		if (ret) {
 			syslog(LOG_ERR, "db: db_open[%02x]: %s", i, db_strerror(ret));
 			if (ret == ENOMEM) {
-				syslog(LOG_ERR, "db: You may need to tune your database; please read http://www.citadel.org/doku.php?id=faq:troubleshooting:out_of_lock_entries for more information.");
+				syslog(LOG_ERR,
+				       "db: You may need to tune your database; please read http://www.citadel.org/doku.php?id=faq:troubleshooting:out_of_lock_entries for more information.");
 			}
 			syslog(LOG_ERR, "db: exit code %d", ret);
 			exit(CTDLEXIT_DB);
@@ -367,7 +363,8 @@ void open_databases(void)
 /* Make sure we own all the files, because in a few milliseconds
  * we're going to drop root privs.
  */
-void cdb_chmod_data(void) {
+void cdb_chmod_data(void)
+{
 	DIR *dp;
 	struct dirent *d;
 	char filename[PATH_MAX];
@@ -439,11 +436,9 @@ void cdb_decompress_if_necessary(struct cdbdata *cdb)
 {
 	static int magic = COMPRESS_MAGIC;
 
-	if ((cdb == NULL) || 
-	    (cdb->ptr == NULL) || 
-	    (cdb->len < sizeof(magic)) ||
-	    (memcmp(cdb->ptr, &magic, sizeof(magic))))
-	    return;
+	if ((cdb == NULL) || (cdb->ptr == NULL) || (cdb->len < sizeof(magic)) || (memcmp(cdb->ptr, &magic, sizeof(magic)))) {
+		return;
+	}
 
 	/* At this point we know we're looking at a compressed item. */
 
@@ -467,10 +462,7 @@ void cdb_decompress_if_necessary(struct cdbdata *cdb)
 	uncompressed_data = malloc(zheader.uncompressed_len);
 
 	if (uncompress((Bytef *) uncompressed_data,
-		       (uLongf *) & destLen,
-		       (const Bytef *) compressed_data,
-		       (uLong) sourceLen) != Z_OK)
-	{
+		       (uLongf *) & destLen, (const Bytef *) compressed_data, (uLong) sourceLen) != Z_OK) {
 		syslog(LOG_EMERG, "db: uncompress() error");
 		cdb_abort();
 	}
@@ -501,12 +493,12 @@ int cdb_store(int cdb, const void *ckey, int ckeylen, void *cdata, int cdatalen)
 	memset(&dkey, 0, sizeof(DBT));
 	memset(&ddata, 0, sizeof(DBT));
 	dkey.size = ckeylen;
-	dkey.data = (void *)ckey;
+	dkey.data = (void *) ckey;
 	ddata.size = cdatalen;
 	ddata.data = cdata;
 
 	/* Only compress Visit and UseTable records.  Everything else is uncompressed. */
-	if ( (cdb == CDB_VISIT) || (cdb == CDB_USETABLE) ) {
+	if ((cdb == CDB_VISIT) || (cdb == CDB_USETABLE)) {
 		compressing = 1;
 		zheader.magic = COMPRESS_MAGIC;
 		zheader.uncompressed_len = cdatalen;
@@ -514,8 +506,7 @@ int cdb_store(int cdb, const void *ckey, int ckeylen, void *cdata, int cdatalen)
 		destLen = (uLongf) buffer_len;
 		compressed_data = malloc(buffer_len);
 		if (compress2((Bytef *) (compressed_data + sizeof(struct CtdlCompressHeader)),
-			&destLen, (Bytef *) cdata, (uLongf) cdatalen, 1) != Z_OK)
-		{
+			      &destLen, (Bytef *) cdata, (uLongf) cdatalen, 1) != Z_OK) {
 			syslog(LOG_EMERG, "db: compress2() error");
 			cdb_abort();
 		}
@@ -530,16 +521,17 @@ int cdb_store(int cdb, const void *ckey, int ckeylen, void *cdata, int cdatalen)
 				    TSD->tid,	/* transaction ID */
 				    &dkey,	/* key */
 				    &ddata,	/* data */
-				    0);	/* flags */
+				    0		/* flags */
+		);
 		if (ret) {
 			syslog(LOG_EMERG, "db: cdb_store(%d): %s", cdb, db_strerror(ret));
 			cdb_abort();
 		}
-		if (compressing)
+		if (compressing) {
 			free(compressed_data);
+		}
 		return ret;
-	}
-	else {
+	} else {
 		bailIfCursor(TSD->cursors, "attempt to write during r/o cursor");
 
 	      retry:
@@ -597,8 +589,7 @@ int cdb_delete(int cdb, void *key, int keylen)
 	      retry:
 		txbegin(&tid);
 
-		if ((ret = dbp[cdb]->del(dbp[cdb], tid, &dkey, 0))
-		    && ret != DB_NOTFOUND) {
+		if ((ret = dbp[cdb]->del(dbp[cdb], tid, &dkey, 0)) && ret != DB_NOTFOUND) {
 			if (ret == DB_LOCK_DEADLOCK) {
 				txabort(tid);
 				goto retry;
@@ -613,15 +604,18 @@ int cdb_delete(int cdb, void *key, int keylen)
 	return ret;
 }
 
+
 static DBC *localcursor(int cdb)
 {
 	int ret;
 	DBC *curs;
 
-	if (TSD->cursors[cdb] == NULL)
+	if (TSD->cursors[cdb] == NULL) {
 		ret = dbp[cdb]->cursor(dbp[cdb], TSD->tid, &curs, 0);
-	else
+	}
+	else {
 		ret = TSD->cursors[cdb]->c_dup(TSD->cursors[cdb], &curs, DB_POSITION);
+	}
 
 	if (ret) {
 		syslog(LOG_EMERG, "db: localcursor: %s", db_strerror(ret));
@@ -645,7 +639,7 @@ struct cdbdata *cdb_fetch(int cdb, const void *key, int keylen)
 
 	memset(&dkey, 0, sizeof(DBT));
 	dkey.size = keylen;
-	dkey.data = (void *)key;
+	dkey.data = (void *) key;
 
 	if (TSD->tid != NULL) {
 		memset(&dret, 0, sizeof(DBT));
@@ -672,17 +666,17 @@ struct cdbdata *cdb_fetch(int cdb, const void *key, int keylen)
 		cdb_abort();
 	}
 
-	if (ret != 0)
+	if (ret != 0) {
 		return NULL;
+	}
+
 	tempcdb = (struct cdbdata *) malloc(sizeof(struct cdbdata));
 
 	if (tempcdb == NULL) {
 		syslog(LOG_EMERG, "db: cdb_fetch: Cannot allocate memory for tempcdb");
 		cdb_abort();
-		return NULL; /* make it easier for static analysis... */
-	}
-	else
-	{
+		return NULL;	/* make it easier for static analysis... */
+	} else {
 		tempcdb->len = dret.size;
 		tempcdb->ptr = dret.data;
 		cdb_decompress_if_necessary(tempcdb);
@@ -707,6 +701,7 @@ void cdb_free(struct cdbdata *cdb)
 	free(cdb);
 }
 
+
 void cdb_close_cursor(int cdb)
 {
 	if (TSD->cursors[cdb] != NULL) {
@@ -715,6 +710,7 @@ void cdb_close_cursor(int cdb)
 
 	TSD->cursors[cdb] = NULL;
 }
+
 
 /* 
  * Prepare for a sequential search of an entire database.
@@ -777,11 +773,9 @@ struct cdbdata *cdb_next_item(int cdb)
 }
 
 
-
 /*
  * Transaction-based stuff.  I'm writing this as I bake cookies...
  */
-
 void cdb_begin_transaction(void)
 {
 
@@ -794,6 +788,7 @@ void cdb_begin_transaction(void)
 
 	txbegin(&TSD->tid);
 }
+
 
 void cdb_end_transaction(void)
 {
@@ -809,13 +804,13 @@ void cdb_end_transaction(void)
 	if (TSD->tid == NULL) {
 		syslog(LOG_ERR, "db: cdb_end_transaction: ERROR: txcommit(NULL) !!");
 		cdb_abort();
-	}
-	else {
+	} else {
 		txcommit(TSD->tid);
 	}
 
 	TSD->tid = NULL;
 }
+
 
 /*
  * Truncate (delete every record)
@@ -829,8 +824,7 @@ void cdb_trunc(int cdb)
 	if (TSD->tid != NULL) {
 		syslog(LOG_EMERG, "db: cdb_trunc must not be called in a transaction.");
 		cdb_abort();
-	}
-	else {
+	} else {
 		bailIfCursor(TSD->cursors, "attempt to write during r/o cursor");
 
 	      retry:
@@ -846,7 +840,8 @@ void cdb_trunc(int cdb)
 			} else {
 				syslog(LOG_EMERG, "db: cdb_truncate(%d): %s", cdb, db_strerror(ret));
 				if (ret == ENOMEM) {
-					syslog(LOG_EMERG, "db: You may need to tune your database; please read http://www.citadel.org/doku.php?id=faq:troubleshooting:out_of_lock_entries for more information.");
+					syslog(LOG_EMERG,
+					       "db: You may need to tune your database; please read http://www.citadel.org/doku.php?id=faq:troubleshooting:out_of_lock_entries for more information.");
 				}
 				exit(CTDLEXIT_DB);
 			}
@@ -898,64 +893,59 @@ int CheckIfAlreadySeen(StrBuf *guid)
 	memcpy(ut.ut_msgid, SKEY(guid));
 	ut.ut_timestamp = time(NULL);
 	cdb_store(CDB_USETABLE, SKEY(guid), &ut, sizeof(struct UseTable));
-	return(found);
+	return (found);
 }
 
 
-void cmd_rsen(char *argbuf) {
+void cmd_rsen(char *argbuf)
+{
 	char Token[SIZ];
 	long TLen;
 	char Time[SIZ];
 
 	struct UseTable ut;
 	struct cdbdata *cdbut;
-	
-	if (CtdlAccessCheck(ac_aide)) return;
+
+	if (CtdlAccessCheck(ac_aide)) {
+		return;
+	}
 
 	TLen = extract_token(Token, argbuf, 1, '|', sizeof Token);
 	if (strncmp(argbuf, "GET", 3) == 0) {
 		cdbut = cdb_fetch(CDB_USETABLE, Token, TLen);
 		if (cdbut != NULL) {
-			memcpy(&ut, cdbut->ptr,
-			       ((cdbut->len > sizeof(struct UseTable)) ?
-				sizeof(struct UseTable) : cdbut->len));
-			
+			memcpy(&ut, cdbut->ptr, ((cdbut->len > sizeof(struct UseTable)) ? sizeof(struct UseTable) : cdbut->len));
+
 			cprintf("%d %ld\n", CIT_OK, ut.ut_timestamp);
-		}
-		else {
+		} else {
 			cprintf("%d not found\n", ERROR + NOT_HERE);
 		}
 
-	}
-	else if (strncmp(argbuf, "SET", 3) == 0) {
+	} else if (strncmp(argbuf, "SET", 3) == 0) {
 		memcpy(ut.ut_msgid, Token, TLen);
 		extract_token(Time, argbuf, 2, '|', sizeof Time);
 		ut.ut_timestamp = atol(Time);
-		cdb_store(CDB_USETABLE,
-			  Token, TLen,
-			  &ut, sizeof(struct UseTable) );
+		cdb_store(CDB_USETABLE, Token, TLen, &ut, sizeof(struct UseTable));
 		cprintf("%d token updated\n", CIT_OK);
-	}
-	else if (strncmp(argbuf, "DEL", 3) == 0) {
+	} else if (strncmp(argbuf, "DEL", 3) == 0) {
 		if (cdb_delete(CDB_USETABLE, Token, TLen))
 			cprintf("%d not found\n", ERROR + NOT_HERE);
 		else
 			cprintf("%d deleted.\n", CIT_OK);
 
-	}
-	else {
+	} else {
 		cprintf("%d Usage: [GET|SET|DEL]|Token|timestamp\n", ERROR);
 	}
 
 }
 
+
 CTDL_MODULE_INIT(database)
 {
-	if (!threading)
-	{
+	if (!threading) {
 		CtdlRegisterProtoHook(cmd_rsen, "RSEN", "manipulate Aggregators seen database");
 	}
 
 	/* return our module id for the log */
- 	return "database";
+	return "database";
 }
