@@ -1,7 +1,7 @@
 /*
  * This module handles states which are global to the entire server.
  *
- * Copyright (c) 1987-2017 by the citadel.org team
+ * Copyright (c) 1987-2018 by the citadel.org team
  *
  * This program is open source software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3.
@@ -50,16 +50,13 @@ void control_find_highest(struct ctdlroom *qrbuf, void *data)
 	long *msglist;
 	int num_msgs=0;
 	int c;
-	int room_fixed = 0;
-	int message_fixed = 0;
 	
-	if (qrbuf->QRnumber > CtdlGetConfigLong("MMnextroom"))
-	{
+	if (qrbuf->QRnumber > CtdlGetConfigLong("MMnextroom")) {
+		syslog(LOG_DEBUG, "control: fixing MMnextroom %ld > %ld", qrbuf->QRnumber, CtdlGetConfigLong("MMnextroom"));
 		CtdlSetConfigLong("MMnextroom", qrbuf->QRnumber);
-		room_fixed = 1;
 	}
 		
-	CtdlGetRoom (&room, qrbuf->QRname);
+	CtdlGetRoom(&room, qrbuf->QRname);
 	
 	/* Load the message list */
 	cdbfr = cdb_fetch(CDB_MSGLISTS, &room.QRnumber, sizeof(long));
@@ -70,24 +67,15 @@ void control_find_highest(struct ctdlroom *qrbuf, void *data)
 		return;	/* No messages at all?  No further action. */
 	}
 
-	if (num_msgs>0)
-	{
-		for (c=0; c<num_msgs; c++)
-		{
-			if (msglist[c] > CtdlGetConfigLong("MMhighest"))
-			{
+	if (num_msgs > 0) {
+		for (c=0; c<num_msgs; c++) {
+			if (msglist[c] > CtdlGetConfigLong("MMhighest")) {
+				syslog(LOG_DEBUG, "control: fixing MMhighest %ld > %ld", msglist[c], CtdlGetConfigLong("MMhighest"));
 				CtdlSetConfigLong("MMhighest", msglist[c]);
-				message_fixed = 1;
 			}
 		}
 	}
 	cdb_free(cdbfr);
-	if (room_fixed) {
-		syslog(LOG_INFO, "control: fixed room counter");
-	}
-	if (message_fixed) {
-		syslog(LOG_INFO, "control: fixed message count");
-	}
 	return;
 }
 
@@ -95,18 +83,12 @@ void control_find_highest(struct ctdlroom *qrbuf, void *data)
 /*
  * Callback to get highest user number.
  */
- 
-void control_find_user (struct ctdluser *EachUser, void *out_data)
+void control_find_user(struct ctdluser *EachUser, void *out_data)
 {
-	int user_fixed = 0;
-	
-	if (EachUser->usernum > CtdlGetConfigLong("MMnextuser"))
-	{
+	if (EachUser->usernum > CtdlGetConfigLong("MMnextuser")) {
+		syslog(LOG_DEBUG, "control: fixing MMnextuser %ld > %ld", EachUser->usernum, CtdlGetConfigLong("MMnextuser"));
 		CtdlSetConfigLong("MMnextuser", EachUser->usernum);
-		user_fixed = 1;
 	}
-	if(user_fixed)
-		syslog(LOG_INFO, "control: fixed user count");
 }
 
 
@@ -147,9 +129,11 @@ void migrate_legacy_control_record(void)
  */
 void check_control(void)
 {
-	syslog(LOG_INFO, "control: sanity checking the recorded highest message, user, and room numbers");
+	syslog(LOG_INFO, "control: sanity checking the recorded highest message and room numbers");
 	CtdlForEachRoom(control_find_highest, NULL);
+	syslog(LOG_INFO, "control: sanity checking the recorded highest user number");
 	ForEachUser(control_find_user, NULL);
+	syslog(LOG_INFO, "control: sanity checks complete");
 }
 
 

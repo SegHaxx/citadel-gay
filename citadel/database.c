@@ -164,48 +164,6 @@ void cdb_check_handles(void)
 
 
 /*
- * Cull the database logs by removing log files that are no longer needed.
- * Note: this code will be removed once we are confident that Berkeley DB can do this on its own.
- */
-void cdb_cull_logs(void)
-{
-#ifndef DB_LOG_AUTO_REMOVE
-	u_int32_t flags;
-	int ret;
-	char **file, **list;
-	char errmsg[SIZ];
-
-	flags = DB_ARCH_ABS;
-
-	/* Get the list of names. */
-	if ((ret = dbenv->log_archive(dbenv, &list, flags)) != 0) {
-		syslog(LOG_ERR, "db: cdb_cull_logs() %s", db_strerror(ret));
-		return;
-	}
-
-	/* Print the list of names. */
-	if (list != NULL) {
-		for (file = list; *file != NULL; ++file) {
-			syslog(LOG_DEBUG, "db: deleting log %s", *file);
-			ret = unlink(*file);
-			if (ret != 0) {
-				snprintf(errmsg, sizeof(errmsg),
-					 " ** ERROR **\n \n \n "
-					 "Citadel was unable to delete the "
-					 "database log file '%s' because of the "
-					 "following error:\n \n %s\n \n"
-					 " This log file is no longer in use "
-					 "and may be safely deleted.\n", *file, strerror(errno));
-				CtdlAideMessage(errmsg, "Database Warning Message");
-			}
-		}
-		free(list);
-	}
-#endif /* DB_LOG_AUTO_REMOVE */
-}
-
-
-/*
  * Request a checkpoint of the database.  Called once per minute by the thread manager.
  */
 void cdb_checkpoint(void)
@@ -222,18 +180,11 @@ void cdb_checkpoint(void)
 
 	/* After a successful checkpoint, we can cull the unused logs */
 	if (CtdlGetConfigInt("c_auto_cull")) {
-#ifdef DB_LOG_AUTO_REMOVE
-		// This version of Berkeley DB can cull the logs on its own!
 		ret = dbenv->log_set_config(dbenv, DB_LOG_AUTO_REMOVE, 1);
-#else
-		cdb_cull_logs();	// Citadel knows how to do it too.
-#endif
 	}
-#ifdef DB_LOG_AUTO_REMOVE
 	else {
 		ret = dbenv->log_set_config(dbenv, DB_LOG_AUTO_REMOVE, 0);
 	}
-#endif
 }
 
 

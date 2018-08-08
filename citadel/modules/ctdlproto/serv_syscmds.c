@@ -2,7 +2,7 @@
 /* 
  * Main source module for the Citadel server
  *
- * Copyright (c) 1987-2017 by the citadel.org team
+ * Copyright (c) 1987-2018 by the citadel.org team
  *
  * This program is open source software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 3.
@@ -98,16 +98,6 @@ void cmd_scdn(char *argbuf)
 	cprintf(Reply, state, ScheduledShutdown);
 }
 
-/*
- * Manually initiate log file cull.
- */
-void cmd_cull(char *argbuf) {
-	if (CtdlAccessCheck(ac_internal)) return;
-	cdb_cull_logs();
-	cprintf("%d Database log file cull completed.\n", CIT_OK);
-}
-
-
 
 /*****************************************************************************/
 /*                      MODULE INITIALIZATION STUFF                          */
@@ -119,7 +109,6 @@ CTDL_MODULE_INIT(syscmd)
 		CtdlRegisterProtoHook(cmd_down, "DOWN", "perform a server shutdown");
 		CtdlRegisterProtoHook(cmd_halt, "HALT", "halt the server without exiting the server process");
 		CtdlRegisterProtoHook(cmd_scdn, "SCDN", "schedule or cancel a server shutdown");
-		CtdlRegisterProtoHook(cmd_cull, "CULL", "Cull database logs");
 	}
         /* return our id for the Log */
 	return "syscmd";
