@@ -52,7 +52,9 @@ void control_find_highest(struct ctdlroom *qrbuf, void *data)
 	int c;
 	
 	if (qrbuf->QRnumber > CtdlGetConfigLong("MMnextroom")) {
-		syslog(LOG_DEBUG, "control: fixing MMnextroom %ld > %ld", qrbuf->QRnumber, CtdlGetConfigLong("MMnextroom"));
+		syslog(LOG_DEBUG, "control: fixing MMnextroom %ld > %ld , found in %s",
+			qrbuf->QRnumber, CtdlGetConfigLong("MMnextroom"), qrbuf->QRname
+		);
 		if (!sanity_diag_mode) {
 			CtdlSetConfigLong("MMnextroom", qrbuf->QRnumber);
 		}
@@ -72,7 +74,9 @@ void control_find_highest(struct ctdlroom *qrbuf, void *data)
 	if (num_msgs > 0) {
 		for (c=0; c<num_msgs; c++) {
 			if (msglist[c] > CtdlGetConfigLong("MMhighest")) {
-				syslog(LOG_DEBUG, "control: fixing MMhighest %ld > %ld", msglist[c], CtdlGetConfigLong("MMhighest"));
+				syslog(LOG_DEBUG, "control: fixing MMhighest %ld > %ld , found in %s",
+					msglist[c], CtdlGetConfigLong("MMhighest"), qrbuf->QRname
+				);
 				if (!sanity_diag_mode) {
 					CtdlSetConfigLong("MMhighest", msglist[c]);
 				}
@@ -90,7 +94,9 @@ void control_find_highest(struct ctdlroom *qrbuf, void *data)
 void control_find_user(struct ctdluser *EachUser, void *out_data)
 {
 	if (EachUser->usernum > CtdlGetConfigLong("MMnextuser")) {
-		syslog(LOG_DEBUG, "control: fixing MMnextuser %ld > %ld", EachUser->usernum, CtdlGetConfigLong("MMnextuser"));
+		syslog(LOG_DEBUG, "control: fixing MMnextuser %ld > %ld , found in %s",
+			EachUser->usernum, CtdlGetConfigLong("MMnextuser"), EachUser->fullname
+		);
 		if (!sanity_diag_mode) {
 			CtdlSetConfigLong("MMnextuser", EachUser->usernum);
 		}
