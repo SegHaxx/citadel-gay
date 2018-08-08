@@ -53,7 +53,9 @@ void control_find_highest(struct ctdlroom *qrbuf, void *data)
 	
 	if (qrbuf->QRnumber > CtdlGetConfigLong("MMnextroom")) {
 		syslog(LOG_DEBUG, "control: fixing MMnextroom %ld > %ld", qrbuf->QRnumber, CtdlGetConfigLong("MMnextroom"));
-		CtdlSetConfigLong("MMnextroom", qrbuf->QRnumber);
+		if (!sanity_diag_mode) {
+			CtdlSetConfigLong("MMnextroom", qrbuf->QRnumber);
+		}
 	}
 		
 	CtdlGetRoom(&room, qrbuf->QRname);
@@ -71,7 +73,9 @@ void control_find_highest(struct ctdlroom *qrbuf, void *data)
 		for (c=0; c<num_msgs; c++) {
 			if (msglist[c] > CtdlGetConfigLong("MMhighest")) {
 				syslog(LOG_DEBUG, "control: fixing MMhighest %ld > %ld", msglist[c], CtdlGetConfigLong("MMhighest"));
-				CtdlSetConfigLong("MMhighest", msglist[c]);
+				if (!sanity_diag_mode) {
+					CtdlSetConfigLong("MMhighest", msglist[c]);
+				}
 			}
 		}
 	}
@@ -87,7 +91,9 @@ void control_find_user(struct ctdluser *EachUser, void *out_data)
 {
 	if (EachUser->usernum > CtdlGetConfigLong("MMnextuser")) {
 		syslog(LOG_DEBUG, "control: fixing MMnextuser %ld > %ld", EachUser->usernum, CtdlGetConfigLong("MMnextuser"));
-		CtdlSetConfigLong("MMnextuser", EachUser->usernum);
+		if (!sanity_diag_mode) {
+			CtdlSetConfigLong("MMnextuser", EachUser->usernum);
+		}
 	}
 }
 
@@ -134,6 +140,10 @@ void check_control(void)
 	syslog(LOG_INFO, "control: sanity checking the recorded highest user number");
 	ForEachUser(control_find_user, NULL);
 	syslog(LOG_INFO, "control: sanity checks complete");
+	if (sanity_diag_mode) {
+		syslog(LOG_INFO, "control: sanity check diagnostic mode is active - exiting now");
+		abort();
+	}
 }
 
 

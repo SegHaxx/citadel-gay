@@ -118,6 +118,7 @@ enum {
 
 extern int ScheduledShutdown;
 extern uid_t ctdluid;
+extern int sanity_diag_mode;
 
 struct ExpressMessage {
 	struct ExpressMessage *next;

@@ -33,6 +33,7 @@ uid_t ctdluid = 0;
 const char *CitadelServiceUDS="citadel-UDS";
 const char *CitadelServiceTCP="citadel-TCP";
 void go_threading(void);
+int sanity_diag_mode = 0;
 
 
 /*
@@ -93,7 +94,7 @@ int main(int argc, char **argv)
 	InitializeMasterTSD();
 
 	/* parse command-line arguments */
-	while ((a=getopt(argc, argv, "l:dh:x:t:B:Dru:")) != EOF) switch(a) {
+	while ((a=getopt(argc, argv, "l:dh:x:t:B:Dru:s")) != EOF) switch(a) {
 
 		case 'l':
 			safestrncpy(facility, optarg, sizeof(facility));
@@ -152,6 +153,11 @@ int main(int argc, char **argv)
 			if (u > 0) {
 				ctdluid = u;
 			}
+			break;
+
+		/* -s tells the server to suppress fixing any discrepancies found during sanity checks, but exit after those checks complete */
+		case 's':
+			sanity_diag_mode = 1;
 			break;
 
 		default:
