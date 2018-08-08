@@ -42,6 +42,11 @@ struct legacy_ctrl_format {
 
 /*
  * Callback to get highest room number when rebuilding message base metadata
+ *
+ * sanity_diag_mode (can be set by -s flag at startup) may be:
+ * 0 = attempt to fix inconsistencies
+ * 1 = show inconsistencies but don't repair them, exit after complete
+ * 2 = show inconsistencies but don't repair them, continue execution
  */
 void control_find_highest(struct ctdlroom *qrbuf, void *data)
 {
@@ -146,7 +151,7 @@ void check_control(void)
 	syslog(LOG_INFO, "control: sanity checking the recorded highest user number");
 	ForEachUser(control_find_user, NULL);
 	syslog(LOG_INFO, "control: sanity checks complete");
-	if (sanity_diag_mode) {
+	if (sanity_diag_mode == 1) {
 		syslog(LOG_INFO, "control: sanity check diagnostic mode is active - exiting now");
 		abort();
 	}

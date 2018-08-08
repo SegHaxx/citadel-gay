@@ -94,7 +94,7 @@ int main(int argc, char **argv)
 	InitializeMasterTSD();
 
 	/* parse command-line arguments */
-	while ((a=getopt(argc, argv, "l:dh:x:t:B:Dru:s")) != EOF) switch(a) {
+	while ((a=getopt(argc, argv, "l:dh:x:t:B:Dru:s:")) != EOF) switch(a) {
 
 		case 'l':
 			safestrncpy(facility, optarg, sizeof(facility));
@@ -155,9 +155,9 @@ int main(int argc, char **argv)
 			}
 			break;
 
-		/* -s tells the server to suppress fixing any discrepancies found during sanity checks, but exit after those checks complete */
+		/* -s tells the server to behave differently during sanity checks */
 		case 's':
-			sanity_diag_mode = 1;
+			sanity_diag_mode = atoi(optarg);
 			break;
 
 		default:
