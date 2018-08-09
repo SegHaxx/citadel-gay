@@ -95,4 +95,4 @@
  * How many messages may the full text indexer scan before flushing its
  * tables to disk?
  */
-#define FT_MAX_CACHE		2500
+#define FT_MAX_CACHE		25

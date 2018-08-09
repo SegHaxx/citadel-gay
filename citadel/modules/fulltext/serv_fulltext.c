@@ -256,7 +256,6 @@ void do_fulltext_indexing(void) {
 	/*
 	 * Make sure we don't run the indexer too frequently.
 	 * FIXME move the setting into config
-	 */
 	time_t now = time(NULL);
 	if ( (now - last_index) < 300L) {
 		syslog(LOG_DEBUG,
@@ -266,10 +265,10 @@ void do_fulltext_indexing(void) {
 		);
 		return;
 	}
+	 */
 
 	/*
-	 * Check to see whether the fulltext index is up to date; if there
-	 * are no messages to index, don't waste any more time trying.
+	 * Silently return if our fulltext index is up to date with new messages.
 	 */
 	if (
 		(CtdlGetConfigLong("MMfulltext") >= CtdlGetConfigLong("MMhighest"))
