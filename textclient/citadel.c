@@ -2116,10 +2116,6 @@ int main(int argc, char **argv)
 				dotknown(ipc, 5, NULL);
 				break;
 
-			case 126:	/* .KShared */
-				dotknown(ipc, 6, NULL);
-				break;
-
 			case 127:	/* Configure POP3 aggregation */
 				do_pop3client_configuration(ipc);
 				break;
