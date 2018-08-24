@@ -22,8 +22,12 @@ queue.
 a single instruction (usually a recipient).  Fields are separated by the
 vertical bar character ("|") and there will always be at least one field on
 each line.
+
+ When delivery to all listed recipients has either completed or permanently
+failed, both the queue item and the message itself are deleted from the
+queue room.
  
- -- Once per Queue-Item --
+ -- Once per queue item --
  
  INSTRUCTION:  msgid
  SYNTAX:       msgid|0000000
@@ -84,7 +88,7 @@ fails).
 
 
 
--- Once per Remote-part per Queue-Item --
+-- Once per recipient per queue item --
 
  INSTRUCTION:  remote
  SYNTAX:       remote|friko@mumjiboolean.com|0|delivery status message
