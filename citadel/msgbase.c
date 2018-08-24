@@ -417,7 +417,6 @@ int CtdlMsgCmp(struct CtdlMessage *msg, struct CtdlMessage *template) {
 }
 
 
-
 /*
  * Retrieve the "seen" message list for the current room.
  */
@@ -427,12 +426,13 @@ void CtdlGetSeen(char *buf, int which_set) {
 	/* Learn about the user and room in question */
 	CtdlGetRelationship(&vbuf, &CC->user, &CC->room);
 
-	if (which_set == ctdlsetseen_seen)
+	if (which_set == ctdlsetseen_seen) {
 		safestrncpy(buf, vbuf.v_seen, SIZ);
-	if (which_set == ctdlsetseen_answered)
+	}
+	if (which_set == ctdlsetseen_answered) {
 		safestrncpy(buf, vbuf.v_answered, SIZ);
+	}
 }
-
 
 
 /*
@@ -446,7 +446,7 @@ void CtdlSetSeen(long *target_msgnums, int num_target_msgnums,
 	int is_seen = 0;
 	int was_seen = 0;
 	long lo = (-1L);
-	long hi = (-1L); /// TODO: we just write here. y?
+	long hi = (-1L);
 	visit vbuf;
 	long *msglist;
 	int num_msgs = 0;
@@ -551,7 +551,6 @@ void CtdlSetSeen(long *target_msgnums, int num_target_msgnums,
 	FreeStrBuf(&setstr);
 	FreeStrBuf(&lostr);
 	FreeStrBuf(&histr);
-
 
 	/* Now translate the array of booleans back into a sequence set */
 	FlushStrBuf(vset);
@@ -857,12 +856,15 @@ int CtdlForEachMessage(int mode, long ref, char *search_string,
 			    )
 			    ) {
 				if ((mode == MSGS_NEW) && (CC->user.flags & US_LASTOLD) && (lastold > 0L) && (printed_lastold == 0) && (!is_seen)) {
-					if (CallBack)
+					if (CallBack) {
 						CallBack(lastold, userdata);
+					}
 					printed_lastold = 1;
 					++num_processed;
 				}
-				if (CallBack) CallBack(thismsg, userdata);
+				if (CallBack) {
+					CallBack(thismsg, userdata);
+				}
 				++num_processed;
 			}
 		}
@@ -884,7 +886,6 @@ int CtdlForEachMessage(int mode, long ref, char *search_string,
 
 	return num_processed;
 }
-
 
 
 /*
@@ -909,14 +910,12 @@ void memfmout(
 	while (ch=*(mptr++), ch != 0) {
 
 		if (ch == '\n') {
-			if (client_write(outbuf, len) == -1)
-			{
+			if (client_write(outbuf, len) == -1) {
 				syslog(LOG_ERR, "msgbase: memfmout() aborting due to write failure");
 				return;
 			}
 			len = 0;
-			if (client_write(nl, nllen) == -1)
-			{
+			if (client_write(nl, nllen) == -1) {
 				syslog(LOG_ERR, "msgbase: memfmout() aborting due to write failure");
 				return;
 			}
@@ -927,14 +926,12 @@ void memfmout(
 		}
 		else if (isspace(ch)) {
 			if (column > 72) {		/* Beyond 72 columns, break on the next space */
-				if (client_write(outbuf, len) == -1)
-				{
+				if (client_write(outbuf, len) == -1) {
 					syslog(LOG_ERR, "msgbase: memfmout() aborting due to write failure");
 					return;
 				}
 				len = 0;
-				if (client_write(nl, nllen) == -1)
-				{
+				if (client_write(nl, nllen) == -1) {
 					syslog(LOG_ERR, "msgbase: memfmout() aborting due to write failure");
 					return;
 				}
@@ -949,14 +946,12 @@ void memfmout(
 			outbuf[len++] = ch;
 			++column;
 			if (column > 1000) {		/* Beyond 1000 columns, break anywhere */
-				if (client_write(outbuf, len) == -1)
-				{
+				if (client_write(outbuf, len) == -1) {
 					syslog(LOG_ERR, "msgbase: memfmout() aborting due to write failure");
 					return;
 				}
 				len = 0;
-				if (client_write(nl, nllen) == -1)
-				{
+				if (client_write(nl, nllen) == -1) {
 					syslog(LOG_ERR, "msgbase: memfmout(): aborting due to write failure");
 					return;
 				}
@@ -965,8 +960,7 @@ void memfmout(
 		}
 	}
 	if (len) {
-		if (client_write(outbuf, len) == -1)
-		{
+		if (client_write(outbuf, len) == -1) {
 			syslog(LOG_ERR, "msgbase: memfmout() aborting due to write failure");
 			return;
 		}
@@ -974,7 +968,6 @@ void memfmout(
 		column = 0;
 	}
 }
-
 
 
 /*
@@ -1000,6 +993,7 @@ void list_this_part(char *name, char *filename, char *partnum, char *disp,
 	}
 }
 
+
 /* 
  * Callback function for multipart prefix
  */
@@ -1018,6 +1012,7 @@ void list_this_pref(char *name, char *filename, char *partnum, char *disp,
 		cprintf("pref=%s|%s\n", partnum, cbtype);
 	}
 }
+
 
 /* 
  * Callback function for multipart sufffix
@@ -1080,7 +1075,6 @@ void mime_download(char *name, char *filename, char *partnum, char *disp,
 }
 
 
-
 /*
  * Callback function for mime parser that outputs a section all at once.
  * We can specify the desired section by part number *or* content-id.
@@ -1106,6 +1100,7 @@ void mime_spew_section(char *name, char *filename, char *partnum, char *disp,
 		client_write(content, length);
 	}
 }
+
 
 struct CtdlMessage *CtdlDeserializeMessage(long msgnum, int with_body, const char *Buffer, long Length)
 {
@@ -1146,8 +1141,7 @@ struct CtdlMessage *CtdlDeserializeMessage(long msgnum, int with_body, const cha
 		long len;
 
 		/* work around possibly buggy messages: */
-		while (field_header == '\0')
-		{
+		while (field_header == '\0') {
 			if (mptr >= upper_bound) {
 				break;
 			}
@@ -1188,8 +1182,7 @@ struct CtdlMessage *CtdlFetchMessage(long msgnum, int with_body, int run_msg_hoo
 		return NULL;
 	}
 
-	if (dmsgtext->ptr[dmsgtext->len - 1] != '\0')
-	{
+	if (dmsgtext->ptr[dmsgtext->len - 1] != '\0') {
 		syslog(LOG_ERR, "msgbase: CtdlFetchMessage(%ld, %d) Forcefully terminating message!!", msgnum, with_body);
 		dmsgtext->ptr[dmsgtext->len - 1] = '\0';
 	}
@@ -1228,7 +1221,6 @@ struct CtdlMessage *CtdlFetchMessage(long msgnum, int with_body, int run_msg_hoo
 }
 
 
-
 /*
  * Pre callback function for multipart/alternative
  *
@@ -1256,6 +1248,7 @@ void fixed_output_pre(char *name, char *filename, char *partnum, char *disp,
 	}
 }
 
+
 /*
  * Post callback function for multipart/alternative
  */
@@ -1275,6 +1268,7 @@ void fixed_output_post(char *name, char *filename, char *partnum, char *disp,
 		--ma->freeze;
 	}
 }
+
 
 /*
  * Inline callback function for mime parser that wants to display text
@@ -1342,6 +1336,7 @@ void fixed_output(char *name, char *filename, char *partnum, char *disp,
 	}
 }
 
+
 /*
  * The client is elegant and sophisticated and wants to be choosy about
  * MIME content types, so figure out which multipart/alternative part
@@ -1363,11 +1358,6 @@ void choose_preferred(char *name, char *filename, char *partnum, char *disp,
 	
 	ma = (struct ma_info *)cbuserdata;
 
-	// NOTE: REMOVING THIS CONDITIONAL FIXES BUG 220
-	//       http://bugzilla.citadel.org/show_bug.cgi?id=220
-	// I don't know if there are any side effects!  Please TEST TEST TEST
-	//if (ma->is_ma > 0) {
-
 	for (i=0; i<num_tokens(CC->preferred_formats, '|'); ++i) {
 		extract_token(buf, CC->preferred_formats, i, '|', sizeof buf);
 		if ( (!strcasecmp(buf, cbtype)) && (!ma->freeze) ) {
@@ -1379,6 +1369,7 @@ void choose_preferred(char *name, char *filename, char *partnum, char *disp,
 		}
 	}
 }
+
 
 /*
  * Now that we've chosen our preferred part, output it.
@@ -1545,7 +1536,6 @@ int check_cached_msglist(long msgnum) {
 }
 
 
-
 /*
  * Get a message off disk.  (returns om_* values found in msgbase.h)
  * 
@@ -1702,7 +1692,6 @@ int CtdlOutputMsg(long msg_num,		/* message number (local) to fetch */
 }
 
 
-
 void OutputCtdlMsgHeaders(
 	struct CtdlMessage *TheMessage,
 	int do_proto)		/* do Citadel protocol responses? */
@@ -1739,9 +1728,7 @@ void OutputCtdlMsgHeaders(
 	 * local Citadel network.
 	 */
 	suppress_f = 0;
-	if (!CM_IsEmpty(TheMessage, eNodeName) &&
-	    (haschar(TheMessage->cm_fields[eNodeName], '.') == 0))
-	{
+	if (!CM_IsEmpty(TheMessage, eNodeName) && (haschar(TheMessage->cm_fields[eNodeName], '.') == 0)) {
 		suppress_f = 1;
 	}
 
@@ -1767,16 +1754,15 @@ void OutputCtdlMsgHeaders(
 				}
 				/* Masquerade display name if needed */
 				else {
-					if (do_proto) cprintf("%s=%s\n",
-							      msgkeys[Field],
-							      TheMessage->cm_fields[Field]
-						);
+					if (do_proto) {
+						cprintf("%s=%s\n", msgkeys[Field], TheMessage->cm_fields[Field]);
+					}
 				}
 			}
 		}
 	}
-
 }
+
 
 void OutputRFC822MsgHeaders(
 	struct CtdlMessage *TheMessage,
@@ -1831,27 +1817,20 @@ void OutputRFC822MsgHeaders(
 				subject_found = 1;
 				break;
 			case emessageId:
-				safestrncpy(mid, mptr, sizeof_mid); /// TODO: detect @ here and copy @nodename in if not found.
+				safestrncpy(mid, mptr, sizeof_mid);
 				break;
 			case erFc822Addr:
 				safestrncpy(fuser, mptr, sizeof_fuser);
-			/* case eOriginalRoom:
-			   cprintf("X-Citadel-Room: %s%s",
-			   mptr, nl)
-			   break;
-			   ; */
 			case eNodeName:
 				safestrncpy(snode, mptr, sizeof_snode);
 				break;
 			case eRecipient:
-				if (haschar(mptr, '@') == 0)
-				{
+				if (haschar(mptr, '@') == 0) {
 					sanitize_truncated_recipient(mptr);
 					cprintf("To: %s@%s", mptr, CtdlGetConfigStr("c_fqdn"));
 					cprintf("%s", nl);
 				}
-				else
-				{
+				else {
 					if ((flags & QP_EADDR) != 0) {
 						mptr = qp_encode_email_addrs(mptr);
 					}
@@ -1861,8 +1840,7 @@ void OutputRFC822MsgHeaders(
 				}
 				break;
 			case eTimestamp:
-				datestring(datestamp, sizeof datestamp,
-					   atol(mptr), DATESTRING_RFC822);
+				datestring(datestamp, sizeof datestamp, atol(mptr), DATESTRING_RFC822);
 				cprintf("Date: %s%s", datestamp, nl);
 				break;
 			case eWeferences:
@@ -1902,10 +1880,10 @@ void OutputRFC822MsgHeaders(
 			case eVltMsgNum:
 				/* these don't map to mime message headers. */
 				break;
-
 			}
-			if (mptr != mpptr)
+			if (mptr != mpptr) {
 				free (mptr);
+			}
 		}
 	}
 	if (subject_found == 0) {
@@ -1918,7 +1896,6 @@ void Dump_RFC822HeadersBody(
 	struct CtdlMessage *TheMessage,
 	int headers_only,	/* eschew the message body? */
 	int flags,		/* should the bessage be exported clean? */
-
 	const char *nl, int nlen)
 {
 	cit_uint8_t prev_ch;
@@ -1931,7 +1908,6 @@ void Dump_RFC822HeadersBody(
 	int lfSent = 0;
 
 	mptr = TheMessage->cm_fields[eMesageText];
-
 
 	prev_ch = '\0';
 	while (*mptr != '\0') {
@@ -1956,7 +1932,7 @@ void Dump_RFC822HeadersBody(
 			    ((headers_only == HEADERS_ONLY) && (mptr < StartOfText)) ||
 			    ((headers_only != HEADERS_NONE) && 
 			     (headers_only != HEADERS_ONLY))
-				) {
+			) {
 				if (*mptr == '\n') {
 					memcpy(&outbuf[outlen], nl, nllen);
 					outlen += nllen;
@@ -1967,20 +1943,15 @@ void Dump_RFC822HeadersBody(
 				}
 			}
 		}
-		if (flags & ESC_DOT)
-		{
-			if ((prev_ch == '\n') && 
-			    (*mptr == '.') && 
-			    ((*(mptr+1) == '\r') || (*(mptr+1) == '\n')))
-			{
+		if (flags & ESC_DOT) {
+			if ((prev_ch == '\n') && (*mptr == '.') && ((*(mptr+1) == '\r') || (*(mptr+1) == '\n'))) {
 				outbuf[outlen++] = '.';
 			}
 			prev_ch = *mptr;
 		}
 		++mptr;
 		if (outlen > 1000) {
-			if (client_write(outbuf, outlen) == -1)
-			{
+			if (client_write(outbuf, outlen) == -1) {
 				syslog(LOG_ERR, "msgbase: Dump_RFC822HeadersBody() aborting due to write failure");
 				return;
 			}
@@ -1995,7 +1966,6 @@ void Dump_RFC822HeadersBody(
 	if (!lfSent)
 		client_write(nl, nlen);
 }
-
 
 
 /* If the format type on disk is 1 (fixed-format), then we want
@@ -2040,20 +2010,18 @@ void DumpFormatFixed(
 				ch = '\r';
 			}
 		}
-		/* if we reach the outer bounds of our buffer, 
-		   abort without respect what whe purge. */
-		if (xlline && 
-		    ((isspace(ch)) || 
-		     (buflen > SIZ - nllen - 2)))
+
+		/* if we reach the outer bounds of our buffer, abort without respect for what we purge. */
+		if (xlline && ((isspace(ch)) || (buflen > SIZ - nllen - 2))) {
 			ch = '\r';
+		}
 
 		if (ch == '\r') {
 			memcpy (&buf[buflen], nl, nllen);
 			buflen += nllen;
 			buf[buflen] = '\0';
 
-			if (client_write(buf, buflen) == -1)
-			{
+			if (client_write(buf, buflen) == -1) {
 				syslog(LOG_ERR, "msgbase: DumpFormatFixed() aborting due to write failure");
 				return;
 			}
@@ -2066,9 +2034,11 @@ void DumpFormatFixed(
 		}
 	}
 	buf[buflen] = '\0';
-	if (!IsEmptyStr(buf))
+	if (!IsEmptyStr(buf)) {
 		cprintf("%s%s", buf, nl);
+	}
 }
+
 
 /*
  * Get a message off disk.  (returns om_* values found in msgbase.h)
@@ -3519,7 +3489,6 @@ int CtdlDeleteMessages(const char *room_name,		/* which room */
  */
 void GetMetaData(struct MetaData *smibuf, long msgnum)
 {
-
 	struct cdbdata *cdbsmi;
 	long TheIndex;
 
@@ -3532,11 +3501,12 @@ void GetMetaData(struct MetaData *smibuf, long msgnum)
 
 	cdbsmi = cdb_fetch(CDB_MSGMAIN, &TheIndex, sizeof(long));
 	if (cdbsmi == NULL) {
-		return;		/* record not found; go with defaults */
+		return;			/* record not found; leave it alone */
 	}
-	memcpy(smibuf, cdbsmi->ptr,					// FIXME can we do this without a memcpy?
+	memcpy(smibuf, cdbsmi->ptr,
 	       ((cdbsmi->len > sizeof(struct MetaData)) ?
-		sizeof(struct MetaData) : cdbsmi->len));
+		sizeof(struct MetaData) : cdbsmi->len)
+	);
 	cdb_free(cdbsmi);
 	return;
 }
@@ -3554,9 +3524,10 @@ void PutMetaData(struct MetaData *smibuf)
 
 	cdb_store(CDB_MSGMAIN,
 		  &TheIndex, (int)sizeof(long),
-		  smibuf, (int)sizeof(struct MetaData));
-
+		  smibuf, (int)sizeof(struct MetaData)
+	);
 }
+
 
 /*
  * AdjRefCount  -  submit an adjustment to the reference count for a message.
@@ -3607,6 +3578,7 @@ void AdjRefCount(long msgnum, int incr)
 
 	return;
 }
+
 
 void AdjRefCountList(long *msgnum, long nmsg, int incr)
 {
@@ -3711,7 +3683,6 @@ int TDAP_ProcessAdjRefCountQueue(void)
 }
 
 
-
 /*
  * TDAP_AdjRefCount  -  adjust the reference count for a message.
  *                      This one does it "for real" because it's called by
@@ -3722,7 +3693,6 @@ int TDAP_ProcessAdjRefCountQueue(void)
  */
 void TDAP_AdjRefCount(long msgnum, int incr)
 {
-
 	struct MetaData smi;
 	long delnum;
 
@@ -3735,9 +3705,7 @@ void TDAP_AdjRefCount(long msgnum, int incr)
 	smi.meta_refcount += incr;
 	PutMetaData(&smi);
 	end_critical_section(S_SUPPMSGMAIN);
-	syslog(LOG_DEBUG, "msgbase: TDAP_AdjRefCount() msg %ld ref count delta %+d, is now %d",
-		   msgnum, incr, smi.meta_refcount
-		);
+	syslog(LOG_DEBUG, "msgbase: TDAP_AdjRefCount() msg %ld ref count delta %+d, is now %d", msgnum, incr, smi.meta_refcount);
 
 	/* If the reference count is now zero, delete the message
 	 * (and its supplementary record as well).
@@ -3757,8 +3725,8 @@ void TDAP_AdjRefCount(long msgnum, int incr)
 		delnum = (0L - msgnum);
 		cdb_delete(CDB_MSGMAIN, &delnum, (int)sizeof(long));
 	}
-
 }
+
 
 /*
  * Write a generic object to this room
@@ -3768,12 +3736,12 @@ void TDAP_AdjRefCount(long msgnum, int incr)
  */
 void CtdlWriteObject(char *req_room,			/* Room to stuff it in */
 		     char *content_type,		/* MIME type of this object */
-		     char *raw_message,		/* Data to be written */
-		     off_t raw_length,		/* Size of raw_message */
+		     char *raw_message,			/* Data to be written */
+		     off_t raw_length,			/* Size of raw_message */
 		     struct ctdluser *is_mailbox,	/* Mailbox room? */
 		     int is_binary,			/* Is encoding necessary? */
 		     int is_unique,			/* Del others of this type? */
-		     unsigned int flags		/* Internal save flags */
+		     unsigned int flags			/* Internal save flags */
 	)
 {
 	struct ctdlroom qrbuf;
@@ -3831,9 +3799,7 @@ void CtdlWriteObject(char *req_room,			/* Room to stuff it in */
 
 	/* Create the requested room if we have to. */
 	if (CtdlGetRoom(&qrbuf, roomname) != 0) {
-		CtdlCreateRoom(roomname, 
-			       ( (is_mailbox != NULL) ? 5 : 3 ),
-			       "", 0, 1, 0, VIEW_BBS);
+		CtdlCreateRoom(roomname, ( (is_mailbox != NULL) ? 5 : 3 ), "", 0, 1, 0, VIEW_BBS);
 	}
 	/* If the caller specified this object as unique, delete all
 	 * other objects of this type that are currently in the room.
@@ -3849,10 +3815,9 @@ void CtdlWriteObject(char *req_room,			/* Room to stuff it in */
 }
 
 
-
-/*****************************************************************************/
-/*                      MODULE INITIALIZATION STUFF                          */
-/*****************************************************************************/
+/************************************************************************/
+/*                      MODULE INITIALIZATION                           */
+/************************************************************************/
 
 CTDL_MODULE_INIT(msgbase)
 {
@@ -3860,6 +3825,6 @@ CTDL_MODULE_INIT(msgbase)
 		FillMsgKeyLookupTable();
 	}
 
-        /* return our Subversion id for the Log */
+        /* return our module id for the log */
 	return "msgbase";
 }
