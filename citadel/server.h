@@ -64,7 +64,6 @@ typedef struct __recptypes {
 
 #define RECPTYPES_MAGIC 0xfeeb
 
-
 #define CTDLEXIT_SHUTDOWN	0	// Normal shutdown; do NOT auto-restart
 
 /*
@@ -114,7 +113,6 @@ enum {
 #define CS_STEALTH	1	/* stealth mode */
 #define CS_CHAT		2	/* chat mode */
 #define CS_POSTING	4	/* Posting */
-
 
 extern int ScheduledShutdown;
 extern uid_t ctdluid;
@@ -286,8 +284,8 @@ struct MetaData {
 	int meta_refcount;		/* Number of rooms pointing to this msg */
 	char meta_content_type[64];	/* Cached MIME content-type */
 	long meta_rfc822_length;	/* Cache of RFC822-translated msg length */
-	char unused_field_1[64];	/* FIXME this isn't used anywhere , why do we have it ?!? */
 };
+
 
 /* Calls to AdjRefCount() are queued and deferred, so the user doesn't
  * have to wait for various disk-intensive operations to complete synchronously.
@@ -316,15 +314,6 @@ struct UseTable {
 	time_t ut_timestamp;
 };
 
-
-
-/* Preferred field order							*/
-/*               **********			Important fields		*/
-/*                         ***************	Semi-important fields		*/
-/*                                        **	internal only                   */
-/*                                          *	Message text (MUST be last)	*/
-///#define FORDER	"IPTAFONHRDBCEWJGKLQSVXZYU12M"
-
 typedef enum _MsgField {
 	eAuthor       = 'A',
 	eBig_message  = 'B',
@@ -352,6 +341,6 @@ typedef enum _MsgField {
 	eSuppressIdx  = '1',
 	eExtnotify    = '2',
 	eVltMsgNum    = '3'
-}eMsgField;
+} eMsgField;
 
 #endif /* SERVER_H */
