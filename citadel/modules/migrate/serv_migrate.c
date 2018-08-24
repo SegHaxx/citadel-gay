@@ -1,7 +1,7 @@
 /*
  * This module dumps and/or loads the Citadel database in XML format.
  *
- * Copyright (c) 1987-2017 by the citadel.org team
+ * Copyright (c) 1987-2018 by the citadel.org team
  *
  * This program is open source software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3.
@@ -330,7 +330,6 @@ void migr_export_message(long msgnum) {
 	cprintf("<msg_meta_refcount>%d</msg_meta_refcount>\n", smi.meta_refcount);
 	cprintf("<msg_meta_rfc822_length>%ld</msg_meta_rfc822_length>\n", smi.meta_rfc822_length);
 	client_write(HKEY("<msg_meta_content_type>")); xml_strout(smi.meta_content_type); client_write(HKEY("</msg_meta_content_type>\n"));
-	client_write(HKEY("<msg_mimetype>")); xml_strout(smi.mimetype); client_write(HKEY("</msg_mimetype>\n"));
 
 	client_write(HKEY("<msg_text>"));
 	CtdlSerializeMessage(&smr, msg);
@@ -795,7 +794,6 @@ void migr_xml_end(void *data, const char *el)
 	else if (!strcasecmp(el, "msg_meta_refcount"))		smi.meta_refcount = atoi(ChrPtr(migr_chardata));
 	else if (!strcasecmp(el, "msg_meta_rfc822_length"))	smi.meta_rfc822_length = atoi(ChrPtr(migr_chardata));
 	else if (!strcasecmp(el, "msg_meta_content_type"))	safestrncpy(smi.meta_content_type, ChrPtr(migr_chardata), sizeof smi.meta_content_type);
-	else if (!strcasecmp(el, "msg_mimetype"))	        safestrncpy(smi.mimetype, ChrPtr(migr_chardata), sizeof smi.mimetype);
 
 	else if (!strcasecmp(el, "msg_text"))
 	{
@@ -820,14 +818,14 @@ void migr_xml_end(void *data, const char *el)
 		}
 
 		syslog(LOG_INFO,
-		       "%s message #%ld, size=%d, refcount=%d, bodylength=%ld, content-type: %s / %s",
+		       "%s message #%ld, size=%d, refcount=%d, bodylength=%ld, content-type: %s",
 		       (rc!= 0)?"failed to import ":"Imported ",
 		       import_msgnum,
 		       StrLength(migr_MsgData),
 		       smi.meta_refcount,
 		       smi.meta_rfc822_length,
-		       smi.meta_content_type,
-		       smi.mimetype);
+		       smi.meta_content_type
+		);
 		memset(&smi, 0, sizeof(smi));
 	}
 
@@ -982,12 +980,12 @@ int migr_restore_message_metadata(long msgnum, int refcount)
 
 
 	syslog(LOG_INFO,
-	       "Setting message #%ld meta data to: refcount=%d, bodylength=%ld, content-type: %s / %s",
+	       "Setting message #%ld meta data to: refcount=%d, bodylength=%ld, content-type: %s",
 	       smi.meta_msgnum,
 	       smi.meta_refcount,
 	       smi.meta_rfc822_length,
-	       smi.meta_content_type,
-	       smi.mimetype);
+	       smi.meta_content_type
+	);
 
 	PutMetaData(&smi);
 

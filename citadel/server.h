@@ -1,7 +1,7 @@
 /* 
  * Main declarations file for the Citadel server
  *
- * Copyright (c) 1987-2017 by the citadel.org team
+ * Copyright (c) 1987-2018 by the citadel.org team
  *
  * This program is open source software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 3.
@@ -65,22 +65,22 @@ typedef struct __recptypes {
 #define RECPTYPES_MAGIC 0xfeeb
 
 
-#define CTDLEXIT_SHUTDOWN	0	/* Normal shutdown; do NOT auto-restart */
+#define CTDLEXIT_SHUTDOWN	0	// Normal shutdown; do NOT auto-restart
 
 /*
  * Exit codes 101 through 109 are used for conditions in which
  * we deliberately do NOT want the service to automatically
  * restart.
  */
-#define CTDLEXIT_CONFIG		101	/* Could not read citadel.config */
-#define CTDLEXIT_CONTROL	102	/* Could not acquire lock */
-#define CTDLEXIT_HOME		103	/* Citadel home directory not found */
-#define CTDLEXIT_OOD		104	/* Out Of Date config - rerun setup */
-#define CTDLEXIT_DB		105	/* Unable to initialize database */
-#define CTDLEXIT_LIBCITADEL	106	/* Incorrect version of libcitadel */
-#define CTDL_EXIT_UNSUP_AUTH	107	/* Unsupported auth mode configured */
-#define CTDLEXIT_UNUSER		108	/* Could not determine uid to run as */
-#define CTDLEXIT_CRYPTO		109	/* Problem initializing SSL or TLS */
+#define CTDLEXIT_CONFIG		101	// Could not read system configuration
+#define CTDLEXIT_CONTROL	102	// Could not acquire lock
+#define CTDLEXIT_HOME		103	// Citadel home directory not found
+#define CTDLEXIT_OOD		104	// Out Of Date config - rerun setup
+#define CTDLEXIT_DB		105	// Unable to initialize database
+#define CTDLEXIT_LIBCITADEL	106	// Incorrect version of libcitadel
+#define CTDL_EXIT_UNSUP_AUTH	107	// Unsupported auth mode configured
+#define CTDLEXIT_UNUSER		108	// Could not determine uid to run as
+#define CTDLEXIT_CRYPTO		109	// Problem initializing SSL or TLS
 
 /*
  * Reasons why a session would be terminated (set CC->kill_me to these values)
@@ -286,7 +286,7 @@ struct MetaData {
 	int meta_refcount;		/* Number of rooms pointing to this msg */
 	char meta_content_type[64];	/* Cached MIME content-type */
 	long meta_rfc822_length;	/* Cache of RFC822-translated msg length */
-	char mimetype[64];              /* if we were able to guess the mimetype for the data */ 
+	char unused_field_1[64];	/* FIXME this isn't used anywhere , why do we have it ?!? */
 };
 
 /* Calls to AdjRefCount() are queued and deferred, so the user doesn't

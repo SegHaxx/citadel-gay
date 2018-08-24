@@ -55,23 +55,23 @@ char *msgkeys[91] = {
 	NULL, 
 	"from", /* A -> eAuthor       */
 	NULL,   /* B -> eBig_message  */
-	NULL,   /* C -> eRemoteRoom   */
-	NULL,   /* D -> eDestination  */
+	NULL,   /* C -> eRemoteRoom   FIXME no more ignet */
+	NULL,   /* D -> eDestination  FIXME no more ignet */
 	"exti", /* E -> eXclusivID    */
 	"rfca", /* F -> erFc822Addr   */
 	NULL,   /* G */
-	"hnod", /* H -> eHumanNode    */
+	"hnod", /* H -> eHumanNode    FIXME no more ignet */
 	"msgn", /* I -> emessageId    */
 	"jrnl", /* J -> eJournal      */
 	"rep2", /* K -> eReplyTo      */
 	"list", /* L -> eListID       */
 	"text", /* M -> eMesageText   */
-	"node", /* N -> eNodeName     */
+	"node", /* N -> eNodeName     FIXME no more ignet */
 	"room", /* O -> eOriginalRoom */
 	"path", /* P -> eMessagePath  */
 	NULL,   /* Q */
 	"rcpt", /* R -> eRecipient    */
-	"spec", /* S -> eSpecialField */
+	"spec", /* S -> eSpecialField FIXME we might not be using this anymore */
 	"time", /* T -> eTimestamp    */
 	"subj", /* U -> eMsgSubject   */
 	"nvto", /* V -> eenVelopeTo   */
@@ -147,21 +147,24 @@ eMsgField FieldOrder[]  = {
 
 static const long NDiskFields = sizeof(FieldOrder) / sizeof(eMsgField);
 
+
 int CM_IsEmpty(struct CtdlMessage *Msg, eMsgField which)
 {
-	return !((Msg->cm_fields[which] != NULL) &&
-		 (Msg->cm_fields[which][0] != '\0'));
+	return !((Msg->cm_fields[which] != NULL) && (Msg->cm_fields[which][0] != '\0'));
 }
+
 
 void CM_SetField(struct CtdlMessage *Msg, eMsgField which, const char *buf, long length)
 {
-	if (Msg->cm_fields[which] != NULL)
+	if (Msg->cm_fields[which] != NULL) {
 		free (Msg->cm_fields[which]);
+	}
 	Msg->cm_fields[which] = malloc(length + 1);
 	memcpy(Msg->cm_fields[which], buf, length);
 	Msg->cm_fields[which][length] = '\0';
 	Msg->cm_lengths[which] = length;
 }
+
 
 void CM_SetFieldLONG(struct CtdlMessage *Msg, eMsgField which, long lvalue)
 {
@@ -170,6 +173,8 @@ void CM_SetFieldLONG(struct CtdlMessage *Msg, eMsgField which, long lvalue)
 	len = snprintf(buf, sizeof(buf), "%ld", lvalue);
 	CM_SetField(Msg, which, buf, len);
 }
+
+
 void CM_CutFieldAt(struct CtdlMessage *Msg, eMsgField WhichToCut, long maxlen)
 {
 	if (Msg->cm_fields[WhichToCut] == NULL)
@@ -182,6 +187,7 @@ void CM_CutFieldAt(struct CtdlMessage *Msg, eMsgField WhichToCut, long maxlen)
 	}
 }
 
+
 void CM_FlushField(struct CtdlMessage *Msg, eMsgField which)
 {
 	if (Msg->cm_fields[which] != NULL)
@@ -189,35 +195,37 @@ void CM_FlushField(struct CtdlMessage *Msg, eMsgField which)
 	Msg->cm_fields[which] = NULL;
 	Msg->cm_lengths[which] = 0;
 }
+
+
 void CM_Flush(struct CtdlMessage *Msg)
 {
 	int i;
 
-	if (CM_IsValidMsg(Msg) == 0) 
+	if (CM_IsValidMsg(Msg) == 0) {
 		return;
+	}
 
-	for (i = 0; i < 256; ++i)
-	{
+	for (i = 0; i < 256; ++i) {
 		CM_FlushField(Msg, i);
 	}
 }
 
+
 void CM_CopyField(struct CtdlMessage *Msg, eMsgField WhichToPutTo, eMsgField WhichtToCopy)
 {
 	long len;
-	if (Msg->cm_fields[WhichToPutTo] != NULL)
+	if (Msg->cm_fields[WhichToPutTo] != NULL) {
 		free (Msg->cm_fields[WhichToPutTo]);
+	}
 
-	if (Msg->cm_fields[WhichtToCopy] != NULL)
-	{
+	if (Msg->cm_fields[WhichtToCopy] != NULL) {
 		len = Msg->cm_lengths[WhichtToCopy];
 		Msg->cm_fields[WhichToPutTo] = malloc(len + 1);
 		memcpy(Msg->cm_fields[WhichToPutTo], Msg->cm_fields[WhichtToCopy], len);
 		Msg->cm_fields[WhichToPutTo][len] = '\0';
 		Msg->cm_lengths[WhichToPutTo] = len;
 	}
-	else
-	{
+	else {
 		Msg->cm_fields[WhichToPutTo] = NULL;
 		Msg->cm_lengths[WhichToPutTo] = 0;
 	}
@@ -249,54 +257,60 @@ void CM_PrependToField(struct CtdlMessage *Msg, eMsgField which, const char *buf
 	}
 }
 
+
 void CM_SetAsField(struct CtdlMessage *Msg, eMsgField which, char **buf, long length)
 {
-	if (Msg->cm_fields[which] != NULL)
+	if (Msg->cm_fields[which] != NULL) {
 		free (Msg->cm_fields[which]);
+	}
 
 	Msg->cm_fields[which] = *buf;
 	*buf = NULL;
 	Msg->cm_lengths[which] = length;
 }
 
+
 void CM_SetAsFieldSB(struct CtdlMessage *Msg, eMsgField which, StrBuf **buf)
 {
-	if (Msg->cm_fields[which] != NULL)
+	if (Msg->cm_fields[which] != NULL) {
 		free (Msg->cm_fields[which]);
+	}
 
 	Msg->cm_lengths[which] = StrLength(*buf);
 	Msg->cm_fields[which] = SmashStrBuf(buf);
 }
 
+
 void CM_GetAsField(struct CtdlMessage *Msg, eMsgField which, char **ret, long *retlen)
 {
-	if (Msg->cm_fields[which] != NULL)
-	{
+	if (Msg->cm_fields[which] != NULL) {
 		*retlen = Msg->cm_lengths[which];
 		*ret = Msg->cm_fields[which];
 		Msg->cm_fields[which] = NULL;
 		Msg->cm_lengths[which] = 0;
 	}
-	else
-	{
+	else {
 		*ret = NULL;
 		*retlen = 0;
 	}
 }
+
 
 /*
  * Returns 1 if the supplied pointer points to a valid Citadel message.
  * If the pointer is NULL or the magic number check fails, returns 0.
  */
 int CM_IsValidMsg(struct CtdlMessage *msg) {
-	if (msg == NULL)
+	if (msg == NULL) {
 		return 0;
+	}
 	if ((msg->cm_magic) != CTDLMESSAGE_MAGIC) {
 		syslog(LOG_WARNING, "msgbase: CM_IsValidMsg() self-check failed");
 		return 0;
 	}
 	return 1;
 }
+
 
 void CM_FreeContents(struct CtdlMessage *msg)
 {
@@ -310,13 +324,14 @@ void CM_FreeContents(struct CtdlMessage *msg)
 
 	msg->cm_magic = 0;	/* just in case */
 }
+
+
 /*
  * 'Destructor' for struct CtdlMessage
  */
 void CM_Free(struct CtdlMessage *msg)
 {
-	if (CM_IsValidMsg(msg) == 0) 
-	{
+	if (CM_IsValidMsg(msg) == 0) {
 		if (msg != NULL) free (msg);
 		return;
 	}
@@ -324,40 +339,42 @@ void CM_Free(struct CtdlMessage *msg)
 	free(msg);
 }
 
+
 int CM_DupField(eMsgField i, struct CtdlMessage *OrgMsg, struct CtdlMessage *NewMsg)
 {
 	long len;
 	len = OrgMsg->cm_lengths[i];
 	NewMsg->cm_fields[i] = malloc(len + 1);
-	if (NewMsg->cm_fields[i] == NULL)
+	if (NewMsg->cm_fields[i] == NULL) {
 		return 0;
+	}
 	memcpy(NewMsg->cm_fields[i], OrgMsg->cm_fields[i], len);
 	NewMsg->cm_fields[i][len] = '\0';
 	NewMsg->cm_lengths[i] = len;
 	return 1;
 }
 
+
 struct CtdlMessage * CM_Duplicate(struct CtdlMessage *OrgMsg)
 {
 	int i;
 	struct CtdlMessage *NewMsg;
 
-	if (CM_IsValidMsg(OrgMsg) == 0) 
+	if (CM_IsValidMsg(OrgMsg) == 0) {
 		return NULL;
+	}
 	NewMsg = (struct CtdlMessage *)malloc(sizeof(struct CtdlMessage));
-	if (NewMsg == NULL)
+	if (NewMsg == NULL) {
 		return NULL;
+	}
 
 	memcpy(NewMsg, OrgMsg, sizeof(struct CtdlMessage));
 
 	memset(&NewMsg->cm_fields, 0, sizeof(char*) * 256);
 	
-	for (i = 0; i < 256; ++i)
-	{
-		if (OrgMsg->cm_fields[i] != NULL)
-		{
-			if (!CM_DupField(i, OrgMsg, NewMsg))
-			{
+	for (i = 0; i < 256; ++i) {
+		if (OrgMsg->cm_fields[i] != NULL) {
+			if (!CM_DupField(i, OrgMsg, NewMsg)) {
 				CM_Free(NewMsg);
 				return NULL;
 			}
@@ -366,9 +383,6 @@ struct CtdlMessage * CM_Duplicate(struct CtdlMessage *OrgMsg)
 
 	return NewMsg;
 }
-
-
-
 
 
 /* Determine if a given message matches the fields in a message template.
@@ -3500,8 +3514,6 @@ int CtdlDeleteMessages(const char *room_name,		/* which room */
 }
 
 
-
-
 /*
  * GetMetaData()  -  Get the supplementary record for a message
  */
@@ -3522,7 +3534,7 @@ void GetMetaData(struct MetaData *smibuf, long msgnum)
 	if (cdbsmi == NULL) {
 		return;		/* record not found; go with defaults */
 	}
-	memcpy(smibuf, cdbsmi->ptr,
+	memcpy(smibuf, cdbsmi->ptr,					// FIXME can we do this without a memcpy?
 	       ((cdbsmi->len > sizeof(struct MetaData)) ?
 		sizeof(struct MetaData) : cdbsmi->len));
 	cdb_free(cdbsmi);
