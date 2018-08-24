@@ -347,7 +347,6 @@ void cmd_uimg(char *cmdbuf)
 		return;
 	}
 	cprintf("%d Ok\n", CIT_OK);
-	CC->upload_type = UPL_IMAGE;
 }
 
 

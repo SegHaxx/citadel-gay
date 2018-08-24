@@ -114,7 +114,6 @@ struct CitContext {
 	char upl_comment[256];
 	char upl_filedir[PATH_MAX];
 	char upl_mimetype[64];
-	char upload_type;
 
 	struct ctdluser user;	/* Database record buffers */
 	struct ctdlroom room;

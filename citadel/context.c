@@ -542,7 +542,6 @@ void begin_session(CitContext *con)
 #endif
 	}
 	con->cs_flags = 0;
-	con->upload_type = UPL_FILE;
 
 	con->nologin = 0;
 	if (((CtdlGetConfigInt("c_maxsessions") > 0)&&(num_sessions > CtdlGetConfigInt("c_maxsessions"))) || CtdlWantSingleUser()) {

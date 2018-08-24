@@ -166,14 +166,6 @@ enum {
 
 
 /*
- * Upload types
- */
-#define UPL_FILE	0
-#define UPL_NET		1
-#define UPL_IMAGE	2
-
-
-/*
  * message transfer formats
  */
 enum {
