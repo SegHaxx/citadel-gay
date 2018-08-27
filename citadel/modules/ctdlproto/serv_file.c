@@ -355,8 +355,6 @@ void cmd_uimg(char *cmdbuf)
  */
 void cmd_clos(char *cmdbuf)
 {
-	char buf[256];
-
 	if (CC->download_fp == NULL) {
 		cprintf("%d You don't have a download file open.\n", ERROR + RESOURCE_NOT_OPEN);
 		return;
@@ -386,43 +384,41 @@ void abort_upl(CitContext *who)
  */
 void cmd_ucls(char *cmd)
 {
-	struct CitContext *CCC = CC;
 	FILE *fp;
-	char upload_notice[512];
-	static int seq = 0;
+	char upload_notice[SIZ];
 
-	if (CCC->upload_fp == NULL) {
+	if (CC->upload_fp == NULL) {
 		cprintf("%d You don't have an upload file open.\n", ERROR + RESOURCE_NOT_OPEN);
 		return;
 	}
 
 	fclose(CC->upload_fp);
-	CCC->upload_fp = NULL;
+	CC->upload_fp = NULL;
 
 	if (!strcasecmp(cmd, "1")) {
-		cprintf("%d File '%s' saved.\n", CIT_OK, CCC->upl_path);
-		fp = fopen(CCC->upl_filedir, "a");
+		cprintf("%d File '%s' saved.\n", CIT_OK, CC->upl_path);
+		fp = fopen(CC->upl_filedir, "a");
 		if (fp == NULL) {
-			fp = fopen(CCC->upl_filedir, "w");
+			fp = fopen(CC->upl_filedir, "w");
 		}
 		if (fp != NULL) {
-			fprintf(fp, "%s %s %s\n", CCC->upl_file, CCC->upl_mimetype, CCC->upl_comment);
+			fprintf(fp, "%s %s %s\n", CC->upl_file, CC->upl_mimetype, CC->upl_comment);
 			fclose(fp);
 		}
 
-		if ((CCC->room.QRflags2 & QR2_NOUPLMSG) == 0) {
+		if ((CC->room.QRflags2 & QR2_NOUPLMSG) == 0) {
 			/* put together an upload notice */
 			snprintf(upload_notice, sizeof upload_notice,
 				 "NEW UPLOAD: '%s'\n %s\n%s\n",
-				 CCC->upl_file, 
-				 CCC->upl_comment, 
-				 CCC->upl_mimetype);
-			quickie_message(CCC->curr_user, NULL, NULL, CCC->room.QRname,
-					upload_notice, 0, NULL);
+				 CC->upl_file, 
+				 CC->upl_comment, 
+				 CC->upl_mimetype
+			);
+			quickie_message(CC->curr_user, NULL, NULL, CC->room.QRname, upload_notice, 0, NULL);
 		}
 	} else {
-		abort_upl(CCC);
-		cprintf("%d File '%s' aborted.\n", CIT_OK, CCC->upl_path);
+		abort_upl(CC);
+		cprintf("%d File '%s' aborted.\n", CIT_OK, CC->upl_path);
 	}
 }
 

@@ -1,6 +1,6 @@
 /*
  * This module handles fulltext indexing of the message base.
- * Copyright (c) 2005-2017 by the citadel.org team
+ * Copyright (c) 2005-2018 by the citadel.org team
  *
  * This program is open source software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License as published
@@ -79,6 +79,7 @@ int longcmp(const void *rec1, const void *rec2) {
 	if (i1 < i2) return(-1);
 	return(0);
 }
+
 
 /*
  * Flush our index cache out to disk.
@@ -204,7 +205,6 @@ void ft_index_message(long msgnum, int op) {
 }
 
 
-
 /*
  * Add a message to the list of those to be indexed.
  */
@@ -214,13 +214,13 @@ void ft_index_msg(long msgnum, void *userdata) {
 		++ft_num_msgs;
 		if (ft_num_msgs > ft_num_alloc) {
 			ft_num_alloc += 1024;
-			ft_newmsgs = realloc(ft_newmsgs,
-				(ft_num_alloc * sizeof(long)));
+			ft_newmsgs = realloc(ft_newmsgs, (ft_num_alloc * sizeof(long)));
 		}
 		ft_newmsgs[ft_num_msgs - 1] = msgnum;
 	}
 
 }
+
 
 /*
  * Scan a room for messages to index.
@@ -240,7 +240,6 @@ void ft_index_room(struct ctdlroom *qrbuf, void *data)
  */
 void do_fulltext_indexing(void) {
 	int i;
-	static time_t last_index = 0L;
 	static time_t last_progress = 0L;
 	static int is_running = 0;
 	if (is_running) return;         /* Concurrency check - only one can run */
@@ -254,32 +253,7 @@ void do_fulltext_indexing(void) {
 	}
 
 	/*
-	 * Make sure we don't run the indexer too frequently.
-	 * FIXME move the setting into config
-	time_t now = time(NULL);
-	if ( (now - last_index) < 300L) {
-		syslog(LOG_DEBUG,
-			"fulltext: indexing interval not yet reached; last run was %ldm%lds ago",
-			((now - last_index) / 60),
-			((now - last_index) % 60)
-		);
-		return;
-	}
-	 */
-
-	/*
-	 * Silently return if our fulltext index is up to date with new messages.
-	 */
-	if (
-		(CtdlGetConfigLong("MMfulltext") >= CtdlGetConfigLong("MMhighest"))
-		&& (CtdlGetConfigInt("MM_fulltext_wordbreaker") == FT_WORDBREAKER_ID)
-	) {
-		return;		/* nothing to do! */
-	}
-	
-	/*
-	 * If we've switched wordbreaker modules, burn the index and start
-	 * over.
+	 * If we've switched wordbreaker modules, burn the index and start over.
 	 */
 	begin_critical_section(S_CONTROL);
 	if (CtdlGetConfigInt("MM_fulltext_wordbreaker") != FT_WORDBREAKER_ID) {
@@ -291,6 +265,13 @@ void do_fulltext_indexing(void) {
 		CtdlSetConfigLong("MMfulltext", 0);
 	}
 	end_critical_section(S_CONTROL);
+
+	/*
+	 * Silently return if our fulltext index is up to date with new messages.
+	 */
+	if ((CtdlGetConfigLong("MMfulltext") >= CtdlGetConfigLong("MMhighest"))) {
+		return;		/* nothing to do! */
+	}
 
 	/*
 	 * Now go through each room and find messages to index.
@@ -354,13 +335,11 @@ void do_fulltext_indexing(void) {
 	CtdlSetConfigLong("MMfulltext", ft_newhighest);
 	CtdlSetConfigInt("MM_fulltext_wordbreaker", FT_WORDBREAKER_ID);
 	end_critical_section(S_CONTROL);
-	last_index = time(NULL);
 
 	syslog(LOG_DEBUG, "fulltext: indexing finished");
 	is_running = 0;
 	return;
 }
-
 
 
 /*
@@ -472,6 +451,7 @@ void cmd_srch(char *argbuf) {
 	cprintf("000\n");
 }
 
+
 /*
  * Zero out our index cache.
  */
@@ -490,6 +470,7 @@ void ft_delete_remove(char *room, long msgnum)
 		ft_index_message(msgnum, 0);
 	}
 }
+
 
 /*****************************************************************************/
 

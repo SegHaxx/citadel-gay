@@ -216,7 +216,6 @@ int ctdl_discard(sieve2_context_t *s, void *my)
 }
 
 
-
 /*
  * Callback function to indicate that a message should be rejected
  */
@@ -265,7 +264,6 @@ int ctdl_reject(sieve2_context_t *s, void *my)
 	cs->cancel_implicit_keep = 1;
 	return SIEVE2_OK;
 }
-
 
 
 /*
@@ -356,11 +354,11 @@ int ctdl_vacation(sieve2_context_t *s, void *my)
 }
 
 
+#if 0
 /*
  * Callback function to parse addresses per local system convention
  * It is disabled because we don't support subaddresses.
  */
-#if 0
 int ctdl_getsubaddress(sieve2_context_t *s, void *my)
 {
 	struct ctdl_sieve *cs = (struct ctdl_sieve *)my;
@@ -418,16 +416,17 @@ int ctdl_getenvelope(sieve2_context_t *s, void *my)
 }
 
 
+#if 0
 /*
  * Callback function to fetch message body
  * (Uncomment the code if we implement this extension)
  *
+ */
 int ctdl_getbody(sieve2_context_t *s, void *my)
 {
 	return SIEVE2_ERROR_UNSUPPORTED;
 }
- *
- */
+#endif
 
 
 /*
@@ -483,6 +482,7 @@ int ctdl_getscript(sieve2_context_t *s, void *my) {
 	return SIEVE2_ERROR_GETSCRIPT;
 }
 
+
 /*
  * Callback function to retrieve message headers
  */
@@ -494,7 +494,6 @@ int ctdl_getheaders(sieve2_context_t *s, void *my) {
 	sieve2_setvalue_string(s, "allheaders", cs->rfc822headers);
 	return SIEVE2_OK;
 }
-
 
 
 /*
@@ -515,7 +514,6 @@ void sieve_queue_room(struct ctdlroom *which_room) {
 }
 
 
-
 /*
  * Perform sieve processing for one message (called by sieve_do_room() for each message)
  */
@@ -529,9 +527,8 @@ void sieve_do_msg(long msgnum, void *userdata) {
 	size_t headers_len = 0;
 	int len = 0;
 
-	if (u == NULL)
-	{
-		syslog(LOG_EMERG, "Can't process message <%ld> without userdata!", msgnum);
+	if (u == NULL) {
+		syslog(LOG_ERR, "Can't process message <%ld> without userdata!", msgnum);
 		return;
 	}
 
@@ -646,7 +643,7 @@ void sieve_do_msg(long msgnum, void *userdata) {
 	syslog(LOG_DEBUG, "Calling sieve2_execute()");
 	res = sieve2_execute(sieve2_context, &my);
 	if (res != SIEVE2_OK) {
-		syslog(LOG_CRIT, "sieve2_execute() returned %d: %s", res, sieve2_errstr(res));
+		syslog(LOG_ERR, "sieve2_execute() returned %d: %s", res, sieve2_errstr(res));
 	}
 
 	free(my.rfc822headers);
@@ -902,7 +899,7 @@ void sieve_do_room(char *roomname) {
 	syslog(LOG_DEBUG, "Rules found.  Performing Sieve processing for <%s>", roomname);
 
 	if (CtdlGetRoom(&CC->room, roomname) != 0) {
-		syslog(LOG_CRIT, "ERROR: cannot load <%s>", roomname);
+		syslog(LOG_ERR, "ERROR: cannot load <%s>", roomname);
 		return;
 	}
 
@@ -910,13 +907,13 @@ void sieve_do_room(char *roomname) {
 	
 	res = sieve2_alloc(&sieve2_context);
 	if (res != SIEVE2_OK) {
-		syslog(LOG_CRIT, "sieve2_alloc() returned %d: %s", res, sieve2_errstr(res));
+		syslog(LOG_ERR, "sieve2_alloc() returned %d: %s", res, sieve2_errstr(res));
 		return;
 	}
 
 	res = sieve2_callbacks(sieve2_context, ctdl_sieve_callbacks);
 	if (res != SIEVE2_OK) {
-		syslog(LOG_CRIT, "sieve2_callbacks() returned %d: %s", res, sieve2_errstr(res));
+		syslog(LOG_ERR, "sieve2_callbacks() returned %d: %s", res, sieve2_errstr(res));
 		goto BAIL;
 	}
 
@@ -927,7 +924,7 @@ void sieve_do_room(char *roomname) {
 	my.u = &u;
 	res = sieve2_validate(sieve2_context, &my);
 	if (res != SIEVE2_OK) {
-		syslog(LOG_CRIT, "sieve2_validate() returned %d: %s", res, sieve2_errstr(res));
+		syslog(LOG_ERR, "sieve2_validate() returned %d: %s", res, sieve2_errstr(res));
 		goto BAIL;
 	}
 
@@ -942,7 +939,7 @@ void sieve_do_room(char *roomname) {
 BAIL:
 	res = sieve2_free(&sieve2_context);
 	if (res != SIEVE2_OK) {
-		syslog(LOG_CRIT, "sieve2_free() returned %d: %s", res, sieve2_errstr(res));
+		syslog(LOG_ERR, "sieve2_free() returned %d: %s", res, sieve2_errstr(res));
 	}
 
 	/* Rewrite the config if we have to */
@@ -1282,13 +1279,13 @@ void ctdl_sieve_init(void) {
 	 */
 	res = sieve2_alloc(&sieve2_context);
 	if (res != SIEVE2_OK) {
-		syslog(LOG_CRIT, "sieve2_alloc() returned %d: %s", res, sieve2_errstr(res));
+		syslog(LOG_ERR, "sieve2_alloc() returned %d: %s", res, sieve2_errstr(res));
 		return;
 	}
 
 	res = sieve2_callbacks(sieve2_context, ctdl_sieve_callbacks);
 	if (res != SIEVE2_OK) {
-		syslog(LOG_CRIT, "sieve2_callbacks() returned %d: %s", res, sieve2_errstr(res));
+		syslog(LOG_ERR, "sieve2_callbacks() returned %d: %s", res, sieve2_errstr(res));
 		goto BAIL;
 	}
 
@@ -1297,10 +1294,11 @@ void ctdl_sieve_init(void) {
 
 BAIL:	res = sieve2_free(&sieve2_context);
 	if (res != SIEVE2_OK) {
-		syslog(LOG_CRIT, "sieve2_free() returned %d: %s", res, sieve2_errstr(res));
+		syslog(LOG_ERR, "sieve2_free() returned %d: %s", res, sieve2_errstr(res));
 	}
 
 }
+
 
 void cleanup_sieve(void)
 {
@@ -1321,6 +1319,7 @@ void cleanup_sieve(void)
         end_critical_section(S_SIEVELIST);
 }
 
+
 int serv_sieve_room(struct ctdlroom *room)
 {
 	if (!strcasecmp(&room->QRname[11], MAILROOM)) {
@@ -1328,6 +1327,7 @@ int serv_sieve_room(struct ctdlroom *room)
 	}
 	return 0;
 }
+
 
 CTDL_MODULE_INIT(sieve)
 {
@@ -1343,4 +1343,3 @@ CTDL_MODULE_INIT(sieve)
         /* return our module name for the log */
 	return "sieve";
 }
-
