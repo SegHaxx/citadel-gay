@@ -1,7 +1,9 @@
 /*
- * Bring external RSS feeds into rooms.
+ * Bring external RSS and/or Atom feeds into rooms.  This module implements a
+ * very loose parser that scrapes both kinds of feeds and is not picky about
+ * the standards compliance of the source data.
  *
- * Copyright (c) 2007-2017 by the citadel.org team
+ * Copyright (c) 2007-2018 by the citadel.org team
  *
  * This program is open source software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3.
@@ -205,9 +207,16 @@ void rss_end_element(void *data, const char *el)
 		}
 	}
 
-	else if (!strcasecmp(el, "author")) {			// author of item (rss and maybe atom)
+	else if (!strcasecmp(el, "creator")) {			// <creator> can be used if <author> is not present
 		if ((r->msg != NULL) && (CM_IsEmpty(r->msg, eAuthor))) {
 			CM_SetField(r->msg, eAuthor, ChrPtr(r->CData), StrLength(r->CData));
+			striplt(r->msg->cm_fields[eAuthor]);
+		}
+	}
+
+	else if (!strcasecmp(el, "author")) {			// <author> supercedes <creator> if both are present
+		if (r->msg != NULL) {
+			CM_SetField(r->msg, eAuthor, ChrPtr(r->CData), StrLength(r->CData));	// CM_SetField will free() the previous value
 			striplt(r->msg->cm_fields[eAuthor]);
 		}
 	}
