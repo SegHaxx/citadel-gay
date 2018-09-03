@@ -270,6 +270,7 @@ typedef struct __visit {
  * These are kept separate from the message itself for one of two reasons:
  * 1. Either their values may change at some point after initial save, or
  * 2. They are merely caches of data which exist somewhere else, for speed.
+ * DO NOT PUT BIG DATA IN HERE ... we need this struct to be tiny for lots of quick r/w
  */
 struct MetaData {
 	long meta_msgnum;		/* Message number in *local* message base */
