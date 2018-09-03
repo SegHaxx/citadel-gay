@@ -253,7 +253,6 @@ int is_sequence_set(char *s) {
 }
 
 
-
 /* 
  *  Traverse the visits file...
  */
@@ -359,7 +358,6 @@ void migr_export_message(long msgnum) {
 }
 
 
-
 void migr_export_openids(void) {
 	struct cdbdata *cdboi;
 	long usernum;
@@ -405,8 +403,6 @@ void migr_export_configs(void) {
 }
 
 
-
-
 void migr_export_messages(void) {
 	char buf[SIZ];
 	long msgnum;
@@ -434,14 +430,15 @@ void migr_export_messages(void) {
 		}
 		fclose(migr_global_message_list);
 	}
-	if (Ctx->kill_me == 0)
+	if (Ctx->kill_me == 0) {
 		syslog(LOG_INFO, "Exported %d messages.", count);
-	else
+	}
+	else {
 		syslog(LOG_ERR, "Export aborted due to client disconnect!");
+	}
 
 	migr_export_message(-1L);	/* This frees the encoding buffer */
 }
-
 
 
 void migr_do_export(void) {
@@ -476,8 +473,6 @@ void migr_do_export(void) {
 	client_write(HKEY("000\n"));
 	Ctx->dont_term = 0;
 }
-
-
 
 
 /******************************************************************************
@@ -613,9 +608,10 @@ int migr_roomrecord(void *data, const char *el)
 	return 1;
 }
 
+
 int migr_floorrecord(void *data, const char *el)
 {
-	if (!strcasecmp(el, "f_num"))			floornum = atoi(ChrPtr(migr_chardata));
+	if (!strcasecmp(el, "f_num"))				floornum = atoi(ChrPtr(migr_chardata));
 	else if (!strcasecmp(el, "f_flags"))			flbuf.f_flags = atoi(ChrPtr(migr_chardata));
 	else if (!strcasecmp(el, "f_name"))			safestrncpy(flbuf.f_name, ChrPtr(migr_chardata), sizeof flbuf.f_name);
 	else if (!strcasecmp(el, "f_ref_count"))		flbuf.f_ref_count = atoi(ChrPtr(migr_chardata));
@@ -624,6 +620,7 @@ int migr_floorrecord(void *data, const char *el)
 	else return 0;
 	return 1;
 }
+
 
 int migr_visitrecord(void *data, const char *el)
 {
@@ -780,9 +777,9 @@ void migr_xml_end(void *data, const char *el)
 	}
 
 	/*** VISITS ***/
-	else if ((!strncasecmp(el, HKEY("v_"))) && 
-		 migr_visitrecord(data, el))
+	else if ((!strncasecmp(el, HKEY("v_"))) && migr_visitrecord(data, el)) {
 		; /* Nothing to do anymore */
+	}
 	else if (!strcasecmp(el, "visit")) {
 		put_visit(&vbuf);
 		syslog(LOG_INFO, "Imported visit: %ld/%ld/%ld", vbuf.v_roomnum, vbuf.v_roomgen, vbuf.v_usernum);
@@ -835,8 +832,6 @@ void migr_xml_end(void *data, const char *el)
 }
 
 
-
-
 /*
  * Import begins here
  */
@@ -865,9 +860,7 @@ void migr_do_import(void) {
 	client_set_inbound_buf(SIZ * 10);
 
 	while (!Finished && client_read_random_blob(Buf, -1) >= 0) {
-		if ((StrLength(Buf) > 4) &&
-		    !strcmp(ChrPtr(Buf) + StrLength(Buf) - 4, "000\n"))
-		{
+		if ((StrLength(Buf) > 4) && !strcmp(ChrPtr(Buf) + StrLength(Buf) - 4, "000\n")) {
 			Finished = 1;
 			StrBufCutAt(Buf, StrLength(Buf) - 4, NULL);
 		}
@@ -978,7 +971,6 @@ int migr_restore_message_metadata(long msgnum, int refcount)
 	smi.meta_rfc822_length = StrLength(CCC->redirect_buffer);
 	CCC->redirect_buffer = NULL;
 
-
 	syslog(LOG_INFO,
 	       "Setting message #%ld meta data to: refcount=%d, bodylength=%ld, content-type: %s",
 	       smi.meta_msgnum,
@@ -994,6 +986,7 @@ int migr_restore_message_metadata(long msgnum, int refcount)
 	return 0;
 }
 
+
 void migr_check_room_msg(long msgnum, void *userdata) {
 	fprintf(migr_global_message_list, "%ld %s\n", msgnum, CC->room.QRname);
 }
@@ -1007,6 +1000,7 @@ void migr_check_rooms_backend(struct ctdlroom *buf, void *data) {
 	CtdlForEachMessage(MSGS_ALL, 0L, NULL, NULL, NULL, migr_check_room_msg, NULL);
 }
 
+
 void RemoveMessagesFromRooms(StrBuf *RoomNameVec, long msgnum) {
 	struct MetaData smi;
 	const char *Pos = NULL;
@@ -1019,8 +1013,9 @@ void RemoveMessagesFromRooms(StrBuf *RoomNameVec, long msgnum) {
 		CtdlDeleteMessages(ChrPtr(oneRoom), &msgnum, 1, "");
 	};
 	GetMetaData(&smi, msgnum);
-	TDAP_AdjRefCount(msgnum, -smi.meta_refcount);
+	AdjRefCount(msgnum, -smi.meta_refcount);
 }
+
 
 void migr_do_restore_meta(void) {
 	char buf[SIZ];
@@ -1069,14 +1064,16 @@ void migr_do_restore_meta(void) {
 				}
 				refcount = 1;
 				lastnum = msgnum;
-				if (prn != NULL)
+				if (prn != NULL) {
 					StrBufPlain(RoomNames, prn + 1, -1);
+				}
 				StrBufTrim(RoomNames);
 			}
 			else {
 				if (prn != NULL) {
-					if (StrLength(RoomNames) > 0)
+					if (StrLength(RoomNames) > 0) {
 						StrBufAppendBufPlain(RoomNames, HKEY("|"), 0);
+					}
 					StrBufAppendBufPlain(RoomNames, prn, -1, 1);
 					StrBufTrim(RoomNames);
 				}
@@ -1097,8 +1094,6 @@ void migr_do_restore_meta(void) {
 }
 
 
-
-
 /******************************************************************************
  *                         Dispatcher, Common code                            *
  ******************************************************************************/
@@ -1107,8 +1102,7 @@ void cmd_migr(char *cmdbuf) {
 	
 	if (CtdlAccessCheck(ac_internal)) return;
 	
-	if (CtdlTrySingleUser())
-	{
+	if (CtdlTrySingleUser()) {
 		CtdlDisableHouseKeeping();
 		CtdlMakeTempFileName(migr_tempfilename1, sizeof migr_tempfilename1);
 		CtdlMakeTempFileName(migr_tempfilename2, sizeof migr_tempfilename2);
@@ -1136,11 +1130,11 @@ void cmd_migr(char *cmdbuf) {
 		CtdlEnableHouseKeeping();
 		CtdlEndSingleUser();
 	}
-	else
-	{
+	else {
 		cprintf("%d The migrator is already running.\n", ERROR + RESOURCE_BUSY);
 	}
 }
+
 
 /******************************************************************************
  *                              Module Hook                                  *

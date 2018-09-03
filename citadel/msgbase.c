@@ -35,10 +35,6 @@
 
 struct addresses_to_be_filed *atbf = NULL;
 
-/* This temp file holds the queue of operations for AdjRefCount() */
-static FILE *arcfp = NULL;
-void AdjRefCountList(long *msgnum, long nmsg, int incr);
-
 /*
  * These are the four-character field headers we use when outputting
  * messages in Citadel format (as opposed to RFC822 format).
@@ -3530,168 +3526,22 @@ void PutMetaData(struct MetaData *smibuf)
 
 
 /*
- * AdjRefCount  -  submit an adjustment to the reference count for a message.
- *                 (These are just queued -- we actually process them later.)
+ * Convenience function to process a big block of AdjRefCount() operations
  */
-void AdjRefCount(long msgnum, int incr)
-{
-	struct arcq new_arcq;
-	int rv = 0;
-
-	syslog(LOG_DEBUG, "msgbase: AdjRefCount() msg %ld ref count delta %+d", msgnum, incr);
-
-	begin_critical_section(S_SUPPMSGMAIN);
-	if (arcfp == NULL) {
-		arcfp = fopen(file_arcq, "ab+");
-		chown(file_arcq, CTDLUID, (-1));
-		chmod(file_arcq, 0600);
-	}
-	end_critical_section(S_SUPPMSGMAIN);
-
-	/* msgnum < 0 means that we're trying to close the file */
-	if (msgnum < 0) {
-		syslog(LOG_DEBUG, "msgbase: closing the AdjRefCount queue file");
-		begin_critical_section(S_SUPPMSGMAIN);
-		if (arcfp != NULL) {
-			fclose(arcfp);
-			arcfp = NULL;
-		}
-		end_critical_section(S_SUPPMSGMAIN);
-		return;
-	}
-
-	/*
-	 * If we can't open the queue, perform the operation synchronously.
-	 */
-	if (arcfp == NULL) {
-		TDAP_AdjRefCount(msgnum, incr);
-		return;
-	}
-
-	new_arcq.arcq_msgnum = msgnum;
-	new_arcq.arcq_delta = incr;
-	rv = fwrite(&new_arcq, sizeof(struct arcq), 1, arcfp);
-	if (rv == -1) {
-		syslog(LOG_EMERG, "%s: %m", file_arcq);
-	}
-	fflush(arcfp);
-
-	return;
-}
-
-
 void AdjRefCountList(long *msgnum, long nmsg, int incr)
 {
-	long i, the_size, offset;
-	struct arcq *new_arcq;
-	int rv = 0;
+	long i;
 
-	begin_critical_section(S_SUPPMSGMAIN);
-	if (arcfp == NULL) {
-		arcfp = fopen(file_arcq, "ab+");
-		chown(file_arcq, CTDLUID, (-1));
-		chmod(file_arcq, 0600);
-	}
-	end_critical_section(S_SUPPMSGMAIN);
-
-	/*
-	 * If we can't open the queue, perform the operation synchronously.
-	 */
-	if (arcfp == NULL) {
-		for (i = 0; i < nmsg; i++)
-			TDAP_AdjRefCount(msgnum[i], incr);
-		return;
-	}
-
-	the_size = sizeof(struct arcq) * nmsg;
-	new_arcq = malloc(the_size);
 	for (i = 0; i < nmsg; i++) {
-		syslog(LOG_DEBUG, "msgbase: AdjRefCountList() msg %ld ref count delta %+d", msgnum[i], incr);
-		new_arcq[i].arcq_msgnum = msgnum[i];
-		new_arcq[i].arcq_delta = incr;
+		AdjRefCount(msgnum[i], incr);
 	}
-	rv = 0;
-	offset = 0;
-	while ((rv >= 0) && (offset < the_size))
-	{
-		rv = fwrite(new_arcq + offset, 1, the_size - offset, arcfp);
-		if (rv == -1) {
-			syslog(LOG_ERR, "%s: %m", file_arcq);
-		}
-		else {
-			offset += rv;
-		}
-	}
-	free(new_arcq);
-	fflush(arcfp);
-
-	return;
 }
 
 
 /*
- * TDAP_ProcessAdjRefCountQueue()
- *
- * Process the queue of message count adjustments that was created by calls
- * to AdjRefCount() ... by reading the queue and calling TDAP_AdjRefCount()
- * for each one.  This should be an "off hours" operation.
+ * AdjRefCount - adjust the reference count for a message.  We need to delete from disk any message whose reference count reaches zero.
  */
-int TDAP_ProcessAdjRefCountQueue(void)
-{
-	char file_arcq_temp[PATH_MAX];
-	int r;
-	FILE *fp;
-	struct arcq arcq_rec;
-	int num_records_processed = 0;
-
-	snprintf(file_arcq_temp, sizeof file_arcq_temp, "%s.%04x", file_arcq, rand());
-
-	begin_critical_section(S_SUPPMSGMAIN);
-	if (arcfp != NULL) {
-		fclose(arcfp);
-		arcfp = NULL;
-	}
-
-	r = link(file_arcq, file_arcq_temp);
-	if (r != 0) {
-		syslog(LOG_ERR, "%s: %m", file_arcq_temp);
-		end_critical_section(S_SUPPMSGMAIN);
-		return(num_records_processed);
-	}
-
-	unlink(file_arcq);
-	end_critical_section(S_SUPPMSGMAIN);
-
-	fp = fopen(file_arcq_temp, "rb");
-	if (fp == NULL) {
-		syslog(LOG_ERR, "%s: %m", file_arcq_temp);
-		return(num_records_processed);
-	}
-
-	while (fread(&arcq_rec, sizeof(struct arcq), 1, fp) == 1) {
-		TDAP_AdjRefCount(arcq_rec.arcq_msgnum, arcq_rec.arcq_delta);
-		++num_records_processed;
-	}
-
-	fclose(fp);
-	r = unlink(file_arcq_temp);
-	if (r != 0) {
-		syslog(LOG_ERR, "%s: %m", file_arcq_temp);
-	}
-
-	return(num_records_processed);
-}
-
-
-/*
- * TDAP_AdjRefCount  -  adjust the reference count for a message.
- *                      This one does it "for real" because it's called by
- *                      the autopurger function that processes the queue
- *                      created by AdjRefCount().   If a message's reference
- *                      count becomes zero, we also delete the message from
- *                      disk and de-index it.
- */
-void TDAP_AdjRefCount(long msgnum, int incr)
+void AdjRefCount(long msgnum, int incr)
 {
 	struct MetaData smi;
 	long delnum;
@@ -3705,10 +3555,9 @@ void TDAP_AdjRefCount(long msgnum, int incr)
 	smi.meta_refcount += incr;
 	PutMetaData(&smi);
 	end_critical_section(S_SUPPMSGMAIN);
-	syslog(LOG_DEBUG, "msgbase: TDAP_AdjRefCount() msg %ld ref count delta %+d, is now %d", msgnum, incr, smi.meta_refcount);
+	syslog(LOG_DEBUG, "msgbase: AdjRefCount() msg %ld ref count delta %+d, is now %d", msgnum, incr, smi.meta_refcount);
 
-	/* If the reference count is now zero, delete the message
-	 * (and its supplementary record as well).
+	/* If the reference count is now zero, delete both the message and its metadata record.
 	 */
 	if (smi.meta_refcount == 0) {
 		syslog(LOG_DEBUG, "msgbase: deleting message <%ld>", msgnum);

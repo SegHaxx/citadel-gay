@@ -3,7 +3,7 @@
  *
  * You might also see this module affectionately referred to as the DAP (the Dreaded Auto-Purger).
  *
- * Copyright (c) 1988-2017 by citadel.org (Art Cancro, Wilifried Goesgens, and others)
+ * Copyright (c) 1988-2018 by citadel.org (Art Cancro, Wilifried Goesgens, and others)
  *
  * This program is open source software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License as published
@@ -898,11 +898,10 @@ void purge_databases(void)
 	       	syslog(LOG_NOTICE, "Purged %d stale external auth associations.", retval);
 	}
 
-	if (!server_shutting_down)
-	{
-       		retval = TDAP_ProcessAdjRefCountQueue();
-	       	syslog(LOG_NOTICE, "Processed %d message reference count adjustments.", retval);
-	}
+	//if (!server_shutting_down)
+	//{
+	//	FIXME this is where we could do a non-interactive delete of zero-refcount messages
+	//}
 
 	if ( (!server_shutting_down) && (CtdlGetConfigInt("c_shrink_db_files") != 0) )
 	{

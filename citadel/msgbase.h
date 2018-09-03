@@ -226,5 +226,6 @@ struct CtdlMessage *CtdlMakeMessageLen(
 	long reflen
 );
 
+void AdjRefCountList(long *msgnum, long nmsg, int incr);
 
 #endif /* MSGBASE_H */

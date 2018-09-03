@@ -4,7 +4,7 @@
  * guesses about what kind of data format changes need to be applied, and
  * we apply them transparently.
  *
- * Copyright (c) 1987-2017 by the citadel.org team
+ * Copyright (c) 1987-2018 by the citadel.org team
  *
  * This program is open source software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License version 3.
@@ -502,6 +502,38 @@ void miafvtur_backend(struct ctdluser *usbuf, void *data) {
 
 
 /*
+ * If our system still has a "refcount_adjustments.dat" sitting around from an old version, ingest it now.
+ */
+int ProcessOldStyleAdjRefCountQueue(void)
+{
+	int r;
+	FILE *fp;
+	struct arcq arcq_rec;
+	int num_records_processed = 0;
+
+	fp = fopen(file_arcq, "rb");
+	if (fp == NULL) {
+		return(num_records_processed);
+	}
+
+	syslog(LOG_INFO, "msgbase: ingesting %s", file_arcq);
+
+	while (fread(&arcq_rec, sizeof(struct arcq), 1, fp) == 1) {
+		AdjRefCount(arcq_rec.arcq_msgnum, arcq_rec.arcq_delta);
+		++num_records_processed;
+	}
+
+	fclose(fp);
+	r = unlink(file_arcq);
+	if (r != 0) {
+		syslog(LOG_ERR, "%s: %m", file_arcq);
+	}
+
+	return(num_records_processed);
+}
+
+
+/*
  * Prior to version 912 we kept a user's various Internet email addresses in their vCards.
  * This function moves them over to the user record, which is where we keep them now.
  */
@@ -598,6 +630,10 @@ void post_startup_upgrades(void) {
 
 	if ((oldver > 000) && (oldver < 912)) {
 		move_inet_addrs_from_vcards_to_user_records();
+	}
+
+	if ((oldver > 000) && (oldver < 922)) {
+		ProcessOldStyleAdjRefCountQueue();
 	}
 }
 
