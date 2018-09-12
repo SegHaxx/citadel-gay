@@ -135,6 +135,7 @@ int uds_connectsock(char *sockpath);
 int tcp_connectsock(char *host, char *service);
 void ctdl_a(struct http_transaction *, struct ctdlsession *);
 void ctdl_r(struct http_transaction *, struct ctdlsession *);
+void ctdl_u(struct http_transaction *, struct ctdlsession *);
 struct ctdlsession *connect_to_citadel(struct http_transaction *);
 void disconnect_from_citadel(struct ctdlsession *);
 char *header_val(struct http_transaction *h, char *requested_header);

@@ -1,4 +1,4 @@
-OBJS := http.o main.o request.o ssl.o static.o tcp_sockets.o webserver.o ctdlclient.o admin_functions.o room_functions.o util.o caldav_reports.o messages.o ctdlfunctions.o ctdl_commands.o forum_view.o html2html.o text2html.o
+OBJS := http.o main.o request.o ssl.o static.o tcp_sockets.o webserver.o ctdlclient.o admin_functions.o room_functions.o util.o caldav_reports.o messages.o ctdlfunctions.o ctdl_commands.o forum_view.o html2html.o text2html.o user_functions.o
 CFLAGS := -ggdb
 LDFLAGS := 
 

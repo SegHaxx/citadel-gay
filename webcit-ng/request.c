@@ -160,7 +160,7 @@ void perform_request(struct http_transaction *h)
 		ctdl_r(h, c);
 		break;
 	case 'u':		// /ctdl/u/ == RESTful path to users
-		do_404(h);
+		ctdl_u(h, c);
 		break;
 	default:
 		do_404(h);
