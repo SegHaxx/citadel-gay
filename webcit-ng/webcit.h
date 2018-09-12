@@ -7,6 +7,8 @@
  * modify it under the terms of the GNU General Public License, version 3.
  */
 
+#define SHOW_ME_VAPPEND_PRINTF
+
 #include <stdlib.h>
 #include <unistd.h>
 #include <stdio.h>
@@ -22,6 +24,7 @@
 #include <netdb.h>
 #include <sys/un.h>
 #include <sys/poll.h>
+#include <sys/time.h>
 #include <string.h>
 #include <pwd.h>
 #include <errno.h>
