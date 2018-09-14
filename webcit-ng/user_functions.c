@@ -16,6 +16,32 @@
 
 
 /*
+ * Fetch a user photo (avatar)
+ */
+void fetch_user_photo(struct http_transaction *h, struct ctdlsession *c)
+{
+	char username[1024];
+
+	extract_token(username, h->uri, 3, '/', sizeof username);
+
+	do_404(h);	// FIXME finish this
+}
+
+
+/*
+ * Fetch a user bio (profile)
+ */
+void fetch_user_bio(struct http_transaction *h, struct ctdlsession *c)
+{
+	char username[1024];
+
+	extract_token(username, h->uri, 3, '/', sizeof username);
+
+	do_404(h);	// FIXME finish this
+}
+
+
+/*
  * Client requested an object related to a user.
  */
 void object_in_user(struct http_transaction *h, struct ctdlsession *c)
@@ -26,8 +52,13 @@ void object_in_user(struct http_transaction *h, struct ctdlsession *c)
 
 	extract_token(buf, h->uri, 4, '/', sizeof buf);
 
-	if (!strcasecmp(buf, "userpic")) {		// FIXME do this
-		do_404(h);
+	if (!strcasecmp(buf, "userpic")) {		// user photo (avatar)
+		fetch_user_photo(h, c);
+		return;
+	}
+
+	if (!strcasecmp(buf, "bio")) {			// user bio (profile)
+		fetch_user_bio(h, c);
 		return;
 	}
 
