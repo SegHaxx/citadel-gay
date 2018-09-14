@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1987-2017 by the citadel.org team
+ * Copyright (c) 1987-2018 by the citadel.org team
  *
  * This program is open source software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -33,7 +33,7 @@ void cmd_dlri(char *cmdbuf)
 
 	struct CtdlMessage *msg = CtdlFetchMessage(CC->room.msgnum_pic, 1, 1);
 	if (msg != NULL) {
-		// The call to CtdlOutputPreLoadedMsg() with MT_SPEW_SECTION will cause the DLUI command
+		// The call to CtdlOutputPreLoadedMsg() with MT_SPEW_SECTION will cause the DLRI command
 		// to have the same output format as the DLAT command, because it calls the same code.
 		// For example: 600 402132|-1||image/gif|
 		safestrncpy(CC->download_desired_section, "1", sizeof CC->download_desired_section);
