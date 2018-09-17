@@ -157,6 +157,7 @@ void download_mime_component(struct http_transaction *h, struct ctdlsession *c, 
 StrBuf *text2html(const char *supplied_charset, int treat_as_wiki, char *roomname, long msgnum, StrBuf *Source);
 StrBuf *variformat2html(StrBuf *Source);
 int ctdl_readline(struct ctdlsession *ctdl, char *buf, int maxbytes);
+int ctdl_read_binary(struct ctdlsession *ctdl, char *buf, int bytes_requested);
 void ctdl_c(struct http_transaction *h, struct ctdlsession *c);
 int webserver(char *webserver_interface, int webserver_port, int webserver_protocol);
 void ctdl_printf(struct ctdlsession *ctdl, const char *format,...);

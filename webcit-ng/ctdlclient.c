@@ -19,8 +19,28 @@ pthread_mutex_t cpool_mutex = PTHREAD_MUTEX_INITIALIZER;	// Lock it before modif
 
 
 /*
+ * Read a specific number of bytes of binary data from the Citadel server.
+ * Returns the number of bytes read or -1 for error.
+ */
+int ctdl_read_binary(struct ctdlsession *ctdl, char *buf, int bytes_requested)
+{
+	int bytes_read = 0;
+	int c = 0;
+
+	while (bytes_read < bytes_requested) {
+		c = read(ctdl->sock, &buf[bytes_read], bytes_requested-bytes_read);
+		if (c <= 0) {
+			syslog(LOG_DEBUG, "Socket error or zero-length read");
+			return (-1);
+		}
+		bytes_read += c;
+	}
+	return (bytes_read);
+}
+
+
+/*
  * Read a newline-terminated line of text from the Citadel server.
- * Implemented in terms of client_read() and is therefore transparent...
  * Returns the string length or -1 for error.
  */
 int ctdl_readline(struct ctdlsession *ctdl, char *buf, int maxbytes)

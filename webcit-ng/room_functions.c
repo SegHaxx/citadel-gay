@@ -28,7 +28,7 @@ long *get_msglist(struct ctdlsession *c, char *which_msgs)
 
 	ctdl_printf(c, "MSGS %s", which_msgs);
 	ctdl_readline(c, buf, sizeof(buf));
-	if (buf[0] == '1')
+	if (buf[0] == '1') {
 		do {
 			if (num_msgs >= num_alloc) {
 				if (num_alloc == 0) {
@@ -42,6 +42,7 @@ long *get_msglist(struct ctdlsession *c, char *which_msgs)
 			ctdl_readline(c, buf, sizeof(buf));
 			msglist[num_msgs++] = atol(buf);
 		} while (strcmp(buf, "000"));	// this makes the last element a "0" terminator
+	}
 	return msglist;
 }
 
@@ -57,8 +58,7 @@ int match_etags(char *taglist, long msgnum)
 	int i = 0;
 	char tag[1024];
 
-	if (msgnum <= 0)	// no msgnum?  no match.
-	{
+	if (msgnum <= 0) {					// no msgnum?  no match.
 		return (0);
 	}
 
@@ -67,24 +67,21 @@ int match_etags(char *taglist, long msgnum)
 		striplt(tag);
 		char *lq = (strchr(tag, '"'));
 		char *rq = (strrchr(tag, '"'));
-		if (lq < rq)	// has two double quotes
-		{
+		if (lq < rq) {					// has two double quotes
 			strcpy(rq, "");
 			strcpy(tag, ++lq);
 		}
 		striplt(tag);
-		if (!strcmp(tag, "*"))	// wildcard match
-		{
+		if (!strcmp(tag, "*")) {			// wildcard match
 			return (1);
 		}
 		long tagmsgnum = atol(tag);
-		if ((tagmsgnum > 0) && (tagmsgnum == msgnum))	// match
-		{
+		if ((tagmsgnum > 0) && (tagmsgnum == msgnum)) {	// match
 			return (1);
 		}
 	}
 
-	return (0);		// no match
+	return (0);						// no match
 }
 
 
