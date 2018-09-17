@@ -190,7 +190,10 @@ function forum_render_one(div, msgnum, scroll_to)
 				document.getElementById(div).innerHTML =
 				  "<div class=\"ctdl-msg-wrapper\">"				// begin message wrapper
 				+ "<div class=\"ctdl-avatar\">"					// begin avatar
-				+ "<i class=\"fa fa-user-circle fa-2x\"></i> "			// FIXME temporary avatar
+
+				+ "<img src=\"/ctdl/u/" + msg.from + "/userpic\" width=\"32\" onerror=\"this.parentNode.innerHTML='FIXME'\">"
+
+				//+ "<i class=\"fa fa-user-circle fa-2x\"></i> "			// FIXME temporary avatar
 				+ "</div>"							// end avatar
 				+ "<div class=\"ctdl-msg-content\">"				// begin content
 				+ "<div class=\"ctdl-msg-header\">"				// begin header
