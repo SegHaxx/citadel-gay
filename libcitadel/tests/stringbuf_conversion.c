@@ -362,7 +362,7 @@ static void TestHTML2ASCII_line(void)
 		
 		StrBufTCP_read_line(Source, &fdin, 0, &Err);
 		printf("the source:>%s<\n", ChrPtr(Source));
-		Target = html_to_ascii(ChrPtr(Source), StrLength(Source), 80, 0);
+		Target = html_to_ascii(ChrPtr(Source), StrLength(Source), 80);
 		
 		printf("the target:>%s<\n", Target);
 		FlushStrBuf(Source);

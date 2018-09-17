@@ -129,7 +129,7 @@ extern char *ssl_cipher_list;
 #define CLIENT_ID		4
 #define CLIENT_VERSION		921		/* This version of WebCit */
 #define MINIMUM_CIT_VERSION	920		/* Minimum required version of Citadel server */
-#define	LIBCITADEL_MIN		920		/* Minimum required version of libcitadel */
+#define	LIBCITADEL_MIN		921		/* Minimum required version of libcitadel */
 #define DEFAULT_HOST		"localhost"	/* Default Citadel server */
 #define DEFAULT_PORT		"504"
 #define TARGET			"webcit01"	/* Window target for inline URL's */

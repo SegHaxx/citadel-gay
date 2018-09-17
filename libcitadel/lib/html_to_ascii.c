@@ -1,6 +1,6 @@
 /*
  * Functions which handle translation between HTML and plain text
- * Copyright (c) 2000-2010 by the citadel.org team
+ * Copyright (c) 2000-2018 by the citadel.org team
  *
  * This program is open source software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -47,9 +47,8 @@
  *
  * inputmsg      = pointer to raw HTML message
  * screenwidth   = desired output screenwidth
- * do_citaformat = set to 1 to indent newlines with spaces
  */
-char *html_to_ascii(const char *inputmsg, int msglen, int screenwidth, int do_citaformat) {
+char *html_to_ascii(const char *inputmsg, int msglen, int screenwidth) {
 	char inbuf[SIZ];
 	int inbuf_len = 0;
 	char outbuf[SIZ];
@@ -543,11 +542,6 @@ char *html_to_ascii(const char *inputmsg, int msglen, int screenwidth, int do_ci
 					strncpy(&outptr[output_len], outbuf, i+1);
 					output_len += (i+1);
 
-					if (do_citaformat) {
-						strcpy(&outptr[output_len], " ");
-						++output_len;
-					}
-
 					strcpy(outbuf, &outbuf[i+1]);
 					i = 0;
 					did_out = 1;
@@ -567,10 +561,6 @@ char *html_to_ascii(const char *inputmsg, int msglen, int screenwidth, int do_ci
 				output_len += rb;
 				strcpy(&outptr[output_len], nl);
 				output_len += strlen(nl);
-				if (do_citaformat) {
-					strcpy(&outptr[output_len], " ");
-					++output_len;
-				}
 				strcpy(outbuf, &outbuf[rb+1]);
 			} else {
 				strncpy(&outptr[output_len], outbuf,
@@ -578,10 +568,6 @@ char *html_to_ascii(const char *inputmsg, int msglen, int screenwidth, int do_ci
 				output_len += (screenwidth-2);
 				strcpy(&outptr[output_len], nl);
 				output_len += strlen(nl);
-				if (do_citaformat) {
-					strcpy(&outptr[output_len], " ");
-					++output_len;
-				}
 				strcpy(outbuf, &outbuf[screenwidth-2]);
 			}
 		}

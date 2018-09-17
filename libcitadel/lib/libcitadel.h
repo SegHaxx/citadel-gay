@@ -28,7 +28,7 @@
 #include <sys/types.h>
 #include <netinet/in.h>
 
-#define LIBCITADEL_VERSION_NUMBER	920
+#define LIBCITADEL_VERSION_NUMBER	921
 
 /*
  * Here's a bunch of stupid magic to make the MIME parser portable.
@@ -463,7 +463,7 @@ char *rfc2047encode(const char *line, long length);
 int is_msg_in_mset(const char *mset, long msgnum);
 int pattern2(char *search, char *patn);
 void stripltlen(char *, int *);
-char *html_to_ascii(const char *inputmsg, int msglen, int screenwidth, int do_citaformat);
+char *html_to_ascii(const char *inputmsg, int msglen, int screenwidth);
 void LoadEntityList(char *FileName);
 
 
