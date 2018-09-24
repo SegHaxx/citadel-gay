@@ -197,6 +197,9 @@ char *html_to_ascii(const char *inputmsg, int msglen, int screenwidth) {
 					strcat(outbuf, nl);
 				}
 
+/****
+	These seemed like a good idea at the time, but it just makes a mess.
+
 				else if (
 					(!strcasecmp(tag, "B"))
 					|| (!strcasecmp(tag, "/B"))
@@ -204,7 +207,6 @@ char *html_to_ascii(const char *inputmsg, int msglen, int screenwidth) {
 					|| (!strcasecmp(tag, "/STRONG"))
 				) {
 					strcat(outbuf, "*");
-					
 				}
 
 				else if (
@@ -214,7 +216,6 @@ char *html_to_ascii(const char *inputmsg, int msglen, int screenwidth) {
 					|| (!strcasecmp(tag, "/EM"))
 				) {
 					strcat(outbuf, "/");
-					
 				}
 
 				else if (
@@ -222,8 +223,8 @@ char *html_to_ascii(const char *inputmsg, int msglen, int screenwidth) {
 					|| (!strcasecmp(tag, "/U"))
 				) {
 					strcat(outbuf, "_");
-					
 				}
+****/
 
 				else if (!strcasecmp(tag, "BR")) {
 					strcat(outbuf, nl);
