@@ -414,7 +414,6 @@ int vcard_upload_beforesave(struct CtdlMessage *msg, recptypes *recp) {
 }
 
 
-
 /*
  * This handler detects whether the user is attempting to save a new
  * vCard as part of his/her personal configuration, and handles the replace
@@ -942,7 +941,6 @@ EOH:	CM_Free(msg);
 }
 
 
-
 /*
  * Get Valid Screen Names
  */
@@ -1139,8 +1137,9 @@ void check_get(void) {
 	}
 }
 
+
 void check_get_greeting(void) {
-/* dummy function, we have no greeting in this verry simple protocol. */
+/* dummy function, we have no greeting in this very simple protocol. */
 }
 
 
@@ -1246,7 +1245,6 @@ struct vCard *vcard_new_from_rfc822_addr(char *addr) {
 
 	return(v);
 }
-
 
 
 /*
@@ -1420,11 +1418,9 @@ CTDL_MODULE_INIT(vcard)
 		CtdlRegisterProtoHook(cmd_gvea, "GVEA", "Get Valid Email Addresses");
 		CtdlRegisterProtoHook(cmd_dvca, "DVCA", "Dump VCard Addresses");
 		CtdlRegisterUserHook(vcard_newuser, EVT_NEWUSER);
-		CtdlRegisterUserHook(vcard_purge, EVT_PURGEUSER);
-
+		CtdlRegisterUserHook(vcard_purge, EVT_PURGEUSER);		// FIXME stop doing this
 		CtdlRegisterDeleteHook(vcard_delete_remove);			// FIXME this is obsolete, right?
 		CtdlRegisterNetprocHook(vcard_extract_from_network);		// FIXME this is obsolete, right?
-
 		CtdlRegisterSessionHook(store_harvested_addresses, EVT_TIMER, PRIO_CLEANUP + 470);
 		CtdlRegisterFixedOutputHook("text/x-vcard", vcard_fixed_output);
 		CtdlRegisterFixedOutputHook("text/vcard", vcard_fixed_output);
@@ -1435,19 +1431,20 @@ CTDL_MODULE_INIT(vcard)
 		/* Set expiration policy to manual; otherwise objects will be lost! */
 		if (!CtdlGetRoomLock(&qr, ADDRESS_BOOK_ROOM)) {
 			qr.QRep.expire_mode = EXPIRE_MANUAL;
-			qr.QRdefaultview = VIEW_ADDRESSBOOK;	/* 2 = address book view */
+			qr.QRdefaultview = VIEW_ADDRESSBOOK;			// 2 = address book view
 			CtdlPutRoomLock(&qr);
 		}
 
 		/* for postfix tcpdict */
-		CtdlRegisterServiceHook(CtdlGetConfigInt("c_pftcpdict_port"),	/* Postfix */
+		CtdlRegisterServiceHook(CtdlGetConfigInt("c_pftcpdict_port"),	// Postfix
 					NULL,
 					check_get_greeting,
 					check_get,
 					NULL,
-					CitadelServiceDICT_TCP);
+					CitadelServiceDICT_TCP
+		);
 	}
-	
+
 	/* return our module name for the log */
 	return "vcard";
 }
