@@ -254,28 +254,6 @@ typedef struct _file_buffer {
 	int nBlobBytesWanted;
 } IOBuffer;
 
-
-typedef struct __fd_iobuffer {
-	IOBuffer *IOB;
-	int OtherFD;
-	int SplicePipe[2];
-	int PipeSize;
-	long TotalSendSize;
-	loff_t TotalSentAlready;
-	loff_t TotalReadAlready;
-	long ChunkSize;
-	long ChunkSendRemain;
-	StrBuf *ChunkBuffer; /* just used if we don't have sendfile */
-} FDIOBuffer;
-
-
-void FDIOBufferInit(FDIOBuffer *FDB, IOBuffer *IO, int FD, long TotalSendSize);
-void FDIOBufferDelete(FDIOBuffer *FDB);
-int FileSendChunked(FDIOBuffer *FDB, const char **Err);
-int FileRecvChunked(FDIOBuffer *FDB, const char **Err);
-int FileMoveChunked(FDIOBuffer *FDB, const char **Err);
-eReadState WriteIOBAlreadyRead(FDIOBuffer *FDB, const char **Error);
-
 long StrBuf_read_one_chunk_callback (int fd, short event, IOBuffer *FB);
 int StrBuf_write_one_chunk_callback(int fd, short event, IOBuffer *FB);
 
