@@ -57,7 +57,6 @@ void validate_config(void) {
 	config_warn_if_empty("c_aideroom");
 	config_warn_if_empty("c_twitroom");
 	config_warn_if_empty("c_nodename");
-	config_warn_if_empty("c_default_cal_zone");
 
 	/*
 	 * Sanity check for port bindings

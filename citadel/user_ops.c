@@ -632,7 +632,7 @@ void do_login(void)
 	/* If this user's name is the name of the system administrator
 	 * (as specified in setup), automatically assign access level 6.
 	 */
-	if (!strcasecmp(CCC->user.fullname, CtdlGetConfigStr("c_sysadm"))) {
+	if ( (!IsEmptyStr(CtdlGetConfigStr("c_sysadm"))) && (!strcasecmp(CCC->user.fullname, CtdlGetConfigStr("c_sysadm"))) ) {
 		CCC->user.axlevel = AxAideU;
 	}
 

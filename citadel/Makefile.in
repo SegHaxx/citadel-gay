@@ -77,7 +77,7 @@ SOURCES=utils/citmail.c \
 	utillib/citadel_dirs.c \
 	citserver.c clientsocket.c config.c control.c $(DATABASE) \
 	domain.c serv_extensions.c genstamp.c \
-	housekeeping.c ical_dezonify.c internet_addressing.c \
+	housekeeping.c default_timezone.c internet_addressing.c \
 	locate_host.c auth.c msgbase.c parsedate.c \
 	room_ops.c euidindex.c server_main.c ldap.c \
 	support.c sysdep.c user_ops.c journaling.c threads.c \
@@ -132,7 +132,7 @@ SERV_OBJS = server_main.o utillib/citadel_dirs.o \
 	$(DATABASE:.c=.o) domain.o \
 	control.o config.o support.o room_ops.o \
 	msgbase.o euidindex.o \
-	locate_host.o housekeeping.o ical_dezonify.o \
+	locate_host.o housekeeping.o default_timezone.o \
 	internet_addressing.o journaling.o \
 	parsedate.o genstamp.o threads.o context.o \
 	clientsocket.o modules_init.o modules_upgrade.o $(SERV_MODULES) \

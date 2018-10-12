@@ -57,6 +57,9 @@
 #include "ctdl_module.h"
 #include "serv_xmpp.h"
 
+/* uncomment for more verbosity - it will log all received XML tags */
+#define XMPP_XML_DEBUG
+
 /* XML_StopParser is present in expat 2.x */
 #if XML_MAJOR_VERSION > 1
 #define HAVE_XML_STOPPARSER
@@ -238,12 +241,12 @@ void xmpp_xml_start(void *data, const char *supplied_el, const char **attr) {
 		strcpy(el, ++sep);
 	}
 
-	/*
+#ifdef XMPP_XML_DEBUG
 	syslog(LOG_DEBUG, "xmpp: ELEMENT START: <%s>", el);
 	for (i=0; attr[i] != NULL; i+=2) {
 		syslog(LOG_DEBUG, "xmpp: Attribute '%s' = '%s'", attr[i], attr[i+1]);
 	}
-	uncomment for more verbosity */
+#endif
 
 	if (!strcasecmp(el, "stream")) {
 		xmpp_stream_start(data, supplied_el, attr);
@@ -310,12 +313,12 @@ void xmpp_xml_end(void *data, const char *supplied_el) {
 		strcpy(el, ++sep);
 	}
 
-	/*
+#ifdef XMPP_XML_DEBUG
 	syslog(LOG_DEBUG, "xmpp: ELEMENT END  : <%s>", el);
 	if (XMPP->chardata_len > 0) {
 		syslog(LOG_DEBUG, "xmpp: chardata: %s", XMPP->chardata);
 	}
-	uncomment for more verbosity */
+#endif
 
 	if (!strcasecmp(el, "resource")) {
 		if (XMPP->chardata_len > 0) {
@@ -434,8 +437,9 @@ void xmpp_xml_end(void *data, const char *supplied_el) {
 
 		else {
 			cprintf("<iq type=\"error\" id=\"%s\">", xmlesc(xmlbuf, XMPP->iq_id, sizeof xmlbuf));
-			cprintf("<error>Don't know howto do '%s'!</error>", xmlesc(xmlbuf, XMPP->iq_type, sizeof xmlbuf));
+			cprintf("<error>Don't know how to do '%s'!</error>", xmlesc(xmlbuf, XMPP->iq_type, sizeof xmlbuf));
 			cprintf("</iq>");
+			syslog(LOG_DEBUG, "XMPP: don't know how to do iq_type='%s' with iq_query_xmlns='%s'", XMPP->iq_type, XMPP->iq_query_xmlns);
 		}
 
 		/* Now clear these fields out so they don't get used by a future stanza */

@@ -25,9 +25,8 @@
 #include "serv_calendar.h"
 #include "room_ops.h"
 #include "euidindex.h"
-#include "ical_dezonify.h"
+#include "default_timezone.h"
 #include "config.h"
-
 
 
 struct ical_respond_data {
@@ -45,7 +44,7 @@ icalcomponent *icalcomponent_new_citadel_vcalendar(void) {
 
 	encaps = icalcomponent_new_vcalendar();
 	if (encaps == NULL) {
-		syslog(LOG_CRIT, "ERROR: could not allocate component!\n");
+		syslog(LOG_ERR, "calendar: could not allocate component");
 		return NULL;
 	}
 
@@ -82,8 +81,6 @@ icalcomponent *ical_encapsulate_subcomponent(icalcomponent *subcomp) {
 	/* Return the object we just created. */
 	return(encaps);
 }
-
-
 
 
 /*
@@ -190,13 +187,13 @@ void ical_send_a_reply(icalcomponent *request, char *action) {
 	strcpy(summary_string, "Calendar item");
 
 	if (request == NULL) {
-		syslog(LOG_ERR, "ERROR: trying to reply to NULL event?\n");
+		syslog(LOG_ERR, "calendar: trying to reply to NULL event");
 		return;
 	}
 
 	the_reply = icalcomponent_new_clone(request);
 	if (the_reply == NULL) {
-		syslog(LOG_ERR, "ERROR: cannot clone request\n");
+		syslog(LOG_ERR, "calendar: cannot clone request");
 		return;
 	}
 
@@ -598,13 +595,13 @@ int ical_update_my_calendar_with_reply(icalcomponent *cal) {
 	/* Figure out just what event it is we're dealing with */
 	strcpy(uid, "--==<< InVaLiD uId >>==--");
 	ical_learn_uid_of_reply(uid, cal);
-	syslog(LOG_DEBUG, "UID of event being replied to is <%s>\n", uid);
+	syslog(LOG_DEBUG, "calendar: UID of event being replied to is <%s>", uid);
 
 	strcpy(hold_rm, CC->room.QRname);	/* save current room */
 
 	if (CtdlGetRoom(&CC->room, USERCALENDARROOM) != 0) {
 		CtdlGetRoom(&CC->room, hold_rm);
-		syslog(LOG_CRIT, "cannot get user calendar room\n");
+		syslog(LOG_ERR, "calendar: cannot get user calendar room");
 		return(2);
 	}
 
@@ -618,7 +615,7 @@ int ical_update_my_calendar_with_reply(icalcomponent *cal) {
 
 	CtdlGetRoom(&CC->room, hold_rm);	/* return to saved room */
 
-	syslog(LOG_DEBUG, "msgnum_being_replaced == %ld\n", msgnum_being_replaced);
+	syslog(LOG_DEBUG, "calendar: msgnum_being_replaced == %ld", msgnum_being_replaced);
 	if (msgnum_being_replaced == 0) {
 		return(1);			/* no calendar event found */
 	}
@@ -644,7 +641,7 @@ int ical_update_my_calendar_with_reply(icalcomponent *cal) {
 
 	original_event = oec.c;
 	if (original_event == NULL) {
-		syslog(LOG_ERR, "ERROR: Original_component is NULL.\n");
+		syslog(LOG_ERR, "calendar: original_component is NULL");
 		return(2);
 	}
 
@@ -847,7 +844,7 @@ int ical_ctdl_is_overlap(
 		return(1);
 	}
 
-	/* syslog(LOG_DEBUG, "Comparing t1start %d:%d t1end %d:%d t2start %d:%d t2end %d:%d \n",
+	/* syslog(LOG_DEBUG, "Comparing t1start %d:%d t1end %d:%d t2start %d:%d t2end %d:%d",
 		t1start.hour, t1start.minute, t1end.hour, t1end.minute,
 		t2start.hour, t2start.minute, t2end.hour, t2end.minute);
 	*/
@@ -856,11 +853,11 @@ int ical_ctdl_is_overlap(
 
 	/* If event 1 ends before event 2 starts, we're in the clear. */
 	if (icaltime_compare(t1end, t2start) <= 0) return(0);
-	/* syslog(LOG_DEBUG, "first passed\n"); */
+	/* syslog(LOG_DEBUG, "calendar: first passed"); */
 
 	/* If event 2 ends before event 1 starts, we're also ok. */
 	if (icaltime_compare(t2end, t1start) <= 0) return(0);
-	/* syslog(LOG_DEBUG, "second passed\n"); */
+	/* syslog(LOG_DEBUG, "calendar: second passed"); */
 
 	/* Otherwise, they overlap. */
 	return(1);
@@ -1439,7 +1436,7 @@ void ical_freebusy(char *who) {
 	if (found_user != 0) {
 		strcpy(buf, who);
 		recp = validate_recipients(buf, NULL, 0);
-		syslog(LOG_DEBUG, "Trying <%s>\n", buf);
+		syslog(LOG_DEBUG, "calendar: trying <%s>", buf);
 		if (recp != NULL) {
 			if (recp->num_local == 1) {
 				found_user = CtdlGetUser(&usbuf, recp->recp_local);
@@ -1453,7 +1450,7 @@ void ical_freebusy(char *who) {
 	 */
 	if (found_user != 0) {
 		snprintf(buf, sizeof buf, "%s@%s", who, CtdlGetConfigStr("c_fqdn"));
-		syslog(LOG_DEBUG, "Trying <%s>\n", buf);
+		syslog(LOG_DEBUG, "calendar: trying <%s>", buf);
 		recp = validate_recipients(buf, NULL, 0);
 		if (recp != NULL) {
 			if (recp->num_local == 1) {
@@ -1476,7 +1473,7 @@ void ical_freebusy(char *who) {
 			if ( (!strcasecmp(type, "localhost"))
 			   || (!strcasecmp(type, "directory")) ) {
 				snprintf(buf, sizeof buf, "%s@%s", who, host);
-				syslog(LOG_DEBUG, "Trying <%s>\n", buf);
+				syslog(LOG_DEBUG, "calendar: trying <%s>", buf);
 				recp = validate_recipients(buf, NULL, 0);
 				if (recp != NULL) {
 					if (recp->num_local == 1) {
@@ -1505,11 +1502,10 @@ void ical_freebusy(char *who) {
 	}
 
 	/* Create a VFREEBUSY subcomponent */
-	syslog(LOG_DEBUG, "Creating VFREEBUSY component\n");
+	syslog(LOG_DEBUG, "calendar: creating VFREEBUSY component");
 	fb = icalcomponent_new_vfreebusy();
 	if (fb == NULL) {
-		cprintf("%d Internal error: cannot allocate memory.\n",
-			ERROR + INTERNAL_ERROR);
+		cprintf("%d Internal error: cannot allocate memory.\n", ERROR + INTERNAL_ERROR);
 		CtdlGetRoom(&CC->room, hold_rm);
 		return;
 	}
@@ -1532,7 +1528,7 @@ void ical_freebusy(char *who) {
 	icalcomponent_add_property(fb, icalproperty_new_organizer(buf));
 
 	/* Add busy time from events */
-	syslog(LOG_DEBUG, "Adding busy time from events\n");
+	syslog(LOG_DEBUG, "calendar: adding busy time from events");
 	CtdlForEachMessage(MSGS_ALL, 0, NULL, NULL, NULL, ical_freebusy_backend, (void *)fb );
 
 	/* If values for DTSTART and DTEND are still not present, set them
@@ -1546,7 +1542,7 @@ void ical_freebusy(char *who) {
 	}
 
 	/* Put the freebusy component into the calendar component */
-	syslog(LOG_DEBUG, "Encapsulating\n");
+	syslog(LOG_DEBUG, "calendar: encapsulating");
 	encaps = ical_encapsulate_subcomponent(fb);
 	if (encaps == NULL) {
 		icalcomponent_free(fb);
@@ -1557,11 +1553,11 @@ void ical_freebusy(char *who) {
 	}
 
 	/* Set the method to PUBLISH */
-	syslog(LOG_DEBUG, "Setting method\n");
+	syslog(LOG_DEBUG, "calendar: setting method");
 	icalcomponent_set_method(encaps, ICAL_METHOD_PUBLISH);
 
 	/* Serialize it */
-	syslog(LOG_DEBUG, "Serializing\n");
+	syslog(LOG_DEBUG, "calendar: serializing");
 	serialized_request = icalcomponent_as_ical_string_r(encaps);
 	icalcomponent_free(encaps);	/* Don't need this anymore. */
 
@@ -1669,7 +1665,7 @@ void ical_getics(void)
 
 	encaps = icalcomponent_new_vcalendar();
 	if (encaps == NULL) {
-		syslog(LOG_ALERT, "ERROR: could not allocate component!\n");
+		syslog(LOG_ERR, "calendar: could not allocate component!");
 		cprintf("%d Could not allocate memory\n", ERROR+INTERNAL_ERROR);
 		return;
 	}
@@ -1795,7 +1791,7 @@ void ical_putics(void)
 				HashPos = GetNewHashPos(tzidlist, 0);
 
 				while (GetNextHashPos(tzidlist, HashPos, &len, &Key, &Value)) {
-					syslog(LOG_DEBUG, "Attaching timezone '%s'\n", (char*) Value);
+					syslog(LOG_DEBUG, "calendar: attaching timezone '%s'", (char*) Value);
 					icaltimezone *t = NULL;
 
 					/* First look for a timezone attached to the original calendar */
@@ -1920,7 +1916,7 @@ void ical_CtdlCreateRoom(void)
 
 	/* Set expiration policy to manual; otherwise objects will be lost! */
 	if (CtdlGetRoomLock(&qr, USERCALENDARROOM)) {
-		syslog(LOG_CRIT, "Couldn't get the user calendar room!\n");
+		syslog(LOG_ERR, "calendar: couldn't get the user calendar room");
 		return;
 	}
 	qr.QRep.expire_mode = EXPIRE_MANUAL;
@@ -1937,7 +1933,7 @@ void ical_CtdlCreateRoom(void)
 
 	/* Set expiration policy to manual; otherwise objects will be lost! */
 	if (CtdlGetRoomLock(&qr, USERTASKSROOM)) {
-		syslog(LOG_CRIT, "Couldn't get the user calendar room!\n");
+		syslog(LOG_ERR, "calendar: couldn't get the user calendar room!");
 		return;
 	}
 	qr.QRep.expire_mode = EXPIRE_MANUAL;
@@ -1954,7 +1950,7 @@ void ical_CtdlCreateRoom(void)
 
 	/* Set expiration policy to manual; otherwise objects will be lost! */
 	if (CtdlGetRoomLock(&qr, USERNOTESROOM)) {
-		syslog(LOG_CRIT, "Couldn't get the user calendar room!\n");
+		syslog(LOG_ERR, "calendar: couldn't get the user calendar room!");
 		return;
 	}
 	qr.QRep.expire_mode = EXPIRE_MANUAL;
@@ -2003,7 +1999,7 @@ void ical_send_out_invitations(icalcomponent *top_level_cal, icalcomponent *cal)
 	const char *tzidc = NULL;
 
 	if (cal == NULL) {
-		syslog(LOG_ERR, "ERROR: trying to reply to NULL event?\n");
+		syslog(LOG_ERR, "calendar: trying to reply to NULL event?");
 		return;
 	}
 
@@ -2021,7 +2017,7 @@ void ical_send_out_invitations(icalcomponent *top_level_cal, icalcomponent *cal)
 	/* Clone the event */
 	the_request = icalcomponent_new_clone(cal);
 	if (the_request == NULL) {
-		syslog(LOG_ERR, "ERROR: cannot clone calendar object\n");
+		syslog(LOG_ERR, "calendar: cannot clone calendar object");
 		return;
 	}
 
@@ -2055,7 +2051,7 @@ void ical_send_out_invitations(icalcomponent *top_level_cal, icalcomponent *cal)
 		}
 	}
 
-	syslog(LOG_DEBUG, "<%d> attendees: <%s>\n", num_attendees, attendees_string);
+	syslog(LOG_DEBUG, "calendar: <%d> attendees: <%s>", num_attendees, attendees_string);
 
 	/* If there are no attendees, there are no invitations to send, so...
 	 * don't bother putting one together!  Punch out, Maverick!
@@ -2068,7 +2064,7 @@ void ical_send_out_invitations(icalcomponent *top_level_cal, icalcomponent *cal)
 	/* Encapsulate the VEVENT component into a complete VCALENDAR */
 	encaps = icalcomponent_new_vcalendar();
 	if (encaps == NULL) {
-		syslog(LOG_ALERT, "ERROR: could not allocate component!\n");
+		syslog(LOG_ERR, "calendar: could not allocate component!");
 		icalcomponent_free(the_request);
 		return;
 	}
@@ -2220,7 +2216,7 @@ void ical_saving_vevent(icalcomponent *top_level_cal, icalcomponent *cal) {
 	icalproperty *organizer = NULL;
 	char organizer_string[SIZ];
 
-	syslog(LOG_DEBUG, "ical_saving_vevent() has been called!\n");
+	syslog(LOG_DEBUG, "calendar: ical_saving_vevent() has been called");
 
 	/* Don't send out invitations unless the client wants us to. */
 	if (CIT_ICAL->server_generated_invitations == 0) {
@@ -2332,7 +2328,7 @@ void ical_obj_beforesave_backend(char *name, char *filename, char *partnum,
 				pch = icalproperty_get_comment(p);
 				if (!IsEmptyStr(pch)) {
 					CM_SetField(msg, eExclusiveID, pch, strlen(pch));
-					syslog(LOG_DEBUG, "Saving calendar UID <%s>\n", pch);
+					syslog(LOG_DEBUG, "calendar: saving calendar UID <%s>", pch);
 				}
 			}
 
@@ -2389,7 +2385,7 @@ int ical_obj_beforesave(struct CtdlMessage *msg, recptypes *recp)
 
 	/* It must be an RFC822 message! */
 	if (msg->cm_format_type != 4) {
-		syslog(LOG_DEBUG, "Rejecting non-RFC822 message\n");
+		syslog(LOG_DEBUG, "calendar: rejecting non-RFC822 message");
 		return(1);		/* You tried to save a non-RFC822 message! */
 	}
 
@@ -2563,11 +2559,11 @@ void ical_fixed_output(char *ptr, int len) {
 }
 
 
-
 void serv_calendar_destroy(void)
 {
 	icaltimezone_free_builtin_timezones();
 }
+
 
 /*
  * Register this module with the Citadel server.
@@ -2599,7 +2595,7 @@ CTDL_MODULE_INIT(calendar)
 		CtdlRegisterFixedOutputHook("application/ics", ical_fixed_output);
 		CtdlRegisterCleanupHook(serv_calendar_destroy);
 	}
-	
+
 	/* return our module name for the log */
 	return "calendar";
 }
