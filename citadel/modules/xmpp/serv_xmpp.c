@@ -1,6 +1,6 @@
 /*
  * XMPP (Jabber) service for the Citadel system
- * Copyright (c) 2007-2017 by Art Cancro and citadel.org
+ * Copyright (c) 2007-2018 by Art Cancro and citadel.org
  *
  * This program is open source software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -68,8 +68,6 @@
 struct xmpp_event *xmpp_queue = NULL;
 
 
-
-
 #ifdef HAVE_XML_STOPPARSER
 /* Stop the parser if an entity declaration is hit. */
 static void xmpp_entity_declaration(void *userData, const XML_Char *entityName,
@@ -82,7 +80,6 @@ static void xmpp_entity_declaration(void *userData, const XML_Char *entityName,
 	XML_StopParser(XMPP->xp, XML_FALSE);
 }
 #endif
-
 
 
 /*
@@ -108,6 +105,7 @@ static inline int Ctdl_GetUtf8SequenceLength(const char *CharS, const char *Char
 		n = 0;
 	return n;
 }
+
 
 char *xmlesc(char *buf, char *str, int bufsiz)
 {
@@ -322,24 +320,21 @@ void xmpp_xml_end(void *data, const char *supplied_el) {
 
 	if (!strcasecmp(el, "resource")) {
 		if (XMPP->chardata_len > 0) {
-			safestrncpy(XMPP->iq_client_resource, XMPP->chardata,
-				sizeof XMPP->iq_client_resource);
+			safestrncpy(XMPP->iq_client_resource, XMPP->chardata, sizeof XMPP->iq_client_resource);
 			striplt(XMPP->iq_client_resource);
 		}
 	}
 
 	else if (!strcasecmp(el, "username")) {		/* NON SASL ONLY */
 		if (XMPP->chardata_len > 0) {
-			safestrncpy(XMPP->iq_client_username, XMPP->chardata,
-				sizeof XMPP->iq_client_username);
+			safestrncpy(XMPP->iq_client_username, XMPP->chardata, sizeof XMPP->iq_client_username);
 			striplt(XMPP->iq_client_username);
 		}
 	}
 
 	else if (!strcasecmp(el, "password")) {		/* NON SASL ONLY */
 		if (XMPP->chardata_len > 0) {
-			safestrncpy(XMPP->iq_client_password, XMPP->chardata,
-				sizeof XMPP->iq_client_password);
+			safestrncpy(XMPP->iq_client_password, XMPP->chardata, sizeof XMPP->iq_client_password);
 			striplt(XMPP->iq_client_password);
 		}
 	}
@@ -355,8 +350,7 @@ void xmpp_xml_end(void *data, const char *supplied_el) {
 			 * Query on a namespace
 			 */
 			if (!IsEmptyStr(XMPP->iq_query_xmlns)) {
-				xmpp_query_namespace(XMPP->iq_id, XMPP->iq_from,
-						XMPP->iq_to, XMPP->iq_query_xmlns);
+				xmpp_query_namespace(XMPP->iq_id, XMPP->iq_from, XMPP->iq_to, XMPP->iq_query_xmlns);
 			}
 
 			/*
@@ -573,7 +567,6 @@ void xmpp_cleanup_function(void) {
 	XML_ParserFree(XMPP->xp);
 	free(XMPP);
 }
-
 
 
 /*
