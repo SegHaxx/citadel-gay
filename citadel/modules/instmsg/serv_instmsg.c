@@ -110,11 +110,8 @@ void log_instant_message(struct CitContext *me, struct CitContext *them, char *m
 		this_im->conversation = NewStrBuf();
 		this_im->next = imlist;
 		imlist = this_im;
-		StrBufAppendBufPlain(this_im->conversation, HKEY(
-			"<html><body>\r\n"
-			), 0);
+		StrBufAppendBufPlain(this_im->conversation, HKEY("<html><body>\r\n"), 0);
 	}
-
 
 	/* Since it's possible for this function to get called more than once if a user is logged
 	 * in on multiple sessions, we use the message's serial number to keep track of whether
@@ -152,7 +149,6 @@ void delete_instant_messages(void) {
 }
 
 
-
 /*
  * Retrieve instant messages
  */
@@ -188,6 +184,7 @@ void cmd_gexp(char *argbuf) {
 	free(ptr);
 }
 
+
 /*
  * Asynchronously deliver instant messages
  */
@@ -201,6 +198,7 @@ void cmd_gexp_async(void) {
 
 	cprintf("%d instant msg\n", ASYNC_MSG + ASYNC_GEXP);
 }
+
 
 /*
  * Back end support function for send_instant_message() and company
@@ -225,8 +223,6 @@ void add_xmsg_to_context(struct CitContext *ccptr, struct ExpressMessage *newmsg
 	 */
 	set_async_waiting(ccptr);
 }
-
-
 
 
 /* 
@@ -289,6 +285,7 @@ int send_instant_message(char *lun, char *lem, char *x_user, char *x_msg)
 	return (message_sent);
 }
 
+
 /*
  * send instant messages
  */
@@ -305,10 +302,12 @@ void cmd_sexp(char *argbuf)
 		cprintf("%d Not logged in.\n", ERROR + NOT_LOGGED_IN);
 		return;
 	}
-	if (CC->fake_username[0])
+	if (CC->fake_username[0]) {
 		lun = CC->fake_username;
-	else
+	}
+	else {
 		lun = CC->user.fullname;
+	}
 
 	lem = CC->cs_inet_email;
 
@@ -358,27 +357,29 @@ void cmd_sexp(char *argbuf)
 		message_sent = PerformXmsgHooks(lun, lem, x_user, x_msg);
 
 		if (message_sent > 0) {
-			if (!IsEmptyStr(x_msg))
+			if (!IsEmptyStr(x_msg)) {
 				cprintf("%d Message sent", CIT_OK);
-			else
+			}
+			else {
 				cprintf("%d Ok to send message", CIT_OK);
-			if (message_sent > 1)
+			}
+			if (message_sent > 1) {
 				cprintf(" to %d users", message_sent);
+			}
 			cprintf(".\n");
 		} else {
-			if (CtdlGetUser(NULL, x_user))
-				cprintf("%d '%s' does not exist.\n",
-						ERROR + NO_SUCH_USER, x_user);
-			else
-				cprintf("%d '%s' is not logged in "
-						"or is not accepting pages.\n",
+			if (CtdlGetUser(NULL, x_user)) {
+				cprintf("%d '%s' does not exist.\n", ERROR + NO_SUCH_USER, x_user);
+			}
+			else {
+				cprintf("%d '%s' is not logged in or is not accepting instant messages.\n",
 						ERROR + RESOURCE_NOT_OPEN, x_user);
+			}
 		}
 
 
 	}
 }
-
 
 
 /*
@@ -457,10 +458,11 @@ void flush_individual_conversation(struct imlog *im) {
 	FullMsgBuf = NewStrBufPlain(NULL, StrLength(im->conversation) + 100);
 
 	StrBufAppendBufPlain(FullMsgBuf, HKEY(
-			"Content-type: text/html; charset=UTF-8\r\n"
-			"Content-Transfer-Encoding: quoted-printable\r\n"
-			"\r\n"
-			), 0);
+		"Content-type: text/html; charset=UTF-8\r\n"
+		"Content-Transfer-Encoding: quoted-printable\r\n"
+		"\r\n"
+		), 0
+	);
 	StrBufAppendBuf (FullMsgBuf, MsgBuf, 0);
 	FreeStrBuf(&MsgBuf);
 
