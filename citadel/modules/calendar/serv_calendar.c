@@ -17,9 +17,7 @@
 #define PRODID "-//Citadel//NONSGML Citadel Calendar//EN"
 
 #include "ctdl_module.h"
-
 #include <libical/ical.h>
-
 #include "msgbase.h"
 #include "internet_addressing.h"
 #include "serv_calendar.h"
@@ -27,7 +25,6 @@
 #include "euidindex.h"
 #include "default_timezone.h"
 #include "config.h"
-
 
 struct ical_respond_data {
 	char desired_partnum[SIZ];
@@ -310,7 +307,6 @@ void ical_send_a_reply(icalcomponent *request, char *action) {
 }
 
 
-
 /*
  * Callback function for mime parser that hunts for calendar content types
  * and turns them into calendar objects.  If something is found, it is placed
@@ -568,8 +564,6 @@ STARTOVER:
 	/* Free the *clone* of the reply. */
 	icalcomponent_free(reply);
 }
-
-
 
 
 /*
@@ -863,6 +857,7 @@ int ical_ctdl_is_overlap(
 	return(1);
 }
 
+
 /* 
  * Phase 6 of "hunt for conflicts"
  * called by ical_conflicts_phase5()
@@ -912,7 +907,6 @@ int ical_conflicts_phase6(struct icaltimetype t1start,
 
 	return(conflict_reported);
 }
-
 
 
 /*
@@ -1029,8 +1023,6 @@ void ical_conflicts_phase5(struct icaltimetype t1start,
 }
 
 
-
-
 /*
  * Phase 4 of "hunt for conflicts"
  * Called by ical_hunt_for_conflicts_backend()
@@ -1132,7 +1124,6 @@ void ical_conflicts_phase4(icalcomponent *proposed_event,
 }
 
 
-
 /*
  * Phase 3 of "hunt for conflicts"
  * Called by ical_hunt_for_conflicts()
@@ -1161,7 +1152,6 @@ void ical_hunt_for_conflicts_backend(long msgnum, void *data) {
 	ical_conflicts_phase4(proposed_event, ird.cal, msgnum);
 	icalcomponent_free(ird.cal);
 }
-
 
 
 /* 
@@ -1195,7 +1185,6 @@ void ical_hunt_for_conflicts(icalcomponent *cal) {
 	CtdlGetRoom(&CC->room, hold_rm);	/* return to saved room */
 
 }
-
 
 
 /*
@@ -1233,7 +1222,6 @@ void ical_conflicts(long msgnum, char *partnum) {
 
 	cprintf("%d No calendar object found\n", ERROR + ROOM_NOT_FOUND);
 }
-
 
 
 /*
@@ -1375,7 +1363,6 @@ void ical_add_to_freebusy(icalcomponent *fb, icalcomponent *top_level_cal) {
 }
 
 
-
 /*
  * Backend for ical_freebusy()
  *
@@ -1408,7 +1395,6 @@ void ical_freebusy_backend(long msgnum, void *data) {
 		icalcomponent_free(ird.cal);
 	}
 }
-
 
 
 /*
@@ -1573,7 +1559,6 @@ void ical_freebusy(char *who) {
 }
 
 
-
 /*
  * Backend for ical_getics()
  * 
@@ -1645,7 +1630,6 @@ void ical_getics_backend(long msgnum, void *data) {
 		icalcomponent_free(ird.cal);
 	}
 }
-
 
 
 /*
@@ -1856,10 +1840,8 @@ void cmd_ical(char *argbuf)
 	}
 
 	if (!strcasecmp(subcmd, "sgi")) {
-		CIT_ICAL->server_generated_invitations =
-			(extract_int(argbuf, 1) ? 1 : 0) ;
-		cprintf("%d %d\n",
-			CIT_OK, CIT_ICAL->server_generated_invitations);
+		CIT_ICAL->server_generated_invitations = (extract_int(argbuf, 1) ? 1 : 0) ;
+		cprintf("%d %d\n", CIT_OK, CIT_ICAL->server_generated_invitations);
 		return;
 	}
 
@@ -1900,7 +1882,6 @@ void cmd_ical(char *argbuf)
 
 	cprintf("%d Invalid subcommand\n", ERROR + CMD_NOT_SUPPORTED);
 }
-
 
 
 /*
@@ -2002,7 +1983,6 @@ void ical_send_out_invitations(icalcomponent *top_level_cal, icalcomponent *cal)
 		syslog(LOG_ERR, "calendar: trying to reply to NULL event?");
 		return;
 	}
-
 
 	/* If this is a VCALENDAR component, look for a VEVENT subcomponent. */
 	if (icalcomponent_isa(cal) == ICAL_VCALENDAR_COMPONENT) {
@@ -2141,8 +2121,7 @@ void ical_send_out_invitations(icalcomponent *top_level_cal, icalcomponent *cal)
 					attached_zones[num_zones_attached++] = z;
 				}
 
-				icalproperty_set_parameter(p,
-					icalparameter_new_tzid(icaltimezone_get_tzid(z))
+				icalproperty_set_parameter(p, icalparameter_new_tzid(icaltimezone_get_tzid(z))
 				);
 			}
 		}
@@ -2265,7 +2244,6 @@ void ical_saving_vevent(icalcomponent *top_level_cal, icalcomponent *cal) {
 }
 
 
-
 /*
  * Back end for ical_obj_beforesave()
  * This hunts for the UID of the calendar event (becomes Citadel msg EUID),
@@ -2363,8 +2341,6 @@ void ical_obj_beforesave_backend(char *name, char *filename, char *partnum,
 		}
 	}
 }
-
-
 
 
 /*
@@ -2478,6 +2454,7 @@ void ical_session_startup(void) {
 	memset(CIT_ICAL, 0, sizeof(struct cit_ical));
 }
 
+
 void ical_session_shutdown(void) {
 	free(CIT_ICAL);
 }
@@ -2486,9 +2463,7 @@ void ical_session_shutdown(void) {
 /*
  * Back end for ical_fixed_output()
  */
-void ical_fixed_output_backend(icalcomponent *cal,
-			int recursion_level
-) {
+void ical_fixed_output_backend(icalcomponent *cal, int recursion_level) {
 	icalcomponent *c;
 	icalproperty *p;
 	char buf[256];
@@ -2533,7 +2508,6 @@ void ical_fixed_output_backend(icalcomponent *cal,
 }
 
 
-
 /*
  * Function to output iCalendar data as plain text.  Nobody uses MSG0
  * anymore, so really this is just so we expose the vCard data to the full
@@ -2559,8 +2533,7 @@ void ical_fixed_output(char *ptr, int len) {
 }
 
 
-void serv_calendar_destroy(void)
-{
+void serv_calendar_destroy(void) {
 	icaltimezone_free_builtin_timezones();
 }
 
@@ -2588,7 +2561,7 @@ CTDL_MODULE_INIT(calendar)
 		CtdlRegisterMessageHook(ical_obj_beforesave, EVT_BEFORESAVE);
 		CtdlRegisterMessageHook(ical_obj_aftersave, EVT_AFTERSAVE);
 		CtdlRegisterSessionHook(ical_CtdlCreateRoom, EVT_LOGIN, PRIO_LOGIN + 1);
-		CtdlRegisterProtoHook(cmd_ical, "ICAL", "Citadel iCal commands");
+		CtdlRegisterProtoHook(cmd_ical, "ICAL", "Citadel iCalendar commands");
 		CtdlRegisterSessionHook(ical_session_startup, EVT_START, PRIO_START + 1);
 		CtdlRegisterSessionHook(ical_session_shutdown, EVT_STOP, PRIO_STOP + 80);
 		CtdlRegisterFixedOutputHook("text/calendar", ical_fixed_output);
