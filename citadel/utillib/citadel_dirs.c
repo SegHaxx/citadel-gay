@@ -63,7 +63,6 @@ char file_crpt_file_key[PATH_MAX]="";
 char file_crpt_file_csr[PATH_MAX]="";
 char file_crpt_file_cer[PATH_MAX]="";
 char file_chkpwd[PATH_MAX]="";
-char file_base64[PATH_MAX]="";
 char file_guesstimezone[PATH_MAX]="";
 
 
@@ -247,11 +246,6 @@ void calc_dirs_n_files(int relh, int home, const char *relhome, char  *ctdldir, 
 		 "%schkpwd",
 		 ctdl_utilbin_dir);
 	StripSlashes(file_chkpwd, 0);
-	snprintf(file_base64,
-		 sizeof file_base64,
-		 "%sbase64",
-		 ctdl_utilbin_dir);
-	StripSlashes(file_base64, 0);
 	snprintf(file_guesstimezone,
 		 sizeof file_guesstimezone,
 		 "%sguesstimezone.sh",
@@ -303,7 +297,6 @@ void calc_dirs_n_files(int relh, int home, const char *relhome, char  *ctdldir, 
 	DBG_PRINT(file_crpt_file_csr);
 	DBG_PRINT(file_crpt_file_cer);
 	DBG_PRINT(file_chkpwd);
-	DBG_PRINT(file_base64);
 	DBG_PRINT(file_guesstimezone);
 }
 

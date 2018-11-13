@@ -36,11 +36,9 @@ include Make_modules
 
 UTIL_TARGETS=citmail$(EXEEXT) sendcommand$(EXEEXT)
 
-UTILBIN_TARGETS= base64$(EXEEXT) setup$(EXEEXT) \
+UTILBIN_TARGETS= setup$(EXEEXT) \
 	chkpw$(EXEEXT) chkpwd$(EXEEXT) \
-	msgform$(EXEEXT) \
 	ctdlmigrate$(EXEEXT)
-
 
 ACLOCAL=@ACLOCAL@
 AUTOCONF=@AUTOCONF@
@@ -71,9 +69,9 @@ LOCALEDIR=@LOCALEDIR@
 
 
 SOURCES=utils/citmail.c \
-	utils/setup.c utils/msgform.c utils/chkpw.c \
+	utils/setup.c utils/chkpw.c \
 	utils/sendcommand.c \
-	utils/ctdlmigrate.c utils/base64.c utils/chkpwd.c \
+	utils/ctdlmigrate.c utils/chkpwd.c \
 	utillib/citadel_dirs.c \
 	citserver.c clientsocket.c config.c control.c $(DATABASE) \
 	domain.c serv_extensions.c genstamp.c \
@@ -168,12 +166,6 @@ chkpw$(EXEEXT): utils/chkpw.o auth.o utillib/citadel_dirs.o
 sendcommand$(EXEEXT): utils/sendcommand.o utillib/citadel_dirs.o $(LIBOBJS)
 	$(CC) utils/sendcommand.o utillib/citadel_dirs.o \
 		$(LIBOBJS) $(LDFLAGS) -o sendcommand$(EXEEXT) $(LIBS)
-
-base64$(EXEEXT): utils/base64.o
-	$(CC) utils/base64.o $(LDFLAGS) -o base64$(EXEEXT)
-
-msgform$(EXEEXT): utils/msgform.o
-	$(CC) utils/msgform.o $(LDFLAGS) -o msgform$(EXEEXT)
 
 .PHONY: install-data install-doc install-exec clean cleaner distclean
 

@@ -1,5 +1,5 @@
 
-Copyright: (C) 1987-2017 Citadel development team; GPL V3
+Copyright: (C) 1987-2018 Citadel development team; GPL V3
 
 Copyright for CRC16: (C) 2002-2003 Indigo Systems Corporation; 
 	  Artistic license + Non advertising clause
@@ -9,8 +9,7 @@ Copyright for MD5 implementation: (C) 1993 Colin Plumb; Public Domain
 * In addition, as a special exception, we hereby declare that our
   favorite type of software is called "open source" -- NOT "free
   software" -- and that our favorite operating system is called
-  "Linux" -- NOT "GNU/Linux."  We officially reject and denounce
-  Richard Stallman's linguistic fascism.
+  "Linux" -- NOT "GNU/Linux".
 
 * In addition, as a special exception, the copyright holders give
   permission to link the code of portions of this program with the
@@ -680,30 +679,5 @@ MD5 license:
    This code was written by Colin Plumb in 1993, no copyright is claimed.
    This code is in the public domain; do with it what you wish.
 
-RFC 2739 openldap schema license:
-
-   This document and translations of it may be copied and furnished to
-   others, and derivative works that comment on or otherwise explain it
-   or assist in its implementation may be prepared, copied, published
-   and distributed, in whole or in part, without restriction of any
-   kind, provided that the above copyright notice and this paragraph are
-   included on all such copies and derivative works.  However, this
-   document itself may not be modified in any way, such as by removing
-   the copyright notice or references to the Internet Society or other
-   Internet organizations, except as needed for the purpose of
-   developing Internet standards in which case the procedures for
-   copyrights defined in the Internet Standards process must be
-   followed, or as required to translate it into languages other than
-   English.
-
-   The limited permissions granted above are perpetual and will not be
-   revoked by the Internet Society or its successors or assigns.
-
-   This document and the information contained herein is provided on an
-   "AS IS" basis and THE INTERNET SOCIETY AND THE INTERNET ENGINEERING
-   TASK FORCE DISCLAIMS ALL WARRANTIES, EXPRESS OR IMPLIED, INCLUDING
-   BUT NOT LIMITED TO ANY WARRANTY THAT THE USE OF THE INFORMATION
-   HEREIN WILL NOT INFRINGE ANY RIGHTS OR ANY IMPLIED WARRANTIES OF
-   MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE.
 
 
