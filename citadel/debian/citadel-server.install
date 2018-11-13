@@ -1,6 +1,5 @@
 etc/citadel/mail.aliases
 etc/citadel/public_clients
-etc/citadel/citadel_urlshorteners.rc
 usr/share/citadel-server/help
 etc/citadel/messages
 usr/lib/citadel-server/ctdlmigrate 
@@ -9,7 +8,6 @@ usr/lib/citadel-server/base64
 usr/lib/citadel-server/chkpwd
 usr/lib/citadel-server/chkpw
 usr/lib/citadel-server/citserver.unstripped
-usr/lib/citadel-server/migrate_aliases.sh
 usr/lib/citadel-server/aidepost
 usr/sbin/citmail
 usr/lib/citadel-server/msgform

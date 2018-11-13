@@ -208,7 +208,7 @@ upgrade: install-exec install-doc
 
 install-data:
 	$(srcdir)/mkinstalldirs $(DESTDIR)$(prefix)/messages
-	@for i in public_clients citadel_urlshorteners.rc \
+	@for i in public_clients \
 		 `find $(srcdir)/messages $(srcdir)/network -type f | grep -v .svn`; do \
 		echo $(INSTALL_DATA) $$i $(DESTDIR)$(prefix)/$$i; \
 		$(INSTALL_DATA) $$i $(DESTDIR)$(prefix)/$$i; \
@@ -221,7 +221,6 @@ install-data:
 install-data-new:
 	$(srcdir)/mkinstalldirs $(DESTDIR)$(ETC_DIR)/
 	$(INSTALL_DATA) $(srcdir)/public_clients $(DESTDIR)$(ETC_DIR)/public_clients
-	$(INSTALL_DATA) $(srcdir)/citadel_urlshorteners.rc $(DESTDIR)$(ETC_DIR)/citadel_urlshorteners.rc
 	$(INSTALL_DATA) $(srcdir)/network/mail.aliases $(DESTDIR)$(ETC_DIR)/mail.aliases
 
 	$(srcdir)/mkinstalldirs $(DESTDIR)$(STATICDATA_DIR)/messages
@@ -273,7 +272,7 @@ install-exec: all
 	$(srcdir)/mkinstalldirs $(DESTDIR)$(prefix)/unstripped
 	cp $(SERVER_TARGETS) $(DESTDIR)$(prefix)/unstripped/
 
-	@for i in utilsmenu database_cleanup.sh migrate_aliases.sh; do \
+	@for i in utilsmenu database_cleanup.sh ; do \
 		if test -f $(srcdir)/$$i; then \
 			echo $(INSTALL) $(srcdir)/$$i $(DESTDIR)$(prefix)/$$i; \
 			$(INSTALL) $(srcdir)/$$i $(DESTDIR)$(prefix)/$$i; \
@@ -293,7 +292,6 @@ install-exec-new: all
 		fi \
 	done
 	cp citserver $(DESTDIR)/$(UTILBIN_DIR)/citserver.unstripped
-	cp migrate_aliases.sh $(DESTDIR)/$(UTILBIN_DIR)/
 	@for i in $(UTILBIN_TARGETS); do \
 		if test -f $$i; then \
 			echo $(INSTALL) $$i $(DESTDIR)/$(UTILBIN_DIR)/$$i; \

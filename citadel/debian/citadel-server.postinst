@@ -52,10 +52,8 @@ case "$1" in
         echo -n "applying your settings.... "
         /usr/lib/citadel-server/setup -q
 	echo "done"
-        # we're in a fresh install, so we send the welcome message.
+        # this is a new installation
         if test -z "$2"; then
-	    echo "migrating mail aliases from other mailers"
-	    /usr/lib/citadel-server/migrate_aliases.sh /etc/citadel/mail.aliases
 	    i=0;
 	    while test ! -S /var/run/citadel/lmtp.socket -a "$i" -lt "10"; do
 		sleep 1
