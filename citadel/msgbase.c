@@ -1109,6 +1109,9 @@ struct CtdlMessage *CtdlDeserializeMessage(long msgnum, int with_body, const cha
 
 	mptr = Buffer;
 	upper_bound = Buffer + Length;
+	if (msgnum <= 0) {
+		return NULL;
+	}
 
 	/* Parse the three bytes that begin EVERY message on disk.
 	 * The first is always 0xFF, the on-disk magic number.
