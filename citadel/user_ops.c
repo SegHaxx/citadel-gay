@@ -619,32 +619,30 @@ int CtdlLoginExistingUser(char *authname, const char *trythisname)
  */
 void do_login(void)
 {
-	struct CitContext *CCC = CC;
+	CC->logged_in = 1;
+	syslog(LOG_NOTICE, "user_ops: <%s> logged in", CC->curr_user);
 
-	CCC->logged_in = 1;
-	syslog(LOG_NOTICE, "user_ops: <%s> logged in", CCC->curr_user);
-
-	CtdlGetUserLock(&CCC->user, CCC->curr_user);
-	++(CCC->user.timescalled);
-	CCC->previous_login = CCC->user.lastcall;
-	time(&CCC->user.lastcall);
+	CtdlGetUserLock(&CC->user, CC->curr_user);
+	++(CC->user.timescalled);
+	CC->previous_login = CC->user.lastcall;
+	time(&CC->user.lastcall);
 
 	/* If this user's name is the name of the system administrator
 	 * (as specified in setup), automatically assign access level 6.
 	 */
-	if ( (!IsEmptyStr(CtdlGetConfigStr("c_sysadm"))) && (!strcasecmp(CCC->user.fullname, CtdlGetConfigStr("c_sysadm"))) ) {
-		CCC->user.axlevel = AxAideU;
+	if ( (!IsEmptyStr(CtdlGetConfigStr("c_sysadm"))) && (!strcasecmp(CC->user.fullname, CtdlGetConfigStr("c_sysadm"))) ) {
+		CC->user.axlevel = AxAideU;
 	}
 
 	/* If we're authenticating off the host system, automatically give
 	 * root the highest level of access.
 	 */
 	if (CtdlGetConfigInt("c_auth_mode") == AUTHMODE_HOST) {
-		if (CCC->user.uid == 0) {
-			CCC->user.axlevel = AxAideU;
+		if (CC->user.uid == 0) {
+			CC->user.axlevel = AxAideU;
 		}
 	}
-	CtdlPutUserLock(&CCC->user);
+	CtdlPutUserLock(&CC->user);
 
 	/*
 	 * If we are using LDAP authentication, extract the user's email addresses from the directory.
@@ -653,8 +651,8 @@ void do_login(void)
 	if ((CtdlGetConfigInt("c_auth_mode") == AUTHMODE_LDAP) || (CtdlGetConfigInt("c_auth_mode") == AUTHMODE_LDAP_AD)) {
 		char new_emailaddrs[512];
 		if (CtdlGetConfigInt("c_ldap_sync_email_addrs") > 0) {
-			if (extract_email_addresses_from_ldap(CCC->ldap_dn, new_emailaddrs) == 0) {
-				CtdlSetEmailAddressesForUser(CCC->user.fullname, new_emailaddrs);
+			if (extract_email_addresses_from_ldap(CC->ldap_dn, new_emailaddrs) == 0) {
+				CtdlSetEmailAddressesForUser(CC->user.fullname, new_emailaddrs);
 			}
 		}
 	}
@@ -662,8 +660,8 @@ void do_login(void)
 
 	/*
 	 * No email address for user?  Make one up.	(commented out because it appears to break things)
-	if (IsEmptyStr(CCC->user.emailaddrs)) {
-		sprintf(CCC->user.emailaddrs, "cit%ld@%s", CCC->user.usernum, CtdlGetConfigStr("c_fqdn"));
+	if (IsEmptyStr(CC->user.emailaddrs)) {
+		sprintf(CC->user.emailaddrs, "cit%ld@%s", CC->user.usernum, CtdlGetConfigStr("c_fqdn"));
 	}
 	 */
 	
@@ -671,14 +669,14 @@ void do_login(void)
 	/*
 	 * Populate cs_inet_email and cs_inet_other_emails with valid email addresses from the user record
 	 */
-	strcpy(CCC->cs_inet_email, CCC->user.emailaddrs);
-	char *firstsep = strstr(CCC->cs_inet_email, "|");
+	strcpy(CC->cs_inet_email, CC->user.emailaddrs);
+	char *firstsep = strstr(CC->cs_inet_email, "|");
 	if (firstsep) {
-		strcpy(CCC->cs_inet_other_emails, firstsep+1);
+		strcpy(CC->cs_inet_other_emails, firstsep+1);
 		*firstsep = 0;
 	}
 	else {
-		CCC->cs_inet_other_emails[0] = 0;
+		CC->cs_inet_other_emails[0] = 0;
 	}
 
 	/* Create any personal rooms required by the system.
