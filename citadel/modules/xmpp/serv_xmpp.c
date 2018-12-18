@@ -403,9 +403,14 @@ void xmpp_xml_end(void *data, const char *supplied_el) {
 		else if (
 			(XMPP->bind_requested)
 			&& (!IsEmptyStr(XMPP->iq_id))
-			&& (!IsEmptyStr(XMPP->iq_client_resource))
 			&& (CC->logged_in)
-			) {
+		) {
+
+			/* If the client has not specified a client resource, generate one */
+
+			if (IsEmptyStr(XMPP->iq_client_resource)) {
+				generate_uuid(XMPP->iq_client_resource);
+			}
 
 			/* Generate the "full JID" of the client resource */
 
@@ -414,6 +419,10 @@ void xmpp_xml_end(void *data, const char *supplied_el) {
 				CC->cs_inet_email,
 				XMPP->iq_client_resource
 			);
+
+			/* FIXME look here ... there's nothing before the slash ... wtf?
+			syslog(LOG_DEBUG, "\033[31m client resource = '%s' \033[0m", XMPP->client_jid);
+			*/
 
 			/* Tell the client what its JID is */
 
