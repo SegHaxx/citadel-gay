@@ -409,7 +409,7 @@ void xmpp_xml_end(void *data, const char *supplied_el) {
 			/* If the client has not specified a client resource, generate one */
 
 			if (IsEmptyStr(XMPP->iq_client_resource)) {
-				generate_uuid(XMPP->iq_client_resource);
+				snprintf(XMPP->iq_client_resource, sizeof XMPP->iq_client_resource, "%d", CC->cs_pid);
 			}
 
 			/* Generate the "full JID" of the client resource */
