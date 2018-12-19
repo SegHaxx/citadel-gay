@@ -413,17 +413,7 @@ void xmpp_xml_end(void *data, const char *supplied_el) {
 			}
 
 			/* Generate the "full JID" of the client resource */
-
-			if (IsEmptyStr(CC->cs_inet_email)) {				// synthetic user@host if no email is set
-				snprintf(XMPP->client_jid, sizeof XMPP->client_jid,
-					"%ld@%s/%s", CC->user.usernum, CtdlGetConfigStr("c_fqdn"), XMPP->iq_client_resource
-				);
-			}
-			else {								// use the email address if we have it
-				snprintf(XMPP->client_jid, sizeof XMPP->client_jid,
-					"%s/%s", CC->cs_inet_email, XMPP->iq_client_resource
-				);
-			}
+			snprintf(XMPP->client_jid, sizeof XMPP->client_jid, "%s/%s", CC->cs_inet_email, XMPP->iq_client_resource);
 
 			/* Tell the client what its JID is */
 

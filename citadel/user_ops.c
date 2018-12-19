@@ -659,12 +659,11 @@ void do_login(void)
 #endif
 
 	/*
-	 * No email address for user?  Make one up.	(commented out because it appears to break things)
+	 * No email address for user?  Make one up.  (Apparently this broke something in the past.  What was it?)
+	 */
 	if (IsEmptyStr(CC->user.emailaddrs)) {
 		sprintf(CC->user.emailaddrs, "cit%ld@%s", CC->user.usernum, CtdlGetConfigStr("c_fqdn"));
 	}
-	 */
-	
 
 	/*
 	 * Populate cs_inet_email and cs_inet_other_emails with valid email addresses from the user record
