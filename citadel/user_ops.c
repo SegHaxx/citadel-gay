@@ -1,7 +1,7 @@
 /* 
  * Server functions which perform operations on user objects.
  *
- * Copyright (c) 1987-2017 by the citadel.org team
+ * Copyright (c) 1987-2018 by the citadel.org team
  *
  * This program is open source software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License, version 3.
@@ -541,9 +541,7 @@ int CtdlLoginExistingUser(char *authname, const char *trythisname)
 			return login_not_found;
 		}
 	
-		/* Locate the associated Citadel account.
-		 * If not found, make one attempt to create it.
-		 */
+		/* Locate the associated Citadel account.  If not found, make one attempt to create it. */
 		found_user = getuserbyuid(&CC->user, pd.pw_uid);
 		if (found_user != 0) {
 			create_user(username, CREATE_USER_DO_NOT_BECOME_USER, pd.pw_uid);
@@ -634,9 +632,7 @@ void do_login(void)
 		CC->user.axlevel = AxAideU;
 	}
 
-	/* If we're authenticating off the host system, automatically give
-	 * root the highest level of access.
-	 */
+	/* If we're authenticating off the host system, automatically give root the highest level of access. */
 	if (CtdlGetConfigInt("c_auth_mode") == AUTHMODE_HOST) {
 		if (CC->user.uid == 0) {
 			CC->user.axlevel = AxAideU;
@@ -644,9 +640,7 @@ void do_login(void)
 	}
 	CtdlPutUserLock(&CC->user);
 
-	/*
-	 * If we are using LDAP authentication, extract the user's email addresses from the directory.
-	 */
+	/* If we are using LDAP authentication, extract the user's email addresses from the directory. */
 #ifdef HAVE_LDAP
 	if ((CtdlGetConfigInt("c_auth_mode") == AUTHMODE_LDAP) || (CtdlGetConfigInt("c_auth_mode") == AUTHMODE_LDAP_AD)) {
 		char new_emailaddrs[512];
@@ -658,11 +652,13 @@ void do_login(void)
 	}
 #endif
 
-	/*
-	 * No email address for user?  Make one up.  (Apparently this broke something in the past.  What was it?)
-	 */
+	/* If the user does not have any email addresses assigned, generate one. */
 	if (IsEmptyStr(CC->user.emailaddrs)) {
-		sprintf(CC->user.emailaddrs, "cit%ld@%s", CC->user.usernum, CtdlGetConfigStr("c_fqdn"));
+		char synthetic_email_addr[1024];
+		snprintf(synthetic_email_addr, sizeof synthetic_email_addr, "ctdl%08lx@%s", CC->user.usernum, CtdlGetConfigStr("c_fqdn"));
+		CtdlSetEmailAddressesForUser(CC->user.fullname, synthetic_email_addr);
+		strncpy(CC->user.emailaddrs, synthetic_email_addr, sizeof(CC->user.emailaddrs));
+		syslog(LOG_DEBUG, "user_ops: auto-generated email address <%s> for <%s>", synthetic_email_addr, CC->user.fullname);
 	}
 
 	/*
