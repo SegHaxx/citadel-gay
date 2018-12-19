@@ -406,16 +406,14 @@ void xmpp_xml_end(void *data, const char *supplied_el) {
 		) {
 
 			/* If the client has not specified a client resource, generate one */
-
 			if (IsEmptyStr(XMPP->iq_client_resource)) {
 				snprintf(XMPP->iq_client_resource, sizeof XMPP->iq_client_resource, "%d", CC->cs_pid);
 			}
 
-			/* Generate the "full JID" of the client resource */
+			/* Generate the "full JID" of the client (user@host/resource) */
 			snprintf(XMPP->client_jid, sizeof XMPP->client_jid, "%s/%s", CC->cs_inet_email, XMPP->iq_client_resource);
 
 			/* Tell the client what its JID is */
-
 			cprintf("<iq type=\"result\" id=\"%s\">", xmlesc(xmlbuf, XMPP->iq_id, sizeof xmlbuf));
 			cprintf("<bind xmlns=\"urn:ietf:params:xml:ns:xmpp-bind\">");
 			cprintf("<jid>%s</jid>", xmlesc(xmlbuf, XMPP->client_jid, sizeof xmlbuf));
