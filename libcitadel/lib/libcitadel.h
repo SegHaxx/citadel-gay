@@ -12,11 +12,9 @@
  * GNU General Public License for more details.
  */
 
-
 /* protect against double includes */
 #ifndef LIBCITADEL_H
 #define LIBCITADEL_H
-
 
 /*
  * since we reference time_t...
@@ -28,7 +26,7 @@
 #include <sys/types.h>
 #include <netinet/in.h>
 
-#define LIBCITADEL_VERSION_NUMBER	922
+#define LIBCITADEL_VERSION_NUMBER	924
 
 /*
  * Here's a bunch of stupid magic to make the MIME parser portable.
@@ -36,7 +34,6 @@
 #ifndef SIZ
 #define SIZ	4096
 #endif
-
 
 typedef enum AXLevel {
 	AxDeleted = 0,
@@ -152,9 +149,8 @@ void mime_parser(char *content_start, char *content_end,
 		 void *userdata,
 		 int dont_decode);
 
-
-
 char *fixed_partnum(char *);
+
 void mime_decode(char *partnum,
 		 char *part_start, size_t length,
 		 char *content_type, char *charset, char *encoding,
@@ -166,11 +162,13 @@ void mime_decode(char *partnum,
 		 MimeParserCallBackType PostMultiPartCallBack,
 		 void *userdata,
 		 int dont_decode);
+
 int mime_decode_now (char *part_start, 
 		     size_t length,
 		     char *encoding,
 		     char **decoded,
 		     size_t *bytes_decoded);
+
 void the_mime_parser(char *partnum,
 		     char *content_start, char *content_end,
 		     MimeParserCallBackType CallBack,
@@ -196,7 +194,6 @@ void SwapBuffers(StrBuf *A, StrBuf *B);
 long StrBufShrinkToFit(StrBuf *Buf, int Force);
 void ReAdjustEmptyBuf(StrBuf *Buf, long ThreshHold, long NewSize);
 void NewStrBufDupAppendFlush(StrBuf **CreateRelpaceMe, StrBuf *CopyFlushMe, const char *NoMe, int KeepOriginal);
-
 int StrBufPlain(StrBuf *Buf, const char* ptr, int nChars);
 StrBuf* _NewConstStrBuf(const char* StringConstant, size_t SizeOfStrConstant);
 #define NewConstStrBuf(a) _NewConstStrBuf(a, sizeof(a))
@@ -205,14 +202,12 @@ char *SmashStrBuf (StrBuf **SmashMe);
 void HFreeStrBuf (void *VFreeMe);
 int FlushStrBuf(StrBuf *buf);
 int FLUSHStrBuf(StrBuf *buf); /* expensive but doesn't leave content behind for others to find in case of errors */
-
 const char *ChrPtr(const StrBuf *Str);
 int StrLength(const StrBuf *Str);
 #define SKEY(a) ChrPtr(a), StrLength(a)
 void StrBufAsciify(StrBuf *Buf, const char repl);
 long StrBufPeek(StrBuf *Buf, const char* ptr, long nThChar, char PeekValue);
 long StrBufPook(StrBuf *Buf, const char* ptr, long nThChar, long nChars, char PookValue);
-
 int StrBufTCP_read_line(StrBuf *buf, int *fd, int append, const char **Error);
 int StrBufReadBLOB(StrBuf *Buf, int *fd, int append, long nBytes, const char **Error);
 #define NNN_TERM 1
@@ -610,12 +605,7 @@ void JsonObjectAppend(JsonValue *Array, JsonValue *Val);
 void SerializeJson(StrBuf *Target, JsonValue *Val, int FreeVal);
 
 
-
-/*
- * Citadels Wildfire implementation, see 
- * http://www.firephp.org/Wiki/Reference/Protocol
- * and http://wildfirehq.org/ for details
- */
+/* the following declarations are leftover from the defunct wildfire implementation. can we remove them? */
 typedef void (*AddHeaderFunc)(const char *HdrName, const char *HdrValue);
 
 typedef enum _WF_MessageType {

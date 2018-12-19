@@ -127,9 +127,9 @@ extern char *ssl_cipher_list;
 #define PORT_NUM		2000		/* port number to listen on */
 #define DEVELOPER_ID		0
 #define CLIENT_ID		4
-#define CLIENT_VERSION		921		/* This version of WebCit */
-#define MINIMUM_CIT_VERSION	920		/* Minimum required version of Citadel server */
-#define	LIBCITADEL_MIN		921		/* Minimum required version of libcitadel */
+#define CLIENT_VERSION		924		/* This version of WebCit */
+#define MINIMUM_CIT_VERSION	924		/* Minimum required version of Citadel server */
+#define	LIBCITADEL_MIN		924		/* Minimum required version of libcitadel */
 #define DEFAULT_HOST		"localhost"	/* Default Citadel server */
 #define DEFAULT_PORT		"504"
 #define TARGET			"webcit01"	/* Window target for inline URL's */
@@ -140,15 +140,11 @@ extern char *ssl_cipher_list;
 #define USERCONFIGROOM		"My Citadel Config"
 #define DEFAULT_MAXMSGS		20
 
-
 #ifdef LIBCITADEL_VERSION_NUMBER
 #if LIBCITADEL_VERSION_NUMBER < LIBCITADEL_MIN
 #error libcitadel is too old.  Please upgrade it before continuing.
 #endif
 #endif
-
-
-
 
 #define SRV_STATUS_MSG(ServerLineBuf) (ChrPtr(ServerLineBuf) + 4), (StrLength(ServerLineBuf) - 4)
 #define MAJORCODE(a) (((int)(a / 100) ) * 100)
@@ -300,7 +296,6 @@ typedef struct  _WebcitHandler{
 	StrBuf *DisplayName;
 } WebcitHandler;
 
-
 void WebcitAddUrlHandler(const char * UrlString, long UrlSLen, const char *DisplayName, long dslen, WebcitHandlerFunc F, long Flags);
 
 typedef struct _headereval {
@@ -308,12 +303,10 @@ typedef struct _headereval {
 	int Type;
 } headereval;
 
-
 struct attach_link {
 	char partnum[32];
 	char html[1024];
 };
-
 
 enum {
 	eUp,
@@ -339,8 +332,6 @@ extern const char *ReqStrs[eNONE];
 #define NO_AUTH 0
 #define AUTH_COOKIE 1
 #define AUTH_BASIC 2
-
-
 
 typedef struct _HdrRefs {
 	long eReqType;				/* HTTP method */
@@ -392,7 +383,6 @@ typedef struct _ParsedHttpHdrs {
 
 	HdrRefs HR;
 } ParsedHttpHdrs;
-
 
 /*
  * One of these is kept for each active Citadel session.
@@ -577,99 +567,50 @@ void wcc_printf(const char *FILE, const char *FUNCTION, long LINE, const char *f
 #else 
 void wc_printf(const char *format,...)__attribute__((__format__(__printf__,1,2)));
 #endif
-
 void hprintf(const char *format,...)__attribute__((__format__(__printf__,1,2)));
-
 void CheckAuthBasic(ParsedHttpHdrs *hdr);
 void GetAuthBasic(ParsedHttpHdrs *hdr);
-
 void sleeeeeeeeeep(int);
-
 size_t wc_strftime(char *s, size_t max, const char *format, const struct tm *tm);
 void fmt_time(char *buf, size_t siz, time_t thetime);
 void httpdate(char *buf, time_t thetime);
 time_t httpdate_to_timestamp(StrBuf *buf);
-
-
-
-
 void end_webcit_session(void);
-
-
-
-
-void cookie_to_stuff(StrBuf *cookie,
-		int *session,
-		StrBuf *user,
-		StrBuf *pass,
-		StrBuf *room,
-		StrBuf *language
-);
+void cookie_to_stuff(StrBuf *cookie, int *session, StrBuf *user, StrBuf *pass, StrBuf *room, StrBuf *language);
 void locate_host(StrBuf *TBuf, int);
 void become_logged_in(const StrBuf *user, const StrBuf *pass, StrBuf *serv_response);
-
 void display_login(void);
 void display_openids(void);
 void display_default_landing_page(void);
 void do_welcome(void);
-
 void display_reg(int during_login);
 void display_main_menu(void);
 void display_aide_menu(void);
-
 void RegisterEmbeddableMimeType(const char *MimeType, long MTLen, int Priority);
 void CreateMimeStr(void);
-
-
 void pop_destination(void);
-
 void FmOut(StrBuf *Target, const char *align, const StrBuf *Source);
 void wDumpContent(int);
-
-
 void PutRequestLocalMem(void *Data, DeleteHashDataFunc DeleteIt);
-
-void output_headers(    int do_httpheaders,
-			int do_htmlhead,
-			int do_room_banner,
-			int unset_cookies,
-			int suppress_check,
-			int cache);
+void output_headers(int do_httpheaders, int do_htmlhead, int do_room_banner, int unset_cookies, int suppress_check, int cache);
 void cdataout(char *rawdata);
-
-
 void url(char *buf, size_t bufsize);
 void UrlizeText(StrBuf* Target, StrBuf *Source, StrBuf *WrkBuf);
-
 void display_success(const char *successmessage);
-
 void shutdown_sessions(void);
-
-
-
 StrBuf *load_mimepart(long msgnum, char *partnum);
 void MimeLoadData(wc_mime_attachment *Mime);
-void do_edit_vcard(long msgnum, char *partnum, 
-		   message_summary *VCMsg,
-		   wc_mime_attachment *VCAtt,
-		   const char *return_to, 
-		   const char *force_room);
-
+void do_edit_vcard(long msgnum, char *partnum, message_summary *VCMsg, wc_mime_attachment *VCAtt, const char *return_to, const char *force_room);
 void select_user_to_edit(const char *preselect);
-
 void convenience_page(const char *titlebarcolor, const char *titlebarmsg, const char *messagetext);
 void output_html(const char *, int, int, StrBuf *, StrBuf *);
-
 ssize_t write(int fd, const void *buf, size_t count);
 void cal_process_attachment(wc_mime_attachment *Mime);
-
 void begin_ajax_response(void);
 void end_ajax_response(void);
-
 extern char *months[];
 extern char *days[];
-long locate_user_vcard_in_this_room(message_summary **VCMsg,
-				    wc_mime_attachment **VCAtt);
+long locate_user_vcard_in_this_room(message_summary **VCMsg, wc_mime_attachment **VCAtt);
 void http_transmit_thing(const char *content_type, int is_static);
 void http_transmit_headers(const char *content_type, int is_static, long is_chunked, int is_gzip);
 long unescape_input(char *buf);
@@ -680,41 +621,29 @@ void StrTabbedDialog(StrBuf *Target, int num_tabs, StrBuf *tabnames[]);
 void tabbed_dialog(int num_tabs, const char *tabnames[]);
 void begin_tab(int tabnum, int num_tabs);
 void end_tab(int tabnum, int num_tabs);
-
 int get_time_format_cached (void);
 void display_wiki_pagelist(void);
 void str_wiki_index(StrBuf *);
-
 HashList *GetRoomListHashLKRA(StrBuf *Target, WCTemplputParams *TP);
-
-/* actual supported locales */
-void TmplGettext(StrBuf *Target, WCTemplputParams *TP);
-
+void TmplGettext(StrBuf *Target, WCTemplputParams *TP); /* actual supported locales */
 void set_selected_language(const char *);
 void go_selected_language(void);
 const char *get_selected_language(void);
-
 void utf8ify_rfc822_string(char **buf);
-
 void begin_burst(void);
 long end_burst(void);
-
 void AppendImportantMessage(const char *pch, long len);
-
 void http_datestring(char *buf, size_t n, time_t xtime);
-
 
 /* These should be empty, but we have them for testing */
 #define DEFAULT_HTTPAUTH_USER	""
 #define DEFAULT_HTTPAUTH_PASS	""
-
 
 /* Exit codes 101 through 109 are initialization failures so we don't want to
  * just keep respawning indefinitely.
  */
 #define WC_EXIT_BIND		101	/* Can't bind to the port */
 #define WC_EXIT_SSL		102	/* Can't initialize SSL */
-
 
 #define WC_TIMEFORMAT_NONE 0
 #define WC_TIMEFORMAT_AMPM 1
@@ -724,8 +653,5 @@ extern int time_to_die;			/* Nonzero if server is shutting down */
 extern int DisableGzip;
 
 void display_summary_page(void);
-
 HashList *GetValidDomainNames(StrBuf *Target, WCTemplputParams *TP);
 void output_error_pic(const char *ErrMsg1, const char *ErrMsg2);
-
-
