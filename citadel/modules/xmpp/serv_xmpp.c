@@ -392,8 +392,7 @@ void xmpp_xml_end(void *data, const char *supplied_el) {
 			xmpp_non_sasl_authenticate(
 				XMPP->iq_id,
 				XMPP->iq_client_username,
-				XMPP->iq_client_password,
-				XMPP->iq_client_resource
+				XMPP->iq_client_password
 			);
 		}	
 

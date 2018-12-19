@@ -147,7 +147,7 @@ void xmpp_sasl_auth(char *sasl_auth_mech, char *authstring) {
 /*
  * Non-SASL authentication
  */
-void xmpp_non_sasl_authenticate(char *iq_id, char *username, char *password, char *resource) {
+void xmpp_non_sasl_authenticate(char *iq_id, char *username, char *password) {
 	int result;
 	char xmlbuf[256];
 
