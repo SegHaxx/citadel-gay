@@ -654,11 +654,7 @@ void do_login(void)
 
 	/* If the user does not have any email addresses assigned, generate one. */
 	if (IsEmptyStr(CC->user.emailaddrs)) {
-		char synthetic_email_addr[1024];
-		snprintf(synthetic_email_addr, sizeof synthetic_email_addr, "ctdl%08lx@%s", CC->user.usernum, CtdlGetConfigStr("c_fqdn"));
-		CtdlSetEmailAddressesForUser(CC->user.fullname, synthetic_email_addr);
-		strncpy(CC->user.emailaddrs, synthetic_email_addr, sizeof(CC->user.emailaddrs));
-		syslog(LOG_DEBUG, "user_ops: auto-generated email address <%s> for <%s>", synthetic_email_addr, CC->user.fullname);
+		AutoGenerateEmailAddressForUser(&CC->user);
 	}
 
 	/*

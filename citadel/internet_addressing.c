@@ -1708,3 +1708,16 @@ void CtdlSetEmailAddressesForUser(char *requested_user, char *new_emailaddrs)
 
 	CtdlPutUserLock(&usbuf);
 }
+
+
+/*
+ * Auto-generate an Internet email address for a user account
+ */
+void AutoGenerateEmailAddressForUser(struct ctdluser *user)
+{
+	char synthetic_email_addr[1024];
+	snprintf(synthetic_email_addr, sizeof synthetic_email_addr, "ctdl%08lx@%s", user->usernum, CtdlGetConfigStr("c_fqdn"));
+	CtdlSetEmailAddressesForUser(user->fullname, synthetic_email_addr);
+	strncpy(CC->user.emailaddrs, synthetic_email_addr, sizeof(user->emailaddrs));
+	syslog(LOG_DEBUG, "user_ops: auto-generated email address <%s> for <%s>", synthetic_email_addr, user->fullname);
+}
