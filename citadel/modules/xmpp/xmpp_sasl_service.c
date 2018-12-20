@@ -119,6 +119,7 @@ void xmpp_output_auth_mechs(void) {
 	cprintf("</mechanisms>");
 }
 
+
 /*
  * Here we go ... client is trying to authenticate.
  */
@@ -131,7 +132,9 @@ void xmpp_sasl_auth(char *sasl_auth_mech, char *authstring) {
 		return;
 	}
 
-        if (CC->logged_in) CtdlUserLogout();  /* Client may try to log in twice.  Handle this. */
+        if (CC->logged_in) {
+		CtdlUserLogout();  /* Client may try to log in twice.  Handle this. */
+	}
 
 	if (CC->nologin) {
 		cprintf("<failure xmlns=\"urn:ietf:params:xml:ns:xmpp-sasl\">");
@@ -151,7 +154,6 @@ void xmpp_sasl_auth(char *sasl_auth_mech, char *authstring) {
 }
 
 
-
 /*
  * Non-SASL authentication
  */
@@ -159,7 +161,9 @@ void xmpp_non_sasl_authenticate(char *iq_id, char *username, char *password) {
 	int result;
 	char xmlbuf[256];
 
-        if (CC->logged_in) CtdlUserLogout();  /* Client may try to log in twice.  Handle this. */
+        if (CC->logged_in) {
+		CtdlUserLogout();  /* Client may try to log in twice.  Handle this. */
+	}
 
 	result = CtdlLoginExistingUser(username);
 	if (result == login_ok) {

@@ -67,7 +67,6 @@
 
 struct xmpp_event *xmpp_queue = NULL;
 
-
 #ifdef HAVE_XML_STOPPARSER
 /* Stop the parser if an entity declaration is hit. */
 static void xmpp_entity_declaration(void *userData, const XML_Char *entityName,
@@ -92,17 +91,17 @@ static inline int Ctdl_GetUtf8SequenceLength(const char *CharS, const char *Char
 	int n = 0;
         unsigned char test = (1<<7);
 
-	if ((*CharS & 0xC0) != 0xC0) 
+	if ((*CharS & 0xC0) != 0xC0) {
 		return 1;
+	}
 
-	while ((n < 8) && 
-	       ((test & ((unsigned char)*CharS)) != 0)) 
-	{
+	while ((n < 8) && ((test & ((unsigned char)*CharS)) != 0))  {
 		test = test >> 1;
 		n ++;
 	}
-	if ((n > 6) || ((CharE - CharS) < n))
+	if ((n > 6) || ((CharE - CharS) < n)) {
 		n = 0;
+	}
 	return n;
 }
 
@@ -297,7 +296,6 @@ void xmpp_xml_start(void *data, const char *supplied_el, const char **attr) {
 		++XMPP->html_tag_level;
 	}
 }
-
 
 
 void xmpp_xml_end(void *data, const char *supplied_el) {

@@ -94,7 +94,6 @@ void xmpp_iq_roster_query(void)
 }
 
 
-
 /*
  * Client is doing a namespace query.  These are all handled differently.
  */

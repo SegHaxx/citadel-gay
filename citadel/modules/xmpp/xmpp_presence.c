@@ -58,7 +58,6 @@
 #include "serv_xmpp.h"
 
 
-
 /* 
  * Indicate the presence of another user to the client
  * (used in several places)
@@ -71,7 +70,6 @@ void xmpp_indicate_presence(char *presence_jid)
 	cprintf("<presence from=\"%s\" ", xmlesc(xmlbuf, presence_jid, sizeof xmlbuf));
 	cprintf("to=\"%s\"></presence>", xmlesc(xmlbuf, XMPP->client_jid, sizeof xmlbuf));
 }
-
 
 
 /*
@@ -221,7 +219,6 @@ void xmpp_presence_notify(char *presence_jid, int event_type) {
 }
 
 
-
 void xmpp_fetch_mortuary_backend(long msgnum, void *userdata) {
 	HashList *mortuary = (HashList *) userdata;
 	struct CtdlMessage *msg;
@@ -261,7 +258,6 @@ void xmpp_fetch_mortuary_backend(long msgnum, void *userdata) {
 }
 
 
-
 /*
  * Fetch the "mortuary" - a list of dead buddies which we keep around forever
  * so we can remove them from any client's roster that still has them listed
@@ -282,7 +278,6 @@ HashList *xmpp_fetch_mortuary(void) {
 
 	return(mortuary);
 }
-
 
 
 /*
@@ -318,7 +313,6 @@ void xmpp_store_mortuary(HashList *mortuary) {
 }
 
 
-
 /*
  * Upon logout we make an attempt to delete the whole roster, in order to
  * try to keep "ghost" buddies from remaining in the client-side roster.
@@ -350,7 +344,6 @@ void xmpp_massacre_roster(void)
 		DeleteHash(&mortuary);
 	}
 }
-
 
 
 /*
@@ -399,4 +392,3 @@ void xmpp_delete_old_buddies_who_no_longer_exist_from_the_client_roster(void)
 	DeleteHash(&mortuary);
 	free(cptr);
 }
-
