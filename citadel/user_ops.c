@@ -717,7 +717,7 @@ void CtdlUserLogout(void)
 	strcpy(CCC->fake_roomname, "");
 	CCC->logged_in = 0;
 
-	/* Check to see if the user was deleted whilst logged in and purge them if necessary */
+	/* Check to see if the user was deleted while logged in and purge them if necessary */
 	if ((CCC->user.axlevel == AxDeleted) && (CCC->user.usernum)) {
 		purge_user(CCC->user.fullname);
 	}
@@ -938,8 +938,9 @@ int purge_user(char pname[])
 	makeuserkey(usernamekey, pname, cutuserkey(pname));
 
 	/* If the name is empty we can't find them in the DB any way so just return */
-	if (IsEmptyStr(pname))
+	if (IsEmptyStr(pname)) {
 		return(ERROR + NO_SUCH_USER);
+	}
 
 	if (CtdlGetUser(&usbuf, pname) != 0) {
 		syslog(LOG_ERR, "user_ops: cannot purge user <%s> - not found", pname);

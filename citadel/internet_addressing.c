@@ -1519,7 +1519,9 @@ int CtdlDirectoryLookup(char *target, char *internet_addr, size_t targbuflen) {
 	char key[SIZ];
 
 	/* Dump it in there unchanged, just for kicks */
-	safestrncpy(target, internet_addr, targbuflen);
+	if (target != NULL) {
+		safestrncpy(target, internet_addr, targbuflen);
+	}
 
 	/* Only do lookups for addresses with hostnames in them */
 	if (num_tokens(internet_addr, '@') != 2) return(-1);
@@ -1530,7 +1532,9 @@ int CtdlDirectoryLookup(char *target, char *internet_addr, size_t targbuflen) {
 	directory_key(key, internet_addr);
 	cdbrec = cdb_fetch(CDB_DIRECTORY, key, strlen(key) );
 	if (cdbrec != NULL) {
-		safestrncpy(target, cdbrec->ptr, targbuflen);
+		if (target != NULL) {
+			safestrncpy(target, cdbrec->ptr, targbuflen);
+		}
 		cdb_free(cdbrec);
 		return(0);
 	}
@@ -1716,7 +1720,31 @@ void CtdlSetEmailAddressesForUser(char *requested_user, char *new_emailaddrs)
 void AutoGenerateEmailAddressForUser(struct ctdluser *user)
 {
 	char synthetic_email_addr[1024];
-	snprintf(synthetic_email_addr, sizeof synthetic_email_addr, "ctdl%08lx@%s", user->usernum, CtdlGetConfigStr("c_fqdn"));
+	int i, j;
+	int u = 0;
+
+	for (i=0; u==0; ++i) {
+		if (i == 0) {
+			// first try just converting the user name to lowercase and replacing spaces with underscores
+			snprintf(synthetic_email_addr, sizeof synthetic_email_addr, "%s@%s", user->fullname, CtdlGetConfigStr("c_fqdn"));
+			for (j=0; ((synthetic_email_addr[j] != '\0')&&(synthetic_email_addr[j] != '@')); j++) {
+				synthetic_email_addr[j] = tolower(synthetic_email_addr[j]);
+				if (!isalnum(synthetic_email_addr[j])) {
+					synthetic_email_addr[j] = '_';
+				}
+			}
+		}
+		else if (i == 1) {
+			// then try 'ctdl' followed by the user number
+			snprintf(synthetic_email_addr, sizeof synthetic_email_addr, "ctdl%08lx@%s", user->usernum, CtdlGetConfigStr("c_fqdn"));
+		}
+		else if (i > 1) {
+			// oof.  just keep trying other numbers until we find one
+			snprintf(synthetic_email_addr, sizeof synthetic_email_addr, "ctdl%08x@%s", i, CtdlGetConfigStr("c_fqdn"));
+		}
+		u = CtdlDirectoryLookup(NULL, synthetic_email_addr, 0);
+	}
+
 	CtdlSetEmailAddressesForUser(user->fullname, synthetic_email_addr);
 	strncpy(CC->user.emailaddrs, synthetic_email_addr, sizeof(user->emailaddrs));
 	syslog(LOG_DEBUG, "user_ops: auto-generated email address <%s> for <%s>", synthetic_email_addr, user->fullname);
