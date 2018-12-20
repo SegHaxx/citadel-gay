@@ -318,8 +318,8 @@ void cmd_conf(char *argbuf)
 	        cprintf("\n");
 	        cprintf("\n");
 		cprintf("%d\n",		CtdlGetConfigInt("c_rbl_at_greeting"));
-		cprintf("%s\n",		CtdlGetConfigStr("c_master_user"));
-		cprintf("%s\n",		CtdlGetConfigStr("c_master_pass"));
+		cprintf("\n");
+		cprintf("\n");
 		cprintf("%s\n",		CtdlGetConfigStr("c_pager_program"));
 		cprintf("%d\n",		CtdlGetConfigInt("c_imap_keep_from"));
 		cprintf("%d\n",		CtdlGetConfigInt("c_xmpp_c2s_port"));
@@ -538,10 +538,10 @@ void cmd_conf(char *argbuf)
 				CtdlSetConfigInt("c_rbl_at_greeting", confbool(buf));
 				break;
 			case 58:
-				CtdlSetConfigStr("c_master_user", buf);
+				/* niu */
 				break;
 			case 59:
-				CtdlSetConfigStr("c_master_pass", buf);
+				/* niu */
 				break;
 			case 60:
 				CtdlSetConfigStr("c_pager_program", buf);

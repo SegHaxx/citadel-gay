@@ -205,8 +205,6 @@ void migrate_legacy_config(struct legacy_config *lconfig)
 	CtdlSetConfigInt(	"c_managesieve_port"	,	lconfig->c_managesieve_port	);
 	CtdlSetConfigInt(	"c_auth_mode"		,	lconfig->c_auth_mode		);
 	CtdlSetConfigInt(	"c_rbl_at_greeting"	,	lconfig->c_rbl_at_greeting	);
-	CtdlSetConfigStr(	"c_master_user"		,	lconfig->c_master_user		);
-	CtdlSetConfigStr(	"c_master_pass"		,	lconfig->c_master_pass		);
 	CtdlSetConfigStr(	"c_pager_program"	,	lconfig->c_pager_program	);
 	CtdlSetConfigInt(	"c_imap_keep_from"	,	lconfig->c_imap_keep_from	);
 	CtdlSetConfigInt(	"c_xmpp_c2s_port"	,	lconfig->c_xmpp_c2s_port	);

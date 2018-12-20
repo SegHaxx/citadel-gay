@@ -1,7 +1,7 @@
 //
 // NNTP server module (RFC 3977)
 //
-// Copyright (c) 2014-2015 by the citadel.org team
+// Copyright (c) 2014-2018 by the citadel.org team
 //
 // This program is open source software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License version 3.
@@ -278,7 +278,7 @@ void nntp_cleanup(void)
 //
 void nntp_authinfo_user(const char *username)
 {
-	int a = CtdlLoginExistingUser(NULL, username);
+	int a = CtdlLoginExistingUser(username);
 	switch (a) {
 	case login_already_logged_in:
 		cprintf("482 Already logged in\r\n");

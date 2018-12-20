@@ -407,7 +407,7 @@ void smtp_get_user(long offset)
 
 	StrBufDecodeBase64(sSMTP->Cmd);
 
-	if (CtdlLoginExistingUser(NULL, ChrPtr(sSMTP->Cmd)) == login_ok) {
+	if (CtdlLoginExistingUser(ChrPtr(sSMTP->Cmd)) == login_ok) {
 		size_t len = CtdlEncodeBase64(buf, "Password:", 9, 0);
 
 		if (buf[len - 1] == '\n') {
@@ -492,10 +492,10 @@ void smtp_try_plain(long offset, long Flags)
 	sSMTP->command_state = smtp_command;
 
 	if (!IsEmptyStr(ident)) {
-		result = CtdlLoginExistingUser(user, ident);
+		result = CtdlLoginExistingUser(ident);
 	}
 	else {
-		result = CtdlLoginExistingUser(NULL, user);
+		result = CtdlLoginExistingUser(user);
 	}
 
 	if (result == login_ok) {

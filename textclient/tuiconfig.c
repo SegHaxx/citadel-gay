@@ -261,19 +261,6 @@ void do_system_configuration(CtdlIPC * ipc)
 		sc[60][0] = 0;
 	}
 
-	/* Master user account */
-	int yes_muacct = 0;
-	if (strlen(sc[58]) > 0)
-		yes_muacct = 1;
-	yes_muacct = boolprompt("Enable a 'master user' account", yes_muacct);
-	if (yes_muacct) {
-		strprompt("Master user name", &sc[58][0], 31);
-		strprompt("Master user password", &sc[59][0], -31);
-	} else {
-		strcpy(&sc[58][0], "");
-		strcpy(&sc[59][0], "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx");
-	}
-
 	/* Save it */
 	scr_printf("Save this configuration? ");
 	if (yesno()) {

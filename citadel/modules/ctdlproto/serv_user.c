@@ -1,7 +1,7 @@
 /* 
  * Server functions which perform operations on user objects.
  *
- * Copyright (c) 1987-2017 by the citadel.org team
+ * Copyright (c) 1987-2018 by the citadel.org team
  *
  * This program is open source software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License, version 3.
@@ -34,7 +34,7 @@ void cmd_user(char *cmdbuf)
 	striplt(username);
 	syslog(LOG_DEBUG, "user_ops: cmd_user(%s)", username);
 
-	a = CtdlLoginExistingUser(NULL, username);
+	a = CtdlLoginExistingUser(username);
 	switch (a) {
 	case login_already_logged_in:
 		cprintf("%d Already logged in.\n", ERROR + ALREADY_LOGGED_IN);
@@ -160,11 +160,6 @@ void cmd_setp(char *new_pw)
 	}
 	if ( (CC->user.uid != CTDLUID) && (CC->user.uid != (-1)) ) {
 		cprintf("%d Not allowed.  Use the 'passwd' command.\n", ERROR + NOT_HERE);
-		return;
-	}
-	if (CC->is_master) {
-		cprintf("%d The master prefix password cannot be changed with this command.\n",
-			ERROR + NOT_HERE);
 		return;
 	}
 

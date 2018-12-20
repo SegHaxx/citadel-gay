@@ -1,7 +1,7 @@
 /*
  * POP3 service for the Citadel system
  *
- * Copyright (c) 1998-2017 by the citadel.org team
+ * Copyright (c) 1998-2018 by the citadel.org team
  *
  * This program is open source software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3.
@@ -133,7 +133,7 @@ void pop3_user(char *argbuf)
 	strcpy(username, argbuf);
 	striplt(username);
 
-	if (CtdlLoginExistingUser(NULL, username) == login_ok) {
+	if (CtdlLoginExistingUser(username) == login_ok) {
 		cprintf("+OK Password required for %s\r\n", username);
 	}
 	else {

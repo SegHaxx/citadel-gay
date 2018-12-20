@@ -375,7 +375,7 @@ int CtdlGetUserByNumber(struct ctdluser *usbuf, long number);
 void CtdlGetRelationship(visit *vbuf, struct ctdluser *rel_user, struct ctdlroom *rel_room);
 void CtdlSetRelationship(visit *newvisit, struct ctdluser *rel_user, struct ctdlroom *rel_room);
 void CtdlMailboxName(char *buf, size_t n, const struct ctdluser *who, const char *prefix);
-int CtdlLoginExistingUser(char *authname, const char *username);
+int CtdlLoginExistingUser(const char *username);
 
 /*
  * Values which may be returned by CtdlLoginExistingUser()

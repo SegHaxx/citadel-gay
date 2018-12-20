@@ -80,7 +80,6 @@ struct CitContext {
 	int internal_pgm;	/* authenticated as internal program */
 	int nologin;		/* not allowed to log in */
 	int curr_view;		/* The view type for the current user/room */
-	int is_master;		/* Is this session logged in using the master user? */
 
 	time_t previous_login;	/* Date/time of previous login */
 	char lastcmdname[5];	/* name of last command executed */

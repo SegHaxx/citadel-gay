@@ -3,7 +3,7 @@
  *
  * Note: RFC3920 says we "must" support DIGEST-MD5 but we only support PLAIN.
  *
- * Copyright (c) 2007-2009 by Art Cancro
+ * Copyright (c) 2007-2018 by Art Cancro
  *
  * This program is open source software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3.
@@ -64,7 +64,7 @@ int xmpp_auth_plain(char *authstring)
 	char pass[256];
 	int result;
 	long len;
-
+	int i;
 
 	/* Take apart the authentication string */
 	memset(pass, 0, sizeof(pass));
@@ -80,16 +80,24 @@ int xmpp_auth_plain(char *authstring)
 	 * do not allow spaces so we can tell the user to substitute underscores if their
 	 * login name contains spaces.
 	 */
-	convert_spaces_to_underscores(ident);
-	convert_spaces_to_underscores(user);
+	for (i=0; ident[i]!=0; ++i) {
+		if (ident[i] == '_') {
+			ident[i] = ' ';
+		}
+	}
+	for (i=0; user[i]!=0; ++i) {
+		if (user[i] == '_') {
+			user[i] = ' ';
+		}
+	}
 
 	/* Now attempt authentication */
 
 	if (!IsEmptyStr(ident)) {
-		result = CtdlLoginExistingUser(user, ident);
+		result = CtdlLoginExistingUser(ident);
 	}
 	else {
-		result = CtdlLoginExistingUser(NULL, user);
+		result = CtdlLoginExistingUser(user);
 	}
 
 	if (result == login_ok) {
@@ -153,7 +161,7 @@ void xmpp_non_sasl_authenticate(char *iq_id, char *username, char *password) {
 
         if (CC->logged_in) CtdlUserLogout();  /* Client may try to log in twice.  Handle this. */
 
-	result = CtdlLoginExistingUser(NULL, username);
+	result = CtdlLoginExistingUser(username);
 	if (result == login_ok) {
 		result = CtdlTryPassword(password, strlen(password));
 		if (result == pass_ok) {

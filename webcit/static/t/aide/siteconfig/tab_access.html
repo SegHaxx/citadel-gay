@@ -30,14 +30,6 @@
 <tr><td><?_("Allow anonymous guest access")></td><td>
 <input type="checkbox" NAME="c_guest_logins" VALUE="yes" <?%("COND:SERVCFG", 1, "c_guest_logins", 1, "CHECKED", "")>></td></tr>
 
-<tr><td><?_("Master user name (blank to disable)")></td><td>
-<input type="text" NAME="c_master_user" MAXLENGTH="31" VALUE='<?SERV:CFG("c_master_user")>'></td></tr>
-
-<tr><td><?_("Master user password")></td><td>
-<input type="password" NAME="c_master_pass" MAXLENGTH="31" VALUE='<?SERV:CFG("c_master_pass")>'></td></tr>
-<tr><td colspan=2><hr></td></tr>
-
-
 <tr><td><?_("Initial access level for new users")></td><td>
 <select name="c_initax" size="1">
 	<option <?%("COND:SERVCFG", 1, "c_initax", 0, 'selected="selected"', "")> value="0">0 - <?_("Deleted")></option>

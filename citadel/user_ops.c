@@ -475,15 +475,13 @@ int getuserbyuid(struct ctdluser *usbuf, uid_t number)
 
 /*
  * Back end for cmd_user() and its ilk
- *
- * NOTE: "authname" should only be used if we are attempting to use the "master user" feature
  */
-int CtdlLoginExistingUser(char *authname, const char *trythisname)
+int CtdlLoginExistingUser(const char *trythisname)
 {
 	char username[SIZ];
 	int found_user;
 
-	syslog(LOG_DEBUG, "user_ops: CtdlLoginExistingUser(%s, %s)", authname, trythisname);
+	syslog(LOG_DEBUG, "user_ops: CtdlLoginExistingUser(%s)", trythisname);
 
 	if ((CC->logged_in)) {
 		return login_already_logged_in;
@@ -495,16 +493,6 @@ int CtdlLoginExistingUser(char *authname, const char *trythisname)
 	{
 		syslog(LOG_DEBUG, "user_ops: system user \"%s\" is not allowed to log in.", trythisname);
 		return login_not_found;
-	}
-
-	/* If a "master user" is defined, handle its authentication if specified */
-	CC->is_master = 0;
-	if (	(!IsEmptyStr(CtdlGetConfigStr("c_master_user"))) && 
-	    	(!IsEmptyStr(CtdlGetConfigStr("c_master_pass"))) &&
-		(authname != NULL) &&
-		(!strcasecmp(authname, CtdlGetConfigStr("c_master_user"))) )
-	{
-		CC->is_master = 1;
 	}
 
 	/* Continue attempting user validation... */
@@ -725,7 +713,6 @@ void CtdlUserLogout(void)
 	/* Clear out the user record in memory so we don't behave like a ghost */
 	memset(&CCC->user, 0, sizeof(struct ctdluser));
 	CCC->curr_user[0] = 0;
-	CCC->is_master = 0;
 	CCC->cs_inet_email[0] = 0;
 	CCC->cs_inet_other_emails[0] = 0;
 	CCC->cs_inet_fn[0] = 0;
@@ -844,10 +831,6 @@ int CtdlTryPassword(const char *password, long len)
 	if (password == NULL) {
 		syslog(LOG_INFO, "user_ops: CtdlTryPassword: NULL password string supplied");
 		return pass_wrong_password;
-	}
-
-	if (CCC->is_master) {
-		code = strcmp(password, CtdlGetConfigStr("c_master_pass"));
 	}
 
 	else if (CtdlGetConfigInt("c_auth_mode") == AUTHMODE_HOST) {

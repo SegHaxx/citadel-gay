@@ -6,7 +6,7 @@
  * as this draft expires with this writing, you might need to search for
  * the new one.
  *
- * Copyright (c) 2007-2015 by the citadel.org team
+ * Copyright (c) 2007-2018 by the citadel.org team
  *
  * This program is open source software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3.
@@ -284,7 +284,7 @@ void cmd_mgsve_auth(int num_parms, char **parms, struct sdm_userdata *u)
 		if ((*username == '\0') && (*(username + 1) != '\0'))
 			username ++;
 		
-		if (login_ok == CtdlLoginExistingUser(NULL, username))
+		if (login_ok == CtdlLoginExistingUser(username))
 		{
 			char *pass;
 

@@ -1,7 +1,7 @@
 /*
  * IMAP server for the Citadel system
  *
- * Copyright (C) 2000-2017 by Art Cancro and others.
+ * Copyright (C) 2000-2018 by Art Cancro and others.
  * This code is released under the terms of the GNU General Public License.
  *
  * WARNING: the IMAP protocol is badly designed.  No implementation of it
@@ -628,7 +628,7 @@ void imap_login(int num_parms, ConstStr *Params)
 			return;
 		}
 	case 4:
-		if (CtdlLoginExistingUser(NULL, Params[2].Key) == login_ok) {
+		if (CtdlLoginExistingUser(Params[2].Key) == login_ok) {
 			if (CtdlTryPassword(Params[3].Key, Params[3].len) == pass_ok) {
 				/* hm, thats not doable by IReply :-( */
 				IAPrintf("%s OK [", Params[0].Key);
@@ -744,10 +744,10 @@ void imap_auth_plain(void)
 	Imap->authstate = imap_as_normal;
 
 	if (!IsEmptyStr(ident)) {
-		result = CtdlLoginExistingUser(user, ident);
+		result = CtdlLoginExistingUser(ident);
 	}
 	else {
-		result = CtdlLoginExistingUser(NULL, user);
+		result = CtdlLoginExistingUser(user);
 	}
 
 	if (result == login_ok) {
@@ -768,7 +768,7 @@ void imap_auth_login_user(long state)
 	switch (state){
 	case imap_as_expecting_username:
 		StrBufDecodeBase64(Imap->Cmd.CmdBuf);
-		CtdlLoginExistingUser(NULL, ChrPtr(Imap->Cmd.CmdBuf));
+		CtdlLoginExistingUser(ChrPtr(Imap->Cmd.CmdBuf));
 		size_t len = CtdlEncodeBase64(PWBuf, "Password:", 9, 0);
 		if (PWBuf[len - 1] == '\n') {
 			PWBuf[len - 1] = '\0';
@@ -780,7 +780,7 @@ void imap_auth_login_user(long state)
 		return;
 	case imap_as_expecting_multilineusername:
 		extract_token(PWBuf, ChrPtr(Imap->Cmd.CmdBuf), 1, ' ', sizeof(PWBuf));
-		CtdlLoginExistingUser(NULL, ChrPtr(Imap->Cmd.CmdBuf));
+		CtdlLoginExistingUser(ChrPtr(Imap->Cmd.CmdBuf));
 		IAPuts("+ go ahead\r\n");
 		Imap->authstate = imap_as_expecting_multilinepassword;
 		return;
