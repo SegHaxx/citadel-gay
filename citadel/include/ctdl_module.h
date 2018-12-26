@@ -110,9 +110,6 @@ void CtdlRegisterMessageHook(int (*handler)(struct CtdlMessage *, recptypes*),
 void CtdlUnregisterMessageHook(int (*handler)(struct CtdlMessage *, recptypes *),
 			       int EventType);
 
-void CtdlRegisterNetprocHook(int (*handler)(struct CtdlMessage *, char *) );
-void CtdlUnregisterNetprocHook(int (*handler)(struct CtdlMessage *, char *) );
-
 void CtdlRegisterRoomHook(int (*fcn_ptr)(struct ctdlroom *) );
 void CtdlUnregisterRoomHook(int (*fnc_ptr)(struct ctdlroom *) );
 

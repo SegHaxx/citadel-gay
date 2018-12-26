@@ -82,18 +82,6 @@ MessageFunctionHook *MessageHookTable = NULL;
 
 
 /*
- * NetprocFunctionHook extensions are used for hooks which implement handlers
- * for incoming network messages.
- */
-typedef struct NetprocFunctionHook NetprocFunctionHook;
-struct NetprocFunctionHook {
-	NetprocFunctionHook *next;
-	int (*h_function_pointer) (struct CtdlMessage *msg, char *target_room);
-};
-NetprocFunctionHook *NetprocHookTable = NULL;
-
-
-/*
  * DeleteFunctionHook extensions are used for hooks which get called when a
  * message is about to be deleted.
  */
@@ -666,63 +654,6 @@ void CtdlDestroyRoomHooks(void)
 	RoomHookTable = NULL;
 }
 
-void CtdlRegisterNetprocHook(int (*handler)(struct CtdlMessage *, char *) )
-{
-	NetprocFunctionHook *newfcn;
-
-	newfcn = (NetprocFunctionHook *)
-	    malloc(sizeof(NetprocFunctionHook));
-	newfcn->next = NetprocHookTable;
-	newfcn->h_function_pointer = handler;
-	NetprocHookTable = newfcn;
-
-	syslog(LOG_DEBUG, "extensions: registered a new netproc function");
-}
-
-
-void CtdlUnregisterNetprocHook(int (*handler)(struct CtdlMessage *, char *) )
-{
-	NetprocFunctionHook *cur, *p, *last;
-
-	cur = NetprocHookTable;
-	last = NULL;
-
-	while (cur != NULL) {
-		if (handler == cur->h_function_pointer)
-		{
-			syslog(LOG_DEBUG, "extensions: unregistered netproc function");
-			p = cur->next;
-			free(cur);
-			if (last != NULL) {
-				last->next = p;
-			}
-			else {
-				NetprocHookTable = p;
-			}
-			cur = p;
-		}
-		else {
-			last = cur;
-			cur = cur->next;
-		}
-	}
-}
-
-void CtdlDestroyNetprocHooks(void)
-{
-	NetprocFunctionHook *cur, *p;
-
-	cur = NetprocHookTable;
-	while (cur != NULL)
-	{
-		syslog(LOG_DEBUG, "extensions: destroyed netproc function");
-		p = cur->next;
-		free(cur);
-		cur = p;
-	}
-	NetprocHookTable = NULL;
-}
-
 
 void CtdlRegisterDeleteHook(void (*handler)(char *, long) )
 {
@@ -1216,23 +1147,6 @@ int PerformRoomHooks(struct ctdlroom *target_room)
 }
 
 
-int PerformNetprocHooks(struct CtdlMessage *msg, char *target_room)
-{
-	NetprocFunctionHook *fcn;
-	int total_retval = 0;
-
-	for (fcn = NetprocHookTable; fcn != NULL; fcn = fcn->next) {
-		total_retval = total_retval +
-			(*fcn->h_function_pointer) (msg, target_room);
-	}
-
-	/* Return the sum of the return codes from the hook functions.
-	 * A nonzero return code will cause the message to *not* be imported.
-	 */
-	return total_retval;
-}
-
-
 void PerformDeleteHooks(char *room, long msgnum)
 {
 	DeleteFunctionHook *fcn;
@@ -1241,9 +1155,6 @@ void PerformDeleteHooks(char *room, long msgnum)
 		(*fcn->h_function_pointer) (room, msgnum);
 	}
 }
-
-
-
 
 
 int PerformXmsgHooks(char *sender, char *sender_email, char *recp, char *msg)

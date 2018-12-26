@@ -922,7 +922,6 @@ void sysdep_master_cleanup(void) {
 	CtdlDestroyProtoHooks();
 	CtdlDestroyDeleteHooks();
 	CtdlDestroyXmsgHooks();
-	CtdlDestroyNetprocHooks();
 	CtdlDestroyUserHooks();
 	CtdlDestroyMessageHook();
 	CtdlDestroyCleanupHooks();

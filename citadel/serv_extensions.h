@@ -44,9 +44,6 @@ void CtdlDestroyXmsgHooks(void);
 void CtdlDestroyMessageHook(void);
 int PerformMessageHooks(struct CtdlMessage *, recptypes *recps, int EventType);
 
-void CtdlDestroyNetprocHooks(void);
-int PerformNetprocHooks(struct CtdlMessage *, char *);
-
 void CtdlDestroyRoomHooks(void);
 int PerformRoomHooks(struct ctdlroom *);
 
