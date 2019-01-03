@@ -1,6 +1,6 @@
 /*
  * XMPP (Jabber) service for the Citadel system
- * Copyright (c) 2007-2018 by Art Cancro and citadel.org
+ * Copyright (c) 2007-2019 by Art Cancro and citadel.org
  *
  * This program is open source software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -58,7 +58,7 @@
 #include "serv_xmpp.h"
 
 /* uncomment for more verbosity - it will log all received XML tags */
-#define XMPP_XML_DEBUG
+// #define XMPP_XML_DEBUG
 
 /* XML_StopParser is present in expat 2.x */
 #if XML_MAJOR_VERSION > 1
@@ -82,9 +82,7 @@ static void xmpp_entity_declaration(void *userData, const XML_Char *entityName,
 
 
 /*
- * Given a source string and a target buffer, returns the string
- * properly escaped for insertion into an XML stream.  Returns a
- * pointer to the target buffer for convenience.
+ * support function for xmlesc() which helps with UTF-8 strings
  */
 static inline int Ctdl_GetUtf8SequenceLength(const char *CharS, const char *CharE)
 {
@@ -106,6 +104,11 @@ static inline int Ctdl_GetUtf8SequenceLength(const char *CharS, const char *Char
 }
 
 
+/*
+ * Given a source string and a target buffer, returns the string
+ * properly escaped for insertion into an XML stream.  Returns a
+ * pointer to the target buffer for convenience.
+ */
 char *xmlesc(char *buf, char *str, int bufsiz)
 {
 	int IsUtf8Sequence;
@@ -142,8 +145,7 @@ char *xmlesc(char *buf, char *str, int bufsiz)
 			buf[len] = 0;
 		}
 		else if (ch < 0x20) {
-			/* we probably shouldn't be doing this */
-			buf[len++] = '_';
+			buf[len++] = '_';	// we probably shouldn't be doing this
 			buf[len] = 0;
 		}
 		else {
@@ -189,7 +191,6 @@ void xmpp_stream_start(void *data, const char *supplied_el, const char **attr)
 	}
 
 	cprintf("<?xml version=\"1.0\" encoding=\"UTF-8\"?>");
-
    	cprintf("<stream:stream ");
 	cprintf("from=\"%s\" ", xmlesc(xmlbuf, XMPP->server_name, sizeof xmlbuf));
 	cprintf("id=\"%08x\" ", CC->cs_pid);
@@ -220,7 +221,6 @@ void xmpp_stream_start(void *data, const char *supplied_el, const char **attr)
 	/* Offer binding and sessions as part of our feature set */
 	cprintf("<bind xmlns=\"urn:ietf:params:xml:ns:xmpp-bind\"/>");
 	cprintf("<session xmlns=\"urn:ietf:params:xml:ns:xmpp-session\"/>");
-
 	cprintf("</stream:features>");
 
 	CC->is_async = 1;		/* XMPP sessions are inherently async-capable */
@@ -232,7 +232,9 @@ void xmpp_xml_start(void *data, const char *supplied_el, const char **attr) {
 	char *sep = NULL;
 	int i;
 
-	/* Axe the namespace, we don't care about it */
+	/* Create a version of the element with the namespace removed.
+	 * Now we can access "el" or "supplied_el" depending on whether we want to see the whole namespace.
+	 */
 	safestrncpy(el, supplied_el, sizeof el);
 	while (sep = strchr(el, ':'), sep) {
 		strcpy(el, ++sep);
@@ -303,7 +305,9 @@ void xmpp_xml_end(void *data, const char *supplied_el) {
 	char *sep = NULL;
 	char xmlbuf[256];
 
-	/* Axe the namespace, we don't care about it */
+	/* Create a version of the element with the namespace removed.
+	 * Now we can access "el" or "supplied_el" depending on whether we want to see the whole namespace.
+	 */
 	safestrncpy(el, supplied_el, sizeof el);
 	while (sep = strchr(el, ':'), sep) {
 		strcpy(el, ++sep);
@@ -366,6 +370,20 @@ void xmpp_xml_end(void *data, const char *supplied_el) {
 			}
 
 			/*
+			 * Client is requesting its own vCard
+			 * (If we make this more elaborate, move it to a separate function)
+			 */
+			else if (XMPP->iq_vcard) {
+				cprintf("<iq type=\"result\" id=\"%s\" ", xmlesc(xmlbuf, XMPP->iq_id, sizeof xmlbuf));
+				cprintf("to=\"%s\">", xmlesc(xmlbuf, XMPP->iq_from, sizeof xmlbuf));
+				cprintf("<vCard xmlns=\"vcard-temp\">");
+				cprintf("<fn>%s</fn>", xmlesc(xmlbuf, CC->user.fullname, sizeof xmlbuf));
+				cprintf("<nickname>%s</nickname>", xmlesc(xmlbuf, CC->user.fullname, sizeof xmlbuf));
+				cprintf("</vCard>");
+				cprintf("</iq>");
+			}
+
+			/*
 			 * Unknown query ... return the XML equivalent of a blank stare
 			 */
 			else {
@@ -385,13 +403,8 @@ void xmpp_xml_end(void *data, const char *supplied_el) {
 		else if (
 			(!strcasecmp(XMPP->iq_type, "set"))
 			&& (!strcasecmp(XMPP->iq_query_xmlns, "jabber:iq:auth:query"))
-			) {
-
-			xmpp_non_sasl_authenticate(
-				XMPP->iq_id,
-				XMPP->iq_client_username,
-				XMPP->iq_client_password
-			);
+		) {
+			xmpp_non_sasl_authenticate(XMPP->iq_id, XMPP->iq_client_username, XMPP->iq_client_password);
 		}	
 
 		/*
@@ -402,7 +415,6 @@ void xmpp_xml_end(void *data, const char *supplied_el) {
 			&& (!IsEmptyStr(XMPP->iq_id))
 			&& (CC->logged_in)
 		) {
-
 			/* If the client has not specified a client resource, generate one */
 			if (IsEmptyStr(XMPP->iq_client_resource)) {
 				snprintf(XMPP->iq_client_resource, sizeof XMPP->iq_client_resource, "%d", CC->cs_pid);
@@ -438,13 +450,13 @@ void xmpp_xml_end(void *data, const char *supplied_el) {
 		XMPP->iq_type[0] = 0;
 		XMPP->iq_client_resource[0] = 0;
 		XMPP->iq_session = 0;
+		XMPP->iq_vcard = 0;
 		XMPP->iq_query_xmlns[0] = 0;
 		XMPP->bind_requested = 0;
 		XMPP->ping_requested = 0;
 	}
 
 	else if (!strcasecmp(el, "auth")) {
-
 		/* Try to authenticate (this function is responsible for the output stanza) */
 		xmpp_sasl_auth(XMPP->sasl_auth_mech, (XMPP->chardata != NULL ? XMPP->chardata : "") );
 
@@ -456,8 +468,11 @@ void xmpp_xml_end(void *data, const char *supplied_el) {
 		XMPP->iq_session = 1;
 	}
 
-	else if (!strcasecmp(el, "presence")) {
+	else if (!strcasecmp(supplied_el, "vcard-temp:vCard")) {
+		XMPP->iq_vcard = 1;
+	}
 
+	else if (!strcasecmp(el, "presence")) {
 		/* Respond to a <presence> update by firing back with presence information
 		 * on the entire wholist.  Check this assumption, it's probably wrong.
 		 */

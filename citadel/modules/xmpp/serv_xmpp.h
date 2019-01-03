@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007-2017 by the citadel.org team
+ * Copyright (c) 2007-2019 by the citadel.org team
  *
  * This program is open source software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3.
@@ -27,6 +27,7 @@ typedef struct _citxmpp {		/* Information about the current session */
 	char iq_client_password[256];	/* password requested by the client (NON SASL ONLY) */
 	char iq_client_resource[256];	/* resource name requested by the client */
 	int iq_session;			/* nonzero == client is requesting a session */
+	int iq_vcard;			/* nonzero == client is requesting its vCard */
 	char iq_query_xmlns[256];	/* Namespace of <query> */
 
 	char sasl_auth_mech[32];	/* SASL auth mechanism requested by the client */
