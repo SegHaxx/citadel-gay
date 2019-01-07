@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2016-2018 by the citadel.org team
+// Copyright (c) 2016-2019 by the citadel.org team
 //
 // This program is open source software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License version 3.
@@ -34,8 +34,7 @@ var views = {
 //
 function render_room_view(gt_msg, lt_msg)
 {
-	switch(current_view)
-	{
+	switch(current_view) {
 		case views.VIEW_MAILBOX:						// FIXME view mail rooms as forums for now
 		case views.VIEW_BBS:
 			forum_readmessages("ctdl-main", gt_msg, lt_msg);
@@ -59,100 +58,81 @@ function forum_readmessages(target_div, gt_msg, lt_msg)
 		+ _("Loading messages from server, please wait") ;
 
 	var request = new XMLHttpRequest();
-	if (lt_msg < 9999999999)
-	{
+	if (lt_msg < 9999999999) {
 		request.open("GET", "/ctdl/r/" + escapeHTMLURI(current_room) + "/msgs.lt|" + lt_msg, true);
 	}
-	else
-	{
+	else {
 		request.open("GET", "/ctdl/r/" + escapeHTMLURI(current_room) + "/msgs.gt|" + gt_msg, true);
 	}
-	request.onreadystatechange = function()
-	{
-		if (this.readyState === 4)
-		{
-			if ((this.status / 100) == 2)
-			{
+	request.onreadystatechange = function() {
+		if (this.readyState === 4) {
+			if ((this.status / 100) == 2) {
 				msgs = JSON.parse(this.responseText);
 				document.getElementById(target_div).innerHTML = "" ;
 
 				// If we were given an explicit starting point, by all means start there.
 				// Note that we don't have to remove them from the array because we did a 'msgs gt|xxx' command to Citadel.
-				if (gt_msg > 0)
-				{
+				if (gt_msg > 0) {
 					msgs = msgs.slice(0, messages_per_page);
 				}
 
 				// Otherwise, show us the last 20 messages
-				else
-				{
-					if (msgs.length > messages_per_page)
-					{
+				else {
+					if (msgs.length > messages_per_page) {
 						msgs = msgs.slice(msgs.length - messages_per_page);
 					}
 					new_old_div_name = randomString(5);
-					if (msgs.length < 1)
-					{
+					if (msgs.length < 1) {
 						newlt = lt_msg;
 					}
-					else
-					{
+					else {
 						newlt = msgs[0];
 					}
 					document.getElementById(target_div).innerHTML +=
-						"<div id=\"" + new_old_div_name + "\">" +
+						"<div align=\"center\" id=\"" + new_old_div_name + "\">" +
 						"<a href=\"javascript:forum_readmessages('" + new_old_div_name + "', 0, " + newlt + ");\">" +
 						"link to msgs less than " + newlt + "</a></div>" ;
 				}
 
 				// Render the divs (we will fill them in later)
-				for (var i in msgs)
-				{
+				for (var i in msgs) {
 					document.getElementById(target_div).innerHTML +=
 						"<div id=\"ctdl_msg_"
 						+ msgs[i] + "\">#" + msgs[i]
 						+ "</div>" ;
 				}
-				if (lt_msg == 9999999999)
-				{
+				if (lt_msg == 9999999999) {
 					new_new_div_name = randomString(5);
-					if (msgs.length <= 0)
-					{
+					if (msgs.length <= 0) {
 						newgt = gt_msg;
 					}
-					else
-					{
+					else {
 						newgt = msgs[msgs.length-1];
 					}
 					document.getElementById(target_div).innerHTML +=
-						"<div id=\"" + new_new_div_name + "\">" +
+						"<div align=\"center\" id=\"" + new_new_div_name + "\">" +
 						"<a href=\"javascript:forum_readmessages('" + new_new_div_name + "', " + newgt + ", 9999999999);\">"
 						+ "link to msgs greater than " + newgt + "</a></div>" ;
 				}
 
 				// Now figure out where to scroll to after rendering.
-				if (gt_msg > 0)
-				{
+				if (gt_msg > 0) {
 					scroll_to = msgs[0];
 				}
-				else if (lt_msg < 9999999999)
-				{
+				else if (lt_msg < 9999999999) {
 					scroll_to = msgs[msgs.length-1];
 				}
-				else if ( (logged_in) && (gt_msg == 0) && (lt_msg == 9999999999) )
-				{
+				else if ( (logged_in) && (gt_msg == 0) && (lt_msg == 9999999999) ) {
 					scroll_to = msgs[msgs.length-1];
 				}
-				else
-				{
+				else {
 					scroll_to = msgs[0];		// FIXME this is too naive
 				}
 
 				// Render the individual messages in the divs
 				forum_render_messages(msgs, "ctdl_msg_", scroll_to)
 			}
-			else
-			{
+			else {
 				// if xhr fails, this will make the link reappear so the user can try again
 				document.getElementById(target_div).innerHTML = original_text;
 			}
@@ -167,8 +147,7 @@ function forum_readmessages(target_div, gt_msg, lt_msg)
 //
 function forum_render_messages(msgs, prefix, scroll_to)
 {
-	for (i=0; i<msgs.length; ++i)
-	{
+	for (i=0; i<msgs.length; ++i) {
 		forum_render_one(prefix+msgs[i], msgs[i], scroll_to)
 	}
 }
@@ -179,12 +158,9 @@ function forum_render_one(div, msgnum, scroll_to)
 {
 	var request = new XMLHttpRequest();
 	request.open("GET", "/ctdl/r/" + escapeHTMLURI(current_room) + "/" + msgs[i] + "/json", true);
-	request.onreadystatechange = function()
-	{
-		if (this.readyState === 4)
-		{
-			if ((this.status / 100) == 2)
-			{
+	request.onreadystatechange = function() {
+		if (this.readyState === 4) {
+			if ((this.status / 100) == 2) {
 				msg = JSON.parse(this.responseText);
 
 				document.getElementById(div).innerHTML =
@@ -209,12 +185,10 @@ function forum_render_one(div, msgnum, scroll_to)
 				+ "</div>"							// end wrapper
 				;
 			}
-			else
-			{
+			else {
 				document.getElementById(div).innerHTML = "ERROR";
 			}
-			if (msgnum == scroll_to)
-			{
+			if (msgnum == scroll_to) {
 				window.location.hash = div;
 			}
 		}
