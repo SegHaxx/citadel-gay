@@ -89,9 +89,11 @@ function forum_readmessages(target_div, gt_msg, lt_msg)
 						newlt = msgs[0];
 					}
 					document.getElementById(target_div).innerHTML +=
-						"<div align=\"center\" id=\"" + new_old_div_name + "\">" +
+						"<div id=\"" + new_old_div_name + "\">" +
+						"<div align=\"center\">" +
 						"<a href=\"javascript:forum_readmessages('" + new_old_div_name + "', 0, " + newlt + ");\">" +
-						"link to msgs less than " + newlt + "</a></div>" ;
+						"<i class=\"fa fa-arrow-circle-up\"></i>&nbsp;&nbsp;" +
+						_("Older posts") + "&nbsp;&nbsp;<i class=\"fa fa-arrow-circle-up\"></a></div></div></a></div></div>" ;
 				}
 
 				// Render the divs (we will fill them in later)
@@ -110,9 +112,11 @@ function forum_readmessages(target_div, gt_msg, lt_msg)
 						newgt = msgs[msgs.length-1];
 					}
 					document.getElementById(target_div).innerHTML +=
-						"<div align=\"center\" id=\"" + new_new_div_name + "\">" +
-						"<a href=\"javascript:forum_readmessages('" + new_new_div_name + "', " + newgt + ", 9999999999);\">"
-						+ "link to msgs greater than " + newgt + "</a></div>" ;
+						"<div id=\"" + new_new_div_name + "\">" +
+						"<div align=\"center\">" +
+						"<a href=\"javascript:forum_readmessages('" + new_new_div_name + "', " + newgt + ", 9999999999);\">" +
+						"<i class=\"fa fa-arrow-circle-down\"></i>&nbsp;&nbsp;" +
+						_("Newer posts") + "&nbsp;&nbsp;<i class=\"fa fa-arrow-circle-down\"></a></div></div>" ;
 				}
 
 				// Now figure out where to scroll to after rendering.
