@@ -54,8 +54,8 @@ function forum_readmessages(target_div, gt_msg, lt_msg)
 {
 	original_text = document.getElementById(target_div).innerHTML;		// in case we need to replace it after an error
 	document.getElementById(target_div).innerHTML = 
-		"<i class=\"fas fa-spinner fa-spin\"></i>&nbsp;&nbsp;"
-		+ _("Loading messages from server, please wait") ;
+		"<div align=\"center\"><i class=\"fas fa-spinner fa-spin\"></i>&nbsp;&nbsp;"
+		+ _("Loading messages from server, please wait") + "</div>";
 
 	var request = new XMLHttpRequest();
 	if (lt_msg < 9999999999) {
@@ -96,12 +96,10 @@ function forum_readmessages(target_div, gt_msg, lt_msg)
 						_("Older posts") + "&nbsp;&nbsp;<i class=\"fa fa-arrow-circle-up\"></a></div></div></a></div></div>" ;
 				}
 
-				// Render the divs (we will fill them in later)
+				// Render an empty div for each message.  We will fill them in later.
 				for (var i in msgs) {
-					document.getElementById(target_div).innerHTML +=
-						"<div id=\"ctdl_msg_"
-						+ msgs[i] + "\">#" + msgs[i]
-						+ "</div>" ;
+					document.getElementById(target_div).innerHTML += "<div id=\"ctdl_msg_" + msgs[i] + "\"> </div>" ;
+					document.getElementById("ctdl_msg_"+msgs[i]).style.display = "none";
 				}
 				if (lt_msg == 9999999999) {
 					new_new_div_name = randomString(5);
@@ -152,7 +150,7 @@ function forum_readmessages(target_div, gt_msg, lt_msg)
 function forum_render_messages(msgs, prefix, scroll_to)
 {
 	for (i=0; i<msgs.length; ++i) {
-		forum_render_one(prefix+msgs[i], msgs[i], scroll_to)
+		forum_render_one(prefix+msgs[i], msgs[i], scroll_to);
 	}
 }
 
@@ -192,6 +190,7 @@ function forum_render_one(div, msgnum, scroll_to)
 			else {
 				document.getElementById(div).innerHTML = "ERROR";
 			}
+			document.getElementById(div).style.display  = "inline";
 			if (msgnum == scroll_to) {
 				window.location.hash = div;
 			}
