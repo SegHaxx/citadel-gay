@@ -182,7 +182,7 @@ static size_t upload_source(void *ptr, size_t size, size_t nmemb, void *userp)
  * by the remote server.  This is an ugly way to extract it, by capturing debug data from
  * the library and filtering on the lines we want.
  */
-int ctdl_libcurl_smtp_debug_callback(CURL * handle, curl_infotype type, char *data, size_t size, void *userptr)
+int ctdl_libcurl_smtp_debug_callback(CURL *handle, curl_infotype type, char *data, size_t size, void *userptr)
 {
 	if (type != CURLINFO_HEADER_IN)
 		return 0;
@@ -197,6 +197,44 @@ int ctdl_libcurl_smtp_debug_callback(CURL * handle, curl_infotype type, char *da
 	memcpy(&debugbuf[len], data, size);
 	debugbuf[len + size] = 0;
 	return 0;
+}
+
+
+/*
+ * Go through the debug output of an SMTP transaction, and boil it down to just the final success or error response message.
+ */
+void trim_response(long response_code, char *response)
+{
+	if ((response_code < 100) || (response_code > 999) || (IsEmptyStr(response))) {
+		return;
+	}
+
+	char *t = malloc(strlen(response));
+	if (!t) {
+		return;
+	}
+	t[0] = 0;
+
+	char *p;
+	for (p = response; *p != 0; ++p) {
+		if ( (*p != '\n') && (!isprint(*p)) ) {		// expunge any nonprintables except for newlines
+			*p = ' ';
+		}
+	}
+
+	char response_code_str[4];
+	snprintf(response_code_str, sizeof response_code_str, "%ld", response_code);
+	char *respstart = strstr(response, response_code_str);
+	if (respstart == NULL) {
+		strcpy(response, smtpstatus(response_code));
+		return;
+	}
+	strcpy(response, respstart);
+
+	p = strstr(response, "\n");
+	if (p != NULL) {
+		*p = 0;
+	}
 }
 
 
@@ -297,23 +335,7 @@ int smtp_attempt_delivery(long msgid, char *recp, char *envelope_from, char *res
 			curl = NULL;	// this gets reused; avoid double-free
 
 			/* Trim the error message buffer down to just the actual message */
-			char response_code_str[4];
-			snprintf(response_code_str, sizeof response_code_str, "%ld", response_code);
-			char *respstart = strstr(response, response_code_str);
-			if (respstart == NULL) {
-				strcpy(response, smtpstatus(response_code));
-			} else {
-				strcpy(response, respstart);
-				char *p;
-				for (p = response; *p != 0; ++p) {
-					if (*p == '\n')
-						*p = ' ';
-					if (*p == '\r')
-						*p = ' ';
-					if (!isprint(*p))
-						*p = ' ';
-				}
-			}
+			trim_response(response_code, response);
 		}
 	}
 
