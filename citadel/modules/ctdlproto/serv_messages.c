@@ -1,7 +1,7 @@
 /*
  * represent messages to the citadel clients
  *
- * Copyright (c) 1987-2018 by the citadel.org team
+ * Copyright (c) 1987-2019 by the citadel.org team
  *
  * This program is open source software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3.
@@ -329,46 +329,6 @@ void cmd_msg2(char *cmdbuf)
 }
 
 
-
-/* 
- * display a message (mode 3 - IGnet raw format - internal programs only)
- */
-void cmd_msg3(char *cmdbuf)
-{
-	long msgnum;
-	struct CtdlMessage *msg = NULL;
-	struct ser_ret smr;
-
-	if (CC->internal_pgm == 0) {
-		cprintf("%d This command is for internal programs only.\n",
-			ERROR + HIGHER_ACCESS_REQUIRED);
-		return;
-	}
-
-	msgnum = extract_long(cmdbuf, 0);
-	msg = CtdlFetchMessage(msgnum, 1, 1);
-	if (msg == NULL) {
-		cprintf("%d Message %ld not found.\n", 
-			ERROR + MESSAGE_NOT_FOUND, msgnum);
-		return;
-	}
-
-	CtdlSerializeMessage(&smr, msg);
-	CM_Free(msg);
-
-	if (smr.len == 0) {
-		cprintf("%d Unable to serialize message\n",
-			ERROR + INTERNAL_ERROR);
-		return;
-	}
-
-	cprintf("%d %ld\n", BINARY_FOLLOWS, (long)smr.len);
-	client_write((char *)smr.ser, (int)smr.len);
-	free(smr.ser);
-}
-
-
-
 /* 
  * Display a message using MIME content types
  */
@@ -381,7 +341,6 @@ void cmd_msg4(char *cmdbuf)
 	extract_token(section, cmdbuf, 1, '|', sizeof section);
 	CtdlOutputMsg(msgid, MT_MIME, 0, 1, 0, (section[0] ? section : NULL) , 0, NULL, NULL, NULL);
 }
-
 
 
 /* 
@@ -925,7 +884,6 @@ CTDL_MODULE_INIT(ctdl_message)
 		CtdlRegisterProtoHook(cmd_msgs, "MSGS", "Output a list of messages in the current room");
 		CtdlRegisterProtoHook(cmd_msg0, "MSG0", "Output a message in plain text format");
 		CtdlRegisterProtoHook(cmd_msg2, "MSG2", "Output a message in RFC822 format");
-		CtdlRegisterProtoHook(cmd_msg3, "MSG3", "Output a message in raw format (deprecated)");
 		CtdlRegisterProtoHook(cmd_msg4, "MSG4", "Output a message in the client's preferred format");
 		CtdlRegisterProtoHook(cmd_msgp, "MSGP", "Select preferred format for MSG4 output");
 		CtdlRegisterProtoHook(cmd_opna, "OPNA", "Open an attachment for download");
