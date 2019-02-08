@@ -1,7 +1,7 @@
 /*
  * Text client functions for reading and writing of messages
  *
- * Copyright (c) 1987-2018 by the citadel.org team
+ * Copyright (c) 1987-2019 by the citadel.org team
  *
  * This program is open source software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3.
@@ -66,7 +66,6 @@ int has_images = 0;		/* Current msg has images */
 struct parts *last_message_parts = NULL;	/* Parts from last msg */
 
 
-
 void ka_sigcatch(int signum)
 {
 	alarm(S_KEEPALIVE);
@@ -125,7 +124,6 @@ int ka_system(char *shc)
 
 	return (-1);
 }
-
 
 
 /*
@@ -387,6 +385,7 @@ void mini_2047_decode(char *s)
 
 	strcpy(qend, &qend[2]);
 }
+
 
 /*
  * Read a message from the server
@@ -731,6 +730,7 @@ int read_message(CtdlIPC * ipc, long num,	/* message number */
 	return (fr);
 }
 
+
 /*
  * replace string function for the built-in editor
  */
@@ -795,6 +795,7 @@ void replace_string(char *filename, long int startpos)
 	rv = truncate(filename, wpos);
 	scr_printf("<R>eplace made %d substitution(s).\n\n", substitutions);
 }
+
 
 /*
  * Function to begin composing a new message
@@ -1244,6 +1245,7 @@ int entmsg(CtdlIPC * ipc, int is_reply,	/* nonzero if this was a <R>eply command
 	return (0);
 }
 
+
 /*
  * Do editing on a quoted file
  */
@@ -1278,8 +1280,9 @@ void process_quote(void)
 	}
 	tfile = fopen(temp, "w");
 	while (fgets(buf, 128, qfile) != NULL) {
-		if ((++line >= qstart) && (line <= qend))
+		if ((++line >= qstart) && (line <= qend)) {
 			fprintf(tfile, " >%s", buf);
+		}
 	}
 	fprintf(tfile, " \n");
 	fclose(qfile);
@@ -1288,9 +1291,8 @@ void process_quote(void)
 }
 
 
-
 /*
- * List the URL's which were embedded in the previous message
+ * List the URLs which were embedded in the previous message
  */
 void list_urls(CtdlIPC * ipc)
 {
@@ -1299,7 +1301,7 @@ void list_urls(CtdlIPC * ipc)
 	int rv;
 
 	if (num_urls == 0) {
-		scr_printf("There were no URL's in the previous message.\n\n");
+		scr_printf("There were no URLs in the previous message.\n\n");
 		return;
 	}
 
@@ -1312,8 +1314,6 @@ void list_urls(CtdlIPC * ipc)
 
 	snprintf(cmd, sizeof cmd, rc_url_cmd, urls[i - 1]);
 	rv = system(cmd);
-	if (rv != 0)
-		scr_printf("failed to '%s' by %d\n", cmd, rv);
 	scr_printf("\n");
 }
 
@@ -1480,9 +1480,10 @@ void readmsgs(CtdlIPC * ipc, enum MessageList c,	/* see listing in citadel_ipc.h
 		for (num_msgs = 0; msg_arr[num_msgs]; num_msgs++);
 	}
 
-	if (num_msgs == 0) {	/* TODO look at this later */
-		if (c == LastMessages)
+	if (num_msgs == 0) {
+		if (c == LastMessages) {
 			return;
+		}
 		scr_printf("*** There are no ");
 		if (c == NewMessages)
 			scr_printf("new ");
@@ -1830,8 +1831,6 @@ void readmsgs(CtdlIPC * ipc, enum MessageList c,	/* see listing in citadel_ipc.h
 }				/* end read routine */
 
 
-
-
 /*
  * View and edit a system message
  */
@@ -1848,11 +1847,8 @@ void edit_system_message(CtdlIPC * ipc, char *which_message)
 }
 
 
-
-
 /*
- * Loads the contents of a file into memory.  Caller must free the allocated
- * memory.
+ * Loads the contents of a file into memory.  Caller must free the allocated memory.
  */
 char *load_message_from_file(FILE * src)
 {
