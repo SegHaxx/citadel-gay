@@ -1,7 +1,7 @@
 /*
  * parse urlparts and post data
  *
- * Copyright (c) 1996-2013 by the citadel.org team
+ * Copyright (c) 1996-2019 by the citadel.org team
  *
  * This program is open source software.  You can redistribute it and/or
  * modify it under the terms of the GNU General Public License, version 3.
@@ -178,6 +178,8 @@ void ParseURLParams(StrBuf *url)
 			syslog(LOG_WARNING, "%s:%d: invalid url_key of size %d in string size %ld",
 				__FILE__, __LINE__, keylen, (long)sizeof(u->url_key)
 			);
+			free(u);
+			return;
 		}
 
 		if (keylen < 0) {
