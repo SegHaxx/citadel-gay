@@ -13,10 +13,7 @@
 
 #ifdef HAVE_DB_H
 #include <db.h>
-#elif defined(HAVE_DB4_DB_H)
-#include <db4/db.h>
-#else
-#error Neither <db.h> nor <db4/db.h> was found by configure. Install db4-devel.
+#error <db.h> was not found by configure. Install the Berkeley DB development package.
 #endif
 
 #include "server.h"

@@ -28,23 +28,14 @@ typedef enum __CCState {
 	CON_SYS                 /* This is a system context and mustn't be purged */
 } CCState;
 
-//#ifndef __ASYNCIO__
-//#define __ASYNCIO__
-//typedef struct AsyncIO AsyncIO; /* forward declaration for event_client.h */
-//#endif
-
-
 #ifndef __CIT_CONTEXT__
 #define __CIT_CONTEXT__
 typedef struct CitContext CitContext;
 #endif
 
 /*
- * Here's the big one... the Citadel context structure.
- *
  * This structure keeps track of all information relating to a running 
  * session on the server.  We keep one of these for each session.
- *
  */
 struct CitContext {
 	CitContext *prev;	/* Link to previous session in list */
@@ -58,12 +49,12 @@ struct CitContext {
 	CCState state;		/* thread state (see CON_ values below) */
 	int kill_me;		/* Set to nonzero to flag for termination */
 
-	IOBuffer SendBuf, /* Our write Buffer */
-		RecvBuf, /* Our block buffered read buffer */
-		SBuf; /* Our block buffered read buffer for clients */
+	IOBuffer SendBuf,	/* Our write Buffer */
+		RecvBuf,	/* Our block buffered read buffer */
+		SBuf;		/* Our block buffered read buffer for clients */
 
-	StrBuf *MigrateBuf;        /* Our block buffered read buffer */
-	StrBuf *sMigrateBuf;        /* Our block buffered read buffer */
+	StrBuf *MigrateBuf;	/* Our block buffered read buffer */
+	StrBuf *sMigrateBuf;	/* Our block buffered read buffer */
 
 	int client_socket;
 	int is_local_socket;	/* set to 1 if client is on unix domain sock */
@@ -76,8 +67,8 @@ struct CitContext {
 #endif
 
 	char curr_user[USERNAME_SIZE];	/* name of current user */
-	int logged_in;		/* logged in */
-	int internal_pgm;	/* authenticated as internal program */
+	int logged_in;		/* logged in? */
+	int internal_pgm;	/* authenticated as internal program? */
 	int nologin;		/* not allowed to log in */
 	int curr_view;		/* The view type for the current user/room */
 
@@ -148,8 +139,6 @@ struct CitContext {
 	int cached_num_msgs;
 
 	char vcard_updated_by_ldap;		/* !0 iff ldap changed the vcard, treat as aide update */
-
-	//AsyncIO *IO;				/* if this session has AsyncIO going on... */
 };
 
 #define CC MyContext()
@@ -188,19 +177,7 @@ int CtdlTerminateOtherSession (int session_num);
  * Bind a thread to a context.  (It's inline merely to speed things up.)
  */
 static INLINE void become_session(CitContext *which_con) {
-/*
-	pid_t tid = syscall(SYS_gettid);
-*/
 	pthread_setspecific(MyConKey, (void *)which_con );
-/*
-	syslog(LOG_DEBUG, "[%d]: Now doing %s\n", 
-		      (int) tid, 
-		      ((which_con != NULL) && (which_con->ServiceName != NULL)) ? 
-		      which_con->ServiceName:"");
-*/
 }
-
-
-
 
 #endif /* CONTEXT_H */

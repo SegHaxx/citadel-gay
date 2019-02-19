@@ -1,12 +1,12 @@
-# Makefile for Citadel
+########################################################################
+#
+# Makefile for Citadel Server
 #
 # NOTE: normally you should not have to modify the Makefile.  All
 # system-dependent configuration is in the "configure" script, which
 # uses "Makefile.in" to generate a "Makefile".  In the rare instance
-# that you have to modify something here, please take note:
-# 1. Edit Makefile.in, -not- Makefile.
-# 2. Send e-mail to ajc@uncensored.citadel.org and let me know what you
-#    did, so any necessary changes can be put into the next release.
+# that you have to modify something here, please edit Makefile.in,
+# *not* Makefile.
 #
 ########################################################################
 
@@ -68,10 +68,8 @@ LOCALEDIR=@LOCALEDIR@
 .SILENT:
 
 
-SOURCES=utils/citmail.c \
-	utils/setup.c utils/chkpw.c \
-	utils/sendcommand.c \
-	utils/ctdlmigrate.c utils/chkpwd.c \
+SOURCES=utils/citmail.c utils/setup.c utils/chkpw.c \
+	utils/sendcommand.c  utils/ctdlmigrate.c utils/chkpwd.c \
 	utillib/citadel_dirs.c \
 	citserver.c clientsocket.c config.c control.c $(DATABASE) \
 	domain.c serv_extensions.c genstamp.c \
@@ -80,7 +78,6 @@ SOURCES=utils/citmail.c \
 	room_ops.c euidindex.c server_main.c ldap.c \
 	support.c sysdep.c user_ops.c journaling.c threads.c \
 	context.c netconfig.c md5.c
-
 
 include Make_sources
 
@@ -113,9 +110,6 @@ utils: $(UTIL_TARGETS) $(UTILBIN_TARGETS)
 .y.c:
 	$(YACC) $(YFLAGS) $<
 	mv -f y.tab.c $@
-
-#
-#
 
 parsedate.o: parsedate.c
 
@@ -200,11 +194,6 @@ upgrade: install-exec install-doc
 
 install-data:
 	$(srcdir)/mkinstalldirs $(DESTDIR)$(prefix)/messages
-	@for i in public_clients \
-		 `find $(srcdir)/messages $(srcdir)/network -type f | grep -v .svn`; do \
-		echo $(INSTALL_DATA) $$i $(DESTDIR)$(prefix)/$$i; \
-		$(INSTALL_DATA) $$i $(DESTDIR)$(prefix)/$$i; \
-	done
 	-@if test -d $(DESTDIR)/etc/pam.d; then \
 		echo $(INSTALL_DATA) $(srcdir)/citadel.pam $(DESTDIR)/etc/pam.d/citadel; \
 		$(INSTALL_DATA) $(srcdir)/citadel.pam $(DESTDIR)/etc/pam.d/citadel; \
@@ -212,8 +201,6 @@ install-data:
 
 install-data-new:
 	$(srcdir)/mkinstalldirs $(DESTDIR)$(ETC_DIR)/
-	$(INSTALL_DATA) $(srcdir)/public_clients $(DESTDIR)$(ETC_DIR)/public_clients
-	$(INSTALL_DATA) $(srcdir)/network/mail.aliases $(DESTDIR)$(ETC_DIR)/mail.aliases
 
 	$(srcdir)/mkinstalldirs $(DESTDIR)$(STATICDATA_DIR)/messages
 	@for i in  \
@@ -313,7 +300,6 @@ clean:
 		done \
 	fi
 	rm -vf $(SERVER_TARGETS) $(UTIL_TARGETS) $(UTILBIN_TARGETS) $(NOINST_TARGETS)
-
 
 cleaner: clean
 	rm -vrf $(SERVER_TARGETS) $(UTIL_TARGETS) $(UTILBIN_TARGETS) $(NOINST_TARGETS) database_cleanup.sh *.la

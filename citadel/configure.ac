@@ -259,14 +259,7 @@ if test "x$with_db" != xno -a "x$with_db" != xyes -a "$with_db"; then
 	with_db=yes
 else
 	test -f /usr/local/lib/libdb.a -o -f /usr/local/lib/libdb.so \
-	  -o -f /usr/local/lib/libdb4.a -o -f /usr/local/lib/libdb4.so \
 	  && db_dir=/usr/local
-
-	test -d /usr/local/BerkeleyDB.4.1 && db_dir=/usr/local/BerkeleyDB.4.1
-	test -d /usr/local/BerkeleyDB.4.2 && db_dir=/usr/local/BerkeleyDB.4.2
-	test -d /usr/local/BerkeleyDB.4.3 && db_dir=/usr/local/BerkeleyDB.4.3
-	test -d /usr/local/BerkeleyDB.4.4 && db_dir=/usr/local/BerkeleyDB.4.4
-	test -d /usr/local/BerkeleyDB.4.5 && db_dir=/usr/local/BerkeleyDB.4.5
 fi
 
 AC_CANONICAL_HOST
@@ -669,18 +662,12 @@ if test "x$with_db" != xno; then
 
 	dblib=""
 
-	if test -d "$db_dir/include/db4"; then
-		CPPFLAGS="$CPPFLAGS -I$db_dir/include/db4"
-		dblib="db4"
-	elif test "$db_dir"; then
+	if test "$db_dir"; then
 		CPPFLAGS="$CPPFLAGS -I$db_dir/include"
-	elif test -d /usr/include/db4; then
-		CPPFLAGS="$CPPFLAGS -I/usr/include/db4"
-		dblib="db4"
 	fi
 
 
-	AC_CHECK_DB([db db-4.1 db-4 db4],
+	AC_CHECK_DB([db],
 		    [
 		     DATABASE=database.c
 		    ],
@@ -751,7 +738,7 @@ dnl
 dnl TODO: for the DB header checks, we should check whether the headers
 dnl define db_env_create, somehow
 dnl
-AC_CHECK_HEADERS(dl.h fcntl.h limits.h malloc.h termios.h sys/ioctl.h sys/select.h sys/stat.h sys/time.h sys/prctl.h syslog.h unistd.h utmp.h utmpx.h paths.h db.h db4/db.h pthread.h netinet/in.h arpa/nameser.h arpa/nameser_compat.h syscall.h sys/syscall.h)
+AC_CHECK_HEADERS(dl.h fcntl.h limits.h malloc.h termios.h sys/ioctl.h sys/select.h sys/stat.h sys/time.h sys/prctl.h syslog.h unistd.h utmp.h utmpx.h paths.h db.h pthread.h netinet/in.h arpa/nameser.h arpa/nameser_compat.h syscall.h sys/syscall.h)
 
 AC_CHECK_HEADER(resolv.h,AC_DEFINE(HAVE_RESOLV_H, [], [define this if you have the resolv.h header file.]),,
 [#ifdef HAVE_SYS_TYPES_H

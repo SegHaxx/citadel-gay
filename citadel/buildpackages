@@ -79,7 +79,7 @@ EMAIL=citadel@outgesourced.org
 	export LDFLAGS='-L/opt/csw/lib -L /usr/local/lib'
 	export CFLAGS='-I/opt/csw/include -I/usr/local/include  -DDISABLE_CURSES'
 	./configure \
-	    --with-db=/opt/csw/bdb44 \
+	    --with-db=/opt/csw/bdb5 \
 	    --with-ical=/usr/local/ \
 	    --with-prefix=/opt/csw/ \
 	    --with-datadir=/opt/csw/var/lib/citadel \

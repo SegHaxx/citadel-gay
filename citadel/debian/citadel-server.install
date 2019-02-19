@@ -1,5 +1,4 @@
 etc/citadel/mail.aliases
-etc/citadel/public_clients
 usr/share/citadel-server/help
 etc/citadel/messages
 usr/lib/citadel-server/ctdlmigrate 

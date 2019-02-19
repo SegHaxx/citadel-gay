@@ -1,7 +1,7 @@
 /* 
  * Main source module for the Citadel server
  *
- * Copyright (c) 1987-2017 by the citadel.org team
+ * Copyright (c) 1987-2019 by the citadel.org team
  *
  * This program is open source software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 3.
@@ -119,18 +119,17 @@ int master_cleanup(int exitcode)
 	struct CleanupFunctionHook *fcn;
 	static int already_cleaning_up = 0;
 
-	if (already_cleaning_up)
-		while (1)
+	if (already_cleaning_up) {
+		while (1) {
 			usleep(1000000);
+		}
+	}
 	already_cleaning_up = 1;
 
 	/* Run any cleanup routines registered by loadable modules */
 	for (fcn = CleanupHookTable; fcn != NULL; fcn = fcn->next) {
 		(*fcn->h_function_pointer) ();
 	}
-
-	/* Close the AdjRefCount queue file */
-	AdjRefCount(-1, 0);
 
 	/* Do system-dependent stuff */
 	sysdep_master_cleanup();
@@ -166,7 +165,6 @@ int master_cleanup(int exitcode)
 }
 
 
-
 /*
  * returns an asterisk if there are any instant messages waiting,
  * space otherwise.
@@ -179,106 +177,6 @@ char CtdlCheckExpress(void)
 		return ('*');
 	}
 }
-
-
-/*
- * Check originating host against the public_clients file.  This determines
- * whether the client is allowed to change the hostname for this session
- * (for example, to show the location of the user rather than the location
- * of the client).
- */
-int CtdlIsPublicClient(void)
-{
-	char buf[1024];
-	char addrbuf[1024];
-	FILE *fp;
-	int i;
-	char *public_clientspos;
-	char *public_clientsend;
-	char *paddr = NULL;
-	struct stat statbuf;
-	static time_t pc_timestamp = 0;
-	static char public_clients[SIZ];
-	static char public_clients_file[SIZ];
-
-#define LOCALHOSTSTR "127.0.0.1"
-
-	snprintf(public_clients_file, sizeof public_clients_file, "%s/public_clients", ctdl_etc_dir);
-
-	/*
-	 * Check the time stamp on the public_clients file.  If it's been
-	 * updated since the last time we were here (or if this is the first
-	 * time we've been through the loop), read its contents and learn
-	 * the IP addresses of the listed hosts.
-	 */
-	if (stat(public_clients_file, &statbuf) != 0) {
-		/* No public_clients file exists, so bail out */
-		syslog(LOG_WARNING, "Warning: '%s' does not exist", public_clients_file);
-		return (0);
-	}
-
-	if (statbuf.st_mtime > pc_timestamp) {
-		begin_critical_section(S_PUBLIC_CLIENTS);
-		syslog(LOG_INFO, "Loading %s", public_clients_file);
-
-		public_clientspos = &public_clients[0];
-		public_clientsend = public_clientspos + SIZ;
-		safestrncpy(public_clientspos, LOCALHOSTSTR, sizeof public_clients);
-		public_clientspos += sizeof(LOCALHOSTSTR) - 1;
-
-		if (hostname_to_dotted_quad(addrbuf, CtdlGetConfigStr("c_fqdn")) == 0) {
-			*(public_clientspos++) = '|';
-			paddr = &addrbuf[0];
-			while (!IsEmptyStr(paddr) && (public_clientspos < public_clientsend))
-				*(public_clientspos++) = *(paddr++);
-		}
-
-		fp = fopen(public_clients_file, "r");
-		if (fp != NULL)
-			while ((fgets(buf, sizeof buf, fp) != NULL) && (public_clientspos < public_clientsend)) {
-				char *ptr;
-				ptr = buf;
-				while (!IsEmptyStr(ptr)) {
-					if (*ptr == '#') {
-						*ptr = 0;
-						break;
-					} else
-						ptr++;
-				}
-				ptr--;
-				while (ptr > buf && isspace(*ptr)) {
-					*(ptr--) = 0;
-				}
-				if (hostname_to_dotted_quad(addrbuf, buf) == 0) {
-					*(public_clientspos++) = '|';
-					paddr = addrbuf;
-					while (!IsEmptyStr(paddr) && (public_clientspos < public_clientsend)) {
-						*(public_clientspos++) = *(paddr++);
-					}
-				}
-			}
-		if (fp != NULL)
-			fclose(fp);
-		pc_timestamp = time(NULL);
-		end_critical_section(S_PUBLIC_CLIENTS);
-	}
-
-	syslog(LOG_DEBUG, "Checking whether %s is a local or public client", CC->cs_addr);
-	for (i = 0; i < num_parms(public_clients); ++i) {
-		extract_token(addrbuf, public_clients, i, '|', sizeof addrbuf);
-		if (!strcasecmp(CC->cs_addr, addrbuf)) {
-			syslog(LOG_DEBUG, "... yes its local.");
-			return (1);
-		}
-	}
-
-	/* No hits.  This is not a public client. */
-	syslog(LOG_DEBUG, "... no it isn't.");
-	return (0);
-}
-
-
-
 
 
 void citproto_begin_session()

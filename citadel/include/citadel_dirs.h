@@ -39,7 +39,6 @@ extern char file_lmtp_unfiltered_socket[PATH_MAX];
 extern char file_arcq[PATH_MAX];
 extern char file_citadel_socket[PATH_MAX];
 extern char file_citadel_admin_socket[PATH_MAX];
-extern char file_mail_aliases[PATH_MAX];
 extern char file_pid_file[PATH_MAX];
 extern char file_pid_paniclog[PATH_MAX];
 extern char file_crpt_file_key[PATH_MAX];

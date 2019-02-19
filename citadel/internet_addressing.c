@@ -403,9 +403,8 @@ void remove_any_whitespace_to_the_left_or_right_of_at_symbol(char *name)
  */
 int alias(char *name)
 {				/* process alias and routing info for mail */
-	FILE *fp;
 	int a;
-	char aaa[SIZ], bbb[SIZ];
+	char aaa[SIZ];
 	int at = 0;
 	char node[64];
 
@@ -415,32 +414,6 @@ int alias(char *name)
 	striplt(name);
 	remove_any_whitespace_to_the_left_or_right_of_at_symbol(name);
 	stripallbut(name, '<', '>');
-
-	fp = fopen(file_mail_aliases, "r");		// when are we going to get rid of this?
-	if (fp == NULL) {
-		fp = fopen("/dev/null", "r");
-	}
-	if (fp == NULL) {
-		return (MES_ERROR);
-	}
-	strcpy(aaa, "");
-	strcpy(bbb, "");
-	while (fgets(aaa, sizeof aaa, fp) != NULL) {
-		while (isspace(name[0]))
-			strcpy(name, &name[1]);
-		aaa[strlen(aaa) - 1] = 0;
-		strcpy(bbb, "");
-		for (a = 0; aaa[a] != '\0'; ++a) {
-			if (aaa[a] == ',') {
-				strcpy(bbb, &aaa[a + 1]);
-				aaa[a] = 0;
-				break;
-			}
-		}
-		if (!strcasecmp(name, aaa))
-			strcpy(name, bbb);
-	}
-	fclose(fp);
 
 	/* Hit the email address directory */
 	if (CtdlDirectoryLookup(aaa, name, sizeof aaa) == 0) {

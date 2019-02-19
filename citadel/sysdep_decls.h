@@ -11,15 +11,11 @@
 
 #ifdef HAVE_DB_H
 #include <db.h>
-#elif defined(HAVE_DB4_DB_H)
-#include <db4/db.h>
-#else
-#error Neither <db.h> nor <db4/db.h> was found by configure. Install db4-devel.
+#error <db.h> was not found by configure. Install the Berkeley DB development package.
 #endif
 
-
-#if DB_VERSION_MAJOR < 4 || DB_VERSION_MINOR < 1
-#error Citadel requires Berkeley DB v4.1 or newer.  Please upgrade.
+#if DB_VERSION_MAJOR < 5
+#error Citadel requires Berkeley DB v5 or newer.  Please upgrade.
 #endif
 
 #include "server.h"

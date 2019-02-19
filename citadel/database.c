@@ -1,7 +1,7 @@
 /*
  * This is a data store backend for the Citadel server which uses Berkeley DB.
  *
- * Copyright (c) 1987-2018 by the citadel.org team
+ * Copyright (c) 1987-2019 by the citadel.org team
  *
  * This program is open source software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License version 3.
@@ -35,10 +35,7 @@
 
 #ifdef HAVE_DB_H
 #include <db.h>
-#elif defined(HAVE_DB4_DB_H)
-#include <db5/db.h>
-#else
-#error Neither <db.h> nor <db5/db.h> was found by configure. Install db5-devel.
+#error <db.h> was not found by configure. Install the Berkeley DB development package.
 #endif
 
 #if DB_VERSION_MAJOR < 5
