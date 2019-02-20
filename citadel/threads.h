@@ -11,10 +11,7 @@
 #include <sys/time.h>
 #include <string.h>
 
-#ifdef HAVE_DB_H
 #include <db.h>
-#error <db.h> was not found by configure. Install the Berkeley DB development package.
-#endif
 
 #include "server.h"
 #include "sysdep_decls.h"

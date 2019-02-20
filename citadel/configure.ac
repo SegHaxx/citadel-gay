@@ -908,8 +908,6 @@ AC_CACHE_CHECK([the weather], ac_cv_weather, [
 	])
 
 
-
-
 AC_CACHE_CHECK([under the bed], ac_cv_under_the_bed, [
 	number=`date | cut -c 19`
 	case $number in
