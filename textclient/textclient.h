@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1987-2018 by the citadel.org team
+ * Copyright (c) 1987-2019 by the citadel.org team
  *
  *  This program is open source software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License version 3.
@@ -479,8 +479,6 @@ int CtdlIPCTerminateSession(CtdlIPC *ipc, int sid, char *cret);
 int CtdlIPCTerminateServerNow(CtdlIPC *ipc, char *cret);
 int CtdlIPCTerminateServerScheduled(CtdlIPC *ipc, int mode, char *cret);
 int CtdlIPCEnterSystemMessage(CtdlIPC *ipc, const char *filename, const char *text, char *cret);
-int CtdlIPCChangeHostname(CtdlIPC *ipc, const char *hostname, char *cret);
-int CtdlIPCChangeRoomname(CtdlIPC *ipc, const char *roomname, char *cret);
 int CtdlIPCChangeUsername(CtdlIPC *ipc, const char *username, char *cret);
 time_t CtdlIPCServerTime(CtdlIPC *ipc, char *crert);
 int CtdlIPCAideGetUserParameters(CtdlIPC *ipc, const char *who, struct ctdluser **uret, char *cret);

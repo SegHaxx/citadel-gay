@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1987-2018 by the citadel.org team
+ * Copyright (c) 1987-2019 by the citadel.org team
  *
  *  This program is open source software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License version 3.
@@ -1952,50 +1952,6 @@ int CtdlIPCEnterSystemMessage(CtdlIPC * ipc, const char *filename, const char *t
 
 	sprintf(aaa, "EMSG %s", filename);
 	ret = CtdlIPCGenericCommand(ipc, aaa, text, strlen(text), NULL, NULL, cret);
-	free(aaa);
-	return ret;
-}
-
-
-/* HCHG */
-int CtdlIPCChangeHostname(CtdlIPC * ipc, const char *hostname, char *cret)
-{
-	int ret;
-	char *aaa;
-
-	if (!cret)
-		return -2;
-	if (!hostname)
-		return -2;
-
-	aaa = (char *) malloc(strlen(hostname) + 6);
-	if (!aaa)
-		return -1;
-
-	sprintf(aaa, "HCHG %s", hostname);
-	ret = CtdlIPCGenericCommand(ipc, aaa, NULL, 0, NULL, NULL, cret);
-	free(aaa);
-	return ret;
-}
-
-
-/* RCHG */
-int CtdlIPCChangeRoomname(CtdlIPC * ipc, const char *roomname, char *cret)
-{
-	int ret;
-	char *aaa;
-
-	if (!cret)
-		return -2;
-	if (!roomname)
-		return -2;
-
-	aaa = (char *) malloc(strlen(roomname) + 6);
-	if (!aaa)
-		return -1;
-
-	sprintf(aaa, "RCHG %s", roomname);
-	ret = CtdlIPCGenericCommand(ipc, aaa, NULL, 0, NULL, NULL, cret);
 	free(aaa);
 	return ret;
 }
