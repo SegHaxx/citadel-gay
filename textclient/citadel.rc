@@ -277,7 +277,6 @@ cmd=36,0,&.,&Enter,&ASCII message
 cmd=37,0,&.,&Enter,&Configuration
 cmd=38,0,&.,&Enter,a new &Room
 cmd=39,0,&.,&Enter,&Textfile
-cmd=77,0,&.,&Enter,&Username
 # cmd=40,0,&.,&Enter,file using &Xmodem
 # cmd=42,0,&.,&Enter,file using &Ymodem
 # cmd=44,0,&.,&Enter,file using &Zmodem

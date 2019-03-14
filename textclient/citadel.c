@@ -1847,13 +1847,6 @@ int main(int argc, char **argv)
 			case 73:
 				cli_image_upload(ipc, "_roompic_");
 				break;
-			case 77:
-				enternew(ipc, "username", aaa, 32);
-				r = CtdlIPCChangeUsername(ipc, aaa, bbb);
-				if (r / 100 != 2)
-					scr_printf("\n%s\n", bbb);
-				break;
-
 			case 35:
 				set_password(ipc);
 				break;

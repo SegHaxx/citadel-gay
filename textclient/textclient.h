@@ -479,7 +479,6 @@ int CtdlIPCTerminateSession(CtdlIPC *ipc, int sid, char *cret);
 int CtdlIPCTerminateServerNow(CtdlIPC *ipc, char *cret);
 int CtdlIPCTerminateServerScheduled(CtdlIPC *ipc, int mode, char *cret);
 int CtdlIPCEnterSystemMessage(CtdlIPC *ipc, const char *filename, const char *text, char *cret);
-int CtdlIPCChangeUsername(CtdlIPC *ipc, const char *username, char *cret);
 time_t CtdlIPCServerTime(CtdlIPC *ipc, char *crert);
 int CtdlIPCAideGetUserParameters(CtdlIPC *ipc, const char *who, struct ctdluser **uret, char *cret);
 int CtdlIPCAideGetEmailAddresses(CtdlIPC *ipc, const char *who, char *, char *cret);

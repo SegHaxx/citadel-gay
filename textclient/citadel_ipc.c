@@ -1957,28 +1957,6 @@ int CtdlIPCEnterSystemMessage(CtdlIPC * ipc, const char *filename, const char *t
 }
 
 
-/* UCHG */
-int CtdlIPCChangeUsername(CtdlIPC * ipc, const char *username, char *cret)
-{
-	int ret;
-	char *aaa;
-
-	if (!cret)
-		return -2;
-	if (!username)
-		return -2;
-
-	aaa = (char *) malloc(strlen(username) + 6);
-	if (!aaa)
-		return -1;
-
-	sprintf(aaa, "UCHG %s", username);
-	ret = CtdlIPCGenericCommand(ipc, aaa, NULL, 0, NULL, NULL, cret);
-	free(aaa);
-	return ret;
-}
-
-
 /* TIME */
 /* This function returns the actual server time reported, or 0 if error */
 time_t CtdlIPCServerTime(CtdlIPC * ipc, char *cret)

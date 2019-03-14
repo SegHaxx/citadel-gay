@@ -142,34 +142,6 @@ void terminate_session(void)
 }
 
 
-/*
- * Change your session info (fake roomname and hostname)
- */
-void edit_me(void)
-{
-	char buf[SIZ];
-
-	output_headers(1, 0, 0, 0, 0, 0);
-	if (havebstr("change_room_name_button")) {
-		serv_printf("RCHG %s", bstr("fake_roomname"));
-		serv_getln(buf, sizeof buf);
-		do_template("who");
-	} else if (havebstr("change_host_name_button")) {
-		serv_printf("HCHG %s", bstr("fake_hostname"));
-		serv_getln(buf, sizeof buf);
-		do_template("who");
-	} else if (havebstr("change_user_name_button")) {
-		serv_printf("UCHG %s", bstr("fake_username"));
-		serv_getln(buf, sizeof buf);
-		do_template("who");
-	} else if (havebstr("cancel_button")) {
-		do_template("who");
-	} else {
-		do_template("who_edit");
-	}
-	end_burst();
-}
-
 void _terminate_session(void) {
 	slrp_highest();
 	terminate_session();
@@ -312,7 +284,6 @@ InitModule_WHO
 	RegisterCTX(CTX_WHO);
 
 	WebcitAddUrlHandler(HKEY("terminate_session"), "", 0, _terminate_session, 0);
-	WebcitAddUrlHandler(HKEY("edit_me"), "", 0, edit_me, 0);
 
 	RegisterIterator("WHOLIST", 1, NULL, GetWholistHash, NULL, DeleteWholistHash, CTX_WHO, CTX_NONE, IT_NOFLAG);
 
