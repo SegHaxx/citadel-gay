@@ -1,7 +1,7 @@
 /* 
  * Server functions which perform operations on user objects.
  *
- * Copyright (c) 1987-2018 by the citadel.org team
+ * Copyright (c) 1987-2019 by the citadel.org team
  *
  * This program is open source software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License, version 3.
@@ -700,9 +700,6 @@ void CtdlUserLogout(void)
 	 * since it's possible to log in again without reconnecting, we cannot
 	 * make that assumption.
 	 */
-	strcpy(CCC->fake_username, "");
-	strcpy(CCC->fake_hostname, "");
-	strcpy(CCC->fake_roomname, "");
 	CCC->logged_in = 0;
 
 	/* Check to see if the user was deleted while logged in and purge them if necessary */
@@ -716,9 +713,6 @@ void CtdlUserLogout(void)
 	CCC->cs_inet_email[0] = 0;
 	CCC->cs_inet_other_emails[0] = 0;
 	CCC->cs_inet_fn[0] = 0;
-	CCC->fake_username[0] = 0;
-	CCC->fake_hostname[0] = 0;
-	CCC->fake_roomname[0] = 0;
 
 	/* Free any output buffers */
 	unbuffer_output();

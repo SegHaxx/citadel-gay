@@ -2,7 +2,7 @@
  * Citadel context management stuff.
  * Here's where we (hopefully) have all the code that manipulates contexts.
  *
- * Copyright (c) 1987-2018 by the citadel.org team
+ * Copyright (c) 1987-2019 by the citadel.org team
  *
  * This program is open source software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 3.
@@ -490,9 +490,6 @@ void begin_session(CitContext *con)
 	strcpy(con->lastcmdname, "    ");
 	strcpy(con->cs_clientname, "(unknown)");
 	strcpy(con->curr_user, NLI);
-	*con->fake_username = '\0';
-	*con->fake_hostname = '\0';
-	*con->fake_roomname = '\0';
 	*con->cs_clientinfo = '\0';
 	safestrncpy(con->cs_host, CtdlGetConfigStr("c_fqdn"), sizeof con->cs_host);
 	safestrncpy(con->cs_addr, "", sizeof con->cs_addr);

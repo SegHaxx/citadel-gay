@@ -1,7 +1,7 @@
 /*
  * This module handles instant messaging between users.
  * 
- * Copyright (c) 1987-2018 by the citadel.org team
+ * Copyright (c) 1987-2019 by the citadel.org team
  *
  * This program is open source software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3.
@@ -235,7 +235,6 @@ int send_instant_message(char *lun, char *lem, char *x_user, char *x_msg)
 	int message_sent = 0;		/* number of successful sends */
 	struct CitContext *ccptr;
 	struct ExpressMessage *newmsg = NULL;
-	char *un;
 	int do_send = 0;		/* 1 = send message; 0 = only check for valid recipient */
 	static int serial_number = 0;	/* this keeps messages from getting logged twice */
 
@@ -248,14 +247,7 @@ int send_instant_message(char *lun, char *lem, char *x_user, char *x_msg)
 	++serial_number;
 	for (ccptr = ContextList; ccptr != NULL; ccptr = ccptr->next) {
 
-		if (ccptr->fake_username[0]) {
-			un = ccptr->fake_username;
-		}
-		else {
-			un = ccptr->user.fullname;
-		}
-
-		if ( ((!strcasecmp(un, x_user))
+		if ( ((!strcasecmp(ccptr->user.fullname, x_user))
 		    || (!strcasecmp(x_user, "broadcast")))
 		    && (ccptr->can_receive_im)
 		    && ((ccptr->disable_exp == 0)
@@ -294,19 +286,12 @@ void cmd_sexp(char *argbuf)
 	int message_sent = 0;
 	char x_user[USERNAME_SIZE];
 	char x_msg[1024];
-	char *lun;
 	char *lem;
 	char *x_big_msgbuf = NULL;
 
 	if ((!(CC->logged_in)) && (!(CC->internal_pgm))) {
 		cprintf("%d Not logged in.\n", ERROR + NOT_LOGGED_IN);
 		return;
-	}
-	if (CC->fake_username[0]) {
-		lun = CC->fake_username;
-	}
-	else {
-		lun = CC->user.fullname;
 	}
 
 	lem = CC->cs_inet_email;
@@ -325,7 +310,7 @@ void cmd_sexp(char *argbuf)
 	}
 	/* This loop handles text-transfer pages */
 	if (!strcmp(x_msg, "-")) {
-		message_sent = PerformXmsgHooks(lun, lem, x_user, "");
+		message_sent = PerformXmsgHooks(CC->user.fullname, lem, x_user, "");
 		if (message_sent == 0) {
 			if (CtdlGetUser(NULL, x_user))
 				cprintf("%d '%s' does not exist.\n",
@@ -349,12 +334,12 @@ void cmd_sexp(char *argbuf)
 				strcat(x_big_msgbuf, "\n");
 			strcat(x_big_msgbuf, x_msg);
 		}
-		PerformXmsgHooks(lun, lem, x_user, x_big_msgbuf);
+		PerformXmsgHooks(CC->user.fullname, lem, x_user, x_big_msgbuf);
 		free(x_big_msgbuf);
 
 		/* This loop handles inline pages */
 	} else {
-		message_sent = PerformXmsgHooks(lun, lem, x_user, x_msg);
+		message_sent = PerformXmsgHooks(CC->user.fullname, lem, x_user, x_msg);
 
 		if (message_sent > 0) {
 			if (!IsEmptyStr(x_msg)) {
