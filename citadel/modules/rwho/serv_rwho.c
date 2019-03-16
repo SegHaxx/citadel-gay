@@ -91,7 +91,7 @@ void cmd_rwho(char *argbuf) {
 	int nContexts, i;
 	int spoofed = 0;
 	int aide;
-	char real_room[ROOMNAMELEN], room[ROOMNAMELEN];
+	char room[ROOMNAMELEN];
 	char flags[5];
 	
 	/* So that we don't keep the context list locked for a long time
@@ -126,7 +126,7 @@ void cmd_rwho(char *argbuf) {
 			strcat(flags, ".");
 		}
 		   
-		GenerateRoomDisplay(real_room, &nptr[i], CC);
+		GenerateRoomDisplay(room, &nptr[i], CC);
 
                 if ((aide) && (spoofed)) {
                 	strcat(flags, "+");
