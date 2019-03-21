@@ -13,7 +13,7 @@
 #define	UDS			"_UDS_"
 #define DEFAULT_HOST		"localhost"
 #define DEFAULT_PORT		"504"
-#define CLIENT_VERSION          924
+#define CLIENT_VERSION          925
 #define CLIENT_TYPE		0
 
 /* commands we can send to the stty_ctdl() routine */
