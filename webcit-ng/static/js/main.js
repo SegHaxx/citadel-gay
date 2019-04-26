@@ -20,6 +20,7 @@ var current_user = _("Not logged in.");
 var serv_info;
 var last_seen = 0;
 var messages_per_page = 20;
+var march_list = [] ;
 
 
 // Placeholder for when we add i18n later
@@ -202,4 +203,23 @@ function gotoroom_2(data) {
 	last_seen = data.last_seen;
 	update_banner();
 	render_room_view(0, 9999999999);
+}
+
+
+// Goto next room with unread messages
+function gotonext() {
+	console.log("march list contains " + march_list.length );
+	if (march_list.length == 0) {
+		march_list = [ 
+			{"rorder":0,"name":"CitaNews","known":true,"hasnewmsgs":true,"floor":0} ,
+			{"rorder":0,"name":"Hot Rodding","known":true,"hasnewmsgs":true,"floor":0} ,
+			{"rorder":0,"name":"_BASEROOM_","known":true,"hasnewmsgs":true,"floor":0} ,
+		] ;
+		// FIXME load the room list then start over, probably ok to recurse
+	}
+	else {
+		next_room = march_list[0].name;
+		march_list.splice(0, 1);
+		gotoroom(next_room);
+	}
 }
