@@ -211,13 +211,7 @@ function gotoroom_2(data) {
 function gotonext() {
 	console.log("march list contains " + march_list.length );
 	if (march_list.length == 0) {
-		load_new_march_list();
-		march_list = [ 
-			{"rorder":0,"name":"CitaNews","known":true,"hasnewmsgs":true,"floor":0} ,
-			{"rorder":0,"name":"Hot Rodding","known":true,"hasnewmsgs":true,"floor":0} ,
-			{"rorder":0,"name":"_BASEROOM_","known":true,"hasnewmsgs":true,"floor":0} ,
-		] ;
-		// FIXME load the room list then start over, probably ok to recurse
+		load_new_march_list();		// we will recurse back here. make sure length isn't still 0 if no new rooms
 	}
 	else {
 		next_room = march_list[0].name;
@@ -236,7 +230,19 @@ function load_new_march_list() {
 	request.onreadystatechange = function() {
 		if ((this.readyState === 4) && ((this.status / 100) == 2)) {
 			march_list = (JSON.parse(this.responseText));
-			gotonext();		// yes , we recurse right back  FIXME sort and filter this data
+			march_list = march_list.filter(function(room) {
+				return room.hasnewmsgs == true;
+			});
+			march_list = march_list.sort(function(a,b) {
+				if (a.floor != b.floor) {
+					return(a.floor - b.floor);
+				}
+				if (a.rorder != b.rorder) {
+					return(a.rorder - b.rorder);
+				}
+				return(a.name < b.name);
+			});
+			gotonext();
 		}
 	};
 	request.send();
