@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2016-2018 by the citadel.org team
+// Copyright (c) 2016-2019 by the citadel.org team
 //
 // This program is open source software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License version 3.
@@ -209,14 +209,13 @@ function gotoroom_2(data) {
 // Goto next room with unread messages
 //
 function gotonext() {
-	console.log("march list contains " + march_list.length );
 	if (march_list.length == 0) {
-		load_new_march_list();		// we will recurse back here. make sure length isn't still 0 if no new rooms
+		load_new_march_list();		// we will recurse back here
 	}
 	else {
 		next_room = march_list[0].name;
 		march_list.splice(0, 1);
-		console.log("going to " + next_room);
+		console.log("going to " + next_room + " , " + march_list.length + " rooms remaining in march list");
 		gotoroom(next_room);
 	}
 }
@@ -231,7 +230,7 @@ function load_new_march_list() {
 		if ((this.readyState === 4) && ((this.status / 100) == 2)) {
 			march_list = (JSON.parse(this.responseText));
 			march_list = march_list.filter(function(room) {
-				return room.hasnewmsgs == true;
+				return room.hasnewmsgs;
 			});
 			march_list = march_list.sort(function(a,b) {
 				if (a.floor != b.floor) {
@@ -242,6 +241,7 @@ function load_new_march_list() {
 				}
 				return(a.name < b.name);
 			});
+			march_list.push({name:"_BASEROOM_",known:true,hasnewmsgs:true,floor:0});
 			gotonext();
 		}
 	};

@@ -502,8 +502,8 @@ void room_list(struct http_transaction *h, struct ctdlsession *c)
 		JsonObjectAppend(jr, NewJsonPlainString(HKEY("name"), roomname, -1));
 
 		int ra = extract_int(buf, 5);
-		JsonObjectAppend(jr, NewJsonBool(HKEY("known"), (ra && UA_KNOWN)));
-		JsonObjectAppend(jr, NewJsonBool(HKEY("hasnewmsgs"), (ra && UA_HASNEWMSGS)));
+		JsonObjectAppend(jr, NewJsonBool(HKEY("known"), (ra & UA_KNOWN)));
+		JsonObjectAppend(jr, NewJsonBool(HKEY("hasnewmsgs"), (ra & UA_HASNEWMSGS)));
 
 		int floor = extract_int(buf, 2);
 		JsonObjectAppend(jr, NewJsonNumber(HKEY("floor"), floor));
