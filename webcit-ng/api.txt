@@ -9,6 +9,6 @@ GET		/ctdl/r/ROOMNAME/		Returns information about the room (name, view, etc.) in
 GET		/ctdl/r/ROOMNAME/msgs.all	JSON array of message list in room
 GET		/ctdl/r/ROOMNAME/msgs.new	JSON array of message list in room (new messages)
 GET		/ctdl/c/info			Returns a JSON representation of the output of an INFO server command
-POST		/ctdl/a/login
+POST		/ctdl/a/login			Send it a your credentials and it will log you in
 GET		/ctdl/a/whoami
 GET		/ctdl/u/USERNAME/userpic	Returns an image containing the photo/avatar of the specified user

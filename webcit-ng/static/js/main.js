@@ -207,9 +207,11 @@ function gotoroom_2(data) {
 
 
 // Goto next room with unread messages
+//
 function gotonext() {
 	console.log("march list contains " + march_list.length );
 	if (march_list.length == 0) {
+		load_new_march_list();
 		march_list = [ 
 			{"rorder":0,"name":"CitaNews","known":true,"hasnewmsgs":true,"floor":0} ,
 			{"rorder":0,"name":"Hot Rodding","known":true,"hasnewmsgs":true,"floor":0} ,
@@ -220,6 +222,23 @@ function gotonext() {
 	else {
 		next_room = march_list[0].name;
 		march_list.splice(0, 1);
+		console.log("going to " + next_room);
 		gotoroom(next_room);
 	}
+}
+
+
+// Called by gotonext() when the march list is empty.
+//
+function load_new_march_list() {
+	var request = new XMLHttpRequest();
+	request.open("GET", "/ctdl/r/", true);
+	request.onreadystatechange = function() {
+		if ((this.readyState === 4) && ((this.status / 100) == 2)) {
+			march_list = (JSON.parse(this.responseText));
+			gotonext();		// yes , we recurse right back  FIXME sort and filter this data
+		}
+	};
+	request.send();
+	request = null;
 }
