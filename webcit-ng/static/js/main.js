@@ -151,8 +151,10 @@ function display_room_list_renderer(data) {
 		}
 		new_roomlist_text = new_roomlist_text +
 			"<li>"
+			+ (data[i].hasnewmsgs ? "<b>" : "")
 			+ "<a href=\"javascript:gotoroom('" + escapeJS(escapeHTML(data[i].name)) + "');\">"
 			+ escapeHTML(data[i].name)
+			+ (data[i].hasnewmsgs ? "</b>" : "")
 			+ "</a></li>"
 		;
 	}
