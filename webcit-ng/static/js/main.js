@@ -34,12 +34,11 @@ function _(x) {
 //
 function randomString(length) {
 	var chars = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghiklmnopqrstuvwxyz'.split('');
+	var str = '';
 
-	if (! length) {
+	if (!length) {
 		length = Math.floor(Math.random() * chars.length);
 	}
-
-	var str = '';
 	for (var i = 0; i < length; i++) {
 		str += chars[Math.floor(Math.random() * chars.length)];
 	}
@@ -50,35 +49,35 @@ function randomString(length) {
 // string escape for html display
 //
 function escapeHTML(text) {
-    'use strict';
-    return text.replace(/[\"&<>]/g, function (a) {
-        return {
-		'"': '&quot;',
-		'&': '&amp;',
-		'<': '&lt;',
-		'>': '&gt;'
-	}[a];
-    });
+	'use strict';
+	return text.replace(/[\"&<>]/g, function (a) {
+		return {
+			'"': '&quot;',
+			'&': '&amp;',
+			'<': '&lt;',
+			'>': '&gt;'
+		}[a];
+	});
 }
 
 
 // string escape for html display
 //
 function escapeHTMLURI(text) {
-    'use strict';
-    return text.replace(/./g, function (a) {
-        return '%' + a.charCodeAt(0).toString(16);
-    });
+	'use strict';
+	return text.replace(/./g, function (a) {
+		return '%' + a.charCodeAt(0).toString(16);
+	});
 }
 
 
 // string escape for JavaScript string
 //
 function escapeJS(text) {
-    'use strict';
-    return text.replace(/[\"\']/g, function (a) {
-        return '\\' + a ;
-    });
+	'use strict';
+	return text.replace(/[\"\']/g, function (a) {
+		return '\\' + a ;
+	});
 }
 
 
@@ -96,6 +95,7 @@ function ctdl_startup() {
 	request = null;
 }
 
+
 // Continuation of ctdl_startup() after serv_info is retrieved
 //
 function ctdl_startup_2(data) {
@@ -112,6 +112,7 @@ function ctdl_startup_2(data) {
 	display_room_list();
 }
 
+
 // Display a room list in the main div.
 //
 function display_room_list() {
@@ -127,6 +128,7 @@ function display_room_list() {
 	request.send();
 	request = null;
 }
+
 
 // Renderer for display_room_list()
 //
@@ -161,6 +163,7 @@ function display_room_list_renderer(data) {
 	new_roomlist_text = new_roomlist_text + "</ul>";
 	document.getElementById("roomlist").innerHTML = new_roomlist_text ;
 }
+
 
 // Update the "banner" div with all relevant info.
 //
