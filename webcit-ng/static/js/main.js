@@ -212,8 +212,10 @@ function gotoroom_2(data) {
 
 
 // Goto next room with unread messages
+// which_oper is 0=ungoto, 1=skip, 2=goto
 //
-function gotonext() {
+function gotonext(which_oper) {
+	if (which_oper != 2) return;		// FIXME implement the other two
 	if (march_list.length == 0) {
 		load_new_march_list();		// we will recurse back here
 	}
