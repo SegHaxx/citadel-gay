@@ -1,7 +1,7 @@
 /*
  * Functions which handle hostname/address lookups and resolution
  *
- * Copyright (c) 1987-2018 by the citadel.org team
+ * Copyright (c) 1987-2019 by the citadel.org team
  *
  * This program is open source software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 3.
@@ -104,8 +104,7 @@ int rblcheck_backend(char *domain, char *txtbuf, int txtbufsize) {
 
 	/* Make our DNS query. */
 	answer = fixedans;
-	if (server_shutting_down)
-	{
+	if (server_shutting_down) {
 		if (txtbuf != NULL) {
 			snprintf(txtbuf, txtbufsize, "System shutting down");
 		}
@@ -121,8 +120,7 @@ int rblcheck_backend(char *domain, char *txtbuf, int txtbufsize) {
 		return(0);
 	}
 
-	if (len > PACKETSZ)
-	{
+	if (len > PACKETSZ) {
 		answer = malloc(len);
 		need_to_free_answer = 1;
 		len = res_query(domain, C_IN, T_A, answer, len);
@@ -134,8 +132,7 @@ int rblcheck_backend(char *domain, char *txtbuf, int txtbufsize) {
 			return(1);
 		}
 	}
-	if (server_shutting_down)
-	{
+	if (server_shutting_down) {
 		if (txtbuf != NULL) {
 			snprintf(txtbuf, txtbufsize, "System shutting down");
 		}
@@ -151,8 +148,7 @@ int rblcheck_backend(char *domain, char *txtbuf, int txtbufsize) {
 	 * nameserver we're using.
 	 */
 	len = res_query(domain, C_IN, T_TXT, answer, PACKETSZ);
-	if (server_shutting_down)
-	{
+	if (server_shutting_down) {
 		if (txtbuf != NULL) {
 			snprintf(txtbuf, txtbufsize, "System shutting down");
 		}
@@ -162,8 +158,7 @@ int rblcheck_backend(char *domain, char *txtbuf, int txtbufsize) {
 	}
 
 	/* Just in case there's no TXT record... */
-	if (len ==(-1))
-	{
+	if (len ==(-1)) {
 		if (txtbuf != NULL) {
 			snprintf(txtbuf, txtbufsize, "Message rejected due to known spammer source IP address");
 		}
@@ -174,8 +169,7 @@ int rblcheck_backend(char *domain, char *txtbuf, int txtbufsize) {
 
 	/* Skip the header and the address we queried. */
 	cp = answer + sizeof( HEADER );
-	while( *cp != '\0' )
-	{
+	while( *cp != '\0' ) {
 		a = *cp++;
 		while( a-- )
 			cp++;
@@ -201,18 +195,16 @@ int rblcheck_backend(char *domain, char *txtbuf, int txtbufsize) {
 	 */
 	rp = (u_char *) result;
 	rend = (u_char *) result + RESULT_SIZE - 1;
-	while (cp < cend && rp < rend)
-	{
+	while (cp < cend && rp < rend) {
 		a = *cp++;
-		if( a != 0 )
-			for (b = a; b > 0 && cp < cend && rp < rend; b--)
-			{
-				if (*cp == '\n' || *cp == '"' || *cp == '\\')
-				{
+		if (a != 0) {
+			for (b = a; b > 0 && cp < cend && rp < rend; b--) {
+				if (*cp == '\n' || *cp == '"' || *cp == '\\') {
 					*rp++ = '\\';
 				}
 				*rp++ = *cp++;
 			}
+		}
 	}
 	*rp = '\0';
 	if (txtbuf != NULL) {
