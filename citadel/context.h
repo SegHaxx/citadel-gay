@@ -57,7 +57,7 @@ struct CitContext {
 	StrBuf *sMigrateBuf;	/* Our block buffered read buffer */
 
 	int client_socket;
-	int is_local_socket;	/* set to 1 if client is on unix domain sock */
+	int is_local_client;	/* set to 1 if client is running on the same host */
 	/* Redirect this session's output to a memory buffer? */
 	StrBuf *redirect_buffer;		/* the buffer */
 	StrBuf *StatusMessage;

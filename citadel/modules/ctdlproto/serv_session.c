@@ -152,7 +152,7 @@ void cmd_iden(char *argbuf)
 	CC->cs_clientname[31] = 0;
 
 	/* For local sockets, allow the client to supply the user's origin address */
-	if (CC->is_local_socket) {
+	if ((CC->is_local_client) || (!IsEmptyStr(CC->cs_addr) && (!strcmp(CC->cs_addr, "127.0.0.1")) || (!strcmp(CC->cs_addr, "::1")))) {
 		safestrncpy(CC->cs_host, from_host, sizeof CC->cs_host);
 		CC->cs_host[sizeof CC->cs_host - 1] = 0;
 		CC->cs_addr[0] = 0;

@@ -495,7 +495,7 @@ void begin_session(CitContext *con)
 	safestrncpy(con->cs_addr, "", sizeof con->cs_addr);
 	con->cs_UDSclientUID = -1;
 	con->cs_host[sizeof con->cs_host - 1] = 0;
-	if (!CC->is_local_socket) {
+	if (!CC->is_local_client) {
 		locate_host(con->cs_host, sizeof con->cs_host,
 			con->cs_addr, sizeof con->cs_addr,
 			con->client_socket
@@ -545,12 +545,9 @@ void begin_session(CitContext *con)
 		con->nologin = 1;
 	}
 
-	if (!CC->is_local_socket) {
-		syslog(LOG_INFO, "context: session (%s) started from %s (%s)", con->ServiceName, con->cs_host, con->cs_addr);
-	}
-	else {
-		syslog(LOG_INFO, "context: session (%s) started via local socket with uid=%d", con->ServiceName, con->cs_UDSclientUID);
-	}
+	syslog(LOG_INFO, "context: session (%s) started from %s (%s) uid=%d",
+		con->ServiceName, con->cs_host, con->cs_addr, con->cs_UDSclientUID
+	);
 
 	/* Run any session startup routines registered by loadable modules */
 	PerformSessionHooks(EVT_START);

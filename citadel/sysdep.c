@@ -4,7 +4,7 @@
  * Here's where we (hopefully) have most parts of the Citadel server that
  * might need tweaking when run on different operating system variants.
  *
- * Copyright (c) 1987-2017 by the citadel.org team
+ * Copyright (c) 1987-2019 by the citadel.org team
  *
  * This program is open source software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 3.
@@ -1109,12 +1109,12 @@ void HuntBadSession(void)
 			{
 				/* Gotcha! */
 				syslog(LOG_ERR,
-				       "sysdep: killing session CC[%d] bad FD: [%d:%d] User[%s] Host[%s:%s]",
-				       ptr->cs_pid,
-				       ptr->client_socket,
-				       ptr->is_local_socket,
-				       ptr->curr_user,
-				       ptr->cs_host,ptr->cs_addr
+				       "sysdep: killing session CC[%d] bad FD: [%d] User[%s] Host[%s:%s]",
+					ptr->cs_pid,
+					ptr->client_socket,
+					ptr->curr_user,
+					ptr->cs_host,
+					ptr->cs_addr
 				);
 				ptr->kill_me = 1;
 				ptr->client_socket = -1;
@@ -1292,9 +1292,9 @@ do_select:	force_purge = 0;
 					con->h_greeting_function = serviceptr->h_greeting_function;
 					con->ServiceName = serviceptr->ServiceName;
 					
-					/* Determine whether it's a local socket */
+					/* Connections on a local client are always from the same host */
 					if (serviceptr->sockpath != NULL) {
-						con->is_local_socket = 1;
+						con->is_local_client = 1;
 					}
 	
 					/* Set the SO_REUSEADDR socket option */
