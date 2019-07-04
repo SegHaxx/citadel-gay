@@ -56,6 +56,10 @@ enum {
 #define GF_SKIP		1		/* <;S>kip floor mode */
 #define GF_ZAP		2		/* <;Z>ap floor mode */
 
+/* Can messages be entered in this room? */
+#define ENTMSG_OK_NO	0		/* You may not enter messages here */
+#define ENTMSG_OK_YES	1		/* Go ahead! */
+#define ENTMSG_OK_BLOG	2		/* Yes, but warn the user about how blog rooms work */
 
 /*
  * Colors for color() command

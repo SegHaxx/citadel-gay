@@ -1,7 +1,7 @@
 /*
  * Main source module for the client program.
  *
- * Copyright (c) 1987-2018 by the citadel.org team
+ * Copyright (c) 1987-2019 by the citadel.org team
  *
  * This program is open source software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3.
@@ -390,11 +390,13 @@ void dotgoto(CtdlIPC * ipc, char *towhere, int display_name, int fromungoto)
 	switch (room->RRdefaultview) {
 	case VIEW_BBS:
 	case VIEW_MAILBOX:
+		entmsg_ok = ENTMSG_OK_YES;
+		break;
 	case VIEW_BLOG:
-		entmsg_ok = 1;
+		entmsg_ok = ENTMSG_OK_BLOG;
 		break;
 	default:
-		entmsg_ok = 0;
+		entmsg_ok = ENTMSG_OK_NO;
 		break;
 	}
 

@@ -1050,7 +1050,21 @@ int entmsg(CtdlIPC * ipc, int is_reply,	/* nonzero if this was a <R>eply command
 	int r;			/* IPC response code */
 	int subject_required = 0;
 
-	if (!entmsg_ok) {
+	if (entmsg_ok == ENTMSG_OK_YES) {
+		/* no problem, go right ahead */
+	}
+	else if (entmsg_ok == ENTMSG_OK_BLOG) {
+		if (!is_reply) {
+			scr_printf("WARNING: this is a BLOG room.\n");
+			scr_printf("The '<E>nter Message' command will create a BLOG POST.\n");
+			scr_printf("If you want to leave a comment or reply to a comment, use the '<R>eply' command.\n");
+			scr_printf("Do you really want to create a new blog post? ");
+			if (!yesno()) {
+				return(1);
+			}
+		}
+	}
+	else {
 		scr_printf("You may not enter messages in this type of room.\n");
 		return (1);
 	}

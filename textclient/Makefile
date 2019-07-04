@@ -35,8 +35,9 @@ clean:
 distclean: clean
 	rm -f config.mk
 
-install: citadel
+install: citadel citadel.rc
 	install citadel $(BINDIR)/citadel
+	install citadel.rc $(ETCDIR)/citadel.rc
 
 uninstall:
 	rm -vf $(BINDIR)/citadel
