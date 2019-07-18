@@ -2,7 +2,7 @@
  * Citadel Extension Loader
  * Originally written by Brian Costello <btx@calyx.net>
  *
- * Copyright (c) 1987-2017 by the citadel.org team
+ * Copyright (c) 1987-2019 by the citadel.org team
  *
  * This program is open source software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 3.
@@ -147,7 +147,6 @@ HashList *ProtoHookList = NULL;
 
 
 static StrBuf *portlist = NULL;
-
 static StrBuf *errormessages = NULL;
 
 
@@ -168,9 +167,7 @@ ConstStr ErrPortShort = { HKEY("We couldn't bind all ports you configured to be 
 ConstStr ErrPortWhere = { HKEY("\"Admin->System Preferences->Network\".\n\nThe failed ports and sockets are: ")};
 ConstStr ErrPortHint  = { HKEY("If you want Citadel to provide you with that functionality, "
 			       "check the output of \"netstat -lnp\" on Linux, or \"netstat -na\" on BSD"
-			       " and stop the program that binds these ports.\n You should eventually remove "
-			       " their initscripts in /etc/init.d so that you won't get this trouble once more.\n"
-			       " After that goto \"Administration -> Shutdown Citadel\" to make Citadel restart & retry to bind this port.\n")};
+			       " and disable the program that binds these ports.\n")};
 
 
 void LogPrintMessages(long err)

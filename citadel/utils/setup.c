@@ -1,7 +1,7 @@
 /*
  * Citadel setup utility
  *
- * Copyright (c) 1987-2018 by the citadel.org team
+ * Copyright (c) 1987-2019 by the citadel.org team
  *
  * This program is open source software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License version 3.
@@ -629,103 +629,14 @@ void check_xinetd_entry(void)
 }
 
 
-/*
- * Offer to disable other MTA's
- */
-void disable_other_mta(const char *mta) {
-	char buf[SIZ];
-	FILE *fp;
-	int lines = 0;
-	int rv;
-
-	snprintf(buf, sizeof buf,
-		"/bin/ls -l /etc/rc*.d/S*%s 2>/dev/null; "
-		"/bin/ls -l /etc/rc.d/rc*.d/S*%s 2>/dev/null",
-		mta, mta
-	);
-	fp = popen(buf, "r");
-	if (fp == NULL) return;
-
-	while (fgets(buf, sizeof buf, fp) != NULL) {
-		++lines;
-	}
-	fclose(fp);
-	if (lines == 0) return;		/* Nothing to do. */
-
-	/* Offer to replace other MTA with the vastly superior Citadel :)  */
-
-	snprintf(buf, sizeof buf,
-		 "%s \"%s\" %s%s%s%s%s%s%s", 
-		 _("You appear to have the "), 
-		 mta, 
-		 _(" email program\n"
-		   "running on your system.  If you want Citadel mail\n"
-		   "connected with "), 
-		 mta,
-		 _(" you will have to manually integrate\n"
-		   "them.  It is preferable to disable "), 
-		 mta,
-		 _(", and use Citadel's\n"
-		   "SMTP, POP3, and IMAP services.\n\n"
-		   "May we disable "), 
-		 mta, 
-		 _("so that Citadel has access to ports\n"
-		   "25, 110, and 143?\n")
-		);
-	if (yesno(buf, 1) == 0) {
-		return;
-	}
-	
-
-	snprintf(buf, sizeof buf, "for x in /etc/rc*.d/S*%s; do mv $x `echo $x |sed s/S/K/g`; done >/dev/null 2>&1", mta);
-	rv = system(buf);
-	if (rv != 0)
-		display_error("%s %s.\n", _("failed to disable other mta"), mta);
-
-	snprintf(buf, sizeof buf, "/etc/init.d/%s stop >/dev/null 2>&1", mta);
-	rv = system(buf);
-	if (rv != 0)
-		display_error(" %s.\n", _("failed to disable other mta"), mta);
-}
-
-const char *other_mtas[] = {
-	"courier-authdaemon",
-	"courier-imap",
-	"courier-imap-ssl",
-	"courier-pop",
-	"courier-pop3",
-	"courier-pop3d",
-	"cyrmaster",
-	"cyrus",
-	"dovecot",
-	"exim",
-	"exim4",
-	"imapd",
-	"mta",
-	"pop3d",
-	"popd",
-	"postfix",
-	"qmail",
-	"saslauthd",
-	"sendmail",
-	"vmailmgrd",
-	""
-};
-
 void disable_other_mtas(void)
 {
-	int i = 0;
-	if ((getenv("ACT_AS_MTA") == NULL) || 
-	    (getenv("ACT_AS_MTA") &&
-	     strcasecmp(getenv("ACT_AS_MTA"), "yes") == 0)) {
+	if ((getenv("ACT_AS_MTA") == NULL) || (getenv("ACT_AS_MTA") && strcasecmp(getenv("ACT_AS_MTA"), "yes") == 0)) {
 		/* Offer to disable other MTA's on the system. */
-		while (!IsEmptyStr(other_mtas[i]))
-		{
-			disable_other_mta(other_mtas[i]);
-			i++;
-		}
+		/* FIXME this has to be rewritten to work in the new systemd-based world. */
 	}
 }
+
 
 void strprompt(const char *prompt_title, const char *prompt_text, char *Target, char *DefValue)
 {
