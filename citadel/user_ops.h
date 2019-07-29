@@ -1,3 +1,17 @@
+/* 
+ * Header file for server functions which perform operations on user objects.
+ *
+ * Copyright (c) 1987-2019 by the citadel.org team
+ *
+ * This program is open source software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License, version 3.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ */
+
 #ifndef __USER_OPS_H__
 #define __USER_OPS_H__
 
