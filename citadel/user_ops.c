@@ -32,6 +32,41 @@ int chkpwd_write_pipe[2];
 int chkpwd_read_pipe[2];
 
 
+
+/*
+ * Figure out what this does and make it cleaner
+ */
+long cutuserkey(char *username) { 
+	long len;
+	len = strlen(username);
+	if (len >= USERNAME_SIZE)
+	{
+		syslog(LOG_INFO, "Username too long: %s", username);
+		len = USERNAME_SIZE - 1; 
+		username[len]='\0';
+	}
+	return len;
+}
+
+
+/*
+ * makeuserkey() - convert a username into the format used as a database key
+ *		 (it's just the username converted into lower case)
+ */
+void makeuserkey(char *key, const char *username, long len) {
+	int i;
+
+	if (len >= USERNAME_SIZE)
+	{
+		syslog(LOG_INFO, "Username too long: %s", username);
+		len = USERNAME_SIZE - 1; 
+	}
+	for (i=0; i<=len; ++i) {
+		key[i] = tolower(username[i]);
+	}
+}
+
+
 /*
  * CtdlGetUser()	retrieve named user into supplied buffer.
  *			returns 0 on success
