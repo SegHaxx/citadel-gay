@@ -568,7 +568,7 @@ void CtdlFillSystemContext(CitContext *context, char *name)
 	context->cs_pid = 0;
 	strcpy (sysname, "SYS_");
 	strcat (sysname, name);
-	len = cutuserkey(sysname);
+	len = cutusername(sysname);
 	memcpy(context->curr_user, sysname, len + 1);
 	context->client_socket = (-1);
 	context->state = CON_SYS;

@@ -34,9 +34,9 @@ int chkpwd_read_pipe[2];
 
 
 /*
- * Figure out what this does and make it cleaner
+ * Trim a string down to the maximum username size and return the new length
  */
-long cutuserkey(char *username) { 
+long cutusername(char *username) { 
 	long len;
 	len = strlen(username);
 	if (len >= USERNAME_SIZE)
@@ -75,7 +75,7 @@ int CtdlGetUser(struct ctdluser *usbuf, char *name)
 {
 	char usernamekey[USERNAME_SIZE];
 	struct cdbdata *cdbus;
-	long len = cutuserkey(name);
+	long len = cutusername(name);
 
 	if (usbuf != NULL) {
 		memset(usbuf, 0, sizeof(struct ctdluser));
@@ -124,7 +124,7 @@ void CtdlPutUser(struct ctdluser *usbuf)
 {
 	char usernamekey[USERNAME_SIZE];
 
-	makeuserkey(usernamekey, usbuf->fullname, cutuserkey(usbuf->fullname));
+	makeuserkey(usernamekey, usbuf->fullname, cutusername(usbuf->fullname));
 	usbuf->version = REV_LEVEL;
 	cdb_store(CDB_USERS, usernamekey, strlen(usernamekey), usbuf, sizeof(struct ctdluser));
 }
@@ -160,8 +160,8 @@ int rename_user(char *oldname, char *newname) {
 	char newnamekey[USERNAME_SIZE];
 
 	/* Create the database keys... */
-	makeuserkey(oldnamekey, oldname, cutuserkey(oldname));
-	makeuserkey(newnamekey, newname, cutuserkey(newname));
+	makeuserkey(oldnamekey, oldname, cutusername(oldname));
+	makeuserkey(newnamekey, newname, cutusername(newname));
 
 	/* Lock up and get going */
 	begin_critical_section(S_USERS);
@@ -947,7 +947,7 @@ int purge_user(char pname[])
 	struct ctdluser usbuf;
 	char usernamekey[USERNAME_SIZE];
 
-	makeuserkey(usernamekey, pname, cutuserkey(pname));
+	makeuserkey(usernamekey, pname, cutusername(pname));
 
 	/* If the name is empty we can't find them in the DB any way so just return */
 	if (IsEmptyStr(pname)) {
