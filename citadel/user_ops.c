@@ -31,8 +31,6 @@
 int chkpwd_write_pipe[2];
 int chkpwd_read_pipe[2];
 
-
-
 /*
  * Trim a string down to the maximum username size and return the new length
  */
@@ -432,38 +430,12 @@ int CtdlGetUserByNumber(struct ctdluser *usbuf, long number)
 /*
  * Helper function for rebuild_usersbynumber()
  */
-void rebuild_ubn_for_user(struct ctdluser *usbuf, void *data) {
+void rebuild_ubn_for_user(char *username, void *data) {
+	struct ctdluser u;
 
-	struct ubnlist {
-		struct ubnlist *next;
-		char username[USERNAME_SIZE];
-		long usernum;
-	};
-
-	static struct ubnlist *u = NULL;
-	struct ubnlist *ptr = NULL;
-
-	/* Lazy programming here.  Call this function as a ForEachUser backend
-	 * in order to queue up the room names, or call it with a null user
-	 * to make it do the processing.
-	 */
-	if (usbuf != NULL) {
-		ptr = (struct ubnlist *) malloc(sizeof (struct ubnlist));
-		if (ptr == NULL) return;
-
-		ptr->usernum = usbuf->usernum;
-		safestrncpy(ptr->username, usbuf->fullname, sizeof ptr->username);
-		ptr->next = u;
-		u = ptr;
-		return;
-	}
-
-	while (u != NULL) {
-		syslog(LOG_DEBUG, "user_ops: rebuilding usersbynumber index %10ld : %s", u->usernum, u->username);
-		cdb_store(CDB_USERSBYNUMBER, &u->usernum, sizeof(long), u->username, strlen(u->username)+1);
-		ptr = u;
-		u = u->next;
-		free(ptr);
+	syslog(LOG_DEBUG, "user_ops: rebuilding usersbynumber index for %s", username);
+	if (CtdlGetUser(&u, username) == 0) {
+		cdb_store(CDB_USERSBYNUMBER, &(u.usernum), sizeof(long), u.fullname, strlen(u.fullname)+1);
 	}
 }
 
@@ -474,7 +446,6 @@ void rebuild_ubn_for_user(struct ctdluser *usbuf, void *data) {
 void rebuild_usersbynumber(void) {
 	cdb_trunc(CDB_USERSBYNUMBER);			/* delete the old indices */
 	ForEachUser(rebuild_ubn_for_user, NULL);	/* enumerate the users */
-	rebuild_ubn_for_user(NULL, NULL);		/* and index them */
 }
 
 
@@ -1173,52 +1144,49 @@ int CtdlForgetThisRoom(void) {
 
 
 /* 
- *  Traverse the user file...
+ * Traverse the user file and perform a callback for each user record.
+ * (New improved version that runs in two phases so that callbacks can perform writes without having a r/o cursor open)
  */
-void ForEachUser(void (*CallBack) (struct ctdluser * EachUser, void *out_data),
-		 void *in_data)
+void ForEachUser(void (*CallBack) (char *, void *out_data), void *in_data)
 {
-	struct ctdluser usbuf;
+	struct feu {
+		char username[USERNAME_SIZE];
+		int version;
+	};
+
 	struct cdbdata *cdbus;
+	struct ctdluser *usptr;
+	int i = 0;
+	struct feu *usernames = NULL;
+	int num_users = 0;
+	int num_users_alloc = 0;
 
 	cdb_rewind(CDB_USERS);
 
+	// Phase 1 : load list of usernames
 	while (cdbus = cdb_next_item(CDB_USERS), cdbus != NULL) {
-		memset(&usbuf, 0, sizeof(struct ctdluser));
-		memcpy(&usbuf, cdbus->ptr,
-		       ((cdbus->len > sizeof(struct ctdluser)) ?
-			sizeof(struct ctdluser) : cdbus->len));
-		cdb_free(cdbus);
-		(*CallBack) (&usbuf, in_data);
-	}
-}
+		usptr = (struct ctdluser *) cdbus->ptr;
 
-
-/*
- * List one user (this works with cmd_list)
- */
-void ListThisUser(struct ctdluser *usbuf, void *data)
-{
-	char *searchstring;
-
-	searchstring = (char *)data;
-	if (bmstrcasestr(usbuf->fullname, searchstring) == NULL) {
-		return;
-	}
-
-	if (usbuf->axlevel > AxDeleted) {
-		if ((CC->user.axlevel >= AxAideU)
-		    || ((usbuf->flags & US_UNLISTED) == 0)
-		    || ((CC->internal_pgm))) {
-			cprintf("%s|%d|%ld|%ld|%ld|%ld||\n",
-				usbuf->fullname,
-				usbuf->axlevel,
-				usbuf->usernum,
-				(long)usbuf->lastcall,
-				usbuf->timescalled,
-				usbuf->posted);
+		if (strlen(usptr->fullname) > 0) {
+			++num_users;
+			if (num_users > num_users_alloc) {
+				num_users_alloc = ((num_users_alloc == 0) ? 1 : (num_users_alloc * 2));
+				usernames = realloc(usernames, num_users_alloc * sizeof(struct feu));
+			}
+			strcpy(usernames[num_users-1].username, usptr->fullname);
+			usernames[num_users-1].version = usptr->version;
 		}
 	}
+
+	// Phase 2 : perform the callback for each username
+	for (i=0; i<num_users; ++i) {
+		if (usernames[i].version < 927) {
+			// FIXME we have to reindex this record
+		}
+		(*CallBack) (usernames[i].username, in_data);
+	}
+
+	free(usernames);
 }
 
 

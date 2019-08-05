@@ -2,7 +2,7 @@
  * This file contains functions which handle the mapping of Internet addresses
  * to users on the Citadel system.
  *
- * Copyright (c) 1987-2018 by the citadel.org team
+ * Copyright (c) 1987-2019 by the citadel.org team
  *
  * This program is open source software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3.
@@ -1588,58 +1588,23 @@ char *harvest_collected_addresses(struct CtdlMessage *msg) {
 
 /*
  * Helper function for CtdlRebuildDirectoryIndex()
- *
- * Call this function as a ForEachUser backend in order to queue up
- * user names, or call it with a null user to make it do the processing.
- * This allows us to maintain the list as a static instead of passing
- * pointers around.
  */
-void CtdlRebuildDirectoryIndex_backend(struct ctdluser *usbuf, void *data) {
+void CtdlRebuildDirectoryIndex_backend(char *username, void *data) {
 
-	struct crdib {
-		char name[64];
-		char emails[512];
-	};
+	int j = 0;
+	struct ctdluser usbuf;
 
-	static struct crdib *e = NULL;
-	static int num_e = 0;
-	static int alloc_e = 0;
-
-	/* this is the calling mode where we add a user */
-
-	if (usbuf != NULL) {
-		if (num_e >= alloc_e) {
-			if (alloc_e == 0) {
-				alloc_e = 100;
-				e = malloc(sizeof(struct crdib) * alloc_e);
-			}
-			else {
-				alloc_e *= 2;
-				e = realloc(e, (sizeof(struct crdib) * alloc_e));
-			}
-		}
-		strcpy(e[num_e].name, usbuf->fullname);
-		strcpy(e[num_e].emails, usbuf->emailaddrs);
-		++num_e;
+	if (CtdlGetUser(&usbuf, username) != 0) {
 		return;
 	}
 
-	/* this is the calling mode where we do the processing */
-
-	int i, j;
-	for (i=0; i<num_e; ++i) {
-		if ( (!IsEmptyStr(e[i].name)) && (!IsEmptyStr(e[i].emails)) ) {
-			for (j=0; j<num_tokens(e[i].emails, '|'); ++j) {
-				char one_email[512];
-				extract_token(one_email, e[i].emails, j, '|', sizeof one_email);
-				CtdlDirectoryAddUser(one_email, e[i].name);
-			}
+	if ( (!IsEmptyStr(usbuf.fullname)) && (!IsEmptyStr(usbuf.emailaddrs)) ) {
+		for (j=0; j<num_tokens(usbuf.emailaddrs, '|'); ++j) {
+			char one_email[512];
+			extract_token(one_email, usbuf.emailaddrs, j, '|', sizeof one_email);
+			CtdlDirectoryAddUser(one_email, usbuf.fullname);
 		}
 	}
-	free(e);
-	num_e = 0;
-	alloc_e = 0;
-	return;
 }
 
 
@@ -1650,7 +1615,6 @@ void CtdlRebuildDirectoryIndex(void) {
 	syslog(LOG_INFO, "internet_addressing: rebuilding email address directory index");
 	cdb_trunc(CDB_DIRECTORY);
 	ForEachUser(CtdlRebuildDirectoryIndex_backend, NULL);
-	CtdlRebuildDirectoryIndex_backend(NULL, NULL);
 }
 
 

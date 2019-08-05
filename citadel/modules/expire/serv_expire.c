@@ -1,9 +1,9 @@
 /*
  * This module handles the expiry of old messages and the purging of old users.
  *
- * You might also see this module affectionately referred to as the DAP (the Dreaded Auto-Purger).
+ * You might also see this module affectionately referred to as TDAP (The Dreaded Auto-Purger).
  *
- * Copyright (c) 1988-2018 by citadel.org (Art Cancro, Wilifried Goesgens, and others)
+ * Copyright (c) 1988-2019 by citadel.org (Art Cancro, Wilifried Goesgens, and others)
  *
  * This program is open source software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License as published
@@ -14,27 +14,6 @@
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- *
- * A brief technical discussion:
- *
- * Several of the purge operations found in this module operate in two
- * stages: the first stage generates a linked list of objects to be deleted,
- * then the second stage deletes all listed objects from the database.
- *
- * At first glance this may seem cumbersome and unnecessary.  The reason it is
- * implemented in this way is because Berkeley DB, and possibly other backends
- * we may hook into in the future, explicitly do _not_ support the deletion of
- * records from a file while the file is being traversed.  The delete operation
- * will succeed, but the traversal is not guaranteed to visit every object if
- * this is done.  Therefore we utilize the two-stage purge.
- *
- * When using Berkeley DB, there's another reason for the two-phase purge: we
- * don't want the entire thing being done as one huge transaction.
- *
- * You'll also notice that we build the in-memory list of records to be deleted
- * sometimes with a linked list and sometimes with a hash table.  There is no
- * reason for this aside from the fact that the linked list ones were written
- * before we had the hash table library available.
  */
 
 
@@ -254,12 +233,17 @@ void PurgeMessages(void) {
 }
 
 
-void AddValidUser(struct ctdluser *usbuf, void *data) {
+void AddValidUser(char *username, void *data) {
 	struct ValidUser *vuptr;
+	struct ctdluser usbuf;
+
+	if (CtdlGetUser(&usbuf, username) != 0) {
+		return;
+	}
 
 	vuptr = (struct ValidUser *)malloc(sizeof(struct ValidUser));
 	vuptr->next = ValidUserList;
-	vuptr->vu_usernum = usbuf->usernum;
+	vuptr->vu_usernum = usbuf.usernum;
 	ValidUserList = vuptr;
 }
 
@@ -373,39 +357,22 @@ int PurgeRooms(void) {
 
 
 /*
- * Back end function to check user accounts for associated Unix accounts
- * which no longer exist.  (Only relevant for host auth mode.)
- */
-void do_uid_user_purge(struct ctdluser *us, void *data) {
-	struct PurgeList *pptr;
-
-	if ((us->uid != (-1)) && (us->uid != CTDLUID)) {
-		if (getpwuid(us->uid) == NULL) {
-			pptr = (struct PurgeList *)
-				malloc(sizeof(struct PurgeList));
-			pptr->next = UserPurgeList;
-			strcpy(pptr->name, us->fullname);
-			UserPurgeList = pptr;
-		}
-	}
-	else {
-		++users_not_purged;
-	}
-}
-
-
-/*
  * Back end function to check user accounts for expiration.
  */
-void do_user_purge(struct ctdluser *us, void *data) {
+void do_user_purge(char *username, void *data) {
 	int purge;
 	time_t now;
 	time_t purge_time;
 	struct PurgeList *pptr;
+	struct ctdluser us;
+
+	if (CtdlGetUser(&us, username) != 0) {
+		return;
+	}
 
 	/* Set purge time; if the user overrides the system default, use it */
-	if (us->USuserpurge > 0) {
-		purge_time = ((time_t)us->USuserpurge) * 86400;
+	if (us.USuserpurge > 0) {
+		purge_time = ((time_t)us.USuserpurge) * 86400;
 	}
 	else {
 		purge_time = CtdlGetConfigLong("c_userpurge") * 86400;
@@ -420,49 +387,49 @@ void do_user_purge(struct ctdluser *us, void *data) {
 	if (CtdlGetConfigLong("c_userpurge") > 0)
 	{
 		now = time(NULL);
-		if ((now - us->lastcall) > purge_time) purge = 1;
+		if ((now - us.lastcall) > purge_time) purge = 1;
 	}
 
 	/* If the record is marked as permanent, don't purge it.
 	 */
-	if (us->flags & US_PERM) purge = 0;
+	if (us.flags & US_PERM) purge = 0;
 
 	/* If the user is an Aide, don't purge him/her/it.
 	 */
-	if (us->axlevel == 6) purge = 0;
+	if (us.axlevel == 6) purge = 0;
 
 	/* If the access level is 0, the record should already have been
 	 * deleted, but maybe the user was logged in at the time or something.
 	 * Delete the record now.
 	 */
-	if (us->axlevel == 0) purge = 1;
+	if (us.axlevel == 0) purge = 1;
 
 	/* If the user set his/her password to 'deleteme', he/she
 	 * wishes to be deleted, so purge the record.
 	 * Moved this lower down so that aides and permanent users get purged if they ask to be.
 	 */
-	if (!strcasecmp(us->password, "deleteme")) purge = 1;
+	if (!strcasecmp(us.password, "deleteme")) purge = 1;
 	
 	/* 0 calls is impossible.  If there are 0 calls, it must
 	 * be a corrupted record, so purge it.
 	 * Actually it is possible if an Aide created the user so now we check for less than 0 (DRW)
 	 */
-	if (us->timescalled < 0) purge = 1;
+	if (us.timescalled < 0) purge = 1;
 
 	/* any negative user number, is
 	 * also impossible.
 	 */
-	if (us->usernum < 0L) purge = 1;
+	if (us.usernum < 0L) purge = 1;
 	
 	/* Don't purge user 0. That user is there for the system */
-	if (us->usernum == 0L)
+	if (us.usernum == 0L)
 	{
 		/* FIXME: Temporary log message. Until we do unauth access with user 0 we should
 		 * try to get rid of all user 0 occurences. Many will be remnants from old code so
 		 * we will need to try and purge them from users data bases.Some will not have names but
 		 * those with names should be purged.
 		 */
-		syslog(LOG_DEBUG, "Auto purger found a user 0 with name <%s>", us->fullname);
+		syslog(LOG_DEBUG, "Auto purger found a user 0 with name <%s>", us.fullname);
 		// purge = 0;
 	}
 	
@@ -470,11 +437,11 @@ void do_user_purge(struct ctdluser *us, void *data) {
 	 * since the actual purge can't find them.
 	 * This shouldn't happen but does somehow.
 	 */
-	if (IsEmptyStr(us->fullname))
+	if (IsEmptyStr(us.fullname))
 	{
 		purge = 0;
 		
-		if (us->usernum > 0L)
+		if (us.usernum > 0L)
 		{
 			purge=0;
 			if (users_corrupt_msg == NULL)
@@ -490,14 +457,14 @@ void do_user_purge(struct ctdluser *us, void *data) {
 			}
 		
 			users_corrupt_msg=realloc(users_corrupt_msg, strlen(users_corrupt_msg)+30);
-			snprintf(&users_corrupt_msg[strlen(users_corrupt_msg)], 29, " %ld\n", us->usernum);
+			snprintf(&users_corrupt_msg[strlen(users_corrupt_msg)], 29, " %ld\n", us.usernum);
 		}
 	}
 
 	if (purge == 1) {
 		pptr = (struct PurgeList *) malloc(sizeof(struct PurgeList));
 		pptr->next = UserPurgeList;
-		strcpy(pptr->name, us->fullname);
+		strcpy(pptr->name, us.fullname);
 		UserPurgeList = pptr;
 	}
 	else {
@@ -518,9 +485,6 @@ int PurgeUsers(void) {
 	switch(CtdlGetConfigInt("c_auth_mode")) {
 		case AUTHMODE_NATIVE:
 			ForEachUser(do_user_purge, NULL);
-			break;
-		case AUTHMODE_HOST:
-			ForEachUser(do_uid_user_purge, NULL);
 			break;
 		default:
 			syslog(LOG_DEBUG, "User purge for auth mode %d is not implemented.", CtdlGetConfigInt("c_auth_mode"));
@@ -559,15 +523,13 @@ int PurgeUsers(void) {
 	if (num_users_purged > 0) CtdlAideMessage(transcript, "User Purge Message");
 	free(transcript);
 
-	if(users_corrupt_msg)
-	{
+	if (users_corrupt_msg) {
 		CtdlAideMessage(users_corrupt_msg, "User Corruption Message");
 		free (users_corrupt_msg);
 		users_corrupt_msg = NULL;
 	}
 	
-	if(users_zero_msg)
-	{
+	if(users_zero_msg) {
 		CtdlAideMessage(users_zero_msg, "User Zero Message");
 		free (users_zero_msg);
 		users_zero_msg = NULL;

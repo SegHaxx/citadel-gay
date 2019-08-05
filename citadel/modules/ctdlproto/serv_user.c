@@ -1,7 +1,7 @@
 /* 
  * Server functions which perform operations on user objects.
  *
- * Copyright (c) 1987-2018 by the citadel.org team
+ * Copyright (c) 1987-2019 by the citadel.org team
  *
  * This program is open source software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License, version 3.
@@ -483,6 +483,40 @@ void cmd_vali(char *v_args)
 	}
 	cprintf("%d User '%s' validated.\n", CIT_OK, userbuf.fullname);
 }
+
+
+/*
+ * List one user (this works with cmd_list)
+ */
+void ListThisUser(char *username, void *data)
+{
+	char *searchstring;
+	struct ctdluser usbuf;
+
+	if (CtdlGetUser(&usbuf, username) != 0) {
+		return;
+	}
+
+	searchstring = (char *)data;
+	if (bmstrcasestr(usbuf.fullname, searchstring) == NULL) {
+		return;
+	}
+
+	if (usbuf.axlevel > AxDeleted) {
+		if ((CC->user.axlevel >= AxAideU)
+		    || ((usbuf.flags & US_UNLISTED) == 0)
+		    || ((CC->internal_pgm))) {
+			cprintf("%s|%d|%ld|%ld|%ld|%ld||\n",
+				usbuf.fullname,
+				usbuf.axlevel,
+				usbuf.usernum,
+				(long)usbuf.lastcall,
+				usbuf.timescalled,
+				usbuf.posted);
+		}
+	}
+}
+
 
 /* 
  *  List users (searchstring may be empty to list all users)

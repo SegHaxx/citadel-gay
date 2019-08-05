@@ -107,51 +107,23 @@ void fix_sys_user_name(void)
 
 /* 
  * Back end processing function for reindex_uids()
- * Call this function as a ForEachUser backend in order to queue up
- * user names, or call it with a null user to make it do the processing.
- * This allows us to maintain the list as a static instead of passing
- * pointers around.
  */
-void reindex_uids_backend(struct ctdluser *usbuf, void *data) {
-	static struct UserProcList *uplist = NULL;
-	struct UserProcList *ptr;
+void reindex_uids_backend(char *username, void *data) {
+
 	struct ctdluser us;
 
-	/* this is the calling mode where we add a user */
-
-	if (usbuf != NULL) {
-		ptr = (struct UserProcList *) malloc(sizeof (struct UserProcList));
-		if (ptr == NULL) {
-			return;
+	if (CtdlGetUserLock(&us, username) == 0) {
+		syslog(LOG_DEBUG, "Processing <%s> (%d)", us.fullname, us.uid);
+		if (us.uid == CTDLUID) {
+			us.uid = NATIVE_AUTH_UID;
 		}
-
-		safestrncpy(ptr->user, usbuf->fullname, sizeof ptr->user);
-		ptr->next = uplist;
-		uplist = ptr;
-		return;
-	}
-
-	/* this is the calling mode where we do the processing */
-
-	while (uplist != NULL) {
-
-		if (CtdlGetUserLock(&us, uplist->user) == 0) {
-			syslog(LOG_DEBUG, "Processing <%s> (%d)", uplist->user, us.uid);
-			if (us.uid == CTDLUID) {
-				us.uid = NATIVE_AUTH_UID;
-			}
-			CtdlPutUserLock(&us);
-			if ((us.uid > 0) && (us.uid != NATIVE_AUTH_UID)) {		// if non-native auth , index by uid
-				StrBuf *claimed_id = NewStrBuf();
-				StrBufPrintf(claimed_id, "uid:%d", us.uid);
-				attach_extauth(&us, claimed_id);
-				FreeStrBuf(&claimed_id);
-			}
+		CtdlPutUserLock(&us);
+		if ((us.uid > 0) && (us.uid != NATIVE_AUTH_UID)) {		// if non-native auth , index by uid
+			StrBuf *claimed_id = NewStrBuf();
+			StrBufPrintf(claimed_id, "uid:%d", us.uid);
+			attach_extauth(&us, claimed_id);
+			FreeStrBuf(&claimed_id);
 		}
-
-		ptr = uplist;
-		uplist = uplist->next;
-		free(ptr);
 	}
 }
 
@@ -163,7 +135,6 @@ void reindex_uids_backend(struct ctdluser *usbuf, void *data) {
 void reindex_uids(void) {
 	syslog(LOG_WARNING, "upgrade: reindexing and applying uid changes");
 	ForEachUser(reindex_uids_backend, NULL);
-	reindex_uids_backend(NULL, NULL);
 	return;
 }
 
@@ -443,61 +414,32 @@ void update_config(void) {
  * This allows us to maintain the list as a static instead of passing
  * pointers around.
  */
-void miafvtur_backend(struct ctdluser *usbuf, void *data) {
+void miafvtur_backend(char *username, void *data) {
+	struct ctdluser usbuf;
+	char primary_inet_email[512] = { 0 };
+	char other_inet_emails[512] = { 0 };
+	char combined_inet_emails[512] = { 0 };
 
-	struct miafvtur {
-		char name[64];
-		char emails[512];
-	};
-
-	static struct miafvtur *m = NULL;
-	static int num_m = 0;
-	static int alloc_m = 0;
-
-	/* this is the calling mode where we add a user */
-
-	if (usbuf != NULL) {
-		char primary_inet_email[512] = { 0 };
-		char other_inet_emails[512] = { 0 };
-		struct vCard *v = vcard_get_user(usbuf);
-		if (!v) return;
-		extract_inet_email_addrs(primary_inet_email, sizeof primary_inet_email, other_inet_emails, sizeof other_inet_emails, v, 1);
-		vcard_free(v);
-	
-		if ( (IsEmptyStr(primary_inet_email)) && (IsEmptyStr(other_inet_emails)) ) {
-			return;
-		}
-
-		if (num_m >= alloc_m) {
-			if (alloc_m == 0) {
-				alloc_m = 100;
-				m = malloc(sizeof(struct miafvtur) * alloc_m);
-			}
-			else {
-				alloc_m *= 2;
-				m = realloc(m, (sizeof(struct miafvtur) * alloc_m));
-			}
-		}
-
-		strcpy(m[num_m].name, usbuf->fullname);
-		snprintf(m[num_m].emails, 512, "%s%s%s",
-			(!IsEmptyStr(primary_inet_email) ? primary_inet_email : ""),
-			((!IsEmptyStr(primary_inet_email)&&(!IsEmptyStr(other_inet_emails))) ? "|" : ""),
-			(!IsEmptyStr(other_inet_emails) ? other_inet_emails : "")
-		);
-		++num_m;
+	if (CtdlGetUser(&usbuf, username) != 0) {
 		return;
 	}
 
-	/* this is the calling mode where we do the processing */
-	int i;
-	for (i=0; i<num_m; ++i) {
-		CtdlSetEmailAddressesForUser(m[i].name, m[i].emails);
+	struct vCard *v = vcard_get_user(&usbuf);
+	if (!v) return;
+	extract_inet_email_addrs(primary_inet_email, sizeof primary_inet_email, other_inet_emails, sizeof other_inet_emails, v, 1);
+	vcard_free(v);
+	
+	if ( (IsEmptyStr(primary_inet_email)) && (IsEmptyStr(other_inet_emails)) ) {
+		return;
 	}
-	free(m);
-	num_m = 0;
-	alloc_m = 0;
-	return;
+
+	snprintf(combined_inet_emails, 512, "%s%s%s",
+		(!IsEmptyStr(primary_inet_email) ? primary_inet_email : ""),
+		((!IsEmptyStr(primary_inet_email)&&(!IsEmptyStr(other_inet_emails))) ? "|" : ""),
+		(!IsEmptyStr(other_inet_emails) ? other_inet_emails : "")
+	);
+
+	CtdlSetEmailAddressesForUser(usbuf.fullname, combined_inet_emails);
 }
 
 
@@ -540,7 +482,6 @@ int ProcessOldStyleAdjRefCountQueue(void)
 void move_inet_addrs_from_vcards_to_user_records(void)
 {
 	ForEachUser(miafvtur_backend, NULL);
-	miafvtur_backend(NULL, NULL);
 	CtdlRebuildDirectoryIndex();
 }
 
@@ -650,6 +591,7 @@ CTDL_MODULE_INIT(upgrade)
 {
 	if(!threading)
 	{
+		move_inet_addrs_from_vcards_to_user_records();
 		post_startup_upgrades();
 	}
 	

@@ -1,7 +1,7 @@
 /*
  * This module handles states which are global to the entire server.
  *
- * Copyright (c) 1987-2018 by the citadel.org team
+ * Copyright (c) 1987-2019 by the citadel.org team
  *
  * This program is open source software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3.
@@ -96,14 +96,19 @@ void control_find_highest(struct ctdlroom *qrbuf, void *data)
 /*
  * Callback to get highest user number.
  */
-void control_find_user(struct ctdluser *EachUser, void *out_data)
-{
-	if (EachUser->usernum > CtdlGetConfigLong("MMnextuser")) {
+void control_find_user(char *username, void *out_data) {
+	struct ctdluser EachUser;
+
+	if (CtdlGetUser(&EachUser, username) != 0) {
+		return;
+	}
+
+	if (EachUser.usernum > CtdlGetConfigLong("MMnextuser")) {
 		syslog(LOG_DEBUG, "control: fixing MMnextuser %ld > %ld , found in %s",
-			EachUser->usernum, CtdlGetConfigLong("MMnextuser"), EachUser->fullname
+			EachUser.usernum, CtdlGetConfigLong("MMnextuser"), EachUser.fullname
 		);
 		if (!sanity_diag_mode) {
-			CtdlSetConfigLong("MMnextuser", EachUser->usernum);
+			CtdlSetConfigLong("MMnextuser", EachUser.usernum);
 		}
 	}
 }

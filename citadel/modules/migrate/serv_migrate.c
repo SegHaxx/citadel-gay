@@ -1,7 +1,7 @@
 /*
  * This module dumps and/or loads the Citadel database in XML format.
  *
- * Copyright (c) 1987-2018 by the citadel.org team
+ * Copyright (c) 1987-2019 by the citadel.org team
  *
  * This program is open source software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3.
@@ -114,21 +114,27 @@ void xml_strout(char *str) {
 /*
  * Export a user record as XML
  */
-void migr_export_users_backend(struct ctdluser *buf, void *data) {
+void migr_export_users_backend(char *username, void *data) {
+
+	struct ctdluser u;
+	if (CtdlGetUser(&u, username) != 0) {
+		return;
+	}
+
 	client_write(HKEY("<user>\n"));
-	cprintf("<u_version>%d</u_version>\n", buf->version);
-	cprintf("<u_uid>%ld</u_uid>\n", (long)buf->uid);
-	client_write(HKEY("<u_password>"));	xml_strout(buf->password);		client_write(HKEY("</u_password>\n"));
-	cprintf("<u_flags>%u</u_flags>\n", buf->flags);
-	cprintf("<u_timescalled>%ld</u_timescalled>\n", buf->timescalled);
-	cprintf("<u_posted>%ld</u_posted>\n", buf->posted);
-	cprintf("<u_axlevel>%d</u_axlevel>\n", buf->axlevel);
-	cprintf("<u_usernum>%ld</u_usernum>\n", buf->usernum);
-	cprintf("<u_lastcall>%ld</u_lastcall>\n", (long)buf->lastcall);
-	cprintf("<u_USuserpurge>%d</u_USuserpurge>\n", buf->USuserpurge);
-	client_write(HKEY("<u_fullname>"));	xml_strout(buf->fullname);		client_write(HKEY("</u_fullname>\n"));
-	cprintf("<u_msgnum_bio>%ld</u_msgnum_bio>\n", buf->msgnum_bio);
-	cprintf("<u_msgnum_pic>%ld</u_msgnum_pic>\n", buf->msgnum_pic);
+	cprintf("<u_version>%d</u_version>\n", u.version);
+	cprintf("<u_uid>%ld</u_uid>\n", (long)u.uid);
+	client_write(HKEY("<u_password>"));	xml_strout(u.password);		client_write(HKEY("</u_password>\n"));
+	cprintf("<u_flags>%u</u_flags>\n", u.flags);
+	cprintf("<u_timescalled>%ld</u_timescalled>\n", u.timescalled);
+	cprintf("<u_posted>%ld</u_posted>\n", u.posted);
+	cprintf("<u_axlevel>%d</u_axlevel>\n", u.axlevel);
+	cprintf("<u_usernum>%ld</u_usernum>\n", u.usernum);
+	cprintf("<u_lastcall>%ld</u_lastcall>\n", (long)u.lastcall);
+	cprintf("<u_USuserpurge>%d</u_USuserpurge>\n", u.USuserpurge);
+	client_write(HKEY("<u_fullname>"));	xml_strout(u.fullname);		client_write(HKEY("</u_fullname>\n"));
+	cprintf("<u_msgnum_bio>%ld</u_msgnum_bio>\n", u.msgnum_bio);
+	cprintf("<u_msgnum_pic>%ld</u_msgnum_pic>\n", u.msgnum_pic);
 	client_write(HKEY("</user>\n"));
 }
 

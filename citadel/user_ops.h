@@ -37,8 +37,7 @@ enum {
 
 void do_login(void);
 int CtdlInvtKick(char *iuser, int op);
-void ForEachUser(void (*CallBack)(struct ctdluser *EachUser, void *out_data), void *in_data);
-void ListThisUser(struct ctdluser *usbuf, void *data);
+void ForEachUser(void (*CallBack) (char *, void *out_data), void *in_data);
 int NewMailCount(void);
 int InitialMailCheck(void);
 void put_visit(visit *newvisit);

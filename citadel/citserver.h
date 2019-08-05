@@ -30,7 +30,7 @@ struct RoomProcList {
 };
 struct UserProcList {
 	struct UserProcList *next;
-	char user[64];
+	char user[USERNAME_SIZE];
 };
 
 #define CTDLUSERIP      (IsEmptyStr(CC->cs_addr) ?  CC->cs_clientinfo: CC->cs_addr)
