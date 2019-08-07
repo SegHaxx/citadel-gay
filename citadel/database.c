@@ -75,7 +75,7 @@ void cdb_verbose_err(const DB_ENV * dbenv, const char *errpfx, const char *msg)
 }
 
 
-/* just a little helper function */
+/* wrapper for txn_abort() that logs/aborts on error */
 static void txabort(DB_TXN * tid)
 {
 	int ret;
@@ -89,7 +89,7 @@ static void txabort(DB_TXN * tid)
 }
 
 
-/* this one is even more helpful than the last. */
+/* wrapper for txn_commit() that logs/aborts on error */
 static void txcommit(DB_TXN * tid)
 {
 	int ret;
@@ -103,7 +103,7 @@ static void txcommit(DB_TXN * tid)
 }
 
 
-/* are you sensing a pattern yet? */
+/* wrapper for txn_begin() that logs/aborts on error */
 static void txbegin(DB_TXN ** tid)
 {
 	int ret;
@@ -117,6 +117,7 @@ static void txbegin(DB_TXN ** tid)
 }
 
 
+/* panic callback */
 static void dbpanic(DB_ENV * env, int errval)
 {
 	syslog(LOG_ERR, "db: PANIC: %s", db_strerror(errval));
@@ -202,20 +203,19 @@ void open_databases(void)
 	syslog(LOG_DEBUG, "db:    Linked zlib: %s", zlibVersion());
 
 	/*
-	 * Silently try to create the database subdirectory.  If it's
-	 * already there, no problem.
+	 * Silently try to create the database subdirectory.  If it's already there, no problem.
 	 */
 	if ((mkdir(ctdl_data_dir, 0700) != 0) && (errno != EEXIST)) {
 		syslog(LOG_ERR, "db: unable to create database directory [%s]: %m", ctdl_data_dir);
 	}
 	if (chmod(ctdl_data_dir, 0700) != 0) {
-		syslog(LOG_ERR, "db: unable to set database directory accessrights [%s]: %m", ctdl_data_dir);
+		syslog(LOG_ERR, "db: unable to set database directory permissions [%s]: %m", ctdl_data_dir);
 	}
 	if (chown(ctdl_data_dir, CTDLUID, (-1)) != 0) {
 		syslog(LOG_ERR, "db: unable to set the owner for [%s]: %m", ctdl_data_dir);
 	}
-	syslog(LOG_DEBUG, "db: Setting up DB environment\n");
-	/* db_env_set_func_yield((int (*)(u_long,  u_long))sched_yield); */
+	syslog(LOG_DEBUG, "db: Setting up DB environment");
+	// db_env_set_func_yield((int (*)(u_long,  u_long))sched_yield);
 	ret = db_env_create(&dbenv, 0);
 	if (ret) {
 		syslog(LOG_ERR, "db: db_env_create: %s", db_strerror(ret));
@@ -251,19 +251,19 @@ void open_databases(void)
 
 	flags = DB_CREATE | DB_INIT_MPOOL | DB_PRIVATE | DB_INIT_TXN | DB_INIT_LOCK | DB_THREAD | DB_INIT_LOG;
 	syslog(LOG_DEBUG, "db: dbenv->open(dbenv, %s, %d, 0)", ctdl_data_dir, flags);
-	ret = dbenv->open(dbenv, ctdl_data_dir, flags, 0);
+	ret = dbenv->open(dbenv, ctdl_data_dir, flags, 0);				// try opening the database cleanly
 	if (ret == DB_RUNRECOVERY) {
 		syslog(LOG_ERR, "db: dbenv->open: %s", db_strerror(ret));
 		syslog(LOG_ERR, "db: attempting recovery...");
 		flags |= DB_RECOVER;
-		ret = dbenv->open(dbenv, ctdl_data_dir, flags, 0);
+		ret = dbenv->open(dbenv, ctdl_data_dir, flags, 0);			// try recovery
 	}
 	if (ret == DB_RUNRECOVERY) {
 		syslog(LOG_ERR, "db: dbenv->open: %s", db_strerror(ret));
 		syslog(LOG_ERR, "db: attempting catastrophic recovery...");
 		flags &= ~DB_RECOVER;
 		flags |= DB_RECOVER_FATAL;
-		ret = dbenv->open(dbenv, ctdl_data_dir, flags, 0);
+		ret = dbenv->open(dbenv, ctdl_data_dir, flags, 0);			// try catastrophic recovery
 	}
 	if (ret) {
 		syslog(LOG_ERR, "db: dbenv->open: %s", db_strerror(ret));
@@ -273,40 +273,30 @@ void open_databases(void)
 	}
 
 	syslog(LOG_INFO, "db: mounting databases");
-
 	for (i = 0; i < MAXCDB; ++i) {
-
-		/* Create a database handle */
-		ret = db_create(&dbp[i], dbenv, 0);
+		ret = db_create(&dbp[i], dbenv, 0);					// Create a database handle
 		if (ret) {
 			syslog(LOG_ERR, "db: db_create: %s", db_strerror(ret));
 			syslog(LOG_ERR, "db: exit code %d", ret);
 			exit(CTDLEXIT_DB);
 		}
 
-
-		/* Arbitrary names for our tables -- we reference them by
-		 * number, so we don't have string names for them.
-		 */
-		snprintf(dbfilename, sizeof dbfilename, "cdb.%02x", i);
-
+		snprintf(dbfilename, sizeof dbfilename, "cdb.%02x", i);			// table names by number
 		ret = dbp[i]->open(dbp[i], NULL, dbfilename, NULL, DB_BTREE, DB_CREATE | DB_AUTO_COMMIT | DB_THREAD, 0600);
 		if (ret) {
 			syslog(LOG_ERR, "db: db_open[%02x]: %s", i, db_strerror(ret));
 			if (ret == ENOMEM) {
-				syslog(LOG_ERR,
-				       "db: You may need to tune your database; please read http://www.citadel.org/doku.php?id=faq:troubleshooting:out_of_lock_entries for more information.");
+				syslog(LOG_ERR, "db: You may need to tune your database; please read http://www.citadel.org/doku.php?id=faq:troubleshooting:out_of_lock_entries for more information.");
 			}
 			syslog(LOG_ERR, "db: exit code %d", ret);
 			exit(CTDLEXIT_DB);
 		}
 	}
-
 }
 
 
-/* Make sure we own all the files, because in a few milliseconds
- * we're going to drop root privs.
+/*
+ * Make sure we own all the files, because in a few milliseconds we're going to drop root privs.
  */
 void cdb_chmod_data(void)
 {
@@ -327,8 +317,6 @@ void cdb_chmod_data(void)
 		}
 		closedir(dp);
 	}
-
-	syslog(LOG_DEBUG, "db: open_databases() finished");
 }
 
 
@@ -338,7 +326,7 @@ void cdb_chmod_data(void)
  */
 void close_databases(void)
 {
-	int a;
+	int i;
 	int ret;
 
 	syslog(LOG_INFO, "db: performing final checkpoint");
@@ -351,15 +339,16 @@ void close_databases(void)
 		syslog(LOG_ERR, "db: log_flush: %s", db_strerror(ret));
 	}
 
-	/* print some statistics... */
 #ifdef DB_STAT_ALL
+	/* print some statistics... */
 	dbenv->lock_stat_print(dbenv, DB_STAT_ALL);
 #endif
 
 	/* close the tables */
-	for (a = 0; a < MAXCDB; ++a) {
-		syslog(LOG_INFO, "db: closing database %02x", a);
-		ret = dbp[a]->close(dbp[a], 0);
+	syslog(LOG_INFO, "db: closing databases");
+	for (i = 0; i < MAXCDB; ++i) {
+		syslog(LOG_INFO, "db: closing database %02x", i);
+		ret = dbp[i]->close(dbp[i], 0);
 		if (ret) {
 			syslog(LOG_ERR, "db: db_close: %s", db_strerror(ret));
 		}
@@ -395,8 +384,9 @@ void cdb_decompress_if_necessary(struct cdbdata *cdb)
 
 	memset(&zheader, 0, sizeof(struct CtdlCompressHeader));
 	cplen = sizeof(struct CtdlCompressHeader);
-	if (sizeof(struct CtdlCompressHeader) > cdb->len)
+	if (sizeof(struct CtdlCompressHeader) > cdb->len) {
 		cplen = cdb->len;
+	}
 	memcpy(&zheader, cdb->ptr, cplen);
 
 	compressed_data = cdb->ptr;
@@ -462,11 +452,11 @@ int cdb_store(int cdb, const void *ckey, int ckeylen, void *cdata, int cdatalen)
 	}
 
 	if (TSD->tid != NULL) {
-		ret = dbp[cdb]->put(dbp[cdb],	/* db */
-				    TSD->tid,	/* transaction ID */
-				    &dkey,	/* key */
-				    &ddata,	/* data */
-				    0		/* flags */
+		ret = dbp[cdb]->put(dbp[cdb],	// db
+				    TSD->tid,	// transaction ID
+				    &dkey,	// key
+				    &ddata,	// data
+				    0		// flags
 		);
 		if (ret) {
 			syslog(LOG_EMERG, "db: cdb_store(%d): %s", cdb, db_strerror(ret));
@@ -589,21 +579,18 @@ struct cdbdata *cdb_fetch(int cdb, const void *key, int keylen)
 	if (TSD->tid != NULL) {
 		memset(&dret, 0, sizeof(DBT));
 		dret.flags = DB_DBT_MALLOC;
-		ret = dbp[cdb]->get(dbp[cdb], TSD->tid, &dkey, &dret, 0);
+		ret = dbp[cdb]->get(dbp[cdb], TSD->tid, &dkey, &dret, 0);		// crashing here
 	} else {
 		DBC *curs;
 
 		do {
 			memset(&dret, 0, sizeof(DBT));
 			dret.flags = DB_DBT_MALLOC;
-
 			curs = localcursor(cdb);
-
 			ret = curs->c_get(curs, &dkey, &dret, DB_SET);
 			cclose(curs);
 		}
 		while (ret == DB_LOCK_DEADLOCK);
-
 	}
 
 	if ((ret != 0) && (ret != DB_NOTFOUND)) {

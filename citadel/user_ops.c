@@ -1180,6 +1180,7 @@ void ForEachUser(void (*CallBack) (char *, void *out_data), void *in_data)
 
 	// Phase 2 : perform the callback for each username
 	for (i=0; i<num_users; ++i) {
+		syslog(LOG_DEBUG, "user_ops: %3d %3d %s", i, usernames[i].version, usernames[i].username);	// FIXME
 		if (usernames[i].version < 927) {
 			// FIXME we have to reindex this record
 		}
