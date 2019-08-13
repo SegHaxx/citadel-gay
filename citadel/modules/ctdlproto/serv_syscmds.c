@@ -33,20 +33,12 @@ void cmd_down(char *argbuf) {
 		int state = CIT_OK;
 		restart_server = extract_int(argbuf, 0);
 		
-		if (restart_server > 0)
-		{
+		if (restart_server > 0) {
 			Reply = "%d citserver will now shut down and automatically restart.\n";
-		}
-		if ((restart_server > 0) && !running_as_daemon)
-		{
-			syslog(LOG_ERR, "The user requested restart, but not running as daemon! Geronimooooooo!\n");
-			Reply = "%d Warning: citserver is not running in daemon mode and is therefore unlikely to restart automatically.\n";
-			state = ERROR;
 		}
 		cprintf(Reply, state);
 	}
-	else
-	{
+	else {
 		cprintf(Reply, CIT_OK + SERVER_SHUTTING_DOWN); 
 	}
 	CC->kill_me = KILLME_SERVER_SHUTTING_DOWN;
