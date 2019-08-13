@@ -79,16 +79,8 @@ void cmd_scdn(char *argbuf)
 	if (CtdlAccessCheck(ac_aide)) return;
 
 	new_state = extract_int(argbuf, 0);
-	if ((new_state == 2) || (new_state == 3))
-	{
+	if ((new_state == 2) || (new_state == 3)) {
 		restart_server = 1;
-		if (!running_as_daemon)
-		{
-			syslog(LOG_ERR, "The user requested restart, but not running as deamon! Geronimooooooo!\n");
-			Reply = "%d %d Warning, not running in deamon mode. maybe we will come up again, but don't lean on it.\n";
-			state = ERROR;
-		}
-
 		restart_server = extract_int(argbuf, 0);
 		new_state -= 2;
 	}

@@ -358,5 +358,8 @@ int main(int argc, char **argv)
 	
 	int exit_code = master_cleanup(exit_signal);
 	ctdl_lockfile(0);
+	if (restart_server) {
+		execv(argv[0], argv);
+	}
 	return(exit_code);
 }
