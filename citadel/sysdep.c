@@ -86,14 +86,14 @@ void init_sysdep(void) {
 	init_ssl();
 #endif
 
-	/*
-	 * Set up a place to put thread-specific data.
-	 * We only need a single pointer per thread - it points to the
-	 * CitContext structure (in the ContextList linked list) of the
-	 * session to which the calling thread is currently bound.
-	 */
-	if (pthread_key_create(&MyConKey, NULL) != 0) {
+	if (pthread_key_create(&ThreadKey, NULL) != 0) {			// TSD for threads
+		syslog(LOG_ERR, "pthread_key_create() : %m");
+		abort();
+	}
+	
+	if (pthread_key_create(&MyConKey, NULL) != 0) {				// TSD for sessions
 		syslog(LOG_CRIT, "sysdep: can't create TSD key: %m");
+		abort();
 	}
 
 	/*

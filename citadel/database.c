@@ -76,7 +76,7 @@ void cdb_verbose_err(const DB_ENV * dbenv, const char *errpfx, const char *msg)
 
 
 /* wrapper for txn_abort() that logs/aborts on error */
-static void txabort(DB_TXN * tid)
+static void txabort(DB_TXN *tid)
 {
 	int ret;
 
@@ -90,7 +90,7 @@ static void txabort(DB_TXN * tid)
 
 
 /* wrapper for txn_commit() that logs/aborts on error */
-static void txcommit(DB_TXN * tid)
+static void txcommit(DB_TXN *tid)
 {
 	int ret;
 
@@ -104,7 +104,7 @@ static void txcommit(DB_TXN * tid)
 
 
 /* wrapper for txn_begin() that logs/aborts on error */
-static void txbegin(DB_TXN ** tid)
+static void txbegin(DB_TXN **tid)
 {
 	int ret;
 
@@ -416,9 +416,8 @@ int cdb_store(int cdb, const void *ckey, int ckeylen, void *cdata, int cdatalen)
 {
 
 	DBT dkey, ddata;
-	DB_TXN *tid;
+	DB_TXN *tid = NULL;
 	int ret = 0;
-
 	struct CtdlCompressHeader zheader;
 	char *compressed_data = NULL;
 	int compressing = 0;
@@ -472,11 +471,11 @@ int cdb_store(int cdb, const void *ckey, int ckeylen, void *cdata, int cdatalen)
 	      retry:
 		txbegin(&tid);
 
-		if ((ret = dbp[cdb]->put(dbp[cdb],	/* db */
-					 tid,	/* transaction ID */
-					 &dkey,	/* key */
-					 &ddata,	/* data */
-					 0))) {	/* flags */
+		if ((ret = dbp[cdb]->put(dbp[cdb],	// db
+					 tid,		// transaction ID
+					 &dkey,		// key
+					 &ddata,	// data
+					 0))) {		// flags
 			if (ret == DB_LOCK_DEADLOCK) {
 				txabort(tid);
 				goto retry;
@@ -772,8 +771,7 @@ void cdb_trunc(int cdb)
 			} else {
 				syslog(LOG_EMERG, "db: cdb_truncate(%d): %s", cdb, db_strerror(ret));
 				if (ret == ENOMEM) {
-					syslog(LOG_EMERG,
-					       "db: You may need to tune your database; please read http://www.citadel.org/doku.php?id=faq:troubleshooting:out_of_lock_entries for more information.");
+					syslog(LOG_EMERG, "db: You may need to tune your database; please read http://www.citadel.org/doku.php?id=faq:troubleshooting:out_of_lock_entries for more information.");
 				}
 				exit(CTDLEXIT_DB);
 			}

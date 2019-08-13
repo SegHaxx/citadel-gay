@@ -24,6 +24,7 @@ struct thread_tsd {
 	DBC *cursors[MAXCDB];   /* Cursors, for traversals... */
 };
 
+pthread_key_t ThreadKey;
 extern struct thread_tsd masterTSD;
 #define TSD MyThread()
 

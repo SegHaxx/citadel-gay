@@ -32,7 +32,6 @@
 uid_t ctdluid = 0;
 const char *CitadelServiceUDS="citadel-UDS";
 const char *CitadelServiceTCP="citadel-TCP";
-void go_threading(void);
 int sanity_diag_mode = 0;
 
 
@@ -40,7 +39,7 @@ int sanity_diag_mode = 0;
  * Create or remove a lock file, so we only have one Citadel Server running at a time.
  */
 void ctdl_lockfile(int yo) {
-	static char lockfilename[SIZ];
+	static char lockfilename[PATH_MAX];
 	static FILE *fp;
 
 	if (yo) {
@@ -251,26 +250,12 @@ int main(int argc, char **argv)
 #endif
 
 	ctdl_lockfile(1);
-
-	/* Initialize... */
-	init_sysdep();
-
-	/*
-	 * Do non system dependent startup functions.
-	 */
-	master_startup();
-
-	/*
-	 * Check that the control record is correct and place sensible values if it isn't
-	 */
-	check_control();
-	
-	/*
-	 * Run any upgrade entry points
-	 */
-	syslog(LOG_INFO, "main: upgrading modules");
+	init_sysdep();						// Initialize...
+	master_startup();					// Do non system dependent startup functions
+	check_control();					// Check, sanitize, initialize the control record
+	syslog(LOG_INFO, "main: upgrading modules");		// Run any upgrade entry points
 	upgrade_modules();
-	
+
 /*
  * Load the user for the masterCC or create them if they don't exist
  */
@@ -313,9 +298,6 @@ int main(int argc, char **argv)
 				do_async_loop,
 				CitadelServiceTCP);
 
-				
-	
-	
 	/*
 	 * Load any server-side extensions available here.
 	 */
