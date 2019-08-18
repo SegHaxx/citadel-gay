@@ -214,7 +214,7 @@ else
 	AC_MSG_RESULT(webcit will be built without character set conversion.)
 fi
 
-
+AC_SEARCH_LIBS(gettext, intl libintl)
 AC_CHECK_LIB(intl, libintl_bindtextdomain, [LDFLAGS="$LDFLAGS -lintl"])
 
 
