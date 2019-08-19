@@ -39,8 +39,8 @@ void cprintf (const char *format, ...);
 #endif
 
 void init_sysdep (void);
-int ctdl_tcp_server(char *ip_addr, int port_number, int queue_len, char *errormessage);
-int ctdl_uds_server(char *sockpath, int queue_len, char *errormessage);
+int ctdl_tcp_server(char *ip_addr, int port_number, int queue_len);
+int ctdl_uds_server(char *sockpath, int queue_len);
 void buffer_output(void);
 void unbuffer_output(void);
 void flush_output(void);
