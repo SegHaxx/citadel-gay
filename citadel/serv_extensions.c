@@ -853,9 +853,7 @@ void CtdlRegisterServiceHook(int tcp_port,
 {
 	ServiceFunctionHook *newfcn;
 	char *message;
-	char error[SIZ];
 
-	strcpy(error, "");
 	newfcn = (ServiceFunctionHook *) malloc(sizeof(ServiceFunctionHook));
 	message = (char*) malloc (SIZ + SIZ);
 	
@@ -868,7 +866,7 @@ void CtdlRegisterServiceHook(int tcp_port,
 	newfcn->ServiceName = ServiceName;
 
 	if (sockpath != NULL) {
-		newfcn->msock = ctdl_uds_server(sockpath, CtdlGetConfigInt("c_maxsessions"), error);
+		newfcn->msock = ctdl_uds_server(sockpath, CtdlGetConfigInt("c_maxsessions"));
 		snprintf(message, SIZ, "extensions: unix domain socket '%s': ", sockpath);
 	}
 	else if (tcp_port <= 0) {	/* port -1 to disable */
@@ -878,10 +876,7 @@ void CtdlRegisterServiceHook(int tcp_port,
 		return;
 	}
 	else {
-		newfcn->msock = ctdl_tcp_server(CtdlGetConfigStr("c_ip_addr"),
-					      tcp_port,
-					      CtdlGetConfigInt("c_maxsessions"), 
-					      error);
+		newfcn->msock = ctdl_tcp_server(CtdlGetConfigStr("c_ip_addr"), tcp_port, CtdlGetConfigInt("c_maxsessions"));
 		snprintf(message, SIZ, "extensions: TCP port %s:%d: (%s) ", 
 			 CtdlGetConfigStr("c_ip_addr"), tcp_port, ServiceName);
 	}
@@ -892,7 +887,7 @@ void CtdlRegisterServiceHook(int tcp_port,
 		syslog(LOG_INFO, "%s", message);
 	}
 	else {
-		AddPortError(message, error);
+		AddPortError(message, "failed");
 		strcat(message, "FAILED.");
 		syslog(LOG_ERR, "%s", message);
 		free(newfcn);
