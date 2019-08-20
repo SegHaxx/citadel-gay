@@ -760,9 +760,6 @@ void edit_value(int curr)
 		}
 		else
 		{
-#ifdef __CYGWIN__
-			ctdluid = 0;	/* work-around for Windows */
-#else
 			pw = getpwuid(ctdluid);
 			if (pw == NULL) {
 				set_int_val(curr, &ctdluid, default_value);
@@ -961,7 +958,7 @@ void fixnss(void) {
  * Messages that are no longer in use.
  * We keep them here so we don't lose the translations if we need them later.
  */
-#if 0
+void niu_messages() {
 				important_message(_("Setup finished"),
 						  _("Setup of the Citadel server is complete.\n"
 						    "If you will be using WebCit, please run its\n"
@@ -972,7 +969,7 @@ void fixnss(void) {
 					    "Go back and check your configuration.\n")
 		important_message(_("Setup finished"),
 				  _("Setup is finished.  You may now start the server."));
-#endif
+}
 
 
 
