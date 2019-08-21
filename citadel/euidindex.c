@@ -1,7 +1,7 @@
 /* 
  * Index messages by EUID per room.
  *
- * Copyright (c) 1987-2017 by the citadel.org team
+ * Copyright (c) 1987-2019 by the citadel.org team
  *
  * This program is open source software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 3.
@@ -106,7 +106,7 @@ void index_message_by_euid(char *euid, struct ctdlroom *qrbuf, long msgnum) {
 	char *data;
 	int data_len;
 
-	syslog(LOG_DEBUG, "euidindex: ndexing message #%ld <%s> in <%s>", msgnum, euid, qrbuf->QRname);
+	syslog(LOG_DEBUG, "euidindex: indexing message #%ld <%s> in <%s>", msgnum, euid, qrbuf->QRname);
 
 	key_len = strlen(euid) + sizeof(long) + 1;
 	key = malloc(key_len);

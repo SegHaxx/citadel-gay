@@ -58,7 +58,6 @@ struct smtpmsgsrc {		// Data passed in and out of libcurl for message upload
 	int bytes_sent;
 };
 
-struct CitContext smtp_client_CC;
 static int doing_smtpclient = 0;
 long *smtpq = NULL;		// array of msgnums containing queue instructions
 int smtpq_count = 0;		// number of queue messages in smtpq
@@ -555,7 +554,6 @@ void smtp_do_queue(void)
 	doing_smtpclient = 1;
 
 	syslog(LOG_DEBUG, "smtpclient: start queue run");
-	pthread_setspecific(MyConKey, (void *) &smtp_client_CC);
 
 	if (CtdlGetRoom(&CC->room, SMTP_SPOOLOUT_ROOM) != 0) {
 		syslog(LOG_WARNING, "Cannot find room <%s>", SMTP_SPOOLOUT_ROOM);
@@ -582,7 +580,6 @@ void smtp_do_queue(void)
 CTDL_MODULE_INIT(smtpclient)
 {
 	if (!threading) {
-		CtdlFillSystemContext(&smtp_client_CC, "SMTP_Send");
 		CtdlRegisterMessageHook(smtp_aftersave, EVT_AFTERSAVE);
 		CtdlRegisterSessionHook(smtp_do_queue, EVT_TIMER, PRIO_AGGR + 50);
 		smtp_init_spoolout();

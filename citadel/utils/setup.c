@@ -128,14 +128,12 @@ void SetTitles(void)
 "specify the -h flag to the server when you start it up.\n"
 "note that it may not have a leading /");
 
-
 	setup_titles[eSysAdminName] = _("Citadel administrator username:");
 	setup_text[eSysAdminName] = _(
 "Please enter the name of the Citadel user account that should be granted "
 "administrative privileges once created. If using internal authentication "
 "this user account will be created if it does not exist. For external "
 "authentication this user account has to exist.");
-
 
 	setup_titles[eSysAdminPW] = _("Administrator password:");
 	setup_text[eSysAdminPW] = _(

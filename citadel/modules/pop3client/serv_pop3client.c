@@ -1,7 +1,7 @@
 /*
  * Consolidate mail from remote POP3 accounts.
  *
- * Copyright (c) 2007-2017 by the citadel.org team
+ * Copyright (c) 2007-2019 by the citadel.org team
  *
  * This program is open source software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License as published
@@ -59,7 +59,6 @@ struct p3cq {				// module-local queue of pop3 client work that needs processing
 	long interval;
 };
 
-struct CitContext pop3_client_CC;
 static int doing_pop3client = 0;
 struct p3cq *p3cq = NULL;
 
@@ -204,8 +203,6 @@ void pop3client_scan(void) {
 	time_t fastest_scan;
 	struct p3cq *pptr = NULL;
 
-	become_session(&pop3_client_CC);
-
 	if (CtdlGetConfigLong("c_pop3_fastest") < CtdlGetConfigLong("c_pop3_fetch")) {
 		fastest_scan = CtdlGetConfigLong("c_pop3_fastest");
 	}
@@ -259,7 +256,6 @@ CTDL_MODULE_INIT(pop3client)
 {
 	if (!threading)
 	{
-		CtdlFillSystemContext(&pop3_client_CC, "POP3aggr");
 		CtdlREGISTERRoomCfgType(pop3client, ParseGeneric, 0, 5, SerializeGeneric, DeleteGenericCfgLine);
 		CtdlRegisterSessionHook(pop3client_scan, EVT_TIMER, PRIO_AGGR + 50);
 	}

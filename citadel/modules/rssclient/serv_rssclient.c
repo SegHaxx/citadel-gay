@@ -73,7 +73,6 @@ struct rssparser {
 };
 
 time_t last_run = 0L;
-struct CitContext rss_CC;
 struct rssurl *rsstodo = NULL;
 
 
@@ -446,7 +445,6 @@ void rssclient_scan(void) {
 		return;
 	}
 
-	become_session(&rss_CC);
 	syslog(LOG_DEBUG, "rssclient: started");
 	CtdlForEachRoom(rssclient_scan_room, NULL);
 	rss_pull_feeds();
@@ -462,10 +460,6 @@ CTDL_MODULE_INIT(rssclient)
 	{
 		syslog(LOG_INFO, "rssclient: using %s", curl_version());
 		CtdlRegisterSessionHook(rssclient_scan, EVT_TIMER, PRIO_AGGR + 300);
-	}
-	else
-	{
-		CtdlFillSystemContext(&rss_CC, "rssclient");
 	}
 	return "rssclient";
 }

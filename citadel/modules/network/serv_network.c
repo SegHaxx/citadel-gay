@@ -1,7 +1,7 @@
 /*
  * This module handles network mail and mailing list processing.
  *
- * Copyright (c) 2000-2018 by the citadel.org team
+ * Copyright (c) 2000-2019 by the citadel.org team
  *
  * This program is open source software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 3.
@@ -76,8 +76,6 @@
 #include "ctdl_module.h"
 #include "netspool.h"
 #include "netmail.h"
-
-struct CitContext networker_spool_CC;
 
 /* comes from lookup3.c from libcitadel... */
 extern uint32_t hashlittle( const void *key, size_t length, uint32_t initval);
@@ -227,7 +225,6 @@ void network_do_queue(void)
 		syslog(LOG_DEBUG, "network: full processing in %ld seconds.", CtdlGetConfigLong("c_net_freq") - (time(NULL)- last_run));
 	}
 
-	become_session(&networker_spool_CC);
 	begin_critical_section(S_RPLIST);
 	RL.rplist = rplist;
 	rplist = NULL;
@@ -320,13 +317,10 @@ void network_do_queue(void)
 /*
  * Module entry point
  */
-
-
 CTDL_MODULE_INIT(network)
 {
 	if (!threading)
 	{
-		CtdlFillSystemContext(&networker_spool_CC, "CitNetSpool");
 		CtdlRegisterRoomHook(network_room_handler);
 		CtdlRegisterCleanupHook(destroy_network_queue_room_locked);
 		CtdlRegisterSessionHook(network_do_queue, EVT_TIMER, PRIO_QUEUE + 10);
