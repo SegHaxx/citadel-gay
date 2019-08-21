@@ -775,7 +775,6 @@ void edit_value(int curr)
 					ctdluid = atoi(ctdluidname);
 				}
 			}
-#endif
 		}
 		setconf_int("c_ctdluid", ctdluid);
 		break;
