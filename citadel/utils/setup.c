@@ -48,10 +48,6 @@
 #define _(string)	(string)
 #endif
 
-#define UI_TEXT		0	/* Default setup type -- text only */
-#define UI_DIALOG	2	/* Use the 'whiptail' or 'dialog' program */
-#define UI_SILENT	3	/* Silent running, for use in scripts */
-
 #define SERVICE_NAME	"citadel"
 #define PROTO_NAME	"tcp"
 #define NSSCONF		"/etc/nsswitch.conf"
@@ -112,7 +108,6 @@ void SetTitles(void)
 
 #ifdef ENABLE_NLS
 	setlocale(LC_MESSAGES, getenv("LANG"));
-
 	bindtextdomain("citadel-setup", LOCALEDIR"/locale");
 	textdomain("citadel-setup");
 	bind_textdomain_codeset("citadel-setup","UTF8");
@@ -236,105 +231,52 @@ void SetTitles(void)
 }
 
 
-
-void title(const char *text)
-{
-	if (setup_type == UI_TEXT) {
-		printf("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n<%s>\n", text);
-	}
+void title(const char *text) {
+	printf("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n<%s>\n", text);
 }
 
 
-
-int yesno(const char *question, int default_value)
-{
-	int i = 0;
+int yesno(const char *question, int default_value) {
 	int answer = 0;
 	char buf[SIZ];
 
-	switch (setup_type) {
-
-	case UI_TEXT:
-		do {
-			printf("%s\n%s [%s] --> ",
-			       question,
-			       _("Yes/No"),
-			       ( default_value ? _("Yes") : _("No") )
-			);
-			if (fgets(buf, sizeof buf, stdin))
-			{
-				answer = tolower(buf[0]);
-				if ((buf[0]==0) || (buf[0]==13) || (buf[0]==10)) {
-					answer = default_value;
-				}
-				else if (answer == 'y') {
-					answer = 1;
-				}
-				else if (answer == 'n') {
-					answer = 0;
-				}
+	do {
+		printf("%s\n%s [%s] --> ", question, _("Yes/No"), ( default_value ? _("Yes") : _("No") ));
+		if (fgets(buf, sizeof buf, stdin)) {
+			answer = tolower(buf[0]);
+			if ((buf[0]==0) || (buf[0]==13) || (buf[0]==10)) {
+				answer = default_value;
 			}
-		} while ((answer < 0) || (answer > 1));
-		break;
-
-	case UI_DIALOG:
-		snprintf(buf, sizeof buf, "exec %s --backtitle '%s' %s --yesno '%s' 15 75",
-			getenv("CTDL_DIALOG"),
-			program_title,
-			( default_value ? "" : "--defaultno" ),
-			question);
-		i = system(buf);
-		if (i == 0) {
-			answer = 1;
+			else if (answer == 'y') {
+				answer = 1;
+			}
+			else if (answer == 'n') {
+				answer = 0;
+			}
 		}
-		else {
-			answer = 0;
-		}
-		break;
-	case UI_SILENT:
-		break;
-	}
+	} while ((answer < 0) || (answer > 1));
 	return (answer);
 }
 
 
-void important_message(const char *title, const char *msgtext)
-{
+void important_message(const char *title, const char *msgtext) {
 	char buf[SIZ];
 
-	switch (setup_type) {
-
-	case UI_TEXT:
-		printf("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n");
-		printf("       %s \n\n%s\n\n", title, msgtext);
-		printf("%s", _("Press return to continue..."));
-		if (fgets(buf, sizeof buf, stdin))
-		{;}
-		break;
-
-	case UI_DIALOG:
-		snprintf(buf, sizeof buf, "exec %s --backtitle '%s' --msgbox '%s' 19 72",
-			getenv("CTDL_DIALOG"),
-			program_title,
-			msgtext);
-		int rv = system(buf);
-		if (rv != 0) {
-			fprintf(stderr, _("failed to run the dialog command\n"));
-		}
-		break;
-	case UI_SILENT:
-		fprintf(stderr, "%s\n", msgtext);
-		break;
+	printf("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n");
+	printf("       %s \n\n%s\n\n", title, msgtext);
+	printf("%s", _("Press return to continue..."));
+	if (fgets(buf, sizeof buf, stdin)) {
+		;
 	}
 }
 
-void important_msgnum(int msgnum)
-{
+
+void important_msgnum(int msgnum) {
 	important_message(_("Important Message"), setup_text[msgnum]);
 }
 
-void display_error(char *error_message_format, ...)
-{
+
+void display_error(char *error_message_format, ...) {
 	StrBuf *Msg;
 	va_list arg_ptr;
 
@@ -347,79 +289,38 @@ void display_error(char *error_message_format, ...)
 	FreeStrBuf(&Msg);
 }
 
-void progress(char *text, long int curr, long int cmax)
-{
+
+void progress(char *text, long int curr, long int cmax) {
 	static long dots_printed = 0L;
 	long a = 0;
-	static FILE *fp = NULL;
-	char buf[SIZ];
 
-	switch (setup_type) {
-
-	case UI_TEXT:
-		if (curr == 0) {
-			printf("%s\n", text);
-			printf("....................................................");
-			printf("..........................\r");
-			dots_printed = 0;
-		} else if (curr == cmax) {
-			printf("\r%79s\n", "");
-		} else {
-			a = (curr * 100) / cmax;
-			a = a * 78;
-			a = a / 100;
-			while (dots_printed < a) {
-				printf("*");
-				++dots_printed;
-			}
+	if (curr == 0) {
+		printf("%s\n", text);
+		printf("....................................................");
+		printf("..........................\r");
+		dots_printed = 0;
+	} else if (curr == cmax) {
+		printf("\r%79s\n", "");
+	} else {
+		a = (curr * 100) / cmax;
+		a = a * 78;
+		a = a / 100;
+		while (dots_printed < a) {
+			printf("*");
+			++dots_printed;
 		}
-		fflush(stdout);
-		break;
-
-	case UI_DIALOG:
-		if (curr == 0) {
-			snprintf(buf, sizeof buf, "exec %s --backtitle '%s' --gauge '%s' 7 72 0",
-				getenv("CTDL_DIALOG"),
-				program_title,
-				text);
-			fp = popen(buf, "w");
-			if (fp != NULL) {
-				fprintf(fp, "0\n");
-				fflush(fp);
-			}
-		} 
-		else if (curr == cmax) {
-			if (fp != NULL) {
-				fprintf(fp, "100\n");
-				pclose(fp);
-				fp = NULL;
-			}
-		}
-		else {
-			a = (curr * 100) / cmax;
-			if (fp != NULL) {
-				fprintf(fp, "%ld\n", a);
-				fflush(fp);
-			}
-		}
-		break;
-	case UI_SILENT:
-		break;
-
-	default:
-		assert(1==0);	/* If we got here then the developer is a moron */
 	}
+	fflush(stdout);
 }
 
 
-int uds_connectsock(char *sockpath)
-{
+int uds_connectsock(char *sockpath) {
 	int s;
 	struct sockaddr_un addr;
 
 	memset(&addr, 0, sizeof(addr));
 	addr.sun_family = AF_UNIX;
-	strncpy(addr.sun_path, sockpath, sizeof addr.sun_path);
+	strcpy(addr.sun_path, sockpath);
 
 	s = socket(AF_UNIX, SOCK_STREAM, 0);
 	if (s < 0) {
@@ -438,8 +339,7 @@ int uds_connectsock(char *sockpath)
 /*
  * input binary data from socket
  */
-void serv_read(char *buf, int bytes)
-{
+void serv_read(char *buf, int bytes) {
 	int len, rlen;
 
 	len = 0;
@@ -456,8 +356,7 @@ void serv_read(char *buf, int bytes)
 /*
  * send binary to server
  */
-void serv_write(char *buf, int nbytes)
-{
+void serv_write(char *buf, int nbytes) {
 	int bytes_written = 0;
 	int retval;
 	while (bytes_written < nbytes) {
@@ -470,12 +369,10 @@ void serv_write(char *buf, int nbytes)
 }
 
 
-
 /*
  * input string from socket - implemented in terms of serv_read()
  */
-void serv_gets(char *buf)
-{
+void serv_gets(char *buf) {
 	int i;
 
 	/* Read one character at a time.
@@ -503,8 +400,7 @@ void serv_gets(char *buf)
 /*
  * send line to server - implemented in terms of serv_write()
  */
-void serv_puts(char *buf)
-{
+void serv_puts(char *buf) {
 	serv_write(buf, strlen(buf));
 	serv_write("\n", 1);
 }
@@ -513,8 +409,7 @@ void serv_puts(char *buf)
 /*
  * Convenience functions to get/set system configuration entries
  */
-void getconf_str(char *buf, char *key)
-{
+void getconf_str(char *buf, char *key) {
 	char cmd[SIZ];
 	char ret[SIZ];
 
@@ -529,15 +424,15 @@ void getconf_str(char *buf, char *key)
 	}
 }
 
-int getconf_int(char *key)
-{
+
+int getconf_int(char *key) {
 	char buf[SIZ];
 	getconf_str(buf, key);
 	return atoi(buf);
 }
 
-void setconf_str(char *key, char *val)
-{
+
+void setconf_str(char *key, char *val) {
 	char buf[SIZ];
 
 	sprintf(buf, "CONF PUTVAL|%s|%s", key, val);
@@ -546,17 +441,13 @@ void setconf_str(char *key, char *val)
 }
 
 
-void setconf_int(char *key, int val)
-{
+void setconf_int(char *key, int val) {
 	char buf[SIZ];
 
 	sprintf(buf, "CONF PUTVAL|%s|%d", key, val);
 	serv_puts(buf);
 	serv_gets(buf);
 }
-
-
-
 
 
 /*
@@ -642,61 +533,27 @@ void strprompt(const char *prompt_title, const char *prompt_text, char *Target, 
 {
 	char buf[SIZ] = "";
 	char setupmsg[SIZ];
-	char dialog_result[PATH_MAX];
-	FILE *fp = NULL;
-	int rv;
 
 	strcpy(setupmsg, "");
 
-	switch (setup_type) {
-	case UI_TEXT:
-		title(prompt_title);
-		printf("\n%s\n", prompt_text);
-		printf("%s\n%s\n", _("This is currently set to:"), Target);
-		printf("%s\n", _("Enter new value or press return to leave unchanged:"));
-		if (fgets(buf, sizeof buf, stdin)) {
-			buf[strlen(buf) - 1] = 0;
-		}
-		if (!IsEmptyStr(buf))
-			strcpy(Target, buf);
-		break;
-
-	case UI_DIALOG:
-		CtdlMakeTempFileName(dialog_result, sizeof dialog_result);
-		snprintf(buf, sizeof buf, "exec %s --backtitle '%s' --nocancel --inputbox '%s' 19 72 '%s' 2>%s",
-			getenv("CTDL_DIALOG"),
-			program_title,
-			prompt_text,
-			Target,
-			dialog_result);
-		rv = system(buf);
-		if (rv != 0) {
-			fprintf(stderr, "failed to run whiptail or dialog\n");
-		}
-		
-		fp = fopen(dialog_result, "r");
-		if (fp != NULL) {
-			if (fgets(Target, sizeof buf, fp)) {
-				if (Target[strlen(Target)-1] == 10) {
-					Target[strlen(Target)-1] = 0;
-				}
-			}
-			fclose(fp);
-			unlink(dialog_result);
-		}
-		break;
-	case UI_SILENT:
-		if (*DefValue != '\0')
-			strcpy(Target, DefValue);
-		break;
+	title(prompt_title);
+	printf("\n%s\n", prompt_text);
+	printf("%s\n%s\n", _("This is currently set to:"), Target);
+	printf("%s\n", _("Enter new value or press return to leave unchanged:"));
+	if (fgets(buf, sizeof buf, stdin)) {
+		buf[strlen(buf) - 1] = 0;
+	}
+	if (!IsEmptyStr(buf)) {
+		strcpy(Target, buf);
 	}
 }
 
-void set_bool_val(int msgpos, int *ip, char *DefValue) 
-{
+
+void set_bool_val(int msgpos, int *ip, char *DefValue) {
 	title(setup_titles[msgpos]);
 	*ip = yesno(setup_text[msgpos], *ip);
 }
+
 
 void set_str_val(int msgpos, char *Target, char *DefValue) 
 {
@@ -706,6 +563,7 @@ void set_str_val(int msgpos, char *Target, char *DefValue)
 		  DefValue
 	);
 }
+
 
 /* like set_str_val() but for numeric values */
 void set_int_val(int msgpos, int *target, char *default_value)
@@ -730,10 +588,6 @@ void edit_value(int curr)
 	int auth = 0;
 	int lportnum = 0;
 
-	if (setup_type == UI_SILENT)
-	{
-		default_value = getenv(EnvNames[curr]);
-	}
 	if (default_value == NULL) {
 		default_value = "";
 	}
@@ -752,28 +606,19 @@ void edit_value(int curr)
 	
 	case eUID:
 		ctdluid = getconf_int("c_ctdluid");
-		if (setup_type == UI_SILENT)
-		{		
-			if (default_value) {
-				ctdluid = atoi(default_value);
-			}					
+		pw = getpwuid(ctdluid);
+		if (pw == NULL) {
+			set_int_val(curr, &ctdluid, default_value);
 		}
-		else
-		{
-			pw = getpwuid(ctdluid);
-			if (pw == NULL) {
-				set_int_val(curr, &ctdluid, default_value);
+		else {
+			strcpy(ctdluidname, pw->pw_name);
+			set_str_val(curr, ctdluidname, default_value);
+			pw = getpwnam(ctdluidname);
+			if (pw != NULL) {
+				ctdluid = pw->pw_uid;
 			}
-			else {
-				strcpy(ctdluidname, pw->pw_name);
-				set_str_val(curr, ctdluidname, default_value);
-				pw = getpwnam(ctdluidname);
-				if (pw != NULL) {
-					ctdluid = pw->pw_uid;
-				}
-				else if (atoi(ctdluidname) > 0) {
-					ctdluid = atoi(ctdluidname);
-				}
+			else if (atoi(ctdluidname) > 0) {
+				ctdluid = atoi(ctdluidname);
 			}
 		}
 		setconf_int("c_ctdluid", ctdluid);
@@ -793,17 +638,7 @@ void edit_value(int curr)
 
 	case eAuthType:
 		auth = getconf_int("c_auth_mode");
-		if (setup_type == UI_SILENT)
-		{
-			if ( (default_value) && (!strcasecmp(default_value, "yes")) ) auth = AUTHMODE_HOST;
-			if ( (default_value) && (!strcasecmp(default_value, "host")) ) auth = AUTHMODE_HOST;
-			if ( (default_value) && (!strcasecmp(default_value, "ldap")) ) auth = AUTHMODE_LDAP;
-			if ( (default_value) && (!strcasecmp(default_value, "ldap_ad")) ) auth = AUTHMODE_LDAP_AD;
-			if ( (default_value) && (!strcasecmp(default_value, "active directory")) ) auth = AUTHMODE_LDAP_AD;
-		}
-		else {
-			set_int_val(curr, &auth, default_value);
-		}
+		set_int_val(curr, &auth, default_value);
 		setconf_int("c_auth_mode", auth);
 		break;
 
@@ -844,23 +679,6 @@ void edit_value(int curr)
 		break;
 	}
 }
-
-
-
-/*
- * Figure out what type of user interface we're going to use
- */
-int discover_ui(void)
-{
-
-	/* Use "whiptail" or "dialog" if we have it */
-	if (getenv("CTDL_DIALOG") != NULL) {
-		return UI_DIALOG;
-	}
-		
-	return UI_TEXT;
-}
-
 
 
 /*
@@ -998,9 +816,6 @@ int main(int argc, char *argv[])
 			strcpy(aaa, &aaa[2]);
 			setup_type = atoi(aaa);
 		}
-		else if (!strcmp(argv[a], "-q")) {
-			setup_type = UI_SILENT;
-		}
 		else if (!strncmp(argv[a], "-h", 2)) {
 			relh=argv[a][2]!='/';
 			if (!relh) {
@@ -1010,18 +825,10 @@ int main(int argc, char *argv[])
 			}
 			home = 1;
 		}
-
 	}
 
 	calc_dirs_n_files(relh, home, relhome, ctdldir, 0);
 	SetTitles();
-
-	/* If a setup type was not specified, try to determine automatically
-	 * the best one to use out of all available types.
-	 */
-	if (setup_type < 0) {
-		setup_type = discover_ui();
-	}
 
 	enable_home = ( relh | home );
 
@@ -1082,18 +889,7 @@ int main(int argc, char *argv[])
 		++a;
 	}
 
-	/*
-	 * Now begin.
-	 */
-
-
-	if (setup_type == UI_TEXT) {
-		printf("\n\n\n	       *** %s ***\n\n", program_title);
-	}
-
-	if (setup_type == UI_DIALOG) {
-		system("clear 2>/dev/null");
-	}
+	printf("\n\n\n	       *** %s ***\n\n", program_title);
 
 	/* Go through a series of dialogs prompting for config info */
 	for (curr = 1; curr < eMaxQuestions; ++curr) {
@@ -1169,11 +965,9 @@ int main(int argc, char *argv[])
 	}
 	progress(activity, 5, 5);
 
-#ifndef __CYGWIN__
 	check_xinetd_entry();	/* Check /etc/xinetd.d/telnet */
 	disable_other_mtas();   /* Offer to disable other MTAs */
 	fixnss();		/* Check for the 'db' nss and offer to disable it */
-#endif
 
 	/*
 	 * Restart citserver
@@ -1219,9 +1013,7 @@ int main(int argc, char *argv[])
 	close(serv_sock);
 	progress(activity, 51, 51);
 
-	if (	(original_start_time == new_start_time)
-		|| (new_start_time <= 0)
-	) {
+	if ((original_start_time == new_start_time) || (new_start_time <= 0)) {
 		display_error("%s\n", _("Setup failed to restart Citadel server.  Please restart it manually."));
 		exit(7);
 	}

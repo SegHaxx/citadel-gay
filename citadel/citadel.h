@@ -194,4 +194,9 @@ struct floor {
 }
 #endif
 
+#if __GNUC__ >= 8
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wformat-truncation"
+#endif
+
 #endif /* CITADEL_H */
