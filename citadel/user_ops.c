@@ -54,8 +54,7 @@ long cutusername(char *username) {
 void makeuserkey(char *key, const char *username, long len) {
 	int i;
 
-	if (len >= USERNAME_SIZE)
-	{
+	if (len >= USERNAME_SIZE) {
 		syslog(LOG_INFO, "Username too long: %s", username);
 		len = USERNAME_SIZE - 1; 
 	}
@@ -178,10 +177,8 @@ int rename_user(char *oldname, char *newname) {
 		if (CtdlGetUser(&usbuf, oldname) != 0) {
 			retcode = RENAMEUSER_NOT_FOUND;
 		}
-
 		else {		/* Sanity checks succeeded.  Now rename the user. */
-			if (usbuf.usernum == 0)
-			{
+			if (usbuf.usernum == 0) {
 				syslog(LOG_DEBUG, "user_ops: can not rename user \"Citadel\".");
 				retcode = RENAMEUSER_NOT_FOUND;
 			} else {
@@ -209,7 +206,6 @@ int GenerateRelationshipIndex(char *IndexBuf,
 			      long RoomGen,
 			      long UserID)
 {
-
 	struct {
 		long iRoomID;
 		long iRoomGen;
@@ -247,10 +243,7 @@ void put_visit(visit *newvisit)
 /*
  * Define a relationship between a user and a room
  */
-void CtdlSetRelationship(visit *newvisit,
-			 struct ctdluser *rel_user,
-			 struct ctdlroom *rel_room)
-{
+void CtdlSetRelationship(visit *newvisit, struct ctdluser *rel_user, struct ctdlroom *rel_room) {
 	/* We don't use these in Citadel because they're implicit by the
 	 * index, but they must be present if the database is exported.
 	 */
@@ -265,10 +258,7 @@ void CtdlSetRelationship(visit *newvisit,
 /*
  * Locate a relationship between a user and a room
  */
-void CtdlGetRelationship(visit *vbuf,
-			 struct ctdluser *rel_user,
-			 struct ctdlroom *rel_room)
-{
+void CtdlGetRelationship(visit *vbuf, struct ctdluser *rel_user, struct ctdlroom *rel_room) {
 	char IndexBuf[32];
 	int IndexLen;
 	struct cdbdata *cdbvisit;

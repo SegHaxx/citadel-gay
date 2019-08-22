@@ -63,21 +63,14 @@
 int oldver = 0;
 
 /*
- * Fix up the name for Citadel user 0 and try to remove any extra users with number 0
+ * Try to remove any extra users with number 0
  */
 void fix_sys_user_name(void)
 {
 	struct ctdluser usbuf;
 	char usernamekey[USERNAME_SIZE];
 
-	/** If we have a user called Citadel rename them to SYS_Citadel */
-	if (CtdlGetUser(&usbuf, "Citadel") == 0)
-	{
-		rename_user("Citadel", "SYS_Citadel");
-	}
-
-	while (CtdlGetUserByNumber(&usbuf, 0) == 0)
-	{
+	while (CtdlGetUserByNumber(&usbuf, 0) == 0) {
 		/* delete user with number 0 and no name */
 		if (IsEmptyStr(usbuf.fullname)) {
 			cdb_delete(CDB_USERS, "", 0);
@@ -89,18 +82,10 @@ void fix_sys_user_name(void)
 		}
 	}
 
-	/* Make sure user SYS_* is user 0 */
-	while (CtdlGetUserByNumber(&usbuf, -1) == 0)
-	{
-		if (strncmp(usbuf.fullname, "SYS_", 4))
-		{	/* Delete any user 0 that doesn't start with SYS_ */
-			makeuserkey(usernamekey, usbuf.fullname, cutusername(usbuf.fullname));
-			cdb_delete(CDB_USERS, usernamekey, strlen(usernamekey));
-		}
-		else {
-			usbuf.usernum = 0;
-			CtdlPutUser(&usbuf);
-		}
+	/* Delete any "user 0" accounts */
+	while (CtdlGetUserByNumber(&usbuf, -1) == 0) {
+		makeuserkey(usernamekey, usbuf.fullname, cutusername(usbuf.fullname));
+		cdb_delete(CDB_USERS, usernamekey, strlen(usernamekey));
 	}
 }
 
@@ -587,14 +572,13 @@ CTDL_MODULE_UPGRADE(upgrade)
 	return "upgrade";
 }
 
+
 CTDL_MODULE_INIT(upgrade)
 {
-	if(!threading)
-	{
-		move_inet_addrs_from_vcards_to_user_records();
+	if (!threading) {
 		post_startup_upgrades();
 	}
-	
+
 	/* return our module name for the log */
         return "upgrade";
 }
