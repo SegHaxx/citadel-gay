@@ -19,7 +19,6 @@
 #include <regex.h>
 #include <sys/stat.h>
 #include <libcitadel.h>
-#include "md5.h"
 #include "ctdl_module.h"
 #include "citserver.h"
 #include "control.h"

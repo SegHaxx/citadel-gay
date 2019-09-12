@@ -45,7 +45,6 @@
 #include "support.h"
 #include "config.h"
 #include "internet_addressing.h"
-#include "md5.h"
 #include "ctdl_module.h"
 #include "serv_xmpp.h"
 

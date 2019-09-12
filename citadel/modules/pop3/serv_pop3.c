@@ -1,7 +1,7 @@
 /*
  * POP3 service for the Citadel system
  *
- * Copyright (c) 1998-2018 by the citadel.org team
+ * Copyright (c) 1998-2019 by the citadel.org team
  *
  * This program is open source software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3.
@@ -57,7 +57,6 @@
 #include "msgbase.h"
 #include "internet_addressing.h"
 #include "serv_pop3.h"
-#include "md5.h"
 #include "ctdl_module.h"
 
 

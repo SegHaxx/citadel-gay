@@ -48,7 +48,6 @@
 #include "parsedate.h"
 #include "database.h"
 #include "citadel_dirs.h"
-#include "md5.h"
 #include "context.h"
 #include "internet_addressing.h"
 
