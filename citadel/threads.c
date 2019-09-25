@@ -137,7 +137,6 @@ void CtdlThreadCreate(void *(*start_routine)(void*))
 
 
 void InitializeMasterTSD(void) {
-	TRACE;
 	memset(&masterTSD, 0, sizeof(struct thread_tsd));
 }
 

@@ -35,7 +35,7 @@ extern "C" {
  */
 #define CITADEL	PACKAGE_STRING
 
-#define REV_LEVEL	927		// This version
+#define REV_LEVEL	928		// This version
 #define REV_MIN		591		// Oldest compatible database
 #define EXPORT_REV_MIN	760		// Oldest compatible export files
 #define LIBCITADEL_MIN	922		// Minimum required version of libcitadel
@@ -176,7 +176,7 @@ struct floor {
 /* number of items which may be handled by the CONF command */
 #define NUM_CONFIGS 71
 
-#define TRACE	syslog(LOG_DEBUG, "\033[31mCheckpoint: %s : %d\033[0m", __FILE__, __LINE__)
+#define TRACE	syslog(LOG_DEBUG, "\033[7m  Checkpoint: %s : %d  \033[0m", __FILE__, __LINE__)
 
 #ifndef LONG_MAX
 #define LONG_MAX 2147483647L

@@ -71,6 +71,13 @@ void master_startup(void)
 	validate_config();
 	migrate_legacy_control_record();
 
+	// If we have an existing database that is older than version 928, reindex the user records.
+	// Unfortunately we cannot do this in serv_upgrade.c because it needs to happen VERY early during startup.
+	int existing_db = CtdlGetConfigInt("MM_hosted_upgrade_level");
+	if ( (existing_db > 0) && (existing_db < 928) ) {
+		ForEachUser(reindex_user_928, NULL);
+	}
+
 	/* Check floor reference counts */
 	check_ref_counts();
 

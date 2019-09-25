@@ -49,18 +49,22 @@ long cutusername(char *username) {
 
 /*
  * makeuserkey() - convert a username into the format used as a database key
- *		 (it's just the username converted into lower case)
+ *                 (Key format is the username with all non-alphanumeric characters removed, and converted to lower case.)
  */
 void makeuserkey(char *key, const char *username, long len) {
 	int i;
+	int keylen = 0;
 
 	if (len >= USERNAME_SIZE) {
 		syslog(LOG_INFO, "Username too long: %s", username);
 		len = USERNAME_SIZE - 1; 
 	}
 	for (i=0; i<=len; ++i) {
-		key[i] = tolower(username[i]);
+		if (isalnum((username[i]))) {
+			key[keylen++] = tolower(username[i]);
+		}
 	}
+	key[keylen++] = 0;
 }
 
 
@@ -195,6 +199,57 @@ int rename_user(char *oldname, char *newname) {
 
 	end_critical_section(S_USERS);
 	return(retcode);
+}
+
+
+/*
+ * Convert a username into the format used as a database key prior to version 928
+ * (This is only used during database upgrade)
+ */
+void makeuserkey_pre928(char *key, const char *username, long len) {
+	int i;
+
+	if (len >= USERNAME_SIZE) {
+		syslog(LOG_INFO, "Username too long: %s", username);
+		len = USERNAME_SIZE - 1; 
+	}
+	for (i=0; i<=len; ++i) {
+		key[i] = tolower(username[i]);
+	}
+}
+
+
+/*
+ * Read a user record using the pre-v928 index format, and write it back using the v928-and-higher index format.
+ * This ONLY gets called by...
+ */
+void reindex_user_928(char *username, void *out_data) {
+
+	char oldkey[USERNAME_SIZE];
+	char newkey[USERNAME_SIZE];
+	struct cdbdata *cdbus;
+	long len = cutusername(username);
+	struct ctdluser usbuf;
+
+	makeuserkey_pre928(oldkey, username, len);
+	makeuserkey(newkey, username, len);
+
+	syslog(LOG_DEBUG, "user_ops: reindex_user_928 <%s> <%s> <%s>", username, oldkey, newkey);
+
+	// Fetch the user record using the old index format
+	cdbus = cdb_fetch(CDB_USERS, oldkey, strlen(oldkey));
+	if (cdbus == NULL) {
+		syslog(LOG_INFO, "user_ops: <%s> not found, were they already reindexed?", username);
+		return;
+	}
+	memcpy(&usbuf, cdbus->ptr, ((cdbus->len > sizeof(struct ctdluser)) ?  sizeof(struct ctdluser) : cdbus->len));
+	cdb_free(cdbus);
+
+	// delete the old record
+	cdb_delete(CDB_USERS, oldkey, strlen(oldkey));
+
+	// write the new record
+	cdb_store(CDB_USERS, newkey, strlen(newkey), &usbuf, sizeof(struct ctdluser));
 }
 
 
@@ -1170,9 +1225,6 @@ void ForEachUser(void (*CallBack) (char *, void *out_data), void *in_data)
 
 	// Phase 2 : perform the callback for each username
 	for (i=0; i<num_users; ++i) {
-		//if (usernames[i].version < 927) {
-			// FIXME This is where we will do the reindexing stuff
-		//}
 		(*CallBack) (usernames[i].username, in_data);
 	}
 

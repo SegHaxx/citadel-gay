@@ -252,7 +252,7 @@ int main(int argc, char **argv)
 	ctdl_lockfile(1);
 	init_sysdep();						// Initialize...
 	master_startup();					// Do non system dependent startup functions
-	check_control();					// Check, sanitize, initialize the control record
+	check_control();					// Check/sanitize/initialize control record, fix user indexes
 	syslog(LOG_INFO, "main: upgrading modules");		// Run any upgrade entry points
 	upgrade_modules();
 
