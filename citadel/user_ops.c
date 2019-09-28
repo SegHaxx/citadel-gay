@@ -1202,32 +1202,39 @@ void ForEachUser(void (*CallBack) (char *, void *out_data), void *in_data)
 		struct feu *next;
 		char username[USERNAME_SIZE];
 	};
-	struct feu *usernames = NULL;
+	struct feu *ufirst = NULL;
+	struct feu *ulast = NULL;
 	struct feu *f = NULL;
 
 	cdb_rewind(CDB_USERS);
 
-	// Phase 1 : load list of usernames
+	// Phase 1 : build a linked list of all our user account names
 	while (cdbus = cdb_next_item(CDB_USERS), cdbus != NULL) {
 		usptr = (struct ctdluser *) cdbus->ptr;
 
 		if (strlen(usptr->fullname) > 0) {
 			f = malloc(sizeof(struct feu));
-			f->next = usernames;
+			f->next = NULL;
 			strncpy(f->username, usptr->fullname, USERNAME_SIZE);
-			usernames = f;
+
+			if (ufirst == NULL) {
+				ufirst = f;
+				ulast = f;
+			}
+			else {
+				ulast->next = f;
+				ulast = f;
+			}
 		}
 	}
 
-	// Phase 2 : perform the callback for each username
-	while (usernames != NULL) {
-		(*CallBack) (usernames->username, in_data);
-		f = usernames;
-		usernames = usernames->next;
+	// Phase 2 : perform the callback for each user while de-allocating the list
+	while (ufirst != NULL) {
+		(*CallBack) (ufirst->username, in_data);
+		f = ufirst;
+		ufirst = ufirst->next;
 		free(f);
 	}
-
-	free(usernames);
 }
 
 
