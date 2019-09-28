@@ -3,7 +3,7 @@
  *
  * Note: RFC3920 says we "must" support DIGEST-MD5 but we only support PLAIN.
  *
- * Copyright (c) 2007-2018 by Art Cancro
+ * Copyright (c) 2007-2019 by Art Cancro
  *
  * This program is open source software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3.
@@ -63,7 +63,6 @@ int xmpp_auth_plain(char *authstring)
 	char pass[256];
 	int result;
 	long len;
-	int i;
 
 	/* Take apart the authentication string */
 	memset(pass, 0, sizeof(pass));
@@ -72,25 +71,9 @@ int xmpp_auth_plain(char *authstring)
 	safestrncpy(ident, decoded_authstring, sizeof ident);
 	safestrncpy(user, &decoded_authstring[strlen(ident) + 1], sizeof user);
 	len = safestrncpy(pass, &decoded_authstring[strlen(ident) + strlen(user) + 2], sizeof pass);
-	if (len < 0)
+	if (len < 0) {
 		len = -len;
-
-	/* If there are underscores in either string, change them to spaces.  Some clients
-	 * do not allow spaces so we can tell the user to substitute underscores if their
-	 * login name contains spaces.
-	 */
-	for (i=0; ident[i]!=0; ++i) {
-		if (ident[i] == '_') {
-			ident[i] = ' ';
-		}
 	}
-	for (i=0; user[i]!=0; ++i) {
-		if (user[i] == '_') {
-			user[i] = ' ';
-		}
-	}
-
-	/* Now attempt authentication */
 
 	if (!IsEmptyStr(ident)) {
 		result = CtdlLoginExistingUser(ident);

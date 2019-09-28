@@ -31,6 +31,7 @@
 int chkpwd_write_pipe[2];
 int chkpwd_read_pipe[2];
 
+
 /*
  * Trim a string down to the maximum username size and return the new length
  */
@@ -204,7 +205,7 @@ int rename_user(char *oldname, char *newname) {
 
 /*
  * Convert a username into the format used as a database key prior to version 928
- * (This is only used during database upgrade)
+ * This only gets called by reindex_user_928()
  */
 void makeuserkey_pre928(char *key, const char *username, long len) {
 	int i;
@@ -221,7 +222,7 @@ void makeuserkey_pre928(char *key, const char *username, long len) {
 
 /*
  * Read a user record using the pre-v928 index format, and write it back using the v928-and-higher index format.
- * This ONLY gets called by...
+ * This ONLY gets called during an upgrade from version <928 to version >=928.
  */
 void reindex_user_928(char *username, void *out_data) {
 
@@ -234,7 +235,7 @@ void reindex_user_928(char *username, void *out_data) {
 	makeuserkey_pre928(oldkey, username, len);
 	makeuserkey(newkey, username, len);
 
-	syslog(LOG_DEBUG, "user_ops: reindex_user_928 <%s> <%s> <%s>", username, oldkey, newkey);
+	syslog(LOG_DEBUG, "user_ops: reindex_user_928: %s <%s> --> <%s>", username, oldkey, newkey);
 
 	// Fetch the user record using the old index format
 	cdbus = cdb_fetch(CDB_USERS, oldkey, strlen(oldkey));
@@ -242,7 +243,7 @@ void reindex_user_928(char *username, void *out_data) {
 		syslog(LOG_INFO, "user_ops: <%s> not found, were they already reindexed?", username);
 		return;
 	}
-	memcpy(&usbuf, cdbus->ptr, ((cdbus->len > sizeof(struct ctdluser)) ?  sizeof(struct ctdluser) : cdbus->len));
+	memcpy(&usbuf, cdbus->ptr, ((cdbus->len > sizeof(struct ctdluser)) ? sizeof(struct ctdluser) : cdbus->len));
 	cdb_free(cdbus);
 
 	// delete the old record
@@ -1194,17 +1195,15 @@ int CtdlForgetThisRoom(void) {
  */
 void ForEachUser(void (*CallBack) (char *, void *out_data), void *in_data)
 {
-	struct feu {
-		char username[USERNAME_SIZE];
-		int version;
-	};
-
 	struct cdbdata *cdbus;
 	struct ctdluser *usptr;
-	int i = 0;
+
+	struct feu {
+		struct feu *next;
+		char username[USERNAME_SIZE];
+	};
 	struct feu *usernames = NULL;
-	int num_users = 0;
-	int num_users_alloc = 0;
+	struct feu *f = NULL;
 
 	cdb_rewind(CDB_USERS);
 
@@ -1213,19 +1212,19 @@ void ForEachUser(void (*CallBack) (char *, void *out_data), void *in_data)
 		usptr = (struct ctdluser *) cdbus->ptr;
 
 		if (strlen(usptr->fullname) > 0) {
-			++num_users;
-			if (num_users > num_users_alloc) {
-				num_users_alloc = ((num_users_alloc == 0) ? 1 : (num_users_alloc * 2));
-				usernames = realloc(usernames, num_users_alloc * sizeof(struct feu));
-			}
-			strcpy(usernames[num_users-1].username, usptr->fullname);
-			usernames[num_users-1].version = usptr->version;
+			f = malloc(sizeof(struct feu));
+			f->next = usernames;
+			strncpy(f->username, usptr->fullname, USERNAME_SIZE);
+			usernames = f;
 		}
 	}
 
 	// Phase 2 : perform the callback for each username
-	for (i=0; i<num_users; ++i) {
-		(*CallBack) (usernames[i].username, in_data);
+	while (usernames != NULL) {
+		(*CallBack) (usernames->username, in_data);
+		f = usernames;
+		usernames = usernames->next;
+		free(f);
 	}
 
 	free(usernames);
