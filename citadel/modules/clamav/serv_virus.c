@@ -6,19 +6,13 @@
  *
  * Copyright (c) 1987-2012 by the citadel.org team
  *
- *  This program is open source software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License version 3.
- *  
- *  
+ * This program is open source software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 3.
  *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  
- *  
- *  
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
  */
 
 #define CLAMD_PORT       "3310"
@@ -61,10 +55,7 @@
 #include "internet_addressing.h"
 #include "domain.h"
 #include "clientsocket.h"
-
-
 #include "ctdl_module.h"
-
 
 
 /*
@@ -83,13 +74,11 @@ int clamd(struct CtdlMessage *msg, recptypes *recp) {
 	StrBuf *msgtext;
 	CitContext *CCC;
 
-	/* Don't care if you're logged in.  You can still spread viruses.
-	 */
-	/* if (CC->logged_in) return(0); */
-
 	/* See if we have any clamd hosts configured */
 	num_clamhosts = get_hosts(clamhosts, "clamav");
-	if (num_clamhosts < 1) return(0);
+	if (num_clamhosts < 1) {
+		return(0);
+	}
 
 	/* Try them one by one until we get a working one */
         for (clamhost=0; clamhost<num_clamhosts; ++clamhost) {
@@ -153,7 +142,6 @@ int clamd(struct CtdlMessage *msg, recptypes *recp) {
 	}
 
 
-
 	/* Message */
 	CC->redirect_buffer = NewStrBufPlain(NULL, SIZ);
 	CtdlOutputPreLoadedMsg(msg, MT_RFC822, HEADERS_ALL, 0, 1, 0);
@@ -166,8 +154,9 @@ int clamd(struct CtdlMessage *msg, recptypes *recp) {
 	/* Close the streamsocket connection; this tells clamd
 	 * that we're done.
 	 */
-	if (streamsock != -1)
+	if (streamsock != -1) {
 		close(streamsock);
+	}
 	
 	/* Response */
 	syslog(LOG_DEBUG, "Awaiting response\n");
@@ -188,7 +177,6 @@ bail:	close(sock);
 	FreeStrBuf(&CCC->sMigrateBuf);
 	return(is_virus);
 }
-
 
 
 CTDL_MODULE_INIT(virus)
