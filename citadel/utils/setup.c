@@ -679,6 +679,7 @@ void edit_value(int curr)
 }
 
 
+#if 0
 /*
  * Strip "db" entries out of /etc/nsswitch.conf
  */
@@ -767,6 +768,7 @@ void fixnss(void) {
 	}
 	unlink(new_filename);
 }
+#endif
 
 
 /*
@@ -965,7 +967,7 @@ int main(int argc, char *argv[])
 
 	check_xinetd_entry();	/* Check /etc/xinetd.d/telnet */
 	disable_other_mtas();   /* Offer to disable other MTAs */
-	fixnss();		/* Check for the 'db' nss and offer to disable it */
+	//	fixnss();	(No longer needed)
 
 	/*
 	 * Restart citserver
