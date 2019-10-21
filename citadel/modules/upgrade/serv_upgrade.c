@@ -472,6 +472,21 @@ void move_inet_addrs_from_vcards_to_user_records(void)
 
 
 /*
+ * Create a default administrator account so we can log in to a new installation
+ */
+void create_default_admin_account(void) {
+	struct ctdluser usbuf;
+
+	create_user(DEFAULT_ADMIN_USERNAME, CREATE_USER_DO_NOT_BECOME_USER, (-1));
+	CtdlGetUser(&usbuf, DEFAULT_ADMIN_USERNAME);
+	safestrncpy(usbuf.password, DEFAULT_ADMIN_PASSWORD, sizeof(usbuf.password));
+	usbuf.axlevel = AxAideU;
+	CtdlPutUser(&usbuf);
+	CtdlSetConfigStr("c_sysadm", DEFAULT_ADMIN_USERNAME);
+}
+
+
+/*
  * Based on the server version number reported by the existing database,
  * run in-place data format upgrades until everything is up to date.
  */
@@ -535,6 +550,13 @@ void pre_startup_upgrades(void) {
 	if (CtdlGetConfigInt("c_ep_mode") == 0) {
 		CtdlSetConfigInt("c_ep_mode", EXPIRE_MANUAL);
 		CtdlSetConfigInt("c_ep_value", 0);
+	}
+
+	/*
+	 * If this is the first run on an empty database, create a default administrator
+	 */
+	if (oldver == 0) {
+		create_default_admin_account();
 	}
 }
 

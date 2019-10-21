@@ -47,6 +47,13 @@ extern "C" {
 #endif
 #endif
 
+/*
+ * This is the user name and password for the default administrator account
+ * that is created when Citadel Server is started with an empty database.
+ */
+#define DEFAULT_ADMIN_USERNAME	"admin"
+#define DEFAULT_ADMIN_PASSWORD	"citadel"
+
 /* Various length constants */
 
 #define ROOMNAMELEN	128		/* The size of a roomname string */
