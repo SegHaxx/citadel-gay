@@ -518,15 +518,6 @@ void check_xinetd_entry(void)
 }
 
 
-void disable_other_mtas(void)
-{
-	if ((getenv("ACT_AS_MTA") == NULL) || (getenv("ACT_AS_MTA") && strcasecmp(getenv("ACT_AS_MTA"), "yes") == 0)) {
-		/* Offer to disable other MTA's on the system. */
-		/* FIXME this has to be rewritten to work in the new systemd-based world. */
-	}
-}
-
-
 void strprompt(const char *prompt_title, const char *prompt_text, char *Target, char *DefValue)
 {
 	char buf[SIZ] = "";
@@ -966,8 +957,6 @@ int main(int argc, char *argv[])
 	progress(activity, 5, 5);
 
 	check_xinetd_entry();	/* Check /etc/xinetd.d/telnet */
-	disable_other_mtas();   /* Offer to disable other MTAs */
-	//	fixnss();	(No longer needed)
 
 	/*
 	 * Restart citserver
