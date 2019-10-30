@@ -91,6 +91,14 @@ char *command_generator(const char *text, int state)
 /* Auto-completer function */
 char **ctdlsh_completion(const char *text, int start, int end)
 {
+
+
+	printf("\033[7mcompletion: text='%s', start=%d, end=%d\033[0m\n", text, start , end);
+
+
+
+
+
 	char **matches = (char **) NULL;
 
 	rl_completer_word_break_characters = " ";
