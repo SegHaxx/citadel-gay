@@ -1,15 +1,10 @@
 /*
- * (c) 2009-2017 by Art Cancro and citadel.org
- * This program is released under the terms of the GNU General Public License v3.
+ * (c) 2009-2019 by Art Cancro and citadel.org
+ * This program is open source.  It runs great on the Linux operating system.
+ * It's released under the General Public License (GPL) version 3.
  */
 
 #include "ctdlsh.h"
-
-
-int cmd_quit(int sock, char *cmdbuf)
-{
-	return (cmdret_exit);
-}
 
 
 /*
@@ -31,8 +26,6 @@ COMMAND commands[] = {
 	{"time", cmd_datetime, "Print the server's date and time"},
 	{"passwd", cmd_passwd, "Set or change an account password"},
 	{"who", cmd_who, "Display a list of online users"},
-	{"exit", cmd_quit, "Quit using ctdlsh"},
-	{"quit", cmd_quit, "Quit using ctdlsh"},
 	{"mailq", cmd_mailq, "Show the outbound email queue"},
 	{NULL, NULL, NULL}
 };
@@ -45,14 +38,17 @@ struct wow {
 };
 
 struct wow wows[] = {
+	{{ "help" }					, "list available commands"				},
+	{{ "date" }					, "print the server's date and time"			},
 	{{ "show", "eggs" }				, "show how many eggs are available for serving"	},
 	{{ "kill", "mark", "zuckerberg" }		, "die motherfucker die"				},
 	{{ "show", "undead", "zombies", "real" }	, "show how many zombies are actually undead"		},
-	{{ "show", "undead", "zombies", "hollywood" }	, "show how many zombies are hollywood communists"	}
+	{{ "show", "undead", "zombies", "hollywood" }	, "show how many zombies are hollywood communists"	},
+	{{ NULL }					, "NULL"						}
 };
 
 
-
+int num_wows = sizeof(wows) / sizeof(struct wow);
 
 
 
@@ -62,8 +58,8 @@ int cmd_help(int sock, char *cmdbuf)
 {
 	int i;
 
-	for (i = 0; commands[i].func != NULL; ++i) {
-		printf("%-10s %s\n", commands[i].name, commands[i].doc);
+	for (i = 0; wows[i].cmd[0]; ++i) {
+		printf("%-10s %s\n", wows[i].cmd[0], wows[i].description);
 	}
 }
 
@@ -150,20 +146,9 @@ void do_main_loop(int server_socket)
 	rl_attempted_completion_function = ctdlsh_completion;
 
 	/* Here we go ... main command loop */
-	while ((ret != cmdret_exit) && (cmd = readline(prompt))) {
-
-		if ((cmd) && (*cmd)) {
-			add_history(cmd);
-			ret = do_one_command(server_socket, cmd);
-
-			//for (i=0; commands[i].func != NULL; ++i) {
-			//if (!strncasecmp(cmd, commands[i].name, strlen(commands[i].name))) {
-			//ret = (*commands[i].func) (server_socket, cmd);
-			//}
-			//}
-
-		}
-
+	while ( (cmd = readline(prompt)) , ((cmd) && (*cmd)) ) {
+		add_history(cmd);
+		ret = do_one_command(server_socket, cmd);
 		free(cmd);
 	}
 }
@@ -181,25 +166,6 @@ int main(int argc, char **argv)
 	char cmd[1024] = { 0 };
 	int exitcode = 0;
 
-
-	int num_wows = sizeof(wows) / sizeof(struct wow);
-	int j;
-	for (i=0; i<num_wows; ++i) {
-		printf("%s\n", wows[i].description);
-		for (j=0; j<5; ++j) {
-			printf("%d '%s'\n", j, wows[i].cmd[j]);
-		}
-	}
-
-
-exit(0);
-
-
-
-
-
-
-
 	for (i = 1; i < argc; ++i) {
 		if (!strcmp(argv[i], "-h")) {
 			ctdldir = argv[++i];
@@ -214,10 +180,10 @@ exit(0);
 	int is_interactive = ((strlen(cmd) == 0) ? 1 : 0);
 
 	if (is_interactive) {
-		printf("\nCitadel administration shell (c) 2009-2017 by citadel.org\n"
+		printf("\nCitadel administration shell (c) 2009-2019 by citadel.org\n"
 		       "This is open source software made available to you under the terms\n"
 		       "of the GNU General Public License v3.  All other rights reserved.\n");
-		printf("Trying %s...\n", ctdldir);
+		printf("Connecting to Citadel server in %s...\n", ctdldir);
 	}
 
 	sprintf(buf, "%s/citadel-admin.socket", ctdldir);
