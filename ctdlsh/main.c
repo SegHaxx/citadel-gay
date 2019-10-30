@@ -146,9 +146,11 @@ void do_main_loop(int server_socket)
 	rl_attempted_completion_function = ctdlsh_completion;
 
 	/* Here we go ... main command loop */
-	while ( (cmd = readline(prompt)) , ((cmd) && (*cmd)) ) {
-		add_history(cmd);
-		ret = do_one_command(server_socket, cmd);
+	while ( (cmd = readline(prompt)) , cmd ) {
+		if (*cmd) {
+			add_history(cmd);
+			ret = do_one_command(server_socket, cmd);
+		}
 		free(cmd);
 	}
 }
