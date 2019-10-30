@@ -15,7 +15,7 @@ int cmd_shutdown(int server_socket, char *cmdbuf)
 		return (cmdret_ok);
 	}
 
-	sock_puts("DOWN");
+	sock_puts(server_socket, "DOWN");
 	sock_getln(server_socket, buf, sizeof buf);
 	if (buf[0] != '2') {
 		fprintf(stderr, "%s\n", &buf[4]);

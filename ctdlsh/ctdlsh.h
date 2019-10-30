@@ -49,3 +49,7 @@ int cmd_who(int, char *);
 int cmd_export(int, char *);
 int cmd_config(int, char *);
 int cmd_mailq(int, char *);
+int sock_puts(int, char *);
+int sock_getln(int, char *, int);
+void sock_printf(int, const char *, ...);
+int uds_connectsock(char *);

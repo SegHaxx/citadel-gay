@@ -38,6 +38,26 @@ COMMAND commands[] = {
 };
 
 
+
+struct wow {
+	char *cmd[5];			// increase this if we need to have larger commands
+	char *description;
+};
+
+struct wow wows[] = {
+	{{ "show", "eggs" }				, "show how many eggs are available for serving"	},
+	{{ "kill", "mark", "zuckerberg" }		, "die motherfucker die"				},
+	{{ "show", "undead", "zombies", "real" }	, "show how many zombies are actually undead"		},
+	{{ "show", "undead", "zombies", "hollywood" }	, "show how many zombies are hollywood communists"	}
+};
+
+
+
+
+
+
+
+
 int cmd_help(int sock, char *cmdbuf)
 {
 	int i;
@@ -110,6 +130,7 @@ void do_main_loop(int server_socket)
 	int i;
 	int ret = (-1);
 
+
 	strcpy(prompt, "> ");
 
 	/* Do an INFO command and learn the hostname for the prompt */
@@ -159,6 +180,25 @@ int main(int argc, char **argv)
 	char *ctdldir = CTDLDIR;
 	char cmd[1024] = { 0 };
 	int exitcode = 0;
+
+
+	int num_wows = sizeof(wows) / sizeof(struct wow);
+	int j;
+	for (i=0; i<num_wows; ++i) {
+		printf("%s\n", wows[i].description);
+		for (j=0; j<5; ++j) {
+			printf("%d '%s'\n", j, wows[i].cmd[j]);
+		}
+	}
+
+
+exit(0);
+
+
+
+
+
+
 
 	for (i = 1; i < argc; ++i) {
 		if (!strcmp(argv[i], "-h")) {
