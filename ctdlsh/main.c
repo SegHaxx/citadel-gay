@@ -32,83 +32,13 @@ COMMAND commands[] = {
 
 
 
-struct wow {
-	char *cmd[5];			// increase this if we need to have larger commands
-	char *description;
-};
-
-struct wow wows[] = {
-	{{ "help" }					, "list available commands"				},
-	{{ "date" }					, "print the server's date and time"			},
-	{{ "show", "eggs" }				, "show how many eggs are available for serving"	},
-	{{ "kill", "mark", "zuckerberg" }		, "die motherfucker die"				},
-	{{ "show", "undead", "zombies", "real" }	, "show how many zombies are actually undead"		},
-	{{ "show", "undead", "zombies", "hollywood" }	, "show how many zombies are hollywood communists"	},
-	{{ NULL }					, "NULL"						}
-};
-
-
-int num_wows = sizeof(wows) / sizeof(struct wow);
-
-
-
-
-
 int cmd_help(int sock, char *cmdbuf)
 {
 	int i;
 
-	for (i = 0; wows[i].cmd[0]; ++i) {
-		printf("%-10s %s\n", wows[i].cmd[0], wows[i].description);
+	for (i = 0; commands[i].func != NULL; ++i) {
+		printf("%10s %s\n", commands[i].name, commands[i].doc);
 	}
-}
-
-
-/* Auto-completer function */
-char *command_generator(const char *text, int state)
-{
-	static int list_index;
-	static int len;
-	char *name;
-
-	if (!state) {
-		list_index = 0;
-		len = strlen(text);
-	}
-
-	while (name = commands[list_index].name) {
-		++list_index;
-
-		if (!strncmp(name, text, len)) {
-			return (strdup(name));
-		}
-	}
-
-	return (NULL);
-}
-
-
-/* Auto-completer function */
-char **ctdlsh_completion(const char *text, int start, int end)
-{
-
-
-	printf("\033[7mcompletion: text='%s', start=%d, end=%d\033[0m\n", text, start , end);
-
-
-
-
-
-	char **matches = (char **) NULL;
-
-	rl_completer_word_break_characters = " ";
-	if (start == 0) {
-		matches = rl_completion_matches(text, command_generator);
-	} else {
-		rl_bind_key('\t', rl_abort);
-	}
-
-	return (matches);
 }
 
 
@@ -124,6 +54,32 @@ int do_one_command(int server_socket, char *cmd)
 	return ret;
 }
 
+char *command_name_generator(const char *text, int state)
+{
+	static int list_index, len;
+	char *name;
+
+	if (!state) {
+		list_index = 0;
+		len = strlen(text);
+	}
+
+	while (name = commands[list_index++].name) {
+		if (strncmp(name, text, len) == 0) {
+			return strdup(name);
+		}
+	}
+
+	return NULL;
+}
+
+
+char **command_name_completion(const char *text, int start, int end)
+{
+	rl_attempted_completion_over = 1;
+	return rl_completion_matches(text, command_name_generator);
+}
+
 
 void do_main_loop(int server_socket)
 {
@@ -133,7 +89,6 @@ void do_main_loop(int server_socket)
 	char server_reply[1024];
 	int i;
 	int ret = (-1);
-
 
 	strcpy(prompt, "> ");
 
@@ -150,10 +105,8 @@ void do_main_loop(int server_socket)
 		}
 	}
 
-	/* Tell libreadline how we will help with auto-completion of commands */
-	rl_attempted_completion_function = ctdlsh_completion;
-
 	/* Here we go ... main command loop */
+	rl_attempted_completion_function = command_name_completion;
 	while ( (cmd = readline(prompt)) , cmd ) {
 		if (*cmd) {
 			add_history(cmd);
