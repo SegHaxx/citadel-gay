@@ -294,7 +294,7 @@ void cmd_sexp(char *argbuf)
 		return;
 	}
 
-	lem = CC->cs_inet_email;
+	lem = CC->cs_principal_id;
 
 	extract_token(x_user, argbuf, 0, '|', sizeof x_user);
 	extract_token(x_msg, argbuf, 1, '|', sizeof x_msg);

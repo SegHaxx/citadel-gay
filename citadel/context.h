@@ -91,6 +91,7 @@ struct CitContext {
 	char cs_addr[64];	/* address logged in from */
 
 	/* The Internet type of thing */
+	char cs_principal_id[256];		/* User principal identity for XMPP, ActivityPub, etc. */
 	char cs_inet_email[128];		/* Return address of outbound Internet mail */
 	char cs_inet_other_emails[1024];	/* User's other valid Internet email addresses */
 	char cs_inet_fn[128];			/* Friendly-name of outbound Internet mail */

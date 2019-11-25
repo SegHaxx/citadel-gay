@@ -97,14 +97,14 @@ void xmpp_send_message(char *message_to, char *message_body) {
 	for (cptr = ContextList; cptr != NULL; cptr = cptr->next) {
 		if (	(cptr->logged_in)
 			&& (cptr->can_receive_im)
-			&& (!strcasecmp(cptr->cs_inet_email, message_to))
+			&& (!strcasecmp(cptr->cs_principal_id, message_to))
 		) {
 			recp = cptr->user.fullname;
 		}
 	}
 
 	if (recp) {
-		PerformXmsgHooks(CC->user.fullname, CC->cs_inet_email, recp, message_body);
+		PerformXmsgHooks(CC->user.fullname, CC->cs_principal_id, recp, message_body);
 	}
 
 	free(XMPP->message_body);

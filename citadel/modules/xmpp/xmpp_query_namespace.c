@@ -57,7 +57,7 @@ void xmpp_roster_item(struct CitContext *cptr) {
 	char xmlbuf2[256];
 
 	cprintf("<item jid=\"%s\" name=\"%s\" subscription=\"both\">",
-		xmlesc(xmlbuf1, cptr->cs_inet_email, sizeof xmlbuf1),
+		xmlesc(xmlbuf1, cptr->cs_principal_id, sizeof xmlbuf1),
 		xmlesc(xmlbuf2, cptr->user.fullname, sizeof xmlbuf2)
 	);
 	cprintf("<group>%s</group>", xmlesc(xmlbuf1, CtdlGetConfigStr("c_humannode"), sizeof xmlbuf1));

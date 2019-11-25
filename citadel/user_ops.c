@@ -697,6 +697,12 @@ void do_login(void)
 		AutoGenerateEmailAddressForUser(&CC->user);
 	}
 
+	/* Populate the user principal identity, which is consistent and never aliased */
+	strcpy(CC->cs_principal_id, "wowowowow");
+	makeuserkey(CC->cs_principal_id, CC->user.fullname, sizeof CC->user.fullname);
+	strcat(CC->cs_principal_id, "@");
+	strcat(CC->cs_principal_id, CtdlGetConfigStr("c_fqdn"));
+
 	/*
 	 * Populate cs_inet_email and cs_inet_other_emails with valid email addresses from the user record
 	 */

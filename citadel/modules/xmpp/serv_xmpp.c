@@ -420,7 +420,7 @@ void xmpp_xml_end(void *data, const char *supplied_el) {
 			}
 
 			/* Generate the "full JID" of the client (user@host/resource) */
-			snprintf(XMPP->client_jid, sizeof XMPP->client_jid, "%s/%s", CC->cs_inet_email, XMPP->iq_client_resource);
+			snprintf(XMPP->client_jid, sizeof XMPP->client_jid, "%s/%s", CC->cs_principal_id, XMPP->iq_client_resource);
 
 			/* Tell the client what its JID is */
 			cprintf("<iq type=\"result\" id=\"%s\">", xmlesc(xmlbuf, XMPP->iq_id, sizeof xmlbuf));
@@ -649,7 +649,7 @@ void xmpp_async_loop(void) {
  * Login hook for XMPP sessions
  */
 void xmpp_login_hook(void) {
-	xmpp_queue_event(XMPP_EVT_LOGIN, CC->cs_inet_email);
+	xmpp_queue_event(XMPP_EVT_LOGIN, CC->cs_principal_id);
 }
 
 
@@ -657,7 +657,7 @@ void xmpp_login_hook(void) {
  * Logout hook for XMPP sessions
  */
 void xmpp_logout_hook(void) {
-	xmpp_queue_event(XMPP_EVT_LOGOUT, CC->cs_inet_email);
+	xmpp_queue_event(XMPP_EVT_LOGOUT, CC->cs_principal_id);
 }
 
 

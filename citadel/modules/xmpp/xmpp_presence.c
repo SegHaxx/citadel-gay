@@ -106,7 +106,7 @@ void xmpp_wholist_presence_dump(void)
 
 	for (i=0; i<nContexts; i++) {
 		if (xmpp_is_visible(&cptr[i], CC)) {
-			xmpp_indicate_presence(cptr[i].cs_inet_email);
+			xmpp_indicate_presence(cptr[i].cs_principal_id);
 		}
 	}
 	free(cptr);
@@ -149,7 +149,7 @@ void xmpp_destroy_buddy(char *presence_jid, int aggressively) {
 
 	/* Do an unsolicited roster update that deletes the contact. */
 	cprintf("<iq from=\"%s\" to=\"%s\" id=\"unbuddy_%x\" type=\"result\">",
-		xmlesc(xmlbuf1, CC->cs_inet_email, sizeof xmlbuf1),
+		xmlesc(xmlbuf1, CC->cs_principal_id, sizeof xmlbuf1),
 		xmlesc(xmlbuf2, XMPP->client_jid, sizeof xmlbuf2),
 		++unsolicited_id
 	);
@@ -184,7 +184,7 @@ void xmpp_presence_notify(char *presence_jid, int event_type) {
 
 	/* Count the visible sessions for this user */
 	for (i=0; i<nContexts; i++) {
-		if ( (!strcasecmp(cptr[i].cs_inet_email, presence_jid))
+		if ( (!strcasecmp(cptr[i].cs_principal_id, presence_jid))
 		   && (xmpp_is_visible(&cptr[i], CC))
 		)  {
 			++visible_sessions;
@@ -330,7 +330,7 @@ void xmpp_massacre_roster(void)
 		for (i=0; i<nContexts; i++) {
 			if (xmpp_is_visible(&cptr[i], CC)) {
 				if (mortuary) {
-					char *buddy = strdup(cptr[i].cs_inet_email);
+					char *buddy = strdup(cptr[i].cs_principal_id);
 					Put(mortuary, buddy, strlen(buddy), buddy, NULL);
 				}
 			}
@@ -376,7 +376,7 @@ void xmpp_delete_old_buddies_who_no_longer_exist_from_the_client_roster(void)
 		online_now = 0;
 		if (cptr) for (i=0; i<nContexts; i++) {
 			if (xmpp_is_visible(&cptr[i], CC)) {
-				if (!strcasecmp(cptr[i].cs_inet_email, (char *)Value)) {
+				if (!strcasecmp(cptr[i].cs_principal_id, (char *)Value)) {
 					online_now = 1;
 				}
 			}
