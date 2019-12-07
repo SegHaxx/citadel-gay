@@ -3108,13 +3108,9 @@ StrBuf *CtdlReadMessageBodyBuf(char *terminator,	/* token signalling EOT */
 			}
 			
 			/* Unescape SMTP-style input of two dots at the beginning of the line */
-			if ((dotdot) &&
-			    (StrLength(LineBuf) == 2) && 
-			    (!strcmp(ChrPtr(LineBuf), "..")))
-			{
+			if ((dotdot) && (StrLength(LineBuf) > 1) && (ChrPtr(LineBuf)[0] == '.')) {
 				StrBufCutLeft(LineBuf, 1);
 			}
-			
 			StrBufAppendBuf(Message, LineBuf, 0);
 		}
 
