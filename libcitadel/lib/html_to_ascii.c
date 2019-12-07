@@ -197,7 +197,7 @@ char *html_to_ascii(const char *inputmsg, int msglen, int screenwidth) {
 					strcat(outbuf, nl);
 				}
 
-/****
+#if 0
 	These seemed like a good idea at the time, but it just makes a mess.
 
 				else if (
@@ -224,7 +224,7 @@ char *html_to_ascii(const char *inputmsg, int msglen, int screenwidth) {
 				) {
 					strcat(outbuf, "_");
 				}
-****/
+#endif
 
 				else if (!strcasecmp(tag, "BR")) {
 					strcat(outbuf, nl);
@@ -274,7 +274,7 @@ char *html_to_ascii(const char *inputmsg, int msglen, int screenwidth) {
 				tag[strlen(tag)] = ch;
 			}
 				
-			else if (!nest) {
+			else if ((!nest) && (styletag == 0)) {
 				outbuf[strlen(outbuf)+1] = 0;
 				outbuf[strlen(outbuf)] = ch;
 			}
