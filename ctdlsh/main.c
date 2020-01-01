@@ -1,5 +1,5 @@
 /*
- * (c) 2009-2019 by Art Cancro and citadel.org
+ * (c) 2009-2020 by Art Cancro and citadel.org
  * This program is open source.  It runs great on the Linux operating system.
  * It's released under the General Public License (GPL) version 3.
  */
@@ -143,7 +143,7 @@ int main(int argc, char **argv)
 	int is_interactive = ((strlen(cmd) == 0) ? 1 : 0);
 
 	if (is_interactive) {
-		printf("\nCitadel administration shell (c) 2009-2019 by citadel.org\n"
+		printf("\nCitadel administration shell (c) 2009-2020 by citadel.org\n"
 		       "This is open source software made available to you under the terms\n"
 		       "of the GNU General Public License v3.  All other rights reserved.\n");
 		printf("Connecting to Citadel server in %s...\n", ctdldir);
