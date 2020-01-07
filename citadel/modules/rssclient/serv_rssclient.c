@@ -3,14 +3,14 @@
  * very loose parser that scrapes both kinds of feeds and is not picky about
  * the standards compliance of the source data.
  *
- * Copyright (c) 2007-2018 by the citadel.org team
+ * Copyright (c) 2007-2020 by the citadel.org team
  *
- * This program is open source software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 3.
+ * This program is open source software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License version 3.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  */
 
@@ -123,7 +123,6 @@ void rss_end_element(void *data, const char *el)
 		(!strcasecmp(el, "entry"))
 		|| (!strcasecmp(el, "item"))
 	) {
-
 		if (r->msg != NULL) {				// Save the message to the rooms
 
 			// use the link as an item id if nothing else is available
@@ -176,10 +175,10 @@ void rss_end_element(void *data, const char *el)
 				long msgnum = (-1);
 				for (rr=r->rooms; rr!=NULL; rr=rr->next) {
 					if (rr == r->rooms) {
-						msgnum = CtdlSubmitMsg(r->msg, NULL, rr->room, 0);
+						msgnum = CtdlSubmitMsg(r->msg, NULL, rr->room, 0);	// in first room, save msg
 					}
 					else {
-						CtdlSaveMsgPointerInRoom(rr->room, msgnum, 0, NULL);
+						CtdlSaveMsgPointerInRoom(rr->room, msgnum, 0, NULL);	// elsewhere, save a pointer
 					}
 					syslog(LOG_DEBUG, "rssclient: saved message %ld to %s", msgnum, rr->room);
 				}
@@ -324,6 +323,7 @@ void rssclient_push_todo(char *rssurl, char *roomname)
 			thisone = r;
 		}
 	}
+
 	if (thisone == NULL) {
 		thisone = malloc(sizeof(struct rssurl));
 		thisone->url = strdup(rssurl);
