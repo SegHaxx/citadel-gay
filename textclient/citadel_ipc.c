@@ -44,7 +44,7 @@ char *axdefs[] = {
 	"New User",
 	"Problem User",
 	"Local User",
-	"Network User",
+	"Normal User",
 	"Preferred User",
 	"Admin",
 	"Admin"
