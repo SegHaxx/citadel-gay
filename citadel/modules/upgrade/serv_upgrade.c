@@ -4,7 +4,7 @@
  * guesses about what kind of data format changes need to be applied, and
  * we apply them transparently.
  *
- * Copyright (c) 1987-2019 by the citadel.org team
+ * Copyright (c) 1987-2020 by the citadel.org team
  *
  * This program is open source software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License version 3.
@@ -84,7 +84,7 @@ void fix_sys_user_name(void)
 
 	/* Delete any "user 0" accounts */
 	while (CtdlGetUserByNumber(&usbuf, -1) == 0) {
-		makeuserkey(usernamekey, usbuf.fullname, cutusername(usbuf.fullname));
+		makeuserkey(usernamekey, usbuf.fullname);
 		cdb_delete(CDB_USERS, usernamekey, strlen(usernamekey));
 	}
 }

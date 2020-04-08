@@ -1,7 +1,7 @@
 /*
  * Main Citadel header file
  *
- * Copyright (c) 1987-2019 by the citadel.org team
+ * Copyright (c) 1987-2020 by the citadel.org team
  *
  * This program is open source software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3.
@@ -35,7 +35,7 @@ extern "C" {
  */
 #define CITADEL	PACKAGE_STRING
 
-#define REV_LEVEL	928		// This version
+#define REV_LEVEL	929		// This version
 #define REV_MIN		591		// Oldest compatible database
 #define EXPORT_REV_MIN	760		// Oldest compatible export files
 #define LIBCITADEL_MIN	922		// Minimum required version of libcitadel

@@ -1,7 +1,7 @@
 /* 
  * Server functions which perform operations on user objects.
  *
- * Copyright (c) 1987-2019 by the citadel.org team
+ * Copyright (c) 1987-2020 by the citadel.org team
  *
  * This program is open source software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License, version 3.
@@ -33,39 +33,40 @@ int chkpwd_read_pipe[2];
 
 
 /*
- * Trim a string down to the maximum username size and return the new length
- */
-long cutusername(char *username) { 
-	long len;
-	len = strlen(username);
-	if (len >= USERNAME_SIZE)
-	{
-		syslog(LOG_INFO, "Username too long: %s", username);
-		len = USERNAME_SIZE - 1; 
-		username[len]='\0';
-	}
-	return len;
-}
-
-
-/*
  * makeuserkey() - convert a username into the format used as a database key
- *                 (Key format is the username with all non-alphanumeric characters removed, and converted to lower case.)
+ *			"key" must be a buffer of at least USERNAME_SIZE
+ *			(Key format is the username with all non-alphanumeric characters removed, and converted to lower case.)
  */
-void makeuserkey(char *key, const char *username, long len) {
+void makeuserkey(char *key, const char *username) {
 	int i;
 	int keylen = 0;
 
-	if (len >= USERNAME_SIZE) {
-		syslog(LOG_INFO, "Username too long: %s", username);
-		len = USERNAME_SIZE - 1; 
+	if (IsEmptyStr(username)) {
+		key[0] = 0;
+		return;
 	}
-	for (i=0; i<=len; ++i) {
+
+	int len = strlen(username);
+	for (i=0; ((i<=len) && (i<USERNAME_SIZE-1)); ++i) {
 		if (isalnum((username[i]))) {
 			key[keylen++] = tolower(username[i]);
 		}
 	}
 	key[keylen++] = 0;
+}
+
+
+/*
+ * Compare two usernames to see if they are the same user after being keyed for the database
+ * Usage is identical to strcmp()
+ */
+int CtdlUserCmp(char *s1, char *s2) {
+	char k1[USERNAME_SIZE];
+	char k2[USERNAME_SIZE];
+
+	makeuserkey(k1, s1);
+	makeuserkey(k2, s2);
+	return(strcmp(k1,k2));
 }
 
 
@@ -77,13 +78,12 @@ int CtdlGetUser(struct ctdluser *usbuf, char *name)
 {
 	char usernamekey[USERNAME_SIZE];
 	struct cdbdata *cdbus;
-	long len = cutusername(name);
 
 	if (usbuf != NULL) {
 		memset(usbuf, 0, sizeof(struct ctdluser));
 	}
 
-	makeuserkey(usernamekey, name, len);
+	makeuserkey(usernamekey, name);
 	cdbus = cdb_fetch(CDB_USERS, usernamekey, strlen(usernamekey));
 
 	if (cdbus == NULL) {	/* user not found */
@@ -126,7 +126,7 @@ void CtdlPutUser(struct ctdluser *usbuf)
 {
 	char usernamekey[USERNAME_SIZE];
 
-	makeuserkey(usernamekey, usbuf->fullname, cutusername(usbuf->fullname));
+	makeuserkey(usernamekey, usbuf->fullname);
 	usbuf->version = REV_LEVEL;
 	cdb_store(CDB_USERS, usernamekey, strlen(usernamekey), usbuf, sizeof(struct ctdluser));
 }
@@ -162,8 +162,8 @@ int rename_user(char *oldname, char *newname) {
 	char newnamekey[USERNAME_SIZE];
 
 	/* Create the database keys... */
-	makeuserkey(oldnamekey, oldname, cutusername(oldname));
-	makeuserkey(newnamekey, newname, cutusername(newname));
+	makeuserkey(oldnamekey, oldname);
+	makeuserkey(newnamekey, newname);
 
 	/* Lock up and get going */
 	begin_critical_section(S_USERS);
@@ -207,8 +207,10 @@ int rename_user(char *oldname, char *newname) {
  * Convert a username into the format used as a database key prior to version 928
  * This only gets called by reindex_user_928()
  */
-void makeuserkey_pre928(char *key, const char *username, long len) {
+void makeuserkey_pre928(char *key, const char *username) {
 	int i;
+
+	int len = strlen(username);
 
 	if (len >= USERNAME_SIZE) {
 		syslog(LOG_INFO, "Username too long: %s", username);
@@ -229,11 +231,10 @@ void reindex_user_928(char *username, void *out_data) {
 	char oldkey[USERNAME_SIZE];
 	char newkey[USERNAME_SIZE];
 	struct cdbdata *cdbus;
-	long len = cutusername(username);
 	struct ctdluser usbuf;
 
-	makeuserkey_pre928(oldkey, username, len);
-	makeuserkey(newkey, username, len);
+	makeuserkey_pre928(oldkey, username);
+	makeuserkey(newkey, username);
 
 	syslog(LOG_DEBUG, "user_ops: reindex_user_928: %s <%s> --> <%s>", username, oldkey, newkey);
 
@@ -699,7 +700,7 @@ void do_login(void)
 
 	/* Populate the user principal identity, which is consistent and never aliased */
 	strcpy(CC->cs_principal_id, "wowowowow");
-	makeuserkey(CC->cs_principal_id, CC->user.fullname, sizeof CC->user.fullname);
+	makeuserkey(CC->cs_principal_id, CC->user.fullname);
 	strcat(CC->cs_principal_id, "@");
 	strcat(CC->cs_principal_id, CtdlGetConfigStr("c_fqdn"));
 
@@ -970,7 +971,7 @@ int purge_user(char pname[])
 	struct ctdluser usbuf;
 	char usernamekey[USERNAME_SIZE];
 
-	makeuserkey(usernamekey, pname, cutusername(pname));
+	makeuserkey(usernamekey, pname);
 
 	/* If the name is empty we can't find them in the DB any way so just return */
 	if (IsEmptyStr(pname)) {

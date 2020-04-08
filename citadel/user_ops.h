@@ -1,7 +1,7 @@
 /* 
  * Header file for server functions which perform operations on user objects.
  *
- * Copyright (c) 1987-2019 by the citadel.org team
+ * Copyright (c) 1987-2020 by the citadel.org team
  *
  * This program is open source software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License, version 3.
@@ -69,8 +69,8 @@ void start_chkpwd_daemon(void);
 int rename_user(char *oldname, char *newname);
 void reindex_user_928(char *username, void *out_data);
 
-long cutusername(char *username);
-void makeuserkey(char *key, const char *username, long len);
+void makeuserkey(char *key, const char *username);
+int CtdlUserCmp(char *s1, char *s2);
 int internal_create_user(char *username, struct ctdluser *usbuf, uid_t uid);
 
 #endif

@@ -1,7 +1,7 @@
 /*
  * This is an implementation of OpenID 2.0 relying party support in stateless mode.
  *
- * Copyright (c) 2007-2019 by the citadel.org team
+ * Copyright (c) 2007-2020 by the citadel.org team
  *
  * This program is open source software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -394,7 +394,6 @@ int openid_create_user_via_ax(StrBuf *claimed_id, HashList *sreg_keys)
 	}
 	syslog(LOG_DEBUG, "openid: the desired account name is <%s>", nickname);
 
-	len = cutusername(nickname);
 	if (!CtdlGetUser(&CC->user, nickname)) {
 		syslog(LOG_DEBUG, "openid: <%s> is already taken by another user.", nickname);
 		memset(&CC->user, 0, sizeof(struct ctdluser));

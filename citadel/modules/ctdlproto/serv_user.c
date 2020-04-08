@@ -1,7 +1,7 @@
 /* 
  * Server functions which perform operations on user objects.
  *
- * Copyright (c) 1987-2019 by the citadel.org team
+ * Copyright (c) 1987-2020 by the citadel.org team
  *
  * This program is open source software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License, version 3.
@@ -741,22 +741,26 @@ void cmd_asea(char *cmdbuf)
 
 	cprintf("%d Ok\n", SEND_LISTING);
 	while (client_getln(buf, sizeof buf) >= 0 && strcmp(buf, "000")) {
-		if (											// addresses must be:
-			(!IsEmptyStr(buf))								// non-empty
-			&& ((strlen(new_emailaddrs) + strlen(buf) + 2) < sizeof(new_emailaddrs))	// fit in the remaining buffer
-			&& (IsDirectory(buf, 0))							// in one of our own domains
-			&& (										// not belong to someone else
-				(CtdlDirectoryLookup(whodat, buf, sizeof whodat) != 0)
-				|| (!strcasecmp(whodat, requested_user))
-			)
-		) {
+		if (IsEmptyStr(buf)) {
+			syslog(LOG_ERR, "user_ops: address <%s> is empty - not using", buf);
+		}
+		else if ((strlen(new_emailaddrs) + strlen(buf) + 2) > sizeof(new_emailaddrs)) {
+			syslog(LOG_ERR, "user_ops: address <%s> does not fit in buffer - not using", buf);
+		}
+		else if (!IsDirectory(buf, 0)) {
+			syslog(LOG_ERR, "user_ops: address <%s> is not in one of our domains - not using", buf);
+		}
+		else if ( (CtdlDirectoryLookup(whodat, buf, sizeof whodat) == 0) && (CtdlUserCmp(whodat, requested_user)) ) {
+			syslog(LOG_ERR, "user_ops: address <%s> already belongs to <%s> - not using", buf, whodat);
+		}
+		else {
+			syslog(LOG_DEBUG, "user_ops: address <%s> validated", buf);
 			if (!IsEmptyStr(new_emailaddrs)) {
 				strcat(new_emailaddrs, "|");
 			}
 			strcat(new_emailaddrs, buf);
 		}
 	}
-
 
 	CtdlSetEmailAddressesForUser(requested_user, new_emailaddrs);
 }

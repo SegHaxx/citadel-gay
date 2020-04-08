@@ -2,7 +2,7 @@
  * Citadel context management stuff.
  * Here's where we (hopefully) have all the code that manipulates contexts.
  *
- * Copyright (c) 1987-2019 by the citadel.org team
+ * Copyright (c) 1987-2020 by the citadel.org team
  *
  * This program is open source software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 3.
@@ -568,7 +568,7 @@ void CtdlFillSystemContext(CitContext *context, char *name)
 	context->cs_pid = 0;
 	strcpy (sysname, "SYS_");
 	strcat (sysname, name);
-	len = cutusername(sysname);
+	len = strlen(sysname);
 	memcpy(context->curr_user, sysname, len + 1);
 	context->client_socket = (-1);
 	context->state = CON_SYS;
