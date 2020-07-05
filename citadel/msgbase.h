@@ -60,7 +60,6 @@ struct repl {			/* Info for replication checking */
 };
 
 
-
 /*
  * This is a list of "harvested" email addresses that we might want to
  * stick into someone's address book.  But we defer this operaiton so

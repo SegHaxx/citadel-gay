@@ -1,7 +1,7 @@
 /*
  * This module handles network mail and mailing list processing.
  *
- * Copyright (c) 2000-2018 by the citadel.org team
+ * Copyright (c) 2000-2020 by the citadel.org team
  *
  * This program is open source software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 3.
@@ -269,11 +269,6 @@ void network_process_digest(SpoolControl *sc, struct CtdlMessage *omsg, long *de
 				"<%s> ",
 				msg->cm_fields[erFc822Addr]);
 		}
-		else if (!CM_IsEmpty(msg, eNodeName)) {
-			fprintf(sc->digestfp,
-				"@%s ",
-				msg->cm_fields[eNodeName]);
-		}
 		fprintf(sc->digestfp, "\n");
 		if (!CM_IsEmpty(msg, eMsgSubject)) {
 			fprintf(sc->digestfp,
@@ -397,12 +392,11 @@ void network_process_participate(SpoolControl *sc, struct CtdlMessage *omsg, lon
 	 * is rude...
 	 */
 	ok_to_participate = 0;
-	if (!CM_IsEmpty(msg, eNodeName)) {
-		if (!strcasecmp(msg->cm_fields[eNodeName], CtdlGetConfigStr("c_nodename")))
-		{
-			ok_to_participate = 1;
-		}
-	}
+
+	// FIXME -- After we removed CitaNet/IGnet support , we now need a new heuristic to determine
+	// whether a message originated locally.  This means the "participate" mode no longer works.
+	// We'll definitely need to refactor this when we do other federated stuff later.
+
 	if (ok_to_participate)
 	{
 		/* Replace the Internet email address of the

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1987-2017 by the citadel.org team
+ * Copyright (c) 1987-2020 by the citadel.org team
  *
  * This program is open source software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -275,7 +275,6 @@ void imap_do_append_flags(long new_msgnum, char *new_message_flags) {
  * This function is called by the main command loop.
  */
 void imap_append(int num_parms, ConstStr *Params) {
-	struct CitContext *CCC = CC;
 	long literal_length;
 	struct CtdlMessage *msg = NULL;
 	long new_msgnum = (-1L);
@@ -366,19 +365,17 @@ void imap_append(int num_parms, ConstStr *Params) {
 	 * folder is selected, save its name so we can return there!!!!!)
 	 */
 	if (Imap->selected) {
-		strcpy(savedroom, CCC->room.QRname);
+		strcpy(savedroom, CC->room.QRname);
 	}
 	CtdlUserGoto(roomname, 0, 0, &msgs, &new, NULL, NULL);
 
 	/* If the user is locally authenticated, FORCE the From: header to
 	 * show up as the real sender.  (Configurable setting)
 	 */
-	if (CCC->logged_in) {
-		if ( ((CCC->room.QRflags & QR_MAILBOX) == 0) && (CtdlGetConfigInt("c_imap_keep_from") == 0))
+	if (CC->logged_in) {
+		if ( ((CC->room.QRflags & QR_MAILBOX) == 0) && (CtdlGetConfigInt("c_imap_keep_from") == 0))
 		{
-			CM_SetField(msg, eAuthor, CCC->user.fullname, strlen(CCC->user.fullname));
-			CM_SetField(msg, eNodeName, CtdlGetConfigStr("c_nodename"), strlen(CtdlGetConfigStr("c_nodename")));
-			CM_SetField(msg, eHumanNode, CtdlGetConfigStr("c_humannode"), strlen(CtdlGetConfigStr("c_humannode")));
+			CM_SetField(msg, eAuthor, CC->user.fullname, strlen(CC->user.fullname));
 		}
 	}
 

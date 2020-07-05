@@ -1,7 +1,7 @@
 /* 
  * Main source module for the Citadel server
  *
- * Copyright (c) 1987-2019 by the citadel.org team
+ * Copyright (c) 1987-2020 by the citadel.org team
  *
  * This program is open source software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 3.
@@ -189,12 +189,12 @@ char CtdlCheckExpress(void)
 void citproto_begin_session()
 {
 	if (CC->nologin == 1) {
-		cprintf("%d %s: Too many users are already online (maximum is %d)\n",
-			ERROR + MAX_SESSIONS_EXCEEDED, CtdlGetConfigStr("c_nodename"), CtdlGetConfigInt("c_maxsessions")
+		cprintf("%d Too many users are already online (maximum is %d)\n",
+			ERROR + MAX_SESSIONS_EXCEEDED, CtdlGetConfigInt("c_maxsessions")
 		    );
 		CC->kill_me = KILLME_MAX_SESSIONS_EXCEEDED;
 	} else {
-		cprintf("%d %s Citadel server ready.\n", CIT_OK, CtdlGetConfigStr("c_nodename"));
+		cprintf("%d %s Citadel server ready.\n", CIT_OK, CtdlGetConfigStr("c_fqdn"));
 		CC->can_receive_im = 1;
 	}
 }
@@ -203,7 +203,7 @@ void citproto_begin_session()
 void citproto_begin_admin_session()
 {
 	CC->internal_pgm = 1;
-	cprintf("%d %s Citadel server ADMIN CONNECTION ready.\n", CIT_OK, CtdlGetConfigStr("c_nodename"));
+	cprintf("%d %s Citadel server ADMIN CONNECTION ready.\n", CIT_OK, CtdlGetConfigStr("c_fqdn"));
 }
 
 
