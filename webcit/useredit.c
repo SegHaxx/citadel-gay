@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996-2017 by the citadel.org team
+ * Copyright (c) 1996-2020 by the citadel.org team
  *
  * This program is open source software.  You can redistribute it and/or
  * modify it under the terms of the GNU General Public License, version 3.
@@ -382,17 +382,21 @@ void tmplput_USERLIST_UID(StrBuf *Target, WCTemplputParams *TP)
 	StrBufAppendPrintf(Target, "%d", ul->UID, 0);
 }
 
+
 void tmplput_USERLIST_LastLogonNo(StrBuf *Target, WCTemplputParams *TP)
 {
 	UserListEntry *ul = (UserListEntry*) CTX(CTX_USERLIST);
 
 	StrBufAppendPrintf(Target,"%ld", ul->LastLogonT, 0);
 }
+
+
 void tmplput_USERLIST_LastLogonStr(StrBuf *Target, WCTemplputParams *TP)
 {
 	UserListEntry *ul = (UserListEntry*) CTX(CTX_USERLIST);
 	StrEscAppend(Target, NULL, asctime(localtime(&ul->LastLogonT)), 0, 0);
 }
+
 
 void tmplput_USERLIST_nLogons(StrBuf *Target, WCTemplputParams *TP)
 {
@@ -401,12 +405,14 @@ void tmplput_USERLIST_nLogons(StrBuf *Target, WCTemplputParams *TP)
 	StrBufAppendPrintf(Target, "%d", ul->nLogons, 0);
 }
 
+
 void tmplput_USERLIST_nPosts(StrBuf *Target, WCTemplputParams *TP)
 {
 	UserListEntry *ul = (UserListEntry*) CTX(CTX_USERLIST);
 
 	StrBufAppendPrintf(Target, "%d", ul->nPosts, 0);
 }
+
 
 void tmplput_USERLIST_Flags(StrBuf *Target, WCTemplputParams *TP)
 {
@@ -415,12 +421,14 @@ void tmplput_USERLIST_Flags(StrBuf *Target, WCTemplputParams *TP)
 	StrBufAppendPrintf(Target, "%d", ul->Flags, 0);
 }
 
+
 void tmplput_USERLIST_DaysTillPurge(StrBuf *Target, WCTemplputParams *TP)
 {
 	UserListEntry *ul = (UserListEntry*) CTX(CTX_USERLIST);
 
 	StrBufAppendPrintf(Target, "%d", ul->DaysTillPurge, 0);
 }
+
 
 int ConditionalUser(StrBuf *Target, WCTemplputParams *TP)
 {
@@ -435,11 +443,13 @@ int ConditionalUser(StrBuf *Target, WCTemplputParams *TP)
 		return 0;
 }
 
+
 int ConditionalFlagINetEmail(StrBuf *Target, WCTemplputParams *TP)
 {
 	UserListEntry *ul = (UserListEntry*) CTX(CTX_USERLIST);
 	return (ul->Flags & US_INTERNET) != 0;
 }
+
 
 int ConditionalUserAccess(StrBuf *Target, WCTemplputParams *TP)
 {
@@ -455,6 +465,8 @@ int ConditionalUserAccess(StrBuf *Target, WCTemplputParams *TP)
 		==
 		ul->AccessLevel;
 }
+
+
 int ConditionalHaveBIO(StrBuf *Target, WCTemplputParams *TP)
 {
 	UserListEntry *ul = (UserListEntry*) CTX(CTX_USERLIST);
@@ -463,6 +475,13 @@ int ConditionalHaveBIO(StrBuf *Target, WCTemplputParams *TP)
 		return 0;
 	return ul->HasBio;
 }
+
+
+int ConditionalSuppressEmailFields(StrBuf *Target, WCTemplputParams *TP)
+{
+	return 0;		// FIXME this makes all email fields display
+}
+
 
 void tmplput_USER_BIO(StrBuf *Target, WCTemplputParams *TP)
 {
@@ -643,7 +662,7 @@ void display_edit_address_book_entry(const char *username, long usernum) {
 }
 
 /*
- *  burge a user 
+ *  purge a user 
  *  username the name of the user to remove
  */
 void delete_user(char *username) {
@@ -816,10 +835,9 @@ void edituser(void) {
 }
 
 
-
 /*
- *  create a new user
- * take the web environment username and create it on the citadel server
+ * create a new user
+ * (take the web environment username and create it on the citadel server)
  */
 void create_user(void) {
 	long FullState;
@@ -881,6 +899,7 @@ void _display_edituser(void) {
 	display_edituser(NULL, 0);
 }
 
+
 void 
 InitModule_USEREDIT
 (void)
@@ -908,16 +927,13 @@ InitModule_USEREDIT
 
 	RegisterNamespace("USER:BIO", 1, 2, tmplput_USER_BIO,  NULL, CTX_NONE);
 
-	RegisterConditional("COND:USERNAME",  0,    ConditionalUser, CTX_USERLIST);
-	RegisterConditional("COND:USERACCESS", 0,   ConditionalUserAccess, CTX_USERLIST);
-	RegisterConditional("COND:USERLIST:FLAG:USE_INTERNET", 0, ConditionalFlagINetEmail, CTX_USERLIST);
-	RegisterConditional("COND:USERLIST:HAVEBIO", 0, ConditionalHaveBIO, CTX_USERLIST);
-
-	RegisterConditional("COND:USER:PIC", 1, Conditional_USER_HAS_PIC,  CTX_NONE);
+	RegisterConditional("COND:USERNAME",			0,	ConditionalUser,		CTX_USERLIST);
+	RegisterConditional("COND:USERACCESS",			0,	ConditionalUserAccess,		CTX_USERLIST);
+	RegisterConditional("COND:USERLIST:FLAG:USE_INTERNET",	0,	ConditionalFlagINetEmail,	CTX_USERLIST);
+	RegisterConditional("COND:USERLIST:HAVEBIO",		0,	ConditionalHaveBIO,		CTX_USERLIST);
+	RegisterConditional("COND:USER:PIC",			1,	Conditional_USER_HAS_PIC,	CTX_NONE);
 
 	RegisterIterator("USERLIST", 0, NULL, iterate_load_userlist, NULL, DeleteHash, CTX_USERLIST, CTX_NONE, IT_FLAG_DETECT_GROUPCHANGE);
-	
-
 
 	RegisterSortFunc(HKEY("user:name"),
 			 HKEY("userlist"),
