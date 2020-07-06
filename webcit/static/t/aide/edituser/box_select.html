@@ -4,6 +4,7 @@
 <center>
   <form method="POST" action="display_edituser">
    <input type="hidden" name="nonce" value="<?NONCE>">
+   <input type="hidden" name="suppress_email" value="1">
    <select name="username" size=10 style="width:100%">
 <?ITERATE("USERLIST", ="aide_edituser_section")>
 </select><br />

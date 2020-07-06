@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996-2017 by the citadel.org team
+ * Copyright (c) 1996-2020 by the citadel.org team
  *
  * This program is open source software.  You can redistribute it and/or
  * modify it under the terms of the GNU General Public License, version 3.
@@ -388,6 +388,16 @@ int conditional_VC_Havetype(StrBuf *Target, WCTemplputParams *TP)
 	DeleteHashPos(&it);
 	return rc;
 }
+
+
+/* Returns 1 to suppress the "email" fields in the vCard editor, if we're editing a user's contact info.
+ * Returns 0 to present those fields, if we're editing a vCard in an address book.
+ */
+int conditional_VC_SuppressEmailFields(StrBuf *Target, WCTemplputParams *TP)
+{	
+	return(atoi(bstr("suppress_email")));
+}
+
 
 /******************************************************************************
  *              parse one VCard                                               *
@@ -1180,7 +1190,9 @@ InitModule_VCARD
 	REGISTERTokenParamDefine(TerminateList);
 	REGISTERTokenParamDefine(Address);
 
-	RegisterConditional("VC:HAVE:TYPE",      1, conditional_VC_Havetype, CTX_VCARD);
+	RegisterConditional("VC:HAVE:TYPE",			1,	conditional_VC_Havetype, CTX_VCARD);
+	RegisterConditional("COND:VC:SUPPRESS_EMAIL_FIELDS",	1,	conditional_VC_SuppressEmailFields, CTX_VCARD);
+
 	RegisterFilteredIterator("VC:TYPE", 1, DefineToToken, NULL, NULL, NULL, filter_VC_ByType, CTX_VCARD_TYPE, CTX_VCARD, IT_NOFLAG);
 	RegisterFilteredIterator("VC:TYPE:ITEMS", 0, NULL, getContextVcard, NULL, NULL, filter_VC_ByContextType, CTX_STRBUF, CTX_VCARD_TYPE, IT_NOFLAG);
 
