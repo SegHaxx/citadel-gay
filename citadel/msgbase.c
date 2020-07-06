@@ -1,7 +1,7 @@
 /*
  * Implements the message store.
  *
- * Copyright (c) 1987-2018 by the citadel.org team
+ * Copyright (c) 1987-2020 by the citadel.org team
  *
  * This program is open source software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3.
@@ -38,7 +38,7 @@ struct addresses_to_be_filed *atbf = NULL;
  * These are the four-character field headers we use when outputting
  * messages in Citadel format (as opposed to RFC822 format).
  */
-char *msgkeys[91] = {
+char *msgkeys[] = {
 	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 
 	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 
 	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 
@@ -48,34 +48,34 @@ char *msgkeys[91] = {
 	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 
 	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 
 	NULL, 
-	"from", /* A -> eAuthor       */
-	NULL,   /* B -> eBig_message  */
-	NULL,   /* C -> eRemoteRoom   FIXME no more ignet */
-	NULL,   /* D -> eDestination  FIXME no more ignet */
-	"exti", /* E -> eXclusivID    */
-	"rfca", /* F -> erFc822Addr   */
-	NULL,   /* G */
-	"hnod", /* H -> eHumanNode    FIXME no more ignet */
-	"msgn", /* I -> emessageId    */
-	"jrnl", /* J -> eJournal      */
-	"rep2", /* K -> eReplyTo      */
-	"list", /* L -> eListID       */
-	"text", /* M -> eMesageText   */
-	"node", /* N -> eNodeName     FIXME no more ignet */
-	"room", /* O -> eOriginalRoom */
-	"path", /* P -> eMessagePath  */
-	NULL,   /* Q */
-	"rcpt", /* R -> eRecipient    */
-	"spec", /* S -> eSpecialField FIXME we might not be using this anymore */
-	"time", /* T -> eTimestamp    */
-	"subj", /* U -> eMsgSubject   */
-	"nvto", /* V -> eenVelopeTo   */
-	"wefw", /* W -> eWeferences   */
-	NULL,   /* X */
-	"cccc", /* Y -> eCarbonCopY   */
-	NULL   /* Z */
-
+	"from", // A -> eAuthor
+	NULL,   // B -> eBig_message
+	NULL,   // C (formerly used as eRemoteRoom)
+	NULL,   // D (formerly used as eDestination)
+	"exti", // E -> eXclusivID
+	"rfca", // F -> erFc822Addr
+	NULL,   // G
+	"hnod", // H (formerly used as eHumanNode)
+	"msgn", // I -> emessageId
+	"jrnl", // J -> eJournal
+	"rep2", // K -> eReplyTo
+	"list", // L -> eListID
+	"text", // M -> eMesageText
+	NULL,	// N (formerly used as eNodeName)
+	"room", // O -> eOriginalRoom
+	"path", // P -> eMessagePath
+	NULL,   // Q
+	"rcpt", // R -> eRecipient
+	NULL,	// S (formerly used as eSpecialField)
+	"time", // T -> eTimestamp
+	"subj", // U -> eMsgSubject
+	"nvto", // V -> eenVelopeTo
+	"wefw", // W -> eWeferences
+	NULL,   // X
+	"cccc", // Y -> eCarbonCopY
+	NULL	// Z
 };
+
 HashList *msgKeyLookup = NULL;
 
 int GetFieldFromMnemonic(eMsgField *f, const char* c)
@@ -109,21 +109,16 @@ eMsgField FieldOrder[]  = {
 	eAuthor      ,
 	erFc822Addr  ,
 	eOriginalRoom,
-	eNodeName    ,
-	eHumanNode   ,
 	eRecipient   ,
-	eDestination ,
 /* Semi-important fields */
 	eBig_message ,
-	eRemoteRoom  ,
 	eExclusiveID ,
 	eWeferences  ,
 	eJournal     ,
-/* G is not used yet, may become virus signature*/
+/* G is not used yet */
 	eReplyTo     ,
 	eListID      ,
 /* Q is not used yet */
-	eSpecialField,
 	eenVelopeTo  ,
 /* X is not used yet */
 /* Z is not used yet */
@@ -1695,7 +1690,6 @@ void OutputCtdlMsgHeaders(
 	int do_proto)		/* do Citadel protocol responses? */
 {
 	int i;
-	int suppress_f = 0;
 	char buf[SIZ];
 	char display_name[256];
 
@@ -1722,14 +1716,6 @@ void OutputCtdlMsgHeaders(
 		}
 	}
 
-	/* Don't show Internet address for users on the
-	 * local Citadel network.
-	 */
-	suppress_f = 0;
-	if (!CM_IsEmpty(TheMessage, eNodeName) && (haschar(TheMessage->cm_fields[eNodeName], '.') == 0)) {
-		suppress_f = 1;
-	}
-
 	/* Now spew the header fields in the order we like them. */
 	for (i=0; i< NDiskFields; ++i) {
 		eMsgField Field;
@@ -1747,9 +1733,6 @@ void OutputCtdlMsgHeaders(
 							      msgkeys[Field],
 							      display_name);
 				}
-				else if ((Field == erFc822Addr) && (suppress_f)) {
-					/* do nothing */
-				}
 				/* Masquerade display name if needed */
 				else {
 					if (do_proto) {
@@ -1764,7 +1747,7 @@ void OutputCtdlMsgHeaders(
 
 void OutputRFC822MsgHeaders(
 	struct CtdlMessage *TheMessage,
-	int flags,		/* should the bessage be exported clean	*/
+	int flags,		/* should the message be exported clean	*/
 	const char *nl, int nlen,
 	char *mid, long sizeof_mid,
 	char *suser, long sizeof_suser,
@@ -1819,9 +1802,6 @@ void OutputRFC822MsgHeaders(
 				break;
 			case erFc822Addr:
 				safestrncpy(fuser, mptr, sizeof_fuser);
-			case eNodeName:
-				safestrncpy(snode, mptr, sizeof_snode);
-				break;
 			case eRecipient:
 				if (haschar(mptr, '@') == 0) {
 					sanitize_truncated_recipient(mptr);
@@ -1863,15 +1843,11 @@ void OutputRFC822MsgHeaders(
 					cprintf("Reply-To: %s%s", mptr, nl);
 				break;
 
-			case eRemoteRoom:
-			case eDestination:
 			case eExclusiveID:
-			case eHumanNode:
 			case eJournal:
 			case eMesageText:
 			case eBig_message:
 			case eOriginalRoom:
-			case eSpecialField:
 			case eErrorMsg:
 			case eSuppressIdx:
 			case eExtnotify:
@@ -2165,7 +2141,6 @@ int CtdlOutputPreLoadedMsg(
 	strcpy(suser, "");
 	strcpy(luser, "");
 	strcpy(fuser, "");
-	memcpy(snode, CtdlGetConfigStr("c_nodename"), strlen(CtdlGetConfigStr("c_nodename")) + 1);
 	if (mode == MT_RFC822) 
 		OutputRFC822MsgHeaders(
 			TheMessage,
@@ -2185,12 +2160,8 @@ int CtdlOutputPreLoadedMsg(
 	}
 
 	if (mode == MT_RFC822) {
-		if (!strcasecmp(snode, NODENAME)) {
-			safestrncpy(snode, FQDN, sizeof snode);
-		}
-
 		/* Construct a fun message id */
-		cprintf("Message-ID: <%s", mid);/// todo: this possibly breaks threadding mails.
+		cprintf("Message-ID: <%s", mid);
 		if (strchr(mid, '@')==NULL) {
 			cprintf("@%s", snode);
 		}
@@ -2894,10 +2865,10 @@ long CtdlSubmitMsg(struct CtdlMessage *msg,	/* message to save */
 	if ((recps != NULL) && (recps->bounce_to == NULL))
 	{
 		if (CC->logged_in) {
-			snprintf(bounce_to, sizeof bounce_to, "%s@%s", CC->user.fullname, CtdlGetConfigStr("c_nodename"));
+			strcpy(bounce_to, CC->user.fullname);
 		}
 		else {
-			snprintf(bounce_to, sizeof bounce_to, "%s@%s", msg->cm_fields[eAuthor], msg->cm_fields[eNodeName]);
+			strcpy(bounce_to, msg->cm_fields[eAuthor]);
 		}
 		recps->bounce_to = bounce_to;
 	}
@@ -3042,7 +3013,6 @@ long quickie_message(const char *from,
 
 	if (!IsEmptyStr(fromaddr)) CM_SetField(msg, erFc822Addr, fromaddr, strlen(fromaddr));
 	if (!IsEmptyStr(room)) CM_SetField(msg, eOriginalRoom, room, strlen(room));
-	CM_SetField(msg, eNodeName, CtdlGetConfigStr("c_nodename"), strlen(CtdlGetConfigStr("c_nodename")));
 	if (!IsEmptyStr(to)) {
 		CM_SetField(msg, eRecipient, to, strlen(to));
 		recp = validate_recipients(to, NULL, 0);
@@ -3267,9 +3237,6 @@ struct CtdlMessage *CtdlMakeMessageLen(
 			CM_SetField(msg, eOriginalRoom, CC->room.QRname, strlen(CC->room.QRname));
 		}
 	}
-
-	CM_SetField(msg, eNodeName, CtdlGetConfigStr("c_nodename"), strlen(CtdlGetConfigStr("c_nodename")));
-	CM_SetField(msg, eHumanNode, CtdlGetConfigStr("c_humannode"), strlen(CtdlGetConfigStr("c_humannode")));
 
 	if (rcplen > 0) {
 		CM_SetField(msg, eRecipient, recipient, rcplen);
@@ -3638,8 +3605,6 @@ void CtdlWriteObject(char *req_room,			/* Room to stuff it in */
 	msg->cm_format_type = 4;
 	CM_SetField(msg, eAuthor, CC->user.fullname, strlen(CC->user.fullname));
 	CM_SetField(msg, eOriginalRoom, req_room, strlen(req_room));
-	CM_SetField(msg, eNodeName, CtdlGetConfigStr("c_nodename"), strlen(CtdlGetConfigStr("c_nodename")));
-	CM_SetField(msg, eHumanNode, CtdlGetConfigStr("c_humannode"), strlen(CtdlGetConfigStr("c_humannode")));
 	msg->cm_flags = flags;
 	
 	CM_SetAsFieldSB(msg, eMesageText, &encoded_message);

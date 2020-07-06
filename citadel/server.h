@@ -1,7 +1,7 @@
 /* 
  * Main declarations file for the Citadel server
  *
- * Copyright (c) 1987-2018 by the citadel.org team
+ * Copyright (c) 1987-2020 by the citadel.org team
  *
  * This program is open source software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 3.
@@ -309,21 +309,16 @@ struct UseTable {
 typedef enum _MsgField {
 	eAuthor       = 'A',
 	eBig_message  = 'B',
-	eRemoteRoom   = 'C',
-	eDestination  = 'D',
 	eExclusiveID  = 'E',
 	erFc822Addr   = 'F',
-	eHumanNode    = 'H',
 	emessageId    = 'I',
 	eJournal      = 'J',
 	eReplyTo      = 'K',
 	eListID       = 'L',
 	eMesageText   = 'M',
-	eNodeName     = 'N',
 	eOriginalRoom = 'O',
 	eMessagePath  = 'P',
 	eRecipient    = 'R',
-	eSpecialField = 'S',
 	eTimestamp    = 'T',
 	eMsgSubject   = 'U',
 	eenVelopeTo   = 'V',

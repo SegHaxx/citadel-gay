@@ -2,7 +2,7 @@
  * Implements the FETCH command in IMAP.
  * This is a good example of the protocol's gratuitous complexity.
  *
- * Copyright (c) 2001-2017 by the citadel.org team
+ * Copyright (c) 2001-2020 by the citadel.org team
  *
  * This program is open source software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -347,19 +347,14 @@ void imap_output_envelope_from(struct CtdlMessage *msg) {
 
 	if (!CM_IsEmpty(msg, erFc822Addr)) {
 		process_rfc822_addr(msg->cm_fields[erFc822Addr], user, node, name);
-		IPutStr(user, strlen(user));		/* mailbox name (user id) */
+		IPutStr(user, strlen(user));			/* mailbox name (user id) */
 		IAPuts(" ");
-		if (!strcasecmp(node, CtdlGetConfigStr("c_nodename"))) {
-			IPutStr(CtdlGetConfigStr("c_fqdn"), strlen(CtdlGetConfigStr("c_fqdn")));
-		}
-		else {
-			IPutStr(node, strlen(node));		/* host name */
-		}
+		IPutStr(node, strlen(node));			/* host name */
 	}
 	else {
-		IPutMsgField(eAuthor); /* mailbox name (user id) */
+		IPutMsgField(eAuthor);				/* Make up a synthetic address */
 		IAPuts(" ");
-		IPutMsgField(eNodeName);	/* host name */
+		IPutStr(CtdlGetConfigStr("c_fqdn"), strlen(CtdlGetConfigStr("c_fqdn")));
 	}
 	
 	IAPuts(")) "); /* close double-parens */
