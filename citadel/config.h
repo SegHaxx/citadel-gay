@@ -17,7 +17,7 @@
 
 /*
  * This is the format of the legacy config file.  Do not attempt to do anything with it other
- * than migrate it into the new format. 
+ * than migrate it into the new format.    DO NOT EDIT -- EVER.
  */
 struct legacy_config {
 	char c_nodename[16];		/* short name of this node on a Citadel network */

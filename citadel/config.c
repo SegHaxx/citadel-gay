@@ -1,7 +1,7 @@
 /*
  * Read and write the citadel.config file
  *
- * Copyright (c) 1987-2017 by the citadel.org team
+ * Copyright (c) 1987-2020 by the citadel.org team
  *
  * This program is open source software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3.
@@ -70,7 +70,6 @@ void validate_config(void) {
 	config_warn_if_port_unset("c_pop3s_port",	995);
 	config_warn_if_port_unset("c_imaps_port",	993);
 	config_warn_if_port_unset("c_pftcpdict_port",	-1);
-	config_warn_if_port_unset("c_managesieve_port",	2020);
 	config_warn_if_port_unset("c_xmpp_c2s_port",	5222);
 	config_warn_if_port_unset("c_xmpp_s2s_port",	5269);
 	config_warn_if_port_unset("c_nntp_port",	119);
@@ -129,7 +128,6 @@ void brand_new_installation_set_defaults(void) {
 	CtdlSetConfigInt("c_pop3s_port",	995);
 	CtdlSetConfigInt("c_imaps_port",	993);
 	CtdlSetConfigInt("c_pftcpdict_port",	-1);
-	CtdlSetConfigInt("c_managesieve_port",	2020);
 	CtdlSetConfigInt("c_xmpp_c2s_port",	5222);
 	CtdlSetConfigInt("c_xmpp_s2s_port",	5269);
 	CtdlSetConfigInt("c_nntp_port",		119);
@@ -202,7 +200,6 @@ void migrate_legacy_config(struct legacy_config *lconfig)
 	CtdlSetConfigStr(	"c_journal_dest"	,	lconfig->c_journal_dest		);
 	CtdlSetConfigStr(	"c_default_cal_zone"	,	lconfig->c_default_cal_zone	);
 	CtdlSetConfigInt(	"c_pftcpdict_port"	,	lconfig->c_pftcpdict_port	);
-	CtdlSetConfigInt(	"c_managesieve_port"	,	lconfig->c_managesieve_port	);
 	CtdlSetConfigInt(	"c_auth_mode"		,	lconfig->c_auth_mode		);
 	CtdlSetConfigInt(	"c_rbl_at_greeting"	,	lconfig->c_rbl_at_greeting	);
 	CtdlSetConfigStr(	"c_pager_program"	,	lconfig->c_pager_program	);

@@ -235,10 +235,6 @@ int confbool(char *v)
 
 /* 
  * Get or set global configuration options
- *
- * IF YOU ADD OR CHANGE FIELDS HERE, YOU *MUST* DOCUMENT YOUR CHANGES AT:
- * http://www.citadel.org/doku.php/documentation:appproto:system_config
- *
  */
 void cmd_conf(char *argbuf)
 {
@@ -316,7 +312,7 @@ void cmd_conf(char *argbuf)
 		cprintf("%s\n",		CtdlGetConfigStr("c_journal_dest"));
 		cprintf("%s\n",		CtdlGetConfigStr("c_default_cal_zone"));
 		cprintf("%d\n",		CtdlGetConfigInt("c_pftcpdict_port"));
-		cprintf("%d\n",		CtdlGetConfigInt("c_managesieve_port"));
+		cprintf("0\n");
 	        cprintf("%d\n",		CtdlGetConfigInt("c_auth_mode"));
 	        cprintf("\n");
 	        cprintf("\n");
@@ -522,7 +518,7 @@ void cmd_conf(char *argbuf)
 				CtdlSetConfigInt("c_pftcpdict_port", atoi(buf));
 				break;
 			case 51:
-				CtdlSetConfigInt("c_managesieve_port", atoi(buf));
+				/* niu */
 				break;
 			case 52:
 				CtdlSetConfigInt("c_auth_mode", atoi(buf));
