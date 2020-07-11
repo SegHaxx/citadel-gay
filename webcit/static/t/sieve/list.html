@@ -1,32 +1,5 @@
 <?=("head")><?%("COND:LOGGEDIN", 1, 1, 1, "", ="paging")>
 
-<?--("iterate over an empty template, so we have the states already loaded for below")><?ITERATE("SIEVE:SCRIPTS", ="sieve_empty")>
-<script type="text/javascript">
-
-	var previously_active_script;
-
-	function ToggleSievePanels() {
- 		d = ($('sieveform').bigaction.options[$('sieveform').bigaction.selectedIndex].value);
- 		for (i=0; i<3; ++i) {
-  			if (i == d) {
-   				$('sievediv' + i).style.display = 'block';
-  			}
-  			else {
-   				$('sievediv' + i).style.display = 'none';
-  			}
- 		}
-	}
-
-	function ToggleScriptPanels() {
- 		d = ($('sieveform').active_script.options[$('sieveform').active_script.selectedIndex].value);
- 		if ($('script_' + previously_active_script)) {
-  			$('script_' + previously_active_script).style.display = 'none';
- 		}
- 		$('script_' + d).style.display = 'block';
- 		previously_active_script = d;
-	}
-</script>
-
 <div id="banner">
 	<img src="static/webcit_icons/essen/32x32/config.png">
 	<h1><?_("View/edit server-side mail filters")></h1>
@@ -38,24 +11,18 @@
     <tr><td valign="top"><form id="sieveform" method="post" action="save_sieve">
 	<input type="hidden" name="nonce" value="<?NONCE>">
 
-	<?_("When new mail arrives: ")>
+	<?_("When new mail arrives: ")><br>
+ 	<?_("Filter it according to rules selected below")>
+
+	<!-- This is a hack to force everyone to use the "rules" version since we are abandoning Sieve.   -- ajc 2020jul11
 	<select name="bigaction" size=1 onChange="ToggleSievePanels();">
  	  <option <?%("COND:BSTR", 1, "__SIEVE:RULESSCRIPT", 1, "", "selected")> value="0"><?_("Leave it in my inbox without filtering")></option>
  	  <option <?%("COND:BSTR", 1, "__SIEVE:RULESSCRIPT", 1, "selected", "")> value="1"><?_("Filter it according to rules selected below")></option>
  	  <option <?%("COND:BSTR", 1, "__SIEVE:EXTERNAL_SCRIPT", 1, "selected", "")> value="2"><?_("Filter it through a manually edited script (advanced users only)")></option>
 	</select>
+	-->
 
-<?--("The no filtering div")>
-	<div id="sievediv0" style="display:none">
-		<div align="center">
-	    		<br><br>
-	    		<?_("Your incoming mail will not be filtered through any scripts.")>
-	    		<br><br>
-		</div>
-	</div>
-
-<?--("The webcit managed scripts div")>
-	<div id="sievediv1" style="display:none">
+	<div id="sievediv1">
 		<?=("sieve_display")><br>
 		<table cellpadding="2" width="100%" class="altern">
 			<?ITERATE("SIEVE:RULES", ="sieve_display_one")>
@@ -65,22 +32,6 @@
 		<script type="text/javascript">UpdateRules();</script>
 	</div>
 
-<?--("The I am smart and can write my own Sieve scripts div")>
-	<div id="sievediv2" style="display:none">
-		<??("COND:BSTR", 1, "__SIEVE:EXTERNALSCRIPT", 1)>
-			<?_("The currently active script is: ")>
-			<select name="active_script" size=1 onChange="ToggleScriptPanels();">
-				<?ITERATE("SIEVE:SCRIPTS", ="sieve_list_select_one")>
-			</select>
-			&nbsp;&nbsp;&nbsp;
-			<a href="display_sieve_add_or_delete"><?_("Add or delete scripts")></a>
-			<br>
-			<?ITERATE("SIEVE:SCRIPTS", ="sieve_display_one_script")>
-		<??("X", 1)>
-		<script type="text/javascript">ToggleScriptPanels();</script>
-	</div>
-
-<?--("The rest of this is common for all panels... ")>
 	<div align="center"><br>
 		<input type="submit" name="save_button" value='<?_("Save changes")>'>
 		&nbsp;
