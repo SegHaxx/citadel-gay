@@ -203,8 +203,7 @@ cause the message to be rejected by the SMTP server.
 
  Register or remove a function with the room processing system.
 Registered functions are called in the order they are registered when a message
-is added to a room. This allows modules such as Sieve to process new messages
-appearing in a room.
+is added to a room. This allows modules to process new messages appearing in a room.
 
 
  void CtdlRegisterXmsgHook(int (*fcn_ptr) (char *, char *, char *), int order)

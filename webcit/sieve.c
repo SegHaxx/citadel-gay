@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996-2012 by the citadel.org team
+ * Copyright (c) 1996-2020 by the citadel.org team
  *
  * This program is open source software.  You can redistribute it and/or
  * modify it under the terms of the GNU General Public License version 3.
@@ -9,7 +9,11 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
- * FIXME: add logic to exclude the webcit-generated script from the manual script selection
+ * 
+ * Implementation note: this was kind of hacked up when we switched from Sieve to custom rules.
+ * As a result there's probably some cruft in here...
+ * ajc 2020jul12
+ *
  */
 
 #include "webcit.h"
@@ -20,220 +24,6 @@ CtxType CTX_SIEVESCRIPT = CTX_NONE;
 #define MAX_SCRIPTS	100
 #define MAX_RULES	50
 #define RULES_SCRIPT	"__WebCit_Generated_Script__"
-
-
-/*
- * Helper function for output_sieve_rule() to output strings with quotes escaped
- */
-void osr_sanitize(char *str) {
-	int i, len;
-
-	if (str == NULL) return;
-	len = strlen(str);
-	for (i=0; i<len; ++i) {
-		if (str[i]=='\"') {
-			str[i] = '\'' ;
-		}
-		else if (isspace(str[i])) {
-			str[i] = ' ';
-		}
-	}
-}
-
-
-/*
- * Output parseable Sieve script code based on rules input
- */
-void output_sieve_rule(char *hfield, char *compare, char *htext, char *sizecomp, int sizeval,
-			char *action, char *fileinto, char *redirect, char *automsg, char *final,
-			char *my_addresses)
-{
-	char *comp1 = "";
-	char *comp2 = "";
-
-	osr_sanitize(htext);
-	osr_sanitize(fileinto);
-	osr_sanitize(redirect);
-	osr_sanitize(automsg);
-
-	/* Prepare negation and match operators that will be used iff we apply a conditional */
-
-	if (!strcasecmp(compare, "contains")) {
-		comp1 = "";
-		comp2 = ":contains";
-	}
-	else if (!strcasecmp(compare, "notcontains")) {
-		comp1 = "not";
-		comp2 = ":contains";
-	}
-	else if (!strcasecmp(compare, "is")) {
-		comp1 = "";
-		comp2 = ":is";
-	}
-	else if (!strcasecmp(compare, "isnot")) {
-		comp1 = "not";
-		comp2 = ":is";
-	}
-	else if (!strcasecmp(compare, "matches")) {
-		comp1 = "";
-		comp2 = ":matches";
-	}
-	else if (!strcasecmp(compare, "notmatches")) {
-		comp1 = "not";
-		comp2 = ":matches";
-	}
-
-	/* Now do the conditional */
-
-	if (!strcasecmp(hfield, "from")) {
-		serv_printf("if%s header %s \"From\" \"%s\"",
-			comp1, comp2,
-			htext
-		);
-	}
-
-	else if (!strcasecmp(hfield, "tocc")) {
-		serv_printf("if%s header %s [\"To\", \"Cc\"] \"%s\"",
-			comp1, comp2,
-			htext
-		);
-	}
-
-	else if (!strcasecmp(hfield, "subject")) {
-		serv_printf("if%s header %s \"Subject\" \"%s\"",
-			comp1, comp2,
-			htext
-		);
-	}
-
-	else if (!strcasecmp(hfield, "replyto")) {
-		serv_printf("if%s header %s \"Reply-to\" \"%s\"",
-			comp1, comp2,
-			htext
-		);
-	}
-
-	else if (!strcasecmp(hfield, "sender")) {
-		serv_printf("if%s header %s \"Sender\" \"%s\"",
-			comp1, comp2,
-			htext
-		);
-	}
-
-	else if (!strcasecmp(hfield, "resentfrom")) {
-		serv_printf("if%s header %s \"Resent-from\" \"%s\"",
-			comp1, comp2,
-			htext
-		);
-	}
-
-	else if (!strcasecmp(hfield, "resentto")) {
-		serv_printf("if%s header %s \"Resent-to\" \"%s\"",
-			comp1, comp2,
-			htext
-		);
-	}
-
-	else if (!strcasecmp(hfield, "xmailer")) {
-		serv_printf("if%s header %s \"X-Mailer\" \"%s\"",
-			comp1, comp2,
-			htext
-		);
-	}
-
-	else if (!strcasecmp(hfield, "xspamflag")) {
-		serv_printf("if%s header %s \"X-Spam-Flag\" \"%s\"",
-			comp1, comp2,
-			htext
-		);
-	}
-
-	else if (!strcasecmp(hfield, "xspamstatus")) {
-		serv_printf("if%s header %s \"X-Spam-Status\" \"%s\"",
-			comp1, comp2,
-			htext
-		);
-	}
-
-	else if (!strcasecmp(hfield, "listid")) {
-		serv_printf("if%s header %s \"List-ID\" \"%s\"",
-			comp1, comp2,
-			htext
-		);
-	}
-
-	else if (!strcasecmp(hfield, "envfrom")) {
-		serv_printf("if%s envelope %s \"From\" \"%s\"",
-			comp1, comp2,
-			htext
-		);
-	}
-
-	else if (!strcasecmp(hfield, "envto")) {
-		serv_printf("if%s envelope %s \"To\" \"%s\"",
-			comp1, comp2,
-			htext
-		);
-	}
-
-	else if (!strcasecmp(hfield, "size")) {
-		if (!strcasecmp(sizecomp, "larger")) {
-			serv_printf("if size :over %d", sizeval);
-		}
-		else if (!strcasecmp(sizecomp, "smaller")) {
-			serv_printf("if size :under %d", sizeval);
-		}
-		else {	/* failsafe - should never get here, but just in case... */
-			serv_printf("if size :over 1");
-		}
-	}
-
-	/* Open braces if we're in a conditional loop */
-
-	if (strcasecmp(hfield, "all")) {
-		serv_printf("{");
-	}
-
-	/* Do action */
-
-	if (!strcasecmp(action, "keep")) {
-		serv_printf("keep;");
-	}
-
-	else if (!strcasecmp(action, "discard")) {
-		serv_printf("discard;");
-	}
-
-	else if (!strcasecmp(action, "reject")) {
-		serv_printf("reject \"%s\";", automsg);
-	}
-
-	else if (!strcasecmp(action, "fileinto")) {
-		serv_printf("fileinto \"%s\";", fileinto);
-	}
-
-	else if (!strcasecmp(action, "redirect")) {
-		serv_printf("redirect \"%s\";", redirect);
-	}
-
-	else if (!strcasecmp(action, "vacation")) {
-		serv_printf("vacation :addresses [%s]\n\"%s\";", my_addresses, automsg);
-	}
-
-	/* Do 'final' action */
-
-	if (!strcasecmp(final, "stop")) {
-		serv_printf("stop;");
-	}
-
-	/* Close the braces if we're in a conditional loop */
-
-	if (strcasecmp(hfield, "all")) {
-		serv_printf("}");
-	}
-
-	/* End of rule. */
-}
 
 
 /*
@@ -273,25 +63,11 @@ void parse_fields_from_rule_editor(void) {
 	}
 
 	/* Now generate the script and write it to the Citadel server */
-	serv_printf("MSIV putscript|%s|", RULES_SCRIPT);
+	serv_printf("PIBR");
 	serv_getln(buf, sizeof buf);
 	if (buf[0] != '4') {
 		return;
 	}
-
-	serv_puts("# THIS SCRIPT WAS AUTOMATICALLY GENERATED BY WEBCIT.");
-	serv_puts("# ");
-	serv_puts("# Do not attempt to manually edit it.  If you do so,");
-	serv_puts("# your changes will be overwritten the next time WebCit");
-	serv_puts("# saves its mail filtering rule set.  If you really want");
-	serv_puts("# to use these rules as the basis for another script,");
-	serv_puts("# copy them to another script and save that instead.");
-	serv_puts("");
-	serv_puts("require \"fileinto\";");
-	serv_puts("require \"reject\";");
-	serv_puts("require \"vacation\";");
-	serv_puts("require \"envelope\";");
-	serv_puts("");
 
 	for (i=0; i<MAX_RULES; ++i) {
 		
@@ -341,16 +117,11 @@ void parse_fields_from_rule_editor(void) {
 			if (encoded_rule[len - 1] == '\n') {
 				encoded_rule[len - 1] = '\0';
 			}
-			serv_printf("# WEBCIT_RULE|%d|%s|", i, encoded_rule);
-			output_sieve_rule(hfield, compare, htext, sizecomp, sizeval,
-					action, fileinto, redirect, automsg, final, my_addresses);
+			serv_printf("rule|%d|%s|", i, encoded_rule);
 			serv_puts("");
 		}
-
-
 	}
 
-	serv_puts("stop;");
 	serv_puts("000");
 }
 
@@ -359,12 +130,6 @@ void parse_fields_from_rule_editor(void) {
  * save sieve config
  */
 void save_sieve(void) {
-	int bigaction;
-	char script_names[MAX_SCRIPTS][64];
-	int num_scripts = 0;
-	int i;
-	char this_name[64];
-	char buf[256];
 
 	if (!havebstr("save_button")) {
 		AppendImportantMessage(_("Cancelled.  Changes were not saved."), -1);
@@ -373,52 +138,6 @@ void save_sieve(void) {
 	}
 
 	parse_fields_from_rule_editor();
-
-	serv_puts("MSIV listscripts");
-	serv_getln(buf, sizeof(buf));
-	if (buf[0] == '1') while (serv_getln(buf, sizeof(buf)), strcmp(buf, "000")) {
-		if (num_scripts < MAX_SCRIPTS) {
-			extract_token(script_names[num_scripts], buf, 0, '|', 64);
-			++num_scripts;
-		}
-	}
-
-	bigaction = ibstr("bigaction");
-
-	if (bigaction == 0) {
-		serv_puts("MSIV setactive||");
-		serv_getln(buf, sizeof buf);
-	}
-
-	else if (bigaction == 1) {
-		serv_printf("MSIV setactive|%s|", RULES_SCRIPT);
-		serv_getln(buf, sizeof buf);
-	}
-
-	else if (bigaction == 2) {
-		serv_printf("MSIV setactive|%s|", bstr("active_script"));
-		serv_getln(buf, sizeof buf);
-	}
-
-	if (num_scripts > 0) {
-		for (i=0; i<num_scripts; ++i) {
-			/*
-			 * We only want to save the scripts from the "manually edited scripts"
-			 * screen.  The script that WebCit generates from its ruleset will be
-			 * auto-generated by parse_fields_from_rule_editor() and saved there.
-			 */
-			if (strcasecmp(script_names[i], RULES_SCRIPT)) {
-				serv_printf("MSIV putscript|%s|", script_names[i]);
-				serv_getln(buf, sizeof buf);
-				if (buf[0] == '4') {
-					snprintf(this_name, sizeof this_name, "text_%s", script_names[i]);
-					striplt((char *)BSTR(this_name)); /* TODO: get rid of typecast*/
-					serv_write(BSTR(this_name), strlen(BSTR(this_name)));
-					serv_puts("\n000");
-				}
-			}
-		}
-	}
 
 	AppendImportantMessage(_("Your changes have been saved."), -1);
 	display_main_menu();
@@ -432,46 +151,6 @@ void display_sieve_add_or_delete(void) {
 	wDumpContent(1);
 }
 
-
-
-/*
- * create a new script
- * take the web environment script name and create it on the citadel server
- */
-void create_script(void) {
-	char buf[256];
-
-	serv_printf("MSIV getscript|%s", bstr("script_name"));
-	serv_getln(buf, sizeof buf);
-	if (buf[0] == '1') {		// does script exist already?
-		while (serv_getln(buf, sizeof(buf)), strcmp(buf, "000")) {
-					// yes -- flush the output
-		}
-	}
-	else {
-					// no -- safe to create a new one by this name
-		serv_printf("MSIV putscript|%s", bstr("script_name"));
-		serv_getln(buf, sizeof buf);
-		if (buf[0] == '4') {
-			serv_puts("keep;");
-			serv_puts("000");
-		}
-	}
-
-	display_sieve_add_or_delete();
-}
-
-
-/*
- * delete a script
- */
-void delete_script(void) {
-	char buf[256];
-
-	serv_printf("MSIV deletescript|%s", bstr("script_name"));
-	serv_getln(buf, sizeof buf);
-	display_sieve_add_or_delete();
-}
 
 
 /*
@@ -802,7 +481,7 @@ void FreeSieveRule(void *vRule)
 	free(Rule);
 }
 
-#define WC_RULE_HEADER "# WEBCIT_RULE|"
+#define WC_RULE_HEADER "rule|"
 HashList *GetSieveRules(StrBuf *Target, WCTemplputParams *TP)
 {
 	StrBuf *Line = NULL;
@@ -814,7 +493,7 @@ HashList *GetSieveRules(StrBuf *Target, WCTemplputParams *TP)
 	SieveRule *Rule = NULL;
 
 	SieveRules = NewHash(1, Flathash);
-	serv_printf("MSIV getscript|"RULES_SCRIPT);
+	serv_printf("GIBR");
 	Line = NewStrBuf();
 	EncodedRule = NewStrBuf();
 	StrBuf_ServGetln(Line);
@@ -830,8 +509,7 @@ HashList *GetSieveRules(StrBuf *Target, WCTemplputParams *TP)
 			{
 				pch = NULL;
 				/* We just care for our encoded header and skip everything else */
-				if ((StrLength(Line) > sizeof(WC_RULE_HEADER) - 1) &&
-				    (!strncasecmp(ChrPtr(Line), HKEY(WC_RULE_HEADER))))
+				if ((StrLength(Line) > sizeof(WC_RULE_HEADER) - 1) && (!strncasecmp(ChrPtr(Line), HKEY(WC_RULE_HEADER))))
 				{
 					StrBufSkip_NTokenS(Line, &pch, '|', 1);
 					n = StrBufExtractNext_int(Line, &pch, '|'); 
@@ -962,7 +640,5 @@ InitModule_SIEVE
 	/* fetch our room into WCC->ThisRoom, to evaluate while iterating over rooms with COND:THIS:THAT:ROOM */
 	RegisterNamespace("SIEVE:SCRIPT:LOOKUP_FILEINTO", 0, 1, tmplput_SieveRule_lookup_FileIntoRoom, NULL, CTX_SIEVESCRIPT);
 	WebcitAddUrlHandler(HKEY("save_sieve"), "", 0, save_sieve, 0);
-	WebcitAddUrlHandler(HKEY("create_script"), "", 0, create_script, 0);
-	WebcitAddUrlHandler(HKEY("delete_script"), "", 0, delete_script, 0);
 	WebcitAddUrlHandler(HKEY("display_sieve_add_or_delete"), "", 0, display_sieve_add_or_delete, 0);
 }

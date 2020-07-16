@@ -2,7 +2,7 @@
  * This file contains functions which handle the mapping of Internet addresses
  * to users on the Citadel system.
  *
- * Copyright (c) 1987-2019 by the citadel.org team
+ * Copyright (c) 1987-2020 by the citadel.org team
  *
  * This program is open source software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3.
@@ -353,7 +353,7 @@ int CtdlIsMe(char *addr, int addr_buf_len)
 
 
 /* If the last item in a list of recipients was truncated to a partial address,
- * remove it completely in order to avoid choking libSieve
+ * remove it completely in order to avoid choking library functions.
  */
 void sanitize_truncated_recipient(char *str)
 {

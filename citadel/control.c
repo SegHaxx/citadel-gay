@@ -1,7 +1,7 @@
 /*
  * This module handles states which are global to the entire server.
  *
- * Copyright (c) 1987-2019 by the citadel.org team
+ * Copyright (c) 1987-2020 by the citadel.org team
  *
  * This program is open source software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3.
@@ -181,7 +181,7 @@ long get_new_message_number(void)
 /*
  * CtdlGetCurrentMessageNumber()  -  Obtain the current highest message number in the system
  * This provides a quick way to initialise a variable that might be used to indicate
- * messages that should not be processed. EG. a new Sieve script will use this
+ * messages that should not be processed.   For example, an inbox rules script will use this
  * to record determine that messages older than this should not be processed.
  *
  * (Why is this function here?  Can't we just go straight to the config variable it fetches?)

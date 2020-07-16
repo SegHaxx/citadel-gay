@@ -79,12 +79,12 @@ struct legacy_config {
 	char c_journal_dest[128];
 	char c_default_cal_zone[128];
 	int c_pftcpdict_port;
-	int c_managesieve_port;
+	int c_niu_9;
 	int c_auth_mode;
 	char c_niu_8[256];
-	int c_niu_9;
-	char c_niu_10[256];
+	int c_niu_10;
 	char c_niu_11[256];
+	char c_niu_12[256];
 	char c_rbl_at_greeting;
 	char c_master_user[32];
 	char c_master_pass[32];

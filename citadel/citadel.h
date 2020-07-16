@@ -35,7 +35,7 @@ extern "C" {
  */
 #define CITADEL	PACKAGE_STRING
 
-#define REV_LEVEL	929		// This version
+#define REV_LEVEL	930		// This version
 #define REV_MIN		591		// Oldest compatible database
 #define EXPORT_REV_MIN	760		// Oldest compatible export files
 #define LIBCITADEL_MIN	922		// Minimum required version of libcitadel
@@ -111,6 +111,7 @@ struct ctdluser {			// User record
 	long msgnum_bio;		// msgnum of user's profile (bio)
 	long msgnum_pic;		// msgnum of user's avatar (photo)
 	char emailaddrs[512];		// Internet email addresses
+	long msgnum_inboxrules;		// msgnum of user's inbox filtering rules
 };
 
 

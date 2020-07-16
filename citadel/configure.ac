@@ -510,22 +510,6 @@ AC_CHECK_HEADER(libical/ical.h,
 )
 
 
-dnl Checks for the libsieve mailbox sorting library.
-AC_CHECK_HEADER(sieve2.h,
-	[AC_CHECK_LIB(sieve, sieve2_license,
-		[
-			SERVER_LIBS="-lsieve $SERVER_LIBS"
-		],
-		[
-			AC_MSG_ERROR(libsieve was not found and is required.  More info: http://www.citadel.org/doku.php/installation:start)
-		]
-	,
-	)],
-	[
-		AC_MSG_ERROR(sieve2.h was not found and is required.  More info: http://www.citadel.org/doku.php/installation:start)
-	]
-)
-
 saved_CFLAGS="$CFLAGS"
 CFLAGS="$CFLAGS $SERVER_LIBS"
 dnl Check for libcitadel

@@ -1,7 +1,7 @@
 /* 
  * Server functions which perform operations on user objects.
  *
- * Copyright (c) 1987-2019 by the citadel.org team
+ * Copyright (c) 1987-2020 by the citadel.org team
  *
  * This program is open source software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License, version 3.
@@ -64,7 +64,7 @@ void cmd_info(char *cmdbuf) {
 	cprintf("%s\n", CtdlGetConfigStr("c_moreprompt"));
 	cprintf("1\n");	/* 1 = yes, this system supports floors */
 	cprintf("1\n"); /* 1 = we support the extended paging options */
-	cprintf("\n");	/* nonce no longer supported */
+	cprintf("\n");	/* no longer used */
 	cprintf("1\n"); /* 1 = yes, this system supports the QNOP command */
 
 #ifdef HAVE_LDAP
@@ -83,10 +83,10 @@ void cmd_info(char *cmdbuf) {
 
 	cprintf("%s\n", CtdlGetConfigStr("c_default_cal_zone"));
 
-	cprintf("0\n");		/* load average		(no longer used) */
-	cprintf("0\n");		/* worker average	(no longer used) */
-	cprintf("0\n");		/* thread count		(no longer used) */
-	cprintf("1\n");		/* yes, Sieve mail filtering is supported */
+	cprintf("0\n"); /* no longer used */
+	cprintf("0\n"); /* no longer used */
+	cprintf("0\n"); /* no longer used */
+	cprintf("0\n"); /* no longer used */
 
 	cprintf("%d\n", CtdlGetConfigInt("c_enable_fulltext"));
 	cprintf("%s\n", svn_revision());

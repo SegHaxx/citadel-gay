@@ -1,6 +1,5 @@
 /*
- * This module glues libSieve to the Citadel server in order to implement
- * the Sieve mailbox filtering language (RFC 3028).
+ * Inbox handling rules
  *
  * Copyright (c) 1987-2020 by the citadel.org team
  *
@@ -47,51 +46,14 @@
 #include "msgbase.h"
 #include "internet_addressing.h"
 #include "ctdl_module.h"
-#include "serv_sieve.h"
-
-struct RoomProcList *sieve_list = NULL;
-char *msiv_extensions = NULL;
 
 
-/*
- * Callback function to send libSieve trace messages to Citadel log facility
- */
-int ctdl_debug(sieve2_context_t *s, void *my)
-{
-	syslog(LOG_DEBUG, "%s", sieve2_getvalue_string(s, "message"));
-	return SIEVE2_OK;
-}
-
-
-/*
- * Callback function to log script parsing errors
- */
-int ctdl_errparse(sieve2_context_t *s, void *my)
-{
-	syslog(LOG_WARNING, "Error in script, line %d: %s",
-		  sieve2_getvalue_int(s, "lineno"),
-		  sieve2_getvalue_string(s, "message")
-	);
-	return SIEVE2_OK;
-}
-
-
-/*
- * Callback function to log script execution errors
- */
-int ctdl_errexec(sieve2_context_t *s, void *my)
-{
-	syslog(LOG_WARNING, "Error executing script: %s",
-		  sieve2_getvalue_string(s, "message")
-		);
-	return SIEVE2_OK;
-}
-
+#if 0
 
 /*
  * Callback function to redirect a message to a different folder
  */
-int ctdl_redirect(sieve2_context_t *s, void *my)
+int ctdl_redirect(void)
 {
 	struct ctdl_sieve *cs = (struct ctdl_sieve *)my;
 	struct CtdlMessage *msg = NULL;
@@ -354,28 +316,6 @@ int ctdl_vacation(sieve2_context_t *s, void *my)
 }
 
 
-#if 0
-/*
- * Callback function to parse addresses per local system convention
- * It is disabled because we don't support subaddresses.
- */
-int ctdl_getsubaddress(sieve2_context_t *s, void *my)
-{
-	struct ctdl_sieve *cs = (struct ctdl_sieve *)my;
-
-	/* libSieve does not take ownership of the memory used here.  But, since we
-	 * are just pointing to locations inside a struct which we are going to free
-	 * later, we're ok.
-	 */
-	sieve2_setvalue_string(s, "user", cs->recp_user);
-	sieve2_setvalue_string(s, "detail", "");
-	sieve2_setvalue_string(s, "localpart", cs->recp_user);
-	sieve2_setvalue_string(s, "domain", cs->recp_node);
-	return SIEVE2_OK;
-}
-#endif
-
-
 /*
  * Callback function to parse message envelope
  */
@@ -415,18 +355,6 @@ int ctdl_getenvelope(sieve2_context_t *s, void *my)
 	return SIEVE2_OK;
 }
 
-
-#if 0
-/*
- * Callback function to fetch message body
- * (Uncomment the code if we implement this extension)
- *
- */
-int ctdl_getbody(sieve2_context_t *s, void *my)
-{
-	return SIEVE2_ERROR_UNSUPPORTED;
-}
-#endif
 
 
 /*
@@ -495,23 +423,6 @@ int ctdl_getheaders(sieve2_context_t *s, void *my) {
 	return SIEVE2_OK;
 }
 
-
-/*
- * Add a room to the list of those rooms which potentially require sieve processing
- */
-void sieve_queue_room(struct ctdlroom *which_room) {
-	struct RoomProcList *ptr;
-
-	ptr = (struct RoomProcList *) malloc(sizeof (struct RoomProcList));
-	if (ptr == NULL) return;
-
-	safestrncpy(ptr->name, which_room->QRname, sizeof ptr->name);
-	begin_critical_section(S_SIEVELIST);
-	ptr->next = sieve_list;
-	sieve_list = ptr;
-	end_critical_section(S_SIEVELIST);
-	syslog(LOG_DEBUG, "<%s> queued for Sieve processing", which_room->QRname);
-}
 
 
 /*
@@ -835,14 +746,6 @@ sieve2_callback_t ctdl_sieve_callbacks[] = {
 	{ SIEVE2_MESSAGE_GETALLHEADERS,	ctdl_getheaders		},
 	{ SIEVE2_MESSAGE_GETSIZE,	ctdl_getsize		},
 	{ SIEVE2_MESSAGE_GETENVELOPE,	ctdl_getenvelope	},
-/*
- * These actions are unsupported by Citadel so we don't declare them.
- *
-	{ SIEVE2_ACTION_NOTIFY,		ctdl_notify		},
-	{ SIEVE2_MESSAGE_GETSUBADDRESS,	ctdl_getsubaddress	},
-	{ SIEVE2_MESSAGE_GETBODY,	ctdl_getbody		},
- *
- */
 	{ 0 }
 };
 
@@ -872,8 +775,7 @@ void sieve_do_room(char *roomname) {
 	 * Find the sieve scripts and control record and do something
 	 */
 	u.config_msgnum = (-1);
-	CtdlForEachMessage(MSGS_LAST, 1, NULL, SIEVECONFIG, NULL,
-		get_sieve_config_backend, (void *)&u );
+	CtdlForEachMessage(MSGS_LAST, 1, NULL, SIEVECONFIG, NULL, get_sieve_config_backend, (void *)&u );
 
 	if (u.config_msgnum < 0) {
 		syslog(LOG_DEBUG, "No Sieve rules exist.  No processing is required.");
@@ -915,7 +817,7 @@ void sieve_do_room(char *roomname) {
 
 	/* Validate the script */
 
-	struct ctdl_sieve my;		/* dummy ctdl_sieve struct just to pass "u" slong */
+	struct ctdl_sieve my;		/* dummy ctdl_sieve struct just to pass "u" along */
 	memset(&my, 0, sizeof my);
 	my.u = &u;
 	res = sieve2_validate(sieve2_context, &my);
@@ -927,10 +829,7 @@ void sieve_do_room(char *roomname) {
 	/* Do something useful */
 	u.sieve2_context = sieve2_context;
 	orig_lastproc = u.lastproc;
-	CtdlForEachMessage(MSGS_GT, u.lastproc, NULL, NULL, NULL,
-		sieve_do_msg,
-		(void *) &u
-	);
+	CtdlForEachMessage(MSGS_GT, u.lastproc, NULL, NULL, NULL, sieve_do_msg, (void *) &u);
 
 BAIL:
 	res = sieve2_free(&sieve2_context);
@@ -938,390 +837,108 @@ BAIL:
 		syslog(LOG_ERR, "sieve2_free() returned %d: %s", res, sieve2_errstr(res));
 	}
 
-	/* Rewrite the config if we have to */
+	/* Rewrite the config if we have to (we're not the user right now) */
 	rewrite_ctdl_sieve_config(&u, (u.lastproc > orig_lastproc) ) ;
 }
 
 
-/*
- * Perform sieve processing for all rooms which require it
- */
-void perform_sieve_processing(void) {
-	struct RoomProcList *ptr = NULL;
-
-	if (sieve_list != NULL) {
-		syslog(LOG_DEBUG, "Begin Sieve processing");
-		while (sieve_list != NULL) {
-			char spoolroomname[ROOMNAMELEN];
-			safestrncpy(spoolroomname, sieve_list->name, sizeof spoolroomname);
-			begin_critical_section(S_SIEVELIST);
-
-			/* pop this record off the list */
-			ptr = sieve_list;
-			sieve_list = sieve_list->next;
-			free(ptr);
-
-			/* invalidate any duplicate entries to prevent double processing */
-			for (ptr=sieve_list; ptr!=NULL; ptr=ptr->next) {
-				if (!strcasecmp(ptr->name, spoolroomname)) {
-					ptr->name[0] = 0;
-				}
-			}
-
-			end_critical_section(S_SIEVELIST);
-			if (spoolroomname[0] != 0) {
-				sieve_do_room(spoolroomname);
-			}
-		}
-	}
-}
 
 
-void msiv_load(struct sdm_userdata *u) {
-	char hold_rm[ROOMNAMELEN];
+#endif
 
-	strcpy(hold_rm, CC->room.QRname);       /* save current room */
 
-	/* Take a spin through the user's personal address book */
-	if (CtdlGetRoom(&CC->room, USERCONFIGROOM) == 0) {
-	
-		u->config_msgnum = (-1);
-		strcpy(u->config_roomname, CC->room.QRname);
-		CtdlForEachMessage(MSGS_LAST, 1, NULL, SIEVECONFIG, NULL,
-			get_sieve_config_backend, (void *)u );
-
-	}
-
-	if (strcmp(CC->room.QRname, hold_rm)) {
-		CtdlGetRoom(&CC->room, hold_rm);    /* return to saved room */
-	}
-}
-
-void msiv_store(struct sdm_userdata *u, int yes_write_to_disk) {
-/*
- * Initialise the sieve configs last processed message number.
- * We don't need to get the highest message number for the users inbox since the systems
- * highest message number will be higher than that and loer than this scripts message number
- * This prevents this new script from processing any old messages in the inbox.
- * Most importantly it will prevent vacation messages being sent to lots of old messages
- * in the inbox.
- */
-	u->lastproc = CtdlGetCurrentMessageNumber();
-	rewrite_ctdl_sieve_config(u, yes_write_to_disk);
-}
 
 
 /*
- * Select the active script.
- * (Set script_name to an empty string to disable all scripts)
- * 
- * Returns 0 on success or nonzero for error.
- */
-int msiv_setactive(struct sdm_userdata *u, char *script_name) {
-	int ok = 0;
-	struct sdm_script *s;
-
-	/* First see if the supplied value is ok */
-
-	if (IsEmptyStr(script_name)) {
-		ok = 1;
-	}
-	else {
-		for (s=u->first_script; s!=NULL; s=s->next) {
-			if (!strcasecmp(s->script_name, script_name)) {
-				ok = 1;
-			}
-		}
-	}
-
-	if (!ok) return(-1);
-
-	/* Now set the active script */
-	for (s=u->first_script; s!=NULL; s=s->next) {
-		if (!strcasecmp(s->script_name, script_name)) {
-			s->script_active = 1;
-		}
-		else {
-			s->script_active = 0;
-		}
-	}
-	
-	return(0);
-}
-
-
-/*
- * Fetch a script by name.
+ * Get InBox Rules
  *
- * Returns NULL if the named script was not found, or a pointer to the script
- * if it was found.   NOTE: the caller does *not* own the memory returned by
- * this function.  Copy it if you need to keep it.
+ * This is a client-facing function which fetches the user's inbox rules -- it omits all lines containing anything other than a rule.
  */
-char *msiv_getscript(struct sdm_userdata *u, char *script_name) {
-	struct sdm_script *s;
-
-	for (s=u->first_script; s!=NULL; s=s->next) {
-		if (!strcasecmp(s->script_name, script_name)) {
-			if (s->script_content != NULL) {
-				return (s->script_content);
-			}
-		}
-	}
-
-	return(NULL);
-}
-
-
-/*
- * Delete a script by name.
- *
- * Returns 0 if the script was deleted.
- *	 1 if the script was not found.
- *	 2 if the script cannot be deleted because it is active.
- */
-int msiv_deletescript(struct sdm_userdata *u, char *script_name) {
-	struct sdm_script *s = NULL;
-	struct sdm_script *script_to_delete = NULL;
-
-	for (s=u->first_script; s!=NULL; s=s->next) {
-		if (!strcasecmp(s->script_name, script_name)) {
-			script_to_delete = s;
-			if (s->script_active) {
-				return(2);
-			}
-		}
-	}
-
-	if (script_to_delete == NULL) return(1);
-
-	if (u->first_script == script_to_delete) {
-		u->first_script = u->first_script->next;
-	}
-	else for (s=u->first_script; s!=NULL; s=s->next) {
-		if (s->next == script_to_delete) {
-			s->next = s->next->next;
-		}
-	}
-
-	free(script_to_delete->script_content);
-	free(script_to_delete);
-	return(0);
-}
-
-
-/*
- * Add or replace a new script.  
- * NOTE: after this function returns, "u" owns the memory that "script_content"
- * was pointing to.
- */
-void msiv_putscript(struct sdm_userdata *u, char *script_name, char *script_content) {
-	int replaced = 0;
-	struct sdm_script *s, *sptr;
-
-	for (s=u->first_script; s!=NULL; s=s->next) {
-		if (!strcasecmp(s->script_name, script_name)) {
-			if (s->script_content != NULL) {
-				free(s->script_content);
-			}
-			s->script_content = script_content;
-			replaced = 1;
-		}
-	}
-
-	if (replaced == 0) {
-		sptr = malloc(sizeof(struct sdm_script));
-		safestrncpy(sptr->script_name, script_name, sizeof sptr->script_name);
-		sptr->script_content = script_content;
-		sptr->script_active = 0;
-		sptr->next = u->first_script;
-		u->first_script = sptr;
-	}
-}
-
-
-
-/*
- * Citadel protocol to manage sieve scripts.
- * This is basically a simplified (read: doesn't resemble IMAP) version
- * of the 'managesieve' protocol.
- */
-void cmd_msiv(char *argbuf) {
-	char subcmd[256];
-	struct sdm_userdata u;
-	char script_name[256];
-	char *script_content = NULL;
-	struct sdm_script *s;
-	int i;
-	int changes_made = 0;
-
-	memset(&u, 0, sizeof(struct sdm_userdata));
+void cmd_gibr(char *argbuf) {
 
 	if (CtdlAccessCheck(ac_logged_in)) return;
-	extract_token(subcmd, argbuf, 0, '|', sizeof subcmd);
-	msiv_load(&u);
 
-	if (!strcasecmp(subcmd, "putscript")) {
-		extract_token(script_name, argbuf, 1, '|', sizeof script_name);
-		if (!IsEmptyStr(script_name)) {
-			cprintf("%d Transmit script now\n", SEND_LISTING);
-			script_content = CtdlReadMessageBody(HKEY("000"), CtdlGetConfigLong("c_maxmsglen"), NULL, 0);
-			msiv_putscript(&u, script_name, script_content);
-			changes_made = 1;
-		}
-		else {
-			cprintf("%d Invalid script name.\n", ERROR + ILLEGAL_VALUE);
-		}
-	}	
-	
-	else if (!strcasecmp(subcmd, "listscripts")) {
-		cprintf("%d Scripts:\n", LISTING_FOLLOWS);
-		for (s=u.first_script; s!=NULL; s=s->next) {
-			if (s->script_content != NULL) {
-				cprintf("%s|%d|\n", s->script_name, s->script_active);
+	cprintf("%d inbox rules for %s\n", LISTING_FOLLOWS, CC->user.fullname);
+
+	struct CtdlMessage *msg = CtdlFetchMessage(CC->user.msgnum_inboxrules, 1, 1);
+	if (msg != NULL) {
+		if (!CM_IsEmpty(msg, eMesageText)) {
+			char *token; 
+			char *rest = msg->cm_fields[eMesageText];
+			while ((token = strtok_r(rest, "\n", &rest))) {
+
+				// for backwards compatibility, "# WEBCIT_RULE" is an alias for "rule" 
+				if (!strncasecmp(token, "# WEBCIT_RULE|", 14)) {
+					strcpy(token, "rule|");	
+					strcpy(&token[5], &token[14]);
+				}
+
+				// Output only lines containing rules.
+				if (!strncasecmp(token, "rule|", 5)) {
+        				cprintf("%s\n", token); 
+				}
 			}
 		}
-		cprintf("000\n");
+		CM_Free(msg);
 	}
+	cprintf("000\n");
+}
 
-	else if (!strcasecmp(subcmd, "setactive")) {
-		extract_token(script_name, argbuf, 1, '|', sizeof script_name);
-		if (msiv_setactive(&u, script_name) == 0) {
-			cprintf("%d ok\n", CIT_OK);
-			changes_made = 1;
-		}
-		else {
-			cprintf("%d Script '%s' does not exist.\n",
-				ERROR + ILLEGAL_VALUE,
-				script_name
-			);
+
+/*
+ * Put InBox Rules
+ *
+ * User transmits the new inbox rules for the account.  They are inserted into the account, replacing the ones already there.
+ */
+void cmd_pibr(char *argbuf) {
+	if (CtdlAccessCheck(ac_logged_in)) return;
+
+	unbuffer_output();
+	cprintf("%d send new rules\n", SEND_LISTING);
+	char *newrules = CtdlReadMessageBody(HKEY("000"), CtdlGetConfigLong("c_maxmsglen"), NULL, 0);
+	StrBuf *NewConfig = NewStrBufPlain("Content-type: application/x-citadel-sieve-config; charset=UTF-8\nContent-transfer-encoding: 8bit\n\n", -1);
+
+	char *token; 
+	char *rest = newrules;
+	while ((token = strtok_r(rest, "\n", &rest))) {
+		// Accept only lines containing rules
+		if (!strncasecmp(token, "rule|", 5)) {
+			StrBufAppendBufPlain(NewConfig, token, -1, 0);
+			StrBufAppendBufPlain(NewConfig, HKEY("\n"), 0);
 		}
 	}
+	free(newrules);
 
-	else if (!strcasecmp(subcmd, "getscript")) {
-		extract_token(script_name, argbuf, 1, '|', sizeof script_name);
-		script_content = msiv_getscript(&u, script_name);
-		if (script_content != NULL) {
-			int script_len;
-
-			cprintf("%d Script:\n", LISTING_FOLLOWS);
-			script_len = strlen(script_content);
-			client_write(script_content, script_len);
-			if (script_content[script_len-1] != '\n') {
-				cprintf("\n");
+	// Fetch the existing config so we can merge in anything that is NOT a rule 
+	// (Does not start with "rule|" but has at least one vertical bar)
+	struct CtdlMessage *msg = CtdlFetchMessage(CC->user.msgnum_inboxrules, 1, 1);
+	if (msg != NULL) {
+		if (!CM_IsEmpty(msg, eMesageText)) {
+			rest = msg->cm_fields[eMesageText];
+			while ((token = strtok_r(rest, "\n", &rest))) {
+				// for backwards compatibility, "# WEBCIT_RULE" is an alias for "rule" 
+				if ((strncasecmp(token, "# WEBCIT_RULE|", 14)) && (strncasecmp(token, "rule|", 5)) && (haschar(token, '|'))) {
+					StrBufAppendBufPlain(NewConfig, token, -1, 0);
+					StrBufAppendBufPlain(NewConfig, HKEY("\n"), 0);
+				}
 			}
-			cprintf("000\n");
 		}
-		else {
-			cprintf("%d Invalid script name.\n", ERROR + ILLEGAL_VALUE);
-		}
+		CM_Free(msg);
 	}
 
-	else if (!strcasecmp(subcmd, "deletescript")) {
-		extract_token(script_name, argbuf, 1, '|', sizeof script_name);
-		i = msiv_deletescript(&u, script_name);
-		if (i == 0) {
-			cprintf("%d ok\n", CIT_OK);
-			changes_made = 1;
-		}
-		else if (i == 1) {
-			cprintf("%d Script '%s' does not exist.\n",
-				ERROR + ILLEGAL_VALUE,
-				script_name
-			);
-		}
-		else if (i == 2) {
-			cprintf("%d Script '%s' is active and cannot be deleted.\n",
-				ERROR + ILLEGAL_VALUE,
-				script_name
-			);
-		}
-		else {
-			cprintf("%d unknown error\n", ERROR);
-		}
+	/* we have composed the new configuration , now save it */
+	long old_msgnum = CC->user.msgnum_inboxrules;
+	char userconfigroomname[ROOMNAMELEN];
+	CtdlMailboxName(userconfigroomname, sizeof userconfigroomname, &CC->user, USERCONFIGROOM);
+	long new_msgnum = quickie_message("Citadel", NULL, NULL, userconfigroomname, ChrPtr(NewConfig), FMT_RFC822, "inbox rules configuration");
+	FreeStrBuf(&NewConfig);
+	CtdlGetUserLock(&CC->user, CC->curr_user);
+	CC->user.msgnum_inboxrules = new_msgnum;
+	CtdlPutUserLock(&CC->user);
+	if (old_msgnum > 0) {
+		syslog(LOG_DEBUG, "Deleting old message %ld from %s", old_msgnum, userconfigroomname);
+		CtdlDeleteMessages(userconfigroomname, &old_msgnum, 1, "");
 	}
-
-	else {
-		cprintf("%d Invalid subcommand\n", ERROR + CMD_NOT_SUPPORTED);
-	}
-
-	msiv_store(&u, changes_made);
-}
-
-
-
-void ctdl_sieve_init(void) {
-	char *cred = NULL;
-	sieve2_context_t *sieve2_context = NULL;
-	int res;
-
-	/*
-	 *	We don't really care about dumping the entire credits to the log
-	 *	every time the server is initialized.  The documentation will suffice
-	 *	for that purpose.  We are making a call to sieve2_credits() in order
-	 *	to demonstrate that we have successfully linked in to libsieve.
-	 */
-	cred = strdup(sieve2_credits());
-	if (cred == NULL) return;
-
-	if (strlen(cred) > 60) {
-		strcpy(&cred[55], "...");
-	}
-
-	syslog(LOG_INFO, "%s",cred);
-	free(cred);
-
-	/* Briefly initialize a Sieve parser instance just so we can list the
-	 * extensions that are available.
-	 */
-	res = sieve2_alloc(&sieve2_context);
-	if (res != SIEVE2_OK) {
-		syslog(LOG_ERR, "sieve2_alloc() returned %d: %s", res, sieve2_errstr(res));
-		return;
-	}
-
-	res = sieve2_callbacks(sieve2_context, ctdl_sieve_callbacks);
-	if (res != SIEVE2_OK) {
-		syslog(LOG_ERR, "sieve2_callbacks() returned %d: %s", res, sieve2_errstr(res));
-		goto BAIL;
-	}
-
-	msiv_extensions = strdup(sieve2_listextensions(sieve2_context));
-	syslog(LOG_INFO, "Extensions: %s", msiv_extensions);
-
-BAIL:	res = sieve2_free(&sieve2_context);
-	if (res != SIEVE2_OK) {
-		syslog(LOG_ERR, "sieve2_free() returned %d: %s", res, sieve2_errstr(res));
-	}
-
-}
-
-
-void cleanup_sieve(void)
-{
-        struct RoomProcList *ptr, *ptr2;
-
-	if (msiv_extensions != NULL)
-		free(msiv_extensions);
-	msiv_extensions = NULL;
-
-        begin_critical_section(S_SIEVELIST);
-	ptr=sieve_list;
-	while (ptr != NULL) {
-		ptr2 = ptr->next;
-		free(ptr);
-		ptr = ptr2;
-	}
-        sieve_list = NULL;
-        end_critical_section(S_SIEVELIST);
-}
-
-
-int serv_sieve_room(struct ctdlroom *room)
-{
-	if (!strcasecmp(&room->QRname[11], MAILROOM)) {
-		sieve_queue_room(room);
-	}
-	return 0;
 }
 
 
@@ -1329,11 +946,11 @@ CTDL_MODULE_INIT(sieve)
 {
 	if (!threading)
 	{
-		ctdl_sieve_init();
-		CtdlRegisterProtoHook(cmd_msiv, "MSIV", "Manage Sieve scripts");
-	        CtdlRegisterRoomHook(serv_sieve_room);
-        	CtdlRegisterSessionHook(perform_sieve_processing, EVT_HOUSE, PRIO_HOUSE + 10);
-		CtdlRegisterCleanupHook(cleanup_sieve);
+		// ctdl_sieve_init();
+		CtdlRegisterProtoHook(cmd_gibr, "GIBR", "Get InBox Rules");
+		CtdlRegisterProtoHook(cmd_pibr, "PIBR", "Put InBox Rules");
+        	// CtdlRegisterSessionHook(perform_sieve_processing, EVT_HOUSE, PRIO_HOUSE + 10);
+		// CtdlRegisterCleanupHook(cleanup_sieve);
 	}
 	
         /* return our module name for the log */

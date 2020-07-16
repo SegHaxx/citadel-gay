@@ -2,7 +2,7 @@
  * Citadel Extension Loader
  * Originally written by Brian Costello <btx@calyx.net>
  *
- * Copyright (c) 1987-2019 by the citadel.org team
+ * Copyright (c) 1987-2020 by the citadel.org team
  *
  * This program is open source software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 3.
@@ -110,7 +110,7 @@ XmsgFunctionHook *XmsgHookTable = NULL;
 
 /*
  * RoomFunctionHook extensions are used for hooks which impliment room
- * processing functions when new messages are added EG. SIEVE.
+ * processing functions when new messages are added.
  */
 typedef struct RoomFunctionHook RoomFunctionHook;
 struct RoomFunctionHook {

@@ -1,7 +1,7 @@
 /*
  * This module dumps and/or loads the Citadel database in XML format.
  *
- * Copyright (c) 1987-2019 by the citadel.org team
+ * Copyright (c) 1987-2020 by the citadel.org team
  *
  * This program is open source software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3.
@@ -135,6 +135,8 @@ void migr_export_users_backend(char *username, void *data) {
 	client_write(HKEY("<u_fullname>"));	xml_strout(u.fullname);		client_write(HKEY("</u_fullname>\n"));
 	cprintf("<u_msgnum_bio>%ld</u_msgnum_bio>\n", u.msgnum_bio);
 	cprintf("<u_msgnum_pic>%ld</u_msgnum_pic>\n", u.msgnum_pic);
+	cprintf("<u_emailaddrs>%s</u_emailaddrs>\n", u.emailaddrs);
+	cprintf("<u_msgnum_inboxrules>%ld</u_msgnum_inboxrules>\n", u.msgnum_inboxrules);
 	client_write(HKEY("</user>\n"));
 }
 
@@ -586,6 +588,8 @@ int migr_userrecord(void *data, const char *el)
 	else if (!strcasecmp(el, "u_fullname"))			safestrncpy(usbuf.fullname, ChrPtr(migr_chardata), sizeof usbuf.fullname);
 	else if (!strcasecmp(el, "u_msgnum_bio"))		usbuf.msgnum_bio = atol(ChrPtr(migr_chardata));
 	else if (!strcasecmp(el, "u_msgnum_pic"))		usbuf.msgnum_pic = atol(ChrPtr(migr_chardata));
+	else if (!strcasecmp(el, "u_emailaddrs"))		safestrncpy(usbuf.emailaddrs, ChrPtr(migr_chardata), sizeof usbuf.emailaddrs);
+	else if (!strcasecmp(el, "u_msgnum_inboxrules"))	usbuf.msgnum_inboxrules = atol(ChrPtr(migr_chardata));
 	else return 0;
 	return 1;
 }

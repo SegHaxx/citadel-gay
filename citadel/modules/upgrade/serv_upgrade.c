@@ -471,6 +471,48 @@ void move_inet_addrs_from_vcards_to_user_records(void)
 }
 
 
+
+
+/*
+ * We found the legacy sieve config in the user's config room.  Store the message number in the user record.
+ */
+void mifm_found_config(long msgnum, void *userdata) {
+	struct ctdluser *us = (struct ctdluser *)userdata;
+
+	us->msgnum_inboxrules = msgnum;
+	syslog(LOG_DEBUG, "user: <%s> inbox filter msgnum: <%ld>", us->fullname, us->msgnum_inboxrules);
+}
+
+
+/*
+ * Helper function for migrate_inbox_filter_msgnums()
+ */
+void mifm_backend(char *username, void *data) {
+	struct ctdluser us;
+	char roomname[ROOMNAMELEN];
+
+	if (CtdlGetUserLock(&us, username) == 0) {
+		/* Take a spin through the user's personal config room */
+		syslog(LOG_DEBUG, "Processing <%s> (%ld)", us.fullname, us.usernum);
+		snprintf(roomname, sizeof roomname, "%010ld.%s", us.usernum, USERCONFIGROOM);
+		if (CtdlGetRoom(&CC->room, roomname) == 0) {
+			CtdlForEachMessage(MSGS_LAST, 1, NULL, SIEVECONFIG, NULL, mifm_found_config, (void *)&us );
+		}
+		CtdlPutUserLock(&us);
+	}
+}
+
+
+/*
+ * Prior to version 930 we used a MIME type search to locate the user's inbox filter rules. 
+ * This function locates those ruleset messages and simply stores the message number in the user record.
+ */
+void migrate_inbox_filter_msgnums(void)
+{
+	ForEachUser(mifm_backend, NULL);
+}
+
+
 /*
  * Create a default administrator account so we can log in to a new installation
  */
@@ -583,6 +625,11 @@ void post_startup_upgrades(void) {
 	if ((oldver > 000) && (oldver < 922)) {
 		ProcessOldStyleAdjRefCountQueue();
 	}
+
+	if ((oldver > 000) && (oldver < 930)) {
+		migrate_inbox_filter_msgnums();
+	}
+
 }
 
 
