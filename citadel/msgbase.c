@@ -2419,7 +2419,10 @@ int CtdlSaveMsgPointersInRoom(char *roomname, long newmsgidlist[], int num_newms
 	}
 
 	/* Submit this room for processing by hooks */
-	PerformRoomHooks(&CC->room);
+	int total_roomhook_errors = PerformRoomHooks(&CC->room);
+	if (total_roomhook_errors) {
+		syslog(LOG_WARNING, "msgbase: room hooks returned %d errors", total_roomhook_errors);
+	}
 
 	/* Go back to the room we were in before we wandered here... */
 	CtdlGetRoom(&CC->room, hold_rm);

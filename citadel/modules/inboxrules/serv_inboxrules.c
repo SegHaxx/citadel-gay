@@ -841,12 +841,91 @@ BAIL:
 	rewrite_ctdl_sieve_config(&u, (u.lastproc > orig_lastproc) ) ;
 }
 
-
-
-
 #endif
 
 
+
+/*
+ * A user account is identified as requring inbox processing.
+ * Do it.
+ */
+void do_inbox_processing_for_user(long usernum) {
+	if (CtdlGetUserByNumber(&CC->user, usernum) == 0) {
+		TRACE;
+		if (CC->user.msgnum_inboxrules <= 0) {
+			syslog(LOG_DEBUG, "NO RULEZ for %s", CC->user.fullname);
+			return;						// this user has no inbox rules
+		}
+		syslog(LOG_DEBUG, "RULEZ for %s", CC->user.fullname);
+	}
+}
+
+
+/*
+ * Here is an array of users (by number) who have received messages in their inbox and may require processing.
+*/
+long *users_requiring_inbox_processing = NULL;
+int num_urip = 0;
+int num_urip_alloc = 0;
+
+
+/*
+ * Perform inbox processing for all rooms which require it
+ */
+void perform_inbox_processing(void) {
+	if (num_urip == 0) {
+		return;											// no action required
+	}
+
+	for (int i=0; i<num_urip; ++i) {
+		do_inbox_processing_for_user(users_requiring_inbox_processing[i]);
+	}
+
+	free(users_requiring_inbox_processing);
+	users_requiring_inbox_processing = NULL;
+	num_urip = 0;
+	num_urip_alloc = 0;
+}
+
+
+/*
+ * This function is called after a message is saved to a room.
+ * If it's someone's inbox, we have to check for inbox rules
+ */
+int serv_inboxrules_roomhook(struct ctdlroom *room) {
+
+	// Is this someone's inbox?
+	if (!strcasecmp(&room->QRname[11], MAILROOM)) {
+		long usernum = atol(room->QRname);
+		if (usernum > 0) {
+
+			// first check to see if this user is already on the list
+			if (num_urip > 0) {
+				for (int i=0; i<=num_urip; ++i) {
+					if (users_requiring_inbox_processing[i] == usernum) {		// already on the list!
+						return(0);
+					}
+				}
+			}
+
+			// make room if we need to
+			if (num_urip_alloc == 0) {
+				num_urip_alloc = 100;
+				users_requiring_inbox_processing = malloc(sizeof(long) * num_urip_alloc);
+			}
+			else if (num_urip >= num_urip_alloc) {
+				num_urip_alloc += 100;
+				users_requiring_inbox_processing = realloc(users_requiring_inbox_processing, (sizeof(long) * num_urip_alloc));
+			}
+			
+			// now add the user to the list
+			users_requiring_inbox_processing[num_urip++] = usernum;
+		}
+	}
+
+	// No errors are possible from this function.
+	return(0);
+}
 
 
 /*
@@ -946,11 +1025,10 @@ CTDL_MODULE_INIT(sieve)
 {
 	if (!threading)
 	{
-		// ctdl_sieve_init();
 		CtdlRegisterProtoHook(cmd_gibr, "GIBR", "Get InBox Rules");
 		CtdlRegisterProtoHook(cmd_pibr, "PIBR", "Put InBox Rules");
-        	// CtdlRegisterSessionHook(perform_sieve_processing, EVT_HOUSE, PRIO_HOUSE + 10);
-		// CtdlRegisterCleanupHook(cleanup_sieve);
+		CtdlRegisterRoomHook(serv_inboxrules_roomhook);
+		CtdlRegisterSessionHook(perform_inbox_processing, EVT_HOUSE, PRIO_HOUSE + 10);
 	}
 	
         /* return our module name for the log */
