@@ -954,5 +954,5 @@ CTDL_MODULE_INIT(sieve)
 	}
 	
         /* return our module name for the log */
-	return "sieve";
+	return "inboxrules";
 }
