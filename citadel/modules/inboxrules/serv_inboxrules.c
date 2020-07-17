@@ -628,33 +628,8 @@ void parse_sieve_config(char *conf, struct sdm_userdata *u) {
 	}
 }
 
-/*
- * We found the Sieve configuration for this user.
- * Now do something with it.
- */
-void get_sieve_config_backend(long msgnum, void *userdata) {
-	struct sdm_userdata *u = (struct sdm_userdata *) userdata;
-	struct CtdlMessage *msg;
-	char *conf;
-	long conflen;
 
-	u->config_msgnum = msgnum;
-	msg = CtdlFetchMessage(msgnum, 1, 1);
-	if (msg == NULL) {
-		u->config_msgnum = (-1) ;
-		return;
-	}
 
-	CM_GetAsField(msg, eMesageText, &conf, &conflen);
-
-	CM_Free(msg);
-
-	if (conf != NULL) {
-		parse_sieve_config(conf, u);
-		free(conf);
-	}
-
-}
 
 
 /* 
@@ -853,10 +828,32 @@ void do_inbox_processing_for_user(long usernum) {
 	if (CtdlGetUserByNumber(&CC->user, usernum) == 0) {
 		TRACE;
 		if (CC->user.msgnum_inboxrules <= 0) {
-			syslog(LOG_DEBUG, "NO RULEZ for %s", CC->user.fullname);
 			return;						// this user has no inbox rules
 		}
+
+		struct CtdlMessage *msg;
+		char *conf;
+		long conflen;
+	
+		msg = CtdlFetchMessage(CC->user.msgnum_inboxrules, 1, 1);
+		if (msg == NULL) {
+			return;						// config msgnum is set but that message does not exist
+		}
+	
+		CM_GetAsField(msg, eMesageText, &conf, &conflen);
+		CM_Free(msg);
+	
+		if (conf == NULL) {
+			return;						// config message exists but body is null
+		}
+
+
 		syslog(LOG_DEBUG, "RULEZ for %s", CC->user.fullname);
+		syslog(LOG_DEBUG, "%s", conf);
+
+		// do something now
+
+		free(conf);
 	}
 }
 
@@ -928,6 +925,107 @@ int serv_inboxrules_roomhook(struct ctdlroom *room) {
 }
 
 
+struct irule {
+	int field_compare_op;
+	char *compared_field;
+	char *compared_value;
+	int size_compare_op;
+	long compared_size;
+	int action;
+	char *file_into;
+	char *redirect_to;
+	char *autoreply_message;
+	int final_action;
+};
+
+struct inboxrules {
+	long lastproc;
+	int num_rules;
+	struct irule *rules;
+};
+
+
+void free_inbox_rules(struct inboxrules *ibr) {
+	int i;
+
+	if (ibr->num_rules > 0) {
+		for (i=0; i<ibr->num_rules; ++i) {
+			if (ibr->rules[i].compared_field)	free(ibr->rules[i].compared_field);
+			if (ibr->rules[i].compared_value)	free(ibr->rules[i].compared_value);
+			if (ibr->rules[i].file_into)		free(ibr->rules[i].file_into);
+			if (ibr->rules[i].redirect_to)		free(ibr->rules[i].autoreply_message);
+			if (ibr->rules[i].autoreply_message)	free(ibr->rules[i].autoreply_message);
+		}
+	}
+
+	free(ibr->rules);
+	free(ibr);
+}
+
+
+/*
+ * Convert the serialized inbox rules message to a data type.
+ */
+struct inboxrules *deserialize_inbox_rules(char *serialized_rules) {
+
+	if (!serialized_rules) {
+		return NULL;
+	}
+
+	/* Make a copy of the supplied buffer because we're going to shit all over it with strtok_r() */
+	char *sr = strdup(serialized_rules);
+	if (!sr) {
+		return NULL;
+	}
+
+	struct inboxrules *ibr = malloc(sizeof(struct inboxrules));
+	if (ibr == NULL) {
+		return NULL;
+	}
+	memset(ibr, 0, sizeof(struct inboxrules));
+
+	char *token; 
+	char *rest = sr;
+	while ((token = strtok_r(rest, "\n", &rest))) {
+
+		// For backwards compatibility, "# WEBCIT_RULE" is an alias for "rule".
+		// Prior to version 930, WebCit converted its rules to Sieve scripts, but saved the rules as comments for later re-editing.
+		// Now, the rules hidden in the comments are the real rules.
+		if (!strncasecmp(token, "# WEBCIT_RULE|", 14)) {
+			strcpy(token, "rule|");	
+			strcpy(&token[5], &token[14]);
+		}
+
+		// Lines containing actual rules are double-serialized with Base64.  It seemed like a good idea at the time :(
+		if (!strncasecmp(token, "rule|", 5)) {
+        		syslog(LOG_DEBUG, "rule: %s", &token[5]);
+			remove_token(&token[5], 0, '|');
+			char *decoded_rule = malloc(strlen(token));
+			CtdlDecodeBase64(decoded_rule, &token[5], strlen(&token[5]));
+			TRACE;
+			syslog(LOG_DEBUG, "%s", decoded_rule);	
+
+			ibr->num_rules++;
+			ibr->rules = realloc(ibr->rules, (sizeof(struct irule) * ibr->num_rules));
+			struct irule *new_rule = &ibr->rules[ibr->num_rules - 1];
+			memset(new_rule, 0, sizeof(struct irule));
+
+			free(decoded_rule);
+		}
+
+		// "lastproc" indicates the newest message number in the inbox that was previously processed by our inbox rules.
+		else if (!strncasecmp(token, "lastproc|", 5)) {
+			ibr->lastproc = atol(&token[9]);
+			syslog(LOG_DEBUG, "lastsent: %ld", ibr->lastproc);
+		}
+
+	}
+
+	free(sr);		// free our copy of the source buffer that has now been trashed with null bytes...
+	return(ibr);		// and return our complex data type to the caller.
+}
+
+
 /*
  * Get InBox Rules
  *
@@ -942,6 +1040,11 @@ void cmd_gibr(char *argbuf) {
 	struct CtdlMessage *msg = CtdlFetchMessage(CC->user.msgnum_inboxrules, 1, 1);
 	if (msg != NULL) {
 		if (!CM_IsEmpty(msg, eMesageText)) {
+
+
+			struct inboxrules *ii = deserialize_inbox_rules(msg->cm_fields[eMesageText]);
+			free_inbox_rules(ii);
+
 			char *token; 
 			char *rest = msg->cm_fields[eMesageText];
 			while ((token = strtok_r(rest, "\n", &rest))) {
