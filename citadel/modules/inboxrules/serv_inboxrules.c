@@ -851,7 +851,7 @@ void do_inbox_processing_for_user(long usernum) {
 		syslog(LOG_DEBUG, "RULEZ for %s", CC->user.fullname);
 		syslog(LOG_DEBUG, "%s", conf);
 
-		// do something now
+		// do something now FIXME actually write this
 
 		free(conf);
 	}
@@ -925,16 +925,104 @@ int serv_inboxrules_roomhook(struct ctdlroom *room) {
 }
 
 
+enum {
+	field_from,		
+	field_tocc,		
+	field_subject,	
+	field_replyto,	
+	field_sender,	
+	field_resentfrom,	
+	field_resentto,	
+	field_envfrom,	
+	field_envto,	
+	field_xmailer,	
+	field_xspamflag,	
+	field_xspamstatus,	
+	field_listid,	
+	field_size,		
+	field_all
+};
+char *field_keys[] = {
+	"from",
+	"tocc",
+	"subject",
+	"replyto",
+	"sender",
+	"resentfrom",
+	"resentto",
+	"envfrom",
+	"envto",
+	"xmailer",
+	"xspamflag",
+	"xspamstatus",
+	"listid",
+	"size",
+	"all"
+};
+
+
+enum {
+	fcomp_contains,
+	fcomp_notcontains,
+	fcomp_is,
+	fcomp_isnot,
+	fcomp_matches,
+	fcomp_notmatches
+};
+char *fcomp_keys[] = {
+	"contains",
+	"notcontains",
+	"is",
+	"isnot",
+	"matches",
+	"notmatches"
+};
+
+enum {
+	action_keep,
+	action_discard,
+	action_reject,
+	action_fileinto,
+	action_redirect,
+	action_vacation
+};
+char *action_keys[] = {
+	"keep",
+	"discard",
+	"reject",
+	"fileinto",
+	"redirect",
+	"vacation"
+};
+
+enum {
+	scomp_larger,
+	scomp_smaller
+};
+char *scomp_keys[] = {
+	"larger",
+	"smaller"
+};
+
+enum {
+	final_continue,
+	final_stop
+};
+char *final_keys[] = {
+	"continue",
+	"stop"
+};
+
 struct irule {
 	int field_compare_op;
-	char *compared_field;
-	char *compared_value;
+	int compared_field;
+	char compared_value[128];
 	int size_compare_op;
 	long compared_size;
 	int action;
-	char *file_into;
-	char *redirect_to;
-	char *autoreply_message;
+	char file_into[ROOMNAMELEN];
+	char redirect_to[1024];
+	char autoreply_message[SIZ];
 	int final_action;
 };
 
@@ -946,18 +1034,6 @@ struct inboxrules {
 
 
 void free_inbox_rules(struct inboxrules *ibr) {
-	int i;
-
-	if (ibr->num_rules > 0) {
-		for (i=0; i<ibr->num_rules; ++i) {
-			if (ibr->rules[i].compared_field)	free(ibr->rules[i].compared_field);
-			if (ibr->rules[i].compared_value)	free(ibr->rules[i].compared_value);
-			if (ibr->rules[i].file_into)		free(ibr->rules[i].file_into);
-			if (ibr->rules[i].redirect_to)		free(ibr->rules[i].autoreply_message);
-			if (ibr->rules[i].autoreply_message)	free(ibr->rules[i].autoreply_message);
-		}
-	}
-
 	free(ibr->rules);
 	free(ibr);
 }
@@ -967,6 +1043,7 @@ void free_inbox_rules(struct inboxrules *ibr) {
  * Convert the serialized inbox rules message to a data type.
  */
 struct inboxrules *deserialize_inbox_rules(char *serialized_rules) {
+	int i;
 
 	if (!serialized_rules) {
 		return NULL;
@@ -1010,18 +1087,97 @@ struct inboxrules *deserialize_inbox_rules(char *serialized_rules) {
 			struct irule *new_rule = &ibr->rules[ibr->num_rules - 1];
 			memset(new_rule, 0, sizeof(struct irule));
 
+			// We have a rule , now parse it
+			syslog(LOG_DEBUG, "Detokenizing: %s", decoded_rule);
+			char rtoken[SIZ];
+			int nt = num_tokens(decoded_rule, '|');
+			for (int t=0; t<nt; ++t) {
+				extract_token(rtoken, decoded_rule, t, '|', sizeof(rtoken));
+				striplt(rtoken);
+				syslog(LOG_DEBUG, "Token %d : %s", t, rtoken);
+				switch(t) {
+					case 1:									// field to compare
+						for (i=0; i<=field_all; ++i) {
+							if (!strcasecmp(rtoken, field_keys[i])) {
+								new_rule->compared_field = i;
+							}
+						}
+						break;
+					case 2:									// field comparison operation
+						for (i=0; i<=fcomp_notmatches; ++i) {
+							if (!strcasecmp(rtoken, fcomp_keys[i])) {
+								new_rule->field_compare_op = i;
+							}
+						}
+						break;
+					case 3:									// field comparison value
+						safestrncpy(new_rule->compared_value, rtoken, sizeof(new_rule->compared_value));
+						break;
+					case 4:									// size comparison operation
+						for (i=0; i<=scomp_smaller; ++i) {
+							if (!strcasecmp(rtoken, scomp_keys[i])) {
+								new_rule->size_compare_op = i;
+							}
+						}
+						break;
+					case 5:									// size comparison value
+						new_rule->compared_size = atol(rtoken);
+						break;
+					case 6:									// action
+						for (i=0; i<=action_vacation; ++i) {
+							if (!strcasecmp(rtoken, action_keys[i])) {
+								new_rule->action = i;
+							}
+						}
+						break;
+					case 7:									// file into (target room)
+						safestrncpy(new_rule->file_into, rtoken, sizeof(new_rule->file_into));
+						break;
+					case 8:									// redirect to (target address)
+						safestrncpy(new_rule->redirect_to, rtoken, sizeof(new_rule->redirect_to));
+						break;
+					case 9:									// autoreply message
+						safestrncpy(new_rule->autoreply_message, rtoken, sizeof(new_rule->autoreply_message));
+						break;
+					case 10:								// final_action;
+						for (i=0; i<=final_stop; ++i) {
+							if (!strcasecmp(rtoken, final_keys[i])) {
+								new_rule->final_action = i;
+							}
+						}
+						break;
+					default:
+						break;
+				}
+			}
 			free(decoded_rule);
+
+			// if we re-serialized this now, what would it look like?
+			syslog(LOG_DEBUG, "test reserialize: 0|%s|%s|%s|%s|%ld|%s|%s|%s|%s|%s",
+				field_keys[new_rule->compared_field],
+				fcomp_keys[new_rule->field_compare_op],
+				new_rule->compared_value,
+				scomp_keys[new_rule->size_compare_op],
+				new_rule->compared_size,
+				action_keys[new_rule->action],
+				new_rule->file_into,
+				new_rule->redirect_to,
+				new_rule->autoreply_message,
+				final_keys[new_rule->final_action]
+			);
+			// delete the above after moving it to a reserialize function
+
 		}
 
 		// "lastproc" indicates the newest message number in the inbox that was previously processed by our inbox rules.
 		else if (!strncasecmp(token, "lastproc|", 5)) {
 			ibr->lastproc = atol(&token[9]);
-			syslog(LOG_DEBUG, "lastsent: %ld", ibr->lastproc);
 		}
 
 	}
 
 	free(sr);		// free our copy of the source buffer that has now been trashed with null bytes...
+	abort();
 	return(ibr);		// and return our complex data type to the caller.
 }
 
