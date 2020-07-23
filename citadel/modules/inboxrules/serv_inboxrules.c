@@ -818,7 +818,11 @@ BAIL:
 #endif
 
 
+/*
+ * The next sections are enums and keys that drive the serialize/deserialize functions for the inbox rules/state configuration.
+ */
 
+// Fields to be compared
 enum {
 	field_from,		
 	field_tocc,		
@@ -854,7 +858,7 @@ char *field_keys[] = {
 	"all"
 };
 
-
+// Field comparison operators
 enum {
 	fcomp_contains,
 	fcomp_notcontains,
@@ -872,6 +876,7 @@ char *fcomp_keys[] = {
 	"notmatches"
 };
 
+// Actions
 enum {
 	action_keep,
 	action_discard,
@@ -889,6 +894,7 @@ char *action_keys[] = {
 	"vacation"
 };
 
+// Size comparison operators
 enum {
 	scomp_larger,
 	scomp_smaller
@@ -898,6 +904,7 @@ char *scomp_keys[] = {
 	"smaller"
 };
 
+// Final actions
 enum {
 	final_continue,
 	final_stop
@@ -907,6 +914,7 @@ char *final_keys[] = {
 	"stop"
 };
 
+// This data structure represents ONE inbox rule within the configuration.
 struct irule {
 	int field_compare_op;
 	int compared_field;
@@ -920,6 +928,7 @@ struct irule {
 	int final_action;
 };
 
+// This data structure represents the entire inbox rules configuration AND current state for a single user.
 struct inboxrules {
 	long lastproc;
 	int num_rules;
@@ -927,15 +936,14 @@ struct inboxrules {
 };
 
 
+// Destructor for 'struct inboxrules'
 void free_inbox_rules(struct inboxrules *ibr) {
 	free(ibr->rules);
 	free(ibr);
 }
 
 
-/*
- * Convert the serialized inbox rules message to a data type.
- */
+// Constructor for 'struct inboxrules' that deserializes the configuration from text input.
 struct inboxrules *deserialize_inbox_rules(char *serialized_rules) {
 	int i;
 
@@ -961,7 +969,7 @@ struct inboxrules *deserialize_inbox_rules(char *serialized_rules) {
 
 		// For backwards compatibility, "# WEBCIT_RULE" is an alias for "rule".
 		// Prior to version 930, WebCit converted its rules to Sieve scripts, but saved the rules as comments for later re-editing.
-		// Now, the rules hidden in the comments are the real rules.
+		// Now, the rules hidden in the comments become the real rules.
 		if (!strncasecmp(token, "# WEBCIT_RULE|", 14)) {
 			strcpy(token, "rule|");	
 			strcpy(&token[5], &token[14]);
@@ -969,26 +977,20 @@ struct inboxrules *deserialize_inbox_rules(char *serialized_rules) {
 
 		// Lines containing actual rules are double-serialized with Base64.  It seemed like a good idea at the time :(
 		if (!strncasecmp(token, "rule|", 5)) {
-        		syslog(LOG_DEBUG, "rule: %s", &token[5]);
 			remove_token(&token[5], 0, '|');
 			char *decoded_rule = malloc(strlen(token));
 			CtdlDecodeBase64(decoded_rule, &token[5], strlen(&token[5]));
-			TRACE;
-			syslog(LOG_DEBUG, "%s", decoded_rule);	
-
 			ibr->num_rules++;
 			ibr->rules = realloc(ibr->rules, (sizeof(struct irule) * ibr->num_rules));
 			struct irule *new_rule = &ibr->rules[ibr->num_rules - 1];
 			memset(new_rule, 0, sizeof(struct irule));
 
 			// We have a rule , now parse it
-			syslog(LOG_DEBUG, "Detokenizing: %s", decoded_rule);
 			char rtoken[SIZ];
 			int nt = num_tokens(decoded_rule, '|');
 			for (int t=0; t<nt; ++t) {
 				extract_token(rtoken, decoded_rule, t, '|', sizeof(rtoken));
 				striplt(rtoken);
-				syslog(LOG_DEBUG, "Token %d : %s", t, rtoken);
 				switch(t) {
 					case 1:									// field to compare
 						for (i=0; i<=field_all; ++i) {
@@ -1047,18 +1049,18 @@ struct inboxrules *deserialize_inbox_rules(char *serialized_rules) {
 			free(decoded_rule);
 
 			// if we re-serialized this now, what would it look like?
-			syslog(LOG_DEBUG, "test reserialize: 0|%s|%s|%s|%s|%ld|%s|%s|%s|%s|%s",
-				field_keys[new_rule->compared_field],
-				fcomp_keys[new_rule->field_compare_op],
-				new_rule->compared_value,
-				scomp_keys[new_rule->size_compare_op],
-				new_rule->compared_size,
-				action_keys[new_rule->action],
-				new_rule->file_into,
-				new_rule->redirect_to,
-				new_rule->autoreply_message,
-				final_keys[new_rule->final_action]
-			);
+			//syslog(LOG_DEBUG, "test reserialize: 0|%s|%s|%s|%s|%ld|%s|%s|%s|%s|%s",
+				//field_keys[new_rule->compared_field],
+				//fcomp_keys[new_rule->field_compare_op],
+				//new_rule->compared_value,
+				//scomp_keys[new_rule->size_compare_op],
+				//new_rule->compared_size,
+				//action_keys[new_rule->action],
+				//new_rule->file_into,
+				//new_rule->redirect_to,
+				//new_rule->autoreply_message,
+				//final_keys[new_rule->final_action]
+			//);
 			// delete the above after moving it to a reserialize function
 
 		}
@@ -1071,7 +1073,6 @@ struct inboxrules *deserialize_inbox_rules(char *serialized_rules) {
 	}
 
 	free(sr);		// free our copy of the source buffer that has now been trashed with null bytes...
-	abort();
 	return(ibr);		// and return our complex data type to the caller.
 }
 
@@ -1081,34 +1082,31 @@ struct inboxrules *deserialize_inbox_rules(char *serialized_rules) {
  * Do it.
  */
 void do_inbox_processing_for_user(long usernum) {
+	struct CtdlMessage *msg;
+	struct inboxrules *ii;
+
 	if (CtdlGetUserByNumber(&CC->user, usernum) == 0) {
-		TRACE;
 		if (CC->user.msgnum_inboxrules <= 0) {
 			return;						// this user has no inbox rules
 		}
 
-		struct CtdlMessage *msg;
-		char *conf;
-		long conflen;
-	
 		msg = CtdlFetchMessage(CC->user.msgnum_inboxrules, 1, 1);
 		if (msg == NULL) {
 			return;						// config msgnum is set but that message does not exist
 		}
 	
-		CM_GetAsField(msg, eMesageText, &conf, &conflen);
+		ii = deserialize_inbox_rules(msg->cm_fields[eMesageText]);
 		CM_Free(msg);
 	
-		if (conf == NULL) {
+		if (ii == NULL) {
 			return;						// config message exists but body is null
 		}
 
+		TRACE;
 		syslog(LOG_DEBUG, "RULEZ for %s", CC->user.fullname);
-		syslog(LOG_DEBUG, "%s", conf);
 
 		// do something now FIXME actually write this
-
-		free(conf);
+		free_inbox_rules(ii);
 	}
 }
 
@@ -1185,6 +1183,8 @@ int serv_inboxrules_roomhook(struct ctdlroom *room) {
  * Get InBox Rules
  *
  * This is a client-facing function which fetches the user's inbox rules -- it omits all lines containing anything other than a rule.
+ * 
+ * hmmmmm ... should we try to rebuild this in terms of deserialize_inbox_rules() instread?
  */
 void cmd_gibr(char *argbuf) {
 
@@ -1195,11 +1195,6 @@ void cmd_gibr(char *argbuf) {
 	struct CtdlMessage *msg = CtdlFetchMessage(CC->user.msgnum_inboxrules, 1, 1);
 	if (msg != NULL) {
 		if (!CM_IsEmpty(msg, eMesageText)) {
-
-
-			struct inboxrules *ii = deserialize_inbox_rules(msg->cm_fields[eMesageText]);
-			free_inbox_rules(ii);
-
 			char *token; 
 			char *rest = msg->cm_fields[eMesageText];
 			while ((token = strtok_r(rest, "\n", &rest))) {
