@@ -724,96 +724,14 @@ sieve2_callback_t ctdl_sieve_callbacks[] = {
 };
 
 
-/*
- * Perform sieve processing for a single room
- */
-void sieve_do_room(char *roomname) {
-	
-	struct sdm_userdata u;
-	sieve2_context_t *sieve2_context = NULL;	/* Context for sieve parser */
-	int res;					/* Return code from libsieve calls */
-	long orig_lastproc = 0;
 
-	memset(&u, 0, sizeof u);
 
-	/* See if the user who owns this 'mailbox' has any Sieve scripts that
-	 * require execution.
-	 */
-	snprintf(u.config_roomname, sizeof u.config_roomname, "%010ld.%s", atol(roomname), USERCONFIGROOM);
-	if (CtdlGetRoom(&CC->room, u.config_roomname) != 0) {
-		syslog(LOG_DEBUG, "<%s> does not exist.  No processing is required.", u.config_roomname);
-		return;
-	}
 
-	/*
-	 * Find the sieve scripts and control record and do something
-	 */
-	u.config_msgnum = (-1);
-	CtdlForEachMessage(MSGS_LAST, 1, NULL, SIEVECONFIG, NULL, get_sieve_config_backend, (void *)&u );
 
-	if (u.config_msgnum < 0) {
-		syslog(LOG_DEBUG, "No Sieve rules exist.  No processing is required.");
-		return;
-	}
 
-	/*
-	 * Check to see whether the script is empty and should not be processed.
-	 * A script is considered non-empty if it contains at least one semicolon.
-	 */
-	if (
-		(get_active_script(&u) == NULL)
-		|| (strchr(get_active_script(&u), ';') == NULL)
-	) {
-		syslog(LOG_DEBUG, "Sieve script is empty.  No processing is required.");
-		return;
-	}
 
-	syslog(LOG_DEBUG, "Rules found.  Performing Sieve processing for <%s>", roomname);
 
-	if (CtdlGetRoom(&CC->room, roomname) != 0) {
-		syslog(LOG_ERR, "ERROR: cannot load <%s>", roomname);
-		return;
-	}
 
-	/* Initialize the Sieve parser */
-	
-	res = sieve2_alloc(&sieve2_context);
-	if (res != SIEVE2_OK) {
-		syslog(LOG_ERR, "sieve2_alloc() returned %d: %s", res, sieve2_errstr(res));
-		return;
-	}
-
-	res = sieve2_callbacks(sieve2_context, ctdl_sieve_callbacks);
-	if (res != SIEVE2_OK) {
-		syslog(LOG_ERR, "sieve2_callbacks() returned %d: %s", res, sieve2_errstr(res));
-		goto BAIL;
-	}
-
-	/* Validate the script */
-
-	struct ctdl_sieve my;		/* dummy ctdl_sieve struct just to pass "u" along */
-	memset(&my, 0, sizeof my);
-	my.u = &u;
-	res = sieve2_validate(sieve2_context, &my);
-	if (res != SIEVE2_OK) {
-		syslog(LOG_ERR, "sieve2_validate() returned %d: %s", res, sieve2_errstr(res));
-		goto BAIL;
-	}
-
-	/* Do something useful */
-	u.sieve2_context = sieve2_context;
-	orig_lastproc = u.lastproc;
-	CtdlForEachMessage(MSGS_GT, u.lastproc, NULL, NULL, NULL, sieve_do_msg, (void *) &u);
-
-BAIL:
-	res = sieve2_free(&sieve2_context);
-	if (res != SIEVE2_OK) {
-		syslog(LOG_ERR, "sieve2_free() returned %d: %s", res, sieve2_errstr(res));
-	}
-
-	/* Rewrite the config if we have to (we're not the user right now) */
-	rewrite_ctdl_sieve_config(&u, (u.lastproc > orig_lastproc) ) ;
-}
 
 #endif
 
@@ -1078,12 +996,24 @@ struct inboxrules *deserialize_inbox_rules(char *serialized_rules) {
 
 
 /*
+ * rename this
+ */
+void sieve_do_msg(long msgnum, void *userdata) {
+	struct inboxrules *ii = (struct sdm_userdata *) userdata;
+	syslog(LOG_DEBUG, "inboxrules: processing message #%ld which is higher than %ld, we are in %s", msgnum, ii->lastproc, CC->room.QRname);
+}
+
+
+
+
+/*
  * A user account is identified as requring inbox processing.
  * Do it.
  */
 void do_inbox_processing_for_user(long usernum) {
 	struct CtdlMessage *msg;
 	struct inboxrules *ii;
+	char roomname[ROOMNAMELEN];
 
 	if (CtdlGetUserByNumber(&CC->user, usernum) == 0) {
 		if (CC->user.msgnum_inboxrules <= 0) {
@@ -1103,9 +1033,20 @@ void do_inbox_processing_for_user(long usernum) {
 		}
 
 		TRACE;
-		syslog(LOG_DEBUG, "RULEZ for %s", CC->user.fullname);
+		syslog(LOG_DEBUG, "inboxrules: for %s", CC->user.fullname);
 
 		// do something now FIXME actually write this
+
+		snprintf(roomname, sizeof roomname, "%010ld.%s", usernum, MAILROOM);
+		if (CtdlGetRoom(&CC->room, roomname) == 0) {
+			syslog(LOG_DEBUG, "GOT DA ROOM!  WE R000000000L!");
+
+				/* Do something useful */
+				CtdlForEachMessage(MSGS_GT, ii->lastproc, NULL, NULL, NULL, sieve_do_msg, (void *) ii);
+
+		}
+
+		// FIXME reserialize our inbox rules/state and write changes back to the config room
 		free_inbox_rules(ii);
 	}
 }
