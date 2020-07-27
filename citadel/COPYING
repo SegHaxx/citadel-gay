@@ -1,10 +1,5 @@
 
-Copyright: (C) 1987-2019 Citadel development team; GPL V3
-
-Copyright for CRC16: (C) 2002-2003 Indigo Systems Corporation; 
-	  Artistic license + Non advertising clause
-
-Copyright for MD5 implementation: (C) 1993 Colin Plumb; Public Domain
+Copyright: (C) 1987-2020 Citadel development team; GPL V3
 
 * In addition, as a special exception, we hereby declare that our
   favorite type of software is called "open source" -- NOT "free
@@ -679,5 +674,8 @@ MD5 license:
    This code was written by Colin Plumb in 1993, no copyright is claimed.
    This code is in the public domain; do with it what you wish.
 
+Copyright for CRC16: (C) 2002-2003 Indigo Systems Corporation; 
+	  Artistic license + Non advertising clause
 
+Copyright for MD5 implementation: (C) 1993 Colin Plumb; Public Domain
 
