@@ -75,7 +75,7 @@ int ctdl_redirect(void)
 		return SIEVE2_ERROR_BADARGS;
 	}
 
-	msg = CtdlFetchMessage(cs->msgnum, 1, 1);
+	msg = CtdlFetchMessage(cs->msgnum, 1);
 	if (msg == NULL) {
 		syslog(LOG_WARNING, "REDIRECT failed: unable to fetch msg %ld", cs->msgnum);
 		free_recipients(valid);
@@ -427,7 +427,7 @@ int ctdl_getheaders(sieve2_context_t *s, void *my) {
 /*
  * Perform sieve processing for one message (called by sieve_do_room() for each message)
  */
-void sieve_do_msg(long msgnum, void *userdata) {
+void inbox_do_msg(long msgnum, void *userdata) {
 	struct sdm_userdata *u = (struct sdm_userdata *) userdata;
 	sieve2_context_t *sieve2_context;
 	struct ctdl_sieve my;
@@ -449,7 +449,7 @@ void sieve_do_msg(long msgnum, void *userdata) {
 	/*
 	 * Make sure you include message body so you can get those second-level headers ;)
 	 */
-	msg = CtdlFetchMessage(msgnum, 1, 1);
+	msg = CtdlFetchMessage(msgnum, 1);
 	if (msg == NULL) return;
 
 	/*
@@ -996,14 +996,19 @@ struct inboxrules *deserialize_inbox_rules(char *serialized_rules) {
 
 
 /*
- * rename this
+ * Process a single message.  We know the room, the user, the rules, the message number, etc.
  */
-void sieve_do_msg(long msgnum, void *userdata) {
-	struct inboxrules *ii = (struct sdm_userdata *) userdata;
+void inbox_do_msg(long msgnum, void *userdata) {
+	struct inboxrules *ii = (struct inboxrules *) userdata;
+	struct CtdlMessage *msg;
 	syslog(LOG_DEBUG, "inboxrules: processing message #%ld which is higher than %ld, we are in %s", msgnum, ii->lastproc, CC->room.QRname);
+
+	// FIXME    you are here
+
+
+	//msg = CtdlFetchMessage(msgnum, 
+
 }
-
-
 
 
 /*
@@ -1020,7 +1025,7 @@ void do_inbox_processing_for_user(long usernum) {
 			return;						// this user has no inbox rules
 		}
 
-		msg = CtdlFetchMessage(CC->user.msgnum_inboxrules, 1, 1);
+		msg = CtdlFetchMessage(CC->user.msgnum_inboxrules, 1);
 		if (msg == NULL) {
 			return;						// config msgnum is set but that message does not exist
 		}
@@ -1042,7 +1047,7 @@ void do_inbox_processing_for_user(long usernum) {
 			syslog(LOG_DEBUG, "GOT DA ROOM!  WE R000000000L!");
 
 				/* Do something useful */
-				CtdlForEachMessage(MSGS_GT, ii->lastproc, NULL, NULL, NULL, sieve_do_msg, (void *) ii);
+				CtdlForEachMessage(MSGS_GT, ii->lastproc, NULL, NULL, NULL, inbox_do_msg, (void *) ii);
 
 		}
 
@@ -1054,7 +1059,7 @@ void do_inbox_processing_for_user(long usernum) {
 
 /*
  * Here is an array of users (by number) who have received messages in their inbox and may require processing.
-*/
+ */
 long *users_requiring_inbox_processing = NULL;
 int num_urip = 0;
 int num_urip_alloc = 0;
@@ -1133,7 +1138,7 @@ void cmd_gibr(char *argbuf) {
 
 	cprintf("%d inbox rules for %s\n", LISTING_FOLLOWS, CC->user.fullname);
 
-	struct CtdlMessage *msg = CtdlFetchMessage(CC->user.msgnum_inboxrules, 1, 1);
+	struct CtdlMessage *msg = CtdlFetchMessage(CC->user.msgnum_inboxrules, 1);
 	if (msg != NULL) {
 		if (!CM_IsEmpty(msg, eMesageText)) {
 			char *token; 
@@ -1184,7 +1189,7 @@ void cmd_pibr(char *argbuf) {
 
 	// Fetch the existing config so we can merge in anything that is NOT a rule 
 	// (Does not start with "rule|" but has at least one vertical bar)
-	struct CtdlMessage *msg = CtdlFetchMessage(CC->user.msgnum_inboxrules, 1, 1);
+	struct CtdlMessage *msg = CtdlFetchMessage(CC->user.msgnum_inboxrules, 1);
 	if (msg != NULL) {
 		if (!CM_IsEmpty(msg, eMesageText)) {
 			rest = msg->cm_fields[eMesageText];

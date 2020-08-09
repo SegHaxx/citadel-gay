@@ -20,7 +20,7 @@
  * The VRFY and EXPN commands have been removed from this implementation
  * because nobody uses these commands anymore, except for spammers.
  *
- * Copyright (c) 1998-2018 by the citadel.org team
+ * Copyright (c) 1998-2020 by the citadel.org team
  *
  * This program is open source software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3.
@@ -326,7 +326,7 @@ void smtp_webcit_preferences_hack_backend(long msgnum, void *userdata) {
 		return;	// already got it
 	}
 
-	msg = CtdlFetchMessage(msgnum, 1, 1);
+	msg = CtdlFetchMessage(msgnum, 1);
 	if (msg == NULL) {
 		return;
 	}

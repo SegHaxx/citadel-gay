@@ -4,7 +4,7 @@
  * wrote it as a module merely to keep things as clean and loosely coupled
  * as possible.
  *
- * Copyright (c) 1987-2017 by the citadel.org team
+ * Copyright (c) 1987-2020 by the citadel.org team
  *
  * This program is open source software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3.
@@ -116,7 +116,7 @@ int inetcfg_aftersave(struct CtdlMessage *msg, recptypes *recp) {
 void inetcfg_init_backend(long msgnum, void *userdata) {
 	struct CtdlMessage *msg;
 
-       	msg = CtdlFetchMessage(msgnum, 1, 1);
+       	msg = CtdlFetchMessage(msgnum, 1);
        	if (msg != NULL) {
 		inetcfg_setTo(msg);
                	CM_Free(msg);

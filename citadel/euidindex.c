@@ -1,7 +1,7 @@
 /* 
  * Index messages by EUID per room.
  *
- * Copyright (c) 1987-2019 by the citadel.org team
+ * Copyright (c) 1987-2020 by the citadel.org team
  *
  * This program is open source software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 3.
@@ -131,7 +131,7 @@ void index_message_by_euid(char *euid, struct ctdlroom *qrbuf, long msgnum) {
 void rebuild_euid_index_for_msg(long msgnum, void *userdata) {
 	struct CtdlMessage *msg = NULL;
 
-	msg = CtdlFetchMessage(msgnum, 0, 1);
+	msg = CtdlFetchMessage(msgnum, 0);
 	if (msg == NULL) return;
 	if (!CM_IsEmpty(msg, eExclusiveID)) {
 		index_message_by_euid(msg->cm_fields[eExclusiveID], &CC->room, msgnum);

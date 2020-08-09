@@ -2,7 +2,7 @@
  * This module implementsserver commands related to the display and
  * manipulation of user "bio" files.
  *
- * Copyright (c) 1987-2017 by the citadel.org team
+ * Copyright (c) 1987-2020 by the citadel.org team
  *
  * This program is open source software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -82,7 +82,7 @@ void cmd_rbio(char *cmdbuf)
 		ruser.fullname, ruser.usernum, ruser.axlevel,
 		(long)ruser.lastcall, ruser.timescalled, ruser.posted);
 
-	struct CtdlMessage *msg = CtdlFetchMessage(ruser.msgnum_bio, 1, 1);
+	struct CtdlMessage *msg = CtdlFetchMessage(ruser.msgnum_bio, 1);
 	if (msg != NULL) {
 		CtdlOutputPreLoadedMsg(msg, MT_CITADEL, HEADERS_NONE, 0, 0, 0);
 		CM_Free(msg);

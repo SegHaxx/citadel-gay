@@ -105,7 +105,7 @@ void CtdlWriteObject(char *req_room,			/* Room to stuff it in */
 			int is_unique,			/* Del others of this type? */
 			unsigned int flags		/* Internal save flags */
 );
-struct CtdlMessage *CtdlFetchMessage(long msgnum, int with_body, int run_msg_hooks);
+struct CtdlMessage *CtdlFetchMessage(long msgnum, int with_body);
 struct CtdlMessage * CM_Duplicate
                        (struct CtdlMessage *OrgMsg);
 int  CM_IsEmpty        (struct CtdlMessage *Msg, eMsgField which);

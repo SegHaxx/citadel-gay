@@ -360,7 +360,7 @@ void ical_respond(long msgnum, char *partnum, char *action) {
 		return;
 	}
 
-	msg = CtdlFetchMessage(msgnum, 1, 1);
+	msg = CtdlFetchMessage(msgnum, 1);
 	if (msg == NULL) {
 		cprintf("%d Message %ld not found.\n",
 			ERROR + ILLEGAL_VALUE,
@@ -619,7 +619,7 @@ int ical_update_my_calendar_with_reply(icalcomponent *cal) {
 	 * us the ability to load the event into memory so we can diddle the
 	 * attendees.
 	 */
-	msg = CtdlFetchMessage(msgnum_being_replaced, 1, 1);
+	msg = CtdlFetchMessage(msgnum_being_replaced, 1);
 	if (msg == NULL) {
 		return(2);			/* internal error */
 	}
@@ -699,7 +699,7 @@ void ical_handle_rsvp(long msgnum, char *partnum, char *action) {
 		return;
 	}
 
-	msg = CtdlFetchMessage(msgnum, 1, 1);
+	msg = CtdlFetchMessage(msgnum, 1);
 	if (msg == NULL) {
 		cprintf("%d Message %ld not found.\n",
 			ERROR + ILLEGAL_VALUE,
@@ -1134,7 +1134,7 @@ void ical_hunt_for_conflicts_backend(long msgnum, void *data) {
 
 	proposed_event = (icalcomponent *)data;
 
-	msg = CtdlFetchMessage(msgnum, 1, 1);
+	msg = CtdlFetchMessage(msgnum, 1);
 	if (msg == NULL) return;
 	memset(&ird, 0, sizeof ird);
 	strcpy(ird.desired_partnum, "_HUNT_");
@@ -1193,7 +1193,7 @@ void ical_conflicts(long msgnum, char *partnum) {
 	struct CtdlMessage *msg = NULL;
 	struct ical_respond_data ird;
 
-	msg = CtdlFetchMessage(msgnum, 1, 1);
+	msg = CtdlFetchMessage(msgnum, 1);
 	if (msg == NULL) {
 		cprintf("%d Message %ld not found\n",
 			ERROR + ILLEGAL_VALUE,
@@ -1377,7 +1377,7 @@ void ical_freebusy_backend(long msgnum, void *data) {
 
 	fb = (icalcomponent *)data;		/* User-supplied data will be the VFREEBUSY component */
 
-	msg = CtdlFetchMessage(msgnum, 1, 1);
+	msg = CtdlFetchMessage(msgnum, 1);
 	if (msg == NULL) return;
 	memset(&ird, 0, sizeof ird);
 	strcpy(ird.desired_partnum, "_HUNT_");
@@ -1574,7 +1574,7 @@ void ical_getics_backend(long msgnum, void *data) {
 
 	/* Look for the calendar event... */
 
-	msg = CtdlFetchMessage(msgnum, 1, 1);
+	msg = CtdlFetchMessage(msgnum, 1);
 	if (msg == NULL) return;
 	memset(&ird, 0, sizeof ird);
 	strcpy(ird.desired_partnum, "_HUNT_");

@@ -1,7 +1,7 @@
 /*
  * Handle XMPP presence exchanges
  *
- * Copyright (c) 2007-2017 by Art Cancro and citadel.org
+ * Copyright (c) 2007-2020 by Art Cancro and citadel.org
  *
  * This program is open source software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -224,7 +224,7 @@ void xmpp_fetch_mortuary_backend(long msgnum, void *userdata) {
 	char *ptr = NULL;
 	char *lasts = NULL;
 
-	msg = CtdlFetchMessage(msgnum, 1, 1);
+	msg = CtdlFetchMessage(msgnum, 1);
 	if (msg == NULL) {
 		return;
 	}

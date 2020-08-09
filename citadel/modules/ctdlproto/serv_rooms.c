@@ -1,7 +1,7 @@
 /* 
  * Server functions which perform operations on room objects.
  *
- * Copyright (c) 1987-2017 by the citadel.org team
+ * Copyright (c) 1987-2020 by the citadel.org team
  *
  * This program is open source software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 3.
@@ -716,7 +716,7 @@ void cmd_seta(char *new_ra)
  */
 void cmd_rinf(char *argbuf)
 {
-	struct CtdlMessage *msg = CtdlFetchMessage(CC->room.msgnum_info, 1, 1);
+	struct CtdlMessage *msg = CtdlFetchMessage(CC->room.msgnum_info, 1);
 	if (msg != NULL) {
 		cprintf("%d Info:\n", LISTING_FOLLOWS);
 		CtdlOutputPreLoadedMsg(msg, MT_CITADEL, HEADERS_NONE, 0, 0, 0);

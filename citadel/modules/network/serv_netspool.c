@@ -2,7 +2,7 @@
  * This module handles shared rooms, inter-Citadel mail, and outbound
  * mailing list processing.
  *
- * Copyright (c) 2000-2018 by the citadel.org team
+ * Copyright (c) 2000-2020 by the citadel.org team
  *
  * This program is open source software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 3.
@@ -217,7 +217,7 @@ void CalcListID(SpoolControl *sc)
 #define MAX_LISTIDLENGTH 150
 
 	// Load the room banner as the list description
-	struct CtdlMessage *msg = CtdlFetchMessage(sc->room.msgnum_info, 1, 1);
+	struct CtdlMessage *msg = CtdlFetchMessage(sc->room.msgnum_info, 1);
         if (msg != NULL) {
 		CC->redirect_buffer = NewStrBufPlain(NULL, SIZ);
                 CtdlOutputPreLoadedMsg(msg, MT_CITADEL, HEADERS_NONE, 0, 0, 0);

@@ -1,7 +1,7 @@
 /*
  * Autocompletion of email recipients, etc.
  *
- * Copyright (c) 1987-2015 by the citadel.org team
+ * Copyright (c) 1987-2020 by the citadel.org team
  *
  * This program is open source software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3.
@@ -59,7 +59,7 @@ void hunt_for_autocomplete(long msgnum, char *search_string) {
 	int i = 0;
 	char *nnn = NULL;
 
-	msg = CtdlFetchMessage(msgnum, 1, 1);
+	msg = CtdlFetchMessage(msgnum, 1);
 	if (msg == NULL) return;
 
 	v = vcard_load(msg->cm_fields[eMesageText]);

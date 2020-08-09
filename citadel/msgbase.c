@@ -756,7 +756,7 @@ int CtdlForEachMessage(int mode, long ref, char *search_string,
 					free(msglist);
 					return -1;
 				}
-				msg = CtdlFetchMessage(msglist[a], 1, 1);
+				msg = CtdlFetchMessage(msglist[a], 1);
 				if (msg != NULL) {
 					if (CtdlMsgCmp(msg, compare)) {
 						msglist[a] = 0L;
@@ -1163,7 +1163,7 @@ struct CtdlMessage *CtdlDeserializeMessage(long msgnum, int with_body, const cha
  * NOTE: Caller is responsible for freeing the returned CtdlMessage struct
  *       using the CM_Free(); function.
  */
-struct CtdlMessage *CtdlFetchMessage(long msgnum, int with_body, int run_msg_hooks)
+struct CtdlMessage *CtdlFetchMessage(long msgnum, int with_body)
 {
 	struct cdbdata *dmsgtext;
 	struct CtdlMessage *ret = NULL;
@@ -1202,12 +1202,6 @@ struct CtdlMessage *CtdlFetchMessage(long msgnum, int with_body, int run_msg_hoo
 	}
 	if (CM_IsEmpty(ret, eMesageText)) {
 		CM_SetField(ret, eMesageText, HKEY("\r\n\r\n (no text)\r\n"));
-	}
-
-	/* Perform "before read" hooks (aborting if any return nonzero) */
-	if (run_msg_hooks && (PerformMessageHooks(ret, NULL, EVT_BEFOREREAD) > 0)) {
-		CM_Free(ret);
-		return NULL;
 	}
 
 	return (ret);
@@ -1596,10 +1590,10 @@ int CtdlOutputMsg(long msg_num,		/* message number (local) to fetch */
 	 * request that we don't even bother loading the body into memory.
 	 */
 	if (headers_only == HEADERS_FAST) {
-		TheMessage = CtdlFetchMessage(msg_num, 0, 1);
+		TheMessage = CtdlFetchMessage(msg_num, 0);
 	}
 	else {
-		TheMessage = CtdlFetchMessage(msg_num, 1, 1);
+		TheMessage = CtdlFetchMessage(msg_num, 1);
 	}
 
 	if (TheMessage == NULL) {
@@ -2394,7 +2388,7 @@ int CtdlSaveMsgPointersInRoom(char *roomname, long newmsgidlist[], int num_newms
 				msg = supplied_msg;
 			}
 			else {
-				msg = CtdlFetchMessage(msgid, 0, 1);
+				msg = CtdlFetchMessage(msgid, 0);
 			}
 	
 			if (msg != NULL) {

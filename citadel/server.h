@@ -233,7 +233,6 @@ struct cdbdata {
 #define EVT_PURGEUSER	100	/* Deleting a user */
 #define EVT_NEWUSER	102	/* Creating a user */
 
-#define EVT_BEFOREREAD	200
 #define EVT_BEFORESAVE	201
 #define EVT_AFTERSAVE	202
 #define EVT_SMTPSCAN	203	/* called before submitting a msg from SMTP */

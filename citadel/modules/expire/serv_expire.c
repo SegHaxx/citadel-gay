@@ -3,7 +3,7 @@
  *
  * You might also see this module affectionately referred to as TDAP (The Dreaded Auto-Purger).
  *
- * Copyright (c) 1988-2019 by citadel.org (Art Cancro, Wilifried Goesgens, and others)
+ * Copyright (c) 1988-2020 by citadel.org (Art Cancro, Wilifried Goesgens, and others)
  *
  * This program is open source software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License as published
@@ -169,7 +169,7 @@ void GatherPurgeMessages(struct ctdlroom *qrbuf, void *data) {
 		for (a=0; a<num_msgs; ++a) {
 			delnum = msglist[a];
 
-			msg = CtdlFetchMessage(delnum, 0, 1); /* dont need body */
+			msg = CtdlFetchMessage(delnum, 0);	/* don't need body */
 			if (msg != NULL) {
 				xtime = atol(msg->cm_fields[eTimestamp]);
 				CM_Free(msg);
@@ -712,7 +712,7 @@ int PurgeEuidIndexTable(void) {
 
 		memcpy(&msgnum, cdbei->ptr, sizeof(long));
 
-		msg = CtdlFetchMessage(msgnum, 0, 1);
+		msg = CtdlFetchMessage(msgnum, 0);
 		if (msg != NULL) {
 			CM_Free(msg);	/* it still exists, so do nothing */
 		}

@@ -3,7 +3,7 @@
  *
  * This is the new, exciting, clever version that makes libcurl do all the work  :)
  *
- * Copyright (c) 1997-2018 by the citadel.org team
+ * Copyright (c) 1997-2020 by the citadel.org team
  *
  * This program is open source software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License as published
@@ -360,7 +360,7 @@ void smtp_process_one_msg(long qmsgnum)
 	int delete_this_queue = 0;
 	char server_response[SIZ];
 
-	msg = CtdlFetchMessage(qmsgnum, 1, 1);
+	msg = CtdlFetchMessage(qmsgnum, 1);
 	if (msg == NULL) {
 		syslog(LOG_WARNING, "smtpclient: %ld does not exist", qmsgnum);
 		return;

@@ -1,6 +1,6 @@
 /*
  * This module handles fulltext indexing of the message base.
- * Copyright (c) 2005-2018 by the citadel.org team
+ * Copyright (c) 2005-2020 by the citadel.org team
  *
  * This program is open source software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License as published
@@ -121,7 +121,7 @@ void ft_index_message(long msgnum, int op) {
 	int tok;
 	struct CtdlMessage *msg = NULL;
 
-	msg = CtdlFetchMessage(msgnum, 1, 1);
+	msg = CtdlFetchMessage(msgnum, 1);
 	if (msg == NULL) {
 		syslog(LOG_ERR, "fulltext: ft_index_message() could not load msg %ld", msgnum);
 		return;

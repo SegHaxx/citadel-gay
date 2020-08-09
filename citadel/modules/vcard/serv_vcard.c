@@ -2,7 +2,7 @@
  * A server-side module for Citadel which supports address book information
  * using the standard vCard format.
  * 
- * Copyright (c) 1999-2018 by the citadel.org team
+ * Copyright (c) 1999-2020 by the citadel.org team
  *
  * This program is open source software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3.
@@ -508,7 +508,7 @@ struct vCard *vcard_get_user(struct ctdluser *u) {
 
 	if (VCmsgnum < 0L) return vcard_new();
 
-	msg = CtdlFetchMessage(VCmsgnum, 1, 1);
+	msg = CtdlFetchMessage(VCmsgnum, 1);
 	if (msg == NULL) return vcard_new();
 
 	v = vcard_load(msg->cm_fields[eMesageText]);
@@ -868,7 +868,7 @@ void dvca_mime_callback(char *name, char *filename, char *partnum, char *disp,
 void dvca_callback(long msgnum, void *userdata) {
 	struct CtdlMessage *msg = NULL;
 
-	msg = CtdlFetchMessage(msgnum, 1, 1);
+	msg = CtdlFetchMessage(msgnum, 1);
 	if (msg == NULL) return;
 	mime_parser(CM_RANGE(msg, eMesageText),
 		    *dvca_mime_callback,	/* callback function */
@@ -1087,7 +1087,7 @@ void strip_addresses_already_have(long msgnum, void *userdata) {
 
 	collected_addresses = (char *)userdata;
 
-	msg = CtdlFetchMessage(msgnum, 1, 1);
+	msg = CtdlFetchMessage(msgnum, 1);
 	if (msg == NULL) return;
 	v = vcard_load(msg->cm_fields[eMesageText]);
 	CM_Free(msg);

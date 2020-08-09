@@ -1,7 +1,7 @@
 /*
  * represent messages to the citadel clients
  *
- * Copyright (c) 1987-2019 by the citadel.org team
+ * Copyright (c) 1987-2020 by the citadel.org team
  *
  * This program is open source software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3.
@@ -42,7 +42,7 @@ void headers_listing(long msgnum, void *userdata)
 	struct CtdlMessage *msg;
 	int output_mode =  *(int *)userdata;
 
-	msg = CtdlFetchMessage(msgnum, 0, 1);
+	msg = CtdlFetchMessage(msgnum, 0);
 	if (msg == NULL) {
 		cprintf("%ld|0|||||||\n", msgnum);
 		return;
@@ -109,7 +109,7 @@ void headers_brief_filter(long msgnum, void *userdata)
 	msg_filter *flt = (msg_filter*) userdata;
 
 	l = GetCount(flt->Filter);
-	msg = CtdlFetchMessage(msgnum, 0, 1);
+	msg = CtdlFetchMessage(msgnum, 0);
 	StrBufPrintf(flt->buffer, "%ld", msgnum);
 	if (msg == NULL) {
 		for (i = 0; i < l; i++) {
@@ -141,7 +141,7 @@ void headers_euid(long msgnum, void *userdata)
 {
 	struct CtdlMessage *msg;
 
-	msg = CtdlFetchMessage(msgnum, 0, 1);
+	msg = CtdlFetchMessage(msgnum, 0);
 	if (msg == NULL) {
 		cprintf("%ld||\n", msgnum);
 		return;

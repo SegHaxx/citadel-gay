@@ -1,7 +1,7 @@
 //
 // NNTP server module (RFC 3977)
 //
-// Copyright (c) 2014-2018 by the citadel.org team
+// Copyright (c) 2014-2020 by the citadel.org team
 //
 // This program is open source software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License version 3.
@@ -977,7 +977,7 @@ void nntp_xover_backend(long msgnum, void *userdata) {
 	if (msgnum < lr->lo) return;
 	if ((lr->hi != 0) && (msgnum > lr->hi)) return;
 
-	struct CtdlMessage *msg = CtdlFetchMessage(msgnum, 0, 1);
+	struct CtdlMessage *msg = CtdlFetchMessage(msgnum, 0);
 	if (msg == NULL) {
 		return;
 	}

@@ -328,7 +328,7 @@ void migr_export_message(long msgnum) {
 
 	/* Ok, here we go ... */
 
-	msg = CtdlFetchMessage(msgnum, 1, 0);
+	msg = CtdlFetchMessage(msgnum, 1);
 	if (msg == NULL) return;	/* fail silently */
 
 	client_write(HKEY("<message>\n"));
@@ -949,7 +949,7 @@ int migr_restore_message_metadata(long msgnum, int refcount)
 
 	/* Ok, here we go ... */
 
-	msg = CtdlFetchMessage(msgnum, 1, 0);
+	msg = CtdlFetchMessage(msgnum, 1);
 	if (msg == NULL) {
 		return 1;
 	}
