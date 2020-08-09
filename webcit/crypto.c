@@ -397,10 +397,8 @@ void init_ssl(void)
 	SSL_CTX_use_certificate_chain_file(ssl_ctx, CTDL_CER_PATH);
 	SSL_CTX_use_PrivateKey_file(ssl_ctx, CTDL_KEY_PATH, SSL_FILETYPE_PEM);
 	if ( !SSL_CTX_check_private_key(ssl_ctx) ) {
-		syslog(LOG_WARNING, "Cannot install certificate: %s\n",
-				ERR_reason_error_string(ERR_get_error()));
+		syslog(LOG_WARNING, "crypto: cannot install certificate: %s\n", ERR_reason_error_string(ERR_get_error()));
 	}
-	
 }
 
 
