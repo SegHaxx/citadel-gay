@@ -834,8 +834,8 @@ char *final_keys[] = {
 
 // This data structure represents ONE inbox rule within the configuration.
 struct irule {
-	int field_compare_op;
 	int compared_field;
+	int field_compare_op;
 	char compared_value[128];
 	int size_compare_op;
 	long compared_size;
@@ -967,18 +967,18 @@ struct inboxrules *deserialize_inbox_rules(char *serialized_rules) {
 			free(decoded_rule);
 
 			// if we re-serialized this now, what would it look like?
-			//syslog(LOG_DEBUG, "test reserialize: 0|%s|%s|%s|%s|%ld|%s|%s|%s|%s|%s",
-				//field_keys[new_rule->compared_field],
-				//fcomp_keys[new_rule->field_compare_op],
-				//new_rule->compared_value,
-				//scomp_keys[new_rule->size_compare_op],
-				//new_rule->compared_size,
-				//action_keys[new_rule->action],
-				//new_rule->file_into,
-				//new_rule->redirect_to,
-				//new_rule->autoreply_message,
-				//final_keys[new_rule->final_action]
-			//);
+			syslog(LOG_DEBUG, "test reserialize: 0|%s|%s|%s|%s|%ld|%s|%s|%s|%s|%s",
+				field_keys[new_rule->compared_field],
+				fcomp_keys[new_rule->field_compare_op],
+				new_rule->compared_value,
+				scomp_keys[new_rule->size_compare_op],
+				new_rule->compared_size,
+				action_keys[new_rule->action],
+				new_rule->file_into,
+				new_rule->redirect_to,
+				new_rule->autoreply_message,
+				final_keys[new_rule->final_action]
+			);
 			// delete the above after moving it to a reserialize function
 
 		}
@@ -1000,13 +1000,108 @@ struct inboxrules *deserialize_inbox_rules(char *serialized_rules) {
  */
 void inbox_do_msg(long msgnum, void *userdata) {
 	struct inboxrules *ii = (struct inboxrules *) userdata;
-	struct CtdlMessage *msg;
+	struct CtdlMessage *msg = NULL;
+	int headers_loaded = 0;
+	int body_loaded = 0;
+	int metadata_loaded = 0;
+	int i;
+
 	syslog(LOG_DEBUG, "inboxrules: processing message #%ld which is higher than %ld, we are in %s", msgnum, ii->lastproc, CC->room.QRname);
 
-	// FIXME    you are here
+	if (ii->num_rules <= 0) {
+		syslog(LOG_DEBUG, "inboxrules: rule set is empty");
+		return;
+	}
+
+	for (i=0; i<ii->num_rules; ++i) {
+		syslog(LOG_DEBUG, "inboxrules: processing rule %d is %s", i, field_keys[ ii->rules[i].compared_field ]);
+
+		// Before doing a field compare, check to see if we have the correct parts of the message in memory.
+
+		switch(ii->rules[i].compared_field) {
+			// These fields require loading only the top-level headers
+			case field_from:		// From:
+			case field_tocc:		// To: or Cc:
+			case field_subject:		// Subject:
+			case field_replyto:		// Reply-to:
+			case field_listid:		// List-ID:
+			case field_envto:		// Envelope-to:
+			case field_envfrom:		// Return-path:
+				if (!headers_loaded) {
+					syslog(LOG_DEBUG, "inboxrules: loading headers for message %ld", msgnum);
+					msg = CtdlFetchMessage(msgnum, 0);
+					headers_loaded = 1;
+				}
+				break;
+			// These fields are not stored as Citadel headers, and therefore require a full message load.
+			case field_sender:
+			case field_resentfrom:
+			case field_resentto:
+			case field_xmailer:
+			case field_xspamflag:
+			case field_xspamstatus:
+				if (!body_loaded) {
+					syslog(LOG_DEBUG, "inboxrules: loading all of message %ld", msgnum);
+					if (msg != NULL) {
+						CM_Free(msg);
+					}
+					msg = CtdlFetchMessage(msgnum, 1);
+					headers_loaded = 1;
+					body_loaded = 1;
+				}
+				break;
+			case field_size:
+				if (!metadata_loaded) {
+					syslog(LOG_DEBUG, "inboxrules: loading metadata for message %ld", msgnum);
+					// FIXME do this
+					metadata_loaded = 1;
+				}
+				break;
+			case field_all:
+				syslog(LOG_DEBUG, "this is an always-on rule");
+				break;
+			default:
+				syslog(LOG_DEBUG, "inboxrules: unknown rule key");
+		}
+
+		// Message data to compare is loaded, now do something.
+		switch(ii->rules[i].compared_field) {
+			default:
+				TRACE;
+				break;
+		}
+
+	
+	}
+
+	TRACE;
+	if (msg != NULL) {
+		CM_Free(msg);
+	}
+	// FIXME you are here YOU ARE HERE
+
+//struct irule {
+	//int field_compare_op;
+	//int compared_field;
+	//char compared_value[128];
+	//int size_compare_op;
+	//long compared_size;
+	//int action;
+	//char file_into[ROOMNAMELEN];
+	//char redirect_to[1024];
+	//char autoreply_message[SIZ];
+	//int final_action;
+//};
+
+//struct inboxrules {
+	//long lastproc;
+	//int num_rules;
+	//struct irule *rules;
 
 
-	//msg = CtdlFetchMessage(msgnum, 
+	// Fetch the message, including the body, we need all of it to run our rules.
+	//msg = CtdlFetchMessage(msgnum, 0);
+	//CM_Free(msg);
 
 }
 

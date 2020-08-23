@@ -1,6 +1,5 @@
 The totally incomplete guide to Citadel internals
 -----------------------------------------------------
------------------------------------------------------
 
 Citadel has evolved quite a bit since its early days, and the data structures
 have evolved with it.  This document provides a rough overview of how the
@@ -222,102 +221,67 @@ reaches zero.
 
 | BYTE  |       Enum        | NW   | Mnemonic       |  Enum / Comments
 |-------|-------------------|------|----------------|---------------------------------------------------------
-| A     |    eAuthor        | from | Author         |  *eAuthor*
-|       |                   |      |                |  Name of originator of message.
-| B     |    eBig\_message  |      | Big message    |  *eBig\_message*
-|       |                   |      |                |  This is a flag which indicates that the message is
+| A     |    eAuthor        | from | Author         |  Name of originator of the message.
+| B     |    eBig_message   |      | Big message    |  This is a flag which indicates that the message is
 |       |                   |      |                |  big, and Citadel is storing the body in a separate
 |       |                   |      |                |  record.  You will never see this field because the
 |       |                   |      |                |  internal API handles it.
-| C     |    eRemoteRoom    |      | RemoteRoom     |  *eRemoteRoom*
-|       |                   |      |                |  when sent via Citadel Networking, this is the room
-|       |                   |      |                |  its going to be put on the remote site.
-| D     |    eDestination   |      | Destination    |  *eDestination*
-|       |                   |      |                |  Contains name of the system this message should
-|       |                   |      |                |  be sent to, for mail routing (private mail only).
-| E     |    eExclusiveID   | exti | Exclusive ID   |  *eExclusiveID*
-|       |                   |      |                |  A persistent alphanumeric Message ID used for
-|       |                   |      |                |  network replication.  When a message arrives that
+| E     |    eExclusiveID   | exti | Exclusive ID   |  A persistent alphanumeric Message ID used for
+|       |                   |      |                |  replication control.  When a message arrives that
 |       |                   |      |                |  contains an Exclusive ID, any existing messages which
 |       |                   |      |                |  contain the same Exclusive ID and are *older* than this
 |       |                   |      |                |  message should be deleted.  If there exist any messages
 |       |                   |      |                |  with the same Exclusive ID that are *newer*, then this
 |       |                   |      |                |  message should be dropped.
-| F     |    erFc822Addr    | rfca | rFc822 address |  *erFc822Addr*
-|       |                   |      |                |  For Internet mail, this is the delivery address of the
+| F     |    erFc822Addr    | rfca | rFc822 address |  For Internet mail, this is the delivery address of the
 |       |                   |      |                |  message author.
-| H     |    eHumanNode     | hnod | Human node name|  *eHumanNode*
-|       |                   |      |                |  Human-readable name of system message originated on.
-| I     |    emessageId     | msgn | Message ID     |  *emessageId*
-|       |                   |      |                |  An RFC822-compatible message ID for this message.
-| J     |    eJournal       | jrnl | Journal        |  *eJournal*
-|       |                   |      |                |  The presence of this field indicates that the message
+| I     |    emessageId     | msgn | Message ID     |  An RFC822-compatible message ID for this message.
+|       |                   |      |                |  
+| J     |    eJournal       | jrnl | Journal        |  The presence of this field indicates that the message
 |       |                   |      |                |  is disqualified from being journaled, perhaps because
 |       |                   |      |                |  it is itself a journalized message and we wish to
 |       |                   |      |                |  avoid double journaling.
-| K     |    eReplyTo       | rep2 | Reply-To       |  *eReplyTo*
-|       |                   |      |                |  the Reply-To header for mailinglist outbound messages
-| L     |    eListID        | list | List-ID        |  *eListID*
-|       |                   |      |                |  Mailing list identification, as per RFC 2919
-| M     |    eMesageText    | text | Message Text   |  *eMesageText*
-|       |                   |      |                |  Normal ASCII, newlines seperated by CR's or LF's,
+| K     |    eReplyTo       | rep2 | Reply-To       |  the Reply-To header for mailinglist outbound messages
+| L     |    eListID        | list | List-ID        |  Mailing list identification, as per RFC 2919
+| M     |    eMesageText    | text | Message Text   |  Normal ASCII, newlines seperated by CR's or LF's,
 |       |                   |      |                |  null terminated as always.
-| N     |    eNodeName      | node | Nodename       |  *eNodeName*
-|       |                   |      |                |  Contains node name of system message originated on.
-| O     |    eOriginalRoom  | room | Room           |  *eOriginalRoom* - Room of origin.
-| P     |    eMessagePath   | path | Path           |  *eMessagePath*
-|       |                   |      |                |  Complete path of message, as in the UseNet news
+| O     |    eOriginalRoom  | room | Room           |  Room of origin.
+| P     |    eMessagePath   | path | Path           |  Complete path of message, as in the UseNet news
 |       |                   |      |                |  standard.  A user should be able to send Internet mail
 |       |                   |      |                |  to this path. (Note that your system name will not be
 |       |                   |      |                |  tacked onto this until you're sending the message to
 |       |                   |      |                |  someone else)
-| R     |    eRecipient     | rcpt | Recipient      |  *eRecipient* - Only present in Mail messages.
-| S     |    eSpecialField  | spec | Special field  |  *eSpecialField*
-|       |                   |      |                |  Only meaningful for messages being spooled over a
-|       |                   |      |                |  network.  Usually means that the message isn't really
-|       |                   |      |                |  a message, but rather some other network function:
-|       |                   |      |                |  -> "S" followed by "FILE" (followed by a null, of
-|       |                   |      |                |     course) means that the message text is actually an
-|       |                   |      |                |     IGnet/Open file transfer.  (OBSOLETE)
-|       |                   |      |                |  -> "S" followed by "CANCEL" means that this message
-|       |                   |      |                |     should be deleted from the local message base once
-|       |                   |      |                |     it has been replicated to all network systems.
-| T     |    eTimestamp     | time | date/Time      |  *eTimestamp*
-|       |                   |      |                |  Unix timestamp containing the creation date/time of
+| R     |    eRecipient     | rcpt | Recipient      |  Only present in Mail messages.
+| T     |    eTimestamp     | time | date/Time      |  Unix timestamp containing the creation date/time of
 |       |                   |      |                |  the message.
-| U     |    eMsgSubject    | subj | sUbject        |  *eMsgSubject* - Optional.
+| U     |    eMsgSubject    | subj | sUbject        |  Message subject.  Optional.
 |       |                   |      |                |  Developers may choose whether they wish to
 |       |                   |      |                |  generate or display subject fields.
-| V     |    eenVelopeTo    | nvto | enVelope-to    |  *eenVelopeTo*
-|       |                   |      |                |  The recipient specified in incoming SMTP messages.
-| W     |    eWeferences    | wefw | Wefewences     |  *eWeferences*
-|       |                   |      |                |  Previous message ID's for conversation threading.  When
+| V     |    eenVelopeTo    | nvto | enVelope-to    |  The recipient specified in incoming SMTP messages.
+| W     |    eWeferences    | wefw | Wefewences     |  Previous message ID's for conversation threading.  When
 |       |                   |      |                |  converting from RFC822 we use References: if present, or
 |       |                   |      |                |  In-Reply-To: otherwise.
 |       |                   |      |                |  (Who in extnotify spool messages which don't need to know
 |       |                   |      |                |  other message ids)
-| Y     |    eCarbonCopY    | cccc | carbon copY    |  *eCarbonCopY*
+| Y     |    eCarbonCopY    | cccc | carbon copY    |  Carbon copy (CC) recipients.
 |       |                   |      |                |  Optional, and only in Mail messages.
 | %     |    eHeaderOnly    | nhdr | oNlyHeader     |  we will just be sending headers. for the Wire protocol only.
 | %     |    eFormatType    | type | type           |  type of citadel message: (Wire protocol only)
 |       |                   |      |                |     FMT\_CITADEL     0   Citadel vari-format (proprietary) 
 |       |                   |      |                |     FMT\_FIXED       1   Fixed format (proprietary)
 |       |                   |      |                |     FMT\_RFC822      4   Standard (headers are in M field)
-| %     |    eMessagePart   | part | emessagePart   |  *eMessagePart* is the id of this part in the mime hierachy
+| %     |    eMessagePart   | part | emessagePart   |  eMessagePart is the id of this part in the mime hierachy
 | %     |	 eSubFolder     | suff | eSubFolder     |  descend into a mime sub container
 | %     | 	 ePevious       | pref | ePevious       |  exit a mime sub container
-| 0     |    eErrorMsg      |      | Error          |  *eErrorMsg*
-|       |                   |      |                |  This field is typically never found in a message on
+| 0     |    eErrorMsg      |      | Error          |  This field is typically never found in a message on
 |       |                   |      |                |  disk or in transit.  Message scanning modules are
 |       |                   |      |                |  expected to fill in this field when rejecting a message
 |       |                   |      |                |  with an explanation as to what happened (virus found,
 |       |                   |      |                |  message looks like spam, etc.)
-| 1     |    eSuppressIdx   |      | suppress index |  *eSuppressIdx*
-|       |                   |      |                |  The presence of this field indicates that the message is
+| 1     |    eSuppressIdx   |      | suppress index |  The presence of this field indicates that the message is
 |       |                   |      |                |  disqualified from being added to the full text index.
-| 2     |    eExtnotify     |      | extnotify      |  *eExtnotify* - Used internally by the serv_extnotify module.
-| 3     |    eVltMsgNum     |      | msgnum         |  *eVltMsgNum*
-|       |                   |      |                |  Used internally to pass the local message number in the
+| 2     |    eExtnotify     |      | extnotify      |  Used internally by the serv_extnotify module.
+| 3     |    eVltMsgNum     |      | msgnum         |  Used internally to pass the local message number in the
 |       |                   |      |                |  database to after-save hooks.  Discarded afterwards.
 
 EXAMPLE
@@ -409,13 +373,14 @@ please see network.txt on its operation and functionality (if any).
 
 PORTABILITY ISSUES
 ------------------
-Citadel is 64-bit clean, architecture-independent, and Year 2000
-compliant.  The software should compile on any POSIX compliant system with
-a full pthreads implementation and TCP/IP support.  In the future we may
-try to port it to non-POSIX systems as well.
+Citadel is 64-bit clean and architecture-independent.  The software is
+developed and primarily run on the Linux operating system (which uses the
+Linux kernel) but it should compile and run on any reasonably POSIX
+compliant system.
 
 On the client side, it's also POSIX compliant.  The client even seems to
-build ok on non-POSIX systems with porting libraries (such as Cygwin).
+build ok on non-POSIX systems with porting libraries (such as Cygwin and
+WSL).
 
 SUPPORTING PRIVATE MAIL
 -----------------------
