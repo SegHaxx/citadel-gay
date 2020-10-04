@@ -884,13 +884,11 @@ void unfold_rfc822_field(char **field, char **FieldEnd)
 	{
 		if ((*sField=='\r') || (*sField=='\n'))
 		{
-			int Offset = 1;
-			while (((*(sField + Offset) == '\r') ||
-				(*(sField + Offset) == '\n') ||
-				(isspace(*(sField + Offset)))) && 
-			       (sField + Offset < pFieldEnd))
-				Offset ++;
-			sField += Offset;
+			int offset = 1;
+			while ( ( (*(sField + offset) == '\r') || (*(sField + offset) == '\n' )) && (sField + offset < pFieldEnd) ) {
+				offset ++;
+			}
+			sField += offset;
 			*pField = *sField;
 		}
 		else {

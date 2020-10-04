@@ -304,6 +304,10 @@ struct UseTable {
 	time_t ut_timestamp;
 };
 
+
+/*
+ * These one-byte field headers are found in the Citadel message store.
+ */
 typedef enum _MsgField {
 	eAuthor       = 'A',
 	eBig_message  = 'B',

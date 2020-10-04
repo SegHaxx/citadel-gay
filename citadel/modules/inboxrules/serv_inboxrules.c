@@ -1004,6 +1004,8 @@ void inbox_do_msg(long msgnum, void *userdata) {
 	int headers_loaded = 0;
 	int body_loaded = 0;
 	int metadata_loaded = 0;
+	int rule_activated = 0;			// On each rule, this is set if the compare succeeds and the rule activates.
+	char compare_me[SIZ];			// On each rule, we will store the field to be compared here.
 	int i;
 
 	syslog(LOG_DEBUG, "inboxrules: processing message #%ld which is higher than %ld, we are in %s", msgnum, ii->lastproc, CC->room.QRname);
@@ -1015,6 +1017,7 @@ void inbox_do_msg(long msgnum, void *userdata) {
 
 	for (i=0; i<ii->num_rules; ++i) {
 		syslog(LOG_DEBUG, "inboxrules: processing rule %d is %s", i, field_keys[ ii->rules[i].compared_field ]);
+		rule_activated = 0;
 
 		// Before doing a field compare, check to see if we have the correct parts of the message in memory.
 
@@ -1030,6 +1033,9 @@ void inbox_do_msg(long msgnum, void *userdata) {
 				if (!headers_loaded) {
 					syslog(LOG_DEBUG, "inboxrules: loading headers for message %ld", msgnum);
 					msg = CtdlFetchMessage(msgnum, 0);
+					if (!msg) {
+						return;
+					}
 					headers_loaded = 1;
 				}
 				break;
@@ -1046,6 +1052,9 @@ void inbox_do_msg(long msgnum, void *userdata) {
 						CM_Free(msg);
 					}
 					msg = CtdlFetchMessage(msgnum, 1);
+					if (!msg) {
+						return;
+					}
 					headers_loaded = 1;
 					body_loaded = 1;
 				}
@@ -1064,11 +1073,107 @@ void inbox_do_msg(long msgnum, void *userdata) {
 				syslog(LOG_DEBUG, "inboxrules: unknown rule key");
 		}
 
+		// If the rule involves a field comparison, load the field to be compared.
+		compare_me[0] = 0;
+		switch(ii->rules[i].compared_field) {
+
+			case field_from:		// From:
+
+				// FIXME we actually need the rfc822 address
+				syslog(LOG_DEBUG, "eAuthor is <%s>", msg->cm_fields[eAuthor]);
+
+				safestrncpy(compare_me, msg->cm_fields[eAuthor], sizeof compare_me);
+				break;
+			case field_tocc:		// To: or Cc:
+				if (!IsEmptyStr(msg->cm_fields[eRecipient])) {
+					safestrncpy(compare_me, msg->cm_fields[eRecipient], sizeof compare_me);
+				}
+				if (!IsEmptyStr(msg->cm_fields[eCarbonCopY])) {
+					if (!IsEmptyStr(compare_me)) {
+						strcat(compare_me, ",");
+					}
+					safestrncpy(&compare_me[strlen(compare_me)], msg->cm_fields[eCarbonCopY], (sizeof compare_me - strlen(compare_me)));
+				}
+				break;
+			case field_subject:		// Subject:
+				safestrncpy(compare_me, msg->cm_fields[eMsgSubject], sizeof compare_me);
+				break;
+			case field_replyto:		// Reply-to:
+				safestrncpy(compare_me, msg->cm_fields[eReplyTo], sizeof compare_me);
+				break;
+			case field_listid:		// List-ID:
+				safestrncpy(compare_me, msg->cm_fields[eListID], sizeof compare_me);
+				break;
+			case field_envto:		// Envelope-to:
+				safestrncpy(compare_me, msg->cm_fields[eenVelopeTo], sizeof compare_me);
+				break;
+			case field_envfrom:		// Return-path:
+				safestrncpy(compare_me, msg->cm_fields[eMessagePath], sizeof compare_me);
+				break;
+
+			case field_sender:
+			case field_resentfrom:
+			case field_resentto:
+			case field_xmailer:
+			case field_xspamflag:
+			case field_xspamstatus:
+
+			default:
+				break;
+		}
+
 		// Message data to compare is loaded, now do something.
 		switch(ii->rules[i].compared_field) {
+			case field_from:		// From:
+			case field_tocc:		// To: or Cc:
+			case field_subject:		// Subject:
+			case field_replyto:		// Reply-to:
+			case field_listid:		// List-ID:
+			case field_envto:		// Envelope-to:
+			case field_envfrom:		// Return-path:
+			case field_sender:
+			case field_resentfrom:
+			case field_resentto:
+			case field_xmailer:
+			case field_xspamflag:
+			case field_xspamstatus:
+
+				// For all of the above fields, we can compare the field we've loaded into the buffer.
+				// FIXME you are here YOU ARE HERE
+				syslog(LOG_DEBUG, "Value of field to compare is: <%s>", compare_me);
+				switch(ii->rules[i].field_compare_op) {
+					case fcomp_contains:
+					case fcomp_matches:
+						rule_activated = (bmstrcasestr(compare_me, ii->rules[i].compared_value) ? 1 : 0);
+						break;
+					case fcomp_notcontains:
+					case fcomp_notmatches:
+						rule_activated = (bmstrcasestr(compare_me, ii->rules[i].compared_value) ? 0 : 1);
+						break;
+					case fcomp_is:
+						rule_activated = (strcasecmp(compare_me, ii->rules[i].compared_value) ? 0 : 1);
+						break;
+					case fcomp_isnot:
+						rule_activated = (strcasecmp(compare_me, ii->rules[i].compared_value) ? 1 : 0);
+						break;
+				}
+
+			case field_size:
+				rule_activated = 0;	// FIXME
+				break;
+			case field_all:			// This rule always triggers
+				rule_activated = 1;
+				break;
 			default:
 				TRACE;
 				break;
+		}
+
+		if (rule_activated) {
+			syslog(LOG_DEBUG, "rule activated");
+		}
+		else {
+			syslog(LOG_DEBUG, "rule NOT activated");
 		}
 
 	
@@ -1078,7 +1183,6 @@ void inbox_do_msg(long msgnum, void *userdata) {
 	if (msg != NULL) {
 		CM_Free(msg);
 	}
-	// FIXME you are here YOU ARE HERE
 
 //struct irule {
 	//int field_compare_op;
