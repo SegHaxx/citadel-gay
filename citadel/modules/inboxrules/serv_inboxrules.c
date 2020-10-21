@@ -1078,10 +1078,7 @@ void inbox_do_msg(long msgnum, void *userdata) {
 		switch(ii->rules[i].compared_field) {
 
 			case field_from:		// From:
-
-				// FIXME we actually need the rfc822 address
-				syslog(LOG_DEBUG, "eAuthor is <%s>", msg->cm_fields[eAuthor]);
-
+				syslog(LOG_DEBUG, "eAuthor is <%s>", msg->cm_fields[erFc822Addr]);
 				safestrncpy(compare_me, msg->cm_fields[eAuthor], sizeof compare_me);
 				break;
 			case field_tocc:		// To: or Cc:
@@ -1160,9 +1157,11 @@ void inbox_do_msg(long msgnum, void *userdata) {
 
 			case field_size:
 				rule_activated = 0;	// FIXME
+				syslog(LOG_DEBUG, "\033[31m\033[7m RULE NOT ACTIVATED \033[0m");
 				break;
 			case field_all:			// This rule always triggers
 				rule_activated = 1;
+				syslog(LOG_DEBUG, "\033[32m\033[7m RULE ACTIVATED \033[0m");
 				break;
 			default:
 				TRACE;
@@ -1179,7 +1178,6 @@ void inbox_do_msg(long msgnum, void *userdata) {
 	
 	}
 
-	TRACE;
 	if (msg != NULL) {
 		CM_Free(msg);
 	}
@@ -1236,7 +1234,6 @@ void do_inbox_processing_for_user(long usernum) {
 			return;						// config message exists but body is null
 		}
 
-		TRACE;
 		syslog(LOG_DEBUG, "inboxrules: for %s", CC->user.fullname);
 
 		// do something now FIXME actually write this
