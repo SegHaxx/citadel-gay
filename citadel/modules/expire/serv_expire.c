@@ -807,71 +807,59 @@ void purge_databases(void)
 	 */
 	now = time(NULL);
 	localtime_r(&now, &tm);
-	if (((tm.tm_hour != CtdlGetConfigInt("c_purge_hour")) || ((now - last_purge) < 43200)) && (force_purge_now == 0))
-	{
-			return;
+	if (((tm.tm_hour != CtdlGetConfigInt("c_purge_hour")) || ((now - last_purge) < 43200)) && (force_purge_now == 0)) {
+		return;
 	}
 
 	syslog(LOG_INFO, "Auto-purger: starting.");
 
-	if (!server_shutting_down)
-	{
+	if (!server_shutting_down) {
 		retval = PurgeUsers();
 		syslog(LOG_NOTICE, "Purged %d users.", retval);
 	}
 		
-	if (!server_shutting_down)
-	{
+	if (!server_shutting_down) {
 		PurgeMessages();
 	       	syslog(LOG_NOTICE, "Expired %d messages.", messages_purged);
 	}
 
-	if (!server_shutting_down)
-	{
+	if (!server_shutting_down) {
        		retval = PurgeRooms();
        		syslog(LOG_NOTICE, "Expired %d rooms.", retval);
 	}
 
-	if (!server_shutting_down)
-	{
+	if (!server_shutting_down) {
        		retval = PurgeVisits();
        		syslog(LOG_NOTICE, "Purged %d visits.", retval);
 	}
 
-	if (!server_shutting_down)
-	{
+	if (!server_shutting_down) {
 		StrBuf *ErrMsg;
-
-		ErrMsg = NewStrBuf ();
+		ErrMsg = NewStrBuf();
 		retval = PurgeUseTable(ErrMsg);
        		syslog(LOG_NOTICE, "Purged %d entries from the use table.", retval);
 		FreeStrBuf(&ErrMsg);
 	}
 
-	if (!server_shutting_down)
-	{
-       	retval = PurgeEuidIndexTable();
-       	syslog(LOG_NOTICE, "Purged %d entries from the EUID index.", retval);
+	if (!server_shutting_down) {
+       		retval = PurgeEuidIndexTable();
+       		syslog(LOG_NOTICE, "Purged %d entries from the EUID index.", retval);
 	}
 
-	if (!server_shutting_down)
-	{
+	if (!server_shutting_down) {
 		retval = PurgeStaleExtAuthAssociations();
 	       	syslog(LOG_NOTICE, "Purged %d stale external auth associations.", retval);
 	}
 
-	//if (!server_shutting_down)
-	//{
+	//if (!server_shutting_down) {
 	//	FIXME this is where we could do a non-interactive delete of zero-refcount messages
 	//}
 
-	if ( (!server_shutting_down) && (CtdlGetConfigInt("c_shrink_db_files") != 0) )
-	{
+	if ( (!server_shutting_down) && (CtdlGetConfigInt("c_shrink_db_files") != 0) ) {
 		cdb_compact();					// Shrink the DB files on disk
 	}
 
-	if (!server_shutting_down)
-	{
+	if (!server_shutting_down) {
 	       	syslog(LOG_INFO, "Auto-purger: finished.");
 		last_purge = now;				// So we don't do it again soon
 		force_purge_now = 0;
