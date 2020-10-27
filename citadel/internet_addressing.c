@@ -134,8 +134,7 @@ void utf8ify_rfc822_string(char *buf) {
 	if (start != NULL) 
 		FindNextEnd (start, end);
 
-	while ((start != NULL) && (end != NULL))
-	{
+	while ((start != NULL) && (end != NULL)) {
 		next = strstr(end, "=?");
 		if (next != NULL)
 			FindNextEnd(next, nextend);
@@ -143,9 +142,7 @@ void utf8ify_rfc822_string(char *buf) {
 			next = NULL;
 
 		/* did we find two partitions */
-		if ((next != NULL) && 
-		    ((next - end) > 2))
-		{
+		if ((next != NULL) && ((next - end) > 2)) {
 			ptr = end + 2;
 			while ((ptr < next) && 
 			       (isspace(*ptr) ||
@@ -180,8 +177,7 @@ void utf8ify_rfc822_string(char *buf) {
 	 */
 	start = strstr(buf, "=?");
 	FindNextEnd((start != NULL)? start : buf, end);
-	while (start != NULL && end != NULL && end > start)
-	{
+	while (start != NULL && end != NULL && end > start) {
 		extract_token(charset, start, 1, '?', sizeof charset);
 		extract_token(encoding, start, 2, '?', sizeof encoding);
 		extract_token(istr, start, 3, '?', sizeof istr);
@@ -197,12 +193,10 @@ void utf8ify_rfc822_string(char *buf) {
 			
 			len = strlen(istr);
 			pos = 0;
-			while (pos < len)
-			{
+			while (pos < len) {
 				if (istr[pos] == '_') istr[pos] = ' ';
 				pos++;
 			}
-
 			ibuflen = CtdlDecodeQuotedPrintable(ibuf, istr, len);
 		}
 		else {
@@ -380,8 +374,7 @@ void sanitize_truncated_recipient(char *str)
  * This function is self explanatory.
  * (What can I say, I'm in a weird mood today...)
  */
-void remove_any_whitespace_to_the_left_or_right_of_at_symbol(char *name)
-{
+void remove_any_whitespace_to_the_left_or_right_of_at_symbol(char *name) {
 	unsigned int i;
 
 	for (i = 0; i < strlen(name); ++i) {
@@ -465,8 +458,7 @@ int alias(char *name)
  *
  * Caller needs to free the result using free_recipients()
  */
-recptypes *validate_recipients(const char *supplied_recipients, const char *RemoteIdentifier, int Flags)
-{
+recptypes *validate_recipients(const char *supplied_recipients, const char *RemoteIdentifier, int Flags) {
 	struct CitContext *CCC = CC;
 	recptypes *ret;
 	char *recipients = NULL;
@@ -594,8 +586,7 @@ recptypes *validate_recipients(const char *supplied_recipients, const char *Remo
 					Flags,
 					0			/* 0 = not a reply */
 					);
-				if (err)
-				{
+				if (err) {
 					++ret->num_error;
 					invalid = 1;
 				} 
@@ -690,8 +681,7 @@ recptypes *validate_recipients(const char *supplied_recipients, const char *Remo
 	}
 	free(org_recp);
 
-	if ( (ret->num_local + ret->num_internet + ret->num_room + ret->num_error) == 0)
-	{
+	if ( (ret->num_local + ret->num_internet + ret->num_room + ret->num_error) == 0) {
 		ret->num_error = (-1);
 		strcpy(ret->errormsg, "No recipients specified.");
 	}
