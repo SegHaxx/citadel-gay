@@ -121,15 +121,15 @@ void JournalRunQueueMsg(struct jnlq *jmsg) {
 			CM_SetField(journal_msg, eJournal, HKEY("is journal"));
 
 			if (!IsEmptyStr(jmsg->from)) {
-				CM_SetField(journal_msg, eAuthor, jmsg->from, strlen(jmsg->from));
+				CM_SetField(journal_msg, eAuthor, jmsg->from, -1);
 			}
 
 			if (!IsEmptyStr(jmsg->rfca)) {
-				CM_SetField(journal_msg, erFc822Addr, jmsg->rfca, strlen(jmsg->rfca));
+				CM_SetField(journal_msg, erFc822Addr, jmsg->rfca, -1);
 			}
 
 			if (!IsEmptyStr(jmsg->subj)) {
-				CM_SetField(journal_msg, eMsgSubject, jmsg->subj, strlen(jmsg->subj));
+				CM_SetField(journal_msg, eMsgSubject, jmsg->subj, -1);
 			}
 
 			mblen = snprintf(mime_boundary, sizeof(mime_boundary),
