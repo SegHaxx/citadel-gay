@@ -149,6 +149,9 @@ void CM_SetField(struct CtdlMessage *Msg, eMsgField which, const char *buf, long
 	if (Msg->cm_fields[which] != NULL) {
 		free (Msg->cm_fields[which]);
 	}
+	if (length < 0) {			// You can set the length to -1 to have CM_SetField measure it for you
+		length = strlen(buf);
+	}
 	Msg->cm_fields[which] = malloc(length + 1);
 	memcpy(Msg->cm_fields[which], buf, length);
 	Msg->cm_fields[which][length] = '\0';
@@ -256,7 +259,12 @@ void CM_SetAsField(struct CtdlMessage *Msg, eMsgField which, char **buf, long le
 
 	Msg->cm_fields[which] = *buf;
 	*buf = NULL;
-	Msg->cm_lengths[which] = length;
+	if (length < 0) {			// You can set the length to -1 to have CM_SetField measure it for you
+		Msg->cm_lengths[which] = strlen(buf);
+	}
+	else {
+		Msg->cm_lengths[which] = length;
+	}
 }
 
 
