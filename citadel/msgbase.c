@@ -2873,7 +2873,7 @@ long CtdlSubmitMsg(struct CtdlMessage *msg,	/* message to save */
 		if (CC->logged_in) {
 			strcpy(bounce_to, CC->user.fullname);
 		}
-		else {
+		else if (!IsEmptyStr(msg->cm_fields[eAuthor])){
 			strcpy(bounce_to, msg->cm_fields[eAuthor]);
 		}
 		recps->bounce_to = bounce_to;
@@ -2881,20 +2881,17 @@ long CtdlSubmitMsg(struct CtdlMessage *msg,	/* message to save */
 		
 	CM_SetFieldLONG(msg, eVltMsgNum, newmsgid);
 
-
 	/* If this is private, local mail, make a copy in the
 	 * recipient's mailbox and bump the reference count.
 	 */
-	if ((recps != NULL) && (recps->num_local > 0))
-	{
+	if ((recps != NULL) && (recps->num_local > 0)) {
 		char *pch;
 		int ntokens;
 
 		pch = recps->recp_local;
 		recps->recp_local = recipient;
 		ntokens = num_tokens(pch, '|');
-		for (i=0; i<ntokens; ++i)
-		{
+		for (i=0; i<ntokens; ++i) {
 			extract_token(recipient, pch, i, '|', sizeof recipient);
 			syslog(LOG_DEBUG, "msgbase: delivering private local mail to <%s>", recipient);
 			if (CtdlGetUser(&userbuf, recipient) == 0) {
@@ -2930,10 +2927,8 @@ long CtdlSubmitMsg(struct CtdlMessage *msg,	/* message to save */
 	}
 
 	if (collected_addresses != NULL) {
-		aptr = (struct addresses_to_be_filed *)
-			malloc(sizeof(struct addresses_to_be_filed));
-		CtdlMailboxName(actual_rm, sizeof actual_rm,
-				&CC->user, USERCONTACTSROOM);
+		aptr = (struct addresses_to_be_filed *) malloc(sizeof(struct addresses_to_be_filed));
+		CtdlMailboxName(actual_rm, sizeof actual_rm, &CC->user, USERCONTACTSROOM);
 		aptr->roomname = strdup(actual_rm);
 		aptr->collected_addresses = collected_addresses;
 		begin_critical_section(S_ATBF);
