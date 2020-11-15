@@ -118,6 +118,11 @@ void rss_start_element(void *data, const char *el, const char **attribute)
 void rss_end_element(void *data, const char *el)
 {
 	struct rssparser *r = (struct rssparser *)data;
+	StrBuf *encoded_field;
+
+	if (StrLength(r->CData) > 0) {				// strip leading/trailing whitespace from field
+		StrBufTrim(r->CData);
+	}
 
 	if (							// end of a new item(rss) or entry(atom)
 		(!strcasecmp(el, "entry"))
@@ -199,22 +204,25 @@ void rss_end_element(void *data, const char *el)
 
 	else if (!strcasecmp(el, "title")) {			// item subject (rss and atom)
 		if ((r->msg != NULL) && (CM_IsEmpty(r->msg, eMsgSubject))) {
-			CM_SetField(r->msg, eMsgSubject, ChrPtr(r->CData), StrLength(r->CData));
-			striplt(r->msg->cm_fields[eMsgSubject]);
+			encoded_field = NewStrBuf();
+			StrBufRFC2047encode(&encoded_field, r->CData);
+			CM_SetAsFieldSB(r->msg, eMsgSubject, &encoded_field);
 		}
 	}
 
 	else if (!strcasecmp(el, "creator")) {			// <creator> can be used if <author> is not present
 		if ((r->msg != NULL) && (CM_IsEmpty(r->msg, eAuthor))) {
-			CM_SetField(r->msg, eAuthor, ChrPtr(r->CData), StrLength(r->CData));
-			striplt(r->msg->cm_fields[eAuthor]);
+			encoded_field = NewStrBuf();
+			StrBufRFC2047encode(&encoded_field, r->CData);
+			CM_SetAsFieldSB(r->msg, eAuthor, &encoded_field);
 		}
 	}
 
 	else if (!strcasecmp(el, "author")) {			// <author> supercedes <creator> if both are present
 		if (r->msg != NULL) {
-			CM_SetField(r->msg, eAuthor, ChrPtr(r->CData), StrLength(r->CData));	// CM_SetField will free() the previous value
-			striplt(r->msg->cm_fields[eAuthor]);
+			encoded_field = NewStrBuf();
+			StrBufRFC2047encode(&encoded_field, r->CData);
+			CM_SetAsFieldSB(r->msg, eAuthor, &encoded_field);
 		}
 	}
 
@@ -242,7 +250,6 @@ void rss_end_element(void *data, const char *el)
 			r->link = NULL;
 		}
 		r->link = strdup(ChrPtr(r->CData));
-		striplt(r->link);
 	}
 
 	else if (
@@ -254,7 +261,6 @@ void rss_end_element(void *data, const char *el)
 			r->item_id = NULL;
 		}
 		r->item_id = strdup(ChrPtr(r->CData));
-		striplt(r->item_id);
 	}
 
 	else if (
@@ -267,7 +273,6 @@ void rss_end_element(void *data, const char *el)
 			r->description = NULL;
 		}
 		r->description = strdup(ChrPtr(r->CData));
-		striplt(r->description);
 	}
 
 	if (r->CData != NULL) {
