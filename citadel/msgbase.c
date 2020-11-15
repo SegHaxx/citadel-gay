@@ -2036,11 +2036,11 @@ int CtdlOutputPreLoadedMsg(
 	 * using functions that are bounds-checked, and therefore we can
 	 * make them substantially smaller than SIZ.
 	 */
-	char suser[100];
-	char luser[100];
-	char fuser[100];
-	char snode[100];
-	char mid[100];
+	char suser[1024];
+	char luser[1024];
+	char fuser[1024];
+	char snode[1024];
+	char mid[1024];
 
 	syslog(LOG_DEBUG, "msgbase: CtdlOutputPreLoadedMsg(TheMessage=%s, %d, %d, %d, %d",
 		   ((TheMessage == NULL) ? "NULL" : "not null"),
@@ -2143,6 +2143,7 @@ int CtdlOutputPreLoadedMsg(
 	strcpy(suser, "");
 	strcpy(luser, "");
 	strcpy(fuser, "");
+	strcpy(snode, "");
 	if (mode == MT_RFC822) 
 		OutputRFC822MsgHeaders(
 			TheMessage,
