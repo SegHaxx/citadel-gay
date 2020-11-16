@@ -1078,8 +1078,9 @@ void inbox_do_msg(long msgnum, void *userdata) {
 		switch(ii->rules[i].compared_field) {
 
 			case field_from:		// From:
-				syslog(LOG_DEBUG, "eAuthor is <%s>", msg->cm_fields[erFc822Addr]);
-				safestrncpy(compare_me, msg->cm_fields[eAuthor], sizeof compare_me);
+				if (!IsEmptyStr(msg->cm_fields[erFc822Addr])) {
+					safestrncpy(compare_me, msg->cm_fields[erFc822Addr], sizeof compare_me);
+				}
 				break;
 			case field_tocc:		// To: or Cc:
 				if (!IsEmptyStr(msg->cm_fields[eRecipient])) {
@@ -1093,19 +1094,29 @@ void inbox_do_msg(long msgnum, void *userdata) {
 				}
 				break;
 			case field_subject:		// Subject:
-				safestrncpy(compare_me, msg->cm_fields[eMsgSubject], sizeof compare_me);
+				if (!IsEmptyStr(msg->cm_fields[eMsgSubject])) {
+					safestrncpy(compare_me, msg->cm_fields[eMsgSubject], sizeof compare_me);
+				}
 				break;
 			case field_replyto:		// Reply-to:
-				safestrncpy(compare_me, msg->cm_fields[eReplyTo], sizeof compare_me);
+				if (!IsEmptyStr(msg->cm_fields[eReplyTo])) {
+					safestrncpy(compare_me, msg->cm_fields[eReplyTo], sizeof compare_me);
+				}
 				break;
 			case field_listid:		// List-ID:
-				safestrncpy(compare_me, msg->cm_fields[eListID], sizeof compare_me);
+				if (!IsEmptyStr(msg->cm_fields[eListID])) {
+					safestrncpy(compare_me, msg->cm_fields[eListID], sizeof compare_me);
+				}
 				break;
 			case field_envto:		// Envelope-to:
-				safestrncpy(compare_me, msg->cm_fields[eenVelopeTo], sizeof compare_me);
+				if (!IsEmptyStr(msg->cm_fields[eenVelopeTo])) {
+					safestrncpy(compare_me, msg->cm_fields[eenVelopeTo], sizeof compare_me);
+				}
 				break;
 			case field_envfrom:		// Return-path:
-				safestrncpy(compare_me, msg->cm_fields[eMessagePath], sizeof compare_me);
+				if (!IsEmptyStr(msg->cm_fields[eMessagePath])) {
+					safestrncpy(compare_me, msg->cm_fields[eMessagePath], sizeof compare_me);
+				}
 				break;
 
 			case field_sender:
@@ -1142,37 +1153,40 @@ void inbox_do_msg(long msgnum, void *userdata) {
 					case fcomp_contains:
 					case fcomp_matches:
 						rule_activated = (bmstrcasestr(compare_me, ii->rules[i].compared_value) ? 1 : 0);
+						syslog(LOG_DEBUG, "Does %s contain %s? %s", compare_me, ii->rules[i].compared_value, rule_activated?"yes":"no");
 						break;
 					case fcomp_notcontains:
 					case fcomp_notmatches:
 						rule_activated = (bmstrcasestr(compare_me, ii->rules[i].compared_value) ? 0 : 1);
+						syslog(LOG_DEBUG, "Does %s contain %s? %s", compare_me, ii->rules[i].compared_value, rule_activated?"yes":"no");
 						break;
 					case fcomp_is:
 						rule_activated = (strcasecmp(compare_me, ii->rules[i].compared_value) ? 0 : 1);
+						syslog(LOG_DEBUG, "Does %s equal %s? %s", compare_me, ii->rules[i].compared_value, rule_activated?"yes":"no");
 						break;
 					case fcomp_isnot:
 						rule_activated = (strcasecmp(compare_me, ii->rules[i].compared_value) ? 1 : 0);
+						syslog(LOG_DEBUG, "Does %s equal %s? %s", compare_me, ii->rules[i].compared_value, rule_activated?"yes":"no");
 						break;
 				}
+				break;
 
 			case field_size:
 				rule_activated = 0;	// FIXME
-				syslog(LOG_DEBUG, "\033[31m\033[7m RULE NOT ACTIVATED \033[0m");
+				syslog(LOG_DEBUG, "FIXME field_size rule not implemented");
 				break;
-			case field_all:			// This rule always triggers
+			case field_all:			// The "all messages" rule ALWAYS triggers
 				rule_activated = 1;
-				syslog(LOG_DEBUG, "\033[32m\033[7m RULE ACTIVATED \033[0m");
 				break;
-			default:
-				TRACE;
+			default:			// no matches, fall through and do nothing
 				break;
 		}
 
 		if (rule_activated) {
-			syslog(LOG_DEBUG, "rule activated");
+			syslog(LOG_DEBUG, "\033[32m\033[7mrule activated\033[0m");		// FIXME remove color
 		}
 		else {
-			syslog(LOG_DEBUG, "rule NOT activated");
+			syslog(LOG_DEBUG, "\033[31m\033[7mrule not activated\033[0m");		// FIXME remove color
 		}
 
 	
