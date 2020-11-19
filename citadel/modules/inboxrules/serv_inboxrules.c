@@ -1000,10 +1000,11 @@ struct inboxrules *deserialize_inbox_rules(char *serialized_rules) {
  */
 void inbox_do_msg(long msgnum, void *userdata) {
 	struct inboxrules *ii = (struct inboxrules *) userdata;
-	struct CtdlMessage *msg = NULL;
-	int headers_loaded = 0;
-	int body_loaded = 0;
-	int metadata_loaded = 0;
+	struct CtdlMessage *msg = NULL;		// If we are loading a message to process, put it here.
+	int headers_loaded = 0;			// Did we load the headers yet?  Do it only once.
+	int body_loaded = 0;			// Did we load the message body yet?  Do it only once.
+	int metadata_loaded = 0;		// Did we load the metadata yet?  Do it only once.
+	struct MetaData smi;			// If we are loading the metadata to compare, put it here.
 	int rule_activated = 0;			// On each rule, this is set if the compare succeeds and the rule activates.
 	char compare_me[SIZ];			// On each rule, we will store the field to be compared here.
 	int i;
@@ -1062,12 +1063,12 @@ void inbox_do_msg(long msgnum, void *userdata) {
 			case field_size:
 				if (!metadata_loaded) {
 					syslog(LOG_DEBUG, "inboxrules: loading metadata for message %ld", msgnum);
-					// FIXME do this
+					GetMetaData(&smi, msgnum);
 					metadata_loaded = 1;
 				}
 				break;
 			case field_all:
-				syslog(LOG_DEBUG, "this is an always-on rule");
+				syslog(LOG_DEBUG, "inboxrules: this is an always-on rule");
 				break;
 			default:
 				syslog(LOG_DEBUG, "inboxrules: unknown rule key");
@@ -1147,7 +1148,6 @@ void inbox_do_msg(long msgnum, void *userdata) {
 			case field_xspamstatus:
 
 				// For all of the above fields, we can compare the field we've loaded into the buffer.
-				// FIXME you are here YOU ARE HERE
 				syslog(LOG_DEBUG, "Value of field to compare is: <%s>", compare_me);
 				switch(ii->rules[i].field_compare_op) {
 					case fcomp_contains:
@@ -1172,54 +1172,41 @@ void inbox_do_msg(long msgnum, void *userdata) {
 				break;
 
 			case field_size:
-				rule_activated = 0;	// FIXME
-				syslog(LOG_DEBUG, "FIXME field_size rule not implemented");
+				rule_activated = 0;
+				syslog(LOG_DEBUG, "comparing actual message size %ld to rule message size %ld", smi.meta_rfc822_length, ii->rules[i].compared_size);
+				switch(ii->rules[i].field_compare_op) {
+					case scomp_larger:
+						rule_activated = ((smi.meta_rfc822_length > ii->rules[i].compared_size) ? 1 : 0);
+						syslog(LOG_DEBUG, "Is %ld larger than %ld? %s", smi.meta_rfc822_length, ii->rules[i].compared_size, (smi.meta_rfc822_length > ii->rules[i].compared_size) ? "yes":"no");
+						break;
+					case scomp_smaller:
+						rule_activated = ((smi.meta_rfc822_length < ii->rules[i].compared_size) ? 1 : 0);
+						syslog(LOG_DEBUG, "Is %ld smaller than %ld? %s", smi.meta_rfc822_length, ii->rules[i].compared_size, (smi.meta_rfc822_length < ii->rules[i].compared_size) ? "yes":"no");
+						break;
+				}
 				break;
 			case field_all:			// The "all messages" rule ALWAYS triggers
 				rule_activated = 1;
 				break;
 			default:			// no matches, fall through and do nothing
+				syslog(LOG_DEBUG, "inboxrules: an unknown field comparison was encountered");
+				rule_activated = 0;
 				break;
 		}
 
+		// FIXME you are here YOU ARE HERE next write the code to take action
 		if (rule_activated) {
 			syslog(LOG_DEBUG, "\033[32m\033[7mrule activated\033[0m");		// FIXME remove color
 		}
 		else {
 			syslog(LOG_DEBUG, "\033[31m\033[7mrule not activated\033[0m");		// FIXME remove color
 		}
-
 	
 	}
 
 	if (msg != NULL) {
 		CM_Free(msg);
 	}
-
-//struct irule {
-	//int field_compare_op;
-	//int compared_field;
-	//char compared_value[128];
-	//int size_compare_op;
-	//long compared_size;
-	//int action;
-	//char file_into[ROOMNAMELEN];
-	//char redirect_to[1024];
-	//char autoreply_message[SIZ];
-	//int final_action;
-//};
-
-//struct inboxrules {
-	//long lastproc;
-	//int num_rules;
-	//struct irule *rules;
-
-
-	// Fetch the message, including the body, we need all of it to run our rules.
-	//msg = CtdlFetchMessage(msgnum, 0);
-	//CM_Free(msg);
-
-}
 
 
 /*
