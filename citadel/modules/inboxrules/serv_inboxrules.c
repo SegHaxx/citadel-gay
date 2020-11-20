@@ -90,19 +90,6 @@ int ctdl_redirect(void)
 }
 
 
-/*
- * Callback function to indicate that a message *will* be kept in the inbox
- */
-int ctdl_keep(sieve2_context_t *s, void *my)
-{
-	struct ctdl_sieve *cs = (struct ctdl_sieve *)my;
-	
-	syslog(LOG_DEBUG, "Action is KEEP");
-
-	cs->keep = 1;
-	cs->cancel_implicit_keep = 1;
-	return SIEVE2_OK;
-}
 
 
 /*
@@ -357,220 +344,6 @@ int ctdl_getenvelope(sieve2_context_t *s, void *my)
 
 
 
-/*
- * Callback function to fetch message size
- */
-int ctdl_getsize(sieve2_context_t *s, void *my)
-{
-	struct ctdl_sieve *cs = (struct ctdl_sieve *)my;
-	struct MetaData smi;
-
-	GetMetaData(&smi, cs->msgnum);
-	
-	if (smi.meta_rfc822_length > 0L) {
-		sieve2_setvalue_int(s, "size", (int)smi.meta_rfc822_length);
-		return SIEVE2_OK;
-	}
-
-	return SIEVE2_ERROR_UNSUPPORTED;
-}
-
-
-/*
- * Return a pointer to the active Sieve script.
- * (Caller does NOT own the memory and should not free the returned pointer.)
- */
-char *get_active_script(struct sdm_userdata *u) {
-	struct sdm_script *sptr;
-
-	for (sptr=u->first_script; sptr!=NULL; sptr=sptr->next) {
-		if (sptr->script_active > 0) {
-			syslog(LOG_DEBUG, "get_active_script() is using script '%s'", sptr->script_name);
-			return(sptr->script_content);
-		}
-	}
-
-	syslog(LOG_DEBUG, "get_active_script() found no active script");
-	return(NULL);
-}
-
-
-/*
- * Callback function to retrieve the sieve script
- */
-int ctdl_getscript(sieve2_context_t *s, void *my) {
-	struct ctdl_sieve *cs = (struct ctdl_sieve *)my;
-
-	char *active_script = get_active_script(cs->u);
-	if (active_script != NULL) {
-		sieve2_setvalue_string(s, "script", active_script);
-		return SIEVE2_OK;
-	}
-
-	return SIEVE2_ERROR_GETSCRIPT;
-}
-
-
-/*
- * Callback function to retrieve message headers
- */
-int ctdl_getheaders(sieve2_context_t *s, void *my) {
-
-	struct ctdl_sieve *cs = (struct ctdl_sieve *)my;
-
-	syslog(LOG_DEBUG, "ctdl_getheaders() was called");
-	sieve2_setvalue_string(s, "allheaders", cs->rfc822headers);
-	return SIEVE2_OK;
-}
-
-
-/*
- * Perform sieve processing for one message (called by sieve_do_room() for each message)
- */
-void inbox_do_msg(long msgnum, void *userdata) {
-	struct sdm_userdata *u = (struct sdm_userdata *) userdata;
-	sieve2_context_t *sieve2_context;
-	struct ctdl_sieve my;
-	int res;
-	struct CtdlMessage *msg;
-	int i;
-	size_t headers_len = 0;
-	int len = 0;
-
-	if (u == NULL) {
-		syslog(LOG_ERR, "Can't process message <%ld> without userdata!", msgnum);
-		return;
-	}
-
-	sieve2_context = u->sieve2_context;
-
-	syslog(LOG_DEBUG, "Performing sieve processing on msg <%ld>", msgnum);
-
-	/*
-	 * Make sure you include message body so you can get those second-level headers ;)
-	 */
-	msg = CtdlFetchMessage(msgnum, 1);
-	if (msg == NULL) return;
-
-	/*
-	 * Grab the message headers so we can feed them to libSieve.
-	 * Use HEADERS_ONLY rather than HEADERS_FAST in order to include second-level headers.
-	 */
-	CC->redirect_buffer = NewStrBufPlain(NULL, SIZ);
-	CtdlOutputPreLoadedMsg(msg, MT_RFC822, HEADERS_ONLY, 0, 1, 0);
-	headers_len = StrLength(CC->redirect_buffer);
-	my.rfc822headers = SmashStrBuf(&CC->redirect_buffer);
-
-	/*
-	 * libSieve clobbers the stack if it encounters badly formed
-	 * headers.  Sanitize our headers by stripping nonprintable
-	 * characters.
-	 */
-	for (i=0; i<headers_len; ++i) {
-		if (!isascii(my.rfc822headers[i])) {
-			my.rfc822headers[i] = '_';
-		}
-	}
-
-	my.keep = 0;				/* Set to 1 to declare an *explicit* keep */
-	my.cancel_implicit_keep = 0;		/* Some actions will cancel the implicit keep */
-	my.usernum = atol(CC->room.QRname);	/* Keep track of the owner of the room's namespace */
-	my.msgnum = msgnum;			/* Keep track of the message number in our local store */
-	my.u = u;				/* Hand off a pointer to the rest of this info */
-
-	/* Keep track of the recipient so we can do handling based on it later */
-	process_rfc822_addr(msg->cm_fields[eRecipient], my.recp_user, my.recp_node, my.recp_name);
-
-	/* Keep track of the sender so we can use it for REJECT and VACATION responses */
-	if (!CM_IsEmpty(msg, erFc822Addr)) {
-		safestrncpy(my.sender, msg->cm_fields[erFc822Addr], sizeof my.sender);
-	}
-	else if (!CM_IsEmpty(msg, eAuthor)) {
-		safestrncpy(my.sender, msg->cm_fields[eAuthor], sizeof my.sender);
-	}
-	else {
-		strcpy(my.sender, "");
-	}
-
-	/* Keep track of the subject so we can use it for VACATION responses */
-	if (!CM_IsEmpty(msg, eMsgSubject)) {
-		safestrncpy(my.subject, msg->cm_fields[eMsgSubject], sizeof my.subject);
-	}
-	else {
-		strcpy(my.subject, "");
-	}
-
-	/* Keep track of the envelope-from address (use body-from if not found) */
-	if (!CM_IsEmpty(msg, eMessagePath)) {
-		safestrncpy(my.envelope_from, msg->cm_fields[eMessagePath], sizeof my.envelope_from);
-		stripallbut(my.envelope_from, '<', '>');
-	}
-	else if (!CM_IsEmpty(msg, erFc822Addr)) {
-		safestrncpy(my.envelope_from, msg->cm_fields[erFc822Addr], sizeof my.envelope_from);
-		stripallbut(my.envelope_from, '<', '>');
-	}
-	else {
-		strcpy(my.envelope_from, "");
-	}
-
-	len = strlen(my.envelope_from);
-	for (i=0; i<len; ++i) {
-		if (isspace(my.envelope_from[i])) my.envelope_from[i] = '_';
-	}
-	if (haschar(my.envelope_from, '@') == 0) {
-		strcat(my.envelope_from, "@");
-		strcat(my.envelope_from, CtdlGetConfigStr("c_fqdn"));
-	}
-
-	/* Keep track of the envelope-to address (use body-to if not found) */
-	if (!CM_IsEmpty(msg, eenVelopeTo)) {
-		safestrncpy(my.envelope_to, msg->cm_fields[eenVelopeTo], sizeof my.envelope_to);
-		stripallbut(my.envelope_to, '<', '>');
-	}
-	else if (!CM_IsEmpty(msg, eRecipient)) {
-		safestrncpy(my.envelope_to, msg->cm_fields[eRecipient], sizeof my.envelope_to);
-		stripallbut(my.envelope_to, '<', '>');
-	}
-	else {
-		strcpy(my.envelope_to, "");
-	}
-
-	len = strlen(my.envelope_to);
-	for (i=0; i<len; ++i) {
-		if (isspace(my.envelope_to[i])) my.envelope_to[i] = '_';
-	}
-	if (haschar(my.envelope_to, '@') == 0) {
-		strcat(my.envelope_to, "@");
-		strcat(my.envelope_to, CtdlGetConfigStr("c_fqdn"));
-	}
-
-	CM_Free(msg);
-	
-	syslog(LOG_DEBUG, "Calling sieve2_execute()");
-	res = sieve2_execute(sieve2_context, &my);
-	if (res != SIEVE2_OK) {
-		syslog(LOG_ERR, "sieve2_execute() returned %d: %s", res, sieve2_errstr(res));
-	}
-
-	free(my.rfc822headers);
-	my.rfc822headers = NULL;
-
-	/*
-	 * Delete the message from the inbox unless either we were told not to, or
-	 * if no other action was successfully taken.
-	 */
-	if ( (!my.keep) && (my.cancel_implicit_keep) ) {
-		syslog(LOG_DEBUG, "keep is 0 -- deleting message from inbox");
-		CtdlDeleteMessages(CC->room.QRname, &msgnum, 1, "");
-	}
-
-	syslog(LOG_DEBUG, "Completed sieve processing on msg <%ld>", msgnum);
-	u->lastproc = msgnum;
-
-	return;
-}
-
-
 
 /*
  * Given the on-disk representation of our Sieve config, load
@@ -701,36 +474,6 @@ void rewrite_ctdl_sieve_config(struct sdm_userdata *u, int yes_write_to_disk) {
 	FreeStrBuf (&text);
 
 }
-
-
-/*
- * This is our callback registration table for libSieve.
- */
-sieve2_callback_t ctdl_sieve_callbacks[] = {
-	{ SIEVE2_ACTION_REJECT,		ctdl_reject		},
-	{ SIEVE2_ACTION_VACATION,	ctdl_vacation		},
-	{ SIEVE2_ERRCALL_PARSE,		ctdl_errparse		},
-	{ SIEVE2_ERRCALL_RUNTIME,	ctdl_errexec		},
-	{ SIEVE2_ACTION_FILEINTO,	ctdl_fileinto		},
-	{ SIEVE2_ACTION_REDIRECT,	ctdl_redirect		},
-	{ SIEVE2_ACTION_DISCARD,	ctdl_discard		},
-	{ SIEVE2_ACTION_KEEP,		ctdl_keep		},
-	{ SIEVE2_SCRIPT_GETSCRIPT,	ctdl_getscript		},
-	{ SIEVE2_DEBUG_TRACE,		ctdl_debug		},
-	{ SIEVE2_MESSAGE_GETALLHEADERS,	ctdl_getheaders		},
-	{ SIEVE2_MESSAGE_GETSIZE,	ctdl_getsize		},
-	{ SIEVE2_MESSAGE_GETENVELOPE,	ctdl_getenvelope	},
-	{ 0 }
-};
-
-
-
-
-
-
-
-
-
 
 
 #endif
@@ -1197,6 +940,19 @@ void inbox_do_msg(long msgnum, void *userdata) {
 		// FIXME you are here YOU ARE HERE next write the code to take action
 		if (rule_activated) {
 			syslog(LOG_DEBUG, "\033[32m\033[7mrule activated\033[0m");		// FIXME remove color
+
+
+			// do action
+
+
+
+			// do final action (anything other than "stop" means continue)
+			if (ii->rules[i].final_action == final_stop) {
+				syslog(LOG_DEBUG, "\033[33m\033[7mSTOP\033[0m");		// FIXME remove color
+				i = ii->num_rules + 1;
+			}
+
+
 		}
 		else {
 			syslog(LOG_DEBUG, "\033[31m\033[7mrule not activated\033[0m");		// FIXME remove color
@@ -1207,6 +963,7 @@ void inbox_do_msg(long msgnum, void *userdata) {
 	if (msg != NULL) {
 		CM_Free(msg);
 	}
+}
 
 
 /*
@@ -1237,15 +994,10 @@ void do_inbox_processing_for_user(long usernum) {
 
 		syslog(LOG_DEBUG, "inboxrules: for %s", CC->user.fullname);
 
-		// do something now FIXME actually write this
-
+		// Go to the user's inbox room and process all new messages
 		snprintf(roomname, sizeof roomname, "%010ld.%s", usernum, MAILROOM);
 		if (CtdlGetRoom(&CC->room, roomname) == 0) {
-			syslog(LOG_DEBUG, "GOT DA ROOM!  WE R000000000L!");
-
-				/* Do something useful */
-				CtdlForEachMessage(MSGS_GT, ii->lastproc, NULL, NULL, NULL, inbox_do_msg, (void *) ii);
-
+			CtdlForEachMessage(MSGS_GT, ii->lastproc, NULL, NULL, NULL, inbox_do_msg, (void *) ii);
 		}
 
 		// FIXME reserialize our inbox rules/state and write changes back to the config room
