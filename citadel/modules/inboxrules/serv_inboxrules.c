@@ -937,19 +937,30 @@ void inbox_do_msg(long msgnum, void *userdata) {
 				break;
 		}
 
-		// FIXME you are here YOU ARE HERE next write the code to take action
+		// If the rule matched, perform the requested action.
 		if (rule_activated) {
 			syslog(LOG_DEBUG, "\033[32m\033[7mrule activated\033[0m");		// FIXME remove color
 
+			// Perform the requested action. FIXME write these
+			switch(ii->rules[i].action) {
+				case action_keep:
+					break;
+				case action_discard:
+					break;
+				case action_reject:
+					break;
+				case action_fileinto:
+					break;
+				case action_redirect:
+					break;
+				case action_vacation:
+					break;
+			}
 
-			// do action
-
-
-
-			// do final action (anything other than "stop" means continue)
+			// Now perform the "final" action (anything other than "stop" means continue)
 			if (ii->rules[i].final_action == final_stop) {
 				syslog(LOG_DEBUG, "\033[33m\033[7mSTOP\033[0m");		// FIXME remove color
-				i = ii->num_rules + 1;
+				i = ii->num_rules + 1;						// throw us out of scope to stop
 			}
 
 
@@ -957,12 +968,17 @@ void inbox_do_msg(long msgnum, void *userdata) {
 		else {
 			syslog(LOG_DEBUG, "\033[31m\033[7mrule not activated\033[0m");		// FIXME remove color
 		}
-	
 	}
+
+	// FIXME keep or don't keep the message
+	//if (!keep) {
+		//delete the message
+	//}
 
 	if (msg != NULL) {
 		CM_Free(msg);
 	}
+	ii->lastproc = msgnum;		// make note of the last message we processed, so we don't scan the whole inbox again
 }
 
 
