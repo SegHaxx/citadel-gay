@@ -750,6 +750,7 @@ void inbox_do_msg(long msgnum, void *userdata) {
 	struct MetaData smi;			// If we are loading the metadata to compare, put it here.
 	int rule_activated = 0;			// On each rule, this is set if the compare succeeds and the rule activates.
 	char compare_me[SIZ];			// On each rule, we will store the field to be compared here.
+	int keep_message = 1;			// Nonzero to keep the message in the inbox after processing, 0 to delete it.
 	int i;
 
 	syslog(LOG_DEBUG, "inboxrules: processing message #%ld which is higher than %ld, we are in %s", msgnum, ii->lastproc, CC->room.QRname);
@@ -944,16 +945,26 @@ void inbox_do_msg(long msgnum, void *userdata) {
 			// Perform the requested action. FIXME write these
 			switch(ii->rules[i].action) {
 				case action_keep:
+					keep_message = 1;
 					break;
 				case action_discard:
+					keep_message = 0;
 					break;
 				case action_reject:
+					// FIXME send the reject message
+					keep_message = 0;
 					break;
 				case action_fileinto:
+					// FIXME put it in the other room
+					keep_message = 0;
 					break;
 				case action_redirect:
+					// FIXME send it to the recipient
+					keep_message = 0;
 					break;
 				case action_vacation:
+					// FIXME send the vacation message
+					keep_message = 1;
 					break;
 			}
 
@@ -970,14 +981,15 @@ void inbox_do_msg(long msgnum, void *userdata) {
 		}
 	}
 
-	// FIXME keep or don't keep the message
-	//if (!keep) {
-		//delete the message
-	//}
-
-	if (msg != NULL) {
+	if (msg != NULL) {		// Delete the copy of the message that is currently in memory.  We don't need it anymore.
 		CM_Free(msg);
 	}
+
+	if (!keep_message) {		// Delete the copy of the message that is currently in the inbox, if rules dictated that.
+		// FIXME delete the message
+		syslog(LOG_DEBUG, "\033[36m\033[7mDELETE FROM INBOX\033[0m");
+	}
+
 	ii->lastproc = msgnum;		// make note of the last message we processed, so we don't scan the whole inbox again
 }
 
