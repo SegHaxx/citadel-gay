@@ -995,8 +995,8 @@ void inbox_do_msg(long msgnum, void *userdata) {
 	}
 
 	if (!keep_message) {		// Delete the copy of the message that is currently in the inbox, if rules dictated that.
-		// FIXME delete the message
 		syslog(LOG_DEBUG, "\033[36m\033[7mDELETE FROM INBOX\033[0m");
+		CtdlDeleteMessages(CC->room.QRname, &msgnum, 1, "");			// we're in the inbox already
 	}
 
 	ii->lastproc = msgnum;		// make note of the last message we processed, so we don't scan the whole inbox again
