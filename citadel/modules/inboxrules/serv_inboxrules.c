@@ -262,48 +262,6 @@ int ctdl_vacation(sieve2_context_t *s, void *my)
 
 
 /*
- * Callback function to parse message envelope
- */
-int ctdl_getenvelope(sieve2_context_t *s, void *my)
-{
-	struct ctdl_sieve *cs = (struct ctdl_sieve *)my;
-
-	syslog(LOG_DEBUG, "Action is GETENVELOPE");
-	syslog(LOG_DEBUG, "EnvFrom: %s", cs->envelope_from);
-	syslog(LOG_DEBUG, "EnvTo: %s", cs->envelope_to);
-
-	if (cs->envelope_from != NULL) {
-		if ((cs->envelope_from[0] != '@')&&(cs->envelope_from[strlen(cs->envelope_from)-1] != '@')) {
-			sieve2_setvalue_string(s, "from", cs->envelope_from);
-		}
-		else {
-			sieve2_setvalue_string(s, "from", "invalid_envelope_from@example.org");
-		}
-	}
-	else {
-		sieve2_setvalue_string(s, "from", "null_envelope_from@example.org");
-	}
-
-
-	if (cs->envelope_to != NULL) {
-		if ((cs->envelope_to[0] != '@') && (cs->envelope_to[strlen(cs->envelope_to)-1] != '@')) {
-			sieve2_setvalue_string(s, "to", cs->envelope_to);
-		}
-		else {
-			sieve2_setvalue_string(s, "to", "invalid_envelope_to@example.org");
-		}
-	}
-	else {
-		sieve2_setvalue_string(s, "to", "null_envelope_to@example.org");
-	}
-
-	return SIEVE2_OK;
-}
-
-
-
-
-/*
  * Given the on-disk representation of our Sieve config, load
  * it into an in-memory data structure.
  */
@@ -696,9 +654,10 @@ struct inboxrules *deserialize_inbox_rules(char *serialized_rules) {
 }
 
 
-// Perform the "reject" action
+// Perform the "reject" action (delete the message, and tell the sender we deleted it)
+// Returns: 1 or 0 to tell the caller to keep (1) or delete (0) the inbox copy of the message.
 //
-void inbox_do_reject(struct irule *rule, struct CtdlMessage *msg) {
+int inbox_do_reject(struct irule *rule, struct CtdlMessage *msg) {
 	syslog(LOG_DEBUG, "inbox_do_reject: sender: <%s>, reject message: <%s>",
 		msg->cm_fields[erFc822Addr],
 		rule->autoreply_message
@@ -713,13 +672,13 @@ void inbox_do_reject(struct irule *rule, struct CtdlMessage *msg) {
 		sender = msg->cm_fields[erFc822Addr];
 	}
 	else {
-		return;
+		return(0);
 	}
 
 	// Assemble the reject message.
 	char *reject_text = malloc(strlen(rule->autoreply_message) + 1024);
 	if (reject_text == NULL) {
-		return;
+		return(0);
 	}
 	sprintf(reject_text, 
 		"Content-type: text/plain\n"
@@ -744,6 +703,7 @@ void inbox_do_reject(struct irule *rule, struct CtdlMessage *msg) {
 		"Delivery status notification"
 	);
 	free(reject_text);
+	return(0);
 }
 
 
@@ -960,8 +920,7 @@ void inbox_do_msg(long msgnum, void *userdata) {
 					keep_message = 0;
 					break;
 				case action_reject:
-					inbox_do_reject(&ii->rules[i], msg);
-					keep_message = 0;
+					keep_message = inbox_do_reject(&ii->rules[i], msg);
 					break;
 				case action_fileinto:
 					// FIXME put it in the other room
