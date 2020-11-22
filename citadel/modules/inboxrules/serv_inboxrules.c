@@ -165,54 +165,12 @@ int ctdl_discard(sieve2_context_t *s, void *my)
 }
 
 
-/*
- * Callback function to indicate that a message should be rejected
- */
-int ctdl_reject(sieve2_context_t *s, void *my)
-{
-	struct ctdl_sieve *cs = (struct ctdl_sieve *)my;
-	char *reject_text = NULL;
 
-	syslog(LOG_DEBUG, "Action is REJECT");
 
-	/* If we don't know who sent the message, do a DISCARD instead. */
-	if (IsEmptyStr(cs->sender)) {
-		syslog(LOG_INFO, "Unknown sender.  Doing DISCARD instead of REJECT.");
-		return ctdl_discard(s, my);
-	}
 
-	/* Assemble the reject message. */
-	reject_text = malloc(strlen(sieve2_getvalue_string(s, "message")) + 1024);
-	if (reject_text == NULL) {
-		return SIEVE2_ERROR_FAIL;
-	}
 
-	sprintf(reject_text, 
-		"Content-type: text/plain\n"
-		"\n"
-		"The message was refused by the recipient's mail filtering program.\n"
-		"The reason given was as follows:\n"
-		"\n"
-		"%s\n"
-		"\n"
-	,
-		sieve2_getvalue_string(s, "message")
-	);
 
-	quickie_message(	/* This delivers the message */
-		NULL,
-		cs->envelope_to,
-		cs->sender,
-		NULL,
-		reject_text,
-		FMT_RFC822,
-		"Delivery status notification"
-	);
 
-	free(reject_text);
-	cs->cancel_implicit_keep = 1;
-	return SIEVE2_OK;
-}
 
 
 /*
@@ -738,6 +696,57 @@ struct inboxrules *deserialize_inbox_rules(char *serialized_rules) {
 }
 
 
+// Perform the "reject" action
+//
+void inbox_do_reject(struct irule *rule, struct CtdlMessage *msg, struct MetaData *smi) {
+	syslog(LOG_DEBUG, "inbox_do_reject: sender: <%s>, reject message: <%s>",
+		msg->cm_fields[erFc822Addr],
+		rule->autoreply_message
+	);
+
+	// If we can't determine who sent the message, reject silently.
+	char *sender;
+	if (!IsEmptyStr(msg->cm_fields[eMessagePath])) {
+		sender = msg->cm_fields[eMessagePath];
+	}
+	else if (!IsEmptyStr(msg->cm_fields[erFc822Addr])) {
+		sender = msg->cm_fields[erFc822Addr];
+	}
+	else {
+		return;
+	}
+
+	// Assemble the reject message.
+	char *reject_text = malloc(strlen(rule->autoreply_message) + 1024);
+	if (reject_text == NULL) {
+		return;
+	}
+	sprintf(reject_text, 
+		"Content-type: text/plain\n"
+		"\n"
+		"The message was refused by the recipient's mail filtering program.\n"
+		"The reason given was as follows:\n"
+		"\n"
+		"%s\n"
+		"\n"
+	,
+		rule->autoreply_message
+	);
+
+	// Deliver the message
+	quickie_message(
+		NULL,
+		msg->cm_fields[eenVelopeTo],
+		sender,
+		NULL,
+		reject_text,
+		FMT_RFC822,
+		"Delivery status notification"
+	);
+	free(reject_text);
+}
+
+
 /*
  * Process a single message.  We know the room, the user, the rules, the message number, etc.
  */
@@ -942,7 +951,7 @@ void inbox_do_msg(long msgnum, void *userdata) {
 		if (rule_activated) {
 			syslog(LOG_DEBUG, "\033[32m\033[7mrule activated\033[0m");		// FIXME remove color
 
-			// Perform the requested action. FIXME write these
+			// Perform the requested action
 			switch(ii->rules[i].action) {
 				case action_keep:
 					keep_message = 1;
@@ -951,7 +960,7 @@ void inbox_do_msg(long msgnum, void *userdata) {
 					keep_message = 0;
 					break;
 				case action_reject:
-					// FIXME send the reject message
+					inbox_do_reject(&ii->rules[i], msg, &smi);
 					keep_message = 0;
 					break;
 				case action_fileinto:
