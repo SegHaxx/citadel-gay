@@ -76,6 +76,7 @@ char *msgkeys[] = {
 	NULL	// Z
 };
 
+
 HashList *msgKeyLookup = NULL;
 
 int GetFieldFromMnemonic(eMsgField *f, const char* c)
@@ -100,6 +101,7 @@ void FillMsgKeyLookupTable(void)
 		}
 	}
 }
+
 
 eMsgField FieldOrder[]  = {
 /* Important fields */
@@ -2456,8 +2458,6 @@ int CtdlSaveMsgPointerInRoom(char *roomname, long msgid,
 }
 
 
-
-
 /*
  * Message base operation to save a new message to the message store
  * (returns new message number)
@@ -2477,8 +2477,7 @@ long CtdlSaveThisMessage(struct CtdlMessage *msg, long msgid, int Reply) {
 	 * If the message is big, set its body aside for storage elsewhere
 	 * and we hide the message body from the serializer
 	 */
-	if (!CM_IsEmpty(msg, eMesageText) && msg->cm_lengths[eMesageText] > BIGMSG)
-	{
+	if (!CM_IsEmpty(msg, eMesageText) && msg->cm_lengths[eMesageText] > BIGMSG) {
 		is_bigmsg = 1;
 		holdM = msg->cm_fields[eMesageText];
 		msg->cm_fields[eMesageText] = NULL;
@@ -2508,8 +2507,7 @@ long CtdlSaveThisMessage(struct CtdlMessage *msg, long msgid, int Reply) {
 	}
 
 	/* Write our little bundle of joy into the message base */
-	retval = cdb_store(CDB_MSGMAIN, &msgid, (int)sizeof(long),
-			   smr.ser, smr.len);
+	retval = cdb_store(CDB_MSGMAIN, &msgid, (int)sizeof(long), smr.ser, smr.len);
 	if (retval < 0) {
 		syslog(LOG_ERR, "msgbase: can't store message %ld: %ld", msgid, retval);
 	}
@@ -2532,6 +2530,7 @@ long CtdlSaveThisMessage(struct CtdlMessage *msg, long msgid, int Reply) {
 
 	return(retval);
 }
+
 
 long send_message(struct CtdlMessage *msg) {
 	long newmsgid;
@@ -2564,7 +2563,6 @@ long send_message(struct CtdlMessage *msg) {
 	 */
 	return(retval);
 }
-
 
 
 /*
@@ -2608,9 +2606,8 @@ void CtdlSerializeMessage(struct ser_ret *ret,		/* return values */
 	ret->ser[2] = msg->cm_format_type;
 	wlen = 3;
 
-	for (i=0; i < NDiskFields; ++i)
-		if (msg->cm_fields[FieldOrder[i]] != NULL)
-		{
+	for (i=0; i < NDiskFields; ++i) {
+		if (msg->cm_fields[FieldOrder[i]] != NULL) {
 			ret->ser[wlen++] = (char)FieldOrder[i];
 
 			memcpy(&ret->ser[wlen],
@@ -2619,6 +2616,7 @@ void CtdlSerializeMessage(struct ser_ret *ret,		/* return values */
 
 			wlen = wlen + msg->cm_lengths[FieldOrder[i]] + 1;
 		}
+	}
 
 	if (ret->len != wlen) {
 		syslog(LOG_ERR, "msgbase: ERROR; len=%ld wlen=%ld", (long)ret->len, (long)wlen);
@@ -2654,7 +2652,6 @@ void ReplicationChecks(struct CtdlMessage *msg) {
 }
 
 
-
 /*
  * Save a message to disk and submit it into the delivery system.
  */
@@ -2662,8 +2659,7 @@ long CtdlSubmitMsg(struct CtdlMessage *msg,	/* message to save */
 		   recptypes *recps,		/* recipients (if mail) */
 		   const char *force,		/* force a particular room? */
 		   int flags			/* should the message be exported clean? */
-	)
-{
+) {
 	char hold_rm[ROOMNAMELEN];
 	char actual_rm[ROOMNAMELEN];
 	char force_room[ROOMNAMELEN];
@@ -2808,8 +2804,7 @@ long CtdlSubmitMsg(struct CtdlMessage *msg,	/* message to save */
 	memset(&smi, 0, sizeof(struct MetaData));
 	smi.meta_msgnum = newmsgid;
 	smi.meta_refcount = 0;
-	safestrncpy(smi.meta_content_type, content_type,
-		    sizeof smi.meta_content_type);
+	safestrncpy(smi.meta_content_type, content_type, sizeof smi.meta_content_type);
 
 	/*
 	 * Measure how big this message will be when rendered as RFC822.
@@ -2853,13 +2848,13 @@ long CtdlSubmitMsg(struct CtdlMessage *msg,	/* message to save */
 	}
 
 	/* If other rooms are specified, drop them there too. */
-	if ((recps != NULL) && (recps->num_room > 0))
+	if ((recps != NULL) && (recps->num_room > 0)) {
 		for (i=0; i<num_tokens(recps->recp_room, '|'); ++i) {
-			extract_token(recipient, recps->recp_room, i,
-				      '|', sizeof recipient);
+			extract_token(recipient, recps->recp_room, i, '|', sizeof recipient);
 			syslog(LOG_DEBUG, "msgbase: delivering to room <%s>", recipient);
 			CtdlSaveMsgPointerInRoom(recipient, newmsgid, 0, msg);
 		}
+	}
 
 	/* Bump this user's messages posted counter. */
 	syslog(LOG_DEBUG, "msgbase: updating user");
@@ -2868,8 +2863,7 @@ long CtdlSubmitMsg(struct CtdlMessage *msg,	/* message to save */
 	CtdlPutCurrentUserLock();
 
 	/* Decide where bounces need to be delivered */
-	if ((recps != NULL) && (recps->bounce_to == NULL))
-	{
+	if ((recps != NULL) && (recps->bounce_to == NULL)) {
 		if (CC->logged_in) {
 			strcpy(bounce_to, CC->user.fullname);
 		}
@@ -2916,8 +2910,9 @@ long CtdlSubmitMsg(struct CtdlMessage *msg,	/* message to save */
 
 	/* Go back to the room we started from */
 	syslog(LOG_DEBUG, "msgbase: returning to original room %s", hold_rm);
-	if (strcasecmp(hold_rm, CC->room.QRname))
+	if (strcasecmp(hold_rm, CC->room.QRname)) {
 		CtdlUserGoto(hold_rm, 0, 1, NULL, NULL, NULL, NULL);
+	}
 
 	/*
 	 * Any addresses to harvest for someone's address book?
@@ -3041,8 +3036,7 @@ StrBuf *CtdlReadMessageBodyBuf(char *terminator,	/* token signalling EOT */
 			       StrBuf *exist,		/* if non-null, append to it;
 							   exist is ALWAYS freed  */
 			       int crlf			/* CRLF newlines instead of LF */
-	) 
-{
+) {
 	StrBuf *Message;
 	StrBuf *LineBuf;
 	int flushing = 0;
@@ -3119,6 +3113,7 @@ char *CtdlReadMessageBody(char *terminator,	/* token signalling EOT */
 		return SmashStrBuf(&Message);
 }
 
+
 struct CtdlMessage *CtdlMakeMessage(
         struct ctdluser *author,        /* author's user structure */
         char *recipient,                /* NULL if it's not mail */
@@ -3132,8 +3127,7 @@ struct CtdlMessage *CtdlMakeMessage(
 	char *supplied_euid,		/* ...or NULL if this is irrelevant */
         char *preformatted_text,        /* ...or NULL to read text from client */
 	char *references		/* Thread references */
-)
-{
+) {
 	return CtdlMakeMessageLen(
 		author,	/* author's user structure */
 		recipient,		/* NULL if it's not mail */
@@ -3159,6 +3153,7 @@ struct CtdlMessage *CtdlMakeMessage(
 
 }
 
+
 /*
  * Build a binary message to be saved on disk.
  * (NOTE: if you supply 'preformatted_text', the buffer you give it
@@ -3166,7 +3161,6 @@ struct CtdlMessage *CtdlMakeMessage(
  * responsible for managing that memory -- it will be freed along with
  * the rest of the fields when CM_Free() is called.)
  */
-
 struct CtdlMessage *CtdlMakeMessageLen(
 	struct ctdluser *author,	/* author's user structure */
 	char *recipient,		/* NULL if it's not mail */
@@ -3189,10 +3183,7 @@ struct CtdlMessage *CtdlMakeMessageLen(
 	long textlen,
 	char *references,		/* Thread references */
 	long reflen
-	)
-{
-	/* Don't confuse the poor folks if it's not routed mail. * /
-	   char dest_node[256] = "";*/
+) {
 	long blen;
 	char buf[1024];
 	struct CtdlMessage *msg;
@@ -3299,18 +3290,15 @@ struct CtdlMessage *CtdlMakeMessageLen(
 }
 
 
-
-
 /*
  * API function to delete messages which match a set of criteria
  * (returns the actual number of messages deleted)
  */
-int CtdlDeleteMessages(const char *room_name,		/* which room */
-		       long *dmsgnums,		/* array of msg numbers to be deleted */
-		       int num_dmsgnums,	/* number of msgs to be deleted, or 0 for "any" */
-		       char *content_type	/* or "" for any.  regular expressions expected. */
-	)
-{
+int CtdlDeleteMessages(const char *room_name,	// which room
+		       long *dmsgnums,		// array of msg numbers to be deleted
+		       int num_dmsgnums,	// number of msgs to be deleted, or 0 for "any"
+		       char *content_type	// or "" for any.  regular expressions expected.
+) {
 	struct ctdlroom qrbuf;
 	struct cdbdata *cdbfr;
 	long *msglist = NULL;
@@ -3557,8 +3545,7 @@ void CtdlWriteObject(char *req_room,			/* Room to stuff it in */
 		     int is_binary,			/* Is encoding necessary? */
 		     int is_unique,			/* Del others of this type? */
 		     unsigned int flags			/* Internal save flags */
-	)
-{
+) {
 	struct ctdlroom qrbuf;
 	char roomname[ROOMNAMELEN];
 	struct CtdlMessage *msg;
