@@ -698,7 +698,7 @@ struct inboxrules *deserialize_inbox_rules(char *serialized_rules) {
 
 // Perform the "reject" action
 //
-void inbox_do_reject(struct irule *rule, struct CtdlMessage *msg, struct MetaData *smi) {
+void inbox_do_reject(struct irule *rule, struct CtdlMessage *msg) {
 	syslog(LOG_DEBUG, "inbox_do_reject: sender: <%s>, reject message: <%s>",
 		msg->cm_fields[erFc822Addr],
 		rule->autoreply_message
@@ -960,7 +960,7 @@ void inbox_do_msg(long msgnum, void *userdata) {
 					keep_message = 0;
 					break;
 				case action_reject:
-					inbox_do_reject(&ii->rules[i], msg, &smi);
+					inbox_do_reject(&ii->rules[i], msg);
 					keep_message = 0;
 					break;
 				case action_fileinto:
