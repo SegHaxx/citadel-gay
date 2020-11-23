@@ -94,25 +94,6 @@ int ctdl_redirect(void)
 
 
 
-/*
- * Callback function to indicate that a message should be discarded.
- */
-int ctdl_discard(sieve2_context_t *s, void *my)
-{
-	struct ctdl_sieve *cs = (struct ctdl_sieve *)my;
-
-	syslog(LOG_DEBUG, "Action is DISCARD");
-
-	/* Cancel the implicit keep.  That's all there is to it. */
-	cs->cancel_implicit_keep = 1;
-	return SIEVE2_OK;
-}
-
-
-
-
-
-
 
 
 
@@ -513,50 +494,50 @@ struct inboxrules *deserialize_inbox_rules(char *serialized_rules) {
 				extract_token(rtoken, decoded_rule, t, '|', sizeof(rtoken));
 				striplt(rtoken);
 				switch(t) {
-					case 1:									// field to compare
+					case 1:								// field to compare
 						for (i=0; i<=field_all; ++i) {
 							if (!strcasecmp(rtoken, field_keys[i])) {
 								new_rule->compared_field = i;
 							}
 						}
 						break;
-					case 2:									// field comparison operation
+					case 2:								// field comparison operation
 						for (i=0; i<=fcomp_notmatches; ++i) {
 							if (!strcasecmp(rtoken, fcomp_keys[i])) {
 								new_rule->field_compare_op = i;
 							}
 						}
 						break;
-					case 3:									// field comparison value
+					case 3:								// field comparison value
 						safestrncpy(new_rule->compared_value, rtoken, sizeof(new_rule->compared_value));
 						break;
-					case 4:									// size comparison operation
+					case 4:								// size comparison operation
 						for (i=0; i<=scomp_smaller; ++i) {
 							if (!strcasecmp(rtoken, scomp_keys[i])) {
 								new_rule->size_compare_op = i;
 							}
 						}
 						break;
-					case 5:									// size comparison value
+					case 5:								// size comparison value
 						new_rule->compared_size = atol(rtoken);
 						break;
-					case 6:									// action
+					case 6:								// action
 						for (i=0; i<=action_vacation; ++i) {
 							if (!strcasecmp(rtoken, action_keys[i])) {
 								new_rule->action = i;
 							}
 						}
 						break;
-					case 7:									// file into (target room)
+					case 7:								// file into (target room)
 						safestrncpy(new_rule->file_into, rtoken, sizeof(new_rule->file_into));
 						break;
-					case 8:									// redirect to (target address)
+					case 8:								// redirect to (target address)
 						safestrncpy(new_rule->redirect_to, rtoken, sizeof(new_rule->redirect_to));
 						break;
-					case 9:									// autoreply message
+					case 9:								// autoreply message
 						safestrncpy(new_rule->autoreply_message, rtoken, sizeof(new_rule->autoreply_message));
 						break;
-					case 10:								// final_action;
+					case 10:							// final_action;
 						for (i=0; i<=final_stop; ++i) {
 							if (!strcasecmp(rtoken, final_keys[i])) {
 								new_rule->final_action = i;
@@ -611,20 +592,20 @@ int inbox_do_fileinto(struct irule *rule, long msgnum) {
 	if (
 		(IsEmptyStr(dest_folder))			// no destination room was specified
 		|| (!strcasecmp(dest_folder, "INBOX"))		// fileinto inbox is the same as keep
-		|| (!strcasecmp(dest_folder, MAILROOM))		// fileinto inbox is the same as keep
+		|| (!strcasecmp(dest_folder, MAILROOM))		// fileinto "Mail" is the same as keep
 	) {
 		return(1);
 	}
 
-	/* Remember what room we came from */
+	// Remember what room we came from
 	safestrncpy(original_room_name, CC->room.QRname, sizeof original_room_name);
 
-	/* First try a mailbox name match (check personal mail folders first) */
+	// First try a mailbox name match (check personal mail folders first)
 	strcpy(foldername, original_room_name);					// This keeps the user namespace of the inbox
 	snprintf(&foldername[10], sizeof(foldername)-10, ".%s", dest_folder);	// And this tacks on the target room name
 	c = CtdlGetRoom(&CC->room, foldername);
 
-	/* Then a regular room name match (public and private rooms) */
+	// Then a regular room name match (public and private rooms)
 	if (c != 0) {
 		safestrncpy(foldername, dest_folder, sizeof foldername);
 		c = CtdlGetRoom(&CC->room, foldername);
@@ -635,12 +616,12 @@ int inbox_do_fileinto(struct irule *rule, long msgnum) {
 		return(1);
 	}
 
-	/* Yes, we actually have to go there */
+	// Yes, we actually have to go there
 	CtdlUserGoto(NULL, 0, 0, NULL, NULL, NULL, NULL);
 
 	c = CtdlSaveMsgPointersInRoom(NULL, &msgnum, 1, 0, NULL, 0);
 
-	/* Go back to the room we came from */
+	// Go back to the room we came from
 	if (strcasecmp(original_room_name, CC->room.QRname)) {
 		CtdlUserGoto(original_room_name, 0, 0, NULL, NULL, NULL, NULL);
 	}
@@ -933,7 +914,7 @@ void inbox_do_msg(long msgnum, void *userdata) {
 			// Now perform the "final" action (anything other than "stop" means continue)
 			if (ii->rules[i].final_action == final_stop) {
 				syslog(LOG_DEBUG, "inboxrules: stop processing");
-				i = ii->num_rules + 1;						// throw us out of scope to stop
+				i = ii->num_rules + 1;					// throw us out of scope to stop
 			}
 
 
