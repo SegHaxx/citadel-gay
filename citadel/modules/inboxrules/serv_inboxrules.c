@@ -92,62 +92,6 @@ int ctdl_redirect(void)
 
 
 
-/*
- * Callback function to file a message into a different mailbox
- */
-int ctdl_fileinto(sieve2_context_t *s, void *my)
-{
-	struct ctdl_sieve *cs = (struct ctdl_sieve *)my;
-	const char *dest_folder = sieve2_getvalue_string(s, "mailbox");
-	int c;
-	char foldername[256];
-	char original_room_name[ROOMNAMELEN];
-
-	syslog(LOG_DEBUG, "Action is FILEINTO, destination is <%s>", dest_folder);
-
-	/* FILEINTO 'INBOX' is the same thing as KEEP */
-	if ( (!strcasecmp(dest_folder, "INBOX")) || (!strcasecmp(dest_folder, MAILROOM)) ) {
-		cs->keep = 1;
-		cs->cancel_implicit_keep = 1;
-		return SIEVE2_OK;
-	}
-
-	/* Remember what room we came from */
-	safestrncpy(original_room_name, CC->room.QRname, sizeof original_room_name);
-
-	/* First try a mailbox name match (check personal mail folders first) */
-	snprintf(foldername, sizeof foldername, "%010ld.%s", cs->usernum, dest_folder);
-	c = CtdlGetRoom(&CC->room, foldername);
-
-	/* Then a regular room name match (public and private rooms) */
-	if (c != 0) {
-		safestrncpy(foldername, dest_folder, sizeof foldername);
-		c = CtdlGetRoom(&CC->room, foldername);
-	}
-
-	if (c != 0) {
-		syslog(LOG_WARNING, "FILEINTO failed: target <%s> does not exist", dest_folder);
-		return SIEVE2_ERROR_BADARGS;
-	}
-
-	/* Yes, we actually have to go there */
-	CtdlUserGoto(NULL, 0, 0, NULL, NULL, NULL, NULL);
-
-	c = CtdlSaveMsgPointersInRoom(NULL, &cs->msgnum, 1, 0, NULL, 0);
-
-	/* Go back to the room we came from */
-	if (strcasecmp(original_room_name, CC->room.QRname)) {
-		CtdlUserGoto(original_room_name, 0, 0, NULL, NULL, NULL, NULL);
-	}
-
-	if (c == 0) {
-		cs->cancel_implicit_keep = 1;
-		return SIEVE2_OK;
-	}
-	else {
-		return SIEVE2_ERROR_BADARGS;
-	}
-}
 
 
 /*
@@ -654,6 +598,57 @@ struct inboxrules *deserialize_inbox_rules(char *serialized_rules) {
 }
 
 
+// Perform the "fileinto" action (save the message in another room)
+// Returns: 1 or 0 to tell the caller to keep (1) or delete (0) the inbox copy of the message.
+//
+int inbox_do_fileinto(struct irule *rule, long msgnum) {
+	char *dest_folder = rule->file_into;
+	char original_room_name[ROOMNAMELEN];
+	char foldername[ROOMNAMELEN];
+	int c;
+
+	// Situations where we want to just keep the message in the inbox:
+	if (
+		(IsEmptyStr(dest_folder))			// no destination room was specified
+		|| (!strcasecmp(dest_folder, "INBOX"))		// fileinto inbox is the same as keep
+		|| (!strcasecmp(dest_folder, MAILROOM))		// fileinto inbox is the same as keep
+	) {
+		return(1);
+	}
+
+	/* Remember what room we came from */
+	safestrncpy(original_room_name, CC->room.QRname, sizeof original_room_name);
+
+	/* First try a mailbox name match (check personal mail folders first) */
+	strcpy(foldername, original_room_name);					// This keeps the user namespace of the inbox
+	snprintf(&foldername[10], sizeof(foldername)-10, ".%s", dest_folder);	// And this tacks on the target room name
+	c = CtdlGetRoom(&CC->room, foldername);
+
+	/* Then a regular room name match (public and private rooms) */
+	if (c != 0) {
+		safestrncpy(foldername, dest_folder, sizeof foldername);
+		c = CtdlGetRoom(&CC->room, foldername);
+	}
+
+	if (c != 0) {
+		syslog(LOG_WARNING, "inboxrules: target <%s> does not exist", dest_folder);
+		return(1);
+	}
+
+	/* Yes, we actually have to go there */
+	CtdlUserGoto(NULL, 0, 0, NULL, NULL, NULL, NULL);
+
+	c = CtdlSaveMsgPointersInRoom(NULL, &msgnum, 1, 0, NULL, 0);
+
+	/* Go back to the room we came from */
+	if (strcasecmp(original_room_name, CC->room.QRname)) {
+		CtdlUserGoto(original_room_name, 0, 0, NULL, NULL, NULL, NULL);
+	}
+
+	return(0);						// delete the inbox copy
+}
+
+
 // Perform the "reject" action (delete the message, and tell the sender we deleted it)
 // Returns: 1 or 0 to tell the caller to keep (1) or delete (0) the inbox copy of the message.
 //
@@ -909,7 +904,7 @@ void inbox_do_msg(long msgnum, void *userdata) {
 
 		// If the rule matched, perform the requested action.
 		if (rule_activated) {
-			syslog(LOG_DEBUG, "\033[32m\033[7mrule activated\033[0m");		// FIXME remove color
+			syslog(LOG_DEBUG, "inboxrules: rule activated");
 
 			// Perform the requested action
 			switch(ii->rules[i].action) {
@@ -923,8 +918,7 @@ void inbox_do_msg(long msgnum, void *userdata) {
 					keep_message = inbox_do_reject(&ii->rules[i], msg);
 					break;
 				case action_fileinto:
-					// FIXME put it in the other room
-					keep_message = 0;
+					keep_message = inbox_do_fileinto(&ii->rules[i], msgnum);
 					break;
 				case action_redirect:
 					// FIXME send it to the recipient
@@ -938,14 +932,14 @@ void inbox_do_msg(long msgnum, void *userdata) {
 
 			// Now perform the "final" action (anything other than "stop" means continue)
 			if (ii->rules[i].final_action == final_stop) {
-				syslog(LOG_DEBUG, "\033[33m\033[7mSTOP\033[0m");		// FIXME remove color
+				syslog(LOG_DEBUG, "inboxrules: stop processing");
 				i = ii->num_rules + 1;						// throw us out of scope to stop
 			}
 
 
 		}
 		else {
-			syslog(LOG_DEBUG, "\033[31m\033[7mrule not activated\033[0m");		// FIXME remove color
+			syslog(LOG_DEBUG, "inboxrules: rule not activated");
 		}
 	}
 
@@ -954,7 +948,7 @@ void inbox_do_msg(long msgnum, void *userdata) {
 	}
 
 	if (!keep_message) {		// Delete the copy of the message that is currently in the inbox, if rules dictated that.
-		syslog(LOG_DEBUG, "\033[36m\033[7mDELETE FROM INBOX\033[0m");
+		syslog(LOG_DEBUG, "inboxrules: delete %ld from inbox", msgnum);
 		CtdlDeleteMessages(CC->room.QRname, &msgnum, 1, "");			// we're in the inbox already
 	}
 
