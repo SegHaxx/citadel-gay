@@ -50,44 +50,13 @@
 
 #if 0
 
-/*
- * Callback function to redirect a message to a different folder
- */
-int ctdl_redirect(void)
-{
-	struct ctdl_sieve *cs = (struct ctdl_sieve *)my;
-	struct CtdlMessage *msg = NULL;
-	recptypes *valid = NULL;
-	char recp[256];
 
-	safestrncpy(recp, sieve2_getvalue_string(s, "address"), sizeof recp);
 
-	syslog(LOG_DEBUG, "Action is REDIRECT, recipient <%s>", recp);
 
-	valid = validate_recipients(recp, NULL, 0);
-	if (valid == NULL) {
-		syslog(LOG_WARNING, "REDIRECT failed: bad recipient <%s>", recp);
-		return SIEVE2_ERROR_BADARGS;
-	}
-	if (valid->num_error > 0) {
-		syslog(LOG_WARNING, "REDIRECT failed: bad recipient <%s>", recp);
-		free_recipients(valid);
-		return SIEVE2_ERROR_BADARGS;
-	}
 
-	msg = CtdlFetchMessage(cs->msgnum, 1);
-	if (msg == NULL) {
-		syslog(LOG_WARNING, "REDIRECT failed: unable to fetch msg %ld", cs->msgnum);
-		free_recipients(valid);
-		return SIEVE2_ERROR_BADARGS;
-	}
 
-	CtdlSubmitMsg(msg, valid, NULL, 0);
-	cs->cancel_implicit_keep = 1;
-	free_recipients(valid);
-	CM_Free(msg);
-	return SIEVE2_OK;
-}
+
+
 
 
 
@@ -594,7 +563,7 @@ int inbox_do_fileinto(struct irule *rule, long msgnum) {
 		|| (!strcasecmp(dest_folder, "INBOX"))		// fileinto inbox is the same as keep
 		|| (!strcasecmp(dest_folder, MAILROOM))		// fileinto "Mail" is the same as keep
 	) {
-		return(1);
+		return(1);					// don't delete the inbox copy if this failed
 	}
 
 	// Remember what room we came from
@@ -613,7 +582,7 @@ int inbox_do_fileinto(struct irule *rule, long msgnum) {
 
 	if (c != 0) {
 		syslog(LOG_WARNING, "inboxrules: target <%s> does not exist", dest_folder);
-		return(1);
+		return(1);					// don't delete the inbox copy if this failed
 	}
 
 	// Yes, we actually have to go there
@@ -626,6 +595,40 @@ int inbox_do_fileinto(struct irule *rule, long msgnum) {
 		CtdlUserGoto(original_room_name, 0, 0, NULL, NULL, NULL, NULL);
 	}
 
+	return(0);						// delete the inbox copy
+}
+
+
+// Perform the "redirect" action (divert the message to another email address)
+// Returns: 1 or 0 to tell the caller to keep (1) or delete (0) the inbox copy of the message.
+//
+int inbox_do_redirect(struct irule *rule, long msgnum) {
+	if (IsEmptyStr(rule->redirect_to)) {
+		syslog(LOG_WARNING, "inboxrules: inbox_do_redirect() invalid recipient <%s>", rule->redirect_to);
+		return(1);					// don't delete the inbox copy if this failed
+	}
+
+	recptypes *valid = validate_recipients(rule->redirect_to, NULL, 0);
+	if (valid == NULL) {
+		syslog(LOG_WARNING, "inboxrules: inbox_do_redirect() invalid recipient <%s>", rule->redirect_to);
+		return(1);					// don't delete the inbox copy if this failed
+	}
+	if (valid->num_error > 0) {
+		free_recipients(valid);
+		syslog(LOG_WARNING, "inboxrules: inbox_do_redirect() invalid recipient <%s>", rule->redirect_to);
+		return(1);					// don't delete the inbox copy if this failed
+	}
+
+	struct CtdlMessage *msg = CtdlFetchMessage(msgnum, 1);
+	if (msg == NULL) {
+		free_recipients(valid);
+		syslog(LOG_WARNING, "inboxrules: cannot reload message %ld for forwarding", msgnum);
+		return(1);					// don't delete the inbox copy if this failed
+	}
+
+	CtdlSubmitMsg(msg, valid, NULL, 0);			// send the message to the new recipient
+	free_recipients(valid);
+	CM_Free(msg);
 	return(0);						// delete the inbox copy
 }
 
@@ -902,8 +905,7 @@ void inbox_do_msg(long msgnum, void *userdata) {
 					keep_message = inbox_do_fileinto(&ii->rules[i], msgnum);
 					break;
 				case action_redirect:
-					// FIXME send it to the recipient
-					keep_message = 0;
+					keep_message = inbox_do_redirect(&ii->rules[i], msgnum);
 					break;
 				case action_vacation:
 					// FIXME send the vacation message
