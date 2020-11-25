@@ -55,18 +55,6 @@
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
 /*
  * Callback function to indicate that a vacation message should be generated
  */
@@ -634,9 +622,8 @@ int inbox_do_redirect(struct irule *rule, long msgnum) {
 
 
 // Perform the "reject" action (delete the message, and tell the sender we deleted it)
-// Returns: 1 or 0 to tell the caller to keep (1) or delete (0) the inbox copy of the message.
 //
-int inbox_do_reject(struct irule *rule, struct CtdlMessage *msg) {
+void inbox_do_reject(struct irule *rule, struct CtdlMessage *msg) {
 	syslog(LOG_DEBUG, "inbox_do_reject: sender: <%s>, reject message: <%s>",
 		msg->cm_fields[erFc822Addr],
 		rule->autoreply_message
@@ -651,13 +638,13 @@ int inbox_do_reject(struct irule *rule, struct CtdlMessage *msg) {
 		sender = msg->cm_fields[erFc822Addr];
 	}
 	else {
-		return(0);
+		return;
 	}
 
 	// Assemble the reject message.
 	char *reject_text = malloc(strlen(rule->autoreply_message) + 1024);
 	if (reject_text == NULL) {
-		return(0);
+		return;
 	}
 	sprintf(reject_text, 
 		"Content-type: text/plain\n"
@@ -682,7 +669,6 @@ int inbox_do_reject(struct irule *rule, struct CtdlMessage *msg) {
 		"Delivery status notification"
 	);
 	free(reject_text);
-	return(0);
 }
 
 
@@ -899,7 +885,8 @@ void inbox_do_msg(long msgnum, void *userdata) {
 					keep_message = 0;
 					break;
 				case action_reject:
-					keep_message = inbox_do_reject(&ii->rules[i], msg);
+					inbox_do_reject(&ii->rules[i], msg);
+					keep_message = 0;
 					break;
 				case action_fileinto:
 					keep_message = inbox_do_fileinto(&ii->rules[i], msgnum);
@@ -908,7 +895,7 @@ void inbox_do_msg(long msgnum, void *userdata) {
 					keep_message = inbox_do_redirect(&ii->rules[i], msgnum);
 					break;
 				case action_vacation:
-					// FIXME send the vacation message
+					// inbox_do_vacation(&ii->rules[i], msg);
 					keep_message = 1;
 					break;
 			}
