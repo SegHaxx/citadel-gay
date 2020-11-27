@@ -143,136 +143,6 @@ int ctdl_vacation(sieve2_context_t *s, void *my)
 }
 
 
-/*
- * Given the on-disk representation of our Sieve config, load
- * it into an in-memory data structure.
- */
-void parse_sieve_config(char *conf, struct sdm_userdata *u) {
-	char *ptr;
-	char *c, *vacrec;
-	char keyword[256];
-	struct sdm_script *sptr;
-	struct sdm_vacation *vptr;
-
-	ptr = conf;
-	while (c = ptr, ptr = bmstrcasestr(ptr, CTDLSIEVECONFIGSEPARATOR), ptr != NULL) {
-		*ptr = 0;
-		ptr += strlen(CTDLSIEVECONFIGSEPARATOR);
-
-		extract_token(keyword, c, 0, '|', sizeof keyword);
-
-		if (!strcasecmp(keyword, "lastproc")) {
-			u->lastproc = extract_long(c, 1);
-		}
-
-		else if (!strcasecmp(keyword, "script")) {
-			sptr = malloc(sizeof(struct sdm_script));
-			extract_token(sptr->script_name, c, 1, '|', sizeof sptr->script_name);
-			sptr->script_active = extract_int(c, 2);
-			remove_token(c, 0, '|');
-			remove_token(c, 0, '|');
-			remove_token(c, 0, '|');
-			sptr->script_content = strdup(c);
-			sptr->next = u->first_script;
-			u->first_script = sptr;
-		}
-
-		else if (!strcasecmp(keyword, "vacation")) {
-
-			if (c != NULL) while (vacrec=c, c=strchr(c, '\n'), (c != NULL)) {
-
-				*c = 0;
-				++c;
-
-				if (strncasecmp(vacrec, "vacation|", 9)) {
-					vptr = malloc(sizeof(struct sdm_vacation));
-					extract_token(vptr->fromaddr, vacrec, 0, '|', sizeof vptr->fromaddr);
-					vptr->timestamp = extract_long(vacrec, 1);
-					vptr->next = u->first_vacation;
-					u->first_vacation = vptr;
-				}
-			}
-		}
-
-		/* ignore unknown keywords */
-	}
-}
-
-
-
-
-
-/* 
- * Write our citadel sieve config back to disk
- * 
- * (Set yes_write_to_disk to nonzero to make it actually write the config;
- * otherwise it just frees the data structures.)
- */
-void rewrite_ctdl_sieve_config(struct sdm_userdata *u, int yes_write_to_disk) {
-	StrBuf *text;
-	struct sdm_script *sptr;
-	struct sdm_vacation *vptr;
-	
-	text = NewStrBufPlain(NULL, SIZ);
-	StrBufPrintf(text,
-		     "Content-type: application/x-citadel-sieve-config\n"
-		     "\n"
-		     CTDLSIEVECONFIGSEPARATOR
-		     "lastproc|%ld"
-		     CTDLSIEVECONFIGSEPARATOR
-		     ,
-		     u->lastproc
-		);
-
-	while (u->first_script != NULL) {
-		StrBufAppendPrintf(text,
-				   "script|%s|%d|%s" CTDLSIEVECONFIGSEPARATOR,
-				   u->first_script->script_name,
-				   u->first_script->script_active,
-				   u->first_script->script_content
-			);
-		sptr = u->first_script;
-		u->first_script = u->first_script->next;
-		free(sptr->script_content);
-		free(sptr);
-	}
-
-	if (u->first_vacation != NULL) {
-
-		StrBufAppendPrintf(text, "vacation|\n");
-		while (u->first_vacation != NULL) {
-			if ( (time(NULL) - u->first_vacation->timestamp) < (MAX_VACATION * 86400)) {
-				StrBufAppendPrintf(text, "%s|%ld\n",
-						   u->first_vacation->fromaddr,
-						   u->first_vacation->timestamp
-					);
-			}
-			vptr = u->first_vacation;
-			u->first_vacation = u->first_vacation->next;
-			free(vptr);
-		}
-		StrBufAppendPrintf(text, CTDLSIEVECONFIGSEPARATOR);
-	}
-
-	if (yes_write_to_disk)
-	{
-		/* Save the config */
-		quickie_message("Citadel", NULL, NULL, u->config_roomname,
-				ChrPtr(text),
-				4,
-				"Sieve configuration"
-		);
-		
-		/* And delete the old one */
-		if (u->config_msgnum > 0) {
-			CtdlDeleteMessages(u->config_roomname, &u->config_msgnum, 1, "");
-		}
-	}
-
-	FreeStrBuf (&text);
-
-}
-
 
 #endif
 
@@ -506,28 +376,15 @@ struct inboxrules *deserialize_inbox_rules(char *serialized_rules) {
 				}
 			}
 			free(decoded_rule);
-
-			// if we re-serialized this now, what would it look like?
-			syslog(LOG_DEBUG, "test reserialize: 0|%s|%s|%s|%s|%ld|%s|%s|%s|%s|%s",
-				field_keys[new_rule->compared_field],
-				fcomp_keys[new_rule->field_compare_op],
-				new_rule->compared_value,
-				scomp_keys[new_rule->size_compare_op],
-				new_rule->compared_size,
-				action_keys[new_rule->action],
-				new_rule->file_into,
-				new_rule->redirect_to,
-				new_rule->autoreply_message,
-				final_keys[new_rule->final_action]
-			);
-			// delete the above after moving it to a reserialize function
-
 		}
 
 		// "lastproc" indicates the newest message number in the inbox that was previously processed by our inbox rules.
 		else if (!strncasecmp(token, "lastproc|", 5)) {
 			ibr->lastproc = atol(&token[9]);
 		}
+
+		// Lines which do not contain a recognizable token must be IGNORED.  These lines may be left over
+		// from a previous version and will disappear when we rewrite the config.
 
 	}
 
@@ -927,6 +784,75 @@ void inbox_do_msg(long msgnum, void *userdata) {
 
 
 /*
+ * Rewrite the rule set to disk after it has been modified
+ */
+void rewrite_rules_to_disk(const char *new_config) {
+	long old_msgnum = CC->user.msgnum_inboxrules;
+	char userconfigroomname[ROOMNAMELEN];
+	CtdlMailboxName(userconfigroomname, sizeof userconfigroomname, &CC->user, USERCONFIGROOM);
+	long new_msgnum = quickie_message("Citadel", NULL, NULL, userconfigroomname, new_config, FMT_RFC822, "inbox rules configuration");
+	CtdlGetUserLock(&CC->user, CC->curr_user);
+	CC->user.msgnum_inboxrules = new_msgnum;
+	CtdlPutUserLock(&CC->user);
+	if (old_msgnum > 0) {
+		syslog(LOG_DEBUG, "Deleting old message %ld from %s", old_msgnum, userconfigroomname);
+		CtdlDeleteMessages(userconfigroomname, &old_msgnum, 1, "");
+	}
+}
+
+
+/*
+ * After we finish processing, rewrite the config to disk.
+ * This saves things like vacation logs and the last-processed message number.
+ */
+void inbox_rewrite_rules(struct inboxrules *ii, long usernum) {
+	StrBuf *text;
+	StrBuf *rule;
+	char *base64_encoded_rule;
+
+	text = NewStrBufPlain(NULL, SIZ);
+	rule = NewStrBufPlain(NULL, SIZ);
+
+	StrBufPrintf(text,
+		"Content-type: application/x-citadel-sieve-config\n"
+		"\n"
+		"lastproc|%ld\n"
+		,
+		ii->lastproc
+	);
+
+	for (int i=0; i<ii->num_rules; ++i) {
+		StrBufPrintf(rule, "%d|%s|%s|%s|%s|%ld|%s|%s|%s|%s|%s|",
+			i,
+			field_keys[ii->rules[i].compared_field],
+			fcomp_keys[ii->rules[i].field_compare_op],
+			ii->rules[i].compared_value,
+			scomp_keys[ii->rules[i].size_compare_op],
+			ii->rules[i].compared_size,
+			action_keys[ii->rules[i].action],
+			ii->rules[i].file_into,
+			ii->rules[i].redirect_to,
+			ii->rules[i].autoreply_message,
+			final_keys[ii->rules[i].final_action]
+		);
+		base64_encoded_rule = malloc(StrLength(rule) * 2);
+		CtdlEncodeBase64(base64_encoded_rule, ChrPtr(rule), StrLength(rule), 0);
+		StrBufAppendPrintf(text, "rule|%d|%s|\n", i, base64_encoded_rule);
+		free(base64_encoded_rule);
+	}
+
+	char config_roomname[ROOMNAMELEN];
+	snprintf(config_roomname, sizeof config_roomname, "%010ld.%s", usernum, USERCONFIGROOM);
+
+	// Save the config
+	rewrite_rules_to_disk(ChrPtr(text));
+
+	FreeStrBuf(&text);
+	FreeStrBuf(&rule);
+}
+
+
+/*
  * A user account is identified as requring inbox processing.
  * Do it.
  */
@@ -935,34 +861,42 @@ void do_inbox_processing_for_user(long usernum) {
 	struct inboxrules *ii;
 	char roomname[ROOMNAMELEN];
 
-	if (CtdlGetUserByNumber(&CC->user, usernum) == 0) {
-		if (CC->user.msgnum_inboxrules <= 0) {
-			return;						// this user has no inbox rules
-		}
-
-		msg = CtdlFetchMessage(CC->user.msgnum_inboxrules, 1);
-		if (msg == NULL) {
-			return;						// config msgnum is set but that message does not exist
-		}
-	
-		ii = deserialize_inbox_rules(msg->cm_fields[eMesageText]);
-		CM_Free(msg);
-	
-		if (ii == NULL) {
-			return;						// config message exists but body is null
-		}
-
-		syslog(LOG_DEBUG, "inboxrules: for %s", CC->user.fullname);
-
-		// Go to the user's inbox room and process all new messages
-		snprintf(roomname, sizeof roomname, "%010ld.%s", usernum, MAILROOM);
-		if (CtdlGetRoom(&CC->room, roomname) == 0) {
-			CtdlForEachMessage(MSGS_GT, ii->lastproc, NULL, NULL, NULL, inbox_do_msg, (void *) ii);
-		}
-
-		// FIXME reserialize our inbox rules/state and write changes back to the config room
-		free_inbox_rules(ii);
+	if (CtdlGetUserByNumber(&CC->user, usernum) != 0) {	// grab the user record
+		return;						// and bail out if we were given an invalid user
 	}
+
+	if (CC->user.msgnum_inboxrules <= 0) {
+		return;						// this user has no inbox rules
+	}
+
+	msg = CtdlFetchMessage(CC->user.msgnum_inboxrules, 1);
+	if (msg == NULL) {
+		return;						// config msgnum is set but that message does not exist
+	}
+
+	ii = deserialize_inbox_rules(msg->cm_fields[eMesageText]);
+	CM_Free(msg);
+
+	if (ii == NULL) {
+		return;						// config message exists but body is null
+	}
+
+	long original_lastproc = ii->lastproc;
+	syslog(LOG_DEBUG, "inboxrules: for %s, messages newer than %ld", CC->user.fullname, original_lastproc);
+
+	// Go to the user's inbox room and process all new messages
+	snprintf(roomname, sizeof roomname, "%010ld.%s", usernum, MAILROOM);
+	if (CtdlGetRoom(&CC->room, roomname) == 0) {
+		CtdlForEachMessage(MSGS_GT, ii->lastproc, NULL, NULL, NULL, inbox_do_msg, (void *) ii);
+	}
+
+	// If we processed any new messages, reserialize and rewrite
+	if (ii->lastproc > original_lastproc) {
+		inbox_rewrite_rules(ii, usernum);
+	}
+
+	// And free the memory.
+	free_inbox_rules(ii);
 }
 
 
@@ -1064,6 +998,9 @@ void cmd_gibr(char *argbuf) {
 				if (!strncasecmp(token, "rule|", 5)) {
         				cprintf("%s\n", token); 
 				}
+				else {
+					cprintf("# invalid rule found : %s\n", token);
+				}
 			}
 		}
 		CM_Free(msg);
@@ -1113,19 +1050,8 @@ void cmd_pibr(char *argbuf) {
 		CM_Free(msg);
 	}
 
-	/* we have composed the new configuration , now save it */
-	long old_msgnum = CC->user.msgnum_inboxrules;
-	char userconfigroomname[ROOMNAMELEN];
-	CtdlMailboxName(userconfigroomname, sizeof userconfigroomname, &CC->user, USERCONFIGROOM);
-	long new_msgnum = quickie_message("Citadel", NULL, NULL, userconfigroomname, ChrPtr(NewConfig), FMT_RFC822, "inbox rules configuration");
+	rewrite_rules_to_disk(ChrPtr(NewConfig));
 	FreeStrBuf(&NewConfig);
-	CtdlGetUserLock(&CC->user, CC->curr_user);
-	CC->user.msgnum_inboxrules = new_msgnum;
-	CtdlPutUserLock(&CC->user);
-	if (old_msgnum > 0) {
-		syslog(LOG_DEBUG, "Deleting old message %ld from %s", old_msgnum, userconfigroomname);
-		CtdlDeleteMessages(userconfigroomname, &old_msgnum, 1, "");
-	}
 }
 
 
