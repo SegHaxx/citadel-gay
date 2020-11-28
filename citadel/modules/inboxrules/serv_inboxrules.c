@@ -48,105 +48,6 @@
 #include "ctdl_module.h"
 
 
-#if 0
-
-
-
-
-
-
-/*
- * Callback function to indicate that a vacation message should be generated
- */
-int ctdl_vacation(sieve2_context_t *s, void *my)
-{
-	struct ctdl_sieve *cs = (struct ctdl_sieve *)my;
-	struct sdm_vacation *vptr;
-	int days = 1;
-	const char *message;
-	char *vacamsg_text = NULL;
-	char vacamsg_subject[1024];
-
-	syslog(LOG_DEBUG, "Action is VACATION");
-
-	message = sieve2_getvalue_string(s, "message");
-	if (message == NULL) return SIEVE2_ERROR_BADARGS;
-
-	if (sieve2_getvalue_string(s, "subject") != NULL) {
-		safestrncpy(vacamsg_subject, sieve2_getvalue_string(s, "subject"), sizeof vacamsg_subject);
-	}
-	else {
-		snprintf(vacamsg_subject, sizeof vacamsg_subject, "Re: %s", cs->subject);
-	}
-
-	days = sieve2_getvalue_int(s, "days");
-	if (days < 1) days = 1;
-	if (days > MAX_VACATION) days = MAX_VACATION;
-
-	/* Check to see whether we've already alerted this sender that we're on vacation. */
-	for (vptr = cs->u->first_vacation; vptr != NULL; vptr = vptr->next) {
-		if (!strcasecmp(vptr->fromaddr, cs->sender)) {
-			if ( (time(NULL) - vptr->timestamp) < (days * 86400) ) {
-				syslog(LOG_DEBUG, "Already alerted <%s> recently.", cs->sender);
-				return SIEVE2_OK;
-			}
-		}
-	}
-
-	/* Assemble the reject message. */
-	vacamsg_text = malloc(strlen(message) + 1024);
-	if (vacamsg_text == NULL) {
-		return SIEVE2_ERROR_FAIL;
-	}
-
-	sprintf(vacamsg_text, 
-		"Content-type: text/plain charset=utf-8\n"
-		"\n"
-		"%s\n"
-		"\n"
-	,
-		message
-	);
-
-	quickie_message(	/* This delivers the message */
-		NULL,
-		cs->envelope_to,
-		cs->sender,
-		NULL,
-		vacamsg_text,
-		FMT_RFC822,
-		vacamsg_subject
-	);
-
-	free(vacamsg_text);
-
-	/* Now update the list to reflect the fact that we've alerted this sender.
-	 * If they're already in the list, just update the timestamp.
-	 */
-	for (vptr = cs->u->first_vacation; vptr != NULL; vptr = vptr->next) {
-		if (!strcasecmp(vptr->fromaddr, cs->sender)) {
-			vptr->timestamp = time(NULL);
-			return SIEVE2_OK;
-		}
-	}
-
-	/* If we get to this point, create a new record.
-	 */
-	vptr = malloc(sizeof(struct sdm_vacation));
-	memset(vptr, 0, sizeof(struct sdm_vacation));
-	vptr->timestamp = time(NULL);
-	safestrncpy(vptr->fromaddr, cs->sender, sizeof vptr->fromaddr);
-	vptr->next = cs->u->first_vacation;
-	cs->u->first_vacation = vptr;
-
-	return SIEVE2_OK;
-}
-
-
-
-#endif
-
-
 /*
  * The next sections are enums and keys that drive the serialize/deserialize functions for the inbox rules/state configuration.
  */
@@ -479,8 +380,9 @@ int inbox_do_redirect(struct irule *rule, long msgnum) {
 }
 
 
-// Perform the "reject" action (delete the message, and tell the sender we deleted it)
-//
+/*
+ * Perform the "reject" action (delete the message, and tell the sender we deleted it)
+ */
 void inbox_do_reject(struct irule *rule, struct CtdlMessage *msg) {
 	syslog(LOG_DEBUG, "inbox_do_reject: sender: <%s>, reject message: <%s>",
 		msg->cm_fields[erFc822Addr],
@@ -509,6 +411,62 @@ void inbox_do_reject(struct irule *rule, struct CtdlMessage *msg) {
 		"\n"
 		"The message was refused by the recipient's mail filtering program.\n"
 		"The reason given was as follows:\n"
+		"\n"
+		"%s\n"
+		"\n"
+	,
+		rule->autoreply_message
+	);
+
+	// Deliver the message
+	quickie_message(
+		NULL,
+		msg->cm_fields[eenVelopeTo],
+		sender,
+		NULL,
+		reject_text,
+		FMT_RFC822,
+		"Delivery status notification"
+	);
+	free(reject_text);
+}
+
+
+/*
+ * Perform the "vacation" action (send an automatic response)
+ */
+void inbox_do_vacation(struct irule *rule, struct CtdlMessage *msg) {
+	syslog(LOG_DEBUG, "inbox_do_vacation: sender: <%s>, vacation message: <%s>",
+		msg->cm_fields[erFc822Addr],
+		rule->autoreply_message
+	);
+
+	// If we can't determine who sent the message, reject silently.
+	char *sender;
+	if (!IsEmptyStr(msg->cm_fields[eMessagePath])) {
+		sender = msg->cm_fields[eMessagePath];
+	}
+	else if (!IsEmptyStr(msg->cm_fields[erFc822Addr])) {
+		sender = msg->cm_fields[erFc822Addr];
+	}
+	else {
+		return;
+	}
+
+
+
+	// FIXME use the S_USETABLE to avoid sending the same correspondent a vacation message repeatedly.
+
+
+
+
+	// Assemble the reject message.
+	char *reject_text = malloc(strlen(rule->autoreply_message) + 1024);
+	if (reject_text == NULL) {
+		return;
+	}
+	sprintf(reject_text, 
+		"Content-type: text/plain\n"
 		"\n"
 		"%s\n"
 		"\n"
@@ -753,7 +711,7 @@ void inbox_do_msg(long msgnum, void *userdata) {
 					keep_message = inbox_do_redirect(&ii->rules[i], msgnum);
 					break;
 				case action_vacation:
-					// inbox_do_vacation(&ii->rules[i], msg);
+					inbox_do_vacation(&ii->rules[i], msg);
 					keep_message = 1;
 					break;
 			}
