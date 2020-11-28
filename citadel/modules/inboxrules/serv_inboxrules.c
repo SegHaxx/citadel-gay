@@ -441,7 +441,7 @@ void inbox_do_vacation(struct irule *rule, struct CtdlMessage *msg) {
 		rule->autoreply_message
 	);
 
-	// If we can't determine who sent the message, reject silently.
+	// If we can't determine who sent the message, no auto-reply can be sent.
 	char *sender;
 	if (!IsEmptyStr(msg->cm_fields[eMessagePath])) {
 		sender = msg->cm_fields[eMessagePath];
@@ -453,38 +453,45 @@ void inbox_do_vacation(struct irule *rule, struct CtdlMessage *msg) {
 		return;
 	}
 
+	// Avoid repeatedly sending auto-replies to the same correspondent over and over again by creating
+	// a hash of the user, correspondent, and reply text, and hitting the S_USETABLE database.
+	StrBuf *u = NewStrBuf();
+	StrBufPrintf(u, "vacation/%x/%x/%x",
+		HashLittle(sender, strlen(sender)),
+		HashLittle(msg->cm_fields[eenVelopeTo], msg->cm_lengths[eenVelopeTo]),
+		HashLittle(rule->autoreply_message, strlen(rule->autoreply_message))
+	);
+	int already_seen = CheckIfAlreadySeen(u);
+	FreeStrBuf(&u);
 
+	if (!already_seen) {
+		// Assemble the auto-reply message.
+		StrBuf *reject_text = NewStrBuf();
+		if (reject_text == NULL) {
+			return;
+		}
 
-	// FIXME use the S_USETABLE to avoid sending the same correspondent a vacation message repeatedly.
-
-
-
-
-	// Assemble the reject message.
-	char *reject_text = malloc(strlen(rule->autoreply_message) + 1024);
-	if (reject_text == NULL) {
-		return;
+		StrBufPrintf(reject_text, 
+			"Content-type: text/plain\n"
+			"\n"
+			"%s\n"
+			"\n"
+		,
+			rule->autoreply_message
+		);
+	
+		// Deliver the auto-reply.
+		quickie_message(
+			NULL,
+			msg->cm_fields[eenVelopeTo],
+			sender,
+			NULL,
+			ChrPtr(reject_text),
+			FMT_RFC822,
+			"Delivery status notification"
+		);
+		FreeStrBuf(&reject_text);
 	}
-	sprintf(reject_text, 
-		"Content-type: text/plain\n"
-		"\n"
-		"%s\n"
-		"\n"
-	,
-		rule->autoreply_message
-	);
-
-	// Deliver the message
-	quickie_message(
-		NULL,
-		msg->cm_fields[eenVelopeTo],
-		sender,
-		NULL,
-		reject_text,
-		FMT_RFC822,
-		"Delivery status notification"
-	);
-	free(reject_text);
 }
 
 
