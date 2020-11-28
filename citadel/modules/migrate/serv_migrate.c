@@ -137,6 +137,7 @@ void migr_export_users_backend(char *username, void *data) {
 	cprintf("<u_msgnum_pic>%ld</u_msgnum_pic>\n", u.msgnum_pic);
 	cprintf("<u_emailaddrs>%s</u_emailaddrs>\n", u.emailaddrs);
 	cprintf("<u_msgnum_inboxrules>%ld</u_msgnum_inboxrules>\n", u.msgnum_inboxrules);
+	cprintf("<u_lastproc_inboxrules>%ld</u_lastproc_inboxrules>\n", u.lastproc_inboxrules);
 	client_write(HKEY("</user>\n"));
 }
 
@@ -590,6 +591,7 @@ int migr_userrecord(void *data, const char *el)
 	else if (!strcasecmp(el, "u_msgnum_pic"))		usbuf.msgnum_pic = atol(ChrPtr(migr_chardata));
 	else if (!strcasecmp(el, "u_emailaddrs"))		safestrncpy(usbuf.emailaddrs, ChrPtr(migr_chardata), sizeof usbuf.emailaddrs);
 	else if (!strcasecmp(el, "u_msgnum_inboxrules"))	usbuf.msgnum_inboxrules = atol(ChrPtr(migr_chardata));
+	else if (!strcasecmp(el, "u_lastproc_inboxrules"))	usbuf.lastproc_inboxrules = atol(ChrPtr(migr_chardata));
 	else return 0;
 	return 1;
 }

@@ -97,7 +97,7 @@ struct march {
  */
 typedef struct ctdluser ctdluser;
 struct ctdluser {			// User record
-	int version;			// Cit vers. which created this rec
+	int version;			// Citadel version which created this record
 	uid_t uid;			// Associate with a unix account?
 	char password[32];		// password
 	unsigned flags;			// See US_ flags below
@@ -112,6 +112,7 @@ struct ctdluser {			// User record
 	long msgnum_pic;		// msgnum of user's avatar (photo)
 	char emailaddrs[512];		// Internet email addresses
 	long msgnum_inboxrules;		// msgnum of user's inbox filtering rules
+	long lastproc_inboxrules;	// msgnum of last message filtered
 };
 
 
