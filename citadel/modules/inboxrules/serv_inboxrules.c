@@ -384,10 +384,7 @@ int inbox_do_redirect(struct irule *rule, long msgnum) {
  * Perform the "reject" action (delete the message, and tell the sender we deleted it)
  */
 void inbox_do_reject(struct irule *rule, struct CtdlMessage *msg) {
-	syslog(LOG_DEBUG, "inbox_do_reject: sender: <%s>, reject message: <%s>",
-		msg->cm_fields[erFc822Addr],
-		rule->autoreply_message
-	);
+	syslog(LOG_DEBUG, "inbox_do_reject: sender: <%s>, reject", msg->cm_fields[erFc822Addr]);
 
 	// If we can't determine who sent the message, reject silently.
 	char *sender;
@@ -436,10 +433,7 @@ void inbox_do_reject(struct irule *rule, struct CtdlMessage *msg) {
  * Perform the "vacation" action (send an automatic response)
  */
 void inbox_do_vacation(struct irule *rule, struct CtdlMessage *msg) {
-	syslog(LOG_DEBUG, "inbox_do_vacation: sender: <%s>, vacation message: <%s>",
-		msg->cm_fields[erFc822Addr],
-		rule->autoreply_message
-	);
+	syslog(LOG_DEBUG, "inbox_do_vacation: sender: <%s>, vacation", msg->cm_fields[erFc822Addr]);
 
 	// If we can't determine who sent the message, no auto-reply can be sent.
 	char *sender;
@@ -654,35 +648,28 @@ void inbox_do_msg(long msgnum, void *userdata) {
 					case fcomp_contains:
 					case fcomp_matches:
 						rule_activated = (bmstrcasestr(compare_me, ii->rules[i].compared_value) ? 1 : 0);
-						syslog(LOG_DEBUG, "Does %s contain %s? %s", compare_me, ii->rules[i].compared_value, rule_activated?"yes":"no");
 						break;
 					case fcomp_notcontains:
 					case fcomp_notmatches:
 						rule_activated = (bmstrcasestr(compare_me, ii->rules[i].compared_value) ? 0 : 1);
-						syslog(LOG_DEBUG, "Does %s contain %s? %s", compare_me, ii->rules[i].compared_value, rule_activated?"yes":"no");
 						break;
 					case fcomp_is:
 						rule_activated = (strcasecmp(compare_me, ii->rules[i].compared_value) ? 0 : 1);
-						syslog(LOG_DEBUG, "Does %s equal %s? %s", compare_me, ii->rules[i].compared_value, rule_activated?"yes":"no");
 						break;
 					case fcomp_isnot:
 						rule_activated = (strcasecmp(compare_me, ii->rules[i].compared_value) ? 1 : 0);
-						syslog(LOG_DEBUG, "Does %s equal %s? %s", compare_me, ii->rules[i].compared_value, rule_activated?"yes":"no");
 						break;
 				}
 				break;
 
 			case field_size:
 				rule_activated = 0;
-				syslog(LOG_DEBUG, "comparing actual message size %ld to rule message size %ld", smi.meta_rfc822_length, ii->rules[i].compared_size);
 				switch(ii->rules[i].field_compare_op) {
 					case scomp_larger:
 						rule_activated = ((smi.meta_rfc822_length > ii->rules[i].compared_size) ? 1 : 0);
-						syslog(LOG_DEBUG, "Is %ld larger than %ld? %s", smi.meta_rfc822_length, ii->rules[i].compared_size, (smi.meta_rfc822_length > ii->rules[i].compared_size) ? "yes":"no");
 						break;
 					case scomp_smaller:
 						rule_activated = ((smi.meta_rfc822_length < ii->rules[i].compared_size) ? 1 : 0);
-						syslog(LOG_DEBUG, "Is %ld smaller than %ld? %s", smi.meta_rfc822_length, ii->rules[i].compared_size, (smi.meta_rfc822_length < ii->rules[i].compared_size) ? "yes":"no");
 						break;
 				}
 				break;
@@ -690,7 +677,7 @@ void inbox_do_msg(long msgnum, void *userdata) {
 				rule_activated = 1;
 				break;
 			default:			// no matches, fall through and do nothing
-				syslog(LOG_DEBUG, "inboxrules: an unknown field comparison was encountered");
+				syslog(LOG_WARNING, "inboxrules: an unknown field comparison was encountered");
 				rule_activated = 0;
 				break;
 		}
@@ -780,10 +767,6 @@ void do_inbox_processing_for_user(long usernum) {
 	if (ii == NULL) {
 		return;						// config message exists but body is null
 	}
-
-
-	syslog(LOG_DEBUG, "ii->lastproc                 %ld", ii->lastproc);
-	syslog(LOG_DEBUG, "CC->user.lastproc_inboxrules %ld", CC->user.lastproc_inboxrules);
 
 	if (ii->lastproc > CC->user.lastproc_inboxrules) {	// There might be a "last message processed" number left over
 		CC->user.lastproc_inboxrules = ii->lastproc;	// in the ruleset from a previous version.  Use this if it is
