@@ -379,6 +379,7 @@ struct inboxrules *deserialize_inbox_rules(char *serialized_rules) {
 		}
 
 		// "lastproc" indicates the newest message number in the inbox that was previously processed by our inbox rules.
+		// This is a legacy location for this value and will only be used if it's the only one present.
 		else if (!strncasecmp(token, "lastproc|", 5)) {
 			ibr->lastproc = atol(&token[9]);
 		}
@@ -784,75 +785,6 @@ void inbox_do_msg(long msgnum, void *userdata) {
 
 
 /*
- * Rewrite the rule set to disk after it has been modified
- */
-void rewrite_rules_to_disk(const char *new_config) {
-	long old_msgnum = CC->user.msgnum_inboxrules;
-	char userconfigroomname[ROOMNAMELEN];
-	CtdlMailboxName(userconfigroomname, sizeof userconfigroomname, &CC->user, USERCONFIGROOM);
-	long new_msgnum = quickie_message("Citadel", NULL, NULL, userconfigroomname, new_config, FMT_RFC822, "inbox rules configuration");
-	CtdlGetUserLock(&CC->user, CC->curr_user);
-	CC->user.msgnum_inboxrules = new_msgnum;
-	CtdlPutUserLock(&CC->user);
-	if (old_msgnum > 0) {
-		syslog(LOG_DEBUG, "Deleting old message %ld from %s", old_msgnum, userconfigroomname);
-		CtdlDeleteMessages(userconfigroomname, &old_msgnum, 1, "");
-	}
-}
-
-
-/*
- * After we finish processing, rewrite the config to disk.
- * This saves things like vacation logs and the last-processed message number.
- */
-void inbox_rewrite_rules(struct inboxrules *ii, long usernum) {
-	StrBuf *text;
-	StrBuf *rule;
-	char *base64_encoded_rule;
-
-	text = NewStrBufPlain(NULL, SIZ);
-	rule = NewStrBufPlain(NULL, SIZ);
-
-	StrBufPrintf(text,
-		"Content-type: application/x-citadel-sieve-config\n"
-		"\n"
-		"lastproc|%ld\n"
-		,
-		ii->lastproc
-	);
-
-	for (int i=0; i<ii->num_rules; ++i) {
-		StrBufPrintf(rule, "%d|%s|%s|%s|%s|%ld|%s|%s|%s|%s|%s|",
-			i,
-			field_keys[ii->rules[i].compared_field],
-			fcomp_keys[ii->rules[i].field_compare_op],
-			ii->rules[i].compared_value,
-			scomp_keys[ii->rules[i].size_compare_op],
-			ii->rules[i].compared_size,
-			action_keys[ii->rules[i].action],
-			ii->rules[i].file_into,
-			ii->rules[i].redirect_to,
-			ii->rules[i].autoreply_message,
-			final_keys[ii->rules[i].final_action]
-		);
-		base64_encoded_rule = malloc(StrLength(rule) * 2);
-		CtdlEncodeBase64(base64_encoded_rule, ChrPtr(rule), StrLength(rule), 0);
-		StrBufAppendPrintf(text, "rule|%d|%s|\n", i, base64_encoded_rule);
-		free(base64_encoded_rule);
-	}
-
-	char config_roomname[ROOMNAMELEN];
-	snprintf(config_roomname, sizeof config_roomname, "%010ld.%s", usernum, USERCONFIGROOM);
-
-	// Save the config
-	rewrite_rules_to_disk(ChrPtr(text));
-
-	FreeStrBuf(&text);
-	FreeStrBuf(&rule);
-}
-
-
-/*
  * A user account is identified as requring inbox processing.
  * Do it.
  */
@@ -860,10 +792,13 @@ void do_inbox_processing_for_user(long usernum) {
 	struct CtdlMessage *msg;
 	struct inboxrules *ii;
 	char roomname[ROOMNAMELEN];
+	char username[64];
 
 	if (CtdlGetUserByNumber(&CC->user, usernum) != 0) {	// grab the user record
 		return;						// and bail out if we were given an invalid user
 	}
+
+	strcpy(username, CC->user.fullname);			// save the user name so we can fetch it later and lock it
 
 	if (CC->user.msgnum_inboxrules <= 0) {
 		return;						// this user has no inbox rules
@@ -881,6 +816,17 @@ void do_inbox_processing_for_user(long usernum) {
 		return;						// config message exists but body is null
 	}
 
+
+	syslog(LOG_DEBUG, "ii->lastproc                 %ld", ii->lastproc);
+	syslog(LOG_DEBUG, "CC->user.lastproc_inboxrules %ld", CC->user.lastproc_inboxrules);
+
+	if (ii->lastproc > CC->user.lastproc_inboxrules) {	// There might be a "last message processed" number left over
+		CC->user.lastproc_inboxrules = ii->lastproc;	// in the ruleset from a previous version.  Use this if it is
+	}							// a higher number.
+	else {
+		ii->lastproc = CC->user.lastproc_inboxrules;
+	}
+
 	long original_lastproc = ii->lastproc;
 	syslog(LOG_DEBUG, "inboxrules: for %s, messages newer than %ld", CC->user.fullname, original_lastproc);
 
@@ -890,9 +836,11 @@ void do_inbox_processing_for_user(long usernum) {
 		CtdlForEachMessage(MSGS_GT, ii->lastproc, NULL, NULL, NULL, inbox_do_msg, (void *) ii);
 	}
 
-	// If we processed any new messages, reserialize and rewrite
+	// Record the number of the last message we processed
 	if (ii->lastproc > original_lastproc) {
-		inbox_rewrite_rules(ii, usernum);
+		CtdlGetUserLock(&CC->user, username);
+		CC->user.lastproc_inboxrules = ii->lastproc;	// Avoid processing the entire inbox next time
+		CtdlPutUserLock(&CC->user);
 	}
 
 	// And free the memory.
@@ -1010,6 +958,27 @@ void cmd_gibr(char *argbuf) {
 
 
 /*
+ * Rewrite the rule set to disk after it has been modified
+ * Called by cmd_pibr()
+ * Returns the msgnum of the new rules message
+ */
+void rewrite_rules_to_disk(const char *new_config) {
+	long old_msgnum = CC->user.msgnum_inboxrules;
+	char userconfigroomname[ROOMNAMELEN];
+	CtdlMailboxName(userconfigroomname, sizeof userconfigroomname, &CC->user, USERCONFIGROOM);
+	long new_msgnum = quickie_message("Citadel", NULL, NULL, userconfigroomname, new_config, FMT_RFC822, "inbox rules configuration");
+	CtdlGetUserLock(&CC->user, CC->curr_user);
+	CC->user.msgnum_inboxrules = new_msgnum;		// Now we know where to get the rules next time
+	CC->user.lastproc_inboxrules = new_msgnum;		// Avoid processing the entire inbox next time
+	CtdlPutUserLock(&CC->user);
+	if (old_msgnum > 0) {
+		syslog(LOG_DEBUG, "Deleting old message %ld from %s", old_msgnum, userconfigroomname);
+		CtdlDeleteMessages(userconfigroomname, &old_msgnum, 1, "");
+	}
+}
+
+
+/*
  * Put InBox Rules
  *
  * User transmits the new inbox rules for the account.  They are inserted into the account, replacing the ones already there.
@@ -1032,24 +1001,6 @@ void cmd_pibr(char *argbuf) {
 		}
 	}
 	free(newrules);
-
-	// Fetch the existing config so we can merge in anything that is NOT a rule 
-	// (Does not start with "rule|" but has at least one vertical bar)
-	struct CtdlMessage *msg = CtdlFetchMessage(CC->user.msgnum_inboxrules, 1);
-	if (msg != NULL) {
-		if (!CM_IsEmpty(msg, eMesageText)) {
-			rest = msg->cm_fields[eMesageText];
-			while ((token = strtok_r(rest, "\n", &rest))) {
-				// for backwards compatibility, "# WEBCIT_RULE" is an alias for "rule" 
-				if ((strncasecmp(token, "# WEBCIT_RULE|", 14)) && (strncasecmp(token, "rule|", 5)) && (haschar(token, '|'))) {
-					StrBufAppendBufPlain(NewConfig, token, -1, 0);
-					StrBufAppendBufPlain(NewConfig, HKEY("\n"), 0);
-				}
-			}
-		}
-		CM_Free(msg);
-	}
-
 	rewrite_rules_to_disk(ChrPtr(NewConfig));
 	FreeStrBuf(&NewConfig);
 }
