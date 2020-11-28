@@ -797,52 +797,10 @@ int CheckIfAlreadySeen(StrBuf *guid) {
 }
 
 
-void cmd_rsen(char *argbuf) {
-	char Token[SIZ];
-	long TLen;
-	char Time[SIZ];
-
-	struct UseTable ut;
-	struct cdbdata *cdbut;
-
-	if (CtdlAccessCheck(ac_aide)) {
-		return;
-	}
-
-	TLen = extract_token(Token, argbuf, 1, '|', sizeof Token);
-	if (strncmp(argbuf, "GET", 3) == 0) {
-		cdbut = cdb_fetch(CDB_USETABLE, Token, TLen);
-		if (cdbut != NULL) {
-			memcpy(&ut, cdbut->ptr, ((cdbut->len > sizeof(struct UseTable)) ? sizeof(struct UseTable) : cdbut->len));
-
-			cprintf("%d %ld\n", CIT_OK, ut.ut_timestamp);
-		} else {
-			cprintf("%d not found\n", ERROR + NOT_HERE);
-		}
-
-	} else if (strncmp(argbuf, "SET", 3) == 0) {
-		memcpy(ut.ut_msgid, Token, TLen);
-		extract_token(Time, argbuf, 2, '|', sizeof Time);
-		ut.ut_timestamp = atol(Time);
-		cdb_store(CDB_USETABLE, Token, TLen, &ut, sizeof(struct UseTable));
-		cprintf("%d token updated\n", CIT_OK);
-	} else if (strncmp(argbuf, "DEL", 3) == 0) {
-		if (cdb_delete(CDB_USETABLE, Token, TLen))
-			cprintf("%d not found\n", ERROR + NOT_HERE);
-		else
-			cprintf("%d deleted.\n", CIT_OK);
-
-	} else {
-		cprintf("%d Usage: [GET|SET|DEL]|Token|timestamp\n", ERROR);
-	}
-
-}
-
-
 CTDL_MODULE_INIT(database)
 {
 	if (!threading) {
-		CtdlRegisterProtoHook(cmd_rsen, "RSEN", "manipulate Aggregators seen database");
+		// nothing to do here
 	}
 
 	/* return our module id for the log */
