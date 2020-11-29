@@ -699,7 +699,7 @@ void do_login(void)
 	}
 
 	/* Populate the user principal identity, which is consistent and never aliased */
-	strcpy(CC->cs_principal_id, "wowowowow");
+	strcpy(CC->cs_principal_id, "");
 	makeuserkey(CC->cs_principal_id, CC->user.fullname);
 	strcat(CC->cs_principal_id, "@");
 	strcat(CC->cs_principal_id, CtdlGetConfigStr("c_fqdn"));

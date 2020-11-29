@@ -1670,6 +1670,7 @@ void AutoGenerateEmailAddressForUser(struct ctdluser *user)
 			snprintf(synthetic_email_addr, sizeof synthetic_email_addr, "ctdl%08x@%s", i, CtdlGetConfigStr("c_fqdn"));
 		}
 		u = CtdlDirectoryLookup(NULL, synthetic_email_addr, 0);
+		syslog(LOG_DEBUG, "\033[33mAddress <%s> lookup <%d>\033[0m", synthetic_email_addr, u);
 	}
 
 	CtdlSetEmailAddressesForUser(user->fullname, synthetic_email_addr);

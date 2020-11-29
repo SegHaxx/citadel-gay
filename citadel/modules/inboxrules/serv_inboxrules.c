@@ -501,6 +501,7 @@ void inbox_do_msg(long msgnum, void *userdata) {
 	struct MetaData smi;			// If we are loading the metadata to compare, put it here.
 	int rule_activated = 0;			// On each rule, this is set if the compare succeeds and the rule activates.
 	char compare_me[SIZ];			// On each rule, we will store the field to be compared here.
+	int compare_compound = 0;		// Set to 1 when we are comparing both display name and email address
 	int keep_message = 1;			// Nonzero to keep the message in the inbox after processing, 0 to delete it.
 	int i;
 
@@ -571,11 +572,21 @@ void inbox_do_msg(long msgnum, void *userdata) {
 
 		// If the rule involves a field comparison, load the field to be compared.
 		compare_me[0] = 0;
+		compare_compound = 0;
 		switch(ii->rules[i].compared_field) {
-
 			case field_from:		// From:
-				if (!IsEmptyStr(msg->cm_fields[erFc822Addr])) {
+				if ( (!IsEmptyStr(msg->cm_fields[erFc822Addr])) && (!IsEmptyStr(msg->cm_fields[erFc822Addr])) ) {
+					snprintf(compare_me, sizeof compare_me, "%s|%s",
+						msg->cm_fields[eAuthor],
+						msg->cm_fields[erFc822Addr]
+					);
+					compare_compound = 1;		// there will be two fields to compare "name|address"
+				}
+				else if (!IsEmptyStr(msg->cm_fields[erFc822Addr])) {
 					safestrncpy(compare_me, msg->cm_fields[erFc822Addr], sizeof compare_me);
+				}
+				else if (!IsEmptyStr(msg->cm_fields[eAuthor])) {
+					safestrncpy(compare_me, msg->cm_fields[eAuthor], sizeof compare_me);
 				}
 				break;
 			case field_tocc:		// To: or Cc:
@@ -644,20 +655,37 @@ void inbox_do_msg(long msgnum, void *userdata) {
 
 				// For all of the above fields, we can compare the field we've loaded into the buffer.
 				syslog(LOG_DEBUG, "Value of field to compare is: <%s>", compare_me);
+				int substring_match = (bmstrcasestr(compare_me, ii->rules[i].compared_value) ? 1 : 0);
+				int exact_match = 0;
+				if (compare_compound) {
+					char *sep = strchr(compare_me, '|');
+					if (sep) {
+						*sep = 0;
+						exact_match =
+							(strcasecmp(compare_me, ii->rules[i].compared_value) ? 0 : 1)
+							+ (strcasecmp(++sep, ii->rules[i].compared_value) ? 0 : 1)
+						;
+					}
+				}
+				else {
+					exact_match = (strcasecmp(compare_me, ii->rules[i].compared_value) ? 0 : 1);
+				}
+				syslog(LOG_DEBUG, "substring match: %d", substring_match);
+				syslog(LOG_DEBUG, "exact match: %d", exact_match);
 				switch(ii->rules[i].field_compare_op) {
 					case fcomp_contains:
 					case fcomp_matches:
-						rule_activated = (bmstrcasestr(compare_me, ii->rules[i].compared_value) ? 1 : 0);
+						rule_activated = substring_match;
 						break;
 					case fcomp_notcontains:
 					case fcomp_notmatches:
-						rule_activated = (bmstrcasestr(compare_me, ii->rules[i].compared_value) ? 0 : 1);
+						rule_activated = !substring_match;
 						break;
 					case fcomp_is:
-						rule_activated = (strcasecmp(compare_me, ii->rules[i].compared_value) ? 0 : 1);
+						rule_activated = exact_match;
 						break;
 					case fcomp_isnot:
-						rule_activated = (strcasecmp(compare_me, ii->rules[i].compared_value) ? 1 : 0);
+						rule_activated = !exact_match;
 						break;
 				}
 				break;
