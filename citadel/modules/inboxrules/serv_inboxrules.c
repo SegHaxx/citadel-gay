@@ -417,10 +417,10 @@ void inbox_do_reject(struct irule *rule, struct CtdlMessage *msg) {
 
 	// Deliver the message
 	quickie_message(
-		NULL,
+		" ",
 		msg->cm_fields[eenVelopeTo],
 		sender,
-		NULL,
+		MAILROOM,
 		reject_text,
 		FMT_RFC822,
 		"Delivery status notification"
@@ -476,10 +476,10 @@ void inbox_do_vacation(struct irule *rule, struct CtdlMessage *msg) {
 	
 		// Deliver the auto-reply.
 		quickie_message(
-			NULL,
+			"",
 			msg->cm_fields[eenVelopeTo],
 			sender,
-			NULL,
+			MAILROOM,
 			ChrPtr(reject_text),
 			FMT_RFC822,
 			"Delivery status notification"
