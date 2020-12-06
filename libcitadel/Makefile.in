@@ -79,6 +79,7 @@ install: $(LIBRARY) $(APIHEADER) install-pkgconfigDATA
 	$(mkinstalldirs) $(DESTDIR)$(libdir) $(DESTDIR)$(includedir)
 	$(LIBTOOL) --mode=install $(INSTALL) $(LIBRARY) $(DESTDIR)$(libdir)/$(LIBRARY)
 	for FN in $(APIHEADER) ; do $(INSTALL_DATA) $$FN $(DESTDIR)$(includedir) ; done
+	ldconfig || true
 
 uninstall:
 	$(LIBTOOL) --mode=uninstall rm -f $(DESTDIR)$(libdir)/$(LIBRARY)
