@@ -68,7 +68,7 @@ void display_icaltimetype_as_webform(struct icaltimetype *t, char *prefix, int d
 		localtime_r(&tt, &tm);
 	}
 
-	wc_printf("<input type=\"text\" name=\"");
+	wc_printf("<input type=\"date\" name=\"");
 	StrBufAppendBufPlain(WCC->WBuf, prefix, -1, 0);
 	wc_printf("\" id=\"");
 	StrBufAppendBufPlain(WCC->WBuf, prefix, -1, 0);

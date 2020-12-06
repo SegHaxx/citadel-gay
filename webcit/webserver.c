@@ -22,7 +22,6 @@ int follow_xff = 0;				/* Follow X-Forwarded-For: header? */
 int DisableGzip = 0;
 char *default_landing_page = NULL;
 extern pthread_mutex_t SessionListMutex;
-extern pthread_key_t MyConKey;
 
 extern void *housekeeping_loop(void);
 extern int webcit_tcp_server(char *ip_addr, int port_number, int queue_len);

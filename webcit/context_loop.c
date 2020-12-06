@@ -24,7 +24,6 @@ pthread_mutex_t SessionListMutex;
 
 wcsession *SessionList = NULL;	/* Linked list of all webcit sessions */
 
-pthread_key_t MyConKey;         /* TSD key for MySession() */
 HashList *HttpReqTypes = NULL;
 HashList *HttpHeaderHandler = NULL;
 extern HashList *HandlerHash;
