@@ -52,12 +52,13 @@ char *helptexts[] = {
 	    " Z         Zap (forget) room. (Removes the room from your list)\n"
 	    " + -       Goto next, previous room on current floor.\n"
 	    " > <       Goto next, previous floor.\n"
-	    " *         Enter any locally installed 'doors'.\n"
 	    "   \n"
 	    " In addition, there are dot commands. You hit the . (dot), then press the\n"
 	    "first letter of each word of the command. As you hit the letters, the words\n"
 	    "pop onto your screen. Exceptions: after you hit .Help or .Goto, the remainder\n"
-	    "of the command is a help file name or room name.\n" "    \n" "      *** USE  .<H>elp ?    for additional help *** \n",
+	    "of the command is a help file name or room name.\n"
+	    "    \n"
+	    "      *** USE  .<H>elp ?    for additional help *** \n",
 
 	"The following commands are available only to Admins.  A subset of these\n"
 	    "commands are available to room aides when they are currently in the room\n"
@@ -433,7 +434,6 @@ int next_lazy_cmd = 5;
 extern int screenwidth, screenheight;
 extern int termn8;
 extern CtdlIPC *ipc_for_signal_handlers;	/* KLUDGE cover your eyes */
-
 struct citcmd *cmdlist = NULL;
 
 
@@ -444,13 +444,10 @@ time_t AnsiDetect;		/* when did we send the detect code? */
 int enable_color = 0;		/* nonzero for ANSI color */
 
 
-
-
 /*
  * If an interesting key has been pressed, return its value, otherwise 0
  */
-char was_a_key_pressed(void)
-{
+char was_a_key_pressed(void) {
 	fd_set rfds;
 	struct timeval tv;
 	int the_character;
@@ -470,21 +467,18 @@ char was_a_key_pressed(void)
 		set_keepalives(KA_NO);
 		the_character = inkey();
 		set_keepalives(KA_YES);
-	} else {
+	}
+	else {
 		the_character = 0;
 	}
 	return (the_character);
 }
 
 
-
-
-
 /*
  * print_instant()  -  print instant messages if there are any
  */
-void print_instant(void)
-{
+void print_instant(void) {
 	char buf[1024];
 	FILE *outpipe;
 	time_t timestamp;
@@ -495,12 +489,14 @@ void print_instant(void)
 	char *listing = NULL;
 	int r;			/* IPC result code */
 
-	if (instant_msgs == 0)
+	if (instant_msgs == 0) {
 		return;
+	}
 
 	if (rc_exp_beep) {
 		ctdl_beep();
 	}
+
 	if (IsEmptyStr(rc_exp_cmd)) {
 		color(BRIGHT_RED);
 		scr_printf("\r---");
@@ -508,8 +504,9 @@ void print_instant(void)
 
 	while (instant_msgs != 0) {
 		r = CtdlIPCGetInstantMessage(ipc_for_signal_handlers, &listing, buf);
-		if (r / 100 != 1)
+		if (r / 100 != 1) {
 			return;
+		}
 
 		instant_msgs = extract_int(buf, 0);
 		timestamp = extract_long(buf, 1);
@@ -595,19 +592,16 @@ void print_instant(void)
 }
 
 
-void set_keepalives(int s)
-{
+void set_keepalives(int s) {
 	keepalives_enabled = (char) s;
 }
+
 
 /* 
  * This loop handles the "keepalive" messages sent to the server when idling.
  */
-
 static time_t idlet = 0;
-static void really_do_keepalive(void)
-{
-
+static void really_do_keepalive(void) {
 	time(&idlet);
 
 	/* This may sometimes get called before we are actually connected
@@ -640,6 +634,7 @@ static void really_do_keepalive(void)
 	}
 }
 
+
 /* I changed this from static to not because I need to call it from
  * screen.c, either that or make something in screen.c not static.
  * Fix it how you like. Why all the staticness? stu
@@ -659,7 +654,6 @@ void do_keepalive(void)
 
 	really_do_keepalive();
 }
-
 
 
 int inkey(void)

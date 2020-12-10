@@ -390,10 +390,11 @@ void mini_2047_decode(char *s)
 /*
  * Read a message from the server
  */
-int read_message(CtdlIPC * ipc, long num,	/* message number */
-		 int pagin,	/* 0 = normal read, 1 = read with pagination, 2 = header */
-		 FILE * dest)
-{				/* Destination file, NULL for screen */
+int read_message(CtdlIPC *ipc,
+		long num,	/* message number */
+		int pagin,	/* 0 = normal read, 1 = read with pagination, 2 = header */
+		FILE *dest	/* Destination file, NULL for screen */
+) {
 	char buf[SIZ];
 	char now[256];
 	int format_type = 0;
@@ -432,7 +433,8 @@ int read_message(CtdlIPC * ipc, long num,	/* message number */
 
 	if (dest) {
 		fprintf(dest, "\n ");
-	} else {
+	}
+	else {
 		scr_printf("\n");
 		if (pagin != 2) {
 			scr_printf(" ");
@@ -452,8 +454,7 @@ int read_message(CtdlIPC * ipc, long num,	/* message number */
 		if (!IsEmptyStr(message->email)) {
 			scr_printf("rfca=%s\n", message->email);
 		}
-		scr_printf("room=%s\ntime=%s", message->room, asctime(localtime(&message->time))
-		    );
+		scr_printf("room=%s\ntime=%s", message->room, asctime(localtime(&message->time)));
 		if (!IsEmptyStr(message->recipient)) {
 			scr_printf("rcpt=%s\n", message->recipient);
 		}
@@ -488,10 +489,12 @@ int read_message(CtdlIPC * ipc, long num,	/* message number */
 	if (nhdr == 1 && !is_room_aide) {
 		if (dest) {
 			fprintf(dest, " ****");
-		} else {
+		}
+		else {
 			scr_printf(" ****");
 		}
-	} else {
+	}
+	else {
 		struct tm thetime;
 		localtime_r(&message->time, &thetime);
 		strftime(now, sizeof now, "%F %R", &thetime);
@@ -500,7 +503,8 @@ int read_message(CtdlIPC * ipc, long num,	/* message number */
 			if (!IsEmptyStr(message->email)) {
 				fprintf(dest, "<%s> ", message->email);
 			}
-		} else {
+		}
+		else {
 			color(BRIGHT_CYAN);
 			scr_printf("%s ", now);
 			color(DIM_WHITE);
