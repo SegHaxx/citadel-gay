@@ -528,29 +528,6 @@ int Conditional_MAIL_SUMM_REPLYTO(StrBuf *Target, WCTemplputParams *TP)
 	return StrLength(Msg->ReplyTo) > 0;
 }
 
-void examine_node(message_summary *Msg, StrBuf *HdrLine, StrBuf *FoundCharset)
-{
-	wcsession *WCC = WC;
-
-	if ( (StrLength(HdrLine) > 0) &&
-	     ((WC->CurRoom.QRFlags & QR_NETWORK)
-	      || ((strcasecmp(ChrPtr(HdrLine), ChrPtr(WCC->serv_info->serv_nodename))
-		   && (strcasecmp(ChrPtr(HdrLine), ChrPtr(WCC->serv_info->serv_fqdn))))))) {
-		FreeStrBuf(&Msg->OtherNode);
-		Msg->OtherNode = NewStrBufDup(HdrLine);
-	}
-}
-void tmplput_MAIL_SUMM_OTHERNODE(StrBuf *Target, WCTemplputParams *TP)
-{
-	message_summary *Msg = (message_summary*) CTX(CTX_MAILSUM);
-	StrBufAppendTemplate(Target, TP, Msg->OtherNode, 0);
-}
-int Conditional_MAIL_SUMM_OTHERNODE(StrBuf *Target, WCTemplputParams *TP)
-{
-	message_summary *Msg = (message_summary*) CTX(CTX_MAILSUM);
-	return StrLength(Msg->OtherNode) > 0;
-}
-
 void examine_nvto(message_summary *Msg, StrBuf *HdrLine, StrBuf *FoundCharset)
 {
 	wcsession *WCC = WC;
@@ -816,34 +793,6 @@ void tmplput_MAIL_SUMM_NATTACH(StrBuf *Target, WCTemplputParams *TP)
 	message_summary *Msg = (message_summary*) CTX(CTX_MAILSUM);
 	StrBufAppendPrintf(Target, "%ld", GetCount(Msg->Attachments));
 }
-
-
-void examine_hnod(message_summary *Msg, StrBuf *HdrLine, StrBuf *FoundCharset)
-{
-	wcsession *WCC = WC;
-
-	CheckConvertBufs(WCC);
-	FreeStrBuf(&Msg->hnod);
-	Msg->hnod = NewStrBufPlain(NULL, StrLength(HdrLine));
-	StrBuf_RFC822_2_Utf8(Msg->hnod, 
-			     HdrLine, 
-			     WCC->DefaultCharset, 
-			     FoundCharset,
-			     WCC->ConvertBuf1,
-			     WCC->ConvertBuf2);
-}
-void tmplput_MAIL_SUMM_H_NODE(StrBuf *Target, WCTemplputParams *TP)
-{
-	message_summary *Msg = (message_summary*) CTX(CTX_MAILSUM);
-	StrBufAppendTemplate(Target, TP, Msg->hnod, 0);
-}
-int Conditional_MAIL_SUMM_H_NODE(StrBuf *Target, WCTemplputParams *TP)
-{
-	message_summary *Msg = (message_summary*) CTX(CTX_MAILSUM);
-	return StrLength(Msg->hnod) > 0;
-}
-
-
 
 void examine_text(message_summary *Msg, StrBuf *HdrLine, StrBuf *FoundCharset)
 {
@@ -1394,13 +1343,11 @@ const char* fieldMnemonics[] = {
 	"from", /* A -> eAuthor       */
 	"exti", /* E -> eXclusivID    */
 	"rfca", /* F -> erFc822Addr   */
-	"hnod", /* H -> eHumanNode    */
 	"msgn", /* I -> emessageId    */
 	"jrnl", /* J -> eJournal      */
 	"rep2", /* K -> eReplyTo      */
 	"list", /* L -> eListID       */
 	"text", /* M -> eMesageText   */
-	"node", /* N -> eNodeName     */
 	"room", /* O -> eOriginalRoom */
 	"path", /* P -> eMessagePath  */
 	"rcpt", /* R -> eRecipient    */
@@ -1487,11 +1434,9 @@ InitModule_MSGRENDERERS
 	RegisterNamespace("MAIL:SUMM:NTATACH", 0, 0, tmplput_MAIL_SUMM_NATTACH,  NULL, CTX_MAILSUM);
 	RegisterNamespace("MAIL:SUMM:CCCC", 0, 2, tmplput_MAIL_SUMM_CCCC, NULL, CTX_MAILSUM);
 	RegisterNamespace("MAIL:SUMM:REPLYTO", 0, 2, tmplput_MAIL_SUMM_REPLYTO, NULL, CTX_MAILSUM);
-	RegisterNamespace("MAIL:SUMM:H_NODE", 0, 2, tmplput_MAIL_SUMM_H_NODE,  NULL, CTX_MAILSUM);
 	RegisterNamespace("MAIL:SUMM:ALLRCPT", 0, 2, tmplput_MAIL_SUMM_ALLRCPT,  NULL, CTX_MAILSUM);
 	RegisterNamespace("MAIL:SUMM:ORGROOM", 0, 2, tmplput_MAIL_SUMM_ORGROOM,  NULL, CTX_MAILSUM);
 	RegisterNamespace("MAIL:SUMM:RFCA", 0, 2, tmplput_MAIL_SUMM_RFCA, NULL, CTX_MAILSUM);
-	RegisterNamespace("MAIL:SUMM:OTHERNODE", 2, 0, tmplput_MAIL_SUMM_OTHERNODE,  NULL, CTX_MAILSUM);
 	RegisterNamespace("MAIL:SUMM:REFIDS", 0, 1, tmplput_MAIL_SUMM_REFIDS,  NULL, CTX_MAILSUM);
 	RegisterNamespace("MAIL:SUMM:INREPLYTO", 0, 2, tmplput_MAIL_SUMM_INREPLYTO,  NULL, CTX_MAILSUM);
 	RegisterNamespace("MAIL:BODY", 0, 2, tmplput_MAIL_BODY,  NULL, CTX_MAILSUM);
@@ -1502,8 +1447,6 @@ InitModule_MSGRENDERERS
 	RegisterConditional("COND:MAIL:SUMM:CCCC", 0, Conditional_MAIL_SUMM_CCCC,  CTX_MAILSUM);
 	RegisterConditional("COND:MAIL:SUMM:REPLYTO", 0, Conditional_MAIL_SUMM_REPLYTO,  CTX_MAILSUM);
 	RegisterConditional("COND:MAIL:SUMM:UNREAD", 0, Conditional_MAIL_SUMM_UNREAD, CTX_MAILSUM);
-	RegisterConditional("COND:MAIL:SUMM:H_NODE", 0, Conditional_MAIL_SUMM_H_NODE, CTX_MAILSUM);
-	RegisterConditional("COND:MAIL:SUMM:OTHERNODE", 0, Conditional_MAIL_SUMM_OTHERNODE, CTX_MAILSUM);
 	RegisterConditional("COND:MAIL:SUMM:SUBJECT", 0, Conditional_MAIL_SUMM_SUBJECT, CTX_MAILSUM);
 	RegisterConditional("COND:MAIL:ANON", 0, Conditional_ANONYMOUS_MESSAGE, CTX_MAILSUM);
 	RegisterConditional("COND:MAIL:TO", 0, Conditional_MAIL_SUMM_TO, CTX_MAILSUM);	
@@ -1565,10 +1508,8 @@ InitModule_MSGRENDERERS
 	RegisterMsgHdr(HKEY("wefw"), examine_wefw, 0);
 	RegisterMsgHdr(HKEY("cccc"), examine_cccc, 0);
 	RegisterMsgHdr(HKEY("rep2"), examine_replyto, 0);
-	RegisterMsgHdr(HKEY("hnod"), examine_hnod, 0);
 	RegisterMsgHdr(HKEY("room"), examine_room, 0);
 	RegisterMsgHdr(HKEY("rfca"), examine_rfca, 0);
-	RegisterMsgHdr(HKEY("node"), examine_node, 0);
 	RegisterMsgHdr(HKEY("rcpt"), examine_rcpt, 0);
 	RegisterMsgHdr(HKEY("nvto"), examine_nvto, 0);
 	RegisterMsgHdr(HKEY("time"), examine_time, 0);
