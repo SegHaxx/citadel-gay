@@ -58,22 +58,16 @@ typedef struct _message_summary {
 	long    reply_references_hash;
 	StrBuf *ReplyTo;
 	StrBuf *cccc;
-	StrBuf *hnod;
 	StrBuf *AllRcpt;
 	StrBuf *Room;
 	StrBuf *Rfca;
 	StrBuf *EnvTo;
-	StrBuf *OtherNode;
 	const StrBuf *PartNum;
-
 	HashList *Attachments;  /* list of attachments */
 	HashList *Submessages;
 	HashList *AttachLinks;
-
 	HashList *AllAttach;
-
 	int hasattachments;
-
 
 	/* The mime part of the message */
 	wc_mime_attachment *MsgBody;

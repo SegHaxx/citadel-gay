@@ -52,13 +52,10 @@ void DestroyMessageSummary(void *vMsg)
 	FreeStrBuf(&Msg->reply_references);
 	FreeStrBuf(&Msg->cccc);
 	FreeStrBuf(&Msg->ReplyTo);
-	FreeStrBuf(&Msg->hnod);
 	FreeStrBuf(&Msg->AllRcpt);
 	FreeStrBuf(&Msg->Room);
 	FreeStrBuf(&Msg->Rfca);
 	FreeStrBuf(&Msg->EnvTo);
-	FreeStrBuf(&Msg->OtherNode);
-
 	DeleteHash(&Msg->Attachments);	/* list of Attachments */
 	DeleteHash(&Msg->Submessages);
 	DeleteHash(&Msg->AttachLinks);
