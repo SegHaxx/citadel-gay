@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996-2013 by the citadel.org team
+ * Copyright (c) 1996-2020 by the citadel.org team
  *
  * This program is open source software.  You can redistribute it and/or
  * modify it under the terms of the GNU General Public License, version 3.
@@ -42,36 +42,34 @@ void DestroyMime(void *vMime);
 #define MSGFLAG_READ (1<<0)
 
 typedef struct _message_summary {
-	long msgnum;		/* the message number on the citadel server */
+	long msgnum;				// the message number on the citadel server
 	int Flags;
-
-	time_t date;     	/* its creation date */
+	time_t date;     			// its creation date
 	int nhdr;
 	int format_type;
 	StrBuf *euid;
-	StrBuf *from;		/* the author */
-	StrBuf *to;		/* the recipient */
-	StrBuf *subj;		/* the title / subject */
+	StrBuf *from;				// display name of message author
+	StrBuf *to;				// the recipient
+	StrBuf *subj;				// title / subject
 	StrBuf *reply_inreplyto;
-	long    reply_inreplyto_hash;
+	long reply_inreplyto_hash;
 	StrBuf *reply_references;
-	long    reply_references_hash;
+	long reply_references_hash;
 	StrBuf *ReplyTo;
 	StrBuf *cccc;
 	StrBuf *AllRcpt;
 	StrBuf *Room;
-	StrBuf *Rfca;
+	StrBuf *Rfca;				// UPN or email address of message author
 	StrBuf *EnvTo;
 	const StrBuf *PartNum;
-	HashList *Attachments;  /* list of attachments */
+	HashList *Attachments;			// list of attachments
 	HashList *Submessages;
 	HashList *AttachLinks;
 	HashList *AllAttach;
 	int hasattachments;
-
-	/* The mime part of the message */
-	wc_mime_attachment *MsgBody;
+	wc_mime_attachment *MsgBody;		// the MIME part of the message
 } message_summary;
+
 void DestroyMessageSummary(void *vMsg);
 
 /* Maps to msgkeys[] in msgbase.c: */
@@ -102,38 +100,35 @@ typedef enum _eMessageField {
 	ePevious,
 	eSubFolder,
 	eLastHeader
-}eMessageField;
+} eMessageField;
 
 extern const char* fieldMnemonics[];
 
 int GetFieldFromMnemonic(eMessageField *f, const char* c);
-
 int EvaluateMsgHdr(const char *HeaderName, long HdrNLen, message_summary *Msg, StrBuf *HdrLine, StrBuf *FoundCharset);
 int EvaluateMsgHdrEnum(eMessageField f, message_summary *Msg, StrBuf *HdrLine, StrBuf *FoundCharset);
 
 
-
-static inline message_summary* GetMessagePtrAt(int n, HashList *Summ)
-{
+static inline message_summary* GetMessagePtrAt(int n, HashList *Summ) {
 	const char *Key;
 	long HKLen;
 	void *vMsg;
 
-	if (Summ == NULL)
+	if (Summ == NULL) {
 		return NULL;
+	}
 	GetHashAt(Summ, n, &HKLen, &Key, &vMsg);
 	return (message_summary*) vMsg;
 }
 
+
 typedef void (*ExamineMsgHeaderFunc)(message_summary *Msg, StrBuf *HdrLine, StrBuf *FoundCharset);
-
 void evaluate_mime_part(StrBuf *Target, WCTemplputParams *TP);
-
 
 typedef enum _eCustomRoomRenderer {
 	eUseDefault = VIEW_JOURNAL + 100, 
 	eReadEUIDS
-}eCustomRoomRenderer;
+} eCustomRoomRenderer;
 
 enum {
 	do_search,

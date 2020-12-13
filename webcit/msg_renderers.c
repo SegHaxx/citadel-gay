@@ -362,17 +362,38 @@ void tmplput_MAIL_SUMM_SUBJECT(StrBuf *Target, WCTemplputParams *TP)
 	}
 	StrBufAppendTemplate(Target, TP, Msg->subj, 0);
 }
-int Conditional_MAIL_SUMM_SUBJECT(StrBuf *Target, WCTemplputParams *TP)
-{
+
+/*
+ * Conditional returns true if the message has a Subject and it is nonzero in length
+ */
+int Conditional_MAIL_SUMM_SUBJECT(StrBuf *Target, WCTemplputParams *TP) {
 	message_summary *Msg = (message_summary*) CTX(CTX_MAILSUM);
-
-
 	return StrLength(Msg->subj) > 0;
 }
 
 
-void examine_msgn(message_summary *Msg, StrBuf *HdrLine, StrBuf *FoundCharset)
-{
+/*
+ * Conditional returns true if the message originated on the local system
+ */
+int Conditional_MAIL_LOCAL(StrBuf *Target, WCTemplputParams *TP) {
+	message_summary *Msg = (message_summary*) CTX(CTX_MAILSUM);
+
+	char *at = strchr(ChrPtr(Msg->Rfca), '@');
+	if (at == NULL) {
+		return 1;						// If there is no "@" in the address, it's got to be local.
+	}
+	++at;
+
+	if (!strcasecmp(at, ChrPtr(WC->serv_info->serv_fqdn))) {	// is this from our local domain?
+		return 1;						// if yes, then the message originated locally.
+	}
+	else {
+		return 0;						// otherwise it probably didn't.
+	}
+}
+
+
+void examine_msgn(message_summary *Msg, StrBuf *HdrLine, StrBuf *FoundCharset) {
 	wcsession *WCC = WC;
 	long Offset = 0;
 	const char *pOffset;
@@ -1362,8 +1383,8 @@ const char* fieldMnemonics[] = {
 };
 HashList *msgKeyLookup = NULL;
 
-int GetFieldFromMnemonic(eMessageField *f, const char* c)
-{
+
+int GetFieldFromMnemonic(eMessageField *f, const char *c) {
 	void *v = NULL;
 	if (GetHash(msgKeyLookup, c, 4, &v)) {
 		*f = (eMessageField) v;
@@ -1372,8 +1393,8 @@ int GetFieldFromMnemonic(eMessageField *f, const char* c)
 	return 0;
 }
 
-void FillMsgKeyLookupTable(void)
-{
+
+void FillMsgKeyLookupTable(void) {
 	long i = 0;
 
 	msgKeyLookup = NewHash (1, FourHash);
@@ -1385,7 +1406,6 @@ void FillMsgKeyLookupTable(void)
 		i++;
 	}
 }
-
 
 
 void 
@@ -1415,9 +1435,9 @@ InitModule_MSGRENDERERS
 			 CTX_MAILSUM);
 
 	RegisterNamespace("SUMM:COUNT", 0, 0, tmplput_SUMM_COUNT, NULL, CTX_NONE);
+
 	/* iterate over all known mails in WC->summ */
-	RegisterIterator("MAIL:SUMM:MSGS", 0, NULL, iterate_get_mailsumm_All,
-			 NULL,NULL, CTX_MAILSUM, CTX_NONE, IT_NOFLAG);
+	RegisterIterator("MAIL:SUMM:MSGS", 0, NULL, iterate_get_mailsumm_All, NULL,NULL, CTX_MAILSUM, CTX_NONE, IT_NOFLAG);
 
 	RegisterNamespace("MAIL:SUMM:EUID", 0, 1, tmplput_MAIL_SUMM_EUID, NULL, CTX_MAILSUM);
 	RegisterNamespace("MAIL:SUMM:DATEBRIEF", 0, 0, tmplput_MAIL_SUMM_DATE_BRIEF, NULL, CTX_MAILSUM);
@@ -1446,22 +1466,19 @@ InitModule_MSGRENDERERS
 	RegisterConditional("COND:MAIL:SUMM:UNREAD", 0, Conditional_MAIL_SUMM_UNREAD, CTX_MAILSUM);
 	RegisterConditional("COND:MAIL:SUMM:SUBJECT", 0, Conditional_MAIL_SUMM_SUBJECT, CTX_MAILSUM);
 	RegisterConditional("COND:MAIL:ANON", 0, Conditional_ANONYMOUS_MESSAGE, CTX_MAILSUM);
-	RegisterConditional("COND:MAIL:TO", 0, Conditional_MAIL_SUMM_TO, CTX_MAILSUM);	
-	RegisterConditional("COND:MAIL:SUBJ", 0, Conditional_MAIL_SUMM_SUBJ, CTX_MAILSUM);	
+	RegisterConditional("COND:MAIL:TO", 0, Conditional_MAIL_SUMM_TO, CTX_MAILSUM);
+	RegisterConditional("COND:MAIL:SUBJ", 0, Conditional_MAIL_SUMM_SUBJ, CTX_MAILSUM);
+	RegisterConditional("COND:MAIL:LOCAL", 0, Conditional_MAIL_LOCAL, CTX_MAILSUM);
 
 	/* do we have mimetypes to iterate over? */
 	RegisterConditional("COND:MAIL:MIME:ATTACH", 0, Conditional_MAIL_MIME_ALL, CTX_MAILSUM);
 	RegisterConditional("COND:MAIL:MIME:ATTACH:SUBMESSAGES", 0, Conditional_MAIL_MIME_SUBMESSAGES, CTX_MAILSUM);
 	RegisterConditional("COND:MAIL:MIME:ATTACH:LINKS", 0, Conditional_MAIL_MIME_ATTACHLINKS, CTX_MAILSUM);
 	RegisterConditional("COND:MAIL:MIME:ATTACH:ATT", 0, Conditional_MAIL_MIME_ATTACH, CTX_MAILSUM);
-	RegisterIterator("MAIL:MIME:ATTACH", 0, NULL, iterate_get_mime_All, 
-			 NULL, NULL, CTX_MIME_ATACH, CTX_MAILSUM, IT_NOFLAG);
-	RegisterIterator("MAIL:MIME:ATTACH:SUBMESSAGES", 0, NULL, iterate_get_mime_Submessages, 
-			 NULL, NULL, CTX_MIME_ATACH, CTX_MAILSUM, IT_NOFLAG);
-	RegisterIterator("MAIL:MIME:ATTACH:LINKS", 0, NULL, iterate_get_mime_AttachLinks, 
-			 NULL, NULL, CTX_MIME_ATACH, CTX_MAILSUM, IT_NOFLAG);
-	RegisterIterator("MAIL:MIME:ATTACH:ATT", 0, NULL, iterate_get_mime_Attachments, 
-			 NULL, NULL, CTX_MIME_ATACH, CTX_MAILSUM, IT_NOFLAG);
+	RegisterIterator("MAIL:MIME:ATTACH", 0, NULL, iterate_get_mime_All, NULL, NULL, CTX_MIME_ATACH, CTX_MAILSUM, IT_NOFLAG);
+	RegisterIterator("MAIL:MIME:ATTACH:SUBMESSAGES", 0, NULL, iterate_get_mime_Submessages, NULL, NULL, CTX_MIME_ATACH, CTX_MAILSUM, IT_NOFLAG);
+	RegisterIterator("MAIL:MIME:ATTACH:LINKS", 0, NULL, iterate_get_mime_AttachLinks, NULL, NULL, CTX_MIME_ATACH, CTX_MAILSUM, IT_NOFLAG);
+	RegisterIterator("MAIL:MIME:ATTACH:ATT", 0, NULL, iterate_get_mime_Attachments, NULL, NULL, CTX_MIME_ATACH, CTX_MAILSUM, IT_NOFLAG);
 
 	/* Parts of a mime attachent */
 	RegisterNamespace("MAIL:MIME:NAME", 0, 2, tmplput_MIME_Name, NULL, CTX_MIME_ATACH);
@@ -1473,13 +1490,12 @@ InitModule_MSGRENDERERS
 	RegisterNamespace("MAIL:MIME:CHARSET", 0, 2, tmplput_MIME_Charset, NULL, CTX_MIME_ATACH);
 	RegisterNamespace("MAIL:MIME:LENGTH", 0, 2, tmplput_MIME_Length, NULL, CTX_MIME_ATACH);
 	RegisterNamespace("MAIL:MIME:DATA", 0, 2, tmplput_MIME_Data, NULL, CTX_MIME_ATACH);
+
 	/* load the actual attachment into WC->attachments; no output!!! */
 	RegisterNamespace("MAIL:MIME:LOADDATA", 0, 0, tmplput_MIME_LoadData, NULL, CTX_MIME_ATACH);
 
 	/* iterate the WC->attachments; use the above tokens for their contents */
-	RegisterIterator("MSG:ATTACHNAMES", 0, NULL, iterate_get_registered_Attachments, 
-			 NULL, NULL, CTX_MIME_ATACH, CTX_NONE, IT_NOFLAG);
-
+	RegisterIterator("MSG:ATTACHNAMES", 0, NULL, iterate_get_registered_Attachments, NULL, NULL, CTX_MIME_ATACH, CTX_NONE, IT_NOFLAG);
 	RegisterNamespace("MSG:NATTACH", 0, 0, get_registered_Attachments_Count,  NULL, CTX_NONE);
 
 	/* mime renderers translate an attachment into webcit viewable html text */
@@ -1512,7 +1528,8 @@ InitModule_MSGRENDERERS
 	RegisterMsgHdr(HKEY("time"), examine_time, 0);
 	RegisterMsgHdr(HKEY("part"), examine_mime_part, 0);
 	RegisterMsgHdr(HKEY("text"), examine_text, 1);
-	/* these are the content-type headers we get infront of a message; put it into the same hash since it doesn't clash. */
+
+	/* these are the content-type headers we get in front of a message; put it into the same hash since it doesn't clash. */
 	RegisterMsgHdr(HKEY("X-Citadel-MSG4-Partnum"), examine_msg4_partnum, 0);
 	RegisterMsgHdr(HKEY("Content-type"), examine_content_type, 0);
 	RegisterMsgHdr(HKEY("Content-length"), examine_content_lengh, 0);

@@ -2,12 +2,8 @@
 	<div class="blog_comment_header">
 		<span class="blog_commenter_name">
  		<??("COND:MAIL:ANON",1)>
-   			<?!("COND:MAIL:SUMM:RFCA", 2)>
-				<a href="do_template?template=user_show?who=<?MAIL:SUMM:FROM("Q")>">"<?MAIL:SUMM:FROM("X")>" &lt;<?MAIL:SUMM:RFCA>&gt;</a>
-			<?!("X", 2)>
-   			<??("COND:MAIL:SUMM:RFCA", 3)>
-				<a href="do_template?template=user_show?who=<?MAIL:SUMM:FROM("Q")>"><?MAIL:SUMM:FROM("X")></a> 
-			<??("X", 3)>
+			<?!("COND:MAIL:LOCAL", 2)><a href="do_template?template=user_show?who=<?MAIL:SUMM:FROM("Q")>"><?MAIL:SUMM:FROM("X")></a><?!("X", 2)>
+			<??("COND:MAIL:LOCAL", 2)><?MAIL:SUMM:FROM("X")> &lt;<?MAIL:SUMM:RFCA>&gt;</a><?!("X", 2)>
 		<??("X", 1)>
 		&nbsp;says:&nbsp;</span>
 		<span class="blog_comment_date"><?MAIL:SUMM:DATEFULL></span>

@@ -246,10 +246,10 @@ int GetConnected (void)
 				  "In order to run this version of WebCit "
 				  "you must also have Citadel %d.%02d or"
 				  " newer.\n\n\n"),
-				WCC->serv_info->serv_rev_level / 100,
-				WCC->serv_info->serv_rev_level % 100,
-				MINIMUM_CIT_VERSION / 100,
-				MINIMUM_CIT_VERSION % 100
+				WCC->serv_info->serv_rev_level,
+				0,
+				MINIMUM_CIT_VERSION,
+				0
 				);
 			hprintf("HTTP/1.1 200 OK\r\n");
 			hprintf("Content-type: text/plain; charset=utf-8\r\n");
