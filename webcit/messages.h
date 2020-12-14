@@ -67,6 +67,7 @@ typedef struct _message_summary {
 	HashList *AttachLinks;
 	HashList *AllAttach;
 	int hasattachments;
+	int is_local;				// nonzero if the message originated on the local system
 	wc_mime_attachment *MsgBody;		// the MIME part of the message
 } message_summary;
 

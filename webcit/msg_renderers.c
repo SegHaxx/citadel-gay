@@ -377,19 +377,7 @@ int Conditional_MAIL_SUMM_SUBJECT(StrBuf *Target, WCTemplputParams *TP) {
  */
 int Conditional_MAIL_LOCAL(StrBuf *Target, WCTemplputParams *TP) {
 	message_summary *Msg = (message_summary*) CTX(CTX_MAILSUM);
-
-	char *at = strchr(ChrPtr(Msg->Rfca), '@');
-	if (at == NULL) {
-		return 1;						// If there is no "@" in the address, it's got to be local.
-	}
-	++at;
-
-	if (!strcasecmp(at, ChrPtr(WC->serv_info->serv_fqdn))) {	// is this from our local domain?
-		return 1;						// if yes, then the message originated locally.
-	}
-	else {
-		return 0;						// otherwise it probably didn't.
-	}
+	return (Msg->is_local ? 1 : 0);
 }
 
 
@@ -513,6 +501,8 @@ void examine_room(message_summary *Msg, StrBuf *HdrLine, StrBuf *FoundCharset)
 		Msg->Room = NewStrBufDup(HdrLine);		
 	}
 }
+
+
 void tmplput_MAIL_SUMM_ORGROOM(StrBuf *Target, WCTemplputParams *TP)
 {
 	message_summary *Msg = (message_summary*) CTX(CTX_MAILSUM);
@@ -525,6 +515,14 @@ void examine_rfca(message_summary *Msg, StrBuf *HdrLine, StrBuf *FoundCharset)
 	FreeStrBuf(&Msg->Rfca);
 	Msg->Rfca = NewStrBufDup(HdrLine);
 }
+
+
+void examine_locl(message_summary *Msg, StrBuf *HdrLine, StrBuf *FoundCharset)
+{
+	Msg->is_local = 1;
+}
+
+
 void tmplput_MAIL_SUMM_RFCA(StrBuf *Target, WCTemplputParams *TP)
 {
 	message_summary *Msg = (message_summary*) CTX(CTX_MAILSUM);
@@ -1378,8 +1376,9 @@ const char* fieldMnemonics[] = {
 	"nhdr", /* % -> eHeaderOnly   */
 	"type", /* % -> eFormatType   */
 	"part", /* % -> eMessagePart  */
-	"suff", /* % -> eSubFolder    */
-	"pref"  /* % -> ePevious      */
+	"suff", /*      eSubFolder    */
+	"pref", /*      ePrefix       */
+	"locl"	/*      eIsLocal      */
 };
 HashList *msgKeyLookup = NULL;
 
@@ -1527,6 +1526,7 @@ InitModule_MSGRENDERERS
 	RegisterMsgHdr(HKEY("nvto"), examine_nvto, 0);
 	RegisterMsgHdr(HKEY("time"), examine_time, 0);
 	RegisterMsgHdr(HKEY("part"), examine_mime_part, 0);
+	RegisterMsgHdr(HKEY("locl"), examine_locl, 0);
 	RegisterMsgHdr(HKEY("text"), examine_text, 1);
 
 	/* these are the content-type headers we get in front of a message; put it into the same hash since it doesn't clash. */
