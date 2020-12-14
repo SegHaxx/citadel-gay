@@ -61,7 +61,7 @@ char *msgkeys[] = {
 	"rep2", // K -> eReplyTo
 	"list", // L -> eListID
 	"text", // M -> eMesageText
-	NULL,	// N (formerly used as eNodeName)
+	"locl",	// N -> eOrigLocal
 	"room", // O -> eOriginalRoom
 	"path", // P -> eMessagePath
 	NULL,   // Q
@@ -113,6 +113,7 @@ eMsgField FieldOrder[]  = {
 	eOriginalRoom,
 	eRecipient   ,
 /* Semi-important fields */
+	eOrigLocal   ,
 	eBig_message ,
 	eExclusiveID ,
 	eWeferences  ,
@@ -1856,6 +1857,7 @@ void OutputRFC822MsgHeaders(
 			case eSuppressIdx:
 			case eExtnotify:
 			case eVltMsgNum:
+			case eOrigLocal:
 				/* these don't map to mime message headers. */
 				break;
 			}

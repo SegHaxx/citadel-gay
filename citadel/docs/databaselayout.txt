@@ -221,7 +221,7 @@ reaches zero.
 
 | BYTE  |       Enum        | NW   | Mnemonic       |  Enum / Comments
 |-------|-------------------|------|----------------|---------------------------------------------------------
-| A     |    eAuthor        | from | Author         |  Name of originator of the message.
+| A     |    eAuthor        | from | Author         |  The display name of the Author of the message.
 | B     |    eBig_message   |      | Big message    |  This is a flag which indicates that the message is
 |       |                   |      |                |  big, and Citadel is storing the body in a separate
 |       |                   |      |                |  record.  You will never see this field because the
@@ -233,8 +233,8 @@ reaches zero.
 |       |                   |      |                |  message should be deleted.  If there exist any messages
 |       |                   |      |                |  with the same Exclusive ID that are *newer*, then this
 |       |                   |      |                |  message should be dropped.
-| F     |    erFc822Addr    | rfca | rFc822 address |  For Internet mail, this is the delivery address of the
-|       |                   |      |                |  message author.
+| F     |    erFc822Addr    | rfca | rFc822 address |  email address or user principal name of the message
+|       |                   |      |                |  author.
 | I     |    emessageId     | msgn | Message ID     |  An RFC822-compatible message ID for this message.
 |       |                   |      |                |  
 | J     |    eJournal       | jrnl | Journal        |  The presence of this field indicates that the message
@@ -245,6 +245,9 @@ reaches zero.
 | L     |    eListID        | list | List-ID        |  Mailing list identification, as per RFC 2919
 | M     |    eMesageText    | text | Message Text   |  Normal ASCII, newlines seperated by CR's or LF's,
 |       |                   |      |                |  null terminated as always.
+| N     |    eOrigLocal     | locl | Is-Local       |  The presence of this field indicates that the message
+|       |                   |      |                |  originated on the local Citadel node, not as an inbound
+|       |                   |      |                |  email or some other outside source.
 | O     |    eOriginalRoom  | room | Room           |  Room of origin.
 | P     |    eMessagePath   | path | Path           |  Complete path of message, as in the UseNet news
 |       |                   |      |                |  standard.  A user should be able to send Internet mail
