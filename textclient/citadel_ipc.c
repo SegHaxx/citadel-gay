@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1987-2019 by the citadel.org team
+ * Copyright (c) 1987-2020 by the citadel.org team
  *
  *  This program is open source software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License version 3.
@@ -622,6 +622,7 @@ int CtdlIPCGetSingleMessage(CtdlIPC * ipc, long msgnum, int headers, int as_mime
 
 	strcpy(encoding, "");
 	strcpy(mret[0]->content_type, "");
+	mret[0]->is_local = 0;
 	sprintf(aaa, "MSG%d %ld|%d", as_mime, msgnum, headers);
 	ret = CtdlIPCGenericCommand(ipc, aaa, NULL, 0, &bbb, &bbb_len, cret);
 	if (ret / 100 == 1) {
@@ -651,6 +652,8 @@ int CtdlIPCGetSingleMessage(CtdlIPC * ipc, long msgnum, int headers, int as_mime
 					safestrncpy(mret[0]->references, &aaa[5], SIZ);
 				else if (!strncasecmp(aaa, "time=", 5))
 					mret[0]->time = atol(&aaa[5]);
+				else if (!strncasecmp(aaa, "locl", 4))
+					mret[0]->is_local = 1;
 
 				/* Multipart/alternative prefix & suffix strings help
 				 * us to determine which part we want to download.

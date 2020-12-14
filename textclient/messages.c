@@ -410,8 +410,6 @@ int read_message(CtdlIPC *ipc,
 	char ch;
 	int linelen;
 	int final_line_is_blank = 0;
-	int is_local = 0;
-
 	has_images = 0;
 
 	sigcaught = 0;
@@ -443,18 +441,6 @@ int read_message(CtdlIPC *ipc,
 	}
 	if (pagin == 1 && !dest) {
 		color(BRIGHT_CYAN);
-	}
-
-	/* Determine if the message originated here on the local system.  If it did we will suppress printing of email addresses */
-	is_local = 0;
-	char *at = !IsEmptyStr(message->email) ? strchr(message->email,'@') : NULL;
-	if (at) {
-		if (!strcasecmp(++at, ipc->ServInfo.fqdn)) {
-			is_local = 1;
-		}
-	}
-	else {
-		is_local = 1;		// no address means it couldn't have originated anywhere else
 	}
 
 	/* View headers only */
@@ -513,7 +499,7 @@ int read_message(CtdlIPC *ipc,
 		strftime(now, sizeof now, "%F %R", &thetime);
 		if (dest) {
 			fprintf(dest, "%s from %s ", now, message->author);
-			if (!is_local) {
+			if (!message->is_local) {
 				fprintf(dest, "<%s> ", message->email);
 			}
 		}
@@ -524,7 +510,7 @@ int read_message(CtdlIPC *ipc,
 			scr_printf("from ");
 			color(BRIGHT_CYAN);
 			scr_printf("%s ", message->author);
-			if (!is_local) {
+			if (!message->is_local) {
 				color(DIM_WHITE);
 				scr_printf("<");
 				color(BRIGHT_BLUE);

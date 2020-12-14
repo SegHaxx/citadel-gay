@@ -335,6 +335,7 @@ struct ctdlipcmessage {
 	char mime_chosen[SIZ];		/* Chosen MIME part to output */
 	char content_type[SIZ];		/* How would you like that? */
 	char references[SIZ];		/* Thread references */
+	int is_local;			/* Nonzero if the message originated on the local system */
 };
 
 
