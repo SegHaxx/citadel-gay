@@ -1689,10 +1689,7 @@ int CtdlOutputMsg(long msg_num,		/* message number (local) to fetch */
 }
 
 
-void OutputCtdlMsgHeaders(
-	struct CtdlMessage *TheMessage,
-	int do_proto)		/* do Citadel protocol responses? */
-{
+void OutputCtdlMsgHeaders(struct CtdlMessage *TheMessage, int do_proto) {
 	int i;
 	char buf[SIZ];
 	char display_name[256];
@@ -1725,23 +1722,29 @@ void OutputCtdlMsgHeaders(
 		eMsgField Field;
 		Field = FieldOrder[i];
 		if (Field != eMesageText) {
-			if ( (!CM_IsEmpty(TheMessage, Field))
-			     && (msgkeys[Field] != NULL) ) {
-				if ((Field == eenVelopeTo) ||
-				    (Field == eRecipient) ||
-				    (Field == eCarbonCopY)) {
+			if ( (!CM_IsEmpty(TheMessage, Field)) && (msgkeys[Field] != NULL) ) {
+				if ((Field == eenVelopeTo) || (Field == eRecipient) || (Field == eCarbonCopY)) {
 					sanitize_truncated_recipient(TheMessage->cm_fields[Field]);
 				}
 				if (Field == eAuthor) {
-					if (do_proto) cprintf("%s=%s\n",
-							      msgkeys[Field],
-							      display_name);
+					if (do_proto) {
+						cprintf("%s=%s\n", msgkeys[Field], display_name);
+					}
 				}
 				/* Masquerade display name if needed */
 				else {
 					if (do_proto) {
 						cprintf("%s=%s\n", msgkeys[Field], TheMessage->cm_fields[Field]);
 					}
+				}
+				/* Give the client a hint about whether the message originated locally */
+				if (Field == erFc822Addr) {
+					if (IsDirectory(TheMessage->cm_fields[Field] ,0)) {
+						cprintf("locl=yes\n");				// message originated locally.
+					}
+
+
+
 				}
 			}
 		}
@@ -2126,7 +2129,7 @@ int CtdlOutputPreLoadedMsg(
 
 	/* Tell the client which format type we're using. */
 	if ( (mode == MT_CITADEL) && (do_proto) ) {
-		cprintf("type=%d\n", TheMessage->cm_format_type);
+		cprintf("type=%d\n", TheMessage->cm_format_type);	// Tell the client which format type we're using.
 	}
 
 	/* nhdr=yes means that we're only displaying headers, no body */
@@ -2137,9 +2140,9 @@ int CtdlOutputPreLoadedMsg(
 		cprintf("nhdr=yes\n");
 	}
 
-	if ((mode == MT_CITADEL) || (mode == MT_MIME)) 
+	if ((mode == MT_CITADEL) || (mode == MT_MIME)) {
 		OutputCtdlMsgHeaders(TheMessage, do_proto);
-
+	}
 
 	/* begin header processing loop for RFC822 transfer format */
 	strcpy(suser, "");
