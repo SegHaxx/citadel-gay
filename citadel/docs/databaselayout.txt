@@ -245,9 +245,6 @@ reaches zero.
 | L     |    eListID        | list | List-ID        |  Mailing list identification, as per RFC 2919
 | M     |    eMesageText    | text | Message Text   |  Normal ASCII, newlines seperated by CR's or LF's,
 |       |                   |      |                |  null terminated as always.
-| N     |    eOrigLocal     | locl | Is-Local       |  The presence of this field indicates that the message
-|       |                   |      |                |  originated on the local Citadel node, not as an inbound
-|       |                   |      |                |  email or some other outside source.
 | O     |    eOriginalRoom  | room | Room           |  Room of origin.
 | P     |    eMessagePath   | path | Path           |  Complete path of message, as in the UseNet news
 |       |                   |      |                |  standard.  A user should be able to send Internet mail
@@ -286,6 +283,9 @@ reaches zero.
 | 2     |    eExtnotify     |      | extnotify      |  Used internally by the serv_extnotify module.
 | 3     |    eVltMsgNum     |      | msgnum         |  Used internally to pass the local message number in the
 |       |                   |      |                |  database to after-save hooks.  Discarded afterwards.
+|       |                   | locl |                |  The presence of this field indicates that the message
+|       |                   |      |                |  is believed to have originated on the local Citadel node,
+|       |                   |      |                |  not as an inbound email or some other outside source.
 
 EXAMPLE
 -------

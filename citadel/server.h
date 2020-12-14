@@ -317,7 +317,6 @@ typedef enum _MsgField {
 	eReplyTo      = 'K',
 	eListID       = 'L',
 	eMesageText   = 'M',
-	eOrigLocal    = 'N',
 	eOriginalRoom = 'O',
 	eMessagePath  = 'P',
 	eRecipient    = 'R',

@@ -1418,7 +1418,8 @@ void directory_key(char *key, char *addr) {
 }
 
 
-/* Return nonzero if the supplied address is in one of "our" domains
+/*
+ * Return nonzero if the supplied address is in one of "our" domains
  */
 int IsDirectory(char *addr, int allow_masq_domains) {
 	char domain[256];
