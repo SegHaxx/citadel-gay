@@ -686,7 +686,7 @@ void cmd_ent0(char *entargs)
 	}
 
 	if (msg != NULL) {
-		msgnum = CtdlSubmitMsg(msg, valid, "", QP_EADDR);
+		msgnum = CtdlSubmitMsg(msg, valid, "");
 		if (do_confirm) {
 			cprintf("%ld\n", msgnum);
 

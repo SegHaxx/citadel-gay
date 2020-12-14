@@ -373,7 +373,7 @@ int inbox_do_redirect(struct irule *rule, long msgnum) {
 		return(1);					// don't delete the inbox copy if this failed
 	}
 
-	CtdlSubmitMsg(msg, valid, NULL, 0);			// send the message to the new recipient
+	CtdlSubmitMsg(msg, valid, NULL);			// send the message to the new recipient
 	free_recipients(valid);
 	CM_Free(msg);
 	return(0);						// delete the inbox copy

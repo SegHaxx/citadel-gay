@@ -2659,8 +2659,7 @@ void ReplicationChecks(struct CtdlMessage *msg) {
  */
 long CtdlSubmitMsg(struct CtdlMessage *msg,	/* message to save */
 		   recptypes *recps,		/* recipients (if mail) */
-		   const char *force,		/* force a particular room? */
-		   int flags			/* should the message be exported clean? */
+		   const char *force		/* force a particular room? */
 ) {
 	char hold_rm[ROOMNAMELEN];
 	char actual_rm[ROOMNAMELEN];
@@ -3022,7 +3021,7 @@ long quickie_message(const char *from,
 		CM_SetField(msg, eMesageText, text, -1);
 	}
 
-	long msgnum = CtdlSubmitMsg(msg, recp, room, 0);
+	long msgnum = CtdlSubmitMsg(msg, recp, room);
 	CM_Free(msg);
 	if (recp != NULL) free_recipients(recp);
 	return msgnum;
@@ -3612,7 +3611,7 @@ void CtdlWriteObject(char *req_room,			/* Room to stuff it in */
 			);
 	}
 	/* Now write the data */
-	CtdlSubmitMsg(msg, NULL, roomname, 0);
+	CtdlSubmitMsg(msg, NULL, roomname);
 	CM_Free(msg);
 }
 

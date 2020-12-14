@@ -1,7 +1,7 @@
 /*
  * This module handles instant messaging between users.
  * 
- * Copyright (c) 1987-2019 by the citadel.org team
+ * Copyright (c) 1987-2020 by the citadel.org team
  *
  * This program is open source software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3.
@@ -479,7 +479,7 @@ void flush_individual_conversation(struct imlog *im) {
 	 */
 	snprintf(roomname, sizeof roomname, "%010ld.%s", im->usernums[1], PAGELOGROOM);
 	CtdlCreateRoom(roomname, 5, "", 0, 1, 1, VIEW_BBS);
-	msgnum = CtdlSubmitMsg(msg, NULL, roomname, 0);
+	msgnum = CtdlSubmitMsg(msg, NULL, roomname);
 	CM_Free(msg);
 
 	/* If there is a valid user number in usernums[0], save a copy for them too. */

@@ -1,7 +1,7 @@
 /*
  * Message journaling functions.
  *
- * Copyright (c) 1987-2018 by the citadel.org team
+ * Copyright (c) 1987-2020 by the citadel.org team
  *
  * This program is open source software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3.
@@ -223,7 +223,7 @@ void JournalRunQueueMsg(struct jnlq *jmsg) {
 			jmsg->msgn = NULL;
 			
 			/* Submit journal message */
-			CtdlSubmitMsg(journal_msg, journal_recps, "", 0);
+			CtdlSubmitMsg(journal_msg, journal_recps, "");
 			CM_Free(journal_msg);
 		}
 

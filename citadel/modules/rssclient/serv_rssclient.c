@@ -180,7 +180,7 @@ void rss_end_element(void *data, const char *el)
 				long msgnum = (-1);
 				for (rr=r->rooms; rr!=NULL; rr=rr->next) {
 					if (rr == r->rooms) {
-						msgnum = CtdlSubmitMsg(r->msg, NULL, rr->room, 0);	// in first room, save msg
+						msgnum = CtdlSubmitMsg(r->msg, NULL, rr->room);		// in first room, save msg
 					}
 					else {
 						CtdlSaveMsgPointerInRoom(rr->room, msgnum, 0, NULL);	// elsewhere, save a pointer

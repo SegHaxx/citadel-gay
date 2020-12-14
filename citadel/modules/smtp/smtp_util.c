@@ -1,7 +1,7 @@
 /*
  * Utility functions for the Citadel SMTP implementation
  *
- * Copyright (c) 1998-2018 by the citadel.org team
+ * Copyright (c) 1998-2020 by the citadel.org team
  *
  * This program is open source software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3.
@@ -247,14 +247,14 @@ void smtp_do_bounce(const char *instr, int is_final)
 		valid = validate_recipients(bounceto, smtp_get_Recipients (), 0);
 		if (valid != NULL) {
 			if (valid->num_error == 0) {
-				CtdlSubmitMsg(bmsg, valid, "", QP_EADDR);
+				CtdlSubmitMsg(bmsg, valid, "");
 				successful_bounce = 1;
 			}
 		}
 
 		/* If not, post it in the Aide> room */
 		if (successful_bounce == 0) {
-			CtdlSubmitMsg(bmsg, NULL, CtdlGetConfigStr("c_aideroom"), QP_EADDR);
+			CtdlSubmitMsg(bmsg, NULL, CtdlGetConfigStr("c_aideroom"));
 		}
 
 		/* Free up the memory we used */

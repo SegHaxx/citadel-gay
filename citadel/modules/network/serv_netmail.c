@@ -221,7 +221,7 @@ void network_deliver_digest(SpoolControl *sc)
 	if (valid != NULL) {
 		valid->bounce_to = strdup(bounce_to);
 		valid->envelope_from = strdup(bounce_to);
-		CtdlSubmitMsg(msg, valid, NULL, 0);
+		CtdlSubmitMsg(msg, valid, NULL);
 	}
 	CM_Free(msg);
 	free_recipients(valid);
@@ -365,7 +365,7 @@ void network_deliver_list(struct CtdlMessage *msg, SpoolControl *sc, const char 
 		valid->bounce_to = strdup(bounce_to);
 		valid->envelope_from = strdup(bounce_to);
 		valid->sending_room = strdup(RoomName);
-		CtdlSubmitMsg(msg, valid, NULL, 0);
+		CtdlSubmitMsg(msg, valid, NULL);
 		free_recipients(valid);
 	}
 	/* Do not call CM_Free(msg) here; the caller will free it. */
@@ -409,7 +409,7 @@ void network_process_participate(SpoolControl *sc, struct CtdlMessage *omsg, lon
 		valid = validate_recipients(ChrPtr(sc->Users[participate]) , NULL, 0);
 
 		CM_SetField(msg, eRecipient, SKEY(sc->Users[roommailalias]));
-		CtdlSubmitMsg(msg, valid, "", 0);
+		CtdlSubmitMsg(msg, valid, "");
 		free_recipients(valid);
 	}
 	CM_Free(msg);

@@ -352,7 +352,7 @@ int wiki_upload_beforesave(struct CtdlMessage *msg, recptypes *recp) {
 
 		CM_SetFieldLONG(history_msg, eTimestamp, Now);
 	
-		CtdlSubmitMsg(history_msg, NULL, "", 0);
+		CtdlSubmitMsg(history_msg, NULL, "");
 	}
 	else {
 		syslog(LOG_ALERT, "Empty boundary string in history message.  No history!\n");
@@ -633,7 +633,7 @@ void wiki_rev(char *pagename, char *rev, char *operation)
 		else if (!strcasecmp(operation, "fetch")) {
 			CM_SetField(msg, eAuthor, HKEY("Citadel"));
 			CtdlCreateRoom(wwm, 5, "", 0, 1, 1, VIEW_BBS);	/* Not an error if already exists */
-			msgnum = CtdlSubmitMsg(msg, NULL, wwm, 0);	/* Store the revision here */
+			msgnum = CtdlSubmitMsg(msg, NULL, wwm);		/* Store the revision here */
 
 			/*
 			 * WARNING: VILE SLEAZY HACK
@@ -670,7 +670,7 @@ void wiki_rev(char *pagename, char *rev, char *operation)
 			if (!IsEmptyStr(pagename)) {
 				CM_SetField(msg, eExclusiveID, pagename, strlen(pagename));
 			}
-			msgnum = CtdlSubmitMsg(msg, NULL, "", 0);	/* Replace the current revision */
+			msgnum = CtdlSubmitMsg(msg, NULL, "");		/* Replace the current revision */
 		}
 		else {
 			/* Theoretically it is impossible to get here, but throw an error anyway */

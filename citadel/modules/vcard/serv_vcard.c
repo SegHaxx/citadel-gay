@@ -1164,7 +1164,7 @@ void store_this_ha(struct addresses_to_be_filed *aptr) {
 			vcard_free(v);
 
 			syslog(LOG_DEBUG, "vcard: adding contact: %s", recipient);
-			CtdlSubmitMsg(vmsg, NULL, aptr->roomname, QP_EADDR);
+			CtdlSubmitMsg(vmsg, NULL, aptr->roomname);
 			CM_Free(vmsg);
 		}
 	}

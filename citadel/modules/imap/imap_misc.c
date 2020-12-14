@@ -392,7 +392,7 @@ void imap_append(int num_parms, ConstStr *Params) {
 	else {
 		/* Yes ... go ahead and post! */
 		if (msg != NULL) {
-			new_msgnum = CtdlSubmitMsg(msg, NULL, "", 0);
+			new_msgnum = CtdlSubmitMsg(msg, NULL, "");
 		}
 		if (new_msgnum >= 0L) {
 			IReplyPrintf("OK [APPENDUID %ld %ld] APPEND completed",

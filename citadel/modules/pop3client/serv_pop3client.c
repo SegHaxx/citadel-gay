@@ -1,7 +1,7 @@
 /*
  * Consolidate mail from remote POP3 accounts.
  *
- * Copyright (c) 2007-2019 by the citadel.org team
+ * Copyright (c) 2007-2020 by the citadel.org team
  *
  * This program is open source software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License as published
@@ -143,7 +143,7 @@ void pop3client_one_mailbox(char *room, const char *host, const char *user, cons
 				res = curl_easy_perform(curl);
 				if (res == CURLE_OK) {
 					struct CtdlMessage *msg = convert_internet_message_buf(&TheMsg);
-					CtdlSubmitMsg(msg, NULL, room, 0);
+					CtdlSubmitMsg(msg, NULL, room);
 					CM_Free(msg);
 				}
 				else {

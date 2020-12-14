@@ -141,7 +141,7 @@ int smtp_aftersave(struct CtdlMessage *msg, recptypes * recps)
 		CM_SetField(imsg, eAuthor, HKEY("Citadel"));
 		CM_SetField(imsg, eJournal, HKEY("do not journal"));
 		CM_SetAsFieldSB(imsg, eMesageText, &SpoolMsg);
-		CtdlSubmitMsg(imsg, NULL, SMTP_SPOOLOUT_ROOM, QP_EADDR);
+		CtdlSubmitMsg(imsg, NULL, SMTP_SPOOLOUT_ROOM);
 		CM_Free(imsg);
 	}
 	return 0;
@@ -499,7 +499,7 @@ void smtp_process_one_msg(long qmsgnum)
 			// replace the old queue entry with the new one
 			syslog(LOG_DEBUG, "smtpclient: %ld rewriting", qmsgnum);
 			msg = convert_internet_message_buf(&NewInstr);	// This function will free NewInstr for us
-			CtdlSubmitMsg(msg, NULL, SMTP_SPOOLOUT_ROOM, 0);
+			CtdlSubmitMsg(msg, NULL, SMTP_SPOOLOUT_ROOM);
 			CM_Free(msg);
 			CtdlDeleteMessages(SMTP_SPOOLOUT_ROOM, &qmsgnum, 1, "");
 		}

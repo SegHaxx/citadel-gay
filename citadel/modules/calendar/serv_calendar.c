@@ -145,7 +145,7 @@ void ical_write_to_cal(struct ctdluser *u, icalcomponent *cal) {
 		CM_SetAsFieldSB(msg, eMesageText, &MsgBody);
 	
 		/* Now write the data */
-		CtdlSubmitMsg(msg, NULL, "", QP_EADDR);
+		CtdlSubmitMsg(msg, NULL, "");
 		CM_Free(msg);
 	}
 
@@ -297,7 +297,7 @@ void ical_send_a_reply(icalcomponent *request, char *action) {
 	
 		if (msg != NULL) {
 			valid = validate_recipients(organizer_string, NULL, 0);
-			CtdlSubmitMsg(msg, valid, "", QP_EADDR);
+			CtdlSubmitMsg(msg, valid, "");
 			CM_Free(msg);
 			free_recipients(valid);
 		}
@@ -669,7 +669,7 @@ int ical_update_my_calendar_with_reply(icalcomponent *cal) {
 	
 		if (msg != NULL) {
 			CIT_ICAL->avoid_sending_invitations = 1;
-			CtdlSubmitMsg(msg, NULL, roomname, QP_EADDR);
+			CtdlSubmitMsg(msg, NULL, roomname);
 			CM_Free(msg);
 			CIT_ICAL->avoid_sending_invitations = 0;
 		}
@@ -2169,7 +2169,7 @@ void ical_send_out_invitations(icalcomponent *top_level_cal, icalcomponent *cal)
 	
 		if (msg != NULL) {
 			valid = validate_recipients(attendees_string, NULL, 0);
-			CtdlSubmitMsg(msg, valid, "", QP_EADDR);
+			CtdlSubmitMsg(msg, valid, "");
 			CM_Free(msg);
 			free_recipients(valid);
 		}

@@ -948,7 +948,7 @@ void smtp_data(long offset, long flags)
 	}
 	
 	else {			/* Ok, we'll accept this message. */
-		msgnum = CtdlSubmitMsg(msg, valid, "", 0);
+		msgnum = CtdlSubmitMsg(msg, valid, "");
 		if (msgnum > 0L) {
 			StrBufPrintf(sSMTP->OneRcpt, "250 Message accepted.\r\n");
 		}
