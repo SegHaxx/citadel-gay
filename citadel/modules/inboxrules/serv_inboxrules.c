@@ -218,7 +218,8 @@ struct inboxrules *deserialize_inbox_rules(char *serialized_rules) {
 			// We have a rule , now parse it
 			char rtoken[SIZ];
 			int nt = num_tokens(decoded_rule, '|');
-			for (int t=0; t<nt; ++t) {
+			int t = 0;
+			for (t=0; t<nt; ++t) {
 				extract_token(rtoken, decoded_rule, t, '|', sizeof(rtoken));
 				striplt(rtoken);
 				switch(t) {
