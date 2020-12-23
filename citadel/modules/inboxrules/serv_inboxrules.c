@@ -837,11 +837,13 @@ int num_urip_alloc = 0;
  * Perform inbox processing for all rooms which require it
  */
 void perform_inbox_processing(void) {
+	int i = 0;
+
 	if (num_urip == 0) {
 		return;											// no action required
 	}
 
-	for (int i=0; i<num_urip; ++i) {
+	for (i=0; i<num_urip; ++i) {
 		do_inbox_processing_for_user(users_requiring_inbox_processing[i]);
 	}
 
@@ -857,6 +859,7 @@ void perform_inbox_processing(void) {
  * If it's someone's inbox, we have to check for inbox rules
  */
 int serv_inboxrules_roomhook(struct ctdlroom *room) {
+	int i = 0;
 
 	// Is this someone's inbox?
 	if (!strcasecmp(&room->QRname[11], MAILROOM)) {
@@ -865,7 +868,7 @@ int serv_inboxrules_roomhook(struct ctdlroom *room) {
 
 			// first check to see if this user is already on the list
 			if (num_urip > 0) {
-				for (int i=0; i<=num_urip; ++i) {
+				for (i=0; i<=num_urip; ++i) {
 					if (users_requiring_inbox_processing[i] == usernum) {		// already on the list!
 						return(0);
 					}
