@@ -108,17 +108,14 @@ ctdl_startup = async() => {
 function display_room_list() {
 	document.getElementById("roomlist").innerHTML = "<img src=\"/ctdl/s/throbber.gif\" />";	// show throbber while loading
 
-
-
-	var request = new XMLHttpRequest();
-	request.open("GET", "/ctdl/r/", true);
-	request.onreadystatechange = function() {
-		if ((this.readyState === 4) && ((this.status / 100) == 2)) {
-			display_room_list_renderer(JSON.parse(this.responseText));
+	fetch_room_list = async() => {
+		response = await fetch("/ctdl/r/");
+		room_list = await(response.json());
+		if (response.ok) {
+			display_room_list_renderer(room_list);
 		}
-	};
-	request.send();
-	request = null;
+	}
+	fetch_room_list();
 }
 
 
@@ -181,25 +178,22 @@ function update_banner() {
 // goto room
 //
 function gotoroom(roomname) {
-	var request = new XMLHttpRequest();
-	request.open("GET", "/ctdl/r/" + escapeHTMLURI(roomname) + "/", true);
-	request.onreadystatechange = function() {
-		if ((this.readyState === 4) && ((this.status / 100) == 2)) {
-			gotoroom_2(JSON.parse(this.responseText));
+
+	fetch_room = async() => {
+		response = await fetch("/ctdl/r/" + escapeHTMLURI(roomname) + "/");
+		data = await(response.json());
+		if (response.ok) {
+			current_room = data.name;
+			new_messages = data.new_messages;
+			total_messages = data.total_messages;
+			current_view = data.current_view;
+			default_view = data.default_view;
+			last_seen = data.last_seen;
+			update_banner();
+			render_room_view(0, 9999999999);
 		}
-	};
-	request.send();
-	request = null;
-}
-function gotoroom_2(data) {
-	current_room = data.name;
-	new_messages = data.new_messages;
-	total_messages = data.total_messages;
-	current_view = data.current_view;
-	default_view = data.default_view;
-	last_seen = data.last_seen;
-	update_banner();
-	render_room_view(0, 9999999999);
+	}
+	fetch_room();
 }
 
 
@@ -223,11 +217,10 @@ function gotonext(which_oper) {
 // Called by gotonext() when the march list is empty.
 //
 function load_new_march_list() {
-	var request = new XMLHttpRequest();
-	request.open("GET", "/ctdl/r/", true);
-	request.onreadystatechange = function() {
-		if ((this.readyState === 4) && ((this.status / 100) == 2)) {
-			march_list = (JSON.parse(this.responseText));
+	fetchm = async() => {
+		response = await fetch("/ctdl/r/");
+		march_list = await(response.json());
+		if (response.ok) {
 			march_list = march_list.filter(function(room) {
 				return room.hasnewmsgs;
 			});
@@ -243,7 +236,6 @@ function load_new_march_list() {
 			march_list.push({name:"_BASEROOM_",known:true,hasnewmsgs:true,floor:0});
 			gotonext();
 		}
-	};
-	request.send();
-	request = null;
+	}
+	fetchm();
 }
