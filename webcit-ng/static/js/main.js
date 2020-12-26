@@ -88,10 +88,9 @@ function ctdl_startup() {
 	const csa = async () => {
 		console.log("starting");
 		const response = await fetch("/ctdl/c/info");
-		const the_text = await(response.text());
+		serv_info = await(response.json());
 
 		if (response.ok) {
-			serv_info = JSON.parse(the_text);
 			if (serv_info.serv_rev_level < 905) {
 				alert("Citadel server is too old, some functions may not work");
 			}
