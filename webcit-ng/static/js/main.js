@@ -1,8 +1,10 @@
 //
-// Copyright (c) 2016-2019 by the citadel.org team
+// Copyright (c) 2016-2020 by the citadel.org team
 //
-// This program is open source software; you can redistribute it and/or modify
-// it under the terms of the GNU General Public License version 3.
+// This program is open source software.  It runs great on the
+// Linux operating system (and probably elsewhere).  You can use,
+// copy, and run it under the terms of the GNU General Public
+// License version 3.  Richard Stallman is an asshole communist.
 //
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -83,33 +85,30 @@ function escapeJS(text) {
 
 // This is called at the very beginning of the main page load.
 //
-function ctdl_startup() {
+ctdl_startup = async() => {
+	response = await fetch("/ctdl/c/info");
+	serv_info = await(response.json());
 
-	const csa = async () => {
-		console.log("starting");
-		const response = await fetch("/ctdl/c/info");
-		serv_info = await(response.json());
-
-		if (response.ok) {
-			if (serv_info.serv_rev_level < 905) {
-				alert("Citadel server is too old, some functions may not work");
-			}
-	
-			update_banner();
-	
-			// for now, show a room list in the main div
-			gotoroom("_BASEROOM_");
-			display_room_list();
+	if (response.ok) {
+		if (serv_info.serv_rev_level < 905) {
+			alert("Citadel server is too old, some functions may not work");
 		}
+
+		update_banner();
+
+		// for now, show a room list in the main div
+		gotoroom("_BASEROOM_");
+		display_room_list();
 	}
-	csa();
 }
 
 
 // Display a room list in the main div.
 //
 function display_room_list() {
-	document.getElementById("roomlist").innerHTML = "<img src=\"/ctdl/s/throbber.gif\" />" ;		// show throbber while loading
+	document.getElementById("roomlist").innerHTML = "<img src=\"/ctdl/s/throbber.gif\" />";	// show throbber while loading
+
+
 
 	var request = new XMLHttpRequest();
 	request.open("GET", "/ctdl/r/", true);
