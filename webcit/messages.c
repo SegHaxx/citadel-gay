@@ -1404,15 +1404,15 @@ void display_enter(void) {
 		return;
 	}
 
-
 	ReplyingModeStr = bstr("replying_mode");
-	if (ReplyingModeStr != NULL) for (i = 0; i < 3; i++) {
+	if (ReplyingModeStr != NULL) {
+		for (i = 0; i < 3; i++) {
 			if (strcmp(ReplyingModeStr, ReplyToModeStrings[i]) == 0) {
 				ReplyMode = (eReplyToNodes) i;
 				break;
 			}
 		}
-		
+	}
 
 	/*
 	 * If the "replying_to" variable is set, it refers to a message
@@ -1434,16 +1434,9 @@ void display_enter(void) {
 
 		StrBuf_ServGetln(Line);
 		if (GetServerStatusMsg(Line, NULL, 0, 0) == 1)
-			while (len = StrBuf_ServGetln(Line),
-			       (len >= 0) && 
-			       ((len != 3)  ||
-				strcmp(ChrPtr(Line), "000")))
-			{
+			while (len = StrBuf_ServGetln(Line), (len >= 0) && ((len != 3) || strcmp(ChrPtr(Line), "000"))) {
 				eMessageField which;
-				if ((StrLength(Line) > 4) && 
-				    (ChrPtr(Line)[4] == '=') &&
-				    GetFieldFromMnemonic(&which, ChrPtr(Line)))
-					switch (which) {
+				if ((StrLength(Line) > 4) && (ChrPtr(Line)[4] == '=') && GetFieldFromMnemonic(&which, ChrPtr(Line))) switch (which) {
 					case eMsgSubject: {
 						StrBuf *subj = NewStrBuf();
 						StrBuf *FlatSubject;
@@ -1573,8 +1566,7 @@ void display_enter(void) {
 		/*
 		 * If this is a Reply or a ReplyAll, copy the sender's email into the To: field
 		 */
-		if ((ReplyMode == eReply) || (ReplyMode == eReplyAll))
-		{
+		if ((ReplyMode == eReply) || (ReplyMode == eReplyAll)) {
 			StrBuf *to_rcpt;
 			if ((StrLength(replyto) > 0) && (ReplyMode == eReplyAll)) {
 				to_rcpt = NewStrBuf();
@@ -1603,22 +1595,22 @@ void display_enter(void) {
 		/*
 		 * Only if this is a ReplyAll, copy all recipients into the Cc: field
 		 */
-		if (ReplyMode == eReplyAll)
-		{
+		if (ReplyMode == eReplyAll) {
 			StrBuf *cc_rcpt = rcpt;
 			rcpt = NULL;
-			if ((StrLength(cccc) > 0) && (StrLength(replyto) == 0))
-			{
+			if ((StrLength(cccc) > 0) && (StrLength(replyto) == 0)) {
 				if (cc_rcpt != NULL)  {
 					StrBufAppendPrintf(cc_rcpt, ", ");
 					StrBufAppendBuf(cc_rcpt, cccc, 0);
-				} else {
+				}
+				else {
 					cc_rcpt = cccc;
 					cccc = NULL;
 				}
 			}
-			if (cc_rcpt != NULL)
+			if (cc_rcpt != NULL) {
 				PutBstr(HKEY("cc"), cc_rcpt);
+			}
 		}
 		FreeStrBuf(&wefw);
 		FreeStrBuf(&msgn);
@@ -1629,11 +1621,11 @@ void display_enter(void) {
 		FreeStrBuf(&cccc);
 	}
 	FreeStrBuf(&Line);
+
 	/*
 	 * Otherwise proceed normally.
 	 * Do a custom room banner with no navbar...
 	 */
-
 	if (recipient_required) {
 		const StrBuf *Recp = NULL; 
 		const StrBuf *Cc = NULL;
