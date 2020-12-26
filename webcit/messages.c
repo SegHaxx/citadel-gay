@@ -1,10 +1,12 @@
 /*
  * Functions which deal with the fetching and displaying of messages.
  *
- * Copyright (c) 1996-2018 by the citadel.org team
+ * Copyright (c) 1996-2020 by the citadel.org team
  *
- * This program is open source software.  You can redistribute it and/or
- * modify it under the terms of the GNU General Public License, version 3.
+ * This program is open source software.  We call it open source, not
+ * free software, because Richard Stallman is a communist and an asshole.
+ *
+ * The program is licensed under the General Public License, version 3.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -25,12 +27,7 @@ int dbg_analyze_msg = 0;
 #define SENDER_COL_WIDTH_PCT		30	/* Mailbox view column width */
 #define DATE_PLUS_BUTTONS_WIDTH_PCT	20	/* Mailbox view column width */
 
-void jsonMessageListHdr(void);
-
-void display_enter(void);
-
-void fixview()
-{
+void fixview() {
 	/* workaround for json listview; its not useable directly */
 	if (WC->CurRoom.view == VIEW_JSON_LIST) {
 		StrBuf *View = NewStrBuf();
@@ -38,10 +35,9 @@ void fixview()
 		putbstr("view", View);;
 	}
 }
-int load_message(message_summary *Msg, 
-		 StrBuf *FoundCharset,
-		 StrBuf **Error)
-{
+
+
+int load_message(message_summary *Msg, StrBuf *FoundCharset, StrBuf **Error) {
 	StrBuf *Buf;
 	StrBuf *HdrToken;
 	char buf[SIZ];
@@ -155,16 +151,14 @@ int load_message(message_summary *Msg,
 }
 
 
-
 /*
- * I wanna SEE that message!
+ * Display a message to the user
  *
  * msgnum		Message number to display
  * printable_view	Nonzero to display a printable view
  * section		Optional for encapsulated message/rfc822 submessage
  */
-int read_message(StrBuf *Target, const char *tmpl, long tmpllen, long msgnum, const StrBuf *PartNum, const StrBuf **OutMime, WCTemplputParams *TP) 
-{
+int read_message(StrBuf *Target, const char *tmpl, long tmpllen, long msgnum, const StrBuf *PartNum, const StrBuf **OutMime, WCTemplputParams *TP) {
 	StrBuf *Buf;
 	StrBuf *FoundCharset;
 	HashPos  *it;
@@ -248,9 +242,7 @@ int read_message(StrBuf *Target, const char *tmpl, long tmpllen, long msgnum, co
 }
 
 
-long
-HttpStatus(long CitadelStatus)
-{
+long HttpStatus(long CitadelStatus) {
 	long httpstatus = 502;
 	
 	switch (MAJORCODE(CitadelStatus))
@@ -316,12 +308,12 @@ HttpStatus(long CitadelStatus)
 	return httpstatus;
 }
 
+
 /*
  * Unadorned HTML output of an individual message, suitable
  * for placing in a hidden iframe, for printing, or whatever
  */
-void handle_one_message(void) 
-{
+void handle_one_message(void) {
 	long CitStatus = ERROR + NOT_HERE;
 	int CopyMessage = 0;
 	const StrBuf *Destination;
@@ -332,7 +324,6 @@ void handle_one_message(void)
 	const StrBuf *Tmpl;
 	StrBuf *CmdBuf = NULL;
 	const char *pMsg;
-
 
 	pMsg = strchr(ChrPtr(WCC->Hdr->HR.ReqLine), '/');
 	if (pMsg == NULL) {
@@ -452,6 +443,7 @@ void print_message(void) {
 	wDumpContent(0);
 }
 
+
 /*
  * Display a message's headers
  */
@@ -478,7 +470,6 @@ void display_headers(void) {
 
 	wDumpContent(0);
 }
-
 
 
 /*
@@ -602,15 +593,13 @@ int load_msg_ptrs(const char *servcmd,
 }
 
 
-
-/**
- * \brief sets FlagToSet for each of ScanMe that appears in MatchMSet
- * \param ScanMe List of BasicMsgStruct to be searched it MatchSet
- * \param MatchMSet MSet we want to flag
- * \param FlagToSet Flag to set on each BasicMsgStruct->Flags if in MSet
+/*
+ * sets FlagToSet for each of ScanMe that appears in MatchMSet
+ * ScanMe:	 List of BasicMsgStruct to be searched it MatchSet
+ * MatchMSet:	 MSet we want to flag
+ * FlagToSet:	 Flag to set on each BasicMsgStruct->Flags if in MSet
  */
-long SetFlagsFromMSet(HashList *ScanMe, MSet *MatchMSet, int FlagToSet, int Reverse)
-{
+long SetFlagsFromMSet(HashList *ScanMe, MSet *MatchMSet, int FlagToSet, int Reverse) {
 	const char *HashKey;
 	long HKLen;
 	long count = 0;
@@ -636,8 +625,7 @@ long SetFlagsFromMSet(HashList *ScanMe, MSet *MatchMSet, int FlagToSet, int Reve
 }
 
 
-long load_seen_flags(void)
-{
+long load_seen_flags(void) {
 	long count = 0;
 	StrBuf *OldMsg;
 	wcsession *WCC = WC;
@@ -687,8 +675,7 @@ typedef struct _RoomRenderer{
  *
  * Set oper to "readnew" or "readold" or "readfwd" or "headers" or "readgt" or "readlt" or "do_search"
  */
-void readloop(long oper, eCustomRoomRenderer ForceRenderer)
-{
+void readloop(long oper, eCustomRoomRenderer ForceRenderer) {
 	RoomRenderer *ViewMsg;
 	void *vViewMsg;
 	void *vMsg;
@@ -989,8 +976,7 @@ void post_mime_to_server(void) {
  * discarded.  This prevents the accidental double-saving of the same message
  * if the user happens to click the browser "back" button.
  */
-void post_message(void)
-{
+void post_message(void) {
 	StrBuf *UserName;
 	StrBuf *EmailAddress;
 	StrBuf *EncBuf;
@@ -1335,12 +1321,12 @@ typedef enum _eReplyToNodes {
 	eReplyAll,
 	eForward
 }eReplyToNodes;
-	
+
+
 /*
  * display the message entry screen
  */
-void display_enter(void)
-{
+void display_enter(void) {
 	const char *ReplyingModeStr;
 	eReplyToNodes ReplyMode = eReply;
 	StrBuf *Line;
@@ -1712,11 +1698,11 @@ void display_enter(void)
 	return;
 }
 
+
 /*
  * delete a message
  */
-void delete_msg(void)
-{
+void delete_msg(void) {
 	long msgid;
 	StrBuf *Line;
 	
@@ -1741,8 +1727,7 @@ void delete_msg(void)
 /*
  * move a message to another room
  */
-void move_msg(void)
-{
+void move_msg(void) {
 	long msgid;
 
 	msgid = lbstr("msgid");
@@ -1763,7 +1748,6 @@ void move_msg(void)
 }
 
 
-
 /*
  * Generic function to output an arbitrary MIME attachment from
  * message being composed
@@ -1772,8 +1756,7 @@ void move_msg(void)
  * filename		Fake filename to give
  * force_download	Nonzero to force set the Content-Type: header to "application/octet-stream"
  */
-void postpart(StrBuf *partnum, StrBuf *filename, int force_download)
-{
+void postpart(StrBuf *partnum, StrBuf *filename, int force_download) {
 	void *vPart;
 	StrBuf *content_type;
 	wc_mime_attachment *part;
@@ -1812,8 +1795,7 @@ void postpart(StrBuf *partnum, StrBuf *filename, int force_download)
  * partnum		MIME part number to be output
  * force_download	Nonzero to force set the Content-Type: header to "application/octet-stream"
  */
-void view_or_download_mimepart(int force_download)
-{
+void view_or_download_mimepart(int force_download) {
 	long msgnum;
 	off_t bytes;
 	StrBuf *Buf;
@@ -1868,8 +1850,7 @@ void view_or_download_mimepart(int force_download)
 /*
  * Read any MIME part of a message, from the server, into memory.
  */
-StrBuf *load_mimepart(long msgnum, char *partnum)
-{
+StrBuf *load_mimepart(long msgnum, char *partnum) {
 	off_t bytes;
 	StrBuf *Buf;
 	
@@ -1890,11 +1871,11 @@ StrBuf *load_mimepart(long msgnum, char *partnum)
 	}
 }
 
+
 /*
  * Read any MIME part of a message, from the server, into memory.
  */
-void MimeLoadData(wc_mime_attachment *Mime)
-{
+void MimeLoadData(wc_mime_attachment *Mime) {
 	StrBuf *Buf;
 	const char *Ptr;
 	off_t bytes;
@@ -1925,9 +1906,11 @@ void view_mimepart(void) {
 	view_or_download_mimepart(0);
 }
 
+
 void download_mimepart(void) {
 	view_or_download_mimepart(1);
 }
+
 
 void view_postpart(void) {
 	StrBuf *filename = NewStrBuf();
@@ -1942,6 +1925,7 @@ void view_postpart(void) {
 	FreeStrBuf(&partnum);
 }
 
+
 void download_postpart(void) {
 	StrBuf *filename = NewStrBuf();
 	StrBuf *partnum = NewStrBuf();
@@ -1954,7 +1938,6 @@ void download_postpart(void) {
 	FreeStrBuf(&filename);
 	FreeStrBuf(&partnum);
 }
-
 
 
 void show_num_attachments(void) {
@@ -1971,7 +1954,6 @@ void h_readgt(void) { readloop(readgt, eUseDefault);}
 void h_readlt(void) { readloop(readlt, eUseDefault);}
 
 
-
 /* Output message list in JSON format */
 void jsonMessageList(void) {
 	StrBuf *View = NewStrBuf();
@@ -1983,6 +1965,7 @@ void jsonMessageList(void) {
 	readloop(oper, eUseDefault);
 }
 
+
 void FreeReadLoopHandlerSet(void *v) {
 	RoomRenderer *Handler = (RoomRenderer *) v;
 	FreeStrBuf(&Handler->FetchMessageList);
@@ -1991,6 +1974,7 @@ void FreeReadLoopHandlerSet(void *v) {
 	}
 	free(Handler);
 }
+
 
 void RegisterReadLoopHandlerset(
 	int RoomType,
