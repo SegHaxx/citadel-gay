@@ -84,32 +84,26 @@ function escapeJS(text) {
 // This is called at the very beginning of the main page load.
 //
 function ctdl_startup() {
-	var request = new XMLHttpRequest();
-	request.open("GET", "/ctdl/c/info", true);
-	request.onreadystatechange = function() {
-		if ((this.readyState === 4) && ((this.status / 100) == 2)) {
-			ctdl_startup_2(JSON.parse(this.responseText));
+
+	const csa = async () => {
+		console.log("starting");
+		const response = await fetch("/ctdl/c/info");
+		const the_text = await(response.text());
+
+		if (response.ok) {
+			serv_info = JSON.parse(the_text);
+			if (serv_info.serv_rev_level < 905) {
+				alert("Citadel server is too old, some functions may not work");
+			}
+	
+			update_banner();
+	
+			// for now, show a room list in the main div
+			gotoroom("_BASEROOM_");
+			display_room_list();
 		}
-	};
-	request.send();
-	request = null;
-}
-
-
-// Continuation of ctdl_startup() after serv_info is retrieved
-//
-function ctdl_startup_2(data) {
-	serv_info = data;
-
-	if (data.serv_rev_level < 905) {
-		alert("Citadel server is too old, some functions may not work");
 	}
-
-	update_banner();
-
-	// for now, show a room list in the main div
-	gotoroom("_BASEROOM_");
-	display_room_list();
+	csa();
 }
 
 
