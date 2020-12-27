@@ -340,50 +340,60 @@ void free_parts(struct parts *p)
 /*
  * This is a mini RFC2047 decoder.
  * It only handles strings encoded from UTF-8 as Quoted-printable.
+ * We can do this "in place" because the converted string will always be smaller than the source string.
  */
 void mini_2047_decode(char *s)
 {
-	if (!s)
+	if (!s) {						// no null strings allowed!
 		return;
-
-	char *qstart = strstr(s, "=?UTF-8?Q?");
-	if (!qstart)
-		return;
-
-	char *qend = strstr(s, "?=");
-	if (!qend)
-		return;
-
-	if (qend <= qstart)
-		return;
-
-	strcpy(qstart, &qstart[10]);
-	qend -= 10;
-
-	char *p = qstart;
-	while (p < qend) {
-
-		if (p[0] == '=') {
-
-			char ch[3];
-			ch[0] = p[1];
-			ch[1] = p[2];
-			ch[2] = p[3];
-			int c;
-			sscanf(ch, "%02x", &c);
-			p[0] = c;
-			strcpy(&p[1], &p[3]);
-			qend -= 2;
-		}
-
-		if (p[0] == '_') {
-			p[0] = ' ';
-		}
-
-		++p;
 	}
 
-	strcpy(qend, &qend[2]);
+	char *qstart = strstr(s, "=?UTF-8?Q?");			// Must start with this string
+	if (!qstart) {
+		return;
+	}
+
+	char *qend = strstr(qstart+10, "?=");			// Must end with this string
+	if (!qend) {
+		return;
+	}
+
+	if (qend <= qstart) {					// And there must be something in between them.
+		return;
+	}
+
+	// The string has qualified for conversion.
+
+	strcpy(qend, "");					// Strip the trailer
+	strcpy(qstart, &qstart[10]);				// Strip the header
+
+	char *r = qstart;					// Pointer to where in the string we're reading
+	char *w = s;						// Pointer to where in the string we're writing
+
+	while(*r) {						// Loop through the source string
+		if (r[0] == '=') {				// "=" means read a hex character
+			char ch[3];
+			ch[0] = r[1];
+			ch[1] = r[2];
+			ch[2] = r[3];
+			int c;
+			sscanf(ch, "%02x", &c);
+			w[0] = c;
+			r += 3;
+			++w;
+		}
+		else if (r[0] == '_') {				// "_" is a space
+			w[0] = ' ';
+			++r;
+			++w;
+		}
+		else {						// anything else pass through literally
+			w[0] = r[0];
+			++r;
+			++w;
+		}
+	}
+	w[0] = 0;						// null terminate
 }
 
 
@@ -583,6 +593,7 @@ int read_message(CtdlIPC *ipc,
 				color(BRIGHT_CYAN);
 				mini_2047_decode(message->subject);
 				scr_printf("%s\n", message->subject);
+
 			}
 		}
 	}

@@ -1,19 +1,22 @@
 /*
- * Copyright (c) 1987-2019 by the citadel.org team
+ * Copyright (c) 1987-2020 by the citadel.org team
  *
- *  This program is open source software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License version 3.
+ * This program is open source software.  It runs great on the Linux
+ * operating system, and probably other places too.  We acknowledge
+ * that Richard Stallman is a communist and an asshole, while at the
+ * same time we release this program under the terms of the General
+ * Public License version 3.
  *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * General Public License for more details.
  */
 
 #define	UDS			"_UDS_"
 #define DEFAULT_HOST		"localhost"
 #define DEFAULT_PORT		"504"
-#define CLIENT_VERSION          925
+#define CLIENT_VERSION          926
 #define CLIENT_TYPE		0
 
 /* commands we can send to the stty_ctdl() routine */
