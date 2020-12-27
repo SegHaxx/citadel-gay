@@ -29,3 +29,8 @@ REST format URIs will generally take the form of:
 
 	/ctdl/objectClass/[container/]object[/operation]
 
+We are using:
+
+*	libcitadel for information about the Citadel server, some string handling, and the JSON encoder
+*	Expat for DAV handling
+*	OpenSSL for TLS

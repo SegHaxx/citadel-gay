@@ -70,7 +70,6 @@ function forum_readmessages(target_div, gt_msg, lt_msg)
 		response = await fetch(url);
 		msgs = await(response.json());
 		if (response.ok) {
-			msgs = JSON.parse(this.responseText);
 			document.getElementById(target_div).innerHTML = "" ;
 
 			// If we were given an explicit starting point, by all means start there.
@@ -160,9 +159,8 @@ function forum_render_messages(msgs, prefix, scroll_to)
 function forum_render_one(div, msgnum, scroll_to) {
 	fetch_message = async() => {
 		response = await fetch("/ctdl/r/" + escapeHTMLURI(current_room) + "/" + msgs[i] + "/json");
-		msg = response.json());
+		msg = await response.json();
 		if (response.ok) {
-			msg = JSON.parse(this.responseText);
 
 			document.getElementById(div).innerHTML =
 			  "<div class=\"ctdl-msg-wrapper\">"				// begin message wrapper
