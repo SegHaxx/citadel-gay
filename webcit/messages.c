@@ -1568,7 +1568,7 @@ void display_enter(void) {
 				StrBufAppendBuf(to_rcpt, replyto, 0);
 			}
 
-			else if (StrLength(rfca) > 0) {
+			else if ( (StrLength(rfca) > 0) && (message_originated_locally == 0) ) {
 				to_rcpt = NewStrBuf();
 				StrBufAppendBuf(to_rcpt, from, 0);
 				StrBufAppendBufPlain(to_rcpt, HKEY(" <"), 0);
