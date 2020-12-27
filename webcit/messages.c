@@ -1424,12 +1424,12 @@ void display_enter(void) {
 		StrBuf *wefw = NULL;
 		StrBuf *msgn = NULL;
 		StrBuf *from = NULL;
-		StrBuf *node = NULL;
 		StrBuf *rfca = NULL;
 		StrBuf *rcpt = NULL;
 		StrBuf *cccc = NULL;
 		StrBuf *replyto = NULL;
 		StrBuf *nvto = NULL;
+		int message_originated_locally = 0;
 		serv_printf("MSG0 %ld|1", replying_to);	
 
 		StrBuf_ServGetln(Line);
@@ -1460,6 +1460,11 @@ void display_enter(void) {
 						PutBstr(HKEY("subject"), FlatSubject);
 					}
 						break;
+
+					case eIsLocal: {
+						message_originated_locally = 1;
+						break;
+					}
 
 					case eWeferences:
 					{
@@ -1496,19 +1501,11 @@ void display_enter(void) {
 						}
 						break;
 					}
-				
 					case eRecipient:
 						rcpt = NewStrBufPlain(ChrPtr(Line) + 5, StrLength(Line) - 5);
 						break;
-			
-				
 					case eCarbonCopY:
 						cccc = NewStrBufPlain(ChrPtr(Line) + 5, StrLength(Line) - 5);
-						break;
-
-				
-					case eNodeName:
-						node = NewStrBufPlain(ChrPtr(Line) + 5, StrLength(Line) - 5);
 						break;
 					case eReplyTo:
 						replyto = NewStrBufPlain(ChrPtr(Line) + 5, StrLength(Line) - 5);
@@ -1527,11 +1524,9 @@ void display_enter(void) {
 						putbstr("nvto", nvto);
 						break;
 					case eXclusivID:
-					case eHumanNode:
 					case eJournal:
 					case eListID:
 					case eMesageText:
-					case eOriginalRoom:
 					case eMessagePath:
 					case eSpecialField:
 					case eTimestamp:
@@ -1539,7 +1534,6 @@ void display_enter(void) {
 					case eFormatType:
 					case eMessagePart:
 					case eSubFolder:
-					case ePevious:
 					case eLastHeader:
 						break;
 
@@ -1568,10 +1562,12 @@ void display_enter(void) {
 		 */
 		if ((ReplyMode == eReply) || (ReplyMode == eReplyAll)) {
 			StrBuf *to_rcpt;
+
 			if ((StrLength(replyto) > 0) && (ReplyMode == eReplyAll)) {
 				to_rcpt = NewStrBuf();
 				StrBufAppendBuf(to_rcpt, replyto, 0);
 			}
+
 			else if (StrLength(rfca) > 0) {
 				to_rcpt = NewStrBuf();
 				StrBufAppendBuf(to_rcpt, from, 0);
@@ -1579,15 +1575,10 @@ void display_enter(void) {
 				StrBufAppendBuf(to_rcpt, rfca, 0);
 				StrBufAppendBufPlain(to_rcpt, HKEY(">"), 0);
 			}
+
 			else {
 				to_rcpt =  from;
 				from = NULL;
-				if (	(StrLength(node) > 0)
-					&& (strcasecmp(ChrPtr(node), ChrPtr(WCC->serv_info->serv_nodename)))
-				) {
-					StrBufAppendBufPlain(to_rcpt, HKEY(" @ "), 0);
-					StrBufAppendBuf(to_rcpt, node, 0);
-				}
 			}
 			PutBstr(HKEY("recp"), to_rcpt);
 		}
@@ -1612,10 +1603,21 @@ void display_enter(void) {
 				PutBstr(HKEY("cc"), cc_rcpt);
 			}
 		}
+
+		// FOOFOO
+		syslog(LOG_DEBUG, "wefw = %s", ChrPtr(wefw));
+		syslog(LOG_DEBUG, "msgn = %s", ChrPtr(msgn));
+		syslog(LOG_DEBUG, "from = %s", ChrPtr(from));
+		syslog(LOG_DEBUG, "rfca = %s", ChrPtr(rfca));
+		syslog(LOG_DEBUG, "rcpt = %s", ChrPtr(rcpt));
+		syslog(LOG_DEBUG, "cccc = %s", ChrPtr(cccc));
+		syslog(LOG_DEBUG, "replyto = %s", ChrPtr(replyto));
+		syslog(LOG_DEBUG, "nvto = %s", ChrPtr(nvto));
+		syslog(LOG_DEBUG, "local = %d" , message_originated_locally);
+
 		FreeStrBuf(&wefw);
 		FreeStrBuf(&msgn);
 		FreeStrBuf(&from);
-		FreeStrBuf(&node);
 		FreeStrBuf(&rfca);
 		FreeStrBuf(&rcpt);
 		FreeStrBuf(&cccc);

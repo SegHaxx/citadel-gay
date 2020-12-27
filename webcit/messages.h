@@ -73,20 +73,22 @@ typedef struct _message_summary {
 
 void DestroyMessageSummary(void *vMsg);
 
-/* Maps to msgkeys[] in msgbase.c: */
+/* some of these fields map to msgkeys[] in msgbase.c ... others don't */
 
+/* I think these are supposed to align with fieldMnemonics in msg_renderers.c
+ * So if you change one you have to change the other.
+ * TODO: figure out who did this and beat them with a wet noodle.
+ */
 typedef enum _eMessageField {
 	eAuthor,
 	eXclusivID,
 	erFc822Addr,
-	eHumanNode,
 	emessageId,
 	eJournal,
 	eReplyTo,
 	eListID,
 	eMesageText,
-	eNodeName,
-	eOriginalRoom,
+	eIsLocal,
 	eMessagePath,
 	eRecipient,
 	eSpecialField,
@@ -98,7 +100,6 @@ typedef enum _eMessageField {
 	eHeaderOnly,
 	eFormatType,
 	eMessagePart,
-	ePevious,
 	eSubFolder,
 	eLastHeader
 } eMessageField;

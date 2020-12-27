@@ -275,20 +275,20 @@ int groupchange_date(const void *s1, const void *s2) {
 }
 
 
-/*----------------------------------------------------------------------------*/
-/* Don't wanna know... or? */
+/* Stub handlers for MIME parser */
 void examine_pref(message_summary *Msg, StrBuf *HdrLine, StrBuf *FoundCharset) {return;}
 void examine_suff(message_summary *Msg, StrBuf *HdrLine, StrBuf *FoundCharset) {return;}
 void examine_path(message_summary *Msg, StrBuf *HdrLine, StrBuf *FoundCharset) {return;}
+
 void examine_content_encoding(message_summary *Msg, StrBuf *HdrLine, StrBuf *FoundCharset)
 {
-/* TODO: do we care? */
+/* nothing to do here */
 }
 
 
 void examine_exti(message_summary *Msg, StrBuf *HdrLine, StrBuf *FoundCharset)
 {
-	/* we don't care */
+/* nothing to do here */
 }
 
 void examine_nhdr(message_summary *Msg, StrBuf *HdrLine, StrBuf *FoundCharset)
@@ -311,17 +311,15 @@ void examine_type(message_summary *Msg, StrBuf *HdrLine, StrBuf *FoundCharset)
 
 void examine_from(message_summary *Msg, StrBuf *HdrLine, StrBuf *FoundCharset)
 {
-	wcsession *WCC = WC;
-
-	CheckConvertBufs(WCC);
+	CheckConvertBufs(WC);
 	FreeStrBuf(&Msg->from);
 	Msg->from = NewStrBufPlain(NULL, StrLength(HdrLine));
 	StrBuf_RFC822_2_Utf8(Msg->from, 
 			     HdrLine, 
-			     WCC->DefaultCharset, 
+			     WC->DefaultCharset, 
 			     FoundCharset,
-			     WCC->ConvertBuf1,
-			     WCC->ConvertBuf2);
+			     WC->ConvertBuf1,
+			     WC->ConvertBuf2);
 }
 void tmplput_MAIL_SUMM_FROM(StrBuf *Target, WCTemplputParams *TP)
 {
@@ -331,17 +329,15 @@ void tmplput_MAIL_SUMM_FROM(StrBuf *Target, WCTemplputParams *TP)
 
 void examine_subj(message_summary *Msg, StrBuf *HdrLine, StrBuf *FoundCharset)
 {
-	wcsession *WCC = WC;
-
-	CheckConvertBufs(WCC);
+	CheckConvertBufs(WC);
 	FreeStrBuf(&Msg->subj);
 	Msg->subj = NewStrBufPlain(NULL, StrLength(HdrLine));
 	StrBuf_RFC822_2_Utf8(Msg->subj, 
 			     HdrLine, 
-			     WCC->DefaultCharset, 
+			     WC->DefaultCharset, 
 			     FoundCharset,
-			     WCC->ConvertBuf1,
-			     WCC->ConvertBuf2);
+			     WC->ConvertBuf1,
+			     WC->ConvertBuf2);
 }
 void tmplput_MAIL_SUMM_SUBJECT(StrBuf *Target, WCTemplputParams *TP)
 {
@@ -382,11 +378,10 @@ int Conditional_MAIL_LOCAL(StrBuf *Target, WCTemplputParams *TP) {
 
 
 void examine_msgn(message_summary *Msg, StrBuf *HdrLine, StrBuf *FoundCharset) {
-	wcsession *WCC = WC;
 	long Offset = 0;
 	const char *pOffset;
 
-	CheckConvertBufs(WCC);
+	CheckConvertBufs(WC);
 	FreeStrBuf(&Msg->reply_inreplyto);
 	Msg->reply_inreplyto = NewStrBufPlain(NULL, StrLength(HdrLine));
 	pOffset = strchr(ChrPtr(HdrLine), '/');
@@ -396,25 +391,26 @@ void examine_msgn(message_summary *Msg, StrBuf *HdrLine, StrBuf *FoundCharset) {
 	Msg->reply_inreplyto_hash = ThreadIdHashOffset(HdrLine, Offset);
 	StrBuf_RFC822_2_Utf8(Msg->reply_inreplyto, 
 			     HdrLine, 
-			     WCC->DefaultCharset,
+			     WC->DefaultCharset,
 			     FoundCharset,
-			     WCC->ConvertBuf1,
-			     WCC->ConvertBuf2);
+			     WC->ConvertBuf1,
+			     WC->ConvertBuf2);
 }
-void tmplput_MAIL_SUMM_INREPLYTO(StrBuf *Target, WCTemplputParams *TP)
-{
+
+
+void tmplput_MAIL_SUMM_INREPLYTO(StrBuf *Target, WCTemplputParams *TP) {
 	message_summary *Msg = (message_summary*) CTX(CTX_MAILSUM);
 	StrBufAppendTemplate(Target, TP, Msg->reply_inreplyto, 0);
 }
 
-int Conditional_MAIL_SUMM_UNREAD(StrBuf *Target, WCTemplputParams *TP)
-{
+
+int Conditional_MAIL_SUMM_UNREAD(StrBuf *Target, WCTemplputParams *TP) {
 	message_summary *Msg = (message_summary*) CTX(CTX_MAILSUM);
 	return (Msg->Flags & MSGFLAG_READ) != 0;
 }
 
-void examine_wefw(message_summary *Msg, StrBuf *HdrLine, StrBuf *FoundCharset)
-{
+
+void examine_wefw(message_summary *Msg, StrBuf *HdrLine, StrBuf *FoundCharset) {
 	wcsession *WCC = WC;
 	long Offset = 0;
 	const char *pOffset;
@@ -434,14 +430,15 @@ void examine_wefw(message_summary *Msg, StrBuf *HdrLine, StrBuf *FoundCharset)
 			     WCC->ConvertBuf1,
 			     WCC->ConvertBuf2);
 }
-void tmplput_MAIL_SUMM_REFIDS(StrBuf *Target, WCTemplputParams *TP)
-{
+
+
+void tmplput_MAIL_SUMM_REFIDS(StrBuf *Target, WCTemplputParams *TP) {
 	message_summary *Msg = (message_summary*) CTX(CTX_MAILSUM);
 	StrBufAppendTemplate(Target, TP, Msg->reply_references, 0);
 }
 
-void examine_replyto(message_summary *Msg, StrBuf *HdrLine, StrBuf *FoundCharset)
-{
+
+void examine_replyto(message_summary *Msg, StrBuf *HdrLine, StrBuf *FoundCharset) {
 	wcsession *WCC = WC;
 
 	CheckConvertBufs(WCC);
@@ -460,14 +457,15 @@ void examine_replyto(message_summary *Msg, StrBuf *HdrLine, StrBuf *FoundCharset
 	}
 	StrBufAppendBuf(Msg->AllRcpt, Msg->ReplyTo, 0);
 }
-void tmplput_MAIL_SUMM_REPLYTO(StrBuf *Target, WCTemplputParams *TP)
-{
+
+
+void tmplput_MAIL_SUMM_REPLYTO(StrBuf *Target, WCTemplputParams *TP) {
 	message_summary *Msg = (message_summary*) CTX(CTX_MAILSUM);
 	StrBufAppendTemplate(Target, TP, Msg->ReplyTo, 0);
 }
 
-void examine_cccc(message_summary *Msg, StrBuf *HdrLine, StrBuf *FoundCharset)
-{
+
+void examine_cccc(message_summary *Msg, StrBuf *HdrLine, StrBuf *FoundCharset) {
 	wcsession *WCC = WC;
 
 	CheckConvertBufs(WCC);
@@ -486,15 +484,15 @@ void examine_cccc(message_summary *Msg, StrBuf *HdrLine, StrBuf *FoundCharset)
 	}
 	StrBufAppendBuf(Msg->AllRcpt, Msg->cccc, 0);
 }
-void tmplput_MAIL_SUMM_CCCC(StrBuf *Target, WCTemplputParams *TP)
-{
+
+
+void tmplput_MAIL_SUMM_CCCC(StrBuf *Target, WCTemplputParams *TP) {
 	message_summary *Msg = (message_summary*) CTX(CTX_MAILSUM);
 	StrBufAppendTemplate(Target, TP, Msg->cccc, 0);
 }
 
 
-void examine_room(message_summary *Msg, StrBuf *HdrLine, StrBuf *FoundCharset)
-{
+void examine_room(message_summary *Msg, StrBuf *HdrLine, StrBuf *FoundCharset) {
 	if ((StrLength(HdrLine) > 0) &&
 	    (strcasecmp(ChrPtr(HdrLine), ChrPtr(WC->CurRoom.name)))) {
 		FreeStrBuf(&Msg->Room);
@@ -503,49 +501,48 @@ void examine_room(message_summary *Msg, StrBuf *HdrLine, StrBuf *FoundCharset)
 }
 
 
-void tmplput_MAIL_SUMM_ORGROOM(StrBuf *Target, WCTemplputParams *TP)
-{
+void tmplput_MAIL_SUMM_ORGROOM(StrBuf *Target, WCTemplputParams *TP) {
 	message_summary *Msg = (message_summary*) CTX(CTX_MAILSUM);
 	StrBufAppendTemplate(Target, TP, Msg->Room, 0);
 }
 
 
-void examine_rfca(message_summary *Msg, StrBuf *HdrLine, StrBuf *FoundCharset)
-{
+void examine_rfca(message_summary *Msg, StrBuf *HdrLine, StrBuf *FoundCharset) {
 	FreeStrBuf(&Msg->Rfca);
 	Msg->Rfca = NewStrBufDup(HdrLine);
 }
 
 
-void examine_locl(message_summary *Msg, StrBuf *HdrLine, StrBuf *FoundCharset)
-{
+void examine_locl(message_summary *Msg, StrBuf *HdrLine, StrBuf *FoundCharset) {
 	Msg->is_local = 1;
 }
 
 
-void tmplput_MAIL_SUMM_RFCA(StrBuf *Target, WCTemplputParams *TP)
-{
+void tmplput_MAIL_SUMM_RFCA(StrBuf *Target, WCTemplputParams *TP) {
 	message_summary *Msg = (message_summary*) CTX(CTX_MAILSUM);
 	StrBufAppendTemplate(Target, TP, Msg->Rfca, 0);
 }
-int Conditional_MAIL_SUMM_RFCA(StrBuf *Target, WCTemplputParams *TP)
-{
+
+
+int Conditional_MAIL_SUMM_RFCA(StrBuf *Target, WCTemplputParams *TP) {
 	message_summary *Msg = (message_summary*) CTX(CTX_MAILSUM);
 	return StrLength(Msg->Rfca) > 0;
 }
-int Conditional_MAIL_SUMM_CCCC(StrBuf *Target, WCTemplputParams *TP)
-{
+
+
+int Conditional_MAIL_SUMM_CCCC(StrBuf *Target, WCTemplputParams *TP) {
 	message_summary *Msg = (message_summary*) CTX(CTX_MAILSUM);
 	return StrLength(Msg->cccc) > 0;
 }
-int Conditional_MAIL_SUMM_REPLYTO(StrBuf *Target, WCTemplputParams *TP)
-{
+
+
+int Conditional_MAIL_SUMM_REPLYTO(StrBuf *Target, WCTemplputParams *TP) {
 	message_summary *Msg = (message_summary*) CTX(CTX_MAILSUM);
 	return StrLength(Msg->ReplyTo) > 0;
 }
 
-void examine_nvto(message_summary *Msg, StrBuf *HdrLine, StrBuf *FoundCharset)
-{
+
+void examine_nvto(message_summary *Msg, StrBuf *HdrLine, StrBuf *FoundCharset) {
 	wcsession *WCC = WC;
 
 	CheckConvertBufs(WCC);
@@ -560,8 +557,7 @@ void examine_nvto(message_summary *Msg, StrBuf *HdrLine, StrBuf *FoundCharset)
 }
 
 
-void examine_rcpt(message_summary *Msg, StrBuf *HdrLine, StrBuf *FoundCharset)
-{
+void examine_rcpt(message_summary *Msg, StrBuf *HdrLine, StrBuf *FoundCharset) {
 	wcsession *WCC = WC;
 
 	CheckConvertBufs(WCC);
@@ -580,42 +576,46 @@ void examine_rcpt(message_summary *Msg, StrBuf *HdrLine, StrBuf *FoundCharset)
 	}
 	StrBufAppendBuf(Msg->AllRcpt, Msg->to, 0);
 }
-void tmplput_MAIL_SUMM_TO(StrBuf *Target, WCTemplputParams *TP)
-{
+
+
+void tmplput_MAIL_SUMM_TO(StrBuf *Target, WCTemplputParams *TP) {
 	message_summary *Msg = (message_summary*) CTX(CTX_MAILSUM);
 	StrBufAppendTemplate(Target, TP, Msg->to, 0);
 }
-int Conditional_MAIL_SUMM_TO(StrBuf *Target, WCTemplputParams *TP) 
-{
+
+
+int Conditional_MAIL_SUMM_TO(StrBuf *Target, WCTemplputParams *TP) {
 	message_summary *Msg = (message_summary*) CTX(CTX_MAILSUM);
 	return StrLength(Msg->to) != 0;
 }
-int Conditional_MAIL_SUMM_SUBJ(StrBuf *Target, WCTemplputParams *TP) 
-{
+
+
+int Conditional_MAIL_SUMM_SUBJ(StrBuf *Target, WCTemplputParams *TP) {
 	message_summary *Msg = (message_summary*) CTX(CTX_MAILSUM);
 	return StrLength(Msg->subj) != 0;
 }
-void tmplput_MAIL_SUMM_ALLRCPT(StrBuf *Target, WCTemplputParams *TP)
-{
+
+
+void tmplput_MAIL_SUMM_ALLRCPT(StrBuf *Target, WCTemplputParams *TP) {
 	message_summary *Msg = (message_summary*) CTX(CTX_MAILSUM);
 	StrBufAppendTemplate(Target, TP, Msg->AllRcpt, 0);
 }
 
 
-
-void tmplput_SUMM_COUNT(StrBuf *Target, WCTemplputParams *TP)
-{
+void tmplput_SUMM_COUNT(StrBuf *Target, WCTemplputParams *TP) {
 	StrBufAppendPrintf(Target, "%d", GetCount( WC->summ));
 }
 
-HashList *iterate_get_mailsumm_All(StrBuf *Target, WCTemplputParams *TP)
-{
+
+HashList *iterate_get_mailsumm_All(StrBuf *Target, WCTemplputParams *TP) {
 	return WC->summ;
 }
-void examine_time(message_summary *Msg, StrBuf *HdrLine, StrBuf *FoundCharset)
-{
+
+
+void examine_time(message_summary *Msg, StrBuf *HdrLine, StrBuf *FoundCharset) {
 	Msg->date = StrTol(HdrLine);
 }
+
 
 void tmplput_MAIL_SUMM_DATE_BRIEF(StrBuf *Target, WCTemplputParams *TP)
 {
@@ -1355,7 +1355,12 @@ readloop_struct rlid[] = {
 	{ {HKEY("readlt")},	servcmd_readlt		}
 };
 
-const char* fieldMnemonics[] = {
+
+/* I think these are supposed to align with _eMessageField in messages.h
+ * So if you change one you have to change the other.
+ * TODO: figure out who did this and beat them with a wet noodle.
+ */
+const char *fieldMnemonics[] = {
 	"from", /* A -> eAuthor       */
 	"exti", /* E -> eXclusivID    */
 	"rfca", /* F -> erFc822Addr   */
@@ -1364,7 +1369,7 @@ const char* fieldMnemonics[] = {
 	"rep2", /* K -> eReplyTo      */
 	"list", /* L -> eListID       */
 	"text", /* M -> eMesageText   */
-	"room", /* O -> eOriginalRoom */
+	"locl",	/*      eIsLocal      */
 	"path", /* P -> eMessagePath  */
 	"rcpt", /* R -> eRecipient    */
 	"spec", /* S -> eSpecialField */
@@ -1373,12 +1378,10 @@ const char* fieldMnemonics[] = {
 	"nvto", /* V -> eenVelopeTo   */
 	"wefw", /* W -> eWeferences   */
 	"cccc", /* Y -> eCarbonCopY   */
-	"nhdr", /* % -> eHeaderOnly   */
-	"type", /* % -> eFormatType   */
-	"part", /* % -> eMessagePart  */
-	"suff", /*      eSubFolder    */
-	"pref", /*      ePrefix       */
-	"locl"	/*      eIsLocal      */
+	"nhdr", /*      eHeaderOnly   */
+	"type", /*      eFormatType   */
+	"part", /*      eMessagePart  */
+	"suff"  /*      eSubFolder    */
 };
 HashList *msgKeyLookup = NULL;
 
@@ -1397,12 +1400,10 @@ void FillMsgKeyLookupTable(void) {
 	long i = 0;
 
 	msgKeyLookup = NewHash (1, FourHash);
-
-	while (i != eLastHeader) {
+	for (i=0; i<eLastHeader; ++i) {
 		if (fieldMnemonics[i] != NULL) {
 			Put(msgKeyLookup, fieldMnemonics[i], 4, (void*)i, reference_free_handler);
 		}
-		i++;
 	}
 }
 

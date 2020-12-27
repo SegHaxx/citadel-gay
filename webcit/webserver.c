@@ -78,6 +78,7 @@ int main(int argc, char **argv)
 	const char *basedir = NULL;
 	char uds_listen_path[PATH_MAX];	/* listen on a unix domain socket? */
 	const char *I18nDumpFile = NULL;
+	int max_log_level = LOG_INFO;
 
 	WildFireInitBacktrace(argv[0], 2);
 
@@ -154,7 +155,7 @@ int main(int argc, char **argv)
 			DisableGzip = 1;
 			break;
 		case 'x':
-			/* no longer used, but ignored so old scripts don't break */
+			max_log_level = atoi(optarg);
 			break;
 		case 'f':
 			follow_xff = 1;
@@ -207,6 +208,7 @@ int main(int argc, char **argv)
 		}
 
 	/* Start the logger */
+	setlogmask(LOG_UPTO(max_log_level));
 	openlog("webcit",
 		( running_as_daemon ? (LOG_PID) : (LOG_PID | LOG_PERROR) ),
 		LOG_DAEMON
