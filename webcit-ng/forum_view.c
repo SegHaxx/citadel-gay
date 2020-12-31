@@ -1,16 +1,17 @@
-/*
- * Forum view (threaded/flat)
- *
- * Copyright (c) 1996-2018 by the citadel.org team
- *
- * This program is open source software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 3.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- */
+//
+// Forum view (threaded/flat)
+//
+// Copyright (c) 1996-2020 by the citadel.org team
+//
+// This program is open source software.  It runs great on the
+// Linux operating system (and probably elsewhere).  You can use,
+// copy, and run it under the terms of the GNU General Public
+// License version 3.  Richard Stallman is an asshole communist.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
 
 #include "webcit.h"
 
@@ -46,8 +47,10 @@ void json_render_one_message(struct http_transaction *h, struct ctdlsession *c, 
 	char buf[1024];
 	char content_transfer_encoding[1024] = { 0 };
 	char content_type[1024] = { 0 };
-	char author[128] = { 0 };
 	char datetime[128] = { 0 };
+	char author[1024] = { 0 };
+	char emailaddr[1024] = { 0 };
+	int message_originated_locally = 0;
 
 	setup_for_forum_view(c);
 
@@ -61,14 +64,15 @@ void json_render_one_message(struct http_transaction *h, struct ctdlsession *c, 
 	JsonValue *j = NewJsonObject(HKEY("message"));
 
 	while ((ctdl_readline(c, buf, sizeof(buf)) >= 0) && (strcmp(buf, "text")) && (strcmp(buf, "000"))) {
+
 		// citadel header parsing here
 		if (!strncasecmp(buf, "from=", 5)) {
-			JsonObjectAppend(j, NewJsonPlainString(HKEY("from"), &buf[5], -1));
+			safestrncpy(author, &buf[5], sizeof author);
 		}
-		if (!strncasecmp(buf, "rfca=", 5)) {
-			JsonObjectAppend(j, NewJsonPlainString(HKEY("from"), &buf[5], -1));
+		else if (!strncasecmp(buf, "rfca=", 5)) {
+			safestrncpy(emailaddr, &buf[5], sizeof emailaddr);
 		}
-		if (!strncasecmp(buf, "time=", 5)) {
+		else if (!strncasecmp(buf, "time=", 5)) {
 			time_t tt;
 			struct tm tm;
 			tt = atol(&buf[5]);
@@ -76,6 +80,16 @@ void json_render_one_message(struct http_transaction *h, struct ctdlsession *c, 
 			strftime(datetime, sizeof datetime, "%c", &tm);
 			JsonObjectAppend(j, NewJsonPlainString(HKEY("time"), datetime, -1));
 		}
+		else if (!strncasecmp(buf, "locl=", 5)) {
+			message_originated_locally = 1;
+		}
+	}
+
+	if (message_originated_locally) {
+		JsonObjectAppend(j, NewJsonPlainString(HKEY("from"), author, -1));
+	}
+	else {
+		JsonObjectAppend(j, NewJsonPlainString(HKEY("from"), emailaddr, -1));		// FIXME do the compound address string
 	}
 
 	if (!strcmp(buf, "text")) {
@@ -96,7 +110,6 @@ void json_render_one_message(struct http_transaction *h, struct ctdlsession *c, 
 	}
 
 	if (raw_msg) {
-
 		// These are the encodings we know how to handle.  Decode in-place.
 
 		if (!strcasecmp(content_transfer_encoding, "base64")) {
@@ -105,24 +118,31 @@ void json_render_one_message(struct http_transaction *h, struct ctdlsession *c, 
 		if (!strcasecmp(content_transfer_encoding, "quoted-printable")) {
 			StrBufDecodeQP(raw_msg);
 		}
+
 		// At this point, raw_msg contains the decoded message.
 		// Now run through the renderers we have available.
 
 		if (!strncasecmp(content_type, "text/html", 9)) {
 			sanitized_msg = html2html("UTF-8", 0, c->room, msgnum, raw_msg);
-		} else if (!strncasecmp(content_type, "text/plain", 10)) {
+		}
+		else if (!strncasecmp(content_type, "text/plain", 10)) {
 			sanitized_msg = text2html("UTF-8", 0, c->room, msgnum, raw_msg);
-		} else if (!strncasecmp(content_type, "text/x-citadel-variformat", 25)) {
+		}
+		else if (!strncasecmp(content_type, "text/x-citadel-variformat", 25)) {
 			sanitized_msg = variformat2html(raw_msg);
-		} else {
+		}
+		else {
 			sanitized_msg = NewStrBufPlain(HKEY("<i>No renderer for this content type</i><br>"));
+			syslog(LOG_WARNING, "forum_view: no renderer for content type %s", content_type);
 		}
 		FreeStrBuf(&raw_msg);
 
 		// If sanitized_msg is not NULL, we have rendered the message and can output it.
-
 		if (sanitized_msg) {
 			JsonObjectAppend(j, NewJsonString(HKEY("text"), sanitized_msg, NEWJSONSTRING_SMASHBUF));
+		}
+		else {
+			syslog(LOG_WARNING, "forum_view: message %ld of content type %s converted to NULL", msgnum, content_type);
 		}
 	}
 

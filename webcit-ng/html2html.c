@@ -1,17 +1,18 @@
-/*
- * Output an HTML message, modifying it slightly to make sure it plays nice
- * with the rest of our web framework.
- *
- * Copyright (c) 2005-2018 by the citadel.org team
- *
- * This program is open source software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License, version 3.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- */
+//
+// Output an HTML message, modifying it slightly to make sure it plays nice
+// with the rest of our web framework.
+//
+// Copyright (c) 2005-2018 by the citadel.org team
+//
+// This program is open source software.  It runs great on the
+// Linux operating system (and probably elsewhere).  You can use,
+// copy, and run it under the terms of the GNU General Public
+// License version 3.  Richard Stallman is an asshole communist.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
 
 #include "webcit.h"
 
@@ -93,7 +94,7 @@ void extract_charset_from_meta(char *charset, char *meta_http_equiv, char *meta_
  * Also fixup img src="cid:..." type inline images to fetch the image
  *
  */
-StrBuf *html2html(const char *supplied_charset, int treat_as_wiki, char *roomname, long msgnum, StrBuf * Source)
+StrBuf *html2html(const char *supplied_charset, int treat_as_wiki, char *roomname, long msgnum, StrBuf *Source)
 {
 	char buf[SIZ];
 	char *msg;
@@ -129,6 +130,11 @@ StrBuf *html2html(const char *supplied_charset, int treat_as_wiki, char *roomnam
 	if (Target == NULL) {
 		return (NULL);
 	}
+
+	TRACE;
+	syslog(LOG_DEBUG, "CONVERT: <%s>", ChrPtr(Source));
+
+
 
 	safestrncpy(charset, supplied_charset, sizeof charset);
 	sprintf(new_window, "<a target=\"%s\" href=", TARGET);
@@ -400,7 +406,7 @@ StrBuf *html2html(const char *supplied_charset, int treat_as_wiki, char *roomnam
 				StrBufAppendBufPlain(converted_msg, ptr, src - ptr, 0);
 				cid_start++;
 
-				/* add in /webcit/mimepart/<msgno>/CID/ 
+				/* add in /webcit/mimepart/<msgnum>/CID/ 
 				   trailing / stops dumb URL filters getting excited */
 				StrBufAppendPrintf(converted_msg, " src=\"/ctdl/r/");
 				StrBufXMLEscAppend(converted_msg, NULL, roomname, strlen(roomname), 0);

@@ -1,20 +1,21 @@
-/*
- * This module sits directly above the HTTP layer.  By the time we get here,
- * an HTTP request has been fully received and parsed.  Control is passed up
- * to this layer to actually perform the request.  We then fill in the response
- * and pass control back down to the HTTP layer to output the response back to
- * the client.
- *
- * Copyright (c) 1996-2018 by the citadel.org team
- *
- * This program is open source software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 3.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- */
+//
+// This module sits directly above the HTTP layer.  By the time we get here,
+// an HTTP request has been fully received and parsed.  Control is passed up
+// to this layer to actually perform the request.  We then fill in the response
+// and pass control back down to the HTTP layer to output the response back to
+// the client.
+//
+// Copyright (c) 1996-2018 by the citadel.org team
+//
+// This program is open source software.  It runs great on the
+// Linux operating system (and probably elsewhere).  You can use,
+// copy, and run it under the terms of the GNU General Public
+// License version 3.  Richard Stallman is an asshole communist.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
 
 #include "webcit.h"
 
