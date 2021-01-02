@@ -1,7 +1,7 @@
 /*
  * Read and write the citadel.config file
  *
- * Copyright (c) 1987-2020 by the citadel.org team
+ * Copyright (c) 1987-2021 by the citadel.org team
  *
  * This program is open source software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3.
@@ -232,14 +232,14 @@ void initialize_config_system(void) {
 		exit(CTDLEXIT_LIBCITADEL);
 	}
 
-	if (chdir(ctdl_bbsbase_dir) != 0) {
-		fprintf(stderr,
-			"This program could not be started.\nUnable to change directory to %s\nError: %s\n",
-			ctdl_bbsbase_dir,
-			strerror(errno)
-		);
-		exit(CTDLEXIT_HOME);
-	}
+	//if (chdir(ctdl_bbsbase_dir) != 0) {
+		//fprintf(stderr,
+			//"This program could not be started.\nUnable to change directory to %s\nError: %s\n",
+			//ctdl_bbsbase_dir,
+			//strerror(errno)
+		//);
+		//exit(CTDLEXIT_HOME);
+	//}
 
 	memset(&lconfig, 0, sizeof(struct legacy_config));
 	cfp = fopen(file_citadel_config, "rb");

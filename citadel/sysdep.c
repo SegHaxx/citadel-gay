@@ -4,7 +4,7 @@
  * Here's where we (hopefully) have most parts of the Citadel server that
  * might need tweaking when run on different operating system variants.
  *
- * Copyright (c) 1987-2019 by the citadel.org team
+ * Copyright (c) 1987-2021 by the citadel.org team
  *
  * This program is open source software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 3.
@@ -946,17 +946,16 @@ void start_daemon(int unused) {
 	pid_t child = 0;
 	FILE *fp;
 	int do_restart = 0;
-
 	current_child = 0;
+
+	//if (chdir(ctdl_run_dir) != 0) {
+		//syslog(LOG_ERR, "%s: %m", ctdl_run_dir);
+	//}
 
 	/* Close stdin/stdout/stderr and replace them with /dev/null.
 	 * We don't just call close() because we don't want these fd's
 	 * to be reused for other files.
 	 */
-	if (chdir(ctdl_run_dir) != 0) {
-		syslog(LOG_ERR, "%s: %m", ctdl_run_dir);
-	}
-
 	child = fork();
 	if (child != 0) {
 		exit(0);
