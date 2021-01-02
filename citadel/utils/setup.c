@@ -1,7 +1,7 @@
 /*
  * Citadel setup utility
  *
- * Copyright (c) 1987-2019 by the citadel.org team
+ * Copyright (c) 1987-2021 by the citadel.org team
  *
  * This program is open source software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License version 3.
@@ -670,98 +670,6 @@ void edit_value(int curr)
 }
 
 
-#if 0
-/*
- * Strip "db" entries out of /etc/nsswitch.conf
- */
-void fixnss(void) {
-	FILE *fp_read;
-	int fd_write;
-	char buf[256];
-	char buf_nc[256];
-	char question[512];
-	int i;
-	int file_changed = 0;
-	char new_filename[64];
-	int rv;
-
-	fp_read = fopen(NSSCONF, "r");
-	if (fp_read == NULL) {
-		return;
-	}
-
-	strcpy(new_filename, "/tmp/ctdl_fixnss_XXXXXX");
-	fd_write = mkstemp(new_filename);
-	if (fd_write < 0) {
-		fclose(fp_read);
-		return;
-	}
-
-	while (fgets(buf, sizeof buf, fp_read) != NULL) {
-		strcpy(buf_nc, buf);
-		for (i=0; buf_nc[i]; ++i) {
-			if (buf_nc[i] == '#') {
-				buf_nc[i] = 0;
-				break;
-			}
-		}
-		for (i=0; i<strlen(buf_nc); ++i) {
-			if (!strncasecmp(&buf_nc[i], "db", 2)) {
-				if (i > 0) {
-					if ((isspace(buf_nc[i+2])) || (buf_nc[i+2]==0)) {
-						file_changed = 1;
-						strcpy(&buf_nc[i], &buf_nc[i+2]);
-						strcpy(&buf[i], &buf[i+2]);
-						if (buf[i]==32) {
-							strcpy(&buf_nc[i], &buf_nc[i+1]);
-							strcpy(&buf[i], &buf[i+1]);
-						}
-					}
-				}
-			}
-		}
-		long buflen = strlen(buf);
-		if (write(fd_write, buf, buflen) != buflen) {
-			fclose(fp_read);
-			close(fd_write);
-			unlink(new_filename);
-			return;
-		}
-	}
-
-	fclose(fp_read);
-	
-	if (!file_changed) {
-		unlink(new_filename);
-		return;
-	}
-
-	snprintf(question, sizeof question,
-		 _(
-			 "\n"
-			 "/etc/nsswitch.conf is configured to use the 'db' module for\n"
-			 "one or more services.  This is not necessary on most systems,\n"
-			 "and it is known to crash the Citadel server when delivering\n"
-			 "mail to the Internet.\n"
-			 "\n"
-			 "Do you want this module to be automatically disabled?\n"
-			 "\n"
-			 )
-	);
-
-	if (yesno(question, 1)) {
-		snprintf(buf, sizeof buf, "/bin/mv -f %s %s", new_filename, NSSCONF);
-		rv = system(buf);
-		if (rv != 0) {
-			fprintf(stderr, "failed to edit %s.\n", NSSCONF);
-		}
-		chmod(NSSCONF, 0644);
-	}
-	unlink(new_filename);
-}
-#endif
-
-
 /*
  * Messages that are no longer in use.
  * We keep them here so we don't lose the translations if we need them later.
@@ -822,12 +730,6 @@ int main(int argc, char *argv[])
 	SetTitles();
 
 	enable_home = ( relh | home );
-
-	if (chdir(ctdl_run_dir) != 0) {
-		display_error("%s: [%s]\n", _("The directory you specified does not exist"), ctdl_run_dir);
-		exit(errno);
-	}
-
 
 	/*
 	 * Connect to the running Citadel server.
