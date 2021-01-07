@@ -52,5 +52,5 @@ do
 done
 
 cp ctdlvisor citadel.AppDir/usr/bin/
-
 ARCH=x86_64 appimagetool citadel.AppDir/
+rm -fr /usr/local/citadel /usr/local/webcit
