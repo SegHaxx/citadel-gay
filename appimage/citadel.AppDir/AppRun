@@ -1,0 +1,5 @@
+#!/bin/bash
+
+export LD_LIBRARY_PATH=$APPDIR/usr/lib
+export PATH=$APPDIR/usr/bin
+exec $APPDIR/ctdlvisor
