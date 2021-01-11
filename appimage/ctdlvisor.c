@@ -42,10 +42,12 @@ pid_t start_citadel() {
 pid_t start_webcit() {
 	char bin[1024];
 	sprintf(bin, "%s/usr/local/webcit/webcit", getenv("APPDIR"));
+	char wchome[1024];
+	sprintf(wchome, "-h%s/usr/local/webcit", getenv("APPDIR"));
 	pid_t pid = fork();
 	if (pid == 0) {
 		printf("Executing %s\n", bin);
-		execlp(bin, "webcit", "-x9", "-p80", "uds", "/usr/local/citadel", NULL);
+		execlp(bin, "webcit", "-x9", wchome, "-p80", "uds", "/usr/local/citadel", NULL);
 		perror("execlp");
 		exit(errno);
 	}
@@ -58,10 +60,12 @@ pid_t start_webcit() {
 pid_t start_webcits() {
 	char bin[1024];
 	sprintf(bin, "%s/usr/local/webcit/webcit", getenv("APPDIR"));
+	char wchome[1024];
+	sprintf(wchome, "-h%s/usr/local/webcit", getenv("APPDIR"));
 	pid_t pid = fork();
 	if (pid == 0) {
 		printf("Executing %s\n", bin);
-		execlp(bin, "webcit", "-x9", "-s", "-p443", "uds", "/usr/local/citadel", NULL);
+		execlp(bin, "webcit", "-x9", wchome, "-s", "-p443", "uds", "/usr/local/citadel", NULL);
 		perror("execlp");
 		exit(errno);
 	}
