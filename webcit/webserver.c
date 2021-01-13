@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996-2020 by the citadel.org team
+ * Copyright (c) 1996-2021 by the citadel.org team
  *
  * This program is open source software.  You can redistribute it and/or
  * modify it under the terms of the GNU General Public License version 3.
@@ -246,8 +246,13 @@ int main(int argc, char **argv)
 	syslog(LOG_NOTICE, "GNU General Public License for more details.");
 	syslog(LOG_NOTICE, " ");
 
-	/* initialize various subsystems */
+	/* run from the webcit home directory */
+	if (chdir(webcitdir) != 0) {
+		syslog(LOG_ERR, "webcit: %s: %m", webcitdir);
+		exit(errno);
+	}
 
+	/* initialize various subsystems */
 	initialise_modules();
 	initialise2_modules();
 	InitTemplateCache();

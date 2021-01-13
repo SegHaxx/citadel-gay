@@ -560,16 +560,6 @@ AC_ARG_WITH(editordir,
 			  fi
 			]
 )
-AC_DEFINE_UNQUOTED(EDITORDIR, "$editordir", [where to find our mail editor])
-
-AC_ARG_WITH(markdowneditordir, 
-		    [  --with-markdowneditordir             directory to put our markdown editor],
-			[ if test "x$withval" != "xno" ; then
-				markdowneditordir=$withval
-			  fi
-			]
-)
-AC_DEFINE_UNQUOTED(MARKDOWNEDITORDIR, "$markdowneditordir", [where to find our markdown editor])
 
 dnl Checks where to find our configs
 AC_ARG_WITH(etcdir, 
