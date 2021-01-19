@@ -26,9 +26,6 @@ make || exit 1
 make install || exit 1
 popd
 
-# Build the appimage supervisor
-cc ctdlvisor.c -o ctdlvisor || exit 1
-
 # Clear out our build directories
 rm -frv citadel.AppDir/usr
 mkdir -p citadel.AppDir/usr/bin
@@ -51,6 +48,7 @@ do
 	rsync -va /usr/local/$x/ ./citadel.AppDir/usr/local/$x/
 done
 
-cp ctdlvisor citadel.AppDir/usr/bin/
-ARCH=x86_64 appimagetool citadel.AppDir/
 rm -fr /usr/local/citadel /usr/local/webcit
+
+cc ctdlvisor.c -o citadel.AppDir/usr/bin/ctdlvisor || exit 1
+ARCH=ARM appimagetool citadel.AppDir/
