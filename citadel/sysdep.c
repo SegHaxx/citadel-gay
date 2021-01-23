@@ -358,26 +358,6 @@ int client_write(const char *buf, int nbytes)
 
 	Ctx = CC;
 
-#ifdef BIGBAD_IODBG
-	{
-		int rv = 0;
-		char fn [SIZ];
-		FILE *fd;
-		
-		snprintf(fn, SIZ, "/tmp/foolog_%s.%d", Ctx->ServiceName, Ctx->cs_pid);
-		
-		fd = fopen(fn, "a+");
-		if (fd == NULL) {
-			syslog(LOG_ERR, "%s: %m", fn);
-			exit(1);
-		}
-		fprintf(fd, "Sending: BufSize: %d BufContent: [", nbytes);
-		rv = fwrite(buf, nbytes, 1, fd);
-		fprintf(fd, "]\n");
-		fclose(fd);
-	}
-#endif
-//	flush_client_inbuf();
 	if (Ctx->redirect_buffer != NULL) {
 		StrBufAppendBufPlain(Ctx->redirect_buffer,
 				     buf, nbytes, 0);
@@ -472,64 +452,14 @@ int client_read_blob(StrBuf *Target, int bytes, int timeout)
 
 #ifdef HAVE_OPENSSL
 	if (CCC->redirect_ssl) {
-#ifdef BIGBAD_IODBG
-		int rv = 0;
-		char fn [SIZ];
-		FILE *fd;
-		
-		snprintf(fn, SIZ, "/tmp/foolog_%s.%d", CCC->ServiceName, CCC->cs_pid);
-			
-		fd = fopen(fn, "a+");
-		if (fd == NULL) {
-			syslog(LOG_ERR, "%s: %m", fn);
-			exit(1);
-		}
-		fprintf(fd, "Reading BLOB: BufSize: %d ", bytes);
-		rv = fwrite(ChrPtr(Target), StrLength(Target), 1, fd);
-		fprintf(fd, "]\n");
-		
-			
-		fclose(fd);
-#endif
 		retval = client_read_sslblob(Target, bytes, timeout);
 		if (retval < 0) {
 			syslog(LOG_ERR, "sysdep: client_read_blob() failed");
 		}
-#ifdef BIGBAD_IODBG
-		snprintf(fn, SIZ, "/tmp/foolog_%s.%d", CCC->ServiceName, CCC->cs_pid);
-		
-		fd = fopen(fn, "a+");
-		if (fd == NULL) {
-			syslog(LOG_ERR, "%s: %m", fn);
-			exit(1);
-		}
-		fprintf(fd, "Read: %d BufContent: [", StrLength(Target));
-		rv = fwrite(ChrPtr(Target), StrLength(Target), 1, fd);
-		fprintf(fd, "]\n");
-		fclose(fd);
-#endif
 	}
 	else 
 #endif
 	{
-#ifdef BIGBAD_IODBG
-		int rv = 0;
-		char fn [SIZ];
-		FILE *fd;
-		
-		snprintf(fn, SIZ, "/tmp/foolog_%s.%d", CCC->ServiceName, CCC->cs_pid);
-			
-		fd = fopen(fn, "a+");
-		if (fd == NULL) {
-			syslog(LOG_ERR, "%s: %m", fn);
-			exit(1);
-		}
-		fprintf(fd, "Reading BLOB: BufSize: %d ",
-			bytes);
-		rv = fwrite(ChrPtr(Target), StrLength(Target), 1, fd);
-		fprintf(fd, "]\n");
-		fclose(fd);
-#endif
 		retval = StrBufReadBLOBBuffered(Target, 
 						CCC->RecvBuf.Buf,
 						&CCC->RecvBuf.ReadWritePointer,
@@ -544,20 +474,6 @@ int client_read_blob(StrBuf *Target, int bytes, int timeout)
 			client_close();
 			return retval;
 		}
-#ifdef BIGBAD_IODBG
-		snprintf(fn, SIZ, "/tmp/foolog_%s.%d", CCC->ServiceName, CCC->cs_pid);
-		
-		fd = fopen(fn, "a+");
-		if (fd == NULL) {
-			syslog(LOG_ERR, "%s: %m", fn);
-			exit(1);
-		}
-		fprintf(fd, "Read: %d BufContent: [",
-			StrLength(Target));
-		rv = fwrite(ChrPtr(Target), StrLength(Target), 1, fd);
-		fprintf(fd, "]\n");
-		fclose(fd);
-#endif
 	}
 	return retval;
 }
@@ -597,26 +513,6 @@ int client_read_random_blob(StrBuf *Target, int timeout)
 			StrBufAppendBufPlain(Target, pch, len, 0);
 			FlushStrBuf(CCC->RecvBuf.Buf);
 			CCC->RecvBuf.ReadWritePointer = NULL;
-#ifdef BIGBAD_IODBG
-			{
-				int rv = 0;
-				char fn [SIZ];
-				FILE *fd;
-			
-				snprintf(fn, SIZ, "/tmp/foolog_%s.%d", CCC->ServiceName, CCC->cs_pid);
-			
-				fd = fopen(fn, "a+");
-				if (fd == NULL) {
-					syslog(LOG_ERR, "%s: %m", fn);
-					exit(1);
-				}
-				fprintf(fd, "Read: BufSize: %d BufContent: [",
-					StrLength(Target));
-				rv = fwrite(ChrPtr(Target), StrLength(Target), 1, fd);
-				fprintf(fd, "]\n");
-				fclose(fd);
-			}
-#endif
 			return StrLength(Target);
 		}
 		return rc;
@@ -678,92 +574,12 @@ int CtdlClientGetLine(StrBuf *Target)
 	FlushStrBuf(Target);
 #ifdef HAVE_OPENSSL
 	if (CCC->redirect_ssl) {
-#ifdef BIGBAD_IODBG
-		char fn [SIZ];
-		FILE *fd;
-		int len = 0;
-		int rlen = 0;
-		int  nlen = 0;
-		int nrlen = 0;
-		const char *pch;
-
-		snprintf(fn, SIZ, "/tmp/foolog_%s.%d", CCC->ServiceName, CCC->cs_pid);
-
-		fd = fopen(fn, "a+");
-		if (fd == NULL) {
-			syslog(LOG_ERR, "%s: %m", fn);
-			exit(1);
-		}
-		pch = ChrPtr(CCC->RecvBuf.Buf);
-		len = StrLength(CCC->RecvBuf.Buf);
-		if (CCC->RecvBuf.ReadWritePointer != NULL)
-			rlen = CCC->RecvBuf.ReadWritePointer - pch;
-		else
-			rlen = 0;
-
-/*		fprintf(fd, "\n\n\nBufSize: %d BufPos: %d \nBufContent: [%s]\n\n_____________________\n",
-			len, rlen, pch);
-*/
-		fprintf(fd, "\n\n\nSSL1: BufSize: %d BufPos: %d \n_____________________\n",
-			len, rlen);
-#endif
-		rc = client_readline_sslbuffer(Target,
-					       CCC->RecvBuf.Buf,
-					       &CCC->RecvBuf.ReadWritePointer,
-					       1);
-#ifdef BIGBAD_IODBG
-                pch = ChrPtr(CCC->RecvBuf.Buf);
-                nlen = StrLength(CCC->RecvBuf.Buf);
-                if (CCC->RecvBuf.ReadWritePointer != NULL)
-                        nrlen = CCC->RecvBuf.ReadWritePointer - pch;
-                else
-                        nrlen = 0;
-/*
-                fprintf(fd, "\n\n\nBufSize: was: %d is: %d BufPos: was: %d is: %d \nBufContent: [%s]\n\n_____________________\n",
-                        len, nlen, rlen, nrlen, pch);
-*/
-                fprintf(fd, "\n\n\nSSL2: BufSize: was: %d is: %d BufPos: was: %d is: %d \n",
-                        len, nlen, rlen, nrlen);
-
-                fprintf(fd, "SSL3: Read: BufSize: %d BufContent: [%s]\n\n*************\n",
-                        StrLength(Target), ChrPtr(Target));
-                fclose(fd);
-
-		if (rc < 0) {
-			syslog(LOG_ERR, "sysdep: CtdlClientGetLine() failed");
-		}
-#endif
+		rc = client_readline_sslbuffer(Target, CCC->RecvBuf.Buf, &CCC->RecvBuf.ReadWritePointer, 1);
 		return rc;
 	}
 	else 
 #endif
 	{
-#ifdef BIGBAD_IODBG
-		char fn [SIZ];
-		FILE *fd;
-		int len, rlen, nlen, nrlen;
-		const char *pch;
-
-		snprintf(fn, SIZ, "/tmp/foolog_%s.%d", CCC->ServiceName, CCC->cs_pid);
-
-		fd = fopen(fn, "a+");
-		if (fd == NULL) {
-			syslog(LOG_ERR, "%s: %m", fn);
-			exit(1);
-		}
-		pch = ChrPtr(CCC->RecvBuf.Buf);
-		len = StrLength(CCC->RecvBuf.Buf);
-		if (CCC->RecvBuf.ReadWritePointer != NULL)
-			rlen = CCC->RecvBuf.ReadWritePointer - pch;
-		else
-			rlen = 0;
-
-/*		fprintf(fd, "\n\n\nBufSize: %d BufPos: %d \nBufContent: [%s]\n\n_____________________\n",
-			len, rlen, pch);
-*/
-		fprintf(fd, "\n\n\nBufSize: %d BufPos: %d \n_____________________\n",
-			len, rlen);
-#endif
 		rc = StrBufTCP_read_buffered_line_fast(Target, 
 						       CCC->RecvBuf.Buf,
 						       &CCC->RecvBuf.ReadWritePointer,
@@ -772,29 +588,6 @@ int CtdlClientGetLine(StrBuf *Target)
 						       1,
 						       &Error
 		);
-
-#ifdef BIGBAD_IODBG
-                pch = ChrPtr(CCC->RecvBuf.Buf);
-                nlen = StrLength(CCC->RecvBuf.Buf);
-                if (CCC->RecvBuf.ReadWritePointer != NULL)
-                        nrlen = CCC->RecvBuf.ReadWritePointer - pch;
-                else
-                        nrlen = 0;
-/*
-                fprintf(fd, "\n\n\nBufSize: was: %d is: %d BufPos: was: %d is: %d \nBufContent: [%s]\n\n_____________________\n",
-                        len, nlen, rlen, nrlen, pch);
-*/
-                fprintf(fd, "\n\n\nBufSize: was: %d is: %d BufPos: was: %d is: %d \n",
-                        len, nlen, rlen, nrlen);
-
-                fprintf(fd, "Read: BufSize: %d BufContent: [%s]\n\n*************\n",
-                        StrLength(Target), ChrPtr(Target));
-                fclose(fd);
-
-		if ((rc < 0) && (Error != NULL)) {
-			syslog(LOG_ERR, "sysdep: CtdlClientGetLine() failed: %s", Error);
-		}
-#endif
 		return rc;
 	}
 }
