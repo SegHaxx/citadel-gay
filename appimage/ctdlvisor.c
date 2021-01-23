@@ -25,9 +25,46 @@
 #include <string.h>
 #include <limits.h>
 
+void main_loop(void);
+
 char *data_directory = "/usr/local/citadel";
 char *http_port = "80";
 char *https_port = "443";
+pid_t citserver_pid;
+pid_t webcit_pid;
+pid_t webcits_pid;
+
+
+void signal_handler(int signal) {
+	fprintf(stderr, "ctdlvisor: caught signal %d", signal);
+
+	int status;
+	pid_t who_exited;
+	char *what_exited = NULL;
+
+	do {
+		fprintf(stderr, "ctdlvisor: waiting for any child process to exit...\n");
+		who_exited = waitpid(-1, &status, 0);
+		if (who_exited == citserver_pid) {
+			what_exited = "Citadel Server";
+		}
+		else if (who_exited == webcit_pid) {
+			what_exited = "WebCit HTTP";
+		}
+		else if (who_exited == webcits_pid) {
+			what_exited = "WebCit HTTPS";
+		}
+		else {
+			what_exited = "unknown";
+		}
+		fprintf(stderr, "ctdlvisor: pid=%d (%s) exited, status=%d, exitcode=%d\n", who_exited, what_exited, status, WEXITSTATUS(status));
+	} while (who_exited >= 0);
+
+	printf("ctdlvisor: exiting from signal catcher.\n");
+	exit(0);
+}
+
+
 
 pid_t start_citadel() {
 	char bin[1024];
@@ -35,8 +72,8 @@ pid_t start_citadel() {
 	pid_t pid = fork();
 	if (pid == 0) {
 		fprintf(stderr, "ctdlvisor: executing %s\n", bin);
+		close(0); close(1); close(2);
 		execlp(bin, "citserver", "-x9", "-h", data_directory, NULL);
-		perror("execlp");
 		exit(errno);
 	}
 	else {
@@ -53,8 +90,8 @@ pid_t start_webcit() {
 	pid_t pid = fork();
 	if (pid == 0) {
 		fprintf(stderr, "ctdlvisor: executing %s\n", bin);
+		close(0); close(1); close(2);
 		execlp(bin, "webcit", "-x9", wchome, "-p", http_port, "uds", data_directory, NULL);
-		perror("execlp");
 		exit(errno);
 	}
 	else {
@@ -71,8 +108,8 @@ pid_t start_webcits() {
 	pid_t pid = fork();
 	if (pid == 0) {
 		fprintf(stderr, "ctdlvisor: executing %s\n", bin);
+		close(0); close(1); close(2);
 		execlp(bin, "webcit", "-x9", wchome, "-s", "-p", https_port, "uds", data_directory, NULL);
-		perror("execlp");
 		exit(errno);
 	}
 	else {
@@ -82,12 +119,6 @@ pid_t start_webcits() {
 
 
 int main(int argc, char **argv) {
-	pid_t citserver_pid;
-	pid_t webcit_pid;
-	pid_t webcits_pid;
-	int shutting_down = 0;
-	int status;
-	pid_t who_exited;
 	int c;
 
 	while ((c = getopt (argc, argv, "h:p:s:")) != -1)  switch(c) {
@@ -118,9 +149,24 @@ int main(int argc, char **argv) {
 		exit(errno);
 	}
 
+	signal(SIGTERM, signal_handler);
+	signal(SIGHUP, signal_handler);
+	signal(SIGINT, signal_handler);
+	signal(SIGQUIT, signal_handler);
+
 	citserver_pid = start_citadel();
 	webcit_pid = start_webcit();
 	webcits_pid = start_webcits();
+
+	main_loop();
+}
+
+
+void main_loop(void) {
+	int status;
+	pid_t who_exited;
+	int shutting_down = 0;
+	int citserver_exit_code = 0;
 
 	do {
 		fprintf(stderr, "ctdlvisor: waiting for any child process to exit...\n");
@@ -130,8 +176,15 @@ int main(int argc, char **argv) {
 		// A *deliberate* exit of citserver will cause ctdlvisor to shut the whole AppImage down.
 		// If it crashes, however, we will start it back up.
 		if (who_exited == citserver_pid) {
-			if (WEXITSTATUS(status) == 0) {
+			citserver_exit_code = WEXITSTATUS(status);
+			if (citserver_exit_code == 0) {
 				fprintf(stderr, "ctdlvisor: citserver exited normally - ending AppImage session\n");
+				shutting_down = 1;
+				kill(webcit_pid, SIGTERM);
+				kill(webcits_pid, SIGTERM);
+			}
+			else if ((citserver_exit_code >= 101) && (citserver_exit_code <= 109)) {
+				fprintf(stderr, "ctdlvisor: citserver exited intentionally - ending AppImage session\n");
 				shutting_down = 1;
 				kill(webcit_pid, SIGTERM);
 				kill(webcits_pid, SIGTERM);
@@ -142,14 +195,14 @@ int main(int argc, char **argv) {
 		}
 
 		// WebCit processes are restarted if they exit for any reason.
-		if ((who_exited == webcit_pid) && (!shutting_down))		webcit_pid = start_webcit();
-		if ((who_exited == webcits_pid) && (!shutting_down))		webcits_pid = start_webcits();
+		if ((who_exited == webcit_pid) && (!shutting_down))	webcit_pid = start_webcit();
+		if ((who_exited == webcits_pid)	&& (!shutting_down))	webcits_pid = start_webcits();
 
 		// If we somehow end up in an endless loop, at least slow it down.
 		sleep(1);
 
-	} while ((who_exited >= 0) && (shutting_down == 0));
+	} while (who_exited >= 0);
 
-	printf("ctdlvisor: exiting.\n");
-	exit(0);
+	printf("ctdlvisor: exit code %d\n", citserver_exit_code);
+	exit(citserver_exit_code);
 }
