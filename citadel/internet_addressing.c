@@ -2,7 +2,7 @@
  * This file contains functions which handle the mapping of Internet addresses
  * to users on the Citadel system.
  *
- * Copyright (c) 1987-2020 by the citadel.org team
+ * Copyright (c) 1987-2021 by the citadel.org team
  *
  * This program is open source software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3.
@@ -1671,7 +1671,7 @@ void AutoGenerateEmailAddressForUser(struct ctdluser *user)
 			snprintf(synthetic_email_addr, sizeof synthetic_email_addr, "ctdl%08x@%s", i, CtdlGetConfigStr("c_fqdn"));
 		}
 		u = CtdlDirectoryLookup(NULL, synthetic_email_addr, 0);
-		syslog(LOG_DEBUG, "\033[33mAddress <%s> lookup <%d>\033[0m", synthetic_email_addr, u);
+		syslog(LOG_DEBUG, "user_ops: address <%s> lookup returned <%d>", synthetic_email_addr, u);
 	}
 
 	CtdlSetEmailAddressesForUser(user->fullname, synthetic_email_addr);
