@@ -634,8 +634,7 @@ int client_getln(char *buf, int bufsize)
 /*
  * Cleanup any contexts that are left lying around
  */
-void close_masters (void)
-{
+void close_masters(void) {
 	struct ServiceFunctionHook *serviceptr;
 	const char *Text;
 
@@ -645,8 +644,7 @@ void close_masters (void)
 	for (serviceptr = ServiceHookTable; serviceptr != NULL;
 	    serviceptr = serviceptr->next ) {
 
-		if (serviceptr->tcp_port > 0)
-		{
+		if (serviceptr->tcp_port > 0) {
 			if (serviceptr->msock == -1) {
 				Text = "not closing again";
 			}
@@ -661,8 +659,7 @@ void close_masters (void)
 			serviceptr->tcp_port = 0;
 		}
 		
-		if (serviceptr->sockpath != NULL)
-		{
+		if (serviceptr->sockpath != NULL) {
 			if (serviceptr->msock == -1) {
 				Text = "not closing again";
 			}
@@ -676,8 +673,7 @@ void close_masters (void)
 			);
 		}
 
-                if (serviceptr->msock != -1)
-		{
+                if (serviceptr->msock != -1) {
 			close(serviceptr->msock);
 			serviceptr->msock = -1;
 		}
@@ -795,11 +791,8 @@ void start_daemon(int unused) {
 }
 
 
-
-void checkcrash(void)
-{
-	if (nFireUpsNonRestart != nFireUps)
-	{
+void checkcrash(void) {
+	if (nFireUpsNonRestart != nFireUps) {
 		StrBuf *CrashMail;
 		CrashMail = NewStrBuf();
 		syslog(LOG_ALERT, "sysdep: posting crash message");
@@ -845,9 +838,7 @@ int convert_login(char NameToConvert[]) {
 }
 
 
-
-void HuntBadSession(void)
-{
+void HuntBadSession(void) {
 	int highest;
 	CitContext *ptr;
 	fd_set readfds;
