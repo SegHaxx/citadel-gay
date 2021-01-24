@@ -20,7 +20,7 @@
  * The VRFY and EXPN commands have been removed from this implementation
  * because nobody uses these commands anymore, except for spammers.
  *
- * Copyright (c) 1998-2020 by the citadel.org team
+ * Copyright (c) 1998-2021 by the citadel.org team
  *
  * This program is open source software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3.
@@ -128,11 +128,6 @@ void registerSmtpCMD(const char *First, long FLen,
 	Put(SMTPCmds, First, FLen, h, NULL);
 }
 
-
-void smtp_cleanup(void)
-{
-	DeleteHash(&SMTPCmds);
-}
 
 /*
  * Here's where our SMTP session begins its happy day.
@@ -1190,7 +1185,6 @@ CTDL_MODULE_INIT(smtp)
 					NULL,
 					CitadelServiceSMTP_LMTP_UNF);
 
-		CtdlRegisterCleanupHook(smtp_cleanup);
 		CtdlRegisterSessionHook(smtp_cleanup_function, EVT_STOP, PRIO_STOP + 250);
 	}
 	

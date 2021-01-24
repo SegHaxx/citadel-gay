@@ -2,7 +2,7 @@
  * Citadel Extension Loader
  * Originally written by Brian Costello <btx@calyx.net>
  *
- * Copyright (c) 1987-2020 by the citadel.org team
+ * Copyright (c) 1987-2021 by the citadel.org team
  *
  * This program is open source software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 3.
@@ -127,9 +127,6 @@ struct SearchFunctionHook {
 	char *name;
 };
 SearchFunctionHook *SearchFunctionHookTable = NULL;
-
-CleanupFunctionHook *CleanupHookTable = NULL;
-CleanupFunctionHook *EVCleanupHookTable = NULL;
 
 ServiceFunctionHook *ServiceHookTable = NULL;
 
@@ -275,94 +272,6 @@ void CtdlRegisterProtoHook(void (*handler) (char *), char *cmd, char *desc)
 
 	Put(ProtoHookList, cmd, 4, p, NULL);
 	syslog(LOG_DEBUG, "extensions: registered server command %s (%s)", cmd, desc);
-}
-
-
-void CtdlRegisterCleanupHook(void (*fcn_ptr) (void))
-{
-
-	CleanupFunctionHook *newfcn;
-
-	newfcn = (CleanupFunctionHook *)
-	    malloc(sizeof(CleanupFunctionHook));
-	newfcn->next = CleanupHookTable;
-	newfcn->h_function_pointer = fcn_ptr;
-	CleanupHookTable = newfcn;
-
-	syslog(LOG_DEBUG, "extensions: registered a new cleanup function");
-}
-
-
-void CtdlUnregisterCleanupHook(void (*fcn_ptr) (void))
-{
-	CleanupFunctionHook *cur, *p, *last;
-	last = NULL;
-	cur = CleanupHookTable;
-	while (cur != NULL)
-	{
-		if (fcn_ptr == cur->h_function_pointer)
-		{
-			syslog(LOG_DEBUG, "extensions: unregistered cleanup function");
-			p = cur->next;
-
-			free(cur);
-			cur = NULL;
-
-			if (last != NULL)
-				last->next = p;
-			else 
-				CleanupHookTable = p;
-			cur = p;
-		}
-		else {
-			last = cur;
-			cur = cur->next;
-		}
-	}
-}
-
-
-void CtdlRegisterEVCleanupHook(void (*fcn_ptr) (void))
-{
-
-	CleanupFunctionHook *newfcn;
-
-	newfcn = (CleanupFunctionHook *)
-	    malloc(sizeof(CleanupFunctionHook));
-	newfcn->next = EVCleanupHookTable;
-	newfcn->h_function_pointer = fcn_ptr;
-	EVCleanupHookTable = newfcn;
-
-	syslog(LOG_DEBUG, "extensions: registered a new cleanup function");
-}
-
-
-void CtdlUnregisterEVCleanupHook(void (*fcn_ptr) (void))
-{
-	CleanupFunctionHook *cur, *p, *last;
-	last = NULL;
-	cur = EVCleanupHookTable;
-	while (cur != NULL)
-	{
-		if (fcn_ptr == cur->h_function_pointer)
-		{
-			syslog(LOG_DEBUG, "extensions: unregistered cleanup function");
-			p = cur->next;
-
-			free(cur);
-			cur = NULL;
-
-			if (last != NULL)
-				last->next = p;
-			else 
-				EVCleanupHookTable = p;
-			cur = p;
-		}
-		else {
-			last = cur;
-			cur = cur->next;
-		}
-	}
 }
 
 

@@ -1,7 +1,7 @@
 /*
  * XMPP event queue
  *
- * Copyright (c) 2007-2017 by Art Cancro
+ * Copyright (c) 2007-2021 by Art Cancro
  *
  * This program is open source software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3.
@@ -137,20 +137,4 @@ void xmpp_process_events(void) {
 	}
 
 	XMPP->last_event_processed = highest_event;
-}
-
-
-void xmpp_cleanup_events(void)
-{
-        struct xmpp_event *ptr, *ptr2;
-        begin_critical_section(S_XMPP_QUEUE);
-	ptr = xmpp_queue;
-	xmpp_queue = NULL;
-	while (ptr != NULL) {
-		ptr2 = ptr->next;
-		free(ptr);
-		ptr = ptr2;
-	}
-        end_critical_section(S_XMPP_QUEUE);
-
 }

@@ -1,7 +1,7 @@
 /*
  * This module handles network mail and mailing list processing.
  *
- * Copyright (c) 2000-2019 by the citadel.org team
+ * Copyright (c) 2000-2021 by the citadel.org team
  *
  * This program is open source software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 3.
@@ -191,13 +191,6 @@ void destroy_network_queue_room(RoomProcList *rplist)
 	}
 }
 
-void destroy_network_queue_room_locked (void)
-{
-	begin_critical_section(S_RPLIST);
-	destroy_network_queue_room(rplist);
-	end_critical_section(S_RPLIST);
-}
-
 
 /*
  * network_do_queue()
@@ -322,7 +315,6 @@ CTDL_MODULE_INIT(network)
 	if (!threading)
 	{
 		CtdlRegisterRoomHook(network_room_handler);
-		CtdlRegisterCleanupHook(destroy_network_queue_room_locked);
 		CtdlRegisterSessionHook(network_do_queue, EVT_TIMER, PRIO_QUEUE + 10);
 	}
 	return "network";

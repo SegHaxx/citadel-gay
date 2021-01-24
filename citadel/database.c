@@ -1,7 +1,7 @@
 /*
  * This is a data store backend for the Citadel server which uses Berkeley DB.
  *
- * Copyright (c) 1987-2020 by the citadel.org team
+ * Copyright (c) 1987-2021 by the citadel.org team
  *
  * This program is open source software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License version 3.
@@ -317,18 +317,13 @@ void close_databases(void) {
 
 	syslog(LOG_INFO, "db: performing final checkpoint");
 	if ((ret = dbenv->txn_checkpoint(dbenv, 0, 0, 0))) {
-		syslog(LOG_ERR, "txn_checkpoint: %s", db_strerror(ret));
+		syslog(LOG_ERR, "db: txn_checkpoint: %s", db_strerror(ret));
 	}
 
 	syslog(LOG_INFO, "db: flushing the database logs");
 	if ((ret = dbenv->log_flush(dbenv, NULL))) {
 		syslog(LOG_ERR, "db: log_flush: %s", db_strerror(ret));
 	}
-
-#ifdef DB_STAT_ALL
-	/* print some statistics... */
-	dbenv->lock_stat_print(dbenv, DB_STAT_ALL);
-#endif
 
 	/* close the tables */
 	syslog(LOG_INFO, "db: closing databases");
@@ -340,6 +335,12 @@ void close_databases(void) {
 		}
 
 	}
+
+	// This seemed nifty at the time but did anyone really look at it?
+	// #ifdef DB_STAT_ALL
+	// /* print some statistics... */
+	// dbenv->lock_stat_print(dbenv, DB_STAT_ALL);
+	// #endif
 
 	/* Close the handle. */
 	ret = dbenv->close(dbenv, 0);

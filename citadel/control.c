@@ -1,7 +1,7 @@
 /*
  * This module handles states which are global to the entire server.
  *
- * Copyright (c) 1987-2020 by the citadel.org team
+ * Copyright (c) 1987-2021 by the citadel.org team
  *
  * This program is open source software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3.
@@ -791,10 +791,6 @@ void cmd_gvdn(char *argbuf)
 /*                      MODULE INITIALIZATION STUFF                          */
 /*****************************************************************************/
 
-void control_cleanup(void)
-{
-	DeleteHash(&CfgNameHash);
-}
 CTDL_MODULE_INIT(control)
 {
 	if (!threading) {
@@ -806,8 +802,6 @@ CTDL_MODULE_INIT(control)
 
 		CtdlRegisterProtoHook(cmd_gvdn, "GVDN", "get valid domain names");
 		CtdlRegisterProtoHook(cmd_conf, "CONF", "get/set system configuration");
-		CtdlRegisterCleanupHook(control_cleanup);
-
 	}
 	/* return our id for the Log */
 	return "control";

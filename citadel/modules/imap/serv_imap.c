@@ -1,7 +1,7 @@
 /*
  * IMAP server for the Citadel system
  *
- * Copyright (C) 2000-2018 by Art Cancro and others.
+ * Copyright (C) 2000-2021 by Art Cancro and others.
  * This code is released under the terms of the GNU General Public License.
  *
  * WARNING: the IMAP protocol is badly designed.  No implementation of it
@@ -90,10 +90,6 @@ void registerImapCMD(const char *First, long FLen,
 	}
 }
 
-void imap_cleanup(void)
-{
-	DeleteHash(&ImapCmds);
-}
 
 const imap_handler_hook *imap_lookup(int num_parms, ConstStr *Params)
 {
@@ -1738,7 +1734,6 @@ CTDL_MODULE_INIT(imap)
 					NULL, imaps_greeting, imap_command_loop, NULL, CitadelServiceIMAPS);
 #endif
 		CtdlRegisterSessionHook(imap_cleanup_function, EVT_STOP, PRIO_STOP + 30);
-		CtdlRegisterCleanupHook(imap_cleanup);
 	}
 	
 	/* return our module name for the log */

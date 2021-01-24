@@ -3,7 +3,7 @@
  * room on a Citadel server.  It handles iCalendar objects using the
  * iTIP protocol.  See RFCs 2445 and 2446.
  *
- * Copyright (c) 1987-2020 by the citadel.org team
+ * Copyright (c) 1987-2021 by the citadel.org team
  *
  * This program is open source software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3.
@@ -2532,11 +2532,6 @@ void ical_fixed_output(char *ptr, int len) {
 }
 
 
-void serv_calendar_destroy(void) {
-	icaltimezone_free_builtin_timezones();
-}
-
-
 /*
  * Register this module with the Citadel server.
  */
@@ -2565,7 +2560,6 @@ CTDL_MODULE_INIT(calendar)
 		CtdlRegisterSessionHook(ical_session_shutdown, EVT_STOP, PRIO_STOP + 80);
 		CtdlRegisterFixedOutputHook("text/calendar", ical_fixed_output);
 		CtdlRegisterFixedOutputHook("application/ics", ical_fixed_output);
-		CtdlRegisterCleanupHook(serv_calendar_destroy);
 	}
 
 	/* return our module name for the log */

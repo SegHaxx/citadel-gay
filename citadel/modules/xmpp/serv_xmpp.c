@@ -1,6 +1,6 @@
 /*
  * XMPP (Jabber) service for the Citadel system
- * Copyright (c) 2007-2019 by Art Cancro and citadel.org
+ * Copyright (c) 2007-2021 by Art Cancro and citadel.org
  *
  * This program is open source software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -662,7 +662,6 @@ void xmpp_logout_hook(void) {
 
 
 const char *CitadelServiceXMPP="XMPP";
-extern void xmpp_cleanup_events(void);
 CTDL_MODULE_INIT(xmpp)
 {
 	if (!threading) {
@@ -678,7 +677,6 @@ CTDL_MODULE_INIT(xmpp)
                 CtdlRegisterSessionHook(xmpp_logout_hook, EVT_LOGOUT, PRIO_LOGOUT + 90);
                 CtdlRegisterSessionHook(xmpp_login_hook, EVT_UNSTEALTH, PRIO_UNSTEALTH + 1);
                 CtdlRegisterSessionHook(xmpp_logout_hook, EVT_STEALTH, PRIO_STEALTH + 1);
-		CtdlRegisterCleanupHook(xmpp_cleanup_events);
 
 	}
 

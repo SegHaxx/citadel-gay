@@ -21,13 +21,6 @@ struct ServiceFunctionHook {
 };
 extern ServiceFunctionHook *ServiceHookTable;
 
-typedef struct CleanupFunctionHook CleanupFunctionHook;
-struct CleanupFunctionHook {
-	CleanupFunctionHook *next;
-	void (*h_function_pointer) (void);
-};
-extern CleanupFunctionHook *CleanupHookTable;
-
 void initialize_server_extensions(void);
 int DLoader_Exec_Cmd(char *cmdbuf);
 char *Dynamic_Module_Init(void);

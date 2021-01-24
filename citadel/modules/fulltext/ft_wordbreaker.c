@@ -147,26 +147,6 @@ void initialize_noise_words(void)
 }
 
 
-void noise_word_cleanup(void)
-{
-	int i;
-	noise_word *cur, *next;
-	
-	syslog(LOG_INFO, "wordbreaker: cleaning up fulltext noise words");
-	
-	for (i = 0 ; i < 26 ; i++)
-	{
-		cur = noise_words[i];
-		while (cur)
-		{
-			next = cur->next;
-			free(cur->word);
-			free(cur);
-			cur = next;
-		}
-	}
-}
-
 /*
  * Compare function
  */

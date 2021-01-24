@@ -634,8 +634,6 @@ int client_getln(char *buf, int bufsize)
 /*
  * Cleanup any contexts that are left lying around
  */
-
-
 void close_masters (void)
 {
 	struct ServiceFunctionHook *serviceptr;

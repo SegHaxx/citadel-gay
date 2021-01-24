@@ -1,6 +1,6 @@
 /*
  * This module handles fulltext indexing of the message base.
- * Copyright (c) 2005-2020 by the citadel.org team
+ * Copyright (c) 2005-2021 by the citadel.org team
  *
  * This program is open source software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License as published
@@ -483,7 +483,6 @@ CTDL_MODULE_INIT(fulltext)
 		CtdlRegisterProtoHook(cmd_srch, "SRCH", "Full text search");
 		CtdlRegisterDeleteHook(ft_delete_remove);
 		CtdlRegisterSearchFuncHook(ft_search, "fulltext");
-		CtdlRegisterCleanupHook(noise_word_cleanup);
 		CtdlRegisterSessionHook(do_fulltext_indexing, EVT_TIMER, PRIO_CLEANUP + 300);
 	}
 	/* return our module name for the log */

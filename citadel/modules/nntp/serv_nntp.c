@@ -265,15 +265,6 @@ void nntp_quit(void)
 
 
 //
-// Cleanup hook for this module
-//
-void nntp_cleanup(void)
-{
-	/* nothing here yet */
-}
-
-
-//
 // Implements the AUTHINFO USER command (RFC 4643)
 //
 void nntp_authinfo_user(const char *username)
@@ -1194,7 +1185,6 @@ CTDL_MODULE_INIT(nntp)
 					CitadelServiceNNTPS);
 #endif
 
-		CtdlRegisterCleanupHook(nntp_cleanup);
 		CtdlRegisterSessionHook(nntp_cleanup_function, EVT_STOP, PRIO_STOP + 250);
 	}
 	

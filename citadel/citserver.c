@@ -1,7 +1,7 @@
 /* 
  * Main source module for the Citadel server
  *
- * Copyright (c) 1987-2020 by the citadel.org team
+ * Copyright (c) 1987-2021 by the citadel.org team
  *
  * This program is open source software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 3.
@@ -123,7 +123,6 @@ void master_startup(void)
  */
 int master_cleanup(int exitcode)
 {
-	struct CleanupFunctionHook *fcn;
 	static int already_cleaning_up = 0;
 
 	if (already_cleaning_up) {
@@ -133,11 +132,6 @@ int master_cleanup(int exitcode)
 	}
 	already_cleaning_up = 1;
 
-	/* Run any cleanup routines registered by loadable modules */
-	for (fcn = CleanupHookTable; fcn != NULL; fcn = fcn->next) {
-		(*fcn->h_function_pointer) ();
-	}
-
 	/* Do system-dependent stuff */
 	sysdep_master_cleanup();
 
@@ -145,7 +139,7 @@ int master_cleanup(int exitcode)
 	shutdown_config_system();
 
 	/* Close databases */
-	syslog(LOG_INFO, "Closing databases\n");
+	syslog(LOG_INFO, "citserver: closing databases");
 	close_databases();
 
 	/* If the operator requested a halt but not an exit, halt here. */

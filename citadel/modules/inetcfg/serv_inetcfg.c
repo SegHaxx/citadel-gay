@@ -4,7 +4,7 @@
  * wrote it as a module merely to keep things as clean and loosely coupled
  * as possible.
  *
- * Copyright (c) 1987-2020 by the citadel.org team
+ * Copyright (c) 1987-2021 by the citadel.org team
  *
  * This program is open source software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3.
@@ -136,15 +136,6 @@ void inetcfg_init(void) {
 /*****************************************************************************/
 /*                      MODULE INITIALIZATION STUFF                          */
 /*****************************************************************************/
-void cleanup_inetcfg(void)
-{
-	char *buf;
-	buf = inetcfg;
-	inetcfg = NULL;
-	if (buf != NULL) {
-		free(buf);
-	}
-}
 
 
 CTDL_MODULE_INIT(inetcfg)
@@ -153,7 +144,6 @@ CTDL_MODULE_INIT(inetcfg)
 	{
 		CtdlRegisterMessageHook(inetcfg_aftersave, EVT_AFTERSAVE);
 		inetcfg_init();
-		CtdlRegisterCleanupHook(cleanup_inetcfg);
 	}
 	
 	/* return our module name for the log */
