@@ -697,25 +697,11 @@ void close_masters (void)
  * The system-dependent part of master_cleanup() - close the master socket.
  */
 void sysdep_master_cleanup(void) {
-	
 	close_masters();
-	
 	context_cleanup();
-	
 #ifdef HAVE_OPENSSL
 	destruct_ssl();
 #endif
-	CtdlDestroyProtoHooks();
-	CtdlDestroyDeleteHooks();
-	CtdlDestroyXmsgHooks();
-	CtdlDestroyUserHooks();
-	CtdlDestroyMessageHook();
-	CtdlDestroyCleanupHooks();
-	CtdlDestroyFixedOutputHooks();	
-	CtdlDestroySessionHooks();
-	CtdlDestroyServiceHook();
-	CtdlDestroyRoomHooks();
-	CtdlDestroySearchHooks();
 }
 
 

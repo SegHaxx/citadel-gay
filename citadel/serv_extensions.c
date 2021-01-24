@@ -277,12 +277,6 @@ void CtdlRegisterProtoHook(void (*handler) (char *), char *cmd, char *desc)
 	syslog(LOG_DEBUG, "extensions: registered server command %s (%s)", cmd, desc);
 }
 
-void CtdlDestroyProtoHooks(void)
-{
-
-	DeleteHash(&ProtoHookList);
-}
-
 
 void CtdlRegisterCleanupHook(void (*fcn_ptr) (void))
 {
@@ -328,21 +322,6 @@ void CtdlUnregisterCleanupHook(void (*fcn_ptr) (void))
 }
 
 
-void CtdlDestroyCleanupHooks(void)
-{
-	CleanupFunctionHook *cur, *p;
-
-	cur = CleanupHookTable;
-	while (cur != NULL)
-	{
-		syslog(LOG_DEBUG, "extensions: destroyed cleanup function");
-		p = cur->next;
-		free(cur);
-		cur = p;
-	}
-	CleanupHookTable = NULL;
-}
-
 void CtdlRegisterEVCleanupHook(void (*fcn_ptr) (void))
 {
 
@@ -385,25 +364,6 @@ void CtdlUnregisterEVCleanupHook(void (*fcn_ptr) (void))
 		}
 	}
 }
-
-
-void CtdlDestroyEVCleanupHooks(void)
-{
-	CleanupFunctionHook *cur, *p;
-
-	cur = EVCleanupHookTable;
-	while (cur != NULL)
-	{
-		syslog(LOG_DEBUG, "extensions: destroyed cleanup function");
-		p = cur->next;
-		cur->h_function_pointer();
-		free(cur);
-		cur = p;
-	}
-	EVCleanupHookTable = NULL;
-}
-
-
 
 
 void CtdlRegisterSessionHook(void (*fcn_ptr) (void), int EventType, int Priority)
@@ -458,21 +418,6 @@ void CtdlUnregisterSessionHook(void (*fcn_ptr) (void), int EventType)
 	}
 }
 
-void CtdlDestroySessionHooks(void)
-{
-	SessionFunctionHook *cur, *p;
-
-	cur = SessionHookTable;
-	while (cur != NULL)
-	{
-		syslog(LOG_DEBUG, "extensions: destroyed session function");
-		p = cur->next;
-		free(cur);
-		cur = p;
-	}
-	SessionHookTable = NULL;
-}
-
 
 void CtdlRegisterUserHook(void (*fcn_ptr) (ctdluser *), int EventType)
 {
@@ -519,21 +464,6 @@ void CtdlUnregisterUserHook(void (*fcn_ptr) (struct ctdluser *), int EventType)
 	}
 }
 
-void CtdlDestroyUserHooks(void)
-{
-	UserFunctionHook *cur, *p;
-
-	cur = UserHookTable;
-	while (cur != NULL)
-	{
-		syslog(LOG_DEBUG, "extensions: destroyed user function");
-		p = cur->next;
-		free(cur);
-		cur = p;
-	}
-	UserHookTable = NULL;
-}
-
 
 void CtdlRegisterMessageHook(int (*handler)(struct CtdlMessage *, recptypes *), int EventType)
 {
@@ -576,21 +506,6 @@ void CtdlUnregisterMessageHook(int (*handler)(struct CtdlMessage *, recptypes *)
 			cur = cur->next;
 		}
 	}
-}
-
-void CtdlDestroyMessageHook(void)
-{
-	MessageFunctionHook *cur, *p;
-
-	cur = MessageHookTable; 
-	while (cur != NULL)
-	{
-		syslog(LOG_DEBUG, "extensions: destroyed message function (type %d)", cur->eventtype);
-		p = cur->next;
-		free(cur);
-		cur = p;
-	}
-	MessageHookTable = NULL;
 }
 
 
@@ -636,22 +551,6 @@ void CtdlUnregisterRoomHook(int (*fcn_ptr)(struct ctdlroom *))
 }
 
 
-void CtdlDestroyRoomHooks(void)
-{
-	RoomFunctionHook *cur, *p;
-
-	cur = RoomHookTable;
-	while (cur != NULL)
-	{
-		syslog(LOG_DEBUG, "extensions: destroyed room function");
-		p = cur->next;
-		free(cur);
-		cur = p;
-	}
-	RoomHookTable = NULL;
-}
-
-
 void CtdlRegisterDeleteHook(void (*handler)(char *, long) )
 {
 	DeleteFunctionHook *newfcn;
@@ -691,22 +590,6 @@ void CtdlUnregisterDeleteHook(void (*handler)(char *, long) )
 			cur = cur->next;
 		}
 	}
-}
-
-
-void CtdlDestroyDeleteHooks(void)
-{
-	DeleteFunctionHook *cur, *p;
-
-	cur = DeleteHookTable;
-	while (cur != NULL)
-	{
-		syslog(LOG_DEBUG, "extensions: destroyed delete function");
-		p = cur->next;
-		free(cur);
-		cur = p;		
-	}
-	DeleteHookTable = NULL;
 }
 
 
@@ -753,21 +636,6 @@ void CtdlUnregisterFixedOutputHook(char *content_type)
 	}
 }
 
-void CtdlDestroyFixedOutputHooks(void)
-{
-	FixedOutputHook *cur, *p;
-
-	cur = FixedOutputTable; 
-	while (cur != NULL)
-	{
-		syslog(LOG_DEBUG, "extensions: destroyed fixed output function for %s", cur->content_type);
-		p = cur->next;
-		free(cur);
-		cur = p;
-		
-	}
-	FixedOutputTable = NULL;
-}
 
 /* returns nonzero if we found a hook and used it */
 int PerformFixedOutputHooks(char *content_type, char *content, int content_length)
@@ -825,22 +693,6 @@ void CtdlUnregisterXmsgHook(int (*fcn_ptr) (char *, char *, char *, char *), int
 			cur = cur->next;
 		}
 	}
-}
-
-
-void CtdlDestroyXmsgHooks(void)
-{
-	XmsgFunctionHook *cur, *p;
-
-	cur = XmsgHookTable;
-	while (cur != NULL)
-	{
-		syslog(LOG_DEBUG, "extensions: destroyed x-msg function (priority %d)", cur->order);
-		p = cur->next;
-		free(cur);
-		cur = p;
-	}
-	XmsgHookTable = NULL;
 }
 
 
@@ -964,39 +816,6 @@ void CtdlShutdownServiceHooks(void)
 }
 
 
-void CtdlDestroyServiceHook(void)
-{
-	const char *Text;
-	ServiceFunctionHook *cur, *p;
-
-	cur = ServiceHookTable;
-	while (cur != NULL)
-	{
-		if (cur->msock != -1)
-		{
-			close(cur->msock);
-			Text = "Closed";
-		}
-		else
-		{
-			Text = " Not closing again";
-		}
-
-		if (cur->sockpath) {
-			syslog(LOG_INFO, "extensions: %s UNIX domain socket %s", Text, cur->sockpath);
-			unlink(cur->sockpath);
-		} else if (cur->tcp_port) {
-			syslog(LOG_INFO, "extensions: %s TCP port %d", Text, cur->tcp_port);
-		} else {
-			syslog(LOG_INFO, "extensions: destroyed service \"%s\"", cur->ServiceName);
-		}
-		p = cur->next;
-		free(cur);
-		cur = p;
-	}
-	ServiceHookTable = NULL;
-}
-
 void CtdlRegisterSearchFuncHook(void (*fcn_ptr)(int *, long **, const char *), char *name)
 {
 	SearchFunctionHook *newfcn;
@@ -1042,18 +861,6 @@ void CtdlUnregisterSearchFuncHook(void (*fcn_ptr)(int *, long **, const char *),
 	}
 }
 
-void CtdlDestroySearchHooks(void)
-{
-        SearchFunctionHook *cur, *p;
-
-	cur = SearchFunctionHookTable;
-	SearchFunctionHookTable = NULL;
-        while (cur != NULL) {
-		p = cur->next;
-		free(cur);
-		cur = p;
-	}
-}
 
 void CtdlModuleDoSearch(int *num_msgs, long **search_msgs, const char *search_string, const char *func_name)
 {

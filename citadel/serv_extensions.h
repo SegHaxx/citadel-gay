@@ -32,33 +32,22 @@ void initialize_server_extensions(void);
 int DLoader_Exec_Cmd(char *cmdbuf);
 char *Dynamic_Module_Init(void);
 
-void CtdlDestroySessionHooks(void);
 void PerformSessionHooks(int EventType);
 
-void CtdlDestroyUserHooks(void);
 void PerformUserHooks(struct ctdluser *usbuf, int EventType);
 
 int PerformXmsgHooks(char *, char *, char *, char *);
-void CtdlDestroyXmsgHooks(void);
 
-void CtdlDestroyMessageHook(void);
 int PerformMessageHooks(struct CtdlMessage *, recptypes *recps, int EventType);
 
-void CtdlDestroyRoomHooks(void);
 int PerformRoomHooks(struct ctdlroom *);
 
-void CtdlDestroyDeleteHooks(void);
 void PerformDeleteHooks(char *, long);
 
-void CtdlDestroyCleanupHooks(void);
 
-void CtdlDestroyProtoHooks(void);
 
-void CtdlDestroyServiceHook(void);
 
-void CtdlDestroySearchHooks(void);
 
-void CtdlDestroyFixedOutputHooks(void);
 int PerformFixedOutputHooks(char *, char *, int);
 
 void netcfg_keyname(char *keybuf, long roomnum);
