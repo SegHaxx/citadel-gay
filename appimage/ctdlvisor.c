@@ -26,6 +26,7 @@
 #include <limits.h>
 
 void main_loop(void);
+void run_in_foreground(void);
 
 char *data_directory = "/usr/local/citadel";
 char *http_port = "80";
@@ -36,7 +37,7 @@ pid_t webcits_pid;
 
 
 void signal_handler(int signal) {
-	fprintf(stderr, "ctdlvisor: caught signal %d", signal);
+	fprintf(stderr, "ctdlvisor: caught signal %d\n", signal);
 
 	int status;
 	pid_t who_exited;
@@ -118,6 +119,11 @@ pid_t start_webcits() {
 }
 
 
+static char *usage =
+	"ctdlvisor: usage: ctdlvisor [-h data_directory] [-p http_port] [-s https_port] command\n"
+	"           'command' must be one of: run, install, start, stop\n"
+;
+
 int main(int argc, char **argv) {
 	int c;
 
@@ -132,10 +138,29 @@ int main(int argc, char **argv) {
 			https_port = optarg;
 			break;
 		default:
-			fprintf(stderr, "ctdlvisor: usage: ctdlvisor [-h data_directory] [-p http_port] [-s https_port]\n");
+			fprintf(stderr, "%s", usage);
 			exit(1);
 	}
 
+
+	if (argc != optind+1) {
+		fprintf(stderr, "%s", usage);
+		exit(1);
+	}
+
+	if (!strcasecmp(argv[optind], "run")) {
+		run_in_foreground();
+	}
+	else {
+		fprintf(stderr, "%s", usage);
+		exit(1);
+	}
+
+	exit(0);
+}
+
+
+void run_in_foreground(void) {
 	fprintf(stderr, "ctdlvisor: Welcome to the Citadel System, brought to you using AppImage.\n");
 	fprintf(stderr, "ctdlvisor: LD_LIBRARY_PATH = %s\n", getenv("LD_LIBRARY_PATH"));
 	fprintf(stderr, "ctdlvisor:            PATH = %s\n", getenv("PATH"));
