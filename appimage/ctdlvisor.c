@@ -34,17 +34,33 @@ char *https_port = "443";
 pid_t citserver_pid;
 pid_t webcit_pid;
 pid_t webcits_pid;
+int shutting_down = 0;
+
+
+void ctdlvisor_exit(int code) {
+	printf("ctdlvisor: exit code %d\n", code);
+	exit(code);
+}
 
 
 void signal_handler(int signal) {
 	fprintf(stderr, "ctdlvisor: caught signal %d\n", signal);
 
+	while(shutting_down) {
+		fprintf(stderr, "ctdlvisor: already shutting down\n");
+		sleep(1);
+	}
+
 	int status;
 	pid_t who_exited;
 	char *what_exited = NULL;
 
+	shutting_down = 1;
+	kill(citserver_pid, SIGTERM);
+	kill(webcit_pid, SIGTERM);
+	kill(webcits_pid, SIGTERM);
 	do {
-		fprintf(stderr, "ctdlvisor: waiting for any child process to exit...\n");
+		fprintf(stderr, "ctdlvisor: waiting for all child process to exit...\n");
 		who_exited = waitpid(-1, &status, 0);
 		if (who_exited == citserver_pid) {
 			what_exited = "Citadel Server";
@@ -61,10 +77,25 @@ void signal_handler(int signal) {
 		fprintf(stderr, "ctdlvisor: pid=%d (%s) exited, status=%d, exitcode=%d\n", who_exited, what_exited, status, WEXITSTATUS(status));
 	} while (who_exited >= 0);
 
-	printf("ctdlvisor: exiting from signal catcher.\n");
-	exit(0);
+	ctdlvisor_exit(0);
 }
 
+
+
+void detach_from_tty(void) {
+	signal(SIGHUP, SIG_IGN);
+	signal(SIGINT, SIG_IGN);
+	signal(SIGQUIT, SIG_IGN);
+
+	setsid();
+	umask(0);
+	if (    (freopen("/dev/null", "r", stdin) != stdin) ||
+		(freopen("/dev/null", "w", stdout) != stdout) ||
+		(freopen("/dev/null", "w", stderr) != stderr)
+	) {
+		fprintf(stderr, "sysdep: unable to reopen stdio: %s\n", strerror(errno));
+	}
+}
 
 
 pid_t start_citadel() {
@@ -73,7 +104,7 @@ pid_t start_citadel() {
 	pid_t pid = fork();
 	if (pid == 0) {
 		fprintf(stderr, "ctdlvisor: executing %s\n", bin);
-		close(0); close(1); close(2);
+		detach_from_tty();
 		execlp(bin, "citserver", "-x9", "-h", data_directory, NULL);
 		exit(errno);
 	}
@@ -91,7 +122,7 @@ pid_t start_webcit() {
 	pid_t pid = fork();
 	if (pid == 0) {
 		fprintf(stderr, "ctdlvisor: executing %s\n", bin);
-		close(0); close(1); close(2);
+		detach_from_tty();
 		execlp(bin, "webcit", "-x9", wchome, "-p", http_port, "uds", data_directory, NULL);
 		exit(errno);
 	}
@@ -109,7 +140,7 @@ pid_t start_webcits() {
 	pid_t pid = fork();
 	if (pid == 0) {
 		fprintf(stderr, "ctdlvisor: executing %s\n", bin);
-		close(0); close(1); close(2);
+		detach_from_tty();
 		execlp(bin, "webcit", "-x9", wchome, "-s", "-p", https_port, "uds", data_directory, NULL);
 		exit(errno);
 	}
@@ -184,13 +215,13 @@ void run_in_foreground(void) {
 	webcits_pid = start_webcits();
 
 	main_loop();
+	exit(0);
 }
 
 
 void main_loop(void) {
 	int status;
 	pid_t who_exited;
-	int shutting_down = 0;
 	int citserver_exit_code = 0;
 
 	do {
@@ -228,6 +259,5 @@ void main_loop(void) {
 
 	} while (who_exited >= 0);
 
-	printf("ctdlvisor: exit code %d\n", citserver_exit_code);
-	exit(citserver_exit_code);
+	ctdlvisor_exit(citserver_exit_code);
 }
