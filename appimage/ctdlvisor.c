@@ -24,6 +24,8 @@
 #include <signal.h>
 #include <string.h>
 #include <limits.h>
+#include <sys/types.h>
+#include <sys/stat.h>
 
 void main_loop(void);
 void run_in_foreground(void);
@@ -152,7 +154,11 @@ pid_t start_webcits() {
 
 static char *usage =
 	"ctdlvisor: usage: ctdlvisor [-h data_directory] [-p http_port] [-s https_port] command\n"
-	"           'command' must be one of: run, install, start, stop\n"
+	"           'command' must be one of:\n"
+	"           run     - start Citadel services in the foreground without detaching\n"
+	"           install - deploy systemd unit files for automatic startup at boot\n"
+	"           upgrade - check for new version of the software\n"
+	"           test    - check this appimage for compatibility with your system\n"
 ;
 
 int main(int argc, char **argv) {
@@ -181,6 +187,15 @@ int main(int argc, char **argv) {
 
 	if (!strcasecmp(argv[optind], "run")) {
 		run_in_foreground();
+	}
+	else if (!strcasecmp(argv[optind], "install")) {
+		fprintf(stderr, "oops, this is not implemented yet\n");
+	}
+	else if (!strcasecmp(argv[optind], "upgrade")) {
+		fprintf(stderr, "oops, this is not implemented yet\n");
+	}
+	else if (!strcasecmp(argv[optind], "test")) {
+		fprintf(stderr, "oops, this is not implemented yet\n");
 	}
 	else {
 		fprintf(stderr, "%s", usage);
