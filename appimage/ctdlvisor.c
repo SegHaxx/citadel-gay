@@ -149,6 +149,23 @@ pid_t start_webcits() {
 }
 
 
+void test_binary_compatibility(void) {
+	char cmd[1024];
+	int ret;
+	fprintf(stderr, "ctdlvisor: testing compatibility...\n");
+	sprintf(cmd, "%s/usr/local/citadel/citserver -c", getenv("APPDIR"));
+	ret = system(cmd);
+	if (ret) {
+		fprintf(stderr, "ctdlvisor: this appimage cannot run on your system.\n"
+				"           The reason may be indicated by any error messages appearing above.\n");
+	}
+	else {
+		fprintf(stderr, "ctdlvisor: this appimage appears to be compatible with your system.\n");
+	}
+	exit(ret);
+}
+
+
 void main_loop(void) {
 	int status;
 	pid_t who_exited;
@@ -302,7 +319,7 @@ int main(int argc, char **argv) {
 		fprintf(stderr, "oops, this is not implemented yet\n");
 	}
 	else if (!strcasecmp(argv[optind], "test")) {
-		fprintf(stderr, "oops, this is not implemented yet\n");
+		test_binary_compatibility();
 	}
 	else if (!strcasecmp(argv[optind], "help")) {
 		fprintf(stderr, "%s", usage);
