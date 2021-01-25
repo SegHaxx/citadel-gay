@@ -27,9 +27,6 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 
-void main_loop(void);
-void run_in_foreground(void);
-
 char *data_directory = "/usr/local/citadel";
 char *http_port = "80";
 char *https_port = "443";
@@ -38,13 +35,14 @@ pid_t webcit_pid;
 pid_t webcits_pid;
 int shutting_down = 0;
 
-
+// Call this instead of exit() just for common diagnostics etc.
 void ctdlvisor_exit(int code) {
 	printf("ctdlvisor: exit code %d\n", code);
 	exit(code);
 }
 
 
+// Interrupting this program with a signal will begin an orderly shutdown.
 void signal_handler(int signal) {
 	fprintf(stderr, "ctdlvisor: caught signal %d\n", signal);
 
@@ -83,13 +81,12 @@ void signal_handler(int signal) {
 }
 
 
-
 void detach_from_tty(void) {
 	signal(SIGHUP, SIG_IGN);
 	signal(SIGINT, SIG_IGN);
 	signal(SIGQUIT, SIG_IGN);
 
-	setsid();
+	setsid();	// become our own process group leader
 	umask(0);
 	if (    (freopen("/dev/null", "r", stdin) != stdin) ||
 		(freopen("/dev/null", "w", stdout) != stdout) ||
@@ -152,88 +149,6 @@ pid_t start_webcits() {
 }
 
 
-static char *usage =
-	"ctdlvisor: usage: ctdlvisor [-h data_directory] [-p http_port] [-s https_port] command\n"
-	"           'command' must be one of:\n"
-	"           run     - start Citadel services in the foreground without detaching\n"
-	"           install - deploy systemd unit files for automatic startup at boot\n"
-	"           upgrade - check for new version of the software\n"
-	"           test    - check this appimage for compatibility with your system\n"
-;
-
-int main(int argc, char **argv) {
-	int c;
-
-	while ((c = getopt (argc, argv, "h:p:s:")) != -1)  switch(c) {
-		case 'h':
-			data_directory = optarg;
-			break;
-		case 'p':
-			http_port = optarg;
-			break;
-		case 's':
-			https_port = optarg;
-			break;
-		default:
-			fprintf(stderr, "%s", usage);
-			exit(1);
-	}
-
-
-	if (argc != optind+1) {
-		fprintf(stderr, "%s", usage);
-		exit(1);
-	}
-
-	if (!strcasecmp(argv[optind], "run")) {
-		run_in_foreground();
-	}
-	else if (!strcasecmp(argv[optind], "install")) {
-		fprintf(stderr, "oops, this is not implemented yet\n");
-	}
-	else if (!strcasecmp(argv[optind], "upgrade")) {
-		fprintf(stderr, "oops, this is not implemented yet\n");
-	}
-	else if (!strcasecmp(argv[optind], "test")) {
-		fprintf(stderr, "oops, this is not implemented yet\n");
-	}
-	else {
-		fprintf(stderr, "%s", usage);
-		exit(1);
-	}
-
-	exit(0);
-}
-
-
-void run_in_foreground(void) {
-	fprintf(stderr, "ctdlvisor: Welcome to the Citadel System, brought to you using AppImage.\n");
-	fprintf(stderr, "ctdlvisor: LD_LIBRARY_PATH = %s\n", getenv("LD_LIBRARY_PATH"));
-	fprintf(stderr, "ctdlvisor:            PATH = %s\n", getenv("PATH"));
-	fprintf(stderr, "ctdlvisor:          APPDIR = %s\n", getenv("APPDIR"));
-	fprintf(stderr, "ctdlvisor:  data directory = %s\n", data_directory);
-	fprintf(stderr, "ctdlvisor:       HTTP port = %s\n", http_port);
-	fprintf(stderr, "ctdlvisor:      HTTPS port = %s\n", https_port);
-
-	if (access(data_directory, R_OK|W_OK|X_OK)) {
-		fprintf(stderr, "ctdlvisor: %s: %s\n", data_directory, strerror(errno));
-		exit(errno);
-	}
-
-	signal(SIGTERM, signal_handler);
-	signal(SIGHUP, signal_handler);
-	signal(SIGINT, signal_handler);
-	signal(SIGQUIT, signal_handler);
-
-	citserver_pid = start_citadel();
-	webcit_pid = start_webcit();
-	webcits_pid = start_webcits();
-
-	main_loop();
-	exit(0);
-}
-
-
 void main_loop(void) {
 	int status;
 	pid_t who_exited;
@@ -273,6 +188,141 @@ void main_loop(void) {
 		sleep(1);
 
 	} while (who_exited >= 0);
-
 	ctdlvisor_exit(citserver_exit_code);
+}
+
+
+void run_in_foreground(void) {
+	fprintf(stderr, "ctdlvisor: Welcome to the Citadel System, brought to you using AppImage.\n");
+	fprintf(stderr, "ctdlvisor: LD_LIBRARY_PATH = %s\n", getenv("LD_LIBRARY_PATH"));
+	fprintf(stderr, "ctdlvisor:            PATH = %s\n", getenv("PATH"));
+	fprintf(stderr, "ctdlvisor:          APPDIR = %s\n", getenv("APPDIR"));
+	fprintf(stderr, "ctdlvisor:  data directory = %s\n", data_directory);
+	fprintf(stderr, "ctdlvisor:       HTTP port = %s\n", http_port);
+	fprintf(stderr, "ctdlvisor:      HTTPS port = %s\n", https_port);
+
+	if (access(data_directory, R_OK|W_OK|X_OK)) {
+		fprintf(stderr, "ctdlvisor: %s: %s\n", data_directory, strerror(errno));
+		ctdlvisor_exit(errno);
+	}
+
+	signal(SIGTERM, signal_handler);
+	signal(SIGHUP, signal_handler);
+	signal(SIGINT, signal_handler);
+	signal(SIGQUIT, signal_handler);
+
+	citserver_pid = start_citadel();
+	webcit_pid = start_webcit();
+	webcits_pid = start_webcits();
+
+	main_loop();
+	ctdlvisor_exit(0);
+}
+
+
+void install_as_service(void) {
+
+	// FIXME fail if some other citadel distribution is already there
+	// FIXME fail if any server processes are running
+	// FIXME interact with the user
+	// FIXME get port numbers and data directory
+	// FIXME create the data directory
+	// FIXME move the appimage into its permanent location
+
+	fprintf(stderr, "Installing as service\n");
+
+	FILE *fp = fopen("/etc/systemd/system/ctdl.service", "w");
+	fprintf(fp,	"# This unit file starts all Citadel services via the AppImage distribution.\n"
+			"[Unit]\n"
+			"Description=Citadel\n"
+			"After=network.target\n"
+			"[Service]\n"
+			"ExecStart=/root/citadel/appimage/Citadel-x86_64.AppImage run -h %s -s %s -s %s\n"
+			"ExecStop=/bin/kill $MAINPID\n"
+			"KillMode=process\n"
+			"Restart=on-failure\n"
+			"LimitCORE=infinity\n"
+			"[Install]\n"
+			"WantedBy=multi-user.target\n"
+		,
+			data_directory, http_port, https_port
+	);
+	fclose(fp);
+
+	fprintf(stderr, "systemd unit file is installed.  Type 'systemctl enable ctdl' to have it start at boot.\n");
+}
+
+
+static char *usage =
+	"\n"
+	"ctdlvisor: usage: ctdlvisor [-h data_directory] [-p http_port] [-s https_port] command\n"
+	"           'command' must be one of: run, install, remove, upgrade, test, help\n"
+	"\n"
+;
+
+int main(int argc, char **argv) {
+	int c;
+
+	if (getenv("APPDIR") == NULL) {
+		fprintf(stderr, "ctdlvisor: APPDIR is not set.  This program must be run from within an AppImage.\n");
+		ctdlvisor_exit(1);
+	}
+
+	while ((c = getopt (argc, argv, "h:p:s:")) != -1)  switch(c) {
+		case 'h':
+			data_directory = optarg;
+			break;
+		case 'p':
+			http_port = optarg;
+			break;
+		case 's':
+			https_port = optarg;
+			break;
+		default:
+			fprintf(stderr, "%s", usage);
+			ctdlvisor_exit(1);
+	}
+
+
+	if (argc != optind+1) {
+		fprintf(stderr, "%s", usage);
+		ctdlvisor_exit(1);
+	}
+
+	if (!strcasecmp(argv[optind], "run")) {
+		run_in_foreground();
+	}
+	else if (!strcasecmp(argv[optind], "install")) {
+		install_as_service();
+	}
+	else if (!strcasecmp(argv[optind], "remove")) {
+		fprintf(stderr, "oops, this is not implemented yet\n");
+	}
+	else if (!strcasecmp(argv[optind], "upgrade")) {
+		fprintf(stderr, "oops, this is not implemented yet\n");
+	}
+	else if (!strcasecmp(argv[optind], "test")) {
+		fprintf(stderr, "oops, this is not implemented yet\n");
+	}
+	else if (!strcasecmp(argv[optind], "help")) {
+		fprintf(stderr, "%s", usage);
+		fprintf(stderr,	"[-h dir]  Use 'dir' as the Citadel data directory (this directory must exist)\n"
+				"[-p port] Listen for HTTP connections on 'port'\n"
+				"[-s port] Listen for HTTPS connections on 'port'\n"
+				"'command' must be one of:\n"
+				"	run	- launch Citadel services (does not detach from terminal)\n"
+				"	install	- create systemd unit files for automatic startup at boot\n"
+				"	remove	- delete systemd unit files to end automatic startup\n"
+				"	upgrade	- download and install a new version of this appimage\n"
+				"	test	- test the appimage for binary compatibility with this host\n"
+				"	help	- display this message\n"
+				"\n"
+		);
+	}
+	else {
+		fprintf(stderr, "%s", usage);
+		ctdlvisor_exit(1);
+	}
+
+	ctdlvisor_exit(0);
 }

@@ -64,3 +64,5 @@ else
 	ARCH=ARM appimagetool citadel.AppDir/
 	md5sum Citadel-armhf.AppImage | awk ' { print $1 } ' >Citadel-armhf.AppImage.md5
 fi
+
+
