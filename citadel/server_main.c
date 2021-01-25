@@ -93,18 +93,26 @@ int main(int argc, char **argv)
 	InitializeMasterTSD();
 
 	/* parse command-line arguments */
-	while ((a=getopt(argc, argv, "l:dh:x:t:B:Dru:s:")) != EOF) switch(a) {
+	while ((a=getopt(argc, argv, "cl:dh:x:t:B:Dru:s:")) != EOF) switch(a) {
 
+		// test this binary for compatibility and exit
+		case 'c':
+			fprintf(stderr, "%d: binary compatibility confirmed\n", argv[0]);
+			exit(0);
+			break;
+
+		// identify the desired syslog facility
 		case 'l':
 			safestrncpy(facility, optarg, sizeof(facility));
 			syslog_facility = SyslogFacility(facility);
 			break;
 
-		/* run in the background if -d was specified */
+		// run in the background if -d was specified
 		case 'd':
 			running_as_daemon = 1;
 			break;
 
+		// specify the data directory
 		case 'h':
 			relh = optarg[0] != '/';
 			if (!relh) {
@@ -116,13 +124,17 @@ int main(int argc, char **argv)
 			home=1;
 			break;
 
+		// identify the desired logging severity level
 		case 'x':
 			max_log_level = atoi(optarg);
 			break;
 
-		case 't':	/* deprecated */
+		// deprecated
+		case 't':
 			break;
-                case 'B': /* Basesize */
+
+		// basesize (what is this?)
+                case 'B':
                         basesize = atoi(optarg);
                         break;
 
@@ -130,14 +142,13 @@ int main(int argc, char **argv)
 			dbg = 1;
 			break;
 
-		/* -r tells the server not to drop root permissions.
-		 * Don't use this unless you know what you're doing.
-		 */
+		// -r tells the server not to drop root permissions.
+		// Don't use this unless you know what you're doing.
 		case 'r':
 			drop_root_perms = 0;
 			break;
 
-		/* -u tells the server what uid to run under... */
+		// -u tells the server what uid to run under...
 		case 'u':
 			u = atoi(optarg);
 			if (u > 0) {
@@ -154,13 +165,13 @@ int main(int argc, char **argv)
 			}
 			break;
 
-		/* -s tells the server to behave differently during sanity checks */
+		// -s tells the server to behave differently during sanity checks
 		case 's':
 			sanity_diag_mode = atoi(optarg);
 			break;
 
+		// any other parameter makes it crash and burn
 		default:
-		/* any other parameter makes it crash and burn */
 			fprintf(stderr,	"citserver: usage: "
 					"citserver "
 					"[-l LogFacility] "
