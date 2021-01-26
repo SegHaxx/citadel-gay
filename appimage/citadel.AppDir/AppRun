@@ -1,18 +1,18 @@
 #!/bin/bash
 
-// This is an AppImage control script for the Citadel system.
-//
-// Copyright (c) 2021 by the citadel.org team
-//
-// This program is open source software.  It runs great on the
-// Linux operating system (and probably elsewhere).  You can use,
-// copy, and run it under the terms of the GNU General Public
-// License version 3.  Richard Stallman is an asshole communist.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License for more details.
+## This is an AppImage control script for the Citadel system.
+##
+## Copyright (c) 2021 by the citadel.org team
+##
+## This program is open source software.  It runs great on the
+## Linux operating system (and probably elsewhere).  You can use,
+## copy, and run it under the terms of the GNU General Public
+## License version 3.  Richard Stallman is an asshole communist.
+##
+## This program is distributed in the hope that it will be useful,
+## but WITHOUT ANY WARRANTY; without even the implied warranty of
+## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+## GNU General Public License for more details.
 
 # Default values
 HTTP_PORT=80
@@ -21,15 +21,31 @@ CTDL_DIR=/usr/local/citadel
 export APPDIR
 
 usage() {
-	echo usage
+	echo ${APPIMAGE}: usage: ${APPIMAGE} '[-h data_directory] [-p http_port] [-s https_port] command'
+	echo 'command must be one of: run, test, install'
 	exit 2
 }
+
+
+# Permanently install the Citadel AppImage to this system
+installation() {
+
+	# First ... check to make sure Citadel isn't runnings
+	if ps ax | grep citserver | grep -v grep ; then
+		echo Installation cannot proceed while Citadel is running.
+		echo Stop your services and try again.
+		exit 1
+	fi
+
+	echo Hi
+	exit
+}
+
 
 PARSED_ARGUMENTS=$(getopt -o h:p:s: -- "$@")
 VALID_ARGUMENTS=$?
 if [ "$VALID_ARGUMENTS" != "0" ]; then
-	echo $0: usage: $0 '[-h data_directory] [-p http_port] [-s https_port] command'
-	echo 'command must be one of: run, test, install'
+	usage
 fi
 
 eval set -- ${PARSED_ARGUMENTS}
@@ -55,8 +71,10 @@ case ${1} in
 	test)
 		export LD_LIBRARY_PATH=$APPDIR/usr/lib
 		export PATH=$APPDIR/usr/bin
-		$APPDIR/usr/local/citadel/citserver -c
-		exit $?
+		exec $APPDIR/usr/local/citadel/citserver -c
+		;;
+	install)
+		installation
 		;;
 	*)
 		echo Unexpected command: ${1} 
