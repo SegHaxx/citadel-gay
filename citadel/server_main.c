@@ -97,7 +97,7 @@ int main(int argc, char **argv)
 
 		// test this binary for compatibility and exit
 		case 'c':
-			fprintf(stderr, "%d: binary compatibility confirmed\n", argv[0]);
+			fprintf(stderr, "%s: binary compatibility confirmed\n", argv[0]);
 			exit(0);
 			break;
 
