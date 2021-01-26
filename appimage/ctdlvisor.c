@@ -71,7 +71,15 @@ void signal_handler(int signal) {
 		else {
 			what_exited = "unknown";
 		}
-		fprintf(stderr, "ctdlvisor: pid=%d (%s) exited, status=%d, exitcode=%d\n", who_exited, what_exited, status, WEXITSTATUS(status));
+		if (WIFEXITED(status)) {
+			fprintf(stderr, "ctdlvisor: %d (%s) exited, exitcode=%d\n", who_exited, what_exited, WEXITSTATUS(status));
+		}
+		else if (WIFSIGNALED(status)) {
+			fprintf(stderr, "ctdlvisor: %d (%s) crashed, signal=%d\n", who_exited, what_exited, WTERMSIG(status));
+		}
+		else {
+			fprintf(stderr, "ctdlvisor: %d (%s) ended, status=%d\n", who_exited, what_exited, status);
+		}
 	} while (who_exited >= 0);
 
 	ctdlvisor_exit(0);
