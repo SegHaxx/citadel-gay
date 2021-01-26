@@ -19,6 +19,7 @@ HTTP_PORT=80
 HTTPS_PORT=443
 CTDL_DIR=/usr/local/citadel
 export APPDIR
+ulimit -c unlimited
 
 usage() {
 	echo ${APPIMAGE}: usage: ${APPIMAGE} '[-h data_directory] [-p http_port] [-s https_port] command'
