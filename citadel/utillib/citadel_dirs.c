@@ -1,7 +1,7 @@
 /*
  * citadel_dirs.c : calculate pathnames for various files used in the Citadel system
  *
- * Copyright (c) 1987-2018 by the citadel.org team
+ * Copyright (c) 1987-2021 by the citadel.org team
  *
  *  This program is open source software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License version 3.
@@ -26,7 +26,6 @@
 
 /* our directories... */
 char ctdl_home_directory[PATH_MAX] = "";
-char ctdl_bio_dir[PATH_MAX]="bio";
 char ctdl_data_dir[PATH_MAX]="data";
 char ctdl_file_dir[PATH_MAX]="files";
 char ctdl_shared_dir[PATH_MAX]="";
@@ -36,7 +35,6 @@ char ctdl_key_dir[PATH_MAX]=SSL_DIR;
 char ctdl_message_dir[PATH_MAX]="messages";
 char ctdl_usrpic_dir[PATH_MAX]="userpics";
 char ctdl_bbsbase_dir[PATH_MAX]="";
-char ctdl_etc_dir[PATH_MAX]="";
 char ctdl_autoetc_dir[PATH_MAX]="";
 /* attention! this may be non volatile on some oses */
 char ctdl_run_dir[PATH_MAX]="";
@@ -116,9 +114,7 @@ void calc_dirs_n_files(int relh, int home, const char *relhome, char  *ctdldir, 
 	basedir=ETC_DIR;
 #endif
 	COMPUTE_DIRECTORY(ctdl_netcfg_dir);
-	COMPUTE_DIRECTORY(ctdl_etc_dir);
 	StripSlashes(ctdl_netcfg_dir, 1);
-	StripSlashes(ctdl_etc_dir, 1);
 
 #ifndef HAVE_UTILBIN_DIR
 	basedir=ctdldir;
@@ -149,7 +145,6 @@ void calc_dirs_n_files(int relh, int home, const char *relhome, char  *ctdldir, 
 #else
 	basedir=DATA_DIR;
 #endif
-	COMPUTE_DIRECTORY(ctdl_bio_dir);
 	COMPUTE_DIRECTORY(ctdl_data_dir);
 	COMPUTE_DIRECTORY(ctdl_file_dir);
 	COMPUTE_DIRECTORY(ctdl_image_dir);
@@ -157,7 +152,6 @@ void calc_dirs_n_files(int relh, int home, const char *relhome, char  *ctdldir, 
 	COMPUTE_DIRECTORY(ctdl_usrpic_dir);
 	COMPUTE_DIRECTORY(ctdl_bbsbase_dir);
 
-	StripSlashes(ctdl_bio_dir, 1);
 	StripSlashes(ctdl_data_dir, 1);
 	StripSlashes(ctdl_file_dir, 1);
 	StripSlashes(ctdl_image_dir, 1);
@@ -258,15 +252,10 @@ void calc_dirs_n_files(int relh, int home, const char *relhome, char  *ctdldir, 
 	snprintf(file_mail_aliases, 
 		 sizeof file_mail_aliases,
 		 "%smail.aliases",
-#ifdef HAVE_ETC_DIR
-		 ctdl_etc_dir
-#else
 		 ctdl_spool_dir
-#endif
 		);
 	StripSlashes(file_mail_aliases, 0);
 
-	DBG_PRINT(ctdl_bio_dir);
 	DBG_PRINT(ctdl_data_dir);
 	DBG_PRINT(ctdl_file_dir);
 	DBG_PRINT(ctdl_image_dir);
@@ -274,7 +263,6 @@ void calc_dirs_n_files(int relh, int home, const char *relhome, char  *ctdldir, 
 	DBG_PRINT(ctdl_key_dir);
 	DBG_PRINT(ctdl_message_dir);
 	DBG_PRINT(ctdl_usrpic_dir);
-	DBG_PRINT(ctdl_etc_dir);
 	DBG_PRINT(ctdl_run_dir);
 	DBG_PRINT(ctdl_spool_dir);
 	DBG_PRINT(ctdl_netdigest_dir);
@@ -304,33 +292,27 @@ void calc_dirs_n_files(int relh, int home, const char *relhome, char  *ctdldir, 
 /*
  * Generate an associated file name for a room
  */
-size_t assoc_file_name(char *buf, size_t n,
-		     struct ctdlroom *qrbuf, const char *prefix)
-{
+size_t assoc_file_name(char *buf, size_t n, struct ctdlroom *qrbuf, const char *prefix) {
 	return snprintf(buf, n, "%s%ld", prefix, qrbuf->QRnumber);
 }
 
-void remove_digest_file(struct ctdlroom *room)
-{
+
+void remove_digest_file(struct ctdlroom *room) {
 	char buf[PATH_MAX];
 
-	snprintf(buf, PATH_MAX, "%s/%ld.eml", 
-		 ctdl_netdigest_dir,
-		 room->QRnumber);
+	snprintf(buf, PATH_MAX, "%s/%ld.eml", ctdl_netdigest_dir, room->QRnumber);
 	StripSlashes(buf, 0);
 	unlink(buf);
 }
 
-FILE *create_digest_file(struct ctdlroom *room, int forceCreate)
-{
+
+FILE *create_digest_file(struct ctdlroom *room, int forceCreate) {
 	struct stat stbuf;
 	char fn[PATH_MAX];
 	int exists;
 	FILE *fp;
 
-	snprintf(fn, PATH_MAX, "%s/%ld.eml", 
-		 ctdl_netdigest_dir,
-		 room->QRnumber);
+	snprintf(fn, PATH_MAX, "%s/%ld.eml", ctdl_netdigest_dir, room->QRnumber);
 	StripSlashes(fn, 0);
 
 	exists = stat(fn, &stbuf); 
@@ -339,21 +321,17 @@ FILE *create_digest_file(struct ctdlroom *room, int forceCreate)
 	
 	fp = fopen(fn, "w+");
 	if (fp == NULL) {
-		syslog(LOG_EMERG,
-		       "failed to create digest file %s: %s",
-		       fn,
-		       strerror(errno));
+		syslog(LOG_ERR, "failed to create digest file %s: %s", fn, strerror(errno));
 	}
 	return fp;
 }
 
 
-int create_dir(char *which, long ACCESS, long UID, long GID)
-{
+int create_dir(char *which, long ACCESS, long UID, long GID) {
 	int rv;
 	rv = mkdir(which, ACCESS);
 	if ((rv == -1) && (errno != EEXIST)) {
-		syslog(LOG_EMERG,
+		syslog(LOG_ERR,
 		       "failed to create directory %s: %s",
 		       which,
 		       strerror(errno));
@@ -361,7 +339,7 @@ int create_dir(char *which, long ACCESS, long UID, long GID)
 	}
 	rv = chmod(which, ACCESS);
 	if (rv == -1) {
-		syslog(LOG_EMERG,
+		syslog(LOG_ERR,
 		       "failed to set permissions for directory %s: %s",
 		       which,
 		       strerror(errno));
@@ -369,7 +347,7 @@ int create_dir(char *which, long ACCESS, long UID, long GID)
 	}
 	rv = chown(which, UID, GID);
 	if (rv == -1) {
-		syslog(LOG_EMERG,
+		syslog(LOG_ERR,
 		       "failed to set owner for directory %s: %s",
 		       which,
 		       strerror(errno));
@@ -378,8 +356,8 @@ int create_dir(char *which, long ACCESS, long UID, long GID)
 	return rv;
 }
 
-int create_run_directories(long UID, long GID)
-{
+
+int create_run_directories(long UID, long GID) {
 	int rv = 0;
 	rv += create_dir(ctdl_message_dir   , S_IRUSR|S_IWUSR|S_IXUSR, UID, -1);
 	rv += create_dir(ctdl_file_dir      , S_IRUSR|S_IWUSR|S_IXUSR, UID, -1);

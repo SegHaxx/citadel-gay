@@ -2,7 +2,7 @@
  * This module implementsserver commands related to the display and
  * manipulation of user "bio" files.
  *
- * Copyright (c) 1987-2020 by the citadel.org team
+ * Copyright (c) 1987-2021 by the citadel.org team
  *
  * This program is open source software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -155,7 +155,7 @@ void import_old_bio_files(void)
 
 
 	syslog(LOG_DEBUG, "Importing old style bio files into the message base");
-	filedir = opendir (ctdl_bio_dir);
+	filedir = opendir("bio");
 	if (filedir == NULL) {
 		return;
 	}
@@ -192,7 +192,7 @@ void import_old_bio_files(void)
 		    (filedir_entry->d_name[1] == '.'))
 			continue;
 
-		snprintf(path, PATH_MAX, "%s/%s", ctdl_bio_dir, filedir_entry->d_name);
+		snprintf(path, PATH_MAX, "bio/%s", filedir_entry->d_name);
 		if (d_type == DT_UNKNOWN) {
 			if (lstat(path, &s) == 0) {
 				d_type = IFTODT(s.st_mode);
@@ -211,7 +211,7 @@ void import_old_bio_files(void)
 		}
 	}
 	closedir(filedir);
-	rmdir(ctdl_bio_dir);
+	rmdir("bio");
 }
 
 

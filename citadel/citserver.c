@@ -54,12 +54,13 @@ void master_startup(void)
 	syslog(LOG_INFO, "Checking directory access");
 	if ((pw = getpwuid(ctdluid)) == NULL) {
 		gid = getgid();
-	} else {
+	}
+	else {
 		gid = pw->pw_gid;
 	}
 
 	if (create_run_directories(CTDLUID, gid) != 0) {
-		syslog(LOG_EMERG, "failed to access & create directories");
+		syslog(LOG_EMERG, "citserver: failed to access and create directories");
 		exit(1);
 	}
 	syslog(LOG_INFO, "Opening databases");

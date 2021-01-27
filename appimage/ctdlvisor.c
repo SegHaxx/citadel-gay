@@ -107,7 +107,7 @@ pid_t start_citadel() {
 	sprintf(bin, "%s/usr/local/citadel/citserver", getenv("APPDIR"));
 	pid_t pid = fork();
 	if (pid == 0) {
-		fprintf(stderr, "ctdlvisor: executing %s\n", bin);
+		fprintf(stderr, "ctdlvisor: executing %s with data directory %s\n", bin, getenv("CTDL_DIR"));
 		detach_from_tty();
 		execlp(bin, "citserver", "-x9", "-h", getenv("CTDL_DIR"), NULL);
 		exit(errno);

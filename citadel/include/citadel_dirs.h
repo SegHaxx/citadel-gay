@@ -8,7 +8,6 @@ extern char ctdl_home_directory[PATH_MAX];
 
 
 /* all our directories */
-extern char ctdl_bio_dir[PATH_MAX];
 extern char ctdl_data_dir[PATH_MAX];
 extern char ctdl_file_dir[PATH_MAX];
 extern char ctdl_shared_dir[PATH_MAX];
@@ -17,7 +16,6 @@ extern char ctdl_info_dir[PATH_MAX];
 extern char ctdl_key_dir[PATH_MAX];
 extern char ctdl_message_dir[PATH_MAX];
 extern char ctdl_usrpic_dir[PATH_MAX];
-extern char ctdl_etc_dir[PATH_MAX];
 extern char ctdl_autoetc_dir[PATH_MAX];
 extern char ctdl_run_dir[PATH_MAX];
 extern char ctdl_spool_dir[PATH_MAX];

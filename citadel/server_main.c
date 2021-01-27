@@ -236,29 +236,13 @@ int main(int argc, char **argv)
 	syslog(LOG_INFO, " ");
 	syslog(LOG_INFO, "%s", libcitadel_version_string());
 
-#ifdef HAVE_RUN_DIR
-	/* on some dists rundir gets purged on startup. so we need to recreate it. */
-
-	if (stat(ctdl_run_dir, &filestats) == -1) {
-#ifdef HAVE_GETPWUID_R
-#ifdef SOLARIS_GETPWUID
-		pwp = getpwuid_r(ctdluid, &pw, pwbuf, sizeof(pwbuf));
-#else // SOLARIS_GETPWUID
-		getpwuid_r(ctdluid, &pw, pwbuf, sizeof(pwbuf), &pwp);
-#endif // SOLARIS_GETPWUID
-#else // HAVE_GETPWUID_R
-		pwp = NULL;
-#endif // HAVE_GETPWUID_R
-
-		if ((mkdir(ctdl_run_dir, 0755) != 0) && (errno != EEXIST)) {
-			syslog(LOG_ERR, "main: unable to create run directory [%s]: %m", ctdl_run_dir);
-		}
-
-		if (chown(ctdl_run_dir, ctdluid, (pwp==NULL)?-1:pw.pw_gid) != 0) {
-			syslog(LOG_ERR, "main: unable to set the access rights for [%s]: %m", ctdl_run_dir);
-		}
+	if ((mkdir(ctdl_run_dir, 0755) != 0) && (errno != EEXIST)) {
+		syslog(LOG_ERR, "main: unable to create run directory [%s]: %m", ctdl_run_dir);
 	}
-#endif
+
+	if (chown(ctdl_run_dir, ctdluid, (pwp==NULL)?-1:pw.pw_gid) != 0) {
+		syslog(LOG_ERR, "main: unable to set the access rights for [%s]: %m", ctdl_run_dir);
+	}
 
 	ctdl_lockfile(1);
 	init_sysdep();						// Initialize...

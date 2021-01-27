@@ -1,7 +1,7 @@
 [Desktop Entry]
 Version=1.0
 Type=Application
-Categories=Network
+Categories=Network;
 Terminal=true
 Exec=AppRun
 Name=Citadel

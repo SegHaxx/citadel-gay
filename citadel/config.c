@@ -232,15 +232,6 @@ void initialize_config_system(void) {
 		exit(CTDLEXIT_LIBCITADEL);
 	}
 
-	//if (chdir(ctdl_bbsbase_dir) != 0) {
-		//fprintf(stderr,
-			//"This program could not be started.\nUnable to change directory to %s\nError: %s\n",
-			//ctdl_bbsbase_dir,
-			//strerror(errno)
-		//);
-		//exit(CTDLEXIT_HOME);
-	//}
-
 	memset(&lconfig, 0, sizeof(struct legacy_config));
 	cfp = fopen(file_citadel_config, "rb");
 	if (cfp != NULL) {
