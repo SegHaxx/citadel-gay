@@ -123,7 +123,7 @@ void migrate_legacy_control_record(void)
 	struct legacy_ctrl_format c;
 	memset(&c, 0, sizeof(c));
 
-	fp = fopen(file_citadel_control, "rb+");
+	fp = fopen("citadel.control", "rb+");
 	if (fp != NULL) {
 		syslog(LOG_INFO, "control: legacy format record found -- importing to db");
 		fread(&c, sizeof(struct legacy_ctrl_format), 1, fp);
@@ -137,8 +137,8 @@ void migrate_legacy_control_record(void)
 		CtdlSetConfigLong(	"MMfulltext",			c.MMfulltext);
 
 		fclose(fp);
-		if (unlink(file_citadel_control) != 0) {
-			fprintf(stderr, "Unable to remove legacy control record %s after migrating it.\n", file_citadel_control);
+		if (unlink("citadel.control") != 0) {
+			fprintf(stderr, "Unable to remove legacy control record after migrating it.\n");
 			fprintf(stderr, "Exiting to prevent data corruption.\n");
 			exit(CTDLEXIT_CONFIG);
 		}

@@ -47,7 +47,6 @@ char ctdl_sbin_dir[PATH_MAX]="";
 char ctdl_bin_dir[PATH_MAX]="";
 
 /* some of our files, that are needed in several places */
-char file_citadel_control[PATH_MAX]="";
 char file_citadel_config[PATH_MAX]="";
 char file_lmtp_socket[PATH_MAX]="";
 char file_lmtp_unfiltered_socket[PATH_MAX]="";
@@ -179,12 +178,7 @@ void calc_dirs_n_files(int relh, int home, const char *relhome, char  *ctdldir, 
 			 "%srefcount_adjustments.dat",
 			 ctdl_autoetc_dir);
 	StripSlashes(file_arcq, 0);
-	snprintf(file_citadel_control, 
-			 sizeof file_citadel_control,
-			 "%scitadel.control",
-			 ctdl_autoetc_dir
-			 );
-	StripSlashes(file_citadel_control, 0);
+
 	snprintf(file_citadel_config, 
 			 sizeof file_citadel_config,
 			 "%scitadel.config",
@@ -272,7 +266,6 @@ void calc_dirs_n_files(int relh, int home, const char *relhome, char  *ctdldir, 
 	DBG_PRINT(ctdl_sbin_dir);
 	DBG_PRINT(ctdl_bin_dir);
 	DBG_PRINT(ctdl_utilbin_dir);
-	DBG_PRINT(file_citadel_control);
 	DBG_PRINT(file_citadel_config);
 	DBG_PRINT(file_lmtp_socket);
 	DBG_PRINT(file_lmtp_unfiltered_socket);
