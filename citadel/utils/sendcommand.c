@@ -27,7 +27,7 @@
 #include <sys/socket.h>
 #include <sys/un.h>
 #include "citadel.h"
-#include "include/citadel_dirs.h"
+#include "citadel_dirs.h"
 #include <libcitadel.h>
 
 int serv_sock = (-1);

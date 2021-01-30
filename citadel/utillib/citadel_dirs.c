@@ -24,40 +24,6 @@
 #include "citadel.h"
 #include "citadel_dirs.h"
 
-/* all our directories */
-char *ctdl_home_directory = ".";
-char *ctdl_db_dir = "data";
-char *ctdl_file_dir = "files";
-char *ctdl_shared_dir = ".";
-char *ctdl_image_dir = "images";
-char *ctdl_info_dir = "info";
-char *ctdl_key_dir = "keys";
-char *ctdl_message_dir = "messages";
-char *ctdl_usrpic_dir = "userpics";
-char *ctdl_autoetc_dir = ".";
-char *ctdl_run_dir = ".";
-char *ctdl_netcfg_dir = "netconfigs";
-char *ctdl_bbsbase_dir = ".";
-char *ctdl_sbin_dir = ".";
-char *ctdl_bin_dir = ".";
-char *ctdl_utilbin_dir = ".";
-
-/* some of the frequently used files */
-char *file_citadel_config = "citadel.config";
-char *file_lmtp_socket = "lmtp.socket";
-char *file_lmtp_unfiltered_socket = "lmtp-unfiltered.socket";
-char *file_arcq = "refcount_adjustments.dat";
-char *file_citadel_socket = "citadel.socket";
-char *file_citadel_admin_socket = "citadel-admin.socket";
-char *file_pid_file = "/var/run/citserver.pid";
-char *file_pid_paniclog = "panic.log";
-char *file_crpt_file_key = "keys/citadel.key";
-char *file_crpt_file_csr = "keys/citadel.csr";
-char *file_crpt_file_cer = "keys/citadel.cer";
-char *file_chkpwd = "chkpwd";
-char *file_guesstimezone = "guesstimezone.sh";
-
-
 /*
  * Generate an associated file name for a room
  */

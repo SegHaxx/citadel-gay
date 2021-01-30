@@ -1,7 +1,7 @@
 /*
  * This module handles loading, saving, and parsing of room network configurations.
  *
- * Copyright (c) 2000-2018 by the citadel.org team
+ * Copyright (c) 2000-2021 by the citadel.org team
  *
  * This program is open source software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 3.
@@ -30,7 +30,7 @@
 
 #include <libcitadel.h>
 
-#include "include/ctdl_module.h"
+#include "ctdl_module.h"
 #include "serv_extensions.h"
 #include "config.h"
 
