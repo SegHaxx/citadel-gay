@@ -1,21 +1,14 @@
 /*
- * Copyright (c) 2005-2012 by the citadel.org team
+ * Copyright (c) 2005-2021 by the citadel.org team
  *
- *  This program is open source software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License version 3.
- *  
- *  
+ * This program is open source software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 3.
  *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  
- *  
- *  
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
  */
-
 
 /*
  * This is an ID for the wordbreaker module.  If we do pluggable wordbreakers
@@ -31,15 +24,3 @@
 #define WB_MAX			40
 
 void wordbreaker(const char *text, int *num_tokens, int **tokens);
-
-void initialize_noise_words(void);
-void noise_word_cleanup(void);
-
-
-typedef struct noise_word noise_word;
-
-struct noise_word {
-	unsigned int len;
-	char *word;
-	noise_word *next;
-};

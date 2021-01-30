@@ -479,7 +479,6 @@ CTDL_MODULE_INIT(fulltext)
 	if (!threading)
 	{
 		initialize_ft_cache();
-		initialize_noise_words();
 		CtdlRegisterProtoHook(cmd_srch, "SRCH", "Full text search");
 		CtdlRegisterDeleteHook(ft_delete_remove);
 		CtdlRegisterSearchFuncHook(ft_search, "fulltext");

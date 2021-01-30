@@ -208,8 +208,8 @@ void LogPrintMessages(long err)
 	StrBufAppendBufPlain(Message, HKEY("\n\n"), 0);
 	StrBufAppendBufPlain(Message, CKEY(ErrGeneral[3]), 0);
 
-	syslog(LOG_EMERG, "extensions: %s", ChrPtr(Message));
-	syslog(LOG_EMERG, "extensions: %s", ErrSubject);
+	syslog(LOG_ERR, "extensions: %s", ChrPtr(Message));
+	syslog(LOG_ERR, "extensions: %s", ErrSubject);
 	quickie_message("Citadel", NULL, NULL, AIDEROOM, ChrPtr(Message), FMT_FIXED, ErrSubject);
 
 	FreeStrBuf(&Message);

@@ -19,7 +19,6 @@
 #include <grp.h>
 #include <sys/file.h>
 #include <libcitadel.h>
-
 #include "citserver.h"
 #include "svn_revision.h"
 #include "modules_init.h"
@@ -37,12 +36,13 @@ int sanity_diag_mode = 0;
 
 /*
  * Create or remove a lock file, so we only have one Citadel Server running at a time.
+ * Set 'op' to nonzero to lock, zero to unlock.
  */
-void ctdl_lockfile(int yo) {
+void ctdl_lockfile(int op) {
 	static char lockfilename[PATH_MAX];
 	static FILE *fp;
 
-	if (yo) {
+	if (op) {
 		syslog(LOG_DEBUG, "main: creating lockfile");
 		snprintf(lockfilename, sizeof lockfilename, "%s/citadel.lock", ctdl_run_dir);
 		fp = fopen(lockfilename, "w");
@@ -67,20 +67,16 @@ void ctdl_lockfile(int yo) {
 /*
  * Here's where it all begins.
  */
-int main(int argc, char **argv)
-{
+int main(int argc, char **argv) {
+
 	size_t basesize = 64;
 	char facility[32];
 	int a;			/* General-purpose variables */
 	struct passwd pw, *pwp = NULL;
 	char pwbuf[SIZ];
 	int drop_root_perms = 1;
-	int relh=0;
-	int home=0;
-	int dbg=0;
 	int max_log_level = LOG_INFO;
-	char relhome[PATH_MAX]="";
-	char ctdldir[PATH_MAX]=CTDLDIR;
+	char *ctdldir = CTDLDIR;
 	int syslog_facility = LOG_DAEMON;
 	uid_t u = 0;
 	struct passwd *p = NULL;
@@ -88,9 +84,22 @@ int main(int argc, char **argv)
 	struct stat filestats;
 #endif
 
-	/* initialize the master context */
-	InitializeMasterCC();
-	InitializeMasterTSD();
+	/* Tell 'em who's in da house */
+	syslog(LOG_INFO, " ");
+	syslog(LOG_INFO, " ");
+	syslog(LOG_INFO, "*** Citadel server engine ***\n");
+ 	syslog(LOG_INFO, "Version %d (build %s) ***", REV_LEVEL, svn_revision());
+	syslog(LOG_INFO, "Copyright (C) 1987-2021 by the Citadel development team.");
+	syslog(LOG_INFO, " ");
+	syslog(LOG_INFO, "This program is open source software: you can redistribute it and/or");
+	syslog(LOG_INFO, "modify it under the terms of the GNU General Public License, version 3.");
+	syslog(LOG_INFO, " ");
+	syslog(LOG_INFO, "This program is distributed in the hope that it will be useful,");
+	syslog(LOG_INFO, "but WITHOUT ANY WARRANTY; without even the implied warranty of");
+	syslog(LOG_INFO, "MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the");
+	syslog(LOG_INFO, "GNU General Public License for more details.");
+	syslog(LOG_INFO, " ");
+	syslog(LOG_INFO, "%s", libcitadel_version_string());
 
 	/* parse command-line arguments */
 	while ((a=getopt(argc, argv, "cl:dh:x:t:B:Dru:s:")) != EOF) switch(a) {
@@ -114,14 +123,7 @@ int main(int argc, char **argv)
 
 		// specify the data directory
 		case 'h':
-			relh = optarg[0] != '/';
-			if (!relh) {
-				safestrncpy(ctdl_home_directory, optarg, sizeof ctdl_home_directory);
-			}
-			else {
-				safestrncpy(relhome, optarg, sizeof relhome);
-			}
-			home=1;
+			ctdldir = optarg;
 			break;
 
 		// identify the desired logging severity level
@@ -133,13 +135,13 @@ int main(int argc, char **argv)
 		case 't':
 			break;
 
-		// basesize (what is this?)
+		// basesize (passed to libcitadel)
                 case 'B':
                         basesize = atoi(optarg);
                         break;
 
+		// deprecated
 		case 'D':
-			dbg = 1;
 			break;
 
 		// -r tells the server not to drop root permissions.
@@ -176,11 +178,23 @@ int main(int argc, char **argv)
 					"citserver "
 					"[-l LogFacility] "
 					"[-x MaxLogLevel] "
-					"[-d] [-D] [-r] "
+					"[-d] [-r] "
 					"[-u user] "
 					"[-h HomeDir]\n"
 			);
 			exit(1);
+	}
+
+	if (chdir(ctdldir) != 0) {
+		syslog(LOG_ERR, "main: unable to change directory to [%s]: %m", ctdldir);
+	}
+	else {
+		syslog(LOG_INFO, "main: running in data directory %s", ctdldir);
+	}
+
+	if ((ctdluid == 0) && (drop_root_perms == 0)) {
+		fprintf(stderr, "citserver: cannot determine user to run as; please specify -r or -u options\n");
+		exit(CTDLEXIT_UNUSER);
 	}
 
 	/* Last ditch effort to determine the user name ... if there's a user called "citadel" then use that */
@@ -200,10 +214,9 @@ int main(int argc, char **argv)
 		}
 	}
 
-	if ((ctdluid == 0) && (drop_root_perms == 0)) {
-		fprintf(stderr, "citserver: cannot determine user to run as; please specify -r or -u options\n");
-		exit(CTDLEXIT_UNUSER);
-	}
+	/* initialize the master context */
+	InitializeMasterCC();
+	InitializeMasterTSD();
 
 	StartLibCitadel(basesize);
 	setlogmask(LOG_UPTO(max_log_level));
@@ -212,29 +225,11 @@ int main(int argc, char **argv)
 		syslog_facility
 	);
 
-	calc_dirs_n_files(relh, home, relhome, ctdldir, dbg);
 	/* daemonize, if we were asked to */
 	if (running_as_daemon) {
 		start_daemon(0);
 		drop_root_perms = 1;
 	}
-
-	/* Tell 'em who's in da house */
-	syslog(LOG_INFO, " ");
-	syslog(LOG_INFO, " ");
-	syslog(LOG_INFO, "*** Citadel server engine ***\n");
- 	syslog(LOG_INFO, "Version %d (build %s) ***", REV_LEVEL, svn_revision());
-	syslog(LOG_INFO, "Copyright (C) 1987-2021 by the Citadel development team.");
-	syslog(LOG_INFO, " ");
-	syslog(LOG_INFO, "This program is open source software: you can redistribute it and/or");
-	syslog(LOG_INFO, "modify it under the terms of the GNU General Public License, version 3.");
-	syslog(LOG_INFO, " ");
-	syslog(LOG_INFO, "This program is distributed in the hope that it will be useful,");
-	syslog(LOG_INFO, "but WITHOUT ANY WARRANTY; without even the implied warranty of");
-	syslog(LOG_INFO, "MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the");
-	syslog(LOG_INFO, "GNU General Public License for more details.");
-	syslog(LOG_INFO, " ");
-	syslog(LOG_INFO, "%s", libcitadel_version_string());
 
 	if ((mkdir(ctdl_run_dir, 0755) != 0) && (errno != EEXIST)) {
 		syslog(LOG_ERR, "main: unable to create run directory [%s]: %m", ctdl_run_dir);
@@ -251,15 +246,14 @@ int main(int argc, char **argv)
 	syslog(LOG_INFO, "main: upgrading modules");		// Run any upgrade entry points
 	upgrade_modules();
 
-/*
- * Load the user for the masterCC or create them if they don't exist
- */
-	if (CtdlGetUser(&masterCC.user, "SYS_Citadel"))
-	{
+	/*
+	 * Load the user for the masterCC or create them if they don't exist
+	 */
+	if (CtdlGetUser(&masterCC.user, "SYS_Citadel")) {
 		/* User doesn't exist. We can't use create user here as the user number needs to be 0 */
 		strcpy (masterCC.user.fullname, "SYS_Citadel") ;
 		CtdlPutUser(&masterCC.user);
-		CtdlGetUser(&masterCC.user, "SYS_Citadel"); /* Just to be safe */
+		CtdlGetUser(&masterCC.user, "SYS_Citadel");	/* Just to be safe */
 	}
 	
 	/*
@@ -297,7 +291,6 @@ int main(int argc, char **argv)
 	 * Load any server-side extensions available here.
 	 */
 	syslog(LOG_INFO, "main: initializing server extensions");
-	
 	initialise_modules(0);
 
 	/*
@@ -314,28 +307,18 @@ int main(int argc, char **argv)
 	checkcrash();
 
 	/*
-	 * Now that we've bound the sockets, change to the Citadel user id and its
-	 * corresponding group ids
+	 * Now that we've bound the sockets, change to the Citadel user id and its corresponding group ids
 	 */
 	if (drop_root_perms) {
 		cdb_chmod_data();	/* make sure we own our data files */
-
-#ifdef HAVE_GETPWUID_R
-#ifdef SOLARIS_GETPWUID
-		pwp = getpwuid_r(ctdluid, &pw, pwbuf, sizeof(pwbuf));
-#else // SOLARIS_GETPWUID
 		getpwuid_r(ctdluid, &pw, pwbuf, sizeof(pwbuf), &pwp);
-#endif // SOLARIS_GETPWUID
-#else // HAVE_GETPWUID_R
-		pwp = NULL;
-#endif // HAVE_GETPWUID_R
-
 		if (pwp == NULL)
 			syslog(LOG_ERR, "main: WARNING, getpwuid(%ld): %m Group IDs will be incorrect.", (long)CTDLUID);
 		else {
 			initgroups(pw.pw_name, pw.pw_gid);
-			if (setgid(pw.pw_gid))
+			if (setgid(pw.pw_gid)) {
 				syslog(LOG_ERR, "main: setgid(%ld): %m", (long)pw.pw_gid);
+			}
 		}
 		syslog(LOG_INFO, "main: changing uid to %ld", (long)CTDLUID);
 		if (setuid(CTDLUID) != 0) {
@@ -349,12 +332,14 @@ int main(int argc, char **argv)
 	/* We want to check for idle sessions once per minute */
 	CtdlRegisterSessionHook(terminate_idle_sessions, EVT_TIMER, PRIO_CLEANUP + 1);
 
+	/* Go into multithreaded mode.  When this call exits, the server is stopping. */
 	go_threading();
 	
+	/* Get ready to shut down the server. */
 	int exit_code = master_cleanup(exit_signal);
 	ctdl_lockfile(0);
 	if (restart_server) {
-		syslog(LOG_INFO, "main:    *** CITADEL SERVER IS RESTARTING ***");
+		syslog(LOG_INFO, "main: *** CITADEL SERVER IS RESTARTING ***");
 		execv(argv[0], argv);
 	}
 	return(exit_code);

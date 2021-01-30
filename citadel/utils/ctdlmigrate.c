@@ -5,7 +5,7 @@
  * The scope of this program isn't wide enough to make a difference.  If you don't like
  * it you can rewrite it.
  *
- * Copyright (c) 2009-2018 citadel.org
+ * Copyright (c) 2009-2021 citadel.org
  *
  * This program is open source software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3.
@@ -87,7 +87,6 @@ int main(int argc, char *argv[])
 	char spinning[4] = "-\\|/" ;
 	int exitcode = 0;
 	
-	calc_dirs_n_files(relh, home, relhome, ctdldir, 0);
 	CtdlMakeTempFileName(socket_path, sizeof socket_path);
 
 	cmdexit = system("clear");

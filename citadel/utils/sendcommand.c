@@ -1,7 +1,7 @@
 /*
  * Command-line utility to transmit a server command.
  *
- * Copyright (c) 1987-2012 by the citadel.org team
+ * Copyright (c) 1987-2021 by the citadel.org team
  *
  * This program is open source software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3.
@@ -167,8 +167,6 @@ int main(int argc, char **argv)
 			return(1);
 		}
 	}
-
-	calc_dirs_n_files(relh, home, relhome, ctdldir, 0);
 
 	fprintf(stderr, "sendcommand: started (pid=%d) connecting to Citadel server at %s\n",
 		(int) getpid(),

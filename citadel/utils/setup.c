@@ -726,7 +726,6 @@ int main(int argc, char *argv[])
 		}
 	}
 
-	calc_dirs_n_files(relh, home, relhome, ctdldir, 0);
 	SetTitles();
 
 	enable_home = ( relh | home );

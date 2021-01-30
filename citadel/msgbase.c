@@ -1054,14 +1054,14 @@ void mime_download(char *name, char *filename, char *partnum, char *disp,
 	) {
 		CC->download_fp = tmpfile();
 		if (CC->download_fp == NULL) {
-			syslog(LOG_EMERG, "msgbase: mime_download() couldn't write: %m");
+			syslog(LOG_ERR, "msgbase: mime_download() couldn't write: %m");
 			cprintf("%d cannot open temporary file: %s\n", ERROR + INTERNAL_ERROR, strerror(errno));
 			return;
 		}
 	
 		rv = fwrite(content, length, 1, CC->download_fp);
 		if (rv <= 0) {
-			syslog(LOG_EMERG, "msgbase: mime_download() Couldn't write: %m");
+			syslog(LOG_ERR, "msgbase: mime_download() Couldn't write: %m");
 			cprintf("%d unable to write tempfile.\n", ERROR + TOO_BIG);
 			fclose(CC->download_fp);
 			CC->download_fp = NULL;

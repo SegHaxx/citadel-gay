@@ -239,7 +239,7 @@ void network_process_digest(SpoolControl *sc, struct CtdlMessage *omsg, long *de
 	/* If there are digest recipients, we have to build a digest */
 	if (sc->digestfp == NULL) {
 		
-		sc->digestfp = create_digest_file(&sc->room, 1);
+		sc->digestfp = tmpfile();
 
 		if (sc->digestfp == NULL)
 			return;

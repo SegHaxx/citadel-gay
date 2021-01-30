@@ -2,7 +2,7 @@
  * This module handles shared rooms, inter-Citadel mail, and outbound
  * mailing list processing.
  *
- * Copyright (c) 2000-2020 by the citadel.org team
+ * Copyright (c) 2000-2021 by the citadel.org team
  *
  * This program is open source software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 3.
@@ -357,7 +357,6 @@ void network_spoolout_room(SpoolControl *sc)
 		network_deliver_digest(sc);	/* deliver */
 		fclose(sc->digestfp);
 		sc->digestfp = NULL;
-		remove_digest_file(&sc->room);
 	}
 
 	/* Now rewrite the netconfig */
@@ -395,21 +394,6 @@ void free_spoolcontrol_struct_members(SpoolControl *sc)
 
 
 /*
- * It's ok if these directories already exist.  Just fail silently.
- */
-void create_spool_dirs(void) {
-	if ((mkdir(ctdl_spool_dir, 0700) != 0) && (errno != EEXIST))
-		syslog(LOG_EMERG, "netspool: unable to create directory [%s]: %s", ctdl_spool_dir, strerror(errno));
-	if (chown(ctdl_spool_dir, CTDLUID, (-1)) != 0)
-		syslog(LOG_EMERG, "netspool: unable to set the access rights for [%s]: %s", ctdl_spool_dir, strerror(errno));
-	if ((mkdir(ctdl_nettmp_dir, 0700) != 0) && (errno != EEXIST))
-		syslog(LOG_EMERG, "netspool: unable to create directory [%s]: %s", ctdl_nettmp_dir, strerror(errno));
-	if (chown(ctdl_nettmp_dir, CTDLUID, (-1)) != 0)
-		syslog(LOG_EMERG, "netspool: unable to set the access rights for [%s]: %s", ctdl_nettmp_dir, strerror(errno));
-}
-
-
-/*
  * Module entry point
  */
 CTDL_MODULE_INIT(network_spool)
@@ -423,7 +407,6 @@ CTDL_MODULE_INIT(network_spool)
 		CtdlREGISTERRoomCfgType(digestrecp,       ParseGeneric,          0, 1, SerializeGeneric,  DeleteGenericCfgLine);
 		CtdlREGISTERRoomCfgType(participate,      ParseGeneric,          0, 1, SerializeGeneric,  DeleteGenericCfgLine);
 		CtdlREGISTERRoomCfgType(roommailalias,    ParseRoomAlias,        0, 1, SerializeGeneric,  DeleteGenericCfgLine);
-		create_spool_dirs();
 	}
 	return "network_spool";
 }

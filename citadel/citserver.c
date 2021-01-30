@@ -60,7 +60,7 @@ void master_startup(void)
 	}
 
 	if (create_run_directories(CTDLUID, gid) != 0) {
-		syslog(LOG_EMERG, "citserver: failed to access and create directories");
+		syslog(LOG_ERR, "citserver: failed to access and create directories");
 		exit(1);
 	}
 	syslog(LOG_INFO, "Opening databases");

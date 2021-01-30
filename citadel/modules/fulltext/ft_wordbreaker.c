@@ -56,10 +56,7 @@
  * NOTE: if the noise word list is altered in any way, the FT_WORDBREAKER_ID
  * must also be changed, so that the index is rebuilt.
  */
-
-noise_word *noise_words[26];
-
-static char *noise_words_init[] = {
+static char *noise_words[] = {
 	"about",
 	"after",
 	"also",
@@ -122,29 +119,7 @@ static char *noise_words_init[] = {
 	"would",
 	"your"
 };
-
-
-void initialize_noise_words(void)
-{
-	int i;
-	int len;
-	int ch;
-	noise_word *next;
-	
-	memset (noise_words, 0, sizeof(noise_words));
-	
-	for (i=0; i<(sizeof(noise_words_init)/sizeof(char *)); ++i)
-	{
-		ch = noise_words_init[i][0] - 'a';
-		len = strlen(noise_words_init[i]);
-		
-		next = malloc(sizeof(noise_word));
-		next->len = len;
-		next->word = strdup(noise_words_init[i]);
-		next->next = noise_words[ch];
-		noise_words[ch] = next;
-	}
-}
+#define NUM_NOISE (sizeof(noise_words) / sizeof(char *))
 
 
 /*
@@ -176,8 +151,6 @@ void wordbreaker(const char *text, int *num_tokens, int **tokens) {
 	char word[256];
 	int i;
 	int word_crc;
-	noise_word *noise;
-	
 	
 	if (text == NULL) {		/* no NULL text please */
 		*num_tokens = 0;
@@ -219,30 +192,22 @@ void wordbreaker(const char *text, int *num_tokens, int **tokens) {
 			word_start = NULL;
 
 			/* are we ok with the length? */
-			if ( (word_len >= WB_MIN)
-			   && (word_len <= WB_MAX) ) {
+			if ( (word_len >= WB_MIN) && (word_len <= WB_MAX) ) {
 				for (i=0; i<word_len; ++i) {
 					word[i] = tolower(word[i]);
 				}
 				/* disqualify noise words */
-				noise = noise_words[(int) (word[0]-'a')];
-				while (noise)
-				{
-					if (noise->len == word_len)
-					{
-						if (!strcmp(word, noise->word)) 
-						{
-							word_len = 0;
-							break;
-						}
+				for (i=0; i<NUM_NOISE; ++i) {
+					if (!strcmp(word, noise_words[i])) {
+						word_len = 0;
+						break;
 					}
-					noise = noise->next;
 				}
+
 				if (word_len == 0)
 					continue;
 
-				word_crc = (int)
-					CalcCRC16Bytes(word_len, word);
+				word_crc = (int) CalcCRC16Bytes(word_len, word);
 
 				++wb_num_tokens;
 				if (wb_num_tokens > wb_num_alloc) {

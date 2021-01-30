@@ -3,15 +3,15 @@
  * some other non-Citadel MTA.  It basically just contacts the Citadel LMTP
  * listener on a unix domain socket and transmits the message.
  *
- * Copyright (c) 1987-2012 by the citadel.org team
+ * Copyright (c) 1987-2021by the citadel.org team
  *
- *  This program is open source software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License version 3.
+ * This program is open source software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 3.
  *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
  */
 
 #include "sysdep.h"
@@ -202,14 +202,11 @@ int main(int argc, char **argv) {
 		}
 	}
 	       
-	/* TODO: should we be able to calculate relative dirs? */
-	calc_dirs_n_files(relh, home, relhome, ctdldir, 0);
-
 	pw = getpwuid(getuid());
 
 	fp = tmpfile();
 	if (fp == NULL) return(errno);
-	serv_sock = uds_connectsock(file_lmtp_socket);	/* FIXME: if called as 'sendmail' connect to file_lmtp_unfiltered_socket */
+	serv_sock = uds_connectsock(file_lmtp_socket);
 	serv_gets(buf);
 	if (buf[0] != '2') {
 		fprintf(stderr, "%s\n", &buf[4]);
