@@ -3,7 +3,7 @@
  * some other non-Citadel MTA.  It basically just contacts the Citadel LMTP
  * listener on a unix domain socket and transmits the message.
  *
- * Copyright (c) 1987-2021by the citadel.org team
+ * Copyright (c) 1987-2021 by the citadel.org team
  *
  * This program is open source software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3.
@@ -176,9 +176,6 @@ int main(int argc, char **argv) {
 	struct passwd *pw;
 	int from_header = 0;
 	int in_body = 0;
-	int relh=0;
-	int home=0;
-	char relhome[PATH_MAX]="";
 	char ctdldir[PATH_MAX]=CTDLDIR;
 	char *sp, *ep;
 	char hostname[256];
@@ -195,11 +192,19 @@ int main(int argc, char **argv) {
 		else if (!strcmp(argv[i], "-t")) {
 			read_recipients_from_headers = 1;
 		}
+		else if (!strncmp(argv[i], "-h", 2)) {
+			safestrncpy(ctdldir, &argv[i][2], sizeof ctdldir);
+		}
 		else if (argv[i][0] != '-') {
 			++num_recipients;
 			recipients = realloc(recipients, (num_recipients * sizeof (char *)));
 			recipients[num_recipients - 1] = strdup(argv[i]);
 		}
+	}
+
+	if (chdir(ctdldir) != 0) {
+		fprintf(stderr, "sendcommand: %s: %s\n", ctdldir, strerror(errno));
+		exit(errno);
 	}
 	       
 	pw = getpwuid(getuid());
