@@ -66,11 +66,7 @@ void getz(char *buf) {
 
 
 
-int main(int argc, char *argv[])
-{
-	int relh=0;
-	int home=0;
-	char relhome[PATH_MAX]="";
+int main(int argc, char *argv[]) {
 	char ctdldir[PATH_MAX]=CTDLDIR;
 	char yesno[5];
 	char sendcommand[PATH_MAX];
@@ -88,9 +84,14 @@ int main(int argc, char *argv[])
 	int exitcode = 0;
 	
 	CtdlMakeTempFileName(socket_path, sizeof socket_path);
+	if (chdir(ctdldir) != 0) {
+		fprintf(stderr, "sendcommand: %s: %s\n", ctdldir, strerror(errno));
+		exit(errno);
+	}
 
-	cmdexit = system("clear");
-	printf(	"-------------------------------------------\n"
+
+	printf(	"\033[2J\033[H\n"
+		"-------------------------------------------\n"
 		"Over-the-wire migration utility for Citadel\n"
 		"-------------------------------------------\n"
 		"\n"
