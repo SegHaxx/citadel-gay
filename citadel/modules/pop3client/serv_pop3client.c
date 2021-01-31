@@ -165,6 +165,7 @@ void pop3client_scan_room(struct ctdlroom *qrbuf, void *data)
 	char *serialized_config = NULL;
 	int num_configs = 0;
 	char cfgline[SIZ];
+	char cfgelement[SIZ];
 	int i = 0;
 
         serialized_config = LoadRoomNetConfigFile(qrbuf->QRnumber);
@@ -179,12 +180,15 @@ void pop3client_scan_room(struct ctdlroom *qrbuf, void *data)
 			struct p3cq *pptr = malloc(sizeof(struct p3cq));
 			pptr->next = p3cq;
 			p3cq = pptr;
-			p3cq->room = "FIXME";
-			p3cq->host = "FIXME";
-			p3cq->user = "FIXME";
-			p3cq->pass = "FIXME";
-			p3cq->keep = "FIXME";
-			p3cq->interval = 0;
+			p3cq->room = strdup(qrbuf->QRname);
+			extract_token(cfgelement, cfgline, 1, '|', sizeof cfgelement);
+			p3cq->host = strdup(cfgelement);
+			extract_token(cfgelement, cfgline, 2, '|', sizeof cfgelement);
+			p3cq->user = strdup(cfgelement);
+			extract_token(cfgelement, cfgline, 3, '|', sizeof cfgelement);
+			p3cq->pass = strdup(cfgelement);
+			p3cq->keep = extract_int(cfgline, 4);
+			p3cq->interval = extract_long(cfgline, 5);
 		}
 	}
 
