@@ -207,9 +207,6 @@ long CtdlGetCurrentMessageNumber(void);
 /*
  * Expose various room operation functions from room_ops.c to the modules API
  */
-typedef struct CfgLineType CfgLineType;
-typedef struct RoomNetCfgLine RoomNetCfgLine;
-typedef struct OneRoomNetCfg OneRoomNetCfg;
 
 unsigned CtdlCreateRoom(char *new_room_name,
 			int new_room_type,
@@ -225,9 +222,8 @@ void CtdlRoomAccess(struct ctdlroom *roombuf, struct ctdluser *userbuf, int *res
 void CtdlPutRoomLock(struct ctdlroom *qrbuf);
 typedef void (*ForEachRoomCallBack)(struct ctdlroom *EachRoom, void *out_data);
 void CtdlForEachRoom(ForEachRoomCallBack CB, void *in_data);
-typedef void (*ForEachRoomNetCfgCallBack)(struct ctdlroom *EachRoom, void *out_data, OneRoomNetCfg *OneRNCFG);
+typedef void (*ForEachRoomNetCfgCallBack)(struct ctdlroom *EachRoom, void *out_data, char *cfg);
 char *LoadRoomNetConfigFile(long roomnum);
-void CtdlForEachNetCfgRoom(ForEachRoomNetCfgCallBack CB, void *in_data);
 void SaveChangedConfigs(void);
 void CtdlDeleteRoom(struct ctdlroom *qrbuf);
 int CtdlRenameRoom(char *old_name, char *new_name, int new_floor);
@@ -288,73 +284,7 @@ void CtdlModuleDoSearch(int *num_msgs, long **search_msgs, const char *search_st
 #define TWITROOM		CtdlGetConfigStr("c_twitroom")
 #define RESTRICT_INTERNET	CtdlGetConfigInt("c_restrict")
 
-typedef void (*CfgLineParser)(const CfgLineType *ThisOne, StrBuf *Line, const char *LinePos, OneRoomNetCfg *rncfg);
-typedef void (*CfgLineSerializer)(const CfgLineType *ThisOne, StrBuf *OuptputBuffer, OneRoomNetCfg *rncfg, RoomNetCfgLine *data);
-typedef void (*CfgLineDeAllocator)(const CfgLineType *ThisOne, RoomNetCfgLine **data);
-
-struct CfgLineType {
-	RoomNetCfg C;
-	CfgLineParser Parser;
-	CfgLineSerializer Serializer;
-	CfgLineDeAllocator DeAllocator;
-	ConstStr Str;
-	int IsSingleLine;
-	int nSegments;
-};
-
-struct RoomNetCfgLine {
-	RoomNetCfgLine *next;
-	int nValues;
-	StrBuf **Value;
-};
-
-struct OneRoomNetCfg {
-	long lastsent;
-	// long changed;
-	StrBuf *Sender;
-	StrBuf *RoomInfo;
-	RoomNetCfgLine *NetConfigs[maxRoomNetCfg];
-	StrBuf *misc;
-};
-
-
 #define CtdlREGISTERRoomCfgType(a, p, uniq, nSegs, s, d) RegisterRoomCfgType(#a, sizeof(#a) - 1, a, p, uniq, nSegs, s, d);
-void RegisterRoomCfgType(const char* Name, long len, RoomNetCfg eCfg, CfgLineParser p, int uniq, int nSegments, CfgLineSerializer s, CfgLineDeAllocator d);
-void ParseGeneric(const CfgLineType *ThisOne, StrBuf *Line, const char *LinePos, OneRoomNetCfg *sc);
-void SerializeGeneric(const CfgLineType *ThisOne, StrBuf *OutputBuffer, OneRoomNetCfg *sc, RoomNetCfgLine *data);
-void DeleteGenericCfgLine(const CfgLineType *ThisOne, RoomNetCfgLine **data);
-RoomNetCfgLine *DuplicateOneGenericCfgLine(const RoomNetCfgLine *data);
-void AddRoomCfgLine(OneRoomNetCfg *OneRNCfg, struct ctdlroom *qrbuf, RoomNetCfg LineType, RoomNetCfgLine *Line);
-
-OneRoomNetCfg *CtdlGetNetCfgForRoom(long QRNumber);
-void SaveRoomNetConfigFile(OneRoomNetCfg *, long);
-void FreeRoomNetworkStruct(OneRoomNetCfg **);
-
-typedef struct _nodeconf {
-	int DeleteMe;
-	StrBuf *NodeName;
-	StrBuf *Secret;
-	StrBuf *Host;
-	StrBuf *Port;
-}CtdlNodeConf;
-
-HashList* CtdlLoadIgNetCfg(void);
-
-
-int CtdlNetconfigCheckRoomaccess(char *errmsgbuf, 
-				 size_t n,
-				 const char* RemoteIdentifier);
-
-
-typedef struct __NetMap {
-	StrBuf *NodeName;
-	time_t lastcontact;
-	StrBuf *NextHop;
-}CtdlNetMap;
-
-HashList* CtdlReadNetworkMap(void);
-StrBuf *CtdlSerializeNetworkMap(HashList *Map);
-
 
 
 

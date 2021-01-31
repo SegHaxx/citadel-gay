@@ -1,7 +1,7 @@
 /*
  * Consolidate mail from remote POP3 accounts.
  *
- * Copyright (c) 2007-2020 by the citadel.org team
+ * Copyright (c) 2007-2021 by the citadel.org team
  *
  * This program is open source software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License as published
@@ -18,18 +18,7 @@
 #include <unistd.h>
 #include <stdio.h>
 #include <sysconfig.h>
-
-#if TIME_WITH_SYS_TIME
-# include <sys/time.h>
-# include <time.h>
-#else
-# if HAVE_SYS_TIME_H
-#  include <sys/time.h>
-# else
-#  include <time.h>
-# endif
-#endif
-
+#include <time.h>
 #include <ctype.h>
 #include <string.h>
 #include <errno.h>
@@ -65,8 +54,7 @@ struct p3cq *p3cq = NULL;
 /*
  * Process one mailbox.
  */
-void pop3client_one_mailbox(char *room, const char *host, const char *user, const char *pass, int keep, long interval)
-{
+void pop3client_one_mailbox(char *room, const char *host, const char *user, const char *pass, int keep, long interval) {
 	syslog(LOG_DEBUG, "pop3client: room=<%s> host=<%s> user=<%s> keep=<%d> interval=<%ld>", room, host, user, keep, interval);
 
 	char url[SIZ];
@@ -97,7 +85,8 @@ void pop3client_one_mailbox(char *room, const char *host, const char *user, cons
 	curl_easy_setopt(curl, CURLOPT_URL, url);
 	res = curl_easy_perform(curl);
 	if (res == CURLE_OK) {
-	} else {
+	}
+	else {
 		syslog(LOG_DEBUG, "pop3client: POP3S connection failed: %s , trying POP3 next", curl_easy_strerror(res));
 		snprintf(url, sizeof url, "pop3://%s", host);			// try unencrypted next
 		curl_easy_setopt(curl, CURLOPT_URL, url);
@@ -169,32 +158,37 @@ void pop3client_one_mailbox(char *room, const char *host, const char *user, cons
 }
 
 
-/*
- * Scan a room's netconfig to determine whether it requires POP3 aggregation
- */
-void pop3client_scan_room(struct ctdlroom *qrbuf, void *data, OneRoomNetCfg *OneRNCFG)
+// Scan a room's netconfig looking for RSS feed parsing requests
+//
+void pop3client_scan_room(struct ctdlroom *qrbuf, void *data)
 {
-	const RoomNetCfgLine *pLine;
-	struct p3cq *pptr = NULL;
+	char *serialized_config = NULL;
+	int num_configs = 0;
+	char cfgline[SIZ];
+	int i = 0;
 
-	if (server_shutting_down) return;
-
-	pLine = OneRNCFG->NetConfigs[pop3client];
-
-	while (pLine != NULL)
-	{
-		pptr = malloc(sizeof(struct p3cq));
-		pptr->next = p3cq;
-		p3cq = pptr;
-		pptr->room = strdup(qrbuf->QRname);
-		pptr->host = strdup(ChrPtr(pLine->Value[0]));
-		pptr->user = strdup(ChrPtr(pLine->Value[1]));
-		pptr->pass = strdup(ChrPtr(pLine->Value[2]));
-		pptr->keep = atoi(ChrPtr(pLine->Value[3]));
-		pptr->interval = atol(ChrPtr(pLine->Value[4]));
-	
-		pLine = pLine->next;
+        serialized_config = LoadRoomNetConfigFile(qrbuf->QRnumber);
+        if (!serialized_config) {
+		return;
 	}
+
+	num_configs = num_tokens(serialized_config, '\n');
+	for (i=0; i<num_configs; ++i) {
+		extract_token(cfgline, serialized_config, i, '\n', sizeof cfgline);
+		if (!strncasecmp(cfgline, HKEY("pop3client|"))) {
+			struct p3cq *pptr = malloc(sizeof(struct p3cq));
+			pptr->next = p3cq;
+			p3cq = pptr;
+			p3cq->room = "FIXME";
+			p3cq->host = "FIXME";
+			p3cq->user = "FIXME";
+			p3cq->pass = "FIXME";
+			p3cq->keep = "FIXME";
+			p3cq->interval = 0;
+		}
+	}
+
+	free(serialized_config);
 }
 
 
@@ -227,7 +221,7 @@ void pop3client_scan(void) {
 	doing_pop3client = 1;
 
 	syslog(LOG_DEBUG, "pop3client: scan started");
-	CtdlForEachNetCfgRoom(pop3client_scan_room, NULL);
+	CtdlForEachRoom(pop3client_scan_room, NULL);
 
 	/*
 	 * We have to queue and process in separate phases, otherwise we leave a cursor open
@@ -256,7 +250,6 @@ CTDL_MODULE_INIT(pop3client)
 {
 	if (!threading)
 	{
-		CtdlREGISTERRoomCfgType(pop3client, ParseGeneric, 0, 5, SerializeGeneric, DeleteGenericCfgLine);
 		CtdlRegisterSessionHook(pop3client_scan, EVT_TIMER, PRIO_AGGR + 50);
 	}
 

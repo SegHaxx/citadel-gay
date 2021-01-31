@@ -23,18 +23,7 @@
 #include <errno.h>
 #include <sys/types.h>
 #include <syslog.h>
-
-#if TIME_WITH_SYS_TIME
-# include <sys/time.h>
-# include <time.h>
-#else
-# if HAVE_SYS_TIME_H
-#  include <sys/time.h>
-# else
-#  include <time.h>
-# endif
-#endif
-
+#include <time.h>
 #include <sys/wait.h>
 #include <ctype.h>
 #include <string.h>
@@ -63,9 +52,6 @@
 #include "serv_nntp.h"
 
 extern long timezone;
-
-//	***************** BEGIN UTILITY FUNCTIONS THAT COULD BE MOVED ELSEWHERE LATER **************
-
 
 //
 // Tests whether the supplied string is a valid newsgroup name
@@ -175,10 +161,6 @@ void newsgroup_to_room(char *target, char *source, size_t target_size) {
 		target[len] = 0;
 	}
 }
-
-
-//	*****************  END  UTILITY FUNCTIONS THAT COULD BE MOVED ELSEWHERE LATER **************
-
 
 
 //

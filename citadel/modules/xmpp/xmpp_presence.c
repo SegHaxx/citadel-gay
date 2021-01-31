@@ -29,18 +29,7 @@
 #include <errno.h>
 #include <sys/types.h>
 #include <assert.h>
-
-#if TIME_WITH_SYS_TIME
-# include <sys/time.h>
-# include <time.h>
-#else
-# if HAVE_SYS_TIME_H
-#  include <sys/time.h>
-# else
-#  include <time.h>
-# endif
-#endif
-
+#include <time.h>
 #include <sys/wait.h>
 #include <string.h>
 #include <limits.h>
@@ -61,8 +50,7 @@
  * Indicate the presence of another user to the client
  * (used in several places)
  */
-void xmpp_indicate_presence(char *presence_jid)
-{
+void xmpp_indicate_presence(char *presence_jid) {
 	char xmlbuf[256];
 
 	syslog(LOG_DEBUG, "xmpp: indicating presence of <%s> to <%s>", presence_jid, XMPP->client_jid);
@@ -94,8 +82,7 @@ int xmpp_is_visible(struct CitContext *cptr, struct CitContext *to_whom) {
 /* 
  * Initial dump of the entire wholist
  */
-void xmpp_wholist_presence_dump(void)
-{
+void xmpp_wholist_presence_dump(void) {
 	struct CitContext *cptr = NULL;
 	int nContexts, i;
 	
@@ -297,8 +284,7 @@ void xmpp_store_mortuary(HashList *mortuary) {
 	);
 
 	HashPos = GetNewHashPos(mortuary, 0);
-	while (GetNextHashPos(mortuary, HashPos, &len, &Key, &Value) != 0)
-	{
+	while (GetNextHashPos(mortuary, HashPos, &len, &Key, &Value) != 0) {
 		StrBufAppendPrintf(themsg, "%s\n", (char *)Value);
 	}
 	DeleteHashPos(&HashPos);
@@ -319,8 +305,7 @@ void xmpp_store_mortuary(HashList *mortuary) {
  * Since the client is probably not still alive, also remember the current
  * roster for next time so we can delete dead buddies then.
  */
-void xmpp_massacre_roster(void)
-{
+void xmpp_massacre_roster(void) {
 	struct CitContext *cptr;
 	int nContexts, i;
 	HashList *mortuary = xmpp_fetch_mortuary();
@@ -355,8 +340,7 @@ void xmpp_massacre_roster(void)
  * when they're connecting from the same client and when they're connecting from a different client,
  * so we have no guarantee of what is in the client side roster at connect time.
  */
-void xmpp_delete_old_buddies_who_no_longer_exist_from_the_client_roster(void)
-{
+void xmpp_delete_old_buddies_who_no_longer_exist_from_the_client_roster(void) {
 	long len;
 	void *Value;
 	const char *Key;
