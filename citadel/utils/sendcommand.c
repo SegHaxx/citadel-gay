@@ -140,9 +140,6 @@ int main(int argc, char **argv)
 	int watchdog = 60;
 	char buf[SIZ];
 	int xfermode = 0;
-	int relh=0;
-	int home=0;
-	char relhome[PATH_MAX]="";
 	char ctdldir[PATH_MAX]=CTDLDIR;
 
 	StartLibCitadel(SIZ);
@@ -151,13 +148,7 @@ int main(int argc, char **argv)
 	while ((a = getopt(argc, argv, "h:w:")) != EOF) {
 		switch (a) {
 		case 'h':
-			relh=optarg[0]!='/';
-			if (!relh) {
-				strncpy(ctdl_home_directory, optarg, sizeof ctdl_home_directory);
-			} else {
-				strncpy(relhome, optarg, sizeof relhome);
-			}
-			home = 1;
+			strncpy(ctdldir, optarg, sizeof ctdldir);
 			break;
 		case 'w':
 			watchdog = atoi(optarg);
@@ -168,11 +159,16 @@ int main(int argc, char **argv)
 		}
 	}
 
-	fprintf(stderr, "sendcommand: started (pid=%d) connecting to Citadel server at %s\n",
+	fprintf(stderr, "sendcommand: started (pid=%d) connecting to Citadel server with data directory %s\n",
 		(int) getpid(),
-		file_citadel_admin_socket
+		ctdldir
 	);
 	fflush(stderr);
+
+	if (chdir(ctdldir) != 0) {
+		fprintf(stderr, "sendcommand: %s: %s\n", ctdldir, strerror(errno));
+		exit(errno);
+	}
 
 	alarm(watchdog);
 	serv_sock = uds_connectsock(file_citadel_admin_socket);
