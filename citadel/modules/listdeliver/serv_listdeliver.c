@@ -45,6 +45,37 @@ int doing_listdeliver = 0;
 
 
 void listdeliver_sweep_room(struct ctdlroom *qrbuf, void *data) {
+	char *serialized_config = NULL;
+	long lastsent = 0;
+	char buf[SIZ];
+	int config_lines;
+	int i;
+
+        serialized_config = LoadRoomNetConfigFile(qrbuf->QRnumber);
+        if (!serialized_config) {
+		syslog(LOG_DEBUG, "\033[31m %s has no netconfig \033[0m", qrbuf->QRname);
+		return;
+	}
+
+	syslog(LOG_DEBUG, "\033[32m %s has a netconfig \033[0m", qrbuf->QRname);
+
+	config_lines = num_tokens(serialized_config, '\n');
+	for (i=0; i<config_lines; ++i) {
+		extract_token(buf, serialized_config, i, '\n', sizeof buf);
+
+		if (!strncasecmp(buf, "lastsent|", 9)) {
+			lastsent = atol(buf[9]);
+			syslog(LOG_DEBUG, "listdeliver: last message delivered = %ld", lastsent);
+		}
+
+
+
+
+		syslog(LOG_DEBUG, "%s", buf);
+	}
+
+
+	free(serialized_config);
 }
 
 
