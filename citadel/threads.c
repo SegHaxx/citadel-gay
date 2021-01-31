@@ -53,7 +53,6 @@ int try_critical_section(int which_one)
 	 * transaction; this could lead to deadlock.
 	 */
 	if (	(which_one != S_FLOORCACHE)
-		&& (which_one != S_RPLIST)
 	) {
 		cdb_check_handles();
 	}
@@ -71,7 +70,6 @@ void begin_critical_section(int which_one)
 	 * transaction; this could lead to deadlock.
 	 */
 	if (	(which_one != S_FLOORCACHE)
-		&& (which_one != S_RPLIST)
 	) {
 		cdb_check_handles();
 	}

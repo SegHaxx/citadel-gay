@@ -69,44 +69,6 @@
 #include "netspool.h"
 #include "netmail.h"
 
-/* comes from lookup3.c from libcitadel... */
-extern uint32_t hashlittle( const void *key, size_t length, uint32_t initval);
-
-/*
- * network_do_queue()
- * 
- * Run through the rooms doing various types of network stuff.
- */
-void network_do_queue(void) {
-	static time_t last_run = 0L;
-	int full_processing = 1;
-
-	/*
-	 * Run the full set of processing tasks no more frequently
-	 * than once every n seconds
-	 */
-	if ( (time(NULL) - last_run) < CtdlGetConfigLong("c_net_freq") ) {
-		full_processing = 0;
-		syslog(LOG_DEBUG, "network: full processing in %ld seconds.", CtdlGetConfigLong("c_net_freq") - (time(NULL)- last_run));
-	}
-
-	begin_critical_section(S_RPLIST);
-	end_critical_section(S_RPLIST);
-
-	/* 
-	 * Go ahead and run the queue
-	 */
-	if (full_processing && !server_shutting_down) {
-		syslog(LOG_DEBUG, "network: loading outbound queue");
-		//CtdlForEachNetCfgRoom(network_queue_interesting_rooms, &RL);
-		// FIXME do the outbound crapola AJC 2021
-	}
-	syslog(LOG_DEBUG, "network: queue run completed");
-
-	if (full_processing) {
-		last_run = time(NULL);
-	}
-}
 
 
 /*
@@ -116,7 +78,6 @@ CTDL_MODULE_INIT(network)
 {
 	if (!threading)
 	{
-		CtdlRegisterSessionHook(network_do_queue, EVT_TIMER, PRIO_QUEUE + 10);
 	}
 	return "network";
 }
