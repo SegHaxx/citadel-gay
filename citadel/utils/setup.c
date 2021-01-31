@@ -694,9 +694,6 @@ int main(int argc, char *argv[])
 	int curr;
 	char buf[1024]; 
 	char aaa[128];
-	int relh = 0;
-	int home = 0;
-	char relhome[PATH_MAX]="";
 	char ctdldir[PATH_MAX]=CTDLDIR;
 	struct passwd *pw;
 	gid_t gid;
@@ -716,19 +713,16 @@ int main(int argc, char *argv[])
 			setup_type = atoi(aaa);
 		}
 		else if (!strncmp(argv[a], "-h", 2)) {
-			relh=argv[a][2]!='/';
-			if (!relh) {
-				safestrncpy(ctdl_home_directory, &argv[a][2], sizeof ctdl_home_directory);
-			} else {
-				safestrncpy(relhome, &argv[a][2], sizeof relhome);
-			}
-			home = 1;
+			safestrncpy(ctdldir, &argv[a][2], sizeof ctdldir);
 		}
 	}
 
-	SetTitles();
+	if (chdir(ctdldir) != 0) {
+		fprintf(stderr, "sendcommand: %s: %s\n", ctdldir, strerror(errno));
+		exit(errno);
+	}
 
-	enable_home = ( relh | home );
+	SetTitles();
 
 	/*
 	 * Connect to the running Citadel server.
