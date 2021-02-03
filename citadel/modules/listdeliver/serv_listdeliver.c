@@ -43,32 +43,56 @@
 int doing_listdeliver = 0;
 
 
+// data passed back and forth between listdeliver_do_msg() and listdeliver_sweep_room()
+struct lddata {
+	long msgnum;		// number of most recent message processed
+	char *netconf;		// netconfig for this room (contains the recipients)
+};
+
+
+
 void listdeliver_do_msg(long msgnum, void *userdata) {
+	struct lddata *ld = (struct lddata *) userdata;
+	ld->msgnum = msgnum;
+	char buf[SIZ];
+
+	struct CtdlMessage *TheMessage = CtdlFetchMessage(msgnum, 1);
+
+	int config_lines = num_tokens(ld->netconf, '\n');
+	for (int i=0; i<config_lines; ++i) {
+		extract_token(buf, ld->netconf, i, '\n', sizeof buf);
+		if ( (!strncasecmp(buf, "listrecp|", 9)) || (!strncasecmp(buf, "digestrecp|", 11)) ) {
+			syslog(LOG_DEBUG, "\033[32mDeliver %ld to %s\033[0m", msgnum, buf);
+			// FIXME
+		}
+	}
+	CM_Free(TheMessage);
 }
 
 
 void listdeliver_sweep_room(struct ctdlroom *qrbuf, void *data) {
-	char *serialized_config = NULL;
+	char *netconfig = NULL;
 	long lastsent = 0;
 	char buf[SIZ];
 	int config_lines;
 	int i;
 	int number_of_messages_processed = 0;
 	int number_of_recipients = 0;
+	struct lddata ld;
 
 	if (CtdlGetRoom(&CC->room, qrbuf->QRname)) {
 		syslog(LOG_DEBUG, "listdeliver: no room <%s>", qrbuf->QRname);
 		return;
 	}
 
-        serialized_config = LoadRoomNetConfigFile(qrbuf->QRnumber);
-        if (!serialized_config) {
+        netconfig = LoadRoomNetConfigFile(qrbuf->QRnumber);
+        if (!netconfig) {
 		return;				// no netconfig, no processing, no problem
 	}
 
-	config_lines = num_tokens(serialized_config, '\n');
+	config_lines = num_tokens(netconfig, '\n');
 	for (i=0; i<config_lines; ++i) {
-		extract_token(buf, serialized_config, i, '\n', sizeof buf);
+		extract_token(buf, netconfig, i, '\n', sizeof buf);
 
 		if (!strncasecmp(buf, "lastsent|", 9)) {
 			lastsent = atol(&buf[9]);
@@ -80,15 +104,17 @@ void listdeliver_sweep_room(struct ctdlroom *qrbuf, void *data) {
 
 	if (number_of_recipients > 0) {
 		syslog(LOG_DEBUG, "listdeliver: processing new messages in <%s> for <%d> recipients", qrbuf->QRname, number_of_recipients);
-		number_of_messages_processed = CtdlForEachMessage(MSGS_GT, lastsent, NULL, NULL, NULL, listdeliver_do_msg, NULL);
+		ld.netconf = netconfig;
+		number_of_messages_processed = CtdlForEachMessage(MSGS_GT, lastsent, NULL, NULL, NULL, listdeliver_do_msg, &ld);
 		syslog(LOG_DEBUG, "listdeliver: processed %d messages", number_of_messages_processed);
 	
 		if (number_of_messages_processed > 0) {
+			syslog(LOG_DEBUG, "listdeliver: new lastsent is %ld", ld.msgnum);
 			// FIXME write lastsent back to netconfig
 		}
 	}
 
-	free(serialized_config);
+	free(netconfig);
 }
 
 
@@ -120,6 +146,8 @@ void listdeliver_sweep(void) {
 	syslog(LOG_DEBUG, "listdeliver: ended");
 	last_run = time(NULL);
 	doing_listdeliver = 0;
+
+	exit(0);
 }
 
 
