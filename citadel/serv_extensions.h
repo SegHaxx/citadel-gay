@@ -31,7 +31,7 @@ void PerformUserHooks(struct ctdluser *usbuf, int EventType);
 
 int PerformXmsgHooks(char *, char *, char *, char *);
 
-int PerformMessageHooks(struct CtdlMessage *, recptypes *recps, int EventType);
+int PerformMessageHooks(struct CtdlMessage *, struct recptypes *recps, int EventType);
 
 int PerformRoomHooks(struct ctdlroom *);
 

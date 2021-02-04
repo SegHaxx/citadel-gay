@@ -110,7 +110,15 @@ void listdeliver_sweep_room(struct ctdlroom *qrbuf, void *data) {
 	
 		if (number_of_messages_processed > 0) {
 			syslog(LOG_DEBUG, "listdeliver: new lastsent is %ld", ld.msgnum);
+
 			// FIXME write lastsent back to netconfig
+			syslog(LOG_DEBUG, "\033[31mBEFORE:<%s>\033[0m", netconfig);
+			syslog(LOG_DEBUG, "\033[32mAFTER:<%s>\033[0m", netconfig);
+
+
+
+
+
 		}
 	}
 

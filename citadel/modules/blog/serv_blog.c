@@ -51,7 +51,7 @@
  * Pre-save hook for saving a message in a blog room.
  * (Do we want to only do this for top-level messages?)
  */
-int blog_upload_beforesave(struct CtdlMessage *msg, recptypes *recp) {
+int blog_upload_beforesave(struct CtdlMessage *msg, struct recptypes *recp) {
 
 	/* Only run this hook for blog rooms */
 	if (CC->room.QRdefaultview != VIEW_BLOG) {

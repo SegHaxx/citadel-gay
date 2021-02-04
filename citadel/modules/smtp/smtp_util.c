@@ -84,7 +84,7 @@ void smtp_do_bounce(const char *instr, int is_final)
 	int num_bounces = 0;
 	int bounce_this = 0;
 	struct CtdlMessage *bmsg = NULL;
-	recptypes *valid;
+	struct recptypes *valid;
 	int successful_bounce = 0;
 	static int seq = 0;
 	StrBuf *BounceMB;

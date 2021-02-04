@@ -105,10 +105,8 @@ void CtdlUnregisterUserHook(void (*fcn_ptr)(struct ctdluser *), int EventType);
 void CtdlRegisterXmsgHook(int (*fcn_ptr)(char *, char *, char *, char *), int order);
 void CtdlUnregisterXmsgHook(int (*fcn_ptr)(char *, char *, char *, char *), int order);
 
-void CtdlRegisterMessageHook(int (*handler)(struct CtdlMessage *, recptypes*),
-							int EventType);
-void CtdlUnregisterMessageHook(int (*handler)(struct CtdlMessage *, recptypes *),
-			       int EventType);
+void CtdlRegisterMessageHook(int (*handler)(struct CtdlMessage *, struct recptypes *), int EventType);
+void CtdlUnregisterMessageHook(int (*handler)(struct CtdlMessage *, struct recptypes *), int EventType);
 
 void CtdlRegisterRoomHook(int (*fcn_ptr)(struct ctdlroom *) );
 void CtdlUnregisterRoomHook(int (*fnc_ptr)(struct ctdlroom *) );

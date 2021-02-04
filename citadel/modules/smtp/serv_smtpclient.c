@@ -82,7 +82,7 @@ void smtp_init_spoolout(void)
  * not happen because the delivery instructions message does not
  * contain a recipient.
  */
-int smtp_aftersave(struct CtdlMessage *msg, recptypes * recps)
+int smtp_aftersave(struct CtdlMessage *msg, struct recptypes *recps)
 {
 	if ((recps != NULL) && (recps->num_internet > 0)) {
 		struct CtdlMessage *imsg = NULL;

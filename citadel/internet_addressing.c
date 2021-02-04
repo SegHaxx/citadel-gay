@@ -322,7 +322,7 @@ int CtdlHostAlias(char *fqdn) {
  */
 int CtdlIsMe(char *addr, int addr_buf_len)
 {
-	recptypes *recp;
+	struct recptypes *recp;
 	int i;
 
 	recp = validate_recipients(addr, NULL, 0);
@@ -458,9 +458,9 @@ int alias(char *name)
  *
  * Caller needs to free the result using free_recipients()
  */
-recptypes *validate_recipients(const char *supplied_recipients, const char *RemoteIdentifier, int Flags) {
+struct recptypes *validate_recipients(const char *supplied_recipients, const char *RemoteIdentifier, int Flags) {
 	struct CitContext *CCC = CC;
-	recptypes *ret;
+	struct recptypes *ret;
 	char *recipients = NULL;
 	char *org_recp;
 	char this_recp[256];
@@ -479,11 +479,11 @@ recptypes *validate_recipients(const char *supplied_recipients, const char *Remo
 	int in_quotes = 0;
 
 	/* Initialize */
-	ret = (recptypes *) malloc(sizeof(recptypes));
+	ret = (struct recptypes *) malloc(sizeof(struct recptypes));
 	if (ret == NULL) return(NULL);
 
 	/* Set all strings to null and numeric values to zero */
-	memset(ret, 0, sizeof(recptypes));
+	memset(ret, 0, sizeof(struct recptypes));
 
 	if (supplied_recipients == NULL) {
 		recipients = strdup("");
@@ -698,7 +698,7 @@ recptypes *validate_recipients(const char *supplied_recipients, const char *Remo
 /*
  * Destructor for recptypes
  */
-void free_recipients(recptypes *valid) {
+void free_recipients(struct recptypes *valid) {
 
 	if (valid == NULL) {
 		return;

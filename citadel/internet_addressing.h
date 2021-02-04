@@ -2,8 +2,8 @@
 #include "server.h"
 #include "ctdl_module.h"
 
-recptypes *validate_recipients(const char *recipients, const char *RemoteIdentifier, int Flags);
-void free_recipients(recptypes *);
+struct recptypes *validate_recipients(const char *recipients, const char *RemoteIdentifier, int Flags);
+void free_recipients(struct recptypes *);
 void process_rfc822_addr(const char *rfc822, char *user, char *node, char *name);
 char *rfc822_fetch_field(const char *rfc822, const char *fieldname);
 void sanitize_truncated_recipient(char *str);

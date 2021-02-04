@@ -44,7 +44,7 @@ struct CtdlMessage {
 
 
 /* Data structure returned by validate_recipients() */
-typedef struct __recptypes {
+struct recptypes {
 	int recptypes_magic;
         int num_local;
         int num_internet;
@@ -60,7 +60,7 @@ typedef struct __recptypes {
 	char *bounce_to;
 	char *envelope_from;
 	char *sending_room;
-} recptypes;
+};
 
 #define RECPTYPES_MAGIC 0xfeeb
 

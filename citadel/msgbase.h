@@ -78,7 +78,7 @@ void memfmout (char *mptr, const char *nl);
 void output_mime_parts(char *);
 long send_message (struct CtdlMessage *);
 void loadtroom (void);
-long CtdlSubmitMsg(struct CtdlMessage *, recptypes *, const char *);
+long CtdlSubmitMsg(struct CtdlMessage *, struct recptypes *, const char *);
 long quickie_message(const char *from, const char *fromaddr, const char *to, char *room, const char *text, int format_type, const char *subject);
 void GetMetaData(struct MetaData *, long);
 void PutMetaData(struct MetaData *);

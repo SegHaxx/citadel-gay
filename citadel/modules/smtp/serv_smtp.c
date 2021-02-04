@@ -693,7 +693,7 @@ void smtp_rcpt(long offset, long flags)
 {
 	struct CitContext *CCC = CC;
 	char message_to_spammer[SIZ];
-	recptypes *valid = NULL;
+	struct recptypes *valid = NULL;
 	citsmtp *sSMTP = SMTP;
 
 	if (StrLength(sSMTP->from) == 0) {
@@ -792,7 +792,7 @@ void smtp_data(long offset, long flags)
 	struct CtdlMessage *msg = NULL;
 	long msgnum = (-1L);
 	char nowstamp[SIZ];
-	recptypes *valid;
+	struct recptypes *valid;
 	int scan_errors;
 	int i;
 	citsmtp *sSMTP = SMTP;

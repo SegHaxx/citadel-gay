@@ -2659,7 +2659,7 @@ void ReplicationChecks(struct CtdlMessage *msg) {
  * Save a message to disk and submit it into the delivery system.
  */
 long CtdlSubmitMsg(struct CtdlMessage *msg,	/* message to save */
-		   recptypes *recps,		/* recipients (if mail) */
+		   struct recptypes *recps,		/* recipients (if mail) */
 		   const char *force		/* force a particular room? */
 ) {
 	char hold_rm[ROOMNAMELEN];
@@ -2986,7 +2986,7 @@ long quickie_message(const char *from,
 		     const char *subject)
 {
 	struct CtdlMessage *msg;
-	recptypes *recp = NULL;
+	struct recptypes *recp = NULL;
 
 	msg = malloc(sizeof(struct CtdlMessage));
 	memset(msg, 0, sizeof(struct CtdlMessage));

@@ -623,7 +623,7 @@ int CtdlLoginExistingUser(const char *trythisname)
 	else {
 		/* native auth mode */
 
-		recptypes *valid = NULL;
+		struct recptypes *valid = NULL;
 	
 		/* First, try to log in as if the supplied name is a display name */
 		found_user = CtdlGetUser(&CC->user, username);

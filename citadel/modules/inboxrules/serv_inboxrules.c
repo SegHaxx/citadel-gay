@@ -345,7 +345,7 @@ int inbox_do_redirect(struct irule *rule, long msgnum) {
 		return(1);					// don't delete the inbox copy if this failed
 	}
 
-	recptypes *valid = validate_recipients(rule->redirect_to, NULL, 0);
+	struct recptypes *valid = validate_recipients(rule->redirect_to, NULL, 0);
 	if (valid == NULL) {
 		syslog(LOG_WARNING, "inboxrules: inbox_do_redirect() invalid recipient <%s>", rule->redirect_to);
 		return(1);					// don't delete the inbox copy if this failed

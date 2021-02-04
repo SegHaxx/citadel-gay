@@ -75,7 +75,7 @@ UserFunctionHook *UserHookTable = NULL;
 typedef struct MessageFunctionHook MessageFunctionHook;
 struct MessageFunctionHook {
 	MessageFunctionHook *next;
-	int (*h_function_pointer) (struct CtdlMessage *msg, recptypes *recps);
+	int (*h_function_pointer) (struct CtdlMessage *msg, struct recptypes *recps);
 	int eventtype;
 };
 MessageFunctionHook *MessageHookTable = NULL;
@@ -374,7 +374,7 @@ void CtdlUnregisterUserHook(void (*fcn_ptr) (struct ctdluser *), int EventType)
 }
 
 
-void CtdlRegisterMessageHook(int (*handler)(struct CtdlMessage *, recptypes *), int EventType)
+void CtdlRegisterMessageHook(int (*handler)(struct CtdlMessage *, struct recptypes *), int EventType)
 {
 
 	MessageFunctionHook *newfcn;
@@ -390,7 +390,7 @@ void CtdlRegisterMessageHook(int (*handler)(struct CtdlMessage *, recptypes *), 
 }
 
 
-void CtdlUnregisterMessageHook(int (*handler)(struct CtdlMessage *, recptypes *), int EventType)
+void CtdlUnregisterMessageHook(int (*handler)(struct CtdlMessage *, struct recptypes *), int EventType)
 {
 	MessageFunctionHook *cur, *p, *last;
 	last = NULL;
@@ -810,7 +810,7 @@ void PerformUserHooks(ctdluser *usbuf, int EventType)
 	}
 }
 
-int PerformMessageHooks(struct CtdlMessage *msg, recptypes *recps, int EventType)
+int PerformMessageHooks(struct CtdlMessage *msg, struct recptypes *recps, int EventType)
 {
 	MessageFunctionHook *fcn = NULL;
 	int total_retval = 0;

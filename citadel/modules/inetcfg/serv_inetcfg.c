@@ -66,7 +66,7 @@ void inetcfg_setTo(struct CtdlMessage *msg) {
  * This handler detects changes being made to the system's Internet
  * configuration.
  */
-int inetcfg_aftersave(struct CtdlMessage *msg, recptypes *recp) {
+int inetcfg_aftersave(struct CtdlMessage *msg, struct recptypes *recp) {
 	char *ptr;
 	int linelen;
 
