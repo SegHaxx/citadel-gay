@@ -84,7 +84,7 @@ enum SMTP_FLAGS {
 	LHLO
 };
 
-typedef void (*smtp_handler)(long offest, long Flags);
+typedef void (*smtp_handler)(long offset, long Flags);
 typedef struct _smtp_handler_hook {
 	smtp_handler h;
 	int Flags;
