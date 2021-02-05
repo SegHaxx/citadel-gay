@@ -891,10 +891,12 @@ void smtp_data(long offset, long flags)
 			CM_SetField(msg, eAuthor, CCC->user.fullname, strlen(CCC->user.fullname));
 
 		if (!validemail) {
-			if (sSMTP->preferred_sender_email != NULL)
+			if (sSMTP->preferred_sender_email != NULL) {
 				CM_SetField(msg, erFc822Addr, SKEY(sSMTP->preferred_sender_email));
-			else
+			}
+			else {
 				CM_SetField(msg, erFc822Addr, CCC->cs_inet_email, strlen(CCC->cs_inet_email));
+			}
 		}
 	}
 

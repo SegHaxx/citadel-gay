@@ -2659,7 +2659,7 @@ void ReplicationChecks(struct CtdlMessage *msg) {
  * Save a message to disk and submit it into the delivery system.
  */
 long CtdlSubmitMsg(struct CtdlMessage *msg,	/* message to save */
-		   struct recptypes *recps,		/* recipients (if mail) */
+		   struct recptypes *recps,	/* recipients (if mail) */
 		   const char *force		/* force a particular room? */
 ) {
 	char hold_rm[ROOMNAMELEN];

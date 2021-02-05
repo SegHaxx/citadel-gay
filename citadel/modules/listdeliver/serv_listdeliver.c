@@ -53,18 +53,37 @@ struct lddata {
 
 void listdeliver_do_msg(long msgnum, void *userdata) {
 	struct lddata *ld = (struct lddata *) userdata;
-	ld->msgnum = msgnum;
+	if (!ld) return;
 	char buf[SIZ];
 
-	struct CtdlMessage *TheMessage = CtdlFetchMessage(msgnum, 1);
+	ld->msgnum = msgnum;
+	if (msgnum <= 0) return;
 
-	int config_lines = num_tokens(ld->netconf, '\n');
-	for (int i=0; i<config_lines; ++i) {
-		extract_token(buf, ld->netconf, i, '\n', sizeof buf);
-		if ( (!strncasecmp(buf, "listrecp|", 9)) || (!strncasecmp(buf, "digestrecp|", 11)) ) {
-			syslog(LOG_DEBUG, "\033[32mDeliver %ld to %s\033[0m", msgnum, buf);
-			// FIXME
+	struct CtdlMessage *TheMessage = CtdlFetchMessage(msgnum, 1);
+	if (!TheMessage) return;
+
+	char *recipients = malloc(strlen(ld->netconf));
+	if (recipients) {
+		recipients[0] = 0;
+
+		int config_lines = num_tokens(ld->netconf, '\n');
+		for (int i=0; i<config_lines; ++i) {
+			extract_token(buf, ld->netconf, i, '\n', sizeof buf);
+			if (!strncasecmp(buf, "listrecp|", 9)) {
+				if (recipients[0] != 0) {
+					strcat(recipients, ",");
+				}
+				strcat(recipients, &buf[9]);
+			}
+			if (!strncasecmp(buf, "digestrecp|", 11)) {
+				if (recipients[0] != 0) {
+					strcat(recipients, ",");
+				}
+				strcat(recipients, &buf[11]);
+			}
 		}
+		syslog(LOG_DEBUG, "\033[33m%s\033[0m", recipients);
+		free(recipients);
 	}
 	CM_Free(TheMessage);
 }

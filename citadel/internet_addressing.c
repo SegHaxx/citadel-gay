@@ -394,8 +394,7 @@ void remove_any_whitespace_to_the_left_or_right_of_at_symbol(char *name) {
 /*
  * Aliasing for network mail.
  */
-int alias(char *name)
-{				/* process alias and routing info for mail */
+int alias(char *name) {				/* process alias and routing info for mail */
 	int a;
 	char aaa[SIZ];
 	int at = 0;
@@ -722,8 +721,7 @@ void free_recipients(struct recptypes *valid) {
 }
 
 
-char *qp_encode_email_addrs(char *source)
-{
+char *qp_encode_email_addrs(char *source) {
 	char *user, *node, *name;
 	const char headerStr[] = "=?UTF-8?Q?";
 	char *Encoded;
@@ -758,20 +756,19 @@ char *qp_encode_email_addrs(char *source)
 			free (AddrPtr), AddrPtr = ptr;
 
 			ptr = (long *) malloc(sizeof (long) * nAddrPtrMax * 2);
-			memset(&ptr[nAddrPtrMax], 0, 
-			       sizeof (long) * nAddrPtrMax);
+			memset(&ptr[nAddrPtrMax], 0, sizeof (long) * nAddrPtrMax);
 
 			memcpy (ptr, AddrUtf8, sizeof (long) * nAddrPtrMax);
 			free (AddrUtf8), AddrUtf8 = ptr;
 			nAddrPtrMax *= 2;				
 		}
-		if (((unsigned char) source[i] < 32) || 
-		    ((unsigned char) source[i] > 126)) {
+		if (((unsigned char) source[i] < 32) || ((unsigned char) source[i] > 126)) {
 			need_to_encode = 1;
 			AddrUtf8[nColons] = 1;
 		}
-		if (source[i] == '"')
+		if (source[i] == '"') {
 			InQuotes = !InQuotes;
+		}
 		if (!InQuotes && source[i] == ',') {
 			AddrPtr[nColons] = i;
 			nColons++;
@@ -801,28 +798,19 @@ char *qp_encode_email_addrs(char *source)
 	for (i = 0; i < nColons && nPtr != NULL; i++) {
 		nmax = EncodedMaxLen - (nPtr - Encoded);
 		if (AddrUtf8[i]) {
-			process_rfc822_addr(&source[AddrPtr[i]], 
-					    user,
-					    node,
-					    name);
+			process_rfc822_addr(&source[AddrPtr[i]], user, node, name);
 			/* TODO: libIDN here ! */
 			if (IsEmptyStr(name)) {
-				n = snprintf(nPtr, nmax, 
-					     (i==0)?"%s@%s" : ",%s@%s",
-					     user, node);
+				n = snprintf(nPtr, nmax, (i==0)?"%s@%s" : ",%s@%s", user, node);
 			}
 			else {
 				EncodedName = rfc2047encode(name, strlen(name));			
-				n = snprintf(nPtr, nmax, 
-					     (i==0)?"%s <%s@%s>" : ",%s <%s@%s>",
-					     EncodedName, user, node);
+				n = snprintf(nPtr, nmax, (i==0)?"%s <%s@%s>" : ",%s <%s@%s>", EncodedName, user, node);
 				free(EncodedName);
 			}
 		}
 		else { 
-			n = snprintf(nPtr, nmax, 
-				     (i==0)?"%s" : ",%s",
-				     &source[AddrPtr[i]]);
+			n = snprintf(nPtr, nmax, (i==0)?"%s" : ",%s", &source[AddrPtr[i]]);
 		}
 		if (n > 0 )
 			nPtr += n;
@@ -884,8 +872,7 @@ void unfold_rfc822_field(char **field, char **FieldEnd)
 		else {
 			if (*sField=='\"') quote = 1 - quote;
 			if (!quote) {
-				if (isspace(*sField))
-				{
+				if (isspace(*sField)) {
 					*pField = ' ';
 					pField++;
 					sField++;
@@ -909,8 +896,7 @@ void unfold_rfc822_field(char **field, char **FieldEnd)
  * Split an RFC822-style address into userid, host, and full name
  *
  */
-void process_rfc822_addr(const char *rfc822, char *user, char *node, char *name)
-{
+void process_rfc822_addr(const char *rfc822, char *user, char *node, char *name) {
 	int a;
 
 	strcpy(user, "");
@@ -1005,7 +991,6 @@ void process_rfc822_addr(const char *rfc822, char *user, char *node, char *name)
 	) {
 		strcpy(node, CtdlGetConfigStr("c_nodename"));
 	}
-
 	else {
 
 		/* strip anything to the left of a @ */
