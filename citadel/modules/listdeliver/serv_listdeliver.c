@@ -174,7 +174,7 @@ void listdeliver_sweep(void) {
 	last_run = time(NULL);
 	doing_listdeliver = 0;
 
-	exit(0);
+	//exit(0);
 }
 
 

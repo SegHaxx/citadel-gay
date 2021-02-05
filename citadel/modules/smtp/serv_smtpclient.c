@@ -3,7 +3,7 @@
  *
  * This is the new, exciting, clever version that makes libcurl do all the work  :)
  *
- * Copyright (c) 1997-2020 by the citadel.org team
+ * Copyright (c) 1997-2021 by the citadel.org team
  *
  * This program is open source software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License as published
@@ -56,8 +56,7 @@ int smtpq_alloc = 0;		// current allocation size for smtpq
 /*
  * Initialize the SMTP outbound queue
  */
-void smtp_init_spoolout(void)
-{
+void smtp_init_spoolout(void) {
 	struct ctdlroom qrbuf;
 
 	/*
@@ -82,8 +81,7 @@ void smtp_init_spoolout(void)
  * not happen because the delivery instructions message does not
  * contain a recipient.
  */
-int smtp_aftersave(struct CtdlMessage *msg, struct recptypes *recps)
-{
+int smtp_aftersave(struct CtdlMessage *msg, struct recptypes *recps) {
 	if ((recps != NULL) && (recps->num_internet > 0)) {
 		struct CtdlMessage *imsg = NULL;
 		char recipient[SIZ];
@@ -140,8 +138,7 @@ int smtp_aftersave(struct CtdlMessage *msg, struct recptypes *recps)
 /*
  * Callback for smtp_attempt_delivery() to supply libcurl with upload data.
  */
-static size_t upload_source(void *ptr, size_t size, size_t nmemb, void *userp)
-{
+static size_t upload_source(void *ptr, size_t size, size_t nmemb, void *userp) {
 	struct smtpmsgsrc *s = (struct smtpmsgsrc *) userp;
 	int sendbytes = 0;
 	const char *send_this = NULL;
@@ -170,8 +167,7 @@ static size_t upload_source(void *ptr, size_t size, size_t nmemb, void *userp)
  * by the remote server.  This is an ugly way to extract it, by capturing debug data from
  * the library and filtering on the lines we want.
  */
-int ctdl_libcurl_smtp_debug_callback(CURL *handle, curl_infotype type, char *data, size_t size, void *userptr)
-{
+int ctdl_libcurl_smtp_debug_callback(CURL *handle, curl_infotype type, char *data, size_t size, void *userptr) {
 	if (type != CURLINFO_HEADER_IN)
 		return 0;
 	if (!userptr)
@@ -191,8 +187,7 @@ int ctdl_libcurl_smtp_debug_callback(CURL *handle, curl_infotype type, char *dat
 /*
  * Go through the debug output of an SMTP transaction, and boil it down to just the final success or error response message.
  */
-void trim_response(long response_code, char *response)
-{
+void trim_response(long response_code, char *response) {
 	if ((response_code < 100) || (response_code > 999) || (IsEmptyStr(response))) {
 		return;
 	}
@@ -213,8 +208,8 @@ void trim_response(long response_code, char *response)
 	char response_code_str[4];
 	snprintf(response_code_str, sizeof response_code_str, "%ld", response_code);
 	char *respstart = strstr(response, response_code_str);
-	if (respstart == NULL) {
-		strcpy(response, smtpstatus(response_code));
+	if (respstart == NULL) {				// If we have a response code but no response text,
+		strcpy(response, smtpstatus(response_code));	// use one of our canned messages.
 		return;
 	}
 	strcpy(response, respstart);
@@ -230,8 +225,7 @@ void trim_response(long response_code, char *response)
  * Attempt a delivery to one recipient.
  * Returns a three-digit SMTP status code.
  */
-int smtp_attempt_delivery(long msgid, char *recp, char *envelope_from, char *response)
-{
+int smtp_attempt_delivery(long msgid, char *recp, char *envelope_from, char *response) {
 	struct smtpmsgsrc s;
 	char *fromaddr = NULL;
 	CURL *curl;
@@ -337,8 +331,7 @@ int smtp_attempt_delivery(long msgid, char *recp, char *envelope_from, char *res
 /*
  * Process one outbound message.
  */
-void smtp_process_one_msg(long qmsgnum)
-{
+void smtp_process_one_msg(long qmsgnum) {
 	struct CtdlMessage *msg = NULL;
 	char *instr = NULL;
 	int i;
@@ -507,8 +500,7 @@ void smtp_process_one_msg(long qmsgnum)
 /*
  * Callback for smtp_do_queue()
  */
-void smtp_add_msg(long msgnum, void *userdata)
-{
+void smtp_add_msg(long msgnum, void *userdata) {
 
 	if (smtpq == NULL) {
 		smtpq_count = 0;
@@ -528,8 +520,7 @@ void smtp_add_msg(long msgnum, void *userdata)
 /*
  * Run through the queue sending out messages.
  */
-void smtp_do_queue(void)
-{
+void smtp_do_queue(void) {
 	int i = 0;
 
 	/*
