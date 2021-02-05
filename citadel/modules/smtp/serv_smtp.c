@@ -85,13 +85,10 @@ enum SMTP_FLAGS {
 };
 
 typedef void (*smtp_handler)(long offest, long Flags);
-
 typedef struct _smtp_handler_hook {
 	smtp_handler h;
 	int Flags;
 } smtp_handler_hook;
-
-int EnableSMTPLog = 0;
 
 HashList *SMTPCmds = NULL;
 #define MaxSMTPCmdLen 10
@@ -300,9 +297,7 @@ void smtp_webcit_preferences_hack_backend(long msgnum, void *userdata) {
 		return;
 	}
 
-	if ( !CM_IsEmpty(msg, eMsgSubject) &&
-	     (!strcasecmp(msg->cm_fields[eMsgSubject], "__ WebCit Preferences __")))
-	{
+	if ( !CM_IsEmpty(msg, eMsgSubject) && (!strcasecmp(msg->cm_fields[eMsgSubject], "__ WebCit Preferences __"))) {
 		/* This is it!  Change ownership of the message text so it doesn't get freed. */
 		*webcit_conf = (char *)msg->cm_fields[eMesageText];
 		msg->cm_fields[eMesageText] = NULL;
@@ -355,7 +350,6 @@ void smtp_webcit_preferences_hack(void) {
 }
 
 
-
 /*
  * Implement HELP command.
  */
@@ -367,8 +361,7 @@ void smtp_help(long offset, long Flags) {
 /*
  *
  */
-void smtp_get_user(long offset)
-{
+void smtp_get_user(long offset) {
 	char buf[SIZ];
 
 	StrBufDecodeBase64(SMTP->Cmd);
@@ -412,8 +405,7 @@ void smtp_get_pass(long offset, long Flags)
 /*
  * Back end for PLAIN auth method (either inline or multistate)
  */
-void smtp_try_plain(long offset, long Flags)
-{
+void smtp_try_plain(long offset, long Flags) {
 	const char*decoded_authstring;
 	char ident[256] = "";
 	char user[256] = "";
@@ -476,8 +468,7 @@ void smtp_try_plain(long offset, long Flags)
 /*
  * Attempt to perform authenticated SMTP
  */
-void smtp_auth(long offset, long Flags)
-{
+void smtp_auth(long offset, long Flags) {
 	char username_prompt[64];
 	char method[64];
 	char encoded_authstring[1024];
@@ -575,12 +566,12 @@ void smtp_rset(long offset, long do_response) {
 	}
 }
 
+
 /*
  * Clear out the portions of the state buffer that need to be cleared out
  * after the DATA command finishes.
  */
-void smtp_data_clear(long offset, long flags)
-{
+void smtp_data_clear(long offset, long flags) {
 	FlushStrBuf(SMTP->from);
 	FlushStrBuf(SMTP->recipients);
 	FlushStrBuf(SMTP->OneRcpt);
@@ -588,6 +579,7 @@ void smtp_data_clear(long offset, long flags)
 	SMTP->delivery_mode = 0;
 	SMTP->message_originated_locally = 0;
 }
+
 
 /*
  * Implements the "MAIL FROM:" command
@@ -657,12 +649,10 @@ void smtp_mail(long offset, long flags) {
 }
 
 
-
 /*
  * Implements the "RCPT To:" command
  */
-void smtp_rcpt(long offset, long flags)
-{
+void smtp_rcpt(long offset, long flags) {
 	char message_to_spammer[SIZ];
 	struct recptypes *valid = NULL;
 
@@ -749,13 +739,10 @@ void smtp_rcpt(long offset, long flags)
 }
 
 
-
-
 /*
  * Implements the DATA command
  */
-void smtp_data(long offset, long flags)
-{
+void smtp_data(long offset, long flags) {
 	StrBuf *body;
 	StrBuf *defbody; 
 	struct CtdlMessage *msg = NULL;
@@ -949,8 +936,7 @@ void smtp_data(long offset, long flags)
 /*
  * implements the STARTTLS command
  */
-void smtp_starttls(long offset, long flags)
-{
+void smtp_starttls(long offset, long flags) {
 	char ok_response[SIZ];
 	char nosup_response[SIZ];
 	char error_response[SIZ];
@@ -1007,19 +993,14 @@ void smtp_command_loop(void) {
 
 	pchs = pch = ChrPtr(SMTP->Cmd);
 	i = 0;
-	while ((*pch != '\0') &&
-	       (!isblank(*pch)) && 
-	       (pch - pchs <= MaxSMTPCmdLen))
-	{
+	while ((*pch != '\0') && (!isblank(*pch)) && (pch - pchs <= MaxSMTPCmdLen)) {
 		CMD[i] = toupper(*pch);
 		pch ++;
 		i++;
 	}
 	CMD[i] = '\0';
 
-	if ((*pch == '\0') ||
-	    (isblank(*pch)))
-	{
+	if ((*pch == '\0') || (isblank(*pch))) {
 		void *v;
 
 		if (GetHash(SMTPCmds, CMD, i, &v) &&
@@ -1038,16 +1019,17 @@ void smtp_command_loop(void) {
 	cprintf("502 I'm afraid I can't do that.\r\n");
 }
 
-void smtp_noop(long offest, long Flags)
-{
+
+void smtp_noop(long offest, long Flags) {
 	cprintf("250 NOOP\r\n");
 }
 
-void smtp_quit(long offest, long Flags)
-{
+
+void smtp_quit(long offest, long Flags) {
 	cprintf("221 Goodbye...\r\n");
 	CC->kill_me = KILLME_CLIENT_LOGGED_OUT;
 }
+
 
 /*****************************************************************************/
 /*                      MODULE INITIALIZATION STUFF                          */
