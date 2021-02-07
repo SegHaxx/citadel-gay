@@ -13,7 +13,7 @@
 
 const char *smtp_get_Recipients(void);
 
-typedef struct _citsmtp {		/* Information about the current session */
+struct citsmtp {		/* Information about the current session */
 	int command_state;
 	StrBuf *Cmd;
 	StrBuf *helo_node;
@@ -28,9 +28,9 @@ typedef struct _citsmtp {		/* Information about the current session */
 	int is_msa;
 	StrBuf *preferred_sender_email;
 	StrBuf *preferred_sender_name;
-} citsmtp;
+};
 
-#define SMTP		((citsmtp *)CC->session_specific_data)
+#define SMTP		((struct citsmtp *)CC->session_specific_data)
 
 // These are all the values that can be passed to the is_final parameter of smtp_do_bounce()
 enum {

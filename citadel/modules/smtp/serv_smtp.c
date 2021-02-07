@@ -84,31 +84,6 @@ enum SMTP_FLAGS {
 	LHLO
 };
 
-typedef void (*smtp_handler)(long offset, long Flags);
-typedef struct _smtp_handler_hook {
-	smtp_handler h;
-	int Flags;
-} smtp_handler_hook;
-
-HashList *SMTPCmds = NULL;
-#define MaxSMTPCmdLen 10
-
-#define RegisterSmtpCMD(First, H, Flags) registerSmtpCMD(HKEY(First), H, Flags)
-void registerSmtpCMD(const char *First, long FLen, smtp_handler H, int Flags) {
-	smtp_handler_hook *h;
-
-	if (FLen >= MaxSMTPCmdLen) {
-		abort();
-	}
-
-	h = (smtp_handler_hook*) malloc(sizeof(smtp_handler_hook));
-	memset(h, 0, sizeof(smtp_handler_hook));
-
-	h->Flags = Flags;
-	h->h = H;
-	Put(SMTPCmds, First, FLen, h, NULL);
-}
-
 
 /*
  * Here's where our SMTP session begins its happy day.
@@ -119,8 +94,8 @@ void smtp_greeting(int is_msa) {
 	strcpy(CC->cs_clientname, "SMTP session");
 	CC->internal_pgm = 1;
 	CC->cs_flags |= CS_STEALTH;
-	CC->session_specific_data = malloc(sizeof(citsmtp));
-	memset(SMTP, 0, sizeof(citsmtp));
+	CC->session_specific_data = malloc(sizeof(struct citsmtp));
+	memset(SMTP, 0, sizeof(struct citsmtp));
 	SMTP->is_msa = is_msa;
 	SMTP->Cmd = NewStrBufPlain(NULL, SIZ);
 	SMTP->helo_node = NewStrBuf();
@@ -212,7 +187,7 @@ void lmtp_unfiltered_greeting(void) {
 /*
  * Login greeting common to all auth methods
  */
-void smtp_auth_greeting(long offset, long Flags) {
+void smtp_auth_greeting(void) {
 	cprintf("235 Hello, %s\r\n", CC->user.fullname);
 	syslog(LOG_INFO, "serv_smtp: SMTP authenticated %s", CC->user.fullname);
 	CC->internal_pgm = 0;
@@ -225,9 +200,11 @@ void smtp_auth_greeting(long offset, long Flags) {
  *
  * which_command:  0=HELO, 1=EHLO, 2=LHLO
  */
-void smtp_hello(long offset, long which_command) {
+void smtp_hello(int which_command) {
 
-	StrBufAppendBuf (SMTP->helo_node, SMTP->Cmd, offset);
+	if (StrLength(SMTP->Cmd) >= 6) {
+		StrBufAppendBuf(SMTP->helo_node, SMTP->Cmd, 5);
+	}
 
 	if ( (which_command != LHLO) && (SMTP->is_lmtp) ) {
 		cprintf("500 Only LHLO is allowed when running LMTP\r\n");
@@ -353,7 +330,7 @@ void smtp_webcit_preferences_hack(void) {
 /*
  * Implement HELP command.
  */
-void smtp_help(long offset, long Flags) {
+void smtp_help(void) {
 	cprintf("214 RTFM http://www.ietf.org/rfc/rfc2821.txt\r\n");
 }
 
@@ -361,12 +338,14 @@ void smtp_help(long offset, long Flags) {
 /*
  *
  */
-void smtp_get_user(long offset) {
+void smtp_get_user(int offset) {
 	char buf[SIZ];
 
-	StrBufDecodeBase64(SMTP->Cmd);
+	StrBuf *UserName = NewStrBufDup(SMTP->Cmd);
+	StrBufCutLeft(UserName, offset);
+	StrBufDecodeBase64(UserName);
 
-	if (CtdlLoginExistingUser(ChrPtr(SMTP->Cmd)) == login_ok) {
+	if (CtdlLoginExistingUser(ChrPtr(UserName)) == login_ok) {
 		size_t len = CtdlEncodeBase64(buf, "Password:", 9, 0);
 
 		if (buf[len - 1] == '\n') {
@@ -379,13 +358,14 @@ void smtp_get_user(long offset) {
 		cprintf("500 No such user.\r\n");
 		SMTP->command_state = smtp_command;
 	}
+	FreeStrBuf(&UserName);
 }
 
 
 /*
  *
  */
-void smtp_get_pass(long offset, long Flags)
+void smtp_get_pass(void)
 {
 	char password[SIZ];
 
@@ -393,7 +373,7 @@ void smtp_get_pass(long offset, long Flags)
 	StrBufDecodeBase64(SMTP->Cmd);
 	syslog(LOG_DEBUG, "serv_smtp: trying <%s>", password);
 	if (CtdlTryPassword(SKEY(SMTP->Cmd)) == pass_ok) {
-		smtp_auth_greeting(offset, Flags);
+		smtp_auth_greeting();
 	}
 	else {
 		cprintf("535 Authentication failed.\r\n");
@@ -405,7 +385,7 @@ void smtp_get_pass(long offset, long Flags)
 /*
  * Back end for PLAIN auth method (either inline or multistate)
  */
-void smtp_try_plain(long offset, long Flags) {
+void smtp_try_plain(void) {
 	const char*decoded_authstring;
 	char ident[256] = "";
 	char user[256] = "";
@@ -419,8 +399,7 @@ void smtp_try_plain(long offset, long Flags) {
 	memset(pass, 0, sizeof(pass));
 	decoded_len = StrBufDecodeBase64(SMTP->Cmd);
 
-	if (decoded_len > 0)
-	{
+	if (decoded_len > 0) {
 		decoded_authstring = ChrPtr(SMTP->Cmd);
 
 		len = safestrncpy(ident, decoded_authstring, sizeof ident);
@@ -428,16 +407,14 @@ void smtp_try_plain(long offset, long Flags) {
 		decoded_len -= len - 1;
 		decoded_authstring += len + 1;
 
-		if (decoded_len > 0)
-		{
+		if (decoded_len > 0) {
 			len = safestrncpy(user, decoded_authstring, sizeof user);
 
 			decoded_authstring += len + 1;
 			decoded_len -= len - 1;
 		}
 
-		if (decoded_len > 0)
-		{
+		if (decoded_len > 0) {
 			plen = safestrncpy(pass, decoded_authstring, sizeof pass);
 
 			if (plen < 0)
@@ -457,7 +434,7 @@ void smtp_try_plain(long offset, long Flags) {
 	if (result == login_ok) {
 		if (CtdlTryPassword(pass, plen) == pass_ok) {
 			smtp_webcit_preferences_hack();
-			smtp_auth_greeting(offset, Flags);
+			smtp_auth_greeting();
 			return;
 		}
 	}
@@ -468,7 +445,7 @@ void smtp_try_plain(long offset, long Flags) {
 /*
  * Attempt to perform authenticated SMTP
  */
-void smtp_auth(long offset, long Flags) {
+void smtp_auth(void) {
 	char username_prompt[64];
 	char method[64];
 	char encoded_authstring[1024];
@@ -478,11 +455,17 @@ void smtp_auth(long offset, long Flags) {
 		return;
 	}
 
-	extract_token(method, ChrPtr(SMTP->Cmd) + offset, 0, ' ', sizeof method);
+	if (StrLength(SMTP->Cmd) < 6) {
+		cprintf("501 Syntax error\r\n");
+		return;
+	}
+
+	extract_token(method, ChrPtr(SMTP->Cmd) + 5, 0, ' ', sizeof method);
 
 	if (!strncasecmp(method, "login", 5) ) {
-		if (StrLength(SMTP->Cmd) - offset >= 7) {
-			smtp_get_user(6);
+		if (StrLength(SMTP->Cmd) >= 12) {
+			syslog(LOG_DEBUG, "serv_smtp: username <%s> supplied inline", ChrPtr(SMTP->Cmd)+11);
+			smtp_get_user(11);
 		}
 		else {
 			size_t len = CtdlEncodeBase64(username_prompt, "Username:", 9, 0);
@@ -497,26 +480,23 @@ void smtp_auth(long offset, long Flags) {
 
 	if (!strncasecmp(method, "plain", 5) ) {
 		long len;
-		if (num_tokens(ChrPtr(SMTP->Cmd) + offset, ' ') < 2) {
+		if (num_tokens(ChrPtr(SMTP->Cmd) + 5, ' ') < 2) {
 			cprintf("334 \r\n");
 			SMTP->command_state = smtp_plain;
 			return;
 		}
 
 		len = extract_token(encoded_authstring, 
-				    ChrPtr(SMTP->Cmd) + offset,
+				    ChrPtr(SMTP->Cmd) + 5,
 				    1, ' ',
 				    sizeof encoded_authstring);
 		StrBufPlain(SMTP->Cmd, encoded_authstring, len);
-		smtp_try_plain(0, Flags);
+		smtp_try_plain();
 		return;
 	}
 
-	if (strncasecmp(method, "login", 5) ) {
-		cprintf("504 Unknown authentication method.\r\n");
-		return;
-	}
-
+	cprintf("504 Unknown authentication method.\r\n");
+	return;
 }
 
 
@@ -528,7 +508,7 @@ void smtp_auth(long offset, long Flags) {
  *
  * Set do_response to nonzero to output the SMTP RSET response code.
  */
-void smtp_rset(long offset, long do_response) {
+void smtp_rset(int do_response) {
 	/*
 	 * Our entire SMTP state is discarded when a RSET command is issued,
 	 * but we need to preserve this one little piece of information, so
@@ -571,7 +551,7 @@ void smtp_rset(long offset, long do_response) {
  * Clear out the portions of the state buffer that need to be cleared out
  * after the DATA command finishes.
  */
-void smtp_data_clear(long offset, long flags) {
+void smtp_data_clear(void) {
 	FlushStrBuf(SMTP->from);
 	FlushStrBuf(SMTP->recipients);
 	FlushStrBuf(SMTP->OneRcpt);
@@ -584,7 +564,7 @@ void smtp_data_clear(long offset, long flags) {
 /*
  * Implements the "MAIL FROM:" command
  */
-void smtp_mail(long offset, long flags) {
+void smtp_mail(void) {
 	char user[SIZ];
 	char node[SIZ];
 	char name[SIZ];
@@ -594,12 +574,17 @@ void smtp_mail(long offset, long flags) {
 		return;
 	}
 
-	if (strncasecmp(ChrPtr(SMTP->Cmd) + offset, "From:", 5)) {
+	if (StrLength(SMTP->Cmd) < 6) {
 		cprintf("501 Syntax error\r\n");
 		return;
 	}
 
-	StrBufAppendBuf(SMTP->from, SMTP->Cmd, offset);
+	if (strncasecmp(ChrPtr(SMTP->Cmd) + 5, "From:", 5)) {
+		cprintf("501 Syntax error\r\n");
+		return;
+	}
+
+	StrBufAppendBuf(SMTP->from, SMTP->Cmd, 5);
 	StrBufTrim(SMTP->from);
 	if (strchr(ChrPtr(SMTP->from), '<') != NULL) {
 		StrBufStripAllBut(SMTP->from, '<', '>');
@@ -652,7 +637,7 @@ void smtp_mail(long offset, long flags) {
 /*
  * Implements the "RCPT To:" command
  */
-void smtp_rcpt(long offset, long flags) {
+void smtp_rcpt(void) {
 	char message_to_spammer[SIZ];
 	struct recptypes *valid = NULL;
 
@@ -661,7 +646,12 @@ void smtp_rcpt(long offset, long flags) {
 		return;
 	}
 	
-	if (strncasecmp(ChrPtr(SMTP->Cmd) + offset, "To:", 3)) {
+	if (StrLength(SMTP->Cmd) < 6) {
+		cprintf("501 Syntax error\r\n");
+		return;
+	}
+
+	if (strncasecmp(ChrPtr(SMTP->Cmd) + 5, "To:", 3)) {
 		cprintf("501 Syntax error\r\n");
 		return;
 	}
@@ -671,8 +661,9 @@ void smtp_rcpt(long offset, long flags) {
 		FlushStrBuf(SMTP->from);
 		return;
 	}
+
 	FlushStrBuf(SMTP->OneRcpt);
-	StrBufAppendBuf(SMTP->OneRcpt, SMTP->Cmd, offset + 3);
+	StrBufAppendBuf(SMTP->OneRcpt, SMTP->Cmd, 8);
 	StrBufTrim(SMTP->OneRcpt);
 	StrBufStripAllBut(SMTP->OneRcpt, '<', '>');
 
@@ -742,7 +733,7 @@ void smtp_rcpt(long offset, long flags) {
 /*
  * Implements the DATA command
  */
-void smtp_data(long offset, long flags) {
+void smtp_data(void) {
 	StrBuf *body;
 	StrBuf *defbody; 
 	struct CtdlMessage *msg = NULL;
@@ -929,14 +920,14 @@ void smtp_data(long offset, long flags) {
 	/* Clean up */
 	CM_Free(msg);
 	free_recipients(valid);
-	smtp_data_clear(0, 0);	/* clear out the buffers now */
+	smtp_data_clear();	/* clear out the buffers now */
 }
 
 
 /*
- * implements the STARTTLS command
+ * Implements the STARTTLS command
  */
-void smtp_starttls(long offset, long flags) {
+void smtp_starttls(void) {
 	char ok_response[SIZ];
 	char nosup_response[SIZ];
 	char error_response[SIZ];
@@ -945,7 +936,24 @@ void smtp_starttls(long offset, long flags) {
 	sprintf(nosup_response, "554 TLS not supported here\r\n");
 	sprintf(error_response, "554 Internal error\r\n");
 	CtdlModuleStartCryptoMsgs(ok_response, nosup_response, error_response);
-	smtp_rset(0, 0);
+	smtp_rset(0);
+}
+
+
+/*
+ * Implements the NOOP (NO OPeration) command
+ */
+void smtp_noop(void) {
+	cprintf("250 NOOP\r\n");
+}
+
+
+/*
+ * Implements the QUIT command
+ */
+void smtp_quit(void) {
+	cprintf("221 Goodbye...\r\n");
+	CC->kill_me = KILLME_CLIENT_LOGGED_OUT;
 }
 
 
@@ -954,9 +962,6 @@ void smtp_starttls(long offset, long flags) {
  */
 void smtp_command_loop(void) {
 	static const ConstStr AuthPlainStr = {HKEY("AUTH PLAIN")};
-	const char *pch, *pchs;
-	long i;
-	char CMD[MaxSMTPCmdLen + 1];
 
 	if (SMTP == NULL) {
 		syslog(LOG_ERR, "serv_smtp: Session SMTP data is null.  WTF?  We will crash now.");
@@ -969,65 +974,91 @@ void smtp_command_loop(void) {
 		CC->kill_me = KILLME_CLIENT_DISCONNECTED;
 		return;
 	}
-	syslog(LOG_DEBUG, "serv_smtp: %s", ChrPtr(SMTP->Cmd));
 
 	if (SMTP->command_state == smtp_user) {
 		if (!strncmp(ChrPtr(SMTP->Cmd), AuthPlainStr.Key, AuthPlainStr.len)) {
-			smtp_try_plain(0, 0);
+			smtp_try_plain();
 		}
 		else {
-			smtp_get_user(0);
+			smtp_get_user(5);
 		}
 		return;
 	}
 
 	else if (SMTP->command_state == smtp_password) {
-		smtp_get_pass(0, 0);
+		smtp_get_pass();
 		return;
 	}
 
 	else if (SMTP->command_state == smtp_plain) {
-		smtp_try_plain(0, 0);
+		smtp_try_plain();
 		return;
 	}
 
-	pchs = pch = ChrPtr(SMTP->Cmd);
-	i = 0;
-	while ((*pch != '\0') && (!isblank(*pch)) && (pch - pchs <= MaxSMTPCmdLen)) {
-		CMD[i] = toupper(*pch);
-		pch ++;
-		i++;
+	syslog(LOG_DEBUG, "serv_smtp: client sent command <%s>", ChrPtr(SMTP->Cmd));
+
+	if (!strncasecmp(ChrPtr(SMTP->Cmd), "NOOP", 4)) {
+		smtp_noop();
+		return;
 	}
-	CMD[i] = '\0';
 
-	if ((*pch == '\0') || (isblank(*pch))) {
-		void *v;
-
-		if (GetHash(SMTPCmds, CMD, i, &v) &&
-		    (v != NULL))
-		{
-			smtp_handler_hook *h = (smtp_handler_hook*) v;
-
-			if (isblank(pchs[i]))
-				i++;
-
-			h->h(i, h->Flags);
-
-			return;
-		}
+	if (!strncasecmp(ChrPtr(SMTP->Cmd), "QUIT", 4)) {
+		smtp_quit();
+		return;
 	}
+
+	if (!strncasecmp(ChrPtr(SMTP->Cmd), "HELO", 4)) {
+		smtp_hello(HELO);
+		return;
+	}
+
+	if (!strncasecmp(ChrPtr(SMTP->Cmd), "EHLO", 4)) {
+		smtp_hello(EHLO);
+		return;
+	}
+
+	if (!strncasecmp(ChrPtr(SMTP->Cmd), "LHLO", 4)) {
+		smtp_hello(LHLO);
+		return;
+	}
+
+	if (!strncasecmp(ChrPtr(SMTP->Cmd), "RSET", 4)) {
+		smtp_rset(1);
+		return;
+	}
+
+	if (!strncasecmp(ChrPtr(SMTP->Cmd), "AUTH", 4)) {
+		smtp_auth();
+		return;
+	}
+
+	if (!strncasecmp(ChrPtr(SMTP->Cmd), "DATA", 4)) {
+		smtp_data();
+		return;
+	}
+
+	if (!strncasecmp(ChrPtr(SMTP->Cmd), "HELP", 4)) {
+		smtp_help();
+		return;
+	}
+
+	if (!strncasecmp(ChrPtr(SMTP->Cmd), "MAIL", 4)) {
+		smtp_mail();
+		return;
+	}
+	
+	if (!strncasecmp(ChrPtr(SMTP->Cmd), "RCPT", 4)) {
+		smtp_rcpt();
+		return;
+	}
+#ifdef HAVE_OPENSSL
+	if (!strncasecmp(ChrPtr(SMTP->Cmd), "STARTTLS", 8)) {
+		smtp_starttls();
+		return;
+	}
+#endif
+
 	cprintf("502 I'm afraid I can't do that.\r\n");
-}
-
-
-void smtp_noop(long offest, long Flags) {
-	cprintf("250 NOOP\r\n");
-}
-
-
-void smtp_quit(long offest, long Flags) {
-	cprintf("221 Goodbye...\r\n");
-	CC->kill_me = KILLME_CLIENT_LOGGED_OUT;
 }
 
 
@@ -1066,24 +1097,6 @@ const char *CitadelServiceSMTP_LMTP_UNF="LMTP-UnF";
 CTDL_MODULE_INIT(smtp)
 {
 	if (!threading) {
-		SMTPCmds = NewHash(1, NULL);
-		
-		RegisterSmtpCMD("AUTH", smtp_auth, 0);
-		RegisterSmtpCMD("DATA", smtp_data, 0);
-		RegisterSmtpCMD("HELO", smtp_hello, HELO);
-		RegisterSmtpCMD("EHLO", smtp_hello, EHLO);
-		RegisterSmtpCMD("LHLO", smtp_hello, LHLO);
-		RegisterSmtpCMD("HELP", smtp_help, 0);
-		RegisterSmtpCMD("MAIL", smtp_mail, 0);
-		RegisterSmtpCMD("NOOP", smtp_noop, 0);
-		RegisterSmtpCMD("QUIT", smtp_quit, 0);
-		RegisterSmtpCMD("RCPT", smtp_rcpt, 0);
-		RegisterSmtpCMD("RSET", smtp_rset, 1);
-#ifdef HAVE_OPENSSL
-		RegisterSmtpCMD("STARTTLS", smtp_starttls, 0);
-#endif
-
-
 		CtdlRegisterServiceHook(CtdlGetConfigInt("c_smtp_port"),	/* SMTP MTA */
 					NULL,
 					smtp_mta_greeting,

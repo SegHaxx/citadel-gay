@@ -52,7 +52,7 @@
 
 const char *smtp_get_Recipients(void)
 {
-	citsmtp *sSMTP = SMTP;
+	struct citsmtp *sSMTP = SMTP;
 
 	if (sSMTP == NULL)
 		return NULL;
