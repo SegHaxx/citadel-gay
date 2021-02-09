@@ -83,7 +83,11 @@ void listdeliver_do_msg(long msgnum, void *userdata) {
 			}
 		}
 		syslog(LOG_DEBUG, "\033[33m%s\033[0m", recipients);
-		free(recipients);
+		struct recptypes *valid = validate_recipients(recipients, NULL, 0);
+		if (valid) {
+			long new_msgnum = CtdlSubmitMsg(TheMessage, valid, "");
+			free_recipients(valid);
+		}
 	}
 	CM_Free(TheMessage);
 }
@@ -174,7 +178,7 @@ void listdeliver_sweep(void) {
 	last_run = time(NULL);
 	doing_listdeliver = 0;
 
-	//exit(0);
+	exit(0);
 }
 
 

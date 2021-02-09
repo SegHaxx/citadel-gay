@@ -26,7 +26,7 @@
 #include <sys/types.h>
 #include <netinet/in.h>
 
-#define LIBCITADEL_VERSION_NUMBER	925
+#define LIBCITADEL_VERSION_NUMBER	926
 
 /*
  * Here's a bunch of stupid magic to make the MIME parser portable.
@@ -439,6 +439,19 @@ void stripltlen(char *, int *);
 char *html_to_ascii(const char *inputmsg, int msglen, int screenwidth);
 void LoadEntityList(char *FileName);
 
+
+typedef struct {
+	void *the_elements;
+	size_t element_size;
+	int num_elements;
+	int num_alloc;
+} Array;
+
+Array *array_new(size_t element_size);
+void array_free(Array *arr);
+void array_append(Array *arr, void *new_element);
+void *array_get_element_at(Array *arr, int index);
+int array_len(Array *arr);
 
 
 /* vCard stuff */

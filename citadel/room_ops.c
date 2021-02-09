@@ -333,13 +333,14 @@ void room_sanity_check(struct ctdlroom *qrbuf) {
 		qrbuf->QRfloor = 0;
 	}
 	/* Listing order of 0 is illegal except for base rooms */
-	if (qrbuf->QRorder == 0)
+	if (qrbuf->QRorder == 0) {
 		if (	!(qrbuf->QRflags & QR_MAILBOX)
 			&& strncasecmp(qrbuf->QRname, CtdlGetConfigStr("c_baseroom"), ROOMNAMELEN)
 			&& strncasecmp(qrbuf->QRname, CtdlGetConfigStr("c_aideroom"), ROOMNAMELEN)
 		) {
 			qrbuf->QRorder = 64;
 		}
+	}
 }
 
 
