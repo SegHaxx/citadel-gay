@@ -62,6 +62,12 @@ void listdeliver_do_msg(long msgnum, void *userdata) {
 	struct CtdlMessage *TheMessage = CtdlFetchMessage(msgnum, 1);
 	if (!TheMessage) return;
 
+
+
+	// FIXME munge the headers so it looks like it came from a mailing list
+
+
+
 	char *recipients = malloc(strlen(ld->netconf));
 	if (recipients) {
 		recipients[0] = 0;
@@ -93,7 +99,10 @@ void listdeliver_do_msg(long msgnum, void *userdata) {
 }
 
 
-void listdeliver_sweep_room(struct ctdlroom *qrbuf, void *data) {
+/*
+ * Sweep through one room looking for mailing list deliveries to do
+ */
+void listdeliver_sweep_room(char *roomname) {
 	char *netconfig = NULL;
 	long lastsent = 0;
 	char buf[SIZ];
@@ -103,15 +112,17 @@ void listdeliver_sweep_room(struct ctdlroom *qrbuf, void *data) {
 	int number_of_recipients = 0;
 	struct lddata ld;
 
-	if (CtdlGetRoom(&CC->room, qrbuf->QRname)) {
-		syslog(LOG_DEBUG, "listdeliver: no room <%s>", qrbuf->QRname);
+	if (CtdlGetRoom(&CC->room, roomname)) {
+		syslog(LOG_DEBUG, "listdeliver: no room <%s>", roomname);
 		return;
 	}
 
-        netconfig = LoadRoomNetConfigFile(qrbuf->QRnumber);
+        netconfig = LoadRoomNetConfigFile(CC->room.QRnumber);
         if (!netconfig) {
 		return;				// no netconfig, no processing, no problem
 	}
+
+	syslog(LOG_DEBUG, "listdeliver: sweeping %s", roomname);
 
 	config_lines = num_tokens(netconfig, '\n');
 	for (i=0; i<config_lines; ++i) {
@@ -126,7 +137,7 @@ void listdeliver_sweep_room(struct ctdlroom *qrbuf, void *data) {
 	}
 
 	if (number_of_recipients > 0) {
-		syslog(LOG_DEBUG, "listdeliver: processing new messages in <%s> for <%d> recipients", qrbuf->QRname, number_of_recipients);
+		syslog(LOG_DEBUG, "listdeliver: processing new messages in <%s> for <%d> recipients", CC->room.QRname, number_of_recipients);
 		ld.netconf = netconfig;
 		number_of_messages_processed = CtdlForEachMessage(MSGS_GT, lastsent, NULL, NULL, NULL, listdeliver_do_msg, &ld);
 		syslog(LOG_DEBUG, "listdeliver: processed %d messages", number_of_messages_processed);
@@ -141,7 +152,6 @@ void listdeliver_sweep_room(struct ctdlroom *qrbuf, void *data) {
 
 
 
-
 		}
 	}
 
@@ -149,9 +159,22 @@ void listdeliver_sweep_room(struct ctdlroom *qrbuf, void *data) {
 }
 
 
+/*
+ * Callback for listdeliver_sweep()
+ * Adds one room to the queue
+ */
+void listdeliver_queue_room(struct ctdlroom *qrbuf, void *data) {
+	Array *roomlistarr = (Array *)data;
+	array_append(roomlistarr, qrbuf->QRname);
+}
 
+
+/*
+ * Queue up the list of rooms so we can sweep them for mailing list delivery instructions
+ */
 void listdeliver_sweep(void) {
 	static time_t last_run = 0L;
+	int i = 0;
 
 	/*
 	 * Run mailing list delivery no more frequently than once every 15 minutes (we should make this configurable)
@@ -173,12 +196,20 @@ void listdeliver_sweep(void) {
 	 * Go through each room looking for mailing lists to process
 	 */
 	syslog(LOG_DEBUG, "listdeliver: sweep started");
-	CtdlForEachRoom(listdeliver_sweep_room, NULL);
+
+	Array *roomlistarr = array_new(ROOMNAMELEN);			// we have to queue them
+	CtdlForEachRoom(listdeliver_queue_room, roomlistarr);		// otherwise we get multiple cursors in progress
+
+	for (i=0; i<array_len(roomlistarr); ++i) {
+		listdeliver_sweep_room((char *)array_get_element_at(roomlistarr, i));
+	}
+
+	array_free(roomlistarr);
 	syslog(LOG_DEBUG, "listdeliver: ended");
 	last_run = time(NULL);
 	doing_listdeliver = 0;
 
-	exit(0);
+	//exit(0);
 }
 
 
