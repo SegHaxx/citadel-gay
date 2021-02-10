@@ -1,7 +1,7 @@
 /*
  * DNS lookup for SMTP sender
  *
- * Copyright (c) 1987-2017 by the citadel.org team
+ * Copyright (c) 1987-2021 by the citadel.org team
  *
  * This program is open source software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 3.
@@ -115,12 +115,14 @@ int getmx(char *mxbuf, char *dest) {
 
 	struct mx *mxrecs = NULL;
 	int num_mxrecs = 0;
-	
+
 	/* If we're configured to send all mail to a smart-host, then our
 	 * job here is really easy.
 	 */
 	n = get_hosts(mxbuf, "smarthost");
-	if (n > 0) return(n);
+	if (n > 0) {
+		return(n);
+	}
 
 	/*
 	 * No smart-host?  Look up the best MX for a site.
@@ -136,7 +138,6 @@ int getmx(char *mxbuf, char *dest) {
 		num_mxrecs = 1;
 	}
 	else {
-
 		/* If we had to truncate, shrink the number to avoid fireworks */
 		if (ret > sizeof(answer)) {
 			ret = sizeof(answer);
@@ -154,6 +155,7 @@ int getmx(char *mxbuf, char *dest) {
 		}
 	
 		while(1) {
+			TRACE;
 			memset(expanded_buf, 0, sizeof(expanded_buf));
 			ret = dn_expand(startptr, endptr, ptr, expanded_buf, sizeof(expanded_buf));
 			if (ret < 0) break;
@@ -163,6 +165,7 @@ int getmx(char *mxbuf, char *dest) {
 			ptr += INT16SZ + INT32SZ;
 			GETSHORT(n, ptr);
 	
+			syslog(LOG_DEBUG, "\033[35mgetmx: found record of type %d and length %d\033[0m", type, n);
 			if (type != T_MX) {
 				ptr += n;
 			}
@@ -193,6 +196,7 @@ int getmx(char *mxbuf, char *dest) {
 
 	strcpy(mxbuf, "");
 	for (n=0; n<num_mxrecs; ++n) {
+		syslog(LOG_DEBUG, "\033[35mgetmx: %d : <%s>\033[0m", n, mxrecs[n].host);
 		strcat(mxbuf, mxrecs[n].host);
 		strcat(mxbuf, "|");
 	}

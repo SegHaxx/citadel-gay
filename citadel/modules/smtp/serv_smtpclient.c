@@ -300,7 +300,7 @@ int smtp_attempt_delivery(long msgid, char *recp, char *envelope_from, char *res
 				 try_this_mx, CtdlGetConfigStr("c_fqdn")
 			    );
 			curl_easy_setopt(curl, CURLOPT_URL, smtp_url);
-			syslog(LOG_DEBUG, "smtpclient: trying %s", smtp_url);	// send the message
+			syslog(LOG_DEBUG, "smtpclient: trying mx %d of %d <%s>", i, num_mx, smtp_url);	// send the message
 			res = curl_easy_perform(curl);
 			curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &response_code);
 			syslog(LOG_DEBUG,

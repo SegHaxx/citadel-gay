@@ -41,6 +41,15 @@ struct legacy_ctrl_format {
 
 
 /*
+ * data that gets passed back and forth between control_find_highest() and its caller
+ */
+struct cfh {
+	long highest_roomnum_found;
+	long highest_msgnum_found;
+};
+
+
+/*
  * Callback to get highest room number when rebuilding message base metadata
  *
  * sanity_diag_mode (can be set by -s flag at startup) may be:
@@ -48,48 +57,36 @@ struct legacy_ctrl_format {
  * 1 = show inconsistencies but don't repair them, exit after complete
  * 2 = show inconsistencies but don't repair them, continue execution
  */
-void control_find_highest(struct ctdlroom *qrbuf, void *data)
-{
-	struct ctdlroom room;
+void control_find_highest(struct ctdlroom *qrbuf, void *data) {
+	struct cfh *cfh = (struct cfh *)data;
 	struct cdbdata *cdbfr;
 	long *msglist;
 	int num_msgs=0;
 	int c;
-	
-	if (qrbuf->QRnumber > CtdlGetConfigLong("MMnextroom")) {
-		syslog(LOG_DEBUG, "control: fixing MMnextroom %ld > %ld , found in %s",
-			qrbuf->QRnumber, CtdlGetConfigLong("MMnextroom"), qrbuf->QRname
-		);
-		if (!sanity_diag_mode) {
-			CtdlSetConfigLong("MMnextroom", qrbuf->QRnumber);
-		}
+
+	if (qrbuf->QRnumber > cfh->highest_roomnum_found) {
+		cfh->highest_roomnum_found = qrbuf->QRnumber;
 	}
-		
-	CtdlGetRoom(&room, qrbuf->QRname);
-	
+
 	/* Load the message list */
-	cdbfr = cdb_fetch(CDB_MSGLISTS, &room.QRnumber, sizeof(long));
+	cdbfr = cdb_fetch(CDB_MSGLISTS, &qrbuf->QRnumber, sizeof(long));
 	if (cdbfr != NULL) {
 		msglist = (long *) cdbfr->ptr;
 		num_msgs = cdbfr->len / sizeof(long);
-	} else {
+	}
+	else {
 		return;	/* No messages at all?  No further action. */
 	}
 
 	if (num_msgs > 0) {
 		for (c=0; c<num_msgs; c++) {
-			if (msglist[c] > CtdlGetConfigLong("MMhighest")) {
-				syslog(LOG_DEBUG, "control: fixing MMhighest %ld > %ld , found in %s",
-					msglist[c], CtdlGetConfigLong("MMhighest"), qrbuf->QRname
-				);
-				if (!sanity_diag_mode) {
-					CtdlSetConfigLong("MMhighest", msglist[c]);
-				}
+			if (msglist[c] > cfh->highest_msgnum_found) {
+				cfh->highest_msgnum_found = msglist[c];
 			}
 		}
 	}
+
 	cdb_free(cdbfr);
-	return;
 }
 
 
@@ -117,8 +114,7 @@ void control_find_user(char *username, void *out_data) {
 /*
  * If we have a legacy format control record on disk, import it.
  */
-void migrate_legacy_control_record(void)
-{
+void migrate_legacy_control_record(void) {
 	FILE *fp = NULL;
 	struct legacy_ctrl_format c;
 	memset(&c, 0, sizeof(c));
@@ -149,13 +145,32 @@ void migrate_legacy_control_record(void)
 /*
  * check_control   -  check the control record has sensible values for message, user and room numbers
  */
-void check_control(void)
-{
+void check_control(void) {
+
 	syslog(LOG_INFO, "control: sanity checking the recorded highest message and room numbers");
-	CtdlForEachRoom(control_find_highest, NULL);
+	struct cfh cfh;
+	memset(&cfh, 0, sizeof(struct cfh));
+	CtdlForEachRoom(control_find_highest, &cfh);
+
+	if (cfh.highest_roomnum_found > CtdlGetConfigLong("MMnextroom")) {
+		syslog(LOG_DEBUG, "control: fixing MMnextroom %ld > %ld", cfh.highest_roomnum_found, CtdlGetConfigLong("MMnextroom"));
+		if (!sanity_diag_mode) {
+			CtdlSetConfigLong("MMnextroom", cfh.highest_roomnum_found);
+		}
+	}
+
+	if (cfh.highest_msgnum_found > CtdlGetConfigLong("MMhighest")) {
+		syslog(LOG_DEBUG, "control: fixing MMhighest %ld > %ld", cfh.highest_msgnum_found, CtdlGetConfigLong("MMhighest"));
+		if (!sanity_diag_mode) {
+			CtdlSetConfigLong("MMhighest", cfh.highest_msgnum_found);
+		}
+	}
+
 	syslog(LOG_INFO, "control: sanity checking the recorded highest user number");
 	ForEachUser(control_find_user, NULL);
+
 	syslog(LOG_INFO, "control: sanity checks complete");
+
 	if (sanity_diag_mode == 1) {
 		syslog(LOG_INFO, "control: sanity check diagnostic mode is active - exiting now");
 		abort();

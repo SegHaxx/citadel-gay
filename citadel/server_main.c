@@ -187,6 +187,7 @@ int main(int argc, char **argv) {
 
 	if (chdir(ctdldir) != 0) {
 		syslog(LOG_ERR, "main: unable to change directory to [%s]: %m", ctdldir);
+		exit(CTDLEXIT_HOME);
 	}
 	else {
 		syslog(LOG_INFO, "main: running in data directory %s", ctdldir);
