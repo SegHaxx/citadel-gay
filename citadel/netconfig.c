@@ -47,7 +47,7 @@ void netcfg_keyname(char *keybuf, long roomnum) {
 /*
  * Given a room number and a textual netconfig, convert to base64 and write to the configdb
  */
-void write_netconfig_to_configdb(long roomnum, const char *raw_netconfig) {
+void SaveRoomNetConfigFile(long roomnum, const char *raw_netconfig) {
 	char keyname[25];
 	char *enc;
 	int enc_len;
@@ -133,7 +133,7 @@ void cmd_snet(char *argbuf) {
 	}
 	FreeStrBuf(&Line);
 
-	write_netconfig_to_configdb(CC->room.QRnumber, ChrPtr(TheConfig));
+	SaveRoomNetConfigFile(CC->room.QRnumber, ChrPtr(TheConfig));
 	FreeStrBuf(&TheConfig);
 }
 
@@ -169,7 +169,7 @@ void convert_legacy_netcfg_files(void)
 					if (v) {
 						rewind(fp);
 						if (fread(v, len, 1, fp)) {
-							write_netconfig_to_configdb(roomnum, v);
+							SaveRoomNetConfigFile(roomnum, v);
 							unlink(filename);
 						}
 						free(v);

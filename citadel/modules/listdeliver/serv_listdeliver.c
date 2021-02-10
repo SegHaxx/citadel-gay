@@ -104,6 +104,7 @@ void listdeliver_do_msg(long msgnum, void *userdata) {
  */
 void listdeliver_sweep_room(char *roomname) {
 	char *netconfig = NULL;
+	char *newnetconfig = NULL;
 	long lastsent = 0;
 	char buf[SIZ];
 	int config_lines;
@@ -145,16 +146,30 @@ void listdeliver_sweep_room(char *roomname) {
 		if (number_of_messages_processed > 0) {
 			syslog(LOG_DEBUG, "listdeliver: new lastsent is %ld", ld.msgnum);
 
-			// FIXME write lastsent back to netconfig
-			syslog(LOG_DEBUG, "\033[31mBEFORE:<%s>\033[0m", netconfig);
-			syslog(LOG_DEBUG, "\033[32mAFTER:<%s>\033[0m", netconfig);
+			// Update this room's netconfig with the updated lastsent
+        		netconfig = LoadRoomNetConfigFile(CC->room.QRnumber);
+        		if (!netconfig) {
+				netconfig = strdup("");
+			}
 
+			// The new netconfig begins with the new lastsent directive
+			newnetconfig = malloc(strlen(netconfig) + 1024);
+			sprintf(newnetconfig, "lastsent|%ld\n", ld.msgnum);
 
+			// And then we append all of the old netconfig, minus the old lastsent.  Also omit blank lines.
+			config_lines = num_tokens(netconfig, '\n');
+			for (i=0; i<config_lines; ++i) {
+				extract_token(buf, netconfig, i, '\n', sizeof buf);
+				if ( (!IsEmptyStr(buf)) && (strncasecmp(buf, "lastsent|", 9)) ) {
+					sprintf(&newnetconfig[strlen(newnetconfig)], "%s\n", buf);
+				}
+			}
 
-
+			// Write the new netconfig back to disk
+			SaveRoomNetConfigFile(CC->room.QRnumber, newnetconfig);
+			free(newnetconfig);
 		}
 	}
-
 	free(netconfig);
 }
 

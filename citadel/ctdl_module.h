@@ -136,13 +136,9 @@ void CtdlUnregisterServiceHook(int tcp_port,
                         void (*h_async_function) (void)
 );
 
-void CtdlRegisterFixedOutputHook(char *content_type,
-			void (*output_function) (char *supplied_data, int len)
-);
+void CtdlRegisterFixedOutputHook(char *content_type, void (*output_function) (char *supplied_data, int len));
 void CtdlUnRegisterFixedOutputHook(char *content_type);
-
 void CtdlRegisterMaintenanceThread(char *name, void *(*thread_proc) (void *arg));
-
 void CtdlRegisterSearchFuncHook(void (*fcn_ptr)(int *, long **, const char *), char *name);
 
 /*
@@ -151,20 +147,6 @@ void CtdlRegisterSearchFuncHook(void (*fcn_ptr)(int *, long **, const char *), c
  */
 void CtdlDisableHouseKeeping(void);
 void CtdlEnableHouseKeeping(void);
-
-/*
- * Directory services hooks for LDAP etc
- */
-
-#define DIRECTORY_USER_DEL 1	// Delete a user entry
-#define DIRECTORY_CREATE_HOST 2	// Create a host entry if not already there.
-#define DIRECTORY_CREATE_OBJECT 3	// Create a new object for directory entry
-#define DIRECTORY_ATTRIB_ADD 4	// Add an attribute to the directory entry object
-#define DIRECTORY_SAVE_OBJECT 5	// Save the object to the directory service
-#define DIRECTORY_FREE_OBJECT 6	// Free the object and its attributes
-
-int CtdlRegisterDirectoryServiceFunc(int (*func)(char *cn, char *ou, void **object), int cmd, char *module);
-int CtdlDoDirectoryServiceFunc(char *cn, char *ou, void **object, char *module, int cmd);
 
 /* TODODRW: This needs to be changed into a hook type interface
  * for now we have this horrible hack
@@ -220,9 +202,8 @@ void CtdlRoomAccess(struct ctdlroom *roombuf, struct ctdluser *userbuf, int *res
 void CtdlPutRoomLock(struct ctdlroom *qrbuf);
 typedef void (*ForEachRoomCallBack)(struct ctdlroom *EachRoom, void *out_data);
 void CtdlForEachRoom(ForEachRoomCallBack CB, void *in_data);
-typedef void (*ForEachRoomNetCfgCallBack)(struct ctdlroom *EachRoom, void *out_data, char *cfg);
 char *LoadRoomNetConfigFile(long roomnum);
-void SaveChangedConfigs(void);
+void SaveRoomNetConfigFile(long roomnum, const char *raw_netconfig);
 void CtdlDeleteRoom(struct ctdlroom *qrbuf);
 int CtdlRenameRoom(char *old_name, char *new_name, int new_floor);
 void CtdlUserGoto (char *where, int display_result, int transiently, int *msgs, int *new, long *oldest, long *newest);
