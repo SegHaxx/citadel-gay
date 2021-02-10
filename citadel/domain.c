@@ -155,7 +155,6 @@ int getmx(char *mxbuf, char *dest) {
 		}
 	
 		while(1) {
-			TRACE;
 			memset(expanded_buf, 0, sizeof(expanded_buf));
 			ret = dn_expand(startptr, endptr, ptr, expanded_buf, sizeof(expanded_buf));
 			if (ret < 0) break;
@@ -165,7 +164,6 @@ int getmx(char *mxbuf, char *dest) {
 			ptr += INT16SZ + INT32SZ;
 			GETSHORT(n, ptr);
 	
-			syslog(LOG_DEBUG, "\033[35mgetmx: found record of type %d and length %d\033[0m", type, n);
 			if (type != T_MX) {
 				ptr += n;
 			}
@@ -175,16 +173,20 @@ int getmx(char *mxbuf, char *dest) {
 				ret = dn_expand(startptr, endptr, ptr, expanded_buf, sizeof(expanded_buf));
 				ptr += ret;
 	
-				++num_mxrecs;
-				if (mxrecs == NULL) {
-					mxrecs = malloc(sizeof(struct mx));
-				}
-				else {
-					mxrecs = realloc(mxrecs, (sizeof(struct mx) * num_mxrecs) );
-				}
+				// If there are no MX records for the domain, resolv will give us a single one with zero length.
+				// Make sure we only record actual MX records and not the blank.
+				if (strlen(expanded_buf) > 0) {
+					++num_mxrecs;
+					if (mxrecs == NULL) {
+						mxrecs = malloc(sizeof(struct mx));
+					}
+					else {
+						mxrecs = realloc(mxrecs, (sizeof(struct mx) * num_mxrecs) );
+					}
 	
-				mxrecs[num_mxrecs - 1].pref = pref;
-				strcpy(mxrecs[num_mxrecs - 1].host, expanded_buf);
+					mxrecs[num_mxrecs - 1].pref = pref;
+					strcpy(mxrecs[num_mxrecs - 1].host, expanded_buf);
+				}
 			}
 		}
 	}
@@ -196,7 +198,6 @@ int getmx(char *mxbuf, char *dest) {
 
 	strcpy(mxbuf, "");
 	for (n=0; n<num_mxrecs; ++n) {
-		syslog(LOG_DEBUG, "\033[35mgetmx: %d : <%s>\033[0m", n, mxrecs[n].host);
 		strcat(mxbuf, mxrecs[n].host);
 		strcat(mxbuf, "|");
 	}
