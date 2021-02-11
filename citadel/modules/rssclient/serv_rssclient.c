@@ -3,7 +3,7 @@
  * very loose parser that scrapes both kinds of feeds and is not picky about
  * the standards compliance of the source data.
  *
- * Copyright (c) 2007-2020 by the citadel.org team
+ * Copyright (c) 2007-2021 by the citadel.org team
  *
  * This program is open source software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License version 3.
@@ -66,10 +66,11 @@ struct rssurl *rsstodo = NULL;
 
 // This handler is called whenever an XML tag opens.
 //
-void rss_start_element(void *data, const char *el, const char **attribute)
-{
+void rss_start_element(void *data, const char *el, const char **attribute) {
 	struct rssparser *r = (struct rssparser *)data;
 	int i;
+
+	if (server_shutting_down) return;			// shunt the whole operation if we're exiting
 
 	if (
 		(!strcasecmp(el, "entry"))
@@ -104,10 +105,11 @@ void rss_start_element(void *data, const char *el, const char **attribute)
 
 // This handler is called whenever an XML tag closes.
 //
-void rss_end_element(void *data, const char *el)
-{
+void rss_end_element(void *data, const char *el) {
 	struct rssparser *r = (struct rssparser *)data;
 	StrBuf *encoded_field;
+
+	if (server_shutting_down) return;			// shunt the whole operation if we're exiting
 
 	if (StrLength(r->CData) > 0) {				// strip leading/trailing whitespace from field
 		StrBufTrim(r->CData);
@@ -375,7 +377,7 @@ void rss_pull_feeds(void)
 	struct rssurl *r;
 	struct rssroom *rr;
 
-	while (rsstodo != NULL) {
+	while ((rsstodo != NULL) && (!server_shutting_down)) {
 		rss_pull_one_feed(rsstodo);
 		r = rsstodo;
 		rsstodo = rsstodo->next;
@@ -399,6 +401,8 @@ void rssclient_scan_room(struct ctdlroom *qrbuf, void *data)
 	int num_configs = 0;
 	char cfgline[SIZ];
 	int i = 0;
+
+	if (server_shutting_down) return;
 
         serialized_config = LoadRoomNetConfigFile(qrbuf->QRnumber);
         if (!serialized_config) {

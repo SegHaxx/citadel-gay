@@ -5,11 +5,39 @@ die () {
 	exit 1
 }
 
-# data dir from autoconf?
-DATA_DIR="@MAKE_DATA_DIR@"
-if test -z "$DATA_DIR" ; then
-	DATA_DIR="/usr/local/citadel"
+DATA_DIR="/usr/local/citadel"
+
+
+
+usage() {
+	echo "Usage: database_cleanup.sh [ -h citadel_dir ]"
+	exit 2
+}
+
+PARSED_ARGUMENTS=$(getopt -a -n database_cleanup.sh -o h: -- "$@")
+VALID_ARGUMENTS=$?
+if [ "$VALID_ARGUMENTS" != "0" ]; then
+	usage
 fi
+
+eval set -- "$PARSED_ARGUMENTS"
+while :
+do
+	case "$1" in
+		-h | --alpha)
+			DATA_DIR=${2}
+			shift 2
+			;;
+		# -- means the end of the arguments; drop this, and break out of the while loop
+		--) shift; break ;;
+		# If invalid options were passed, then getopt should have reported an error,
+		# which we checked as VALID_ARGUMENTS when getopt was called...
+		*) echo "Unexpected option: $1 - this should not happen."
+			usage
+			;;
+	esac
+done
+
 DATA_DIR=$DATA_DIR/data
 
 # If we're on an Easy Install system, use our own db_ tools.
@@ -87,6 +115,7 @@ you will need `du -sh $DATA_DIR|sed "s;/.*;;"` of free space.
 
 !
 
+echo We will attempt to look for a Citadel database in $DATA_DIR
 echo -n "Do you want to continue? "
 
 read yesno
@@ -104,7 +133,10 @@ for x in 00 01 02 03 04 05 06 07 08 09 0a 0b 0c 0d
 do
 	filename=cdb.$x
 	echo Dumping $filename
-	$DUMP -h $DATA_DIR $filename >/tmp/CitaDump.$x || die
+	$DUMP -h $DATA_DIR $filename >/tmp/CitaDump.$x || {
+		echo error $?
+		die
+	}
 	rm -f $DATA_DIR/$filename
 done
 

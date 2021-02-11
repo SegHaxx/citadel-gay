@@ -167,6 +167,10 @@ void go_threading(void)
 	CtdlShutdownServiceHooks();		/* close all listener sockets to prevent new connections */
 	PerformSessionHooks(EVT_SHUTDOWN);	/* run any registered shutdown hooks */
 
+	/* We used to wait for all threads to exit.  Fuck that.  The only thing important is that the databases are
+	 * cleanly unmounted.  After that, exit the whole program.
+	 */
+#if 0
 	int countdown = 30;
 	while ( (num_workers > 0) && (countdown-- > 0)) {
 		syslog(LOG_DEBUG, "Waiting %d seconds for %d worker threads to exit",
@@ -174,4 +178,6 @@ void go_threading(void)
 		);
 		usleep(1000000);
 	}
+#endif
+
 }
