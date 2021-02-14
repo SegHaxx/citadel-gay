@@ -56,6 +56,7 @@ void listdeliver_do_msg(long msgnum, void *userdata) {
 	if (!ld) return;
 	char buf[SIZ];
 	char *ch;
+	char bounce_to[256];
 
 	ld->msgnum = msgnum;
 	if (msgnum <= 0) return;
@@ -75,13 +76,6 @@ void listdeliver_do_msg(long msgnum, void *userdata) {
 		if (isspace(*ch)) *ch = '_';
 	}
 	CM_SetField(TheMessage, eReplyTo, buf, strlen(buf));
-
-	// Errors-to: should be set to our Aide room so we see the notifications.
-
-
-
-
-
 
 	// With that out of the way, let's figure out who this message needs to be sent to.
 	char *recipients = malloc(strlen(ld->netconf));
@@ -104,10 +98,16 @@ void listdeliver_do_msg(long msgnum, void *userdata) {
 				strcat(recipients, &buf[11]);
 			}
 		}
+
+		// Where do we want bounces and other noise to be sent?  Certainly not to the list members!
+		snprintf(bounce_to, sizeof bounce_to, "room_aide@%s", CtdlGetConfigStr("c_fqdn"));
+
+		// Now submit the message
 		struct recptypes *valid = validate_recipients(recipients, NULL, 0);
 		if (valid) {
-			long new_msgnum = CtdlSubmitMsg(TheMessage, valid, "");
-			syslog(LOG_DEBUG, "listdeliver: original message <%ld> is now <%ld> outgoing to the list", msgnum, new_msgnum);
+			valid->bounce_to = strdup(bounce_to);
+			valid->envelope_from = strdup(bounce_to);
+			CtdlSubmitMsg(TheMessage, valid, "");
 			free_recipients(valid);
 		}
 	}
