@@ -140,14 +140,12 @@ eMsgField FieldOrder[]  = {
 static const long NDiskFields = sizeof(FieldOrder) / sizeof(eMsgField);
 
 
-int CM_IsEmpty(struct CtdlMessage *Msg, eMsgField which)
-{
+int CM_IsEmpty(struct CtdlMessage *Msg, eMsgField which) {
 	return !((Msg->cm_fields[which] != NULL) && (Msg->cm_fields[which][0] != '\0'));
 }
 
 
-void CM_SetField(struct CtdlMessage *Msg, eMsgField which, const char *buf, long length)
-{
+void CM_SetField(struct CtdlMessage *Msg, eMsgField which, const char *buf, long length) {
 	if (Msg->cm_fields[which] != NULL) {
 		free (Msg->cm_fields[which]);
 	}
@@ -161,8 +159,7 @@ void CM_SetField(struct CtdlMessage *Msg, eMsgField which, const char *buf, long
 }
 
 
-void CM_SetFieldLONG(struct CtdlMessage *Msg, eMsgField which, long lvalue)
-{
+void CM_SetFieldLONG(struct CtdlMessage *Msg, eMsgField which, long lvalue) {
 	char buf[128];
 	long len;
 	len = snprintf(buf, sizeof(buf), "%ld", lvalue);
@@ -170,8 +167,7 @@ void CM_SetFieldLONG(struct CtdlMessage *Msg, eMsgField which, long lvalue)
 }
 
 
-void CM_CutFieldAt(struct CtdlMessage *Msg, eMsgField WhichToCut, long maxlen)
-{
+void CM_CutFieldAt(struct CtdlMessage *Msg, eMsgField WhichToCut, long maxlen) {
 	if (Msg->cm_fields[WhichToCut] == NULL)
 		return;
 
@@ -183,8 +179,7 @@ void CM_CutFieldAt(struct CtdlMessage *Msg, eMsgField WhichToCut, long maxlen)
 }
 
 
-void CM_FlushField(struct CtdlMessage *Msg, eMsgField which)
-{
+void CM_FlushField(struct CtdlMessage *Msg, eMsgField which) {
 	if (Msg->cm_fields[which] != NULL)
 		free (Msg->cm_fields[which]);
 	Msg->cm_fields[which] = NULL;
@@ -192,8 +187,7 @@ void CM_FlushField(struct CtdlMessage *Msg, eMsgField which)
 }
 
 
-void CM_Flush(struct CtdlMessage *Msg)
-{
+void CM_Flush(struct CtdlMessage *Msg) {
 	int i;
 
 	if (CM_IsValidMsg(Msg) == 0) {
@@ -206,8 +200,7 @@ void CM_Flush(struct CtdlMessage *Msg)
 }
 
 
-void CM_CopyField(struct CtdlMessage *Msg, eMsgField WhichToPutTo, eMsgField WhichtToCopy)
-{
+void CM_CopyField(struct CtdlMessage *Msg, eMsgField WhichToPutTo, eMsgField WhichtToCopy) {
 	long len;
 	if (Msg->cm_fields[WhichToPutTo] != NULL) {
 		free (Msg->cm_fields[WhichToPutTo]);
@@ -227,8 +220,7 @@ void CM_CopyField(struct CtdlMessage *Msg, eMsgField WhichToPutTo, eMsgField Whi
 }
 
 
-void CM_PrependToField(struct CtdlMessage *Msg, eMsgField which, const char *buf, long length)
-{
+void CM_PrependToField(struct CtdlMessage *Msg, eMsgField which, const char *buf, long length) {
 	if (Msg->cm_fields[which] != NULL) {
 		long oldmsgsize;
 		long newmsgsize;
@@ -253,8 +245,7 @@ void CM_PrependToField(struct CtdlMessage *Msg, eMsgField which, const char *buf
 }
 
 
-void CM_SetAsField(struct CtdlMessage *Msg, eMsgField which, char **buf, long length)
-{
+void CM_SetAsField(struct CtdlMessage *Msg, eMsgField which, char **buf, long length) {
 	if (Msg->cm_fields[which] != NULL) {
 		free (Msg->cm_fields[which]);
 	}
@@ -270,8 +261,7 @@ void CM_SetAsField(struct CtdlMessage *Msg, eMsgField which, char **buf, long le
 }
 
 
-void CM_SetAsFieldSB(struct CtdlMessage *Msg, eMsgField which, StrBuf **buf)
-{
+void CM_SetAsFieldSB(struct CtdlMessage *Msg, eMsgField which, StrBuf **buf) {
 	if (Msg->cm_fields[which] != NULL) {
 		free (Msg->cm_fields[which]);
 	}
@@ -281,8 +271,7 @@ void CM_SetAsFieldSB(struct CtdlMessage *Msg, eMsgField which, StrBuf **buf)
 }
 
 
-void CM_GetAsField(struct CtdlMessage *Msg, eMsgField which, char **ret, long *retlen)
-{
+void CM_GetAsField(struct CtdlMessage *Msg, eMsgField which, char **ret, long *retlen) {
 	if (Msg->cm_fields[which] != NULL) {
 		*retlen = Msg->cm_lengths[which];
 		*ret = Msg->cm_fields[which];
@@ -312,8 +301,7 @@ int CM_IsValidMsg(struct CtdlMessage *msg) {
 }
 
 
-void CM_FreeContents(struct CtdlMessage *msg)
-{
+void CM_FreeContents(struct CtdlMessage *msg) {
 	int i;
 
 	for (i = 0; i < 256; ++i)
@@ -329,8 +317,7 @@ void CM_FreeContents(struct CtdlMessage *msg)
 /*
  * 'Destructor' for struct CtdlMessage
  */
-void CM_Free(struct CtdlMessage *msg)
-{
+void CM_Free(struct CtdlMessage *msg) {
 	if (CM_IsValidMsg(msg) == 0) {
 		if (msg != NULL) free (msg);
 		return;
@@ -340,8 +327,7 @@ void CM_Free(struct CtdlMessage *msg)
 }
 
 
-int CM_DupField(eMsgField i, struct CtdlMessage *OrgMsg, struct CtdlMessage *NewMsg)
-{
+int CM_DupField(eMsgField i, struct CtdlMessage *OrgMsg, struct CtdlMessage *NewMsg) {
 	long len;
 	len = OrgMsg->cm_lengths[i];
 	NewMsg->cm_fields[i] = malloc(len + 1);
@@ -355,8 +341,7 @@ int CM_DupField(eMsgField i, struct CtdlMessage *OrgMsg, struct CtdlMessage *New
 }
 
 
-struct CtdlMessage * CM_Duplicate(struct CtdlMessage *OrgMsg)
-{
+struct CtdlMessage *CM_Duplicate(struct CtdlMessage *OrgMsg) {
 	int i;
 	struct CtdlMessage *NewMsg;
 
@@ -488,7 +473,8 @@ void CtdlSetSeen(long *target_msgnums, int num_target_msgnums,
 		cdbfr->ptr = NULL;	/* CtdlSetSeen() now owns this memory */
 		num_msgs = cdbfr->len / sizeof(long);
 		cdb_free(cdbfr);
-	} else {
+	}
+	else {
 		return;	/* No messages at all?  No further action. */
 	}
 

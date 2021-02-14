@@ -570,8 +570,7 @@ struct recptypes *validate_recipients(const char *supplied_recipients, const cha
 				}
 				strcat(ret->recp_room, this_recp);
 			}
-			else if ( (!strncasecmp(this_recp, "room_", 5))
-				  && (!CtdlGetRoom(&tempQR, &this_recp_cooked[5])) ) {
+			else if ( (!strncasecmp(this_recp, "room_", 5)) && (!CtdlGetRoom(&tempQR, &this_recp_cooked[5])) ) {
 
 				/* Save room so we can restore it later */
 				tempQR2 = CCC->room;

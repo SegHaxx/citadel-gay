@@ -561,7 +561,7 @@ CTDL_MODULE_INIT(smtpclient)
 {
 	if (!threading) {
 		CtdlRegisterMessageHook(smtp_aftersave, EVT_AFTERSAVE);
-		CtdlRegisterSessionHook(smtp_do_queue, EVT_TIMER, PRIO_AGGR + 50);
+		CtdlRegisterSessionHook(smtp_do_queue, EVT_TIMER, PRIO_AGGR + 51);
 		smtp_init_spoolout();
 	}
 

@@ -55,6 +55,7 @@ void listdeliver_do_msg(long msgnum, void *userdata) {
 	struct lddata *ld = (struct lddata *) userdata;
 	if (!ld) return;
 	char buf[SIZ];
+	char *ch;
 
 	ld->msgnum = msgnum;
 	if (msgnum <= 0) return;
@@ -62,12 +63,27 @@ void listdeliver_do_msg(long msgnum, void *userdata) {
 	struct CtdlMessage *TheMessage = CtdlFetchMessage(msgnum, 1);
 	if (!TheMessage) return;
 
+	// If the subject line does not contain the name of the room, add it now.
+	if (!bmstrcasestr(TheMessage->cm_fields[eMsgSubject], CC->room.QRname)) {
+		snprintf(buf, sizeof buf, "[%s] %s", CC->room.QRname, TheMessage->cm_fields[eMsgSubject]);
+		CM_SetField(TheMessage, eMsgSubject, buf, strlen(buf));
+	}
+
+	// Reply-to: should be set so that replies come to the list.
+	snprintf(buf, sizeof buf, "room_%s@%s", CC->room.QRname, CtdlGetConfigStr("c_fqdn"));
+	for (ch=buf; *ch; ++ch) {
+		if (isspace(*ch)) *ch = '_';
+	}
+	CM_SetField(TheMessage, eReplyTo, buf, strlen(buf));
+
+	// Errors-to: should be set to our Aide room so we see the notifications.
 
 
-	// FIXME munge the headers so it looks like it came from a mailing list
 
 
 
+
+	// With that out of the way, let's figure out who this message needs to be sent to.
 	char *recipients = malloc(strlen(ld->netconf));
 	if (recipients) {
 		recipients[0] = 0;
@@ -88,10 +104,10 @@ void listdeliver_do_msg(long msgnum, void *userdata) {
 				strcat(recipients, &buf[11]);
 			}
 		}
-		syslog(LOG_DEBUG, "\033[33m%s\033[0m", recipients);
 		struct recptypes *valid = validate_recipients(recipients, NULL, 0);
 		if (valid) {
 			long new_msgnum = CtdlSubmitMsg(TheMessage, valid, "");
+			syslog(LOG_DEBUG, "listdeliver: original message <%ld> is now <%ld> outgoing to the list", msgnum, new_msgnum);
 			free_recipients(valid);
 		}
 	}
@@ -123,8 +139,6 @@ void listdeliver_sweep_room(char *roomname) {
 		return;				// no netconfig, no processing, no problem
 	}
 
-	syslog(LOG_DEBUG, "listdeliver: sweeping %s", roomname);
-
 	config_lines = num_tokens(netconfig, '\n');
 	for (i=0; i<config_lines; ++i) {
 		extract_token(buf, netconfig, i, '\n', sizeof buf);
@@ -141,7 +155,7 @@ void listdeliver_sweep_room(char *roomname) {
 		syslog(LOG_DEBUG, "listdeliver: processing new messages in <%s> for <%d> recipients", CC->room.QRname, number_of_recipients);
 		ld.netconf = netconfig;
 		number_of_messages_processed = CtdlForEachMessage(MSGS_GT, lastsent, NULL, NULL, NULL, listdeliver_do_msg, &ld);
-		syslog(LOG_DEBUG, "listdeliver: processed %d messages", number_of_messages_processed);
+		syslog(LOG_INFO, "listdeliver: processed <%d> messages in <%s> for <%d> recipients", number_of_messages_processed, CC->room.QRname, number_of_recipients);
 	
 		if (number_of_messages_processed > 0) {
 			syslog(LOG_DEBUG, "listdeliver: new lastsent is %ld", ld.msgnum);
@@ -167,10 +181,10 @@ void listdeliver_sweep_room(char *roomname) {
 
 			// Write the new netconfig back to disk
 			SaveRoomNetConfigFile(CC->room.QRnumber, newnetconfig);
-			free(newnetconfig);
+			free(newnetconfig);	// this was the new netconfig, free it because we're done with it
 		}
 	}
-	free(netconfig);
+	free(netconfig);			// this was the old netconfig, free it even if we didn't do anything
 }
 
 
@@ -223,10 +237,7 @@ void listdeliver_sweep(void) {
 	syslog(LOG_DEBUG, "listdeliver: ended");
 	last_run = time(NULL);
 	doing_listdeliver = 0;
-
-	//exit(0);
 }
-
 
 
 /*
@@ -234,8 +245,7 @@ void listdeliver_sweep(void) {
  */
 CTDL_MODULE_INIT(listdeliver)
 {
-	if (!threading)
-	{
+	if (!threading) {
 		CtdlRegisterSessionHook(listdeliver_sweep, EVT_TIMER, PRIO_AGGR + 50);
 	}
 	
