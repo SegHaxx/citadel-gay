@@ -59,6 +59,10 @@ void do_subscribe_or_unsubscribe(int action, char *emailaddr, char *url) {
 	char buf[1024];
 	char confirmation_token[40];
 
+	// We need a URL-safe representation of the room name
+	char urlroom[ROOMNAMELEN+10];
+	urlesc(urlroom, sizeof(urlroom), CC->room.QRname);
+
 	// Update this room's netconfig with the updated lastsent
 	begin_critical_section(S_NETCONFIGS);
         char *oldnetconfig = LoadRoomNetConfigFile(CC->room.QRnumber);
@@ -109,10 +113,16 @@ void do_subscribe_or_unsubscribe(int action, char *emailaddr, char *url) {
 	if ((action == SUBSCRIBE) && (!is_already_subscribed)) {
 		generate_uuid(confirmation_token);
 		sprintf(&newnetconfig[strlen(newnetconfig)], "subpending|%s|%s|%ld|%s", emailaddr, confirmation_token, time(NULL), url);
+
+		// FIXME now generate the confirmation email
+		syslog(LOG_DEBUG, "%s?room=%s&token=%s&cmd=confirm", url, urlroom, confirmation_token);
 	}
 	if ((action == UNSUBSCRIBE) && (is_already_subscribed)) {
 		generate_uuid(confirmation_token);
 		sprintf(&newnetconfig[strlen(newnetconfig)], "unsubpending|%s|%s|%ld|%s", emailaddr, confirmation_token, time(NULL), url);
+
+		// FIXME now generate the confirmation email
+		syslog(LOG_DEBUG, "%s?room=%s&token=%s&cmd=confirm", url, urlroom, confirmation_token);
 	}
 
 	// Write the new netconfig back to disk
