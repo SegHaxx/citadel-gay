@@ -55,43 +55,90 @@ enum {				// one of these gets passed to do_subscribe_or_unsubscribe() so it kno
  */
 void do_subscribe_or_unsubscribe(int action, char *emailaddr, char *url) {
 
-	char *netconfig, *newnetconfig;
-	int config_lines, i;
+	int i;
 	char buf[1024];
+	char confirmation_token[40];
 
 	// Update this room's netconfig with the updated lastsent
 	begin_critical_section(S_NETCONFIGS);
-        netconfig = LoadRoomNetConfigFile(CC->room.QRnumber);
-        if (!netconfig) {
-		netconfig = strdup("");
+        char *oldnetconfig = LoadRoomNetConfigFile(CC->room.QRnumber);
+        if (!oldnetconfig) {
+		oldnetconfig = strdup("");
 	}
 
-	// The new netconfig begins with the new lastsent directive
-	newnetconfig = malloc(strlen(netconfig) + 1024);
-#if 0
-	FIXME SYNTAX ERROR #$%$&%$^#%$ sprintf(newnetconfig, "lastsent|%ld\n", ld.msgnum);
-#endif
+	// The new netconfig begins with an empty buffer...
+	char *newnetconfig = malloc(strlen(oldnetconfig) + 1024);
+	newnetconfig[0] = 0;
 
-	// And then we append all of the old netconfig, minus the old lastsent.  Also omit blank lines.
-	config_lines = num_tokens(netconfig, '\n');
+	// And then we...
+	int is_already_subscribed = 0;
+	int config_lines = num_tokens(oldnetconfig, '\n');
 	for (i=0; i<config_lines; ++i) {
-		extract_token(buf, netconfig, i, '\n', sizeof buf);
-		if ( (!IsEmptyStr(buf)) && (strncasecmp(buf, "lastsent|", 9)) ) {
+		extract_token(buf, oldnetconfig, i, '\n', sizeof buf);
+		int keep_this_line =1;						// set to nonzero if we are discarding a line
+
+		if (IsEmptyStr(buf)) {
+			keep_this_line = 0;
+		}
+
+		char buf_token[1024];
+		char buf_email[1024];
+		extract_token(buf_token, buf, 0, '|', sizeof buf_token);
+		extract_token(buf_email, buf, 1, '|', sizeof buf_email);
+
+		if (	( (!strcasecmp(buf_token, "listrecp")) || (!strcasecmp(buf_token, "digestrecp")) )
+			&& (!strcasecmp(buf_email, emailaddr)) 
+		) {
+			is_already_subscribed = 1;
+		}
+
+		if ( (!strcasecmp(buf_token, "subpending")) || (!strcasecmp(buf_token, "unsubpending")) ) {
+			time_t pendingtime = extract_long(buf, 3);
+			if ((time(NULL) - pendingtime) > 259200) {
+				syslog(LOG_DEBUG, "%s %s is %ld seconds old - deleting it", buf_email, buf_token, time(NULL) - pendingtime);
+				keep_this_line = 0;
+			}
+		}
+		
+		if (keep_this_line) {
 			sprintf(&newnetconfig[strlen(newnetconfig)], "%s\n", buf);
 		}
 	}
 
+	// Do we need to send out a confirmation email?
+	if ((action == SUBSCRIBE) && (!is_already_subscribed)) {
+		generate_uuid(confirmation_token);
+		sprintf(&newnetconfig[strlen(newnetconfig)], "subpending|%s|%s|%ld|%s", emailaddr, confirmation_token, time(NULL), url);
+	}
+	if ((action == UNSUBSCRIBE) && (is_already_subscribed)) {
+		generate_uuid(confirmation_token);
+		sprintf(&newnetconfig[strlen(newnetconfig)], "unsubpending|%s|%s|%ld|%s", emailaddr, confirmation_token, time(NULL), url);
+	}
+
 	// Write the new netconfig back to disk
+	syslog(LOG_DEBUG, "old: <\033[31m%s\033[0m>", oldnetconfig);
+	syslog(LOG_DEBUG, "new: <\033[32m%s\033[0m>", newnetconfig);
 	SaveRoomNetConfigFile(CC->room.QRnumber, newnetconfig);
 	end_critical_section(S_NETCONFIGS);
 	free(newnetconfig);			// this was the new netconfig, free it because we're done with it
-	free(netconfig);			// this was the old netconfig, free it even if we didn't do anything
+	free(oldnetconfig);			// this was the old netconfig, free it even if we didn't do anything
 
-#if 0
-	FIXME tell the client what we did
-#endif
-
-
+	// Tell the client what happened.
+	if ((action == SUBSCRIBE) && (is_already_subscribed)) {
+		cprintf("%d This email is already subscribed.\n", ERROR + ALREADY_EXISTS);
+	}
+	else if ((action == SUBSCRIBE) && (!is_already_subscribed)) {
+		cprintf("%d Confirmation email sent.\n", CIT_OK);
+	}
+	else if ((action == UNSUBSCRIBE) && (!is_already_subscribed)) {
+		cprintf("%d This email is not subscribed.\n", ERROR + NO_SUCH_USER);
+	}
+	else if ((action == UNSUBSCRIBE) && (is_already_subscribed)) {
+		cprintf("%d Confirmation email sent.\n", CIT_OK);
+	}
+	else {
+		cprintf("%d FIXME tell the client what we did\n", ERROR);
+	}
 }
 
 

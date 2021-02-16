@@ -79,10 +79,10 @@
 <input type="text" name="email" value="<?BSTR('email', 'X')>" maxlength="128" size="60">
 <br><br>
 
-<?_("(If subscribing) preferred format: ")>
+<div style="display:none"><?_("(If subscribing) preferred format: ")>
 <input type="radio" name="subtype" value="list" CHECKED><?_("One message at a time")>&nbsp; 
 <input type="radio" name="subtype" value="digest"><?_("Digest format")>&nbsp; 
-<br><br>
+<br><br></div>
 <input type="submit" name="cmd" value="subscribe">
 <input type="submit" name="cmd" value="unsubscribe">
 <br><br>
