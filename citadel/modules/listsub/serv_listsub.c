@@ -49,6 +49,120 @@ enum {				// one of these gets passed to do_subscribe_or_unsubscribe() so it kno
 
 
 /*
+ * This generates an email with a link the user clicks to confirm a list subscription.
+ */
+void send_subscribe_confirmation_email(char *roomname, char *emailaddr, char *url, char *confirmation_token) {
+	// We need a URL-safe representation of the room name
+	char urlroom[ROOMNAMELEN+10];
+	urlesc(urlroom, sizeof(urlroom), roomname);
+
+	char from_address[1024];
+	snprintf(from_address, sizeof from_address, "noreply@%s", CtdlGetConfigStr("c_fqdn"));
+
+	char emailtext[SIZ];
+	snprintf(emailtext, sizeof emailtext,
+		"MIME-Version: 1.0\n"
+		"Content-Type: multipart/alternative; boundary=\"__ctdlmultipart__\"\n"
+		"\n"
+		"This is a multipart message in MIME format.\n"
+		"\n"
+		"--__ctdlmultipart__\n"
+		"Content-type: text/plain\n"
+		"\n"
+		"Someone (probably you) has submitted a request to subscribe\n"
+		"<%s> to the <%s> mailing list.\n"
+		"\n"
+		"Please go here to confirm this request:\n"
+		"%s?room=%s&token=%s&cmd=confirm\n"
+		"\n"
+		"If this request has been submitted in error and you do not\n"
+		"wish to receive the <%s> mailing list, simply do nothing,\n"
+		"and you will not receive any further mailings.\n"
+		"\n"
+		"--__ctdlmultipart__\n"
+		"Content-type: text/html\n"
+		"\n"
+		"<html><body><p>Someone (probably you) has submitted a request to subscribe "
+		"<strong>%s</strong> to the <strong>%s</strong> mailing list.</p>"
+		"<p>Please go here to confirm this request:</p>"
+		"<p><a href=\"%s?room=%s&token=%s&cmd=confirm\">"
+		"%s?room=%s&token=%s&cmd=confirm</a></p>"
+		"<p>If this request has been submitted in error and you do not "
+		"wish to receive the <strong>%s<strong> mailing list, simply do nothing, "
+		"and you will not receive any further mailings.</p>"
+		"</body></html>\n"
+		"\n"
+		"--__ctdlmultipart__--\n"
+		,
+		emailaddr, roomname, url, urlroom, confirmation_token, roomname,
+		emailaddr, roomname,
+		url, urlroom, confirmation_token,
+		url, urlroom, confirmation_token,
+		roomname
+	);
+
+	quickie_message("Citadel", from_address, emailaddr, NULL, emailtext, FMT_RFC822, "Please confirm your list subscription");
+}
+
+
+/*
+ * This generates an email with a link the user clicks to confirm a list unsubscription.
+ */
+void send_unsubscribe_confirmation_email(char *roomname, char *emailaddr, char *url, char *confirmation_token) {
+	// We need a URL-safe representation of the room name
+	char urlroom[ROOMNAMELEN+10];
+	urlesc(urlroom, sizeof(urlroom), roomname);
+
+	char from_address[1024];
+	snprintf(from_address, sizeof from_address, "noreply@%s", CtdlGetConfigStr("c_fqdn"));
+
+	char emailtext[SIZ];
+	snprintf(emailtext, sizeof emailtext,
+		"MIME-Version: 1.0\n"
+		"Content-Type: multipart/alternative; boundary=\"__ctdlmultipart__\"\n"
+		"\n"
+		"This is a multipart message in MIME format.\n"
+		"\n"
+		"--__ctdlmultipart__\n"
+		"Content-type: text/plain\n"
+		"\n"
+		"Someone (probably you) has submitted a request to unsubscribe\n"
+		"<%s> from the <%s> mailing list.\n"
+		"\n"
+		"Please go here to confirm this request:\n"
+		"%s?room=%s&token=%s&cmd=confirm\n"
+		"\n"
+		"If this request has been submitted in error and you still\n"
+		"wish to receive the <%s> mailing list, simply do nothing,\n"
+		"and you will remain subscribed.\n"
+		"\n"
+		"--__ctdlmultipart__\n"
+		"Content-type: text/html\n"
+		"\n"
+		"<html><body><p>Someone (probably you) has submitted a request to unsubscribe "
+		"<strong>%s</strong> from the <strong>%s</strong> mailing list.</p>"
+		"<p>Please go here to confirm this request:</p>"
+		"<p><a href=\"%s?room=%s&token=%s&cmd=confirm\">"
+		"%s?room=%s&token=%s&cmd=confirm</a></p>"
+		"<p>If this request has been submitted in error and you still "
+		"wish to receive the <strong>%s<strong> mailing list, simply do nothing, "
+		"and you will remain subscribed.</p>"
+		"</body></html>\n"
+		"\n"
+		"--__ctdlmultipart__--\n"
+		,
+		emailaddr, roomname, url, urlroom, confirmation_token, roomname,
+		emailaddr, roomname,
+		url, urlroom, confirmation_token,
+		url, urlroom, confirmation_token,
+		roomname
+	);
+
+	quickie_message("Citadel", from_address, emailaddr, NULL, emailtext, FMT_RFC822, "Please confirm your list subscription");
+}
+
+
+/*
  * "Subscribe" and "Unsubscribe" operations are so similar that they share a function.
  * The actual subscription doesn't take place here -- we just send out the confirmation request
  * and record the address and confirmation token.
@@ -58,10 +172,6 @@ void do_subscribe_or_unsubscribe(int action, char *emailaddr, char *url) {
 	int i;
 	char buf[1024];
 	char confirmation_token[40];
-
-	// We need a URL-safe representation of the room name
-	char urlroom[ROOMNAMELEN+10];
-	urlesc(urlroom, sizeof(urlroom), CC->room.QRname);
 
 	// Update this room's netconfig with the updated lastsent
 	begin_critical_section(S_NETCONFIGS);
@@ -113,16 +223,12 @@ void do_subscribe_or_unsubscribe(int action, char *emailaddr, char *url) {
 	if ((action == SUBSCRIBE) && (!is_already_subscribed)) {
 		generate_uuid(confirmation_token);
 		sprintf(&newnetconfig[strlen(newnetconfig)], "subpending|%s|%s|%ld|%s", emailaddr, confirmation_token, time(NULL), url);
-
-		// FIXME now generate the confirmation email
-		syslog(LOG_DEBUG, "%s?room=%s&token=%s&cmd=confirm", url, urlroom, confirmation_token);
+		send_subscribe_confirmation_email(CC->room.QRname, emailaddr, url, confirmation_token);
 	}
 	if ((action == UNSUBSCRIBE) && (is_already_subscribed)) {
 		generate_uuid(confirmation_token);
 		sprintf(&newnetconfig[strlen(newnetconfig)], "unsubpending|%s|%s|%ld|%s", emailaddr, confirmation_token, time(NULL), url);
-
-		// FIXME now generate the confirmation email
-		syslog(LOG_DEBUG, "%s?room=%s&token=%s&cmd=confirm", url, urlroom, confirmation_token);
+		send_unsubscribe_confirmation_email(CC->room.QRname, emailaddr, url, confirmation_token);
 	}
 
 	// Write the new netconfig back to disk
