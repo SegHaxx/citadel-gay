@@ -161,6 +161,7 @@ void listdeliver_sweep_room(char *roomname) {
 			syslog(LOG_DEBUG, "listdeliver: new lastsent is %ld", ld.msgnum);
 
 			// Update this room's netconfig with the updated lastsent
+			begin_critical_section(S_NETCONFIGS);
         		netconfig = LoadRoomNetConfigFile(CC->room.QRnumber);
         		if (!netconfig) {
 				netconfig = strdup("");
@@ -181,6 +182,7 @@ void listdeliver_sweep_room(char *roomname) {
 
 			// Write the new netconfig back to disk
 			SaveRoomNetConfigFile(CC->room.QRnumber, newnetconfig);
+			end_critical_section(S_NETCONFIGS);
 			free(newnetconfig);	// this was the new netconfig, free it because we're done with it
 		}
 	}

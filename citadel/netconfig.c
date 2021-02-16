@@ -133,7 +133,9 @@ void cmd_snet(char *argbuf) {
 	}
 	FreeStrBuf(&Line);
 
+	begin_critical_section(S_NETCONFIGS);
 	SaveRoomNetConfigFile(CC->room.QRnumber, ChrPtr(TheConfig));
+	end_critical_section(S_NETCONFIGS);
 	FreeStrBuf(&TheConfig);
 }
 

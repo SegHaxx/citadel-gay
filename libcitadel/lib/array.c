@@ -87,3 +87,12 @@ void *array_get_element_at(Array *arr, int index) {
 int array_len(Array *arr) {
 	return arr->num_elements;
 }
+
+
+/*
+ * Sort an array.  We already know the element size and number of elements, so all we need is
+ * a sort function, which we will pass along to qsort().
+ */
+void array_sort(Array *arr, int (*compar)(const void *, const void *)) {
+	qsort(arr->the_elements, arr->num_elements, arr->element_size, compar);
+}

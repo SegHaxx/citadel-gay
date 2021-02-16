@@ -112,37 +112,30 @@ int getmx(char *mxbuf, char *dest) {
 	unsigned short pref, type;
 	int n = 0;
 	int qdcount;
+	Array *mxrecords = NULL;
+	struct mx mx;
 
-	struct mx *mxrecs = NULL;
-	int num_mxrecs = 0;
-
-	/* If we're configured to send all mail to a smart-host, then our
-	 * job here is really easy.
-	 */
+	// If we're configured to send all mail to a smart-host, then our job here is really easy -- just return those.
 	n = get_hosts(mxbuf, "smarthost");
 	if (n > 0) {
 		return(n);
 	}
 
-	/*
-	 * No smart-host?  Look up the best MX for a site.
-	 * Make a call to the resolver library.
-	 */
+	mxrecords = array_new(sizeof(struct mx));
 
+	// No smart-host?  Look up the best MX for a site.  Make a call to the resolver library.
 	ret = res_query(dest, C_IN, T_MX, (unsigned char *)answer.bytes, sizeof(answer));
 
 	if (ret < 0) {
-		mxrecs = malloc(sizeof(struct mx));
-		mxrecs[0].pref = 0;
-		strcpy(mxrecs[0].host, dest);
-		num_mxrecs = 1;
+		mx.pref = 0;
+		strcpy(mx.host, dest);
+		array_append(mxrecords, &mx);
 	}
 	else {
-		/* If we had to truncate, shrink the number to avoid fireworks */
-		if (ret > sizeof(answer)) {
+		if (ret > sizeof(answer)) {		// If we had to truncate, shrink the number to avoid fireworks
 			ret = sizeof(answer);
 		}
-	
+
 		startptr = &answer.bytes[0];		// start and end of buffer
 		endptr = &answer.bytes[ret];
 		ptr = startptr + HFIXEDSZ;		// advance past header
@@ -173,39 +166,27 @@ int getmx(char *mxbuf, char *dest) {
 				ret = dn_expand(startptr, endptr, ptr, expanded_buf, sizeof(expanded_buf));
 				ptr += ret;
 	
-				// If there are no MX records for the domain, resolv will give us a single one with zero length.
-				// Make sure we only record actual MX records and not the blank.
-				if (strlen(expanded_buf) > 0) {
-					++num_mxrecs;
-					if (mxrecs == NULL) {
-						mxrecs = malloc(sizeof(struct mx));
-					}
-					else {
-						mxrecs = realloc(mxrecs, (sizeof(struct mx) * num_mxrecs) );
-					}
-	
-					mxrecs[num_mxrecs - 1].pref = pref;
-					strcpy(mxrecs[num_mxrecs - 1].host, expanded_buf);
-				}
+				mx.pref = pref;
+				strcpy(mx.host, expanded_buf);
+				array_append(mxrecords, &mx);
 			}
 		}
 	}
 
-	/* Sort the MX records by preference */
-	if (num_mxrecs > 1) {
-		qsort(mxrecs, num_mxrecs, sizeof(struct mx), mx_compare_pref);
+	// Sort the MX records by preference
+	if (array_len(mxrecords) > 1) {
+		array_sort(mxrecords, mx_compare_pref);
 	}
 
+	int num_mxrecs = array_len(mxrecords);
 	strcpy(mxbuf, "");
 	for (n=0; n<num_mxrecs; ++n) {
-		strcat(mxbuf, mxrecs[n].host);
+		strcat(mxbuf, ((struct mx *)array_get_element_at(mxrecords, n))->host);
 		strcat(mxbuf, "|");
 	}
-	free(mxrecs);
+	array_free(mxrecords);
 
-	/*
-	 * Append any fallback smart hosts we have configured.
-	 */
+	// Append any fallback smart hosts we have configured.
 	num_mxrecs += get_hosts(&mxbuf[strlen(mxbuf)], "fallbackhost");
 	return(num_mxrecs);
 }

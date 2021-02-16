@@ -399,7 +399,7 @@ void smtp_process_one_msg(long qmsgnum) {
 	}
 
 	if (should_try_now) {
-		syslog(LOG_DEBUG, "smtpclient: %ld attempting delivery now", qmsgnum);
+		syslog(LOG_DEBUG, "smtpclient: attempting delivery of message <%ld> now", qmsgnum);
 		StrBuf *NewInstr = NewStrBuf();
 		StrBufAppendPrintf(NewInstr, "Content-type: " SPOOLMIME "\n\n");
 		StrBufAppendPrintf(NewInstr, "msgid|%ld\n", msgid);

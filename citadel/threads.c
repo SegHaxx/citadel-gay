@@ -1,7 +1,7 @@
 /*
  * Thread handling stuff for Citadel server
  *
- * Copyright (c) 1987-2019 by the citadel.org team
+ * Copyright (c) 1987-2021 by the citadel.org team
  *
  * This program is open source software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 3.
@@ -53,6 +53,7 @@ int try_critical_section(int which_one)
 	 * transaction; this could lead to deadlock.
 	 */
 	if (	(which_one != S_FLOORCACHE)
+		&& (which_one != S_NETCONFIGS)
 	) {
 		cdb_check_handles();
 	}
@@ -70,6 +71,7 @@ void begin_critical_section(int which_one)
 	 * transaction; this could lead to deadlock.
 	 */
 	if (	(which_one != S_FLOORCACHE)
+		&& (which_one != S_NETCONFIGS)
 	) {
 		cdb_check_handles();
 	}
