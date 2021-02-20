@@ -17,13 +17,11 @@
 /*
  * List subscription handling
  */
-
-int Conditional_LISTSUB_EXECUTE_SUBSCRIBE(StrBuf *Target, WCTemplputParams *TP)
-{
+int Conditional_LISTSUB_EXECUTE_SUBSCRIBE(StrBuf *Target, WCTemplputParams *TP) {
 	int rc;
 	StrBuf *Line;
 	const char *ImpMsg;
-	const StrBuf *Room, *Email, *SubType;
+	const StrBuf *Room, *Email;
 
 	if (strcmp(bstr("cmd"), "subscribe")) {
 		return 0;
@@ -43,25 +41,20 @@ int Conditional_LISTSUB_EXECUTE_SUBSCRIBE(StrBuf *Target, WCTemplputParams *TP)
 		AppendImportantMessage(ImpMsg, -1);
 		return 0;
 	}
-	SubType = sbstr("subtype");
 
 	Line = NewStrBuf();
-	serv_printf("SUBS subscribe|%s|%s|%s|%s/listsub",
-		    ChrPtr(Room),
-		    ChrPtr(Email),
-		    ChrPtr(SubType),
-		    ChrPtr(site_prefix)
-		);
+	serv_printf("LSUB subscribe|%s|%s|%s/listsub", ChrPtr(Room), ChrPtr(Email), ChrPtr(site_prefix));
 	StrBuf_ServGetln(Line);
 	rc = GetServerStatusMsg(Line, NULL, 1, 2);
 	FreeStrBuf(&Line);
-	if (rc == 2)
+	if (rc == 2) {
 		putbstr("__FAIL", NewStrBufPlain(HKEY("1")));
+	}
 	return rc == 2;
 }
 
-int Conditional_LISTSUB_EXECUTE_UNSUBSCRIBE(StrBuf *Target, WCTemplputParams *TP)
-{
+
+int Conditional_LISTSUB_EXECUTE_UNSUBSCRIBE(StrBuf *Target, WCTemplputParams *TP) {
 	int rc;
 	StrBuf *Line;
 	const char *ImpMsg;
@@ -86,11 +79,7 @@ int Conditional_LISTSUB_EXECUTE_UNSUBSCRIBE(StrBuf *Target, WCTemplputParams *TP
 		return 0;
 	}
 
-	serv_printf("SUBS unsubscribe|%s|%s|%s/listsub",
-		    ChrPtr(Room),
-		    ChrPtr(Email),
-		    ChrPtr(site_prefix)
-		);
+	serv_printf("LSUB unsubscribe|%s|%s|%s/listsub", ChrPtr(Room), ChrPtr(Email), ChrPtr(site_prefix));
 	Line = NewStrBuf();
 	StrBuf_ServGetln(Line);
 	rc = GetServerStatusMsg(Line, NULL, 1, 2);
@@ -127,10 +116,7 @@ int Conditional_LISTSUB_EXECUTE_CONFIRM_SUBSCRIBE(StrBuf *Target, WCTemplputPara
 	}
 
 	Line = NewStrBuf();
-	serv_printf("SUBS confirm|%s|%s",
-		    ChrPtr(Room),
-		    ChrPtr(Token)
-		);
+	serv_printf("LSUB confirm|%s|%s", ChrPtr(Room), ChrPtr(Token));
 	StrBuf_ServGetln(Line);
 	rc = GetServerStatusMsg(Line, NULL, 1, 2);
 	FreeStrBuf(&Line);

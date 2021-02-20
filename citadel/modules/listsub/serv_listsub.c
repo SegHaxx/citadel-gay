@@ -94,7 +94,10 @@ void send_subscribe_confirmation_email(char *roomname, char *emailaddr, char *ur
 		"\n"
 		"--__ctdlmultipart__--\n"
 		,
-		emailaddr, roomname, url, urlroom, confirmation_token, roomname,
+		emailaddr, roomname,
+		url, urlroom, confirmation_token,
+		roomname
+		,
 		emailaddr, roomname,
 		url, urlroom, confirmation_token,
 		url, urlroom, confirmation_token,
@@ -151,14 +154,17 @@ void send_unsubscribe_confirmation_email(char *roomname, char *emailaddr, char *
 		"\n"
 		"--__ctdlmultipart__--\n"
 		,
-		emailaddr, roomname, url, urlroom, confirmation_token, roomname,
+		emailaddr, roomname,
+		url, urlroom, confirmation_token,
+		roomname
+		,
 		emailaddr, roomname,
 		url, urlroom, confirmation_token,
 		url, urlroom, confirmation_token,
 		roomname
 	);
 
-	quickie_message("Citadel", from_address, emailaddr, NULL, emailtext, FMT_RFC822, "Please confirm your list subscription");
+	quickie_message("Citadel", from_address, emailaddr, NULL, emailtext, FMT_RFC822, "Please confirm your list unsubscription");
 }
 
 
@@ -195,21 +201,21 @@ void do_subscribe_or_unsubscribe(int action, char *emailaddr, char *url) {
 			keep_this_line = 0;
 		}
 
-		char buf_token[1024];
+		char buf_directive[1024];
 		char buf_email[1024];
-		extract_token(buf_token, buf, 0, '|', sizeof buf_token);
+		extract_token(buf_directive, buf, 0, '|', sizeof buf_directive);
 		extract_token(buf_email, buf, 1, '|', sizeof buf_email);
 
-		if (	( (!strcasecmp(buf_token, "listrecp")) || (!strcasecmp(buf_token, "digestrecp")) )
+		if (	( (!strcasecmp(buf_directive, "listrecp")) || (!strcasecmp(buf_directive, "digestrecp")) )
 			&& (!strcasecmp(buf_email, emailaddr)) 
 		) {
 			is_already_subscribed = 1;
 		}
 
-		if ( (!strcasecmp(buf_token, "subpending")) || (!strcasecmp(buf_token, "unsubpending")) ) {
+		if ( (!strcasecmp(buf_directive, "subpending")) || (!strcasecmp(buf_directive, "unsubpending")) ) {
 			time_t pendingtime = extract_long(buf, 3);
 			if ((time(NULL) - pendingtime) > 259200) {
-				syslog(LOG_DEBUG, "%s %s is %ld seconds old - deleting it", buf_email, buf_token, time(NULL) - pendingtime);
+				syslog(LOG_DEBUG, "%s %s is %ld seconds old - deleting it", buf_email, buf_directive, time(NULL) - pendingtime);
 				keep_this_line = 0;
 			}
 		}
@@ -232,8 +238,6 @@ void do_subscribe_or_unsubscribe(int action, char *emailaddr, char *url) {
 	}
 
 	// Write the new netconfig back to disk
-	syslog(LOG_DEBUG, "old: <\033[31m%s\033[0m>", oldnetconfig);
-	syslog(LOG_DEBUG, "new: <\033[32m%s\033[0m>", newnetconfig);
 	SaveRoomNetConfigFile(CC->room.QRnumber, newnetconfig);
 	end_critical_section(S_NETCONFIGS);
 	free(newnetconfig);			// this was the new netconfig, free it because we're done with it
@@ -241,27 +245,109 @@ void do_subscribe_or_unsubscribe(int action, char *emailaddr, char *url) {
 
 	// Tell the client what happened.
 	if ((action == SUBSCRIBE) && (is_already_subscribed)) {
-		cprintf("%d This email is already subscribed.\n", ERROR + ALREADY_EXISTS);
+		cprintf("%d This email address is already subscribed.\n", ERROR + ALREADY_EXISTS);
 	}
 	else if ((action == SUBSCRIBE) && (!is_already_subscribed)) {
-		cprintf("%d Confirmation email sent.\n", CIT_OK);
+		cprintf("%d Subscription was requested, and a confirmation email was sent.\n", CIT_OK);
 	}
 	else if ((action == UNSUBSCRIBE) && (!is_already_subscribed)) {
-		cprintf("%d This email is not subscribed.\n", ERROR + NO_SUCH_USER);
+		cprintf("%d This email address is not subscribed.\n", ERROR + NO_SUCH_USER);
 	}
 	else if ((action == UNSUBSCRIBE) && (is_already_subscribed)) {
-		cprintf("%d Confirmation email sent.\n", CIT_OK);
+		cprintf("%d Unsubscription was requested, and a confirmation email was sent.\n", CIT_OK);
 	}
 	else {
-		cprintf("%d FIXME tell the client what we did\n", ERROR);
+		cprintf("%d Nothing happens.\n", ERROR);
 	}
+}
+
+
+/*
+ * Confirm a list subscription or unsubscription
+ */
+void do_confirm(char *token) {
+	int yes_subscribe = 0;				// Set to 1 if the confirmation to subscribe is validated.
+	int yes_unsubscribe = 0;			// Set to 1 if the confirmation to unsubscribe is validated.
+	int i;
+	char buf[1024];
+	int config_lines = 0;
+	char pending_directive[128];
+	char pending_email[256];
+	char pending_token[128];
+
+	// We will have to do this in two passes.  The first pass checks to see if we have a confirmation request matching the token.
+        char *oldnetconfig = LoadRoomNetConfigFile(CC->room.QRnumber);
+        if (!oldnetconfig) {
+		cprintf("%d There are no pending requests.\n", ERROR + NO_SUCH_USER);
+		return;
+	}
+
+	config_lines = num_tokens(oldnetconfig, '\n');
+	for (i=0; i<config_lines; ++i) {
+		extract_token(buf, oldnetconfig, i, '\n', sizeof buf);
+		extract_token(pending_directive, buf, 0, '|', sizeof pending_directive);
+		extract_token(pending_email, buf, 1, '|', sizeof pending_email);
+		extract_token(pending_token, buf, 2, '|', sizeof pending_token);
+
+		if (!strcasecmp(pending_token, token)) {
+			if (!strcasecmp(pending_directive, "subpending")) {
+				yes_subscribe = 1;
+			}
+			else if (!strcasecmp(pending_directive, "unsubpending")) {
+				yes_unsubscribe = 1;
+			}
+		}
+	}
+	free(oldnetconfig);
+
+	// We didn't find a pending subscribe or unsubscribe request with the supplied token.
+	if ((!yes_subscribe) && (!yes_unsubscribe)) {
+		cprintf("%d The request you are trying to confirm was not found.\n", ERROR + NO_SUCH_USER);
+		return;
+	}
+
+	// The second pass performs the now confirmed operation.
+	// We will have to do this in two passes.  The first pass checks to see if we have a confirmation request matching the token.
+        oldnetconfig = LoadRoomNetConfigFile(CC->room.QRnumber);
+        if (!oldnetconfig) {
+		oldnetconfig = strdup("");
+	}
+
+	// The new netconfig begins with an empty buffer...
+	begin_critical_section(S_NETCONFIGS);
+	char *newnetconfig = malloc(strlen(oldnetconfig) + 1024);
+	newnetconfig[0] = 0;
+
+	config_lines = num_tokens(oldnetconfig, '\n');
+	for (i=0; i<config_lines; ++i) {
+		char buf_email[256];
+		extract_token(buf, oldnetconfig, i, '\n', sizeof buf);
+		extract_token(buf_email, buf, 1, '|', sizeof pending_email);
+		if (strcasecmp(buf_email, pending_email)) {
+			sprintf(&newnetconfig[strlen(newnetconfig)], "%s\n", buf);	// only keep lines that do not reference this subscriber
+		}
+	}
+
+	// We have now removed all lines containing the subscriber's email address.  This deletes any pending requests.
+	// If this was an unsubscribe operation, they're now gone from the list.
+	// But if this was a subscribe operation, we now need to add them.
+	if (yes_subscribe) {
+		sprintf(&newnetconfig[strlen(newnetconfig)], "listrecp|%s\n", pending_email);
+	}
+
+	// FIXME write it back to disk
+	SaveRoomNetConfigFile(CC->room.QRnumber, newnetconfig);
+	end_critical_section(S_NETCONFIGS);
+	free(oldnetconfig);
+	free(newnetconfig);
+	cprintf("%d The pending request was confirmed.\n", CIT_OK);
 }
 
 
 /* 
  * process subscribe/unsubscribe requests and confirmations
  */
-void cmd_subs(char *cmdbuf) {
+void cmd_lsub(char *cmdbuf) {
 	char cmd[20];
 	char roomname[ROOMNAMELEN];
 	char emailaddr[1024];
@@ -287,21 +373,19 @@ void cmd_subs(char *cmdbuf) {
 
 	if (!strcasecmp(cmd, "subscribe")) {
 		extract_token(emailaddr, cmdbuf, 2, '|', sizeof emailaddr);	// token 2 is the subscriber's email address
-		extract_token(options, cmdbuf, 3, '|', sizeof options);		// there are no options ... ignore this token
-		extract_token(url, cmdbuf, 4, '|', sizeof url);			// token 3 is the URL at which we subscribed
+		extract_token(url, cmdbuf, 3, '|', sizeof url);			// token 3 is the URL at which we subscribed
 		do_subscribe_or_unsubscribe(SUBSCRIBE, emailaddr, url);
 	}
 
 	else if (!strcasecmp(cmd, "unsubscribe")) {
 		extract_token(emailaddr, cmdbuf, 2, '|', sizeof emailaddr);	// token 2 is the subscriber's email address
-		extract_token(options, cmdbuf, 3, '|', sizeof options);		// there are no options ... ignore this token
-		extract_token(url, cmdbuf, 4, '|', sizeof url);			// token 3 is the URL at which we subscribed
+		extract_token(url, cmdbuf, 3, '|', sizeof url);			// token 3 is the URL at which we subscribed
 		do_subscribe_or_unsubscribe(UNSUBSCRIBE, emailaddr, url);
 	}
 
 	else if (!strcasecmp(cmd, "confirm")) {
 		extract_token(token, cmdbuf, 2, '|', sizeof token);		// token 2 is the confirmation token
-		cprintf("%d not implemented\n", ERROR);
+		do_confirm(token);
 	}
 
 	else {									// sorry man, I can't deal with that
@@ -317,7 +401,7 @@ CTDL_MODULE_INIT(listsub)
 {
 	if (!threading)
 	{
-		CtdlRegisterProtoHook(cmd_subs, "SUBS", "List subscribe/unsubscribe");
+		CtdlRegisterProtoHook(cmd_lsub, "LSUB", "List subscribe/unsubscribe");
 	}
 	
 	/* return our module name for the log */
