@@ -1795,6 +1795,7 @@ void OutputRFC822MsgHeaders(
 				break;
 			case erFc822Addr:
 				safestrncpy(fuser, mptr, sizeof_fuser);
+				break;
 			case eRecipient:
 				if (haschar(mptr, '@') == 0) {
 					sanitize_truncated_recipient(mptr);
