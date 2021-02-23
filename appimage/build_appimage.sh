@@ -6,6 +6,7 @@ rm -fr $CITADEL_BUILD_DIR $WEBCIT_BUILD_DIR
 
 # libcitadel has to be built in a "real" library directory
 pushd ../libcitadel || exit 1
+make distclean 2>/dev/null
 ./bootstrap || exit 1
 ./configure || exit 1
 make || exit 1
@@ -14,6 +15,7 @@ popd
 
 # Build the Citadel server
 pushd ../citadel || exit 1
+make distclean 2>/dev/null
 ./bootstrap || exit 1
 ./configure --prefix=$CITADEL_BUILD_DIR || exit 1
 make || exit 1
@@ -22,6 +24,7 @@ popd
 
 # Build WebCit
 pushd ../webcit || exit 1
+make distclean 2>/dev/null
 ./bootstrap || exit 1
 ./configure --prefix=$WEBCIT_BUILD_DIR || exit 1
 make || exit 1
@@ -57,12 +60,9 @@ rm -fr $CITADEL_BUILD_DIR $WEBCIT_BUILD_DIR
 cc ctdlvisor.c -o citadel.AppDir/usr/bin/ctdlvisor || exit 1
 
 cpu=`uname -p`
+basefilename=citadel-`date +%s`
 if [ $cpu == x86_64 ] ; then
-	ARCH=x86_64 appimagetool citadel.AppDir/
-	md5sum Citadel-x86_64.AppImage | awk ' { print $1 } ' >Citadel-x86_64.AppImage.md5
+	ARCH=x86_64 appimagetool citadel.AppDir/ ${basefilename}-x64.appimage
 else
-	ARCH=ARM appimagetool citadel.AppDir/
-	md5sum Citadel-armhf.AppImage | awk ' { print $1 } ' >Citadel-armhf.AppImage.md5
+	ARCH=ARM appimagetool ${basefilename}.AppDir/ ${basefilename}-arm32.appimage
 fi
-
-

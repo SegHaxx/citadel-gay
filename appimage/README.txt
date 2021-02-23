@@ -7,8 +7,8 @@ distributed as a single binary file.  Visit https://appimage.org/ to learn more 
 AppImage format and how it works.
 
 Again, do NOT try to run this on your production machine.  For that matter, don't try to
-run it on anything other than a dedicated build host.  It will ERASE /usr/local/citadel
-and /usr/local/webcit during the build process.
+run it on anything other than a dedicated build host.  It may ERASE data you intended to
+keep.
 
 If you're an end user you shouldn't have any need to do this at all.  The whole point of
 this is that we can supply ready-to-run binaries that will run on any Linux/Linux system
@@ -39,5 +39,5 @@ You should be running this build on the OLDEST version of Linux/Linux on which y
 binary should be able to run.  The distribution does not matter -- for example, a
 binary built on Debian should run fine on Ubuntu or Red Hat or whatever -- but the C
 library and other very base system libraries are only upward compatible, not downward
-compatible.  For example, at the time of this writing, I am building on Ubuntu 14 and
+compatible.  For example, at the time of this writing, I am building on Ubuntu 16 and
 it's early 2021.
