@@ -64,5 +64,5 @@ basefilename=citadel-`date +%s`
 if [ $cpu == x86_64 ] ; then
 	ARCH=x86_64 appimagetool citadel.AppDir/ ${basefilename}-x64.appimage
 else
-	ARCH=ARM appimagetool ${basefilename}.AppDir/ ${basefilename}-arm32.appimage
+	ARCH=ARM appimagetool citadel.AppDir/ ${basefilename}-arm32.appimage
 fi
