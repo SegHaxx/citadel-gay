@@ -66,3 +66,5 @@ if [ $cpu == x86_64 ] ; then
 else
 	ARCH=ARM appimagetool citadel.AppDir/ ${basefilename}-arm32.appimage
 fi
+
+

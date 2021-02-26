@@ -31,14 +31,131 @@ usage() {
 # Permanently install the Citadel AppImage to this system
 installation() {
 
-	# First ... check to make sure Citadel isn't runnings
+	clear
+	echo
+	echo
+
+	# First ... check to make sure Citadel isn't already running.
+	echo Checking to make sure Citadel is not already running...
 	if ps ax | grep citserver | grep -v grep ; then
 		echo Installation cannot proceed while Citadel is running.
 		echo Stop your services and try again.
 		exit 1
 	fi
+	echo OK
+	echo
 
-	echo Hi
+	# Check compatibility
+	echo Checking this AppImage compatibility with your host system...
+	(
+		export LD_LIBRARY_PATH=$APPDIR/usr/lib
+		export PATH=$APPDIR/usr/bin
+		$APPDIR/usr/local/citadel/citserver -c || {
+			echo Compatibility failed.
+			exit 2
+		}
+	)
+	echo OK
+	echo
+
+	# Locate the Citadel run directory
+	confirmed=0
+	while [ ${confirmed} == 0 ] 
+	do
+		echo -n In what directory will you run Citadel\?  \[${CTDL_DIR}\]\ 
+		read dir
+		if [ "${dir}" == "" ]
+		then
+			dir=${CTDL_DIR}
+		fi
+		if [ ! -d ${dir} ] 
+		then
+			echo -n ${dir} does not exist.  Do you want to create it\?\ 
+			read yesno
+			if [ `echo ${yesno} | cut -c1` == 'y' ]
+			then
+				mkdir ${dir}
+			fi
+		fi
+		if [ -d ${dir} ] 
+		then
+			confirmed=1
+		fi
+	done
+	CTDL_DIR=${dir}
+
+	# Check systemd
+	echo Checking this operating system for systemd...
+	systemctl --version >/dev/null 2>&1 || {
+		echo Automatic installation is only supported with systemd.
+		echo You can still run Citadel but you will need to start it some other way.
+		exit 3
+	}
+	echo OK
+	echo
+
+	# Remove old unit files
+	echo Checking for old startup files.
+	ls /etc/systemd/system/citadel* 2>/dev/null && {
+		rm -i /etc/systemd/system/citadel*
+	}
+	ls /etc/systemd/system/webcit* 2>/dev/null && {
+		rm -i /etc/systemd/system/webcit*
+	}
+	echo OK
+	echo
+
+	echo Ready to install ${APPIMAGE} in ${CTDL_DIR}
+	echo Copying the AppImage...
+	rm -f ${CTDL_DIR}/citadel.appimage 2>/dev/null
+	cp ${APPIMAGE} ${CTDL_DIR}/citadel.appimage || {
+		echo Installation has failed with error code $? .
+		exit 4
+	}
+
+	echo Creating the systemd unit file...
+	(
+		echo '# This unit file starts all Citadel services via the AppImage distribution.'
+		echo '# Automatically installed on' `date`
+		echo ''
+		echo '[Unit]'
+		echo 'Description=Citadel'
+		echo 'After=network.target'
+		echo ''
+		echo '[Service]'
+		echo 'ExecStart='${CTDL_DIR}'/citadel.appimage run -h '${CTDL_DIR}' -p '${HTTP_PORT}' -s '${HTTPS_PORT}
+		echo 'ExecStop=/bin/kill $MAINPID'
+		echo 'KillMode=process'
+		echo 'Restart=on-failure'
+		echo 'LimitCORE=infinity'
+		echo ''
+		echo '[Install]'
+		echo 'WantedBy=multi-user.target'
+	) >/etc/systemd/system/citadel.service || {
+		echo Installation has failed with error code $? .
+		exit 5
+	}
+	echo OK
+	echo
+
+	echo Enabling the service...
+	systemctl enable citadel || {
+		echo Installation has failed with error code $? .
+		exit 6
+	}
+	echo OK
+	echo
+
+	echo Starting the service...
+	systemctl start citadel || {
+		echo Installation has failed with error code $? .
+		exit 6
+	}
+	echo OK
+	echo
+
+	echo Installation has completed.
+	echo Please continue by browsing to http://`hostname`:${HTTP_PORT}
 	exit
 }
 
@@ -84,19 +201,3 @@ case ${1} in
 		;;
 esac
 exit 0
-
-
-
-
-# This unit file starts all Citadel services via the AppImage distribution.
-[Unit]
-Description=Citadel
-After=network.target
-[Service]
-ExecStart=/root/citadel/appimage/Citadel-x86_64.AppImage run -h /usr/local/citadel -s 80 -s 443
-ExecStop=/bin/kill $MAINPID
-KillMode=process
-Restart=on-failure
-LimitCORE=infinity
-[Install]
-WantedBy=multi-user.target
