@@ -18,11 +18,11 @@
 /*
  * Write data to the HTTP client.  Encrypt if necessary.
  */
-int client_write(struct client_handle *ch, char *buf, int nbytes)
-{
+int client_write(struct client_handle *ch, char *buf, int nbytes) {
 	if (is_https) {
 		return client_write_ssl(ch, buf, nbytes);
-	} else {
+	}
+	else {
 		return write(ch->sock, buf, nbytes);
 	}
 }
@@ -32,11 +32,11 @@ int client_write(struct client_handle *ch, char *buf, int nbytes)
  * Read data from the HTTP client.  Decrypt if necessary.
  * Returns number of bytes read, or -1 to indicate an error.
  */
-int client_read(struct client_handle *ch, char *buf, int nbytes)
-{
+int client_read(struct client_handle *ch, char *buf, int nbytes) {
 	if (is_https) {
 		return client_read_ssl(ch, buf, nbytes);
-	} else {
+	}
+	else {
 		int bytes_received = 0;
 		int bytes_this_block = 0;
 		while (bytes_received < nbytes) {
@@ -56,13 +56,13 @@ int client_read(struct client_handle *ch, char *buf, int nbytes)
  * Implemented in terms of client_read() and is therefore transparent...
  * Returns the string length or -1 for error.
  */
-int client_readline(struct client_handle *ch, char *buf, int maxbytes)
-{
+int client_readline(struct client_handle *ch, char *buf, int maxbytes) {
 	int len = 0;
 	int c = 0;
 
-	if (buf == NULL)
+	if (buf == NULL) {
 		return (-1);
+	}
 
 	while (len < maxbytes) {
 		c = client_read(ch, &buf[len], 1);
@@ -86,8 +86,7 @@ int client_readline(struct client_handle *ch, char *buf, int maxbytes)
 /*
  * printf() type function to send data to the web client.
  */
-void client_printf(struct client_handle *ch, const char *format, ...)
-{
+void client_printf(struct client_handle *ch, const char *format, ...) {
 	va_list arg_ptr;
 	StrBuf *Buf = NewStrBuf();
 
@@ -104,8 +103,7 @@ void client_printf(struct client_handle *ch, const char *format, ...)
  * Push one new header into the response of an HTTP request.
  * When completed, the HTTP transaction now owns the memory allocated for key and val.
  */
-void add_response_header(struct http_transaction *h, char *key, char *val)
-{
+void add_response_header(struct http_transaction *h, char *key, char *val) {
 	struct http_header *new_response_header = malloc(sizeof(struct http_header));
 	new_response_header->key = key;
 	new_response_header->val = val;
@@ -118,8 +116,7 @@ void add_response_header(struct http_transaction *h, char *key, char *val)
  * Entry point for this layer.  Socket is connected.  If running as an HTTPS
  * server, SSL has already been negotiated.  Now perform one transaction.
  */
-void perform_one_http_transaction(struct client_handle *ch)
-{
+void perform_one_http_transaction(struct client_handle *ch) {
 	char buf[1024];
 	int len;
 	int lines_read = 0;
@@ -138,7 +135,8 @@ void perform_one_http_transaction(struct client_handle *ch)
 			if (c == NULL) {
 				h.method = strdup("NULL");
 				h.uri = strdup("/");
-			} else {
+			}
+			else {
 				*c = 0;
 				h.method = strdup(buf);
 				++c;
@@ -150,7 +148,8 @@ void perform_one_http_transaction(struct client_handle *ch)
 				++c;
 				h.uri = strdup(d);
 			}
-		} else {			// Subsequent lines are headers.
+		}
+		else {			// Subsequent lines are headers.
 			c = strchr(buf, ':');	// Header line folding is obsolete so we don't support it.
 			if (c != NULL) {
 				struct http_header *new_request_header = malloc(sizeof(struct http_header));
@@ -171,24 +170,25 @@ void perform_one_http_transaction(struct client_handle *ch)
 	}
 
 	// build up the site prefix, such as https://foo.bar.com:4343
-
 	h.site_prefix = malloc(256);
 	strcpy(h.site_prefix, (is_https ? "https://" : "http://"));
 	char *hostheader = header_val(&h, "Host");
 	if (hostheader) {
 		strcat(h.site_prefix, hostheader);
-	} else {
+	}
+	else {
 		strcat(h.site_prefix, "127.0.0.1");
 	}
 	socklen_t llen = sizeof(sin);
 	if (getsockname(ch->sock, (struct sockaddr *) &sin, &llen) >= 0) {
 		sprintf(&h.site_prefix[strlen(h.site_prefix)], ":%d", ntohs(sin.sin_port));
 	}
-	// Now try to read in the request body (if one is present)
 
+	// Now try to read in the request body (if one is present)
 	if (len < 0) {
 		syslog(LOG_DEBUG, "Client disconnected");
-	} else {
+	}
+	else {
 		syslog(LOG_DEBUG, "< %s %s", h.method, h.uri);
 
 		// If there is a request body, read it now.
@@ -275,8 +275,7 @@ void perform_one_http_transaction(struct client_handle *ch)
  * The caller does NOT own the memory of the returned pointer, but can count on the pointer
  * to still be valid through the end of the transaction.
  */
-char *header_val(struct http_transaction *h, char *requested_header)
-{
+char *header_val(struct http_transaction *h, char *requested_header) {
 	struct http_header *clh;	// general purpose iterator variable
 	for (clh = h->request_headers; clh != NULL; clh = clh->next) {
 		if (!strcasecmp(clh->key, requested_header)) {

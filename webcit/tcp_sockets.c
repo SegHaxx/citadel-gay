@@ -920,8 +920,7 @@ retry:
  * sockpath - file name of the unix domain socket
  * queue_len - Number of incoming connections to allow in the queue
  */
-int webcit_uds_server(char *sockpath, int queue_len)
-{
+int webcit_uds_server(char *sockpath, int queue_len) {
 	struct sockaddr_un addr;
 	int s;
 	int i;
@@ -964,8 +963,6 @@ int webcit_uds_server(char *sockpath, int queue_len)
 }
 
 
-
-
 /*
  * Read data from the client socket.
  *
@@ -979,8 +976,7 @@ int webcit_uds_server(char *sockpath, int queue_len)
  *      0       Request timed out.
  *	-1   	Connection is broken, or other error.
  */
-int client_read_to(ParsedHttpHdrs *Hdr, StrBuf *Target, int bytes, int timeout)
-{
+int client_read_to(ParsedHttpHdrs *Hdr, StrBuf *Target, int bytes, int timeout) {
 	const char *Error;
 	int retval = 0;
 
@@ -991,11 +987,11 @@ int client_read_to(ParsedHttpHdrs *Hdr, StrBuf *Target, int bytes, int timeout)
 
 		baselen = StrLength(Target);
 
-		if (Hdr->Pos == NULL)
+		if (Hdr->Pos == NULL) {
 			Hdr->Pos = ChrPtr(Hdr->ReadBuf);
+		}
 
-		if (StrLength(Hdr->ReadBuf) > 0)
-		{
+		if (StrLength(Hdr->ReadBuf) > 0) {
 			bufremain = StrLength(Hdr->ReadBuf) - (Hdr->Pos - ChrPtr(Hdr->ReadBuf));
 			
 			if (bytes < bufremain)
@@ -1004,8 +1000,7 @@ int client_read_to(ParsedHttpHdrs *Hdr, StrBuf *Target, int bytes, int timeout)
 			StrBufCutLeft(Hdr->ReadBuf, bufremain);
 		}
 
-		if (bytes > bufremain) 
-		{
+		if (bytes > bufremain) {
 			while ((StrLength(Hdr->ReadBuf) + StrLength(Target) < bytes + baselen) &&
 			       (retval >= 0))
 				retval = client_read_sslbuffer(Hdr->ReadBuf, timeout);
@@ -1032,8 +1027,7 @@ int client_read_to(ParsedHttpHdrs *Hdr, StrBuf *Target, int bytes, int timeout)
 					O_TERM,
 					&Error);
 	if (retval < 0) {
-		syslog(LOG_INFO, "client_read() failed: %s\n",
-			Error);
+		syslog(LOG_INFO, "client_read() failed: %s\n", Error);
 		wc_backtrace(LOG_DEBUG);
 		return retval;
 	}
@@ -1096,11 +1090,12 @@ long end_burst(void)
 	}
 #endif
 
-	if (WCC->Hdr->http_sock == -1)
+	if (WCC->Hdr->http_sock == -1) {
 		return -1;
+	}
 	fdflags = fcntl(WC->Hdr->http_sock, F_GETFL);
 
-	while ((ptr < eptr) && (WCC->Hdr->http_sock != -1)){
+	while ((ptr < eptr) && (WCC->Hdr->http_sock != -1)) {
                 if ((fdflags & O_NONBLOCK) == O_NONBLOCK) {
                         FD_ZERO(&wset);
                         FD_SET(WCC->Hdr->http_sock, &wset);

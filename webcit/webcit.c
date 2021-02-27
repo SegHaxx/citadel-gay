@@ -25,11 +25,10 @@ extern int verbose;
 
 void PutRequestLocalMem(void *Data, DeleteHashDataFunc DeleteIt)
 {
-        wcsession *WCC = WC;
 	int n;
 	
-	n = GetCount(WCC->Hdr->HTTPHeaders);
-	Put(WCC->Hdr->HTTPHeaders, IKEY(n), Data, DeleteIt);
+	n = GetCount(WC->Hdr->HTTPHeaders);
+	Put(WC->Hdr->HTTPHeaders, IKEY(n), Data, DeleteIt);
 }
 
 void DeleteWebcitHandler(void *vHandler)
@@ -58,9 +57,8 @@ void WebcitAddUrlHandler(const char * UrlString, long UrlSLen,
 
 void tmplput_HANDLER_DISPLAYNAME(StrBuf *Target, WCTemplputParams *TP) 
 {
-	wcsession *WCC = WC;
-	if (WCC->Hdr->HR.Handler != NULL)
-		StrBufAppendTemplate(Target, TP, WCC->Hdr->HR.Handler->DisplayName, 0);
+	if (WC->Hdr->HR.Handler != NULL)
+		StrBufAppendTemplate(Target, TP, WC->Hdr->HR.Handler->DisplayName, 0);
 }
 
 
@@ -73,20 +71,19 @@ void wcc_printf(const char *FILE, const char *FUNCTION, long LINE, const char *f
 void wc_printf(const char *format,...)
 #endif
 {
-	wcsession *WCC = WC;
 	va_list arg_ptr;
 
-	if (WCC->WBuf == NULL)
-		WCC->WBuf = NewStrBuf();
+	if (WC->WBuf == NULL)
+		WC->WBuf = NewStrBuf();
 #ifdef UBER_VERBOSE_DEBUGGING
-	StrBufAppendPrintf(WCC->WBuf, "\n%s:%s:%d[", FILE, FUNCTION, LINE);
+	StrBufAppendPrintf(WC->WBuf, "\n%s:%s:%d[", FILE, FUNCTION, LINE);
 #endif
 
 	va_start(arg_ptr, format);
-	StrBufVAppendPrintf(WCC->WBuf, format, arg_ptr);
+	StrBufVAppendPrintf(WC->WBuf, format, arg_ptr);
 	va_end(arg_ptr);
 #ifdef UBER_VERBOSE_DEBUGGING
-	StrBufAppendPrintf(WCC->WBuf, "]\n");
+	StrBufAppendPrintf(WC->WBuf, "]\n");
 #endif
 }
 
@@ -95,11 +92,10 @@ void wc_printf(const char *format,...)
  */
 void hprintf(const char *format,...)
 {
-	wcsession *WCC = WC;
 	va_list arg_ptr;
 
 	va_start(arg_ptr, format);
-	StrBufVAppendPrintf(WCC->HBuf, format, arg_ptr);
+	StrBufVAppendPrintf(WC->HBuf, format, arg_ptr);
 	va_end(arg_ptr);
 }
 
@@ -138,12 +134,11 @@ void output_headers(	int do_httpheaders,	/* 1 = output HTTP headers			  */
 			int suppress_check,	/* 1 = suppress check for instant messages	  */
 			int cache		/* 1 = allow browser to cache this page	     */
 ) {
-	wcsession *WCC = WC;
 	char httpnow[128];
 
-	if (WCC->isFailure) 
+	if (WC->isFailure) 
 		hprintf("HTTP/2.2 500 Internal Server Error");
-	else if (WCC->Hdr->HaveRange > 1)
+	else if (WC->Hdr->HaveRange > 1)
 		hprintf("HTTP/1.1 206 Partial Content\r\n");
 	else
 		hprintf("HTTP/1.1 200 OK\r\n");
@@ -151,12 +146,12 @@ void output_headers(	int do_httpheaders,	/* 1 = output HTTP headers			  */
 	http_datestring(httpnow, sizeof httpnow, time(NULL));
 
 	if (do_httpheaders) {
-		if (WCC->serv_info != NULL)
+		if (WC->serv_info != NULL)
 			hprintf("Content-type: text/html; charset=utf-8\r\n"
 				"Server: %s / %s\n"
 				"Connection: close\r\n",
 				PACKAGE_STRING, 
-				ChrPtr(WCC->serv_info->serv_software));
+				ChrPtr(WC->serv_info->serv_software));
 		else
 			hprintf("Content-type: text/html; charset=utf-8\r\n"
 				"Server: %s / [n/a]\n"
@@ -190,7 +185,7 @@ void output_headers(	int do_httpheaders,	/* 1 = output HTTP headers			  */
 	if (do_htmlhead) {
 		begin_burst();
 		do_template("head");
-		if ( (WCC->logged_in) && (!unset_cookies) ) {
+		if ( (WC->logged_in) && (!unset_cookies) ) {
 			DoTemplate(HKEY("paging"), NULL, &NoCtx);
 		}
 		if (do_room_banner) {
@@ -254,7 +249,6 @@ void http_transmit_thing(const char *content_type, int is_static)
 
 void http_transmit_headers(const char *content_type, int is_static, long is_chunked, int is_gzip)
 {
-	wcsession *WCC = WC;
 	if (verbose)
 		syslog(LOG_DEBUG, "http_transmit_thing(%s)%s", content_type, ((is_static > 0) ? " (static)" : ""));
 	output_headers(0, 0, 0, 0, 0, is_static);
@@ -262,12 +256,12 @@ void http_transmit_headers(const char *content_type, int is_static, long is_chun
 	if (is_gzip)
 		hprintf("Content-encoding: gzip\r\n");
 
-	if (WCC->Hdr->HaveRange)
+	if (WC->Hdr->HaveRange)
 		hprintf("Accept-Ranges: bytes\r\n"
 			"Content-Range: bytes %ld-%ld/%ld\r\n",
-			WCC->Hdr->RangeStart,
-			WCC->Hdr->RangeTil,
-			WCC->Hdr->TotalBytes);
+			WC->Hdr->RangeStart,
+			WC->Hdr->RangeTil,
+			WC->Hdr->TotalBytes);
 
 	hprintf("Content-type: %s\r\n"
 		"Server: "PACKAGE_STRING"\r\n"
@@ -336,7 +330,6 @@ void display_success(const char *successmessage)
  */
 void authorization_required(void)
 {
-	wcsession *WCC = WC;
 	const char *message = "";
 
 	hprintf("HTTP/1.1 401 Authorization Required\r\n");
@@ -348,7 +341,7 @@ void authorization_required(void)
 	hprintf("WWW-Authenticate: Basic realm=\"%s\"\r\n", ChrPtr(WC->serv_info->serv_humannode));
 
 	/* if this is a false cookie authentication, remove it to avoid endless loops. */
-	if (StrLength(WCC->Hdr->HR.RawCookie) > 0)
+	if (StrLength(WC->Hdr->HR.RawCookie) > 0)
 		stuff_to_cookie(1);
 
 	hprintf("Content-Type: text/html\r\n");
@@ -357,8 +350,8 @@ void authorization_required(void)
 	wc_printf(_("Authorization Required"));
 	wc_printf("</h1>\r\n");
 
-	if (WCC->ImportantMsg != NULL) {
-		message = ChrPtr(WCC->ImportantMsg);
+	if (WC->ImportantMsg != NULL) {
+		message = ChrPtr(WC->ImportantMsg);
 	}
 
 	wc_printf(
@@ -374,9 +367,8 @@ void authorization_required(void)
  * Convenience functions to wrap around asynchronous ajax responses
  */
 void begin_ajax_response(void) {
-	wcsession *WCC = WC;
 
-	FlushStrBuf(WCC->HBuf);
+	FlushStrBuf(WC->HBuf);
 	output_headers(0, 0, 0, 0, 0, 0);
 
 	hprintf("Content-type: text/html; charset=UTF-8\r\n"
@@ -401,7 +393,6 @@ void end_ajax_response(void) {
  */
 void ajax_servcmd(void)
 {
-	wcsession *WCC = WC;
 	int Done = 0;
 	StrBuf *Buf;
 	char *junk;
@@ -413,15 +404,15 @@ void ajax_servcmd(void)
 	Buf = NewStrBuf();
 	serv_puts(bstr("g_cmd"));
 	StrBuf_ServGetln(Buf);
-	StrBufAppendBuf(WCC->WBuf, Buf, 0);
-	StrBufAppendBufPlain(WCC->WBuf, HKEY("\n"), 0);
+	StrBufAppendBuf(WC->WBuf, Buf, 0);
+	StrBufAppendBufPlain(WC->WBuf, HKEY("\n"), 0);
 	
 	switch (GetServerStatus(Buf, NULL)) {
 	case 8:
 		serv_puts("\n\n000");
 		if ( (StrLength(Buf)==3) && 
 		     !strcmp(ChrPtr(Buf), "000")) {
-			StrBufAppendBufPlain(WCC->WBuf, HKEY("\000"), 0);
+			StrBufAppendBufPlain(WC->WBuf, HKEY("\000"), 0);
 			break;
 		}
 	case 1:
@@ -432,8 +423,8 @@ void ajax_servcmd(void)
 			     !strcmp(ChrPtr(Buf), "000")) {
 				Done = 1;
 			}
-			StrBufAppendBuf(WCC->WBuf, Buf, 0);
-			StrBufAppendBufPlain(WCC->WBuf, HKEY("\n"), 0);
+			StrBufAppendBuf(WC->WBuf, Buf, 0);
+			StrBufAppendBufPlain(WC->WBuf, HKEY("\n"), 0);
 		}
 		break;
 	case 4:
@@ -461,7 +452,7 @@ void ajax_servcmd(void)
 	 * that page_popup() doesn't try to open it a second time. TODO: page_popup isn't with us anymore.
 	 */
 	if (!strncasecmp(bstr("g_cmd"), "GEXP", 4)) {
-		WCC->last_pager_check = time(NULL);
+		WC->last_pager_check = time(NULL);
 	}
 	FreeStrBuf(&Buf);
 }
@@ -496,17 +487,16 @@ void seconds_since_last_gexp(void)
  * Save a URL destination so we can go to it later
  */
 void push_destination(void) {
-	wcsession *WCC = WC;
 
-	if (!WCC) {
+	if (!WC) {
 		wc_printf("no session");
 		return;
 	}
 
-	FreeStrBuf(&WCC->PushedDestination);
-	WCC->PushedDestination = NewStrBufDup(sbstr("url"));
+	FreeStrBuf(&WC->PushedDestination);
+	WC->PushedDestination = NewStrBufDup(sbstr("url"));
 	if (verbose)
-		syslog(LOG_DEBUG, "Push: %s", ChrPtr(WCC->PushedDestination));
+		syslog(LOG_DEBUG, "Push: %s", ChrPtr(WC->PushedDestination));
 	wc_printf("OK");
 }
 
@@ -515,19 +505,17 @@ void push_destination(void) {
  * Go to the URL saved by push_destination()
  */
 void pop_destination(void) {
-	wcsession *WCC = WC;
-
 	/*
 	 * If we are in the middle of a new user signup, the server may request that
 	 * we first pass through a registration screen.
 	 */
-	if ((WCC) && (WCC->need_regi)) {
-		if ((WCC->PushedDestination != NULL) && (StrLength(WCC->PushedDestination) > 0)) {
+	if ((WC) && (WC->need_regi)) {
+		if ((WC->PushedDestination != NULL) && (StrLength(WC->PushedDestination) > 0)) {
 			/* Registering will take us to the My Citadel Config room, so save our place */
-			StrBufAppendBufPlain(WCC->PushedDestination, HKEY("?go="), 0);
-			StrBufUrlescAppend(WCC->PushedDestination, WCC->CurRoom.name, NULL);
+			StrBufAppendBufPlain(WC->PushedDestination, HKEY("?go="), 0);
+			StrBufUrlescAppend(WC->PushedDestination, WC->CurRoom.name, NULL);
 		}
-		WCC->need_regi = 0;
+		WC->need_regi = 0;
 		display_reg(1);
 		return;
 	}
@@ -536,7 +524,7 @@ void pop_destination(void) {
 	 * Do something reasonable if we somehow ended up requesting a pop without
 	 * having first done a push.
 	 */
-	if ( (!WCC) || (WCC->PushedDestination == NULL) || (StrLength(WCC->PushedDestination) == 0) ) {
+	if ( (!WC) || (WC->PushedDestination == NULL) || (StrLength(WC->PushedDestination) == 0) ) {
 		do_welcome();
 		return;
 	}
@@ -544,44 +532,41 @@ void pop_destination(void) {
 	/*
 	 * All righty then!  We have a destination saved, so go there now.
 	 */
-	if (verbose)
-		syslog(LOG_DEBUG, "Pop: %s", ChrPtr(WCC->PushedDestination));
-	http_redirect(ChrPtr(WCC->PushedDestination));
+	if (verbose) {
+		syslog(LOG_DEBUG, "Pop: %s", ChrPtr(WC->PushedDestination));
+	}
+	http_redirect(ChrPtr(WC->PushedDestination));
 }
 
 
-
-int ReadPostData(void)
-{
+int ReadPostData(void) {
 	int rc;
 	int urlencoded_post = 0;
-	wcsession *WCC = WC;
 	StrBuf *content = NULL;
 	
-	urlencoded_post = (strncasecmp(ChrPtr(WCC->Hdr->HR.ContentType), "application/x-www-form-urlencoded", 33) == 0) ;
+	urlencoded_post = (strncasecmp(ChrPtr(WC->Hdr->HR.ContentType), "application/x-www-form-urlencoded", 33) == 0) ;
 
-	content = NewStrBufPlain(NULL, WCC->Hdr->HR.ContentLength + 256);
+	content = NewStrBufPlain(NULL, WC->Hdr->HR.ContentLength + 256);
 
-	if (!urlencoded_post)
-	{
+	if (!urlencoded_post) {
 		StrBufPrintf(content, 
-		     "Content-type: %s\n"
-			     "Content-length: %ld\n\n",
-			     ChrPtr(WCC->Hdr->HR.ContentType), 
-			     WCC->Hdr->HR.ContentLength);
+			"Content-type: %s\n"
+			"Content-length: %ld\n\n",
+			ChrPtr(WC->Hdr->HR.ContentType), 
+			WC->Hdr->HR.ContentLength
+		);
 	}
 
-	/** Read the entire input data at once. */
-	rc = client_read_to(WCC->Hdr, content, 
-			    WCC->Hdr->HR.ContentLength,
-			    SLEEPING);
-	if (rc < 0)
+	/* Read the entire input data at once. */
+	rc = client_read_to(WC->Hdr, content, WC->Hdr->HR.ContentLength, SLEEPING);
+	if (rc < 0) {
 		return rc;
-		
+	}
 	
 	if (urlencoded_post) {
 		ParseURLParams(content);
-	} else if (!strncasecmp(ChrPtr(WCC->Hdr->HR.ContentType), "multipart", 9)) {
+	}
+	else if (!strncasecmp(ChrPtr(WC->Hdr->HR.ContentType), "multipart", 9)) {
 		char *Buf;
 		char *BufEnd;
 		long len;
@@ -591,9 +576,10 @@ int ReadPostData(void)
 		BufEnd = Buf + len;
 		mime_parser(Buf, BufEnd, *upload_handler, NULL, NULL, NULL, 0);
 		free(Buf);
-	} else if (WCC->Hdr->HR.ContentLength > 0) {
-		WCC->upload = content;
-		WCC->upload_length = StrLength(WCC->upload);
+	}
+	else if (WC->Hdr->HR.ContentLength > 0) {
+		WC->upload = content;
+		WC->upload_length = StrLength(WC->upload);
 		content = NULL;
 	}
 	FreeStrBuf(&content);
@@ -605,12 +591,11 @@ int Conditional_REST_DEPTH(StrBuf *Target, WCTemplputParams *TP)
 {
 	long Depth, IsDepth;
 	long offset = 0;
-	wcsession *WCC = WC;
 
-	if (WCC->Hdr->HR.Handler != NULL)
+	if (WC->Hdr->HR.Handler != NULL)
 		offset ++;
 	Depth = GetTemplateTokenNumber(Target, TP, 2, 0);
-	IsDepth = GetCount(WCC->Directory) + offset;
+	IsDepth = GetCount(WC->Directory) + offset;
 
 //	LogTemplateError(Target, "bla", 1, TP, "REST_DEPTH: %ld : %ld\n", Depth, IsDepth);
 	if (Depth < 0) {
@@ -635,41 +620,38 @@ void session_loop(void)
 	 * We stuff these with the values coming from the client cookies,
 	 * so we can use them to reconnect a timed out session if we have to.
 	 */
-	wcsession *WCC;
-      
-	WCC= WC;
-	WCC->upload_length = 0;
-	WCC->upload = NULL;
-	WCC->Hdr->nWildfireHeaders = 0;
+	WC->upload_length = 0;
+	WC->upload = NULL;
+	WC->Hdr->nWildfireHeaders = 0;
 
-	if (WCC->Hdr->HR.ContentLength > 0) {
+	if (WC->Hdr->HR.ContentLength > 0) {
 		if (ReadPostData() < 0) {
 			return;
 		}
 	}
 
 	Buf = NewStrBuf();
-	WCC->trailing_javascript = NewStrBuf();
+	WC->trailing_javascript = NewStrBuf();
 
 	/* Convert base64-encoded URL's back to plain text */
-	if (!strncmp(ChrPtr(WCC->Hdr->this_page), "/B64", 4)) {
-		StrBufCutLeft(WCC->Hdr->this_page, 4);
-		StrBufDecodeBase64(WCC->Hdr->this_page);
-		http_redirect(ChrPtr(WCC->Hdr->this_page));
+	if (!strncmp(ChrPtr(WC->Hdr->this_page), "/B64", 4)) {
+		StrBufCutLeft(WC->Hdr->this_page, 4);
+		StrBufDecodeBase64(WC->Hdr->this_page);
+		http_redirect(ChrPtr(WC->Hdr->this_page));
 		goto SKIP_ALL_THIS_CRAP;
 	}
 
 	/* If there are variables in the URL, we must grab them now */
-	if (WCC->Hdr->PlainArgs != NULL)
-		ParseURLParams(WCC->Hdr->PlainArgs);
+	if (WC->Hdr->PlainArgs != NULL)
+		ParseURLParams(WC->Hdr->PlainArgs);
 
 	/* If the client sent a nonce that is incorrect, kill the request. */
 	if (havebstr("nonce")) {
 		if (verbose)
 			syslog(LOG_DEBUG, "Comparing supplied nonce %s to session nonce %d", 
-			       bstr("nonce"), WCC->nonce
+			       bstr("nonce"), WC->nonce
 				);
-		if (ibstr("nonce") != WCC->nonce) {
+		if (ibstr("nonce") != WC->nonce) {
 			syslog(LOG_INFO, "Ignoring request with mismatched nonce.");
 			hprintf("HTTP/1.1 404 Security check failed\r\n");
 			hprintf("Content-Type: text/plain\r\n");
@@ -683,7 +665,7 @@ void session_loop(void)
 	/*
 	 * If we're not connected to a Citadel server, try to hook up the connection now.
 	 */
-	if (!WCC->connected) {
+	if (!WC->connected) {
 		if (GetConnected()) {
 			hprintf("HTTP/1.1 503 Service Unavailable\r\n");
 			hprintf("Content-Type: text/html\r\n");
@@ -708,37 +690,37 @@ void session_loop(void)
 	 * If we're not logged in, but we have authentication data (either from
 	 * a cookie or from http-auth), try logging in to Citadel using that.
 	 */
-	if (	(!WCC->logged_in)
-		&& (StrLength(WCC->Hdr->c_username) > 0)
-		&& (StrLength(WCC->Hdr->c_password) > 0)
+	if (	(!WC->logged_in)
+		&& (StrLength(WC->Hdr->c_username) > 0)
+		&& (StrLength(WC->Hdr->c_password) > 0)
 	) {
 		long Status;
 
 		FlushStrBuf(Buf);
-		serv_printf("USER %s", ChrPtr(WCC->Hdr->c_username));
+		serv_printf("USER %s", ChrPtr(WC->Hdr->c_username));
 		StrBuf_ServGetln(Buf);
 		if (GetServerStatus(Buf, &Status) == 3) {
-			serv_printf("PASS %s", ChrPtr(WCC->Hdr->c_password));
+			serv_printf("PASS %s", ChrPtr(WC->Hdr->c_password));
 			StrBuf_ServGetln(Buf);
 			if (GetServerStatus(Buf, NULL) == 2) {
-				become_logged_in(WCC->Hdr->c_username,
-						 WCC->Hdr->c_password, Buf);
+				become_logged_in(WC->Hdr->c_username,
+						 WC->Hdr->c_password, Buf);
 			} else {
 				/* Should only display when password is wrong */
-				WCC->ImportantMsg = NewStrBufPlain(ChrPtr(Buf) + 4, StrLength(Buf) - 4);
+				WC->ImportantMsg = NewStrBufPlain(ChrPtr(Buf) + 4, StrLength(Buf) - 4);
 				authorization_required();
 				FreeStrBuf(&Buf);
 				goto SKIP_ALL_THIS_CRAP;
 			}
 		}
 		else if (Status == 541) {
-			WCC->logged_in = 1;
+			WC->logged_in = 1;
 		}
 	}
 
-	xhttp = (WCC->Hdr->HR.eReqType != eGET) &&
-		(WCC->Hdr->HR.eReqType != ePOST) &&
-		(WCC->Hdr->HR.eReqType != eHEAD);
+	xhttp = (WC->Hdr->HR.eReqType != eGET) &&
+		(WC->Hdr->HR.eReqType != ePOST) &&
+		(WC->Hdr->HR.eReqType != eHEAD);
 
 	/*
 	 * If a 'go' (or 'gotofirst') parameter has been specified, attempt to goto that room
@@ -768,36 +750,36 @@ void session_loop(void)
 	 * If we aren't in any room yet, but we have cookie data telling us where we're
 	 * supposed to be, and 'go' was not specified, then go there.
 	 */
-	else if ( (StrLength(WCC->CurRoom.name) == 0) && ( (StrLength(WCC->Hdr->c_roomname) > 0) )) {
+	else if ( (StrLength(WC->CurRoom.name) == 0) && ( (StrLength(WC->Hdr->c_roomname) > 0) )) {
 		int ret;
 
 		if (verbose)
 			syslog(LOG_DEBUG, "We are in '%s' but cookie indicates '%s', going there...",
-			       ChrPtr(WCC->CurRoom.name),
-			       ChrPtr(WCC->Hdr->c_roomname)
+			       ChrPtr(WC->CurRoom.name),
+			       ChrPtr(WC->Hdr->c_roomname)
 		);
-		ret = gotoroom(WCC->Hdr->c_roomname);	/* do quietly to avoid session output! */
+		ret = gotoroom(WC->Hdr->c_roomname);	/* do quietly to avoid session output! */
 		if ((ret/100) != 2) {
 			if (verbose)
 				syslog(LOG_DEBUG, "COOKIEGOTO: Unable to change to [%s]; Reason: %d",
-				       ChrPtr(WCC->Hdr->c_roomname), ret);
+				       ChrPtr(WC->Hdr->c_roomname), ret);
 		}
 	}
 
-	if (WCC->Hdr->HR.Handler != NULL) {
-		if (	(!WCC->logged_in)
-			&& ((WCC->Hdr->HR.Handler->Flags & ANONYMOUS) == 0)
-			&& (WCC->serv_info != NULL)
-			&& (WCC->serv_info->serv_supports_guest == 0)
+	if (WC->Hdr->HR.Handler != NULL) {
+		if (	(!WC->logged_in)
+			&& ((WC->Hdr->HR.Handler->Flags & ANONYMOUS) == 0)
+			&& (WC->serv_info != NULL)
+			&& (WC->serv_info->serv_supports_guest == 0)
 		) {
 			display_login();
 		}
 		else {
-			if ((WCC->Hdr->HR.Handler->Flags & AJAX) != 0) {
+			if ((WC->Hdr->HR.Handler->Flags & AJAX) != 0) {
 				begin_ajax_response();
 			}
-			WCC->Hdr->HR.Handler->F();
-			if ((WCC->Hdr->HR.Handler->Flags & AJAX) != 0) {
+			WC->Hdr->HR.Handler->F();
+			if ((WC->Hdr->HR.Handler->Flags & AJAX) != 0) {
 				end_ajax_response();
 			}
 		}
@@ -808,7 +790,7 @@ void session_loop(void)
 		 * ordinary browser users get a nice login screen, DAV etc. requsets
 		 * are given a 401 so they can handle it appropriate.
 		 */
-		if (!WCC->logged_in)  {
+		if (!WC->logged_in)  {
 			if (xhttp) {
 				authorization_required();
 			}
@@ -840,9 +822,7 @@ SKIP_ALL_THIS_CRAP:
  * Display the appropriate landing page for this site.
  */
 void display_default_landing_page(void) {
-	wcsession *WCC = WC;
-
-	if (WCC && WCC->serv_info && WCC->serv_info->serv_supports_guest) {
+	if (WC && WC->serv_info && WC->serv_info->serv_supports_guest) {
 		/* default action */
 
 		if (havebstr("go")) {
@@ -884,41 +864,40 @@ int Conditional_IS_HTTPS(StrBuf *Target, WCTemplputParams *TP)
 
 void AppendImportantMessage(const char *pch, long len)
 {
-	wcsession *WCC = WC;
 
-	if (StrLength(WCC->ImportantMsg) > 0) {
-		StrBufAppendBufPlain(WCC->ImportantMsg, HKEY("\n"), 0);
+	if (StrLength(WC->ImportantMsg) > 0) {
+		StrBufAppendBufPlain(WC->ImportantMsg, HKEY("\n"), 0);
 	}
 		
-	StrBufAppendBufPlain(WCC->ImportantMsg, pch, len, 0);
+	StrBufAppendBufPlain(WC->ImportantMsg, pch, len, 0);
 }
 
 int ConditionalImportantMesage(StrBuf *Target, WCTemplputParams *TP)
 {
-	wcsession *WCC = WC;
-	if (WCC != NULL)
-		return (StrLength(WCC->ImportantMsg) > 0);
-	else
+	if (WC != NULL) {
+		return (StrLength(WC->ImportantMsg) > 0);
+	}
+	else {
 		return 0;
+	}
 }
 
 void tmplput_importantmessage(StrBuf *Target, WCTemplputParams *TP)
 {
-	wcsession *WCC = WC;
 	
-	if (WCC != NULL) {
-		if (StrLength(WCC->ImportantMsg) > 0) {
-			StrBufAppendTemplate(Target, TP, WCC->ImportantMsg, 0);
+	if (WC != NULL) {
+		if (StrLength(WC->ImportantMsg) > 0) {
+			StrBufAppendTemplate(Target, TP, WC->ImportantMsg, 0);
 		}
 	}
 }
 
 void tmplput_trailing_javascript(StrBuf *Target, WCTemplputParams *TP)
 {
-	wcsession *WCC = WC;
 
-	if (WCC != NULL)
-		StrBufAppendTemplate(Target, TP, WCC->trailing_javascript, 0);
+	if (WC != NULL) {
+		StrBufAppendTemplate(Target, TP, WC->trailing_javascript, 0);
+	}
 }
 
 void tmplput_csslocal(StrBuf *Target, WCTemplputParams *TP)
@@ -927,10 +906,8 @@ void tmplput_csslocal(StrBuf *Target, WCTemplputParams *TP)
 			csslocal, 0);
 }
 
-void tmplput_packagestring(StrBuf *Target, WCTemplputParams *TP)
-{
-	StrBufAppendBufPlain(Target, 
-			     HKEY(PACKAGE_STRING), 0);
+void tmplput_packagestring(StrBuf *Target, WCTemplputParams *TP) {
+	StrBufAppendBufPlain(Target, HKEY(PACKAGE_STRING), 0);
 }
 
 extern char static_local_dir[PATH_MAX];
