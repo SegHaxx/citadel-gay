@@ -1017,7 +1017,6 @@ int client_read_to(ParsedHttpHdrs *Hdr, StrBuf *Target, int bytes, int timeout) 
 			return 1;
 	}
 #endif
-
 	retval = StrBufReadBLOBBuffered(Target, 
 					Hdr->ReadBuf, 
 					&Hdr->Pos, 

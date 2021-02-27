@@ -4989,14 +4989,13 @@ int StrBufReadBLOBBuffered(StrBuf *Blob,
 	
 	pos = *Pos;
 
-	if (pos != NULL)
+	if (pos != NULL) {
 		rlen = pos - IOBuf->buf;
+	}
 	rlen = IOBuf->BufUsed - rlen;
 
 
-	if ((IOBuf->BufUsed > 0) && 
-	    (pos != NULL) && 
-	    (pos < IOBuf->buf + IOBuf->BufUsed)) 
+	if ((IOBuf->BufUsed > 0) && (pos != NULL) && (pos < IOBuf->buf + IOBuf->BufUsed)) 
 	{
 		if (rlen < nBytes) {
 			memcpy(Blob->buf + Blob->BufUsed, pos, rlen);
@@ -5021,8 +5020,9 @@ int StrBufReadBLOBBuffered(StrBuf *Blob,
 
 	FlushStrBuf(IOBuf);
 	*Pos = NULL;
-	if (IOBuf->BufSize < nBytes - nRead)
+	if (IOBuf->BufSize < nBytes - nRead) {
 		IncreaseBuf(IOBuf, 0, nBytes - nRead);
+	}
 	ptr = IOBuf->buf;
 
 	fdflags = fcntl(*fd, F_GETFL);
@@ -5034,11 +5034,8 @@ int StrBufReadBLOBBuffered(StrBuf *Blob,
 
 	nBytes -= nRead;
 	nRead = 0;
-	while ((nSuccessLess < MaxTries) && 
-	       (nRead < nBytes) &&
-	       (*fd != -1)) {
-		if (IsNonBlock)
-		{
+	while ((nSuccessLess < MaxTries) && (nRead < nBytes) && (*fd != -1)) {
+		if (IsNonBlock) {
 			tv.tv_sec = 1;
 			tv.tv_usec = 0;
 		
@@ -5048,8 +5045,9 @@ int StrBufReadBLOBBuffered(StrBuf *Blob,
 				*Error = strerror(errno);
 				close (*fd);
 				*fd = -1;
-				if (*Error == NULL)
+				if (*Error == NULL) {
 					*Error = ErrRBLF_SelectFailed;
+				}
 				return -1;
 			}
 			if (! FD_ISSET(*fd, &rfds) != 0) {
@@ -5057,20 +5055,16 @@ int StrBufReadBLOBBuffered(StrBuf *Blob,
 				continue;
 			}
 		}
-		rlen = read(*fd, 
-			    ptr,
-			    IOBuf->BufSize - (ptr - IOBuf->buf));
-		if (rlen == -1) {
+		rlen = read(*fd, ptr, IOBuf->BufSize - (ptr - IOBuf->buf));
+		// if (rlen == -1) {		2021feb27 ajc changed this, apparently we will always get at least 1 byte unless the connection is broken
+		if (rlen < 1) {
 			close(*fd);
 			*fd = -1;
 			*Error = strerror(errno);
 			return rlen;
 		}
 		else if (rlen == 0){
-			if ((check == NNN_TERM) && 
-			    (nRead > 5) &&
-			    (strncmp(IOBuf->buf + IOBuf->BufUsed - 5, "\n000\n", 5) == 0)) 
-			{
+			if ((check == NNN_TERM) && (nRead > 5) && (strncmp(IOBuf->buf + IOBuf->BufUsed - 5, "\n000\n", 5) == 0)) {
 				StrBufPlain(Blob, HKEY("\n000\n"));
 				StrBufCutRight(Blob, 5);
 				return Blob->BufUsed;
