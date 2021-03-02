@@ -1,7 +1,7 @@
 /*
  * This module dumps and/or loads the Citadel database in XML format.
  *
- * Copyright (c) 1987-2020 by the citadel.org team
+ * Copyright (c) 1987-2021 by the citadel.org team
  *
  * This program is open source software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3.
@@ -52,14 +52,11 @@
 #include "euidindex.h"
 #include "ctdl_module.h"
 
-#define END_OF_MESSAGE	"---eom---dbd---"
-
 char migr_tempfilename1[PATH_MAX];
 char migr_tempfilename2[PATH_MAX];
 FILE *migr_global_message_list;
 int total_msgs = 0;
 char *ikey = NULL;			// If we're importing a config key we store it here.
-
 
 /******************************************************************************
  *        Code which implements the export appears in this section            *
@@ -466,8 +463,8 @@ void migr_do_export(void) {
 	if (Ctx->kill_me == 0)	migr_export_visits();
 	cprintf("<progress>%d</progress>\n", 25);
 	if (Ctx->kill_me == 0)	migr_export_messages();
-	client_write(HKEY("</citadel_migrate_data>\n"));
 	cprintf("<progress>%d</progress>\n", 100);
+	client_write(HKEY("</citadel_migrate_data>\n"));
 	client_write(HKEY("000\n"));
 	Ctx->dont_term = 0;
 }
