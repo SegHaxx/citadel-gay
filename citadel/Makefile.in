@@ -70,7 +70,7 @@ LOCALEDIR=@LOCALEDIR@
 
 SOURCES=utils/citmail.c utils/setup.c utils/chkpw.c \
 	utils/sendcommand.c  utils/ctdlmigrate.c utils/chkpwd.c \
-	utillib/citadel_dirs.c \
+	citadel_dirs.c \
 	citserver.c clientsocket.c config.c control.c $(DATABASE) \
 	domain.c serv_extensions.c genstamp.c \
 	housekeeping.c default_timezone.c internet_addressing.c \
@@ -93,7 +93,7 @@ mkdir-init:
 	@for d in `/bin/ls $(VPATH)/user_modules/`; do \
 		(mkdir -p user_modules/$$d ) ; \
 	done
-	mkdir -p utils utillib
+	mkdir -p utils
 	mkdir locale
 
 svn_revision.c: ${SOURCES}
@@ -119,7 +119,7 @@ Make_modules: modules_init.c
 
 modules_upgrade.c: modules_init.c
 
-SERV_OBJS = server_main.o utillib/citadel_dirs.o \
+SERV_OBJS = server_main.o citadel_dirs.o \
 	user_ops.o citserver.o sysdep.o serv_extensions.o \
 	$(DATABASE:.c=.o) domain.o \
 	control.o config.o support.o room_ops.o \
@@ -137,28 +137,28 @@ citserver$(EXEEXT): $(SERV_OBJS)
 	echo "CC $<"
 	$(CC) $(CFLAGS) $(CPPFLAGS) $(DEFS) -c $< -o $@
 
-citmail$(EXEEXT): utils/citmail.o utillib/citadel_dirs.o
-	$(CC) utils/citmail.o utillib/citadel_dirs.o \
+citmail$(EXEEXT): utils/citmail.o citadel_dirs.o
+	$(CC) utils/citmail.o citadel_dirs.o \
 		$(LDFLAGS) -o citmail$(EXEEXT) $(LIBS)
 
 # setup does need LIBS defined, because it uses network functions which are in -lsocket -lnsl on Solaris.
-setup$(EXEEXT): utils/setup.o utillib/citadel_dirs.o
-	$(CC) utils/setup.o utillib/citadel_dirs.o \
+setup$(EXEEXT): utils/setup.o citadel_dirs.o
+	$(CC) utils/setup.o citadel_dirs.o \
 		$(LDFLAGS) -o setup$(EXEEXT) $(LIBS) $(SETUP_LIBS)
 
-ctdlmigrate$(EXEEXT): utils/ctdlmigrate.o utillib/citadel_dirs.o
-	$(CC) utils/ctdlmigrate.o utillib/citadel_dirs.o \
+ctdlmigrate$(EXEEXT): utils/ctdlmigrate.o citadel_dirs.o
+	$(CC) utils/ctdlmigrate.o citadel_dirs.o \
 		$(LDFLAGS) -o ctdlmigrate$(EXEEXT) $(LIBS)
 
 chkpwd$(EXEEXT): utils/chkpwd.o auth.o
 	$(CC) utils/chkpwd.o auth.o $(LDFLAGS) -o chkpwd$(EXEEXT) $(chkpwd_LIBS)
 
-chkpw$(EXEEXT): utils/chkpw.o auth.o utillib/citadel_dirs.o
-	$(CC) utils/chkpw.o auth.o utillib/citadel_dirs.o \
+chkpw$(EXEEXT): utils/chkpw.o auth.o citadel_dirs.o
+	$(CC) utils/chkpw.o auth.o citadel_dirs.o \
 		$(LDFLAGS) -o chkpw$(EXEEXT) $(chkpwd_LIBS)
 
-sendcommand$(EXEEXT): utils/sendcommand.o utillib/citadel_dirs.o $(LIBOBJS)
-	$(CC) utils/sendcommand.o utillib/citadel_dirs.o \
+sendcommand$(EXEEXT): utils/sendcommand.o citadel_dirs.o $(LIBOBJS)
+	$(CC) utils/sendcommand.o citadel_dirs.o \
 		$(LIBOBJS) $(LDFLAGS) -o sendcommand$(EXEEXT) $(LIBS)
 
 .PHONY: install-data install-doc install-exec clean cleaner distclean
@@ -290,7 +290,7 @@ clean:
 	rm -vfr locale/*
 	rm -vf *.o 
 	rm -vf utils/*.o ;\
-	rm -vf utillib/*.o ;\
+	rm -vf *.o ;\
 	for i in $(srcdir)/modules/* ; do \
 		rm -vf $$i/*.o ;\
 	done
@@ -310,7 +310,6 @@ distclean: cleaner
 	rm -vf po/Makefile 
 	rm -vf Makefile configure sysdep.h config.cache config.log config.status *.d package-version.txt
 	rm -vf utils/*.d ;
-	rm -vf utillib/*.d ;
 	for i in $(srcdir)/modules/* ; do \
 		rm -vf $$i/*.d ;\
 	done

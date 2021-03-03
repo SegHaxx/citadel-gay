@@ -375,17 +375,16 @@ void sanitize_truncated_recipient(char *str)
  * (What can I say, I'm in a weird mood today...)
  */
 void remove_any_whitespace_to_the_left_or_right_of_at_symbol(char *name) {
-	unsigned int i;
+	char *ptr;
+	if (!name) return;
 
-	for (i = 0; i < strlen(name); ++i) {
-		if (name[i] == '@') {
-			while (isspace(name[i - 1]) && i > 0) {
-				strcpy(&name[i - 1], &name[i]);
-				--i;
-			}
-			while (isspace(name[i + 1])) {
-				strcpy(&name[i + 1], &name[i + 2]);
-			}
+	for (ptr=name; *ptr; ++ptr) {
+		while ( (isspace(*ptr)) && (*(ptr+1)=='@') ) {
+			strcpy(ptr, ptr+1);
+			if (ptr > name) --ptr;
+		}
+		while ( (*ptr=='@') && (*(ptr+1)!=0) && (isspace(*(ptr+1))) ) {
+			strcpy(ptr+1, ptr+2);
 		}
 	}
 }
