@@ -128,7 +128,6 @@ int main(int argc, char* argv[])
 {
 	setvbuf(stdout, NULL, _IONBF, 0);
 
-	StartLibCitadel(8);
 
 	CU_set_output_filename("TestAutomated");
 	if (CU_initialize_registry()) {

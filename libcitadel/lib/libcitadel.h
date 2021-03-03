@@ -120,7 +120,6 @@ extern const char *StrBufNOTNULL;
 
 char *libcitadel_version_string(void);
 int libcitadel_version_number(void);
-void StartLibCitadel(size_t basesize);
 void ShutDownLibCitadel(void);
 
 /*

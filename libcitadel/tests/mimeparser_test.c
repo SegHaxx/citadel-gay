@@ -234,7 +234,6 @@ int main(int argc, char* argv[])
 			ma.printme = optarg;
 		}
 	}
-	StartLibCitadel(8);
 
 	if (filename == NULL) {
 		printf("Filename requried! -f\n");

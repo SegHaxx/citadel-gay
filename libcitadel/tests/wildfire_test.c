@@ -82,7 +82,6 @@ int main(int argc, char* argv[])
 	StrBuf *Info;
 	int nWildfireHeaders = 0;
 
-	StartLibCitadel(8);
 	printf("%s == %d?\n", libcitadel_version_string(), libcitadel_version_number());
        
 	

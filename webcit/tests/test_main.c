@@ -65,7 +65,6 @@ extern int LoadTemplates;
  */
 int main(int argc, char **argv)
 {
-	size_t basesize = 2;            /* how big should strbufs be on creation? */
 	pthread_attr_t attr;		/* Thread attributes */
 	int a;	        	/* General-purpose variables */
 	char tracefile[PATH_MAX];
@@ -115,10 +114,7 @@ int main(int argc, char **argv)
 			home_specified = 1;
 			home=1;
 			break;
-		case 'B': /* Basesize */
-			basesize = atoi(optarg);
-			if (basesize > 2)
-				StartLibCitadel(basesize);
+		case 'B': /* deprecated */
 			break;
 		case 'i':
 			safestrncpy(ip_addr, optarg, sizeof ip_addr);

@@ -47,7 +47,6 @@ ConstStr RoomNetCfgStrs[maxRoomNetCfg] = {
 
 
 extern int EnableSplice;
-extern int BaseStrBufSize;
 extern int ZLibCompressionRatio;
 
 char *libcitadel_version_string(void) {
@@ -56,20 +55,6 @@ char *libcitadel_version_string(void) {
 
 int libcitadel_version_number(void) {
 	return LIBCITADEL_VERSION_NUMBER;
-}
-
-void StartLibCitadel(size_t basesize)
-{
-	const char *envvar;
-
-	BaseStrBufSize = basesize;
-	envvar = getenv("LIBCITADEL_ENABLE_SPLICE");
-	if (envvar != NULL)
-		EnableSplice = atol(envvar);
-
-	envvar = getenv("LIBCITADEL_ZLIB_LEVEL");
-	if (envvar != NULL)
-		ZLibCompressionRatio = atol(envvar);
 }
 
 void ShutDownLibCitadel(void)

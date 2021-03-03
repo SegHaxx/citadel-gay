@@ -142,8 +142,6 @@ int main(int argc, char **argv)
 	int xfermode = 0;
 	char ctdldir[PATH_MAX]=CTDLDIR;
 
-	StartLibCitadel(SIZ);
-
 	/* Parse command line */
 	while ((a = getopt(argc, argv, "h:w:")) != EOF) {
 		switch (a) {
@@ -221,23 +219,10 @@ int main(int argc, char **argv)
 
 	close(serv_sock);
 	alarm(0);						/* cancel the watchdog timer */
+
 	fprintf(stderr, "sendcommand: processing ended.\n");
 	if (xfermode == '5') {
 		return(1);
 	}
 	return(0);
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-

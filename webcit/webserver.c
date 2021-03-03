@@ -64,7 +64,6 @@ void LoadMimeBlacklist(void);
 int main(int argc, char **argv)
 {
 	uid_t UID = -1;
-	size_t basesize = 2;            /* how big should strbufs be on creation? */
 	pthread_t SessThread;		/* Thread descriptor */
 	pthread_attr_t attr;		/* Thread attributes */
 	int a;		        	/* General-purpose variable */
@@ -129,10 +128,7 @@ int main(int argc, char **argv)
 		case 'g':
 			default_landing_page = strdup(optarg);
 			break;
-		case 'B': /* Basesize */
-			basesize = atoi(optarg);
-			if (basesize > 2)
-				StartLibCitadel(basesize);
+		case 'B': /* deprecated */
 			break;
 		case 'i':
 			safestrncpy(ip_addr, optarg, sizeof ip_addr);
@@ -199,7 +195,7 @@ int main(int argc, char **argv)
 				"[-d] [-Z] [-G i18ndumpfile] "
 				"[-u uid] [-h homedirectory] "
 				"[-D daemonizepid] [-v] "
-				"[-g defaultlandingpage] [-B basesize] "
+				"[-g defaultlandingpage] "
 #ifdef HAVE_OPENSSL
 				"[-s] [-S cipher_suites]"
 #endif

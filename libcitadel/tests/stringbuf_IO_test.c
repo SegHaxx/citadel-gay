@@ -457,7 +457,6 @@ int main(int argc, char* argv[])
 	}
 
 
-	StartLibCitadel(8);
 	CU_BOOL Run = CU_FALSE ;
 	
 	CU_set_output_filename("TestAutomated");

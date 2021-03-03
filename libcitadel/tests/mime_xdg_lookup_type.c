@@ -49,7 +49,6 @@ int main(int argc, char* argv[])
 			break;
 		}
 	}
-	StartLibCitadel(8);
 
 	if (IconDir != NULL)
 		LoadIconDir(IconDir);

@@ -157,7 +157,6 @@ int main(int argc, char* argv[])
 	}
 
 
-	StartLibCitadel(8);
 
 	StreamEncode();
 	return 0;

@@ -69,7 +69,6 @@ void ctdl_lockfile(int op) {
  */
 int main(int argc, char **argv) {
 
-	size_t basesize = 64;
 	char facility[32];
 	int a;			/* General-purpose variables */
 	struct passwd pw, *pwp = NULL;
@@ -135,9 +134,8 @@ int main(int argc, char **argv) {
 		case 't':
 			break;
 
-		// basesize (passed to libcitadel)
+		// deprecated
                 case 'B':
-                        basesize = atoi(optarg);
                         break;
 
 		// deprecated
@@ -219,7 +217,6 @@ int main(int argc, char **argv) {
 	InitializeMasterCC();
 	InitializeMasterTSD();
 
-	StartLibCitadel(basesize);
 	setlogmask(LOG_UPTO(max_log_level));
 	openlog("citserver",
 		( running_as_daemon ? (LOG_PID) : (LOG_PID | LOG_PERROR) ),
