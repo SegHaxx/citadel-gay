@@ -1,7 +1,7 @@
 /*
  * Utility functions for the Citadel SMTP implementation
  *
- * Copyright (c) 1998-2020 by the citadel.org team
+ * Copyright (c) 1998-2021 by the citadel.org team
  *
  * This program is open source software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3.
@@ -50,8 +50,7 @@
 #include "ctdl_module.h"
 #include "smtp_util.h"
 
-const char *smtp_get_Recipients(void)
-{
+const char *smtp_get_Recipients(void) {
 	struct citsmtp *sSMTP = SMTP;
 
 	if (sSMTP == NULL)
@@ -70,8 +69,7 @@ const char *smtp_get_Recipients(void)
  *	SDB_BOUNCE_ALL		Advise the sender that all deliveries have failed and will not be retried
  *	SDB_WARN		Warn the sender about all 4XX transient delays
  */
-void smtp_do_bounce(const char *instr, int is_final)
-{
+void smtp_do_bounce(const char *instr, int is_final) {
 	int i;
 	int lines;
 	int status;
@@ -95,7 +93,6 @@ void smtp_do_bounce(const char *instr, int is_final)
 	boundary = NewStrBufPlain(HKEY("=_Citadel_Multipart_"));
 
 	StrBufAppendPrintf(boundary, "%s_%04x%04x", CtdlGetConfigStr("c_fqdn"), getpid(), ++seq);
-
 
 	/* Start building our bounce message */
 
@@ -121,8 +118,7 @@ void smtp_do_bounce(const char *instr, int is_final)
 	StrBufAppendBufPlain(BounceMB, HKEY("\r\n"), 0);
 	StrBufAppendBufPlain(BounceMB, HKEY("Content-type: text/plain\r\n\r\n"), 0);
 
-	if (is_final == SDB_BOUNCE_ALL)
-	{
+	if (is_final == SDB_BOUNCE_ALL) {
 		StrBufAppendBufPlain(
 			BounceMB,
 			HKEY(	"A message you sent could not be delivered "
@@ -131,8 +127,7 @@ void smtp_do_bounce(const char *instr, int is_final)
 				"Giving up on the following addresses:\n\n"),
 			0);
 	}
-	else if (is_final == SDB_BOUNCE_FATALS)
-	{
+	else if (is_final == SDB_BOUNCE_FATALS) {
 		StrBufAppendBufPlain(
 			BounceMB,
 			HKEY(	"A message you sent could not be delivered "
@@ -140,8 +135,7 @@ void smtp_do_bounce(const char *instr, int is_final)
 				"The following addresses were undeliverable:\n\n"),
 			0);
 	}
-	else if (is_final == SDB_WARN)
-	{
+	else if (is_final == SDB_WARN) {
 		StrBufAppendBufPlain(
 			BounceMB,
 			HKEY("A message you sent has not been delivered "
@@ -150,8 +144,7 @@ void smtp_do_bounce(const char *instr, int is_final)
 				"The following addresses were undeliverable:\n\n"),
 			0);
 	}
-	else	// should never get here
-	{
+	else {	// should never get here
 		StrBufAppendBufPlain(BounceMB, HKEY("This message should never occur.\n\n"), 0);
 	}
 
@@ -257,9 +250,6 @@ void smtp_do_bounce(const char *instr, int is_final)
 }
 
 
-
-
-
 char *smtpcodes[][2] = {
 	{ "211 - System status / system help reply" },
 	{ "214", "Help message" },
@@ -312,7 +302,6 @@ char *smtpcodes[][2] = {
 };
 
 
-
 char *smtpstatus(int code) {
 	int i;
 
@@ -324,4 +313,3 @@ char *smtpstatus(int code) {
 	
 	return("Unknown or other SMTP status");
 }
-

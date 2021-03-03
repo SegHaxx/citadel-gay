@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1987-2020 by the citadel.org team
+ * Copyright (c) 1987-2021 by the citadel.org team
  *
  * This program is open source software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,8 +23,7 @@
  * DownLoad Room Image (see its icon or whatever)
  * If this command succeeds, it follows the same protocol as the DLAT command.
  */
-void cmd_dlri(char *cmdbuf)
-{
+void cmd_dlri(char *cmdbuf) {
 	if (CtdlAccessCheck(ac_logged_in_or_guest)) return;
 	if (CC->room.msgnum_pic < 1) {
 		cprintf("%d No image found.\n", ERROR + FILE_NOT_FOUND);
@@ -50,8 +49,7 @@ void cmd_dlri(char *cmdbuf)
 /*
  * UpLoad Room Image (avatar or photo or whatever)
  */
-void cmd_ulri(char *cmdbuf)
-{
+void cmd_ulri(char *cmdbuf) {
 	long data_length;
 	char mimetype[SIZ];
 
@@ -107,8 +105,7 @@ void cmd_ulri(char *cmdbuf)
  * DownLoad User Image (see their avatar or photo or whatever)
  * If this command succeeds, it follows the same protocol as the DLAT command.
  */
-void cmd_dlui(char *cmdbuf)
-{
+void cmd_dlui(char *cmdbuf) {
 	struct ctdluser ruser;
 	char buf[SIZ];
 
@@ -142,8 +139,7 @@ void cmd_dlui(char *cmdbuf)
 /*
  * UpLoad User Image (avatar or photo or whatever)
  */
-void cmd_ului(char *cmdbuf)
-{
+void cmd_ului(char *cmdbuf) {
 	long data_length;
 	char mimetype[SIZ];
 	char username[USERNAME_SIZE];
@@ -151,8 +147,7 @@ void cmd_ului(char *cmdbuf)
 
 	if (CtdlAccessCheck(ac_logged_in_or_guest)) return;
 
-	if (num_parms(cmdbuf) < 2)
-	{
+	if (num_parms(cmdbuf) < 2) {
 		cprintf("%d Usage error\n", ERROR + ILLEGAL_VALUE);
 		return;
 	}
@@ -225,8 +220,7 @@ void cmd_ului(char *cmdbuf)
 /*
  * Import function called by import_old_userpic_files() for a single user
  */
-void import_one_userpic_file(char *username, long usernum, char *path)
-{
+void import_one_userpic_file(char *username, long usernum, char *path) {
 	syslog(LOG_DEBUG, "Import legacy userpic for %s, usernum=%ld, filename=%s", username, usernum, path);
 
 	FILE *fp = fopen(path, "r");
@@ -273,8 +267,7 @@ void import_one_userpic_file(char *username, long usernum, char *path)
 /*
  * Look for old-format "userpic" files and import them into the message base
  */
-void import_old_userpic_files(void)
-{
+void import_old_userpic_files(void) {
 	DIR *filedir = NULL;
 	struct dirent *filedir_entry;
 	size_t d_namelen;

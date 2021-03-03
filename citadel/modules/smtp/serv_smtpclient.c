@@ -322,8 +322,9 @@ int smtp_attempt_delivery(long msgid, char *recp, char *envelope_from, char *res
 	}
 
 	FreeStrBuf(&s.TheMessage);
-	if (fromaddr)
+	if (fromaddr) {
 		free(fromaddr);
+	}
 	return ((int) response_code);
 }
 
@@ -388,11 +389,13 @@ void smtp_process_one_msg(long qmsgnum) {
 	int should_try_now = 0;
 	if (attempted < submitted) {	// If no attempts have been made yet, try now
 		should_try_now = 1;
-	} else if ((attempted - submitted) <= 14400) {
+	}
+	else if ((attempted - submitted) <= 14400) {
 		if ((time(NULL) - attempted) > 1800) {	// First four hours, retry every 30 minutes
 			should_try_now = 1;
 		}
-	} else {
+	}
+	else {
 		if ((time(NULL) - attempted) > 14400) {	// After that, retry once every 4 hours
 			should_try_now = 1;
 		}
@@ -404,11 +407,12 @@ void smtp_process_one_msg(long qmsgnum) {
 		StrBufAppendPrintf(NewInstr, "Content-type: " SPOOLMIME "\n\n");
 		StrBufAppendPrintf(NewInstr, "msgid|%ld\n", msgid);
 		StrBufAppendPrintf(NewInstr, "submitted|%ld\n", submitted);
-		if (bounceto)
+		if (bounceto) {
 			StrBufAppendPrintf(NewInstr, "bounceto|%s\n", bounceto);
-		if (envelope_from)
+		}
+		if (envelope_from) {
 			StrBufAppendPrintf(NewInstr, "envelope_from|%s\n", envelope_from);
-
+		}
 		for (i = 0; i < num_tokens(instr, '\n'); ++i) {
 			extract_token(cfgline, instr, i, '\n', sizeof cfgline);
 			if (!strncasecmp(cfgline, HKEY("remote|"))) {
@@ -423,10 +427,12 @@ void smtp_process_one_msg(long qmsgnum) {
 					       "smtpclient: recp: <%s> , result: %d (%s)", recp, new_result, server_response);
 					if ((new_result / 100) == 2) {
 						++num_success;
-					} else {
+					}
+					else {
 						if ((new_result / 100) == 5) {
 							++num_fail;
-						} else {
+						}
+						else {
 							++num_delayed;
 						}
 						StrBufAppendPrintf
@@ -477,7 +483,8 @@ void smtp_process_one_msg(long qmsgnum) {
 			deletes[1] = msgid;
 			CtdlDeleteMessages(SMTP_SPOOLOUT_ROOM, deletes, 2, "");
 			FreeStrBuf(&NewInstr);	// We have to free NewInstr here, no longer needed
-		} else {
+		}
+		else {
 			// replace the old queue entry with the new one
 			syslog(LOG_DEBUG, "smtpclient: %ld rewriting", qmsgnum);
 			msg = convert_internet_message_buf(&NewInstr);	// This function will free NewInstr for us
@@ -485,14 +492,17 @@ void smtp_process_one_msg(long qmsgnum) {
 			CM_Free(msg);
 			CtdlDeleteMessages(SMTP_SPOOLOUT_ROOM, &qmsgnum, 1, "");
 		}
-	} else {
+	}
+	else {
 		syslog(LOG_DEBUG, "smtpclient: %ld retry time not reached", qmsgnum);
 	}
 
-	if (bounceto != NULL)
+	if (bounceto != NULL) {
 		free(bounceto);
-	if (envelope_from != NULL)
+	}
+	if (envelope_from != NULL) {
 		free(envelope_from);
+	}
 	free(instr);
 }
 
@@ -529,8 +539,9 @@ void smtp_do_queue(void) {
 	 * don't really require extremely fine granularity here, we'll do it
 	 * with a static variable instead.
 	 */
-	if (doing_smtpclient)
+	if (doing_smtpclient) {
 		return;
+	}
 	doing_smtpclient = 1;
 
 	syslog(LOG_DEBUG, "smtpclient: start queue run");
