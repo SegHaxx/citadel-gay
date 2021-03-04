@@ -186,23 +186,25 @@ int main(int argc, char *argv[]) {
 	}
 
 	printf(	"\033[2J\033[H\n"
-		"-------------------------------------------\n"
-		"Over-the-wire migration utility for Citadel\n"
-		"-------------------------------------------\n"
+		"          \033[32m╔═══════════════════════════════════════════════╗\n"
+		"          ║                                               ║\n"
+		"          ║    \033[33mCitadel over-the-wire migration utility    \033[32m║\n"
+		"          ║                                               ║\n"
+		"          ╚═══════════════════════════════════════════════╝\033[0m\n"
 		"\n"
 		"This utility is designed to migrate your Citadel installation\n"
 		"to a new host system via a network connection, without disturbing\n"
 		"the source system.  The target may be a different CPU architecture\n"
 		"and/or operating system.  The source system should be running\n"
-		"Citadel version %d or newer, and the target system should be running\n"
+		"Citadel version \033[33m%d\033[0m or newer, and the target system should be running\n"
 		"either the same version or a newer version.  You will also need\n"
-		"the 'rsync' utility, and OpenSSH v4 or newer.\n"
+		"the \033[33mrsync\033[0m utility, and OpenSSH v4 or newer.\n"
 		"\n"
 		"You must run this utility on the TARGET SYSTEM.  Any existing data\n"
 		"on this system will be ERASED.  Your target system will be on this\n"
 		"host in %s.\n"
 		"\n"
-		"Do you wish to continue? "
+		"\033[33mDo you wish to continue? \033[0m"
 		,
 		EXPORT_REV_MIN, ctdldir
 	);
@@ -212,9 +214,16 @@ int main(int argc, char *argv[]) {
 	}
 
 	if (!cmdexit) {
-		printf("\n\nGreat!  First we will check some things out here on our target\n"
-			"system to make sure it is ready to receive data.\n\n");
+
+		printf(	"\033[2J\033[H\n"
+			"          \033[32m╔═══════════════════════════════════════════════╗\n"
+			"          ║                                               ║\n"
+			"          ║       \033[33mValidate source and target systems\033[32m      ║\n"
+			"          ║                                               ║\n"
+			"          ╚═══════════════════════════════════════════════╝\033[0m\n"
+			"\n\n");
 	
+		printf("First we must validate that the local target system is running and ready to receive data.\n");
 		printf("Checking connectivity to Citadel in %s...\n", ctdldir);
 		local_admin_socket = uds_connectsock("citadel-admin.socket");
 
@@ -263,7 +272,7 @@ int main(int argc, char *argv[]) {
 			exit(1);
 		}
 		else {						// Wait for SSH to go into the background
-			waitpid(sshpid, NULL, 0);
+			waitpid(sshpid, &cmdexit, 0);
 		}
 	}
 
@@ -274,7 +283,7 @@ int main(int argc, char *argv[]) {
 		cmdexit = system(cmd);
 		printf("\n");
 		if (cmdexit != 0) {
-			printf("Remote commands are not succeeding.\n\n");
+			printf("\033[31mRemote commands are not succeeding.\033[0m\n\n");
 		}
 	}
 
@@ -306,8 +315,18 @@ int main(int argc, char *argv[]) {
 	}
 
 	if (!cmdexit) {
-		printf("\033[2J\n");
-		printf("\033[2;0H\033[33mMigrating from %s\033[0m\n\n", remote_host);
+		printf(	"\033[2J\033[H\n"
+			"          \033[32m╔═══════════════════════════════════════════════════════════════════╗\n"
+			"          ║                                                                   ║\n"
+			"          ║ \033[33mMigrating from: %-50s\033[32m║\n"
+			"          ║                                                                   ║\n"
+			"          ╟═══════════════════════════════════════════════════════════════════╣\n"
+			"          ║                                                                   ║\n"
+			"          ║ Lines received: 0                           Percent complete: 0   ║\n"
+			"          ║                                                                   ║\n"
+			"          ╚═══════════════════════════════════════════════════════════════════╝\033[0m\n"
+			"\n", remote_host
+		);
 
 		snprintf(cmd, sizeof cmd, "ssh -S %s %s@%s %s -w3600 MIGR export", socket_path, remote_user, remote_host, remote_sendcommand);
 		sourcefp = popen(cmd, "r");
@@ -321,7 +340,7 @@ int main(int argc, char *argv[]) {
 		serv_puts(local_admin_socket, "MIGR import");
 		serv_gets(local_admin_socket, buf);
 		if (buf[0] != '4') {
-			printf("\n%s\n", buf);
+			printf("\n\033[31m%s\033[0m\n", buf);
 			cmdexit = 3;
 		}
 	}
@@ -334,11 +353,11 @@ int main(int argc, char *argv[]) {
 			if (ptr) *ptr = 0;	// remove the newline character
 			++linecount;
 			if (!strncasecmp(buf, "<progress>", 10)) {
-				printf("\033[11;0HPercent complete: \033[32m%d\033[0m\n", atoi(&buf[10]));
+				printf("\033[8;75H\033[33m%d\033[0m\033[20;0H\n", atoi(&buf[10]));
 			}
 			if (time(NULL) != last_update) {
 				last_update = time(NULL);
-				printf("\033[10;0H  Lines received: \033[32m%d\033[0m\n", linecount);
+				printf("\033[8;29H\033[33m%d\033[0m\033[20;0H\n", linecount);
 			}
 			serv_puts(local_admin_socket, buf);
 		}
@@ -348,9 +367,14 @@ int main(int argc, char *argv[]) {
 
 	// FIXME restart the local server now
 
-	pclose(sourcefp);
- 	printf("\nShutting down the socket connection...\n\n");
+	if (sourcefp) {
+	 	printf("Closing the data connection from the source system...\n");
+		pclose(sourcefp);
+	}
+ 	printf("Shutting down the socket connection...\n");
 	unlink(socket_path);
+ 	printf("Shutting down the SSH session...\n");
 	kill(sshpid, SIGKILL);
+	printf("\033[3%dmExit code %d\033[0m\n", (cmdexit ? 1 : 2), cmdexit);
 	exit(cmdexit);
 }
