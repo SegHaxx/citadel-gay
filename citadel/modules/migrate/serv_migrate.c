@@ -834,14 +834,12 @@ void migr_xml_end(void *data, const char *el)
  * Import begins here
  */
 void migr_do_import(void) {
-	StrBuf *Buf;
 	XML_Parser xp;
-	int Finished = 0;
+	char buf[SIZ];
 	
 	unbuffer_output();
 	migr_chardata = NewStrBufPlain(NULL, SIZ * 20);
 	migr_MsgData = NewStrBufPlain(NULL, SIZ * 20);
-	Buf = NewStrBufPlain(NULL, SIZ);
 	xp = XML_ParserCreate(NULL);
 	if (!xp) {
 		cprintf("%d Failed to create XML parser instance\n", ERROR+INTERNAL_ERROR);
@@ -857,24 +855,14 @@ void migr_do_import(void) {
 
 	client_set_inbound_buf(SIZ * 10);
 
-	while (!Finished && client_read_random_blob(Buf, -1) >= 0) {
-		if ((StrLength(Buf) > 4) && !strcmp(ChrPtr(Buf) + StrLength(Buf) - 4, "000\n")) {
-			Finished = 1;
-			StrBufCutAt(Buf, StrLength(Buf) - 4, NULL);
-		}
+	while (client_getln(buf, sizeof buf) >= 0 && strcmp(buf, "000")) {
+		XML_Parse(xp, buf, strlen(buf), 0);
 		if (server_shutting_down)
 			break;	// Should we break or return?
-		
-		if (StrLength(Buf) == 0)
-			continue;
-
-		XML_Parse(xp, ChrPtr(Buf), StrLength(Buf), 0);
-		FlushStrBuf(Buf);
 	}
 
 	XML_Parse(xp, "", 0, 1);
 	XML_ParserFree(xp);
-	FreeStrBuf(&Buf);
 	FreeStrBuf(&migr_chardata);
 	FreeStrBuf(&migr_MsgData);
 	rebuild_euid_index();
@@ -908,7 +896,6 @@ HashList *UsedMessageIDS = NULL;
 
 int migr_restore_message_metadata(long msgnum, int refcount)
 {
-	CitContext *CCC = MyContext();
 	struct MetaData smi;
 	struct CtdlMessage *msg;
 	char *mptr = NULL;
@@ -964,10 +951,10 @@ int migr_restore_message_metadata(long msgnum, int refcount)
 		}
 	}
 
-	CCC->redirect_buffer = PlainMessageBuf;
+	CC->redirect_buffer = PlainMessageBuf;
 	CtdlOutputPreLoadedMsg(msg, MT_RFC822, HEADERS_ALL, 0, 1, QP_EADDR);
-	smi.meta_rfc822_length = StrLength(CCC->redirect_buffer);
-	CCC->redirect_buffer = NULL;
+	smi.meta_rfc822_length = StrLength(CC->redirect_buffer);
+	CC->redirect_buffer = NULL;
 
 	syslog(LOG_INFO,
 	       "Setting message #%ld meta data to: refcount=%d, bodylength=%ld, content-type: %s",

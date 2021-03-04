@@ -32,8 +32,7 @@
 
 int serv_sock = (-1);
 
-int uds_connectsock(char *sockpath)
-{
+int uds_connectsock(char *sockpath) {
 	int s;
 	struct sockaddr_un addr;
 
@@ -60,8 +59,7 @@ int uds_connectsock(char *sockpath)
 /*
  * input binary data from socket
  */
-void serv_read(char *buf, int bytes)
-{
+void serv_read(char *buf, int bytes) {
 	int len, rlen;
 
 	len = 0;
@@ -78,8 +76,7 @@ void serv_read(char *buf, int bytes)
 /*
  * send binary to server
  */
-void serv_write(char *buf, int nbytes)
-{
+void serv_write(char *buf, int nbytes) {
 	int bytes_written = 0;
 	int retval;
 	while (bytes_written < nbytes) {
@@ -95,8 +92,7 @@ void serv_write(char *buf, int nbytes)
 /*
  * input string from socket - implemented in terms of serv_read()
  */
-void serv_gets(char *buf)
-{
+void serv_gets(char *buf) {
 	int i;
 
 	/* Read one character at a time.
@@ -124,8 +120,7 @@ void serv_gets(char *buf)
 /*
  * send line to server - implemented in terms of serv_write()
  */
-void serv_puts(char *buf)
-{
+void serv_puts(char *buf) {
 	serv_write(buf, strlen(buf));
 	serv_write("\n", 1);
 }
@@ -134,8 +129,7 @@ void serv_puts(char *buf)
 /*
  * Main loop.  Do things and have fun.
  */
-int main(int argc, char **argv)
-{
+int main(int argc, char **argv) {
 	int a;
 	int watchdog = 60;
 	char buf[SIZ];
