@@ -1,10 +1,6 @@
 /*
  * Across-the-wire migration utility for Citadel
  *
- * Yes, we used goto, and gets(), and committed all sorts of other heinous sins here.
- * The scope of this program isn't wide enough to make a difference.  If you don't like
- * it you can rewrite it.
- *
  * Copyright (c) 2009-2021 citadel.org
  *
  * This program is open source software; you can redistribute it and/or modify
@@ -14,9 +10,6 @@
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- *
- * (Note: a useful future enhancement might be to support "-h" on both sides)
- *
  */
 
 #include <stdlib.h>
@@ -71,7 +64,7 @@ int uds_connectsock(char *sockpath) {
 
 	memset(&addr, 0, sizeof(addr));
 	addr.sun_family = AF_UNIX;
-	strncpy(addr.sun_path, sockpath, sizeof addr.sun_path);
+	strcpy(addr.sun_path, sockpath);
 
 	s = socket(AF_UNIX, SOCK_STREAM, 0);
 	if (s < 0) {
@@ -162,7 +155,7 @@ void serv_puts(int serv_sock, char *buf) {
 int main(int argc, char *argv[]) {
 	char ctdldir[PATH_MAX]=CTDLDIR;
 	char yesno[5];
-	int cmdexit;
+	int cmdexit = 0;				// when something fails, set cmdexit to nonzero, and skip to the end
 	char cmd[PATH_MAX];
 	char buf[PATH_MAX];
 	char socket_path[PATH_MAX];
@@ -173,12 +166,13 @@ int main(int argc, char *argv[]) {
 	int linecount = 0;
 	int a;
 	int local_admin_socket = (-1);
+	pid_t sshpid = (-1);
 
 	/* Parse command line */
 	while ((a = getopt(argc, argv, "h:")) != EOF) {
 		switch (a) {
 		case 'h':
-			strncpy(ctdldir, optarg, sizeof ctdldir);
+			strcpy(ctdldir, optarg);
 			break;
 		default:
 			fprintf(stderr, "sendcommand: usage: ctdlmigrate [-h server_dir]\n");
@@ -214,134 +208,149 @@ int main(int argc, char *argv[]) {
 	);
 
 	if ((fgets(yesno, sizeof yesno, stdin) == NULL) || (tolower(yesno[0]) != 'y')) {
-		exit(0);
+		cmdexit = 1;
 	}
 
-	printf("\n\nGreat!  First we will check some things out here on our target\n"
-		"system to make sure it is ready to receive data.\n\n");
+	if (!cmdexit) {
+		printf("\n\nGreat!  First we will check some things out here on our target\n"
+			"system to make sure it is ready to receive data.\n\n");
+	
+		printf("Checking connectivity to Citadel in %s...\n", ctdldir);
+		local_admin_socket = uds_connectsock("citadel-admin.socket");
 
-	printf("Checking connectivity to Citadel in %s...\n", ctdldir);
-	local_admin_socket = uds_connectsock("citadel-admin.socket");
-
-
-	serv_gets(local_admin_socket, buf);
-	puts(buf);
-	if (buf[0] != '2') {
-		exit(1);
-	}
-	serv_puts(local_admin_socket, "ECHO Connection to Citadel Server succeeded.");
-	serv_gets(local_admin_socket, buf);
-	puts(buf);
-	if (buf[0] != '2') {
-		exit(1);
-	}
-
-	printf("\nOK, this side is ready to go.  Now we must connect to the source system.\n\n");
-
-	printf("Enter the host name or IP address of the source system\n"
-		"(example: ctdl.foo.org)\n"
-		"--> ");
-	getz(remote_host);
-
-	while (IsEmptyStr(remote_user)) {
-		printf("\nEnter the name of a user on %s who has full access to Citadel files\n"
-			"(usually root)\n--> ",
-			remote_host);
-		getz(remote_user);
-	}
-
-	printf("\nEstablishing an SSH connection to the source system...\n\n");
-	sprintf(socket_path, "/tmp/ctdlmigrate.XXXXXX");
-	mktemp(socket_path);
-	unlink(socket_path);
-	snprintf(cmd, sizeof cmd, "ssh -MNf -S %s %s@%s", socket_path, remote_user, remote_host);
-	cmdexit = system(cmd);
-	printf("\n");
-	if (cmdexit != 0) {
-		printf("This program was unable to establish an SSH session to the source system.\n\n");
-		exit(cmdexit);
-	}
-
-	printf("\nTesting a command over the connection...\n\n");
-	snprintf(cmd, sizeof cmd, "ssh -S %s %s@%s 'echo Remote commands are executing successfully.'",
-		socket_path, remote_user, remote_host);
-	cmdexit = system(cmd);
-	printf("\n");
-	if (cmdexit != 0) {
-		printf("Remote commands are not succeeding.\n\n");
-		exit(cmdexit);
-	}
-
-	printf("\nLocating the remote 'sendcommand' and Citadel installation...\n");
-	snprintf(remote_sendcommand, sizeof remote_sendcommand, "/usr/local/citadel/sendcommand");
-	snprintf(cmd, sizeof cmd, "ssh -S %s %s@%s %s NOOP",
-		socket_path, remote_user, remote_host, remote_sendcommand);
-	cmdexit = system(cmd);
-	if (cmdexit != 0) {
-		snprintf(remote_sendcommand, sizeof remote_sendcommand, "/usr/sbin/sendcommand");
-		snprintf(cmd, sizeof cmd, "ssh -S %s %s@%s %s NOOP",
-			socket_path, remote_user, remote_host, remote_sendcommand);
-		cmdexit = system(cmd);
-	}
-	if (cmdexit != 0) {
-		printf("\nUnable to locate Citadel programs on the remote system.  Please enter\n"
-			"the name of the directory on %s which contains the 'sendcommand' program.\n"
-			"(example: /opt/foo/citadel)\n"
-			"--> ", remote_host);
-		getz(buf);
-		snprintf(remote_sendcommand, sizeof remote_sendcommand, "%s/sendcommand", buf);
-		snprintf(cmd, sizeof cmd, "ssh -S %s %s@%s %s NOOP",
-			socket_path, remote_user, remote_host, remote_sendcommand);
-		cmdexit = system(cmd);
-	}
-	printf("\n");
-	if (cmdexit != 0) {
-		printf("ctdlmigrate was unable to attach to the remote Citadel system.\n\n");
-		exit(cmdexit);
-	}
-
-	printf("\033[2J\n");
-	printf("\033[2;0H\033[33mMigrating from %s\033[0m\n\n", remote_host);
-
-	snprintf(cmd, sizeof cmd, "ssh -S %s %s@%s %s -w3600 MIGR export", socket_path, remote_user, remote_host, remote_sendcommand);
-	sourcefp = popen(cmd, "r");
-	if (!sourcefp) {
-		printf("\n%s\n\n", strerror(errno));
-		exit(2);
-	}
-
-	serv_puts(local_admin_socket, "MIGR import");
-	serv_gets(local_admin_socket, buf);
-	if (buf[0] != '4') {
-		printf("\n%s\n", buf);
-		exit(3);
-	}
-
-	char *ptr;
-	time_t time_started = time(NULL);
-	time_t last_update = time(NULL);
-	while (ptr = fgets(buf, SIZ, sourcefp), (ptr != NULL)) {
-		ptr = strchr(buf, '\n');
-		if (ptr) *ptr = 0;
-		++linecount;
-		if (!strncasecmp(buf, "<progress>", 10)) {
-			printf("\033[11;0HPercent complete: \033[32m%d\033[0m\n", atoi(&buf[10]));
+		serv_gets(local_admin_socket, buf);
+		puts(buf);
+		if (buf[0] != '2') {
+			cmdexit = 1;
 		}
-		if (time(NULL) != last_update) {
-			last_update = time(NULL);
-			printf("\033[10;0H  Lines received: \033[32m%d\033[0m\n", linecount);
-		}
-		serv_puts(local_admin_socket, buf);
 	}
 
-	serv_puts(local_admin_socket, "000");
+	if (!cmdexit) {
+		serv_puts(local_admin_socket, "ECHO Connection to Citadel Server succeeded.");
+		serv_gets(local_admin_socket, buf);
+		puts(buf);
+		if (buf[0] != '2') {
+			cmdexit = 1;
+		}
+	}
+
+	if (!cmdexit) {
+		printf("\nOK, this side is ready to go.  Now we must connect to the source system.\n\n");
+		printf("Enter the host name or IP address of the source system\n"
+			"(example: ctdl.foo.org)\n"
+			"--> ");
+		getz(remote_host);
+	
+		while (IsEmptyStr(remote_user)) {
+			printf("\nEnter the name of a user on %s who has full access to Citadel files\n"
+				"(usually root)\n--> ",
+				remote_host);
+			getz(remote_user);
+		}
+
+		printf("\nEstablishing an SSH connection to the source system...\n\n");
+		sprintf(socket_path, "/tmp/ctdlmigrate-socket.%ld.%d", time(NULL), getpid());
+		unlink(socket_path);
+
+		snprintf(cmd, sizeof cmd, "ssh -MNf -S %s -l %s %s", socket_path, remote_user, remote_host);
+		sshpid = fork();
+		if (sshpid < 0) {
+			printf("%s\n", strerror(errno));
+			cmdexit = errno;
+		}
+		else if (sshpid == 0) {
+			execl("/bin/bash", "bash", "-c", cmd, (char *) NULL);
+			exit(1);
+		}
+		else {						// Wait for SSH to go into the background
+			waitpid(sshpid, NULL, 0);
+		}
+	}
+
+	if (!cmdexit) {
+		printf("\nTesting a command over the connection...\n\n");
+		snprintf(cmd, sizeof cmd, "ssh -S %s %s@%s 'echo Remote commands are executing successfully.'",
+			socket_path, remote_user, remote_host);
+		cmdexit = system(cmd);
+		printf("\n");
+		if (cmdexit != 0) {
+			printf("Remote commands are not succeeding.\n\n");
+		}
+	}
+
+	if (!cmdexit) {
+		printf("\nLocating the remote 'sendcommand' and Citadel installation...\n");
+		snprintf(remote_sendcommand, sizeof remote_sendcommand, "/usr/local/citadel/sendcommand");
+		snprintf(cmd, sizeof cmd, "ssh -S %s %s@%s %s NOOP", socket_path, remote_user, remote_host, remote_sendcommand);
+		cmdexit = system(cmd);
+
+		if (cmdexit) {
+			snprintf(remote_sendcommand, sizeof remote_sendcommand, "/usr/sbin/sendcommand");
+			snprintf(cmd, sizeof cmd, "ssh -S %s %s@%s %s NOOP", socket_path, remote_user, remote_host, remote_sendcommand);
+			cmdexit = system(cmd);
+		}
+
+		if (cmdexit) {
+			printf("\nUnable to locate Citadel programs on the remote system.  Please enter\n"
+				"the name of the directory on %s which contains the 'sendcommand' program.\n"
+				"(example: /opt/foo/citadel)\n"
+				"--> ", remote_host);
+			getz(buf);
+			snprintf(remote_sendcommand, sizeof remote_sendcommand, "%s/sendcommand", buf);
+			snprintf(cmd, sizeof cmd, "ssh -S %s %s@%s %s NOOP", socket_path, remote_user, remote_host, remote_sendcommand);
+			cmdexit = system(cmd);
+			if (!cmdexit) {
+				printf("ctdlmigrate was unable to attach to the remote Citadel system.\n\n");
+			}
+		}
+	}
+
+	if (!cmdexit) {
+		printf("\033[2J\n");
+		printf("\033[2;0H\033[33mMigrating from %s\033[0m\n\n", remote_host);
+
+		snprintf(cmd, sizeof cmd, "ssh -S %s %s@%s %s -w3600 MIGR export", socket_path, remote_user, remote_host, remote_sendcommand);
+		sourcefp = popen(cmd, "r");
+		if (!sourcefp) {
+			cmdexit = errno;
+			printf("\n%s\n\n", strerror(errno));
+		}
+	}
+
+	if (!cmdexit) {
+		serv_puts(local_admin_socket, "MIGR import");
+		serv_gets(local_admin_socket, buf);
+		if (buf[0] != '4') {
+			printf("\n%s\n", buf);
+			cmdexit = 3;
+		}
+	}
+
+	if (!cmdexit) {
+		char *ptr;
+		time_t last_update = time(NULL);
+		while (ptr = fgets(buf, SIZ, sourcefp), (ptr != NULL)) {
+			ptr = strchr(buf, '\n');
+			if (ptr) *ptr = 0;	// remove the newline character
+			++linecount;
+			if (!strncasecmp(buf, "<progress>", 10)) {
+				printf("\033[11;0HPercent complete: \033[32m%d\033[0m\n", atoi(&buf[10]));
+			}
+			if (time(NULL) != last_update) {
+				last_update = time(NULL);
+				printf("\033[10;0H  Lines received: \033[32m%d\033[0m\n", linecount);
+			}
+			serv_puts(local_admin_socket, buf);
+		}
+	
+		serv_puts(local_admin_socket, "000");
+	}
 
 	// FIXME restart the local server now
 
 	pclose(sourcefp);
  	printf("\nShutting down the socket connection...\n\n");
-	snprintf(cmd, sizeof cmd, "ssh -S %s -N -O exit %s@%s", socket_path, remote_user, remote_host);
-	system(cmd);
 	unlink(socket_path);
-	exit(0);
+	kill(sshpid, SIGKILL);
+	exit(cmdexit);
 }
