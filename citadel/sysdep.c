@@ -543,8 +543,7 @@ int client_read_to(char *buf, int bytes, int timeout)
 }
 
 
-int HaveMoreLinesWaiting(CitContext *CCC)
-{
+int HaveMoreLinesWaiting(CitContext *CCC) {
 	if ((CCC->kill_me != 0) ||
 	    ( (CCC->RecvBuf.ReadWritePointer == NULL) && 
 	      (StrLength(CCC->RecvBuf.Buf) == 0) && 
@@ -560,13 +559,11 @@ int HaveMoreLinesWaiting(CitContext *CCC)
  * (This is implemented in terms of client_read_to() and could be
  * justifiably moved out of sysdep.c)
  */
-INLINE int client_read(char *buf, int bytes)
-{
+INLINE int client_read(char *buf, int bytes) {
 	return(client_read_to(buf, bytes, CtdlGetConfigInt("c_sleeping")));
 }
 
-int CtdlClientGetLine(StrBuf *Target)
-{
+int CtdlClientGetLine(StrBuf *Target) {
 	CitContext *CCC=CC;
 	const char *Error;
 	int rc;
@@ -598,8 +595,7 @@ int CtdlClientGetLine(StrBuf *Target)
  * (This is implemented in terms of client_read() and could be
  * justifiably moved out of sysdep.c)
  */
-int client_getln(char *buf, int bufsize)
-{
+int client_getln(char *buf, int bufsize) {
 	int i, retval;
 	CitContext *CCC=CC;
 	const char *pCh;
