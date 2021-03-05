@@ -15,14 +15,17 @@
 /*
  * Explanation of <progress> tags:
  *
- * 0%              nothing
- * 2%              finished exporting configuration
- * 7%              finished exporting users
- * 12%             finished exporting openids
- * 17%             finished exporting rooms
- * 18%             finished exporting floors
- * 25%             finished exporting visits
- * 100%            finished exporting messages
+ * 0%		started
+ * 2%		finished exporting configuration
+ * 7%		finished exporting users
+ * 12%		finished exporting openids
+ * 17%		finished exporting rooms
+ * 18%		finished exporting floors
+ * 25%		finished exporting visits
+ * 26-99%	exporting messages
+ * 100%		finished exporting messages
+ *
+ * These tags are inserted into the XML stream to give the reader an approximation of its progress.
  */
 
 #include "sysdep.h"
@@ -134,15 +137,24 @@ void migr_export_users(void) {
 
 
 void migr_export_room_msg(long msgnum, void *userdata) {
-	cprintf("%ld\n", msgnum);
+	static int count = 0;
+
+	cprintf("%ld,", msgnum);
+	if (++count%10==0) {
+		cprintf("\n");
+	}
 	fprintf(migr_global_message_list, "%ld\n", msgnum);
 }
 
 
 void migr_export_rooms_backend(struct ctdlroom *buf, void *data) {
 	client_write(HKEY("<room>\n"));
-	client_write(HKEY("<QRname>"));	xml_strout(buf->QRname);	client_write(HKEY("</QRname>\n"));
-	client_write(HKEY("<QRpasswd>"));	xml_strout(buf->QRpasswd);	client_write(HKEY("</QRpasswd>\n"));
+	client_write(HKEY("<QRname>"));
+	xml_strout(buf->QRname);
+	client_write(HKEY("</QRname>\n"));
+	client_write(HKEY("<QRpasswd>"));
+	xml_strout(buf->QRpasswd);
+	client_write(HKEY("</QRpasswd>\n"));
 	cprintf("<QRroomaide>%ld</QRroomaide>\n", buf->QRroomaide);
 	cprintf("<QRhighest>%ld</QRhighest>\n", buf->QRhighest);
 	cprintf("<QRgen>%ld</QRgen>\n", (long)buf->QRgen);
@@ -165,16 +177,15 @@ void migr_export_rooms_backend(struct ctdlroom *buf, void *data) {
 	client_write(HKEY("</room>\n"));
 
 	/* message list goes inside this tag */
-
 	CtdlGetRoom(&CC->room, buf->QRname);
 	client_write(HKEY("<room_messages>"));
-	client_write(HKEY("<FRname>"));	xml_strout(CC->room.QRname);	client_write(HKEY("</FRname>\n"));
-	client_write(HKEY("<FRmsglist>"));
+	client_write(HKEY("<FRname>"));
+	xml_strout(buf->QRname);			// buf->QRname rather than CC->room.QRname to guarantee consistency
+	client_write(HKEY("</FRname>\n"));
+	client_write(HKEY("<FRmsglist>\n"));
 	CtdlForEachMessage(MSGS_ALL, 0L, NULL, NULL, NULL, migr_export_room_msg, NULL);
 	client_write(HKEY("</FRmsglist>\n"));
 	client_write(HKEY("</room_messages>\n"));
-
-
 }
 
 
@@ -193,9 +204,9 @@ void migr_export_rooms(void) {
 	 * exporting the message multiple times.)
 	 */
 	snprintf(cmd, sizeof cmd, "sort -n <%s >%s", migr_tempfilename1, migr_tempfilename2);
-	if (system(cmd) != 0) syslog(LOG_ALERT, "Error %d", errno);
+	if (system(cmd) != 0) syslog(LOG_ERR, "Error %d", errno);
 	snprintf(cmd, sizeof cmd, "uniq <%s >%s", migr_tempfilename2, migr_tempfilename1);
-	if (system(cmd) != 0) syslog(LOG_ALERT, "Error %d", errno);
+	if (system(cmd) != 0) syslog(LOG_ERR, "Error %d", errno);
 
 
 	snprintf(cmd, sizeof cmd, "wc -l %s", migr_tempfilename1);
@@ -496,8 +507,13 @@ long import_msgnum = 0;
 /*
  * This callback stores up the data which appears in between tags.
  */
-void migr_xml_chardata(void *data, const XML_Char *s, int len)
-{
+void migr_xml_chardata(void *data, const XML_Char *s, int len) {
+
+	char aaa[65536];
+	memcpy(aaa, s, len);
+	aaa[len] = 0;
+	syslog(LOG_DEBUG, "chardata <\033[35m%s\033[0m>", aaa);
+
 	StrBufAppendBufPlain(migr_chardata, s, len, 0);
 }
 
@@ -526,7 +542,7 @@ void migr_xml_start(void *data, const char *el, const char **attr) {
 	}
 
 	if (citadel_migrate_data != 1) {
-		syslog(LOG_ALERT, "Out-of-sequence tag <%s> detected.  Warning: ODD-DATA!", el);
+		syslog(LOG_ERR, "Out-of-sequence tag <%s> detected.  Warning: ODD-DATA!", el);
 		return;
 	}
 
@@ -560,8 +576,7 @@ void migr_xml_start(void *data, const char *el, const char **attr) {
 }
 
 
-int migr_userrecord(void *data, const char *el)
-{
+int migr_userrecord(void *data, const char *el) {
 	if (!strcasecmp(el, "u_version"))			usbuf.version = atoi(ChrPtr(migr_chardata));
 	else if (!strcasecmp(el, "u_uid"))			usbuf.uid = atol(ChrPtr(migr_chardata));
 	else if (!strcasecmp(el, "u_password"))			safestrncpy(usbuf.password, ChrPtr(migr_chardata), sizeof usbuf.password);
@@ -583,8 +598,7 @@ int migr_userrecord(void *data, const char *el)
 }
 
 
-int migr_roomrecord(void *data, const char *el)
-{
+int migr_roomrecord(void *data, const char *el) {
 	if (!strcasecmp(el, "QRname"))				safestrncpy(qrbuf.QRname, ChrPtr(migr_chardata), sizeof qrbuf.QRname);
 	else if (!strcasecmp(el, "QRpasswd"))			safestrncpy(qrbuf.QRpasswd, ChrPtr(migr_chardata), sizeof qrbuf.QRpasswd);
 	else if (!strcasecmp(el, "QRroomaide"))			qrbuf.QRroomaide = atol(ChrPtr(migr_chardata));
@@ -607,8 +621,7 @@ int migr_roomrecord(void *data, const char *el)
 }
 
 
-int migr_floorrecord(void *data, const char *el)
-{
+int migr_floorrecord(void *data, const char *el) {
 	if (!strcasecmp(el, "f_num"))				floornum = atoi(ChrPtr(migr_chardata));
 	else if (!strcasecmp(el, "f_flags"))			flbuf.f_flags = atoi(ChrPtr(migr_chardata));
 	else if (!strcasecmp(el, "f_name"))			safestrncpy(flbuf.f_name, ChrPtr(migr_chardata), sizeof flbuf.f_name);
@@ -620,8 +633,7 @@ int migr_floorrecord(void *data, const char *el)
 }
 
 
-int migr_visitrecord(void *data, const char *el)
-{
+int migr_visitrecord(void *data, const char *el) {
 	if (!strcasecmp(el, "v_roomnum"))			vbuf.v_roomnum = atol(ChrPtr(migr_chardata));
 	else if (!strcasecmp(el, "v_roomgen"))			vbuf.v_roomgen = atol(ChrPtr(migr_chardata));
 	else if (!strcasecmp(el, "v_usernum"))			vbuf.v_usernum = atol(ChrPtr(migr_chardata));
@@ -648,8 +660,7 @@ int migr_visitrecord(void *data, const char *el)
 }
 
 
-void migr_xml_end(void *data, const char *el)
-{
+void migr_xml_end(void *data, const char *el) {
 	const char *ptr;
 	int msgcount = 0;
 	long msgnum = 0L;
@@ -663,7 +674,7 @@ void migr_xml_end(void *data, const char *el)
 	}
 
 	if (citadel_migrate_data != 1) {
-		syslog(LOG_ALERT, "Out-of-sequence tag <%s> detected.  Warning: ODD-DATA!", el);
+		syslog(LOG_ERR, "Out-of-sequence tag <%s> detected.  Warning: ODD-DATA!", el);
 		return;
 	}
 
@@ -671,8 +682,7 @@ void migr_xml_end(void *data, const char *el)
 
 	/*** CONFIG ***/
 
-	if (!strcasecmp(el, "config"))
-	{
+	if (!strcasecmp(el, "config")) {
 		syslog(LOG_DEBUG, "Imported config key=%s", ikey);
 
 		if (ikey != NULL) {
@@ -722,7 +732,9 @@ void migr_xml_end(void *data, const char *el)
 
 	/*** ROOM MESSAGE POINTERS ***/
 
-	else if (!strcasecmp(el, "FRname"))			safestrncpy(FRname, ChrPtr(migr_chardata), sizeof FRname);
+	else if (!strcasecmp(el, "FRname")) {
+		safestrncpy(FRname, ChrPtr(migr_chardata), sizeof FRname);
+	}
 
 	else if (!strcasecmp(el, "FRmsglist")) {
 		if (!IsEmptyStr(FRname)) {
@@ -733,6 +745,7 @@ void migr_xml_end(void *data, const char *el)
 			syslog(LOG_DEBUG, "Message list for: %s", FRname);
 
 			ptr = ChrPtr(migr_chardata);
+			syslog(LOG_DEBUG, "\033[31m%s\033[0m", ptr);
 			while (*ptr != 0) {
 				while ((*ptr != 0) && (!isdigit(*ptr))) {
 					++ptr;
@@ -745,6 +758,7 @@ void migr_xml_end(void *data, const char *el)
 							msglist = realloc(msglist, sizeof(long) * msglist_alloc);
 						}
 						msglist[msgcount++] = msgnum;
+						syslog(LOG_DEBUG, "\033[32mmsgnum %ld , count is now %d\033[0m", msgnum, msgcount);
 						}
 					}
 					while ((*ptr != 0) && (isdigit(*ptr))) {
@@ -790,8 +804,7 @@ void migr_xml_end(void *data, const char *el)
 	else if (!strcasecmp(el, "msg_meta_rfc822_length"))	smi.meta_rfc822_length = atoi(ChrPtr(migr_chardata));
 	else if (!strcasecmp(el, "msg_meta_content_type"))	safestrncpy(smi.meta_content_type, ChrPtr(migr_chardata), sizeof smi.meta_content_type);
 
-	else if (!strcasecmp(el, "msg_text"))
-	{
+	else if (!strcasecmp(el, "msg_text")) {
 		long rc;
 		struct CtdlMessage *msg;
 
@@ -894,8 +907,7 @@ void migr_do_listdirs(void) {
 StrBuf *PlainMessageBuf = NULL;
 HashList *UsedMessageIDS = NULL;
 
-int migr_restore_message_metadata(long msgnum, int refcount)
-{
+int migr_restore_message_metadata(long msgnum, int refcount) {
 	struct MetaData smi;
 	struct CtdlMessage *msg;
 	char *mptr = NULL;
@@ -965,9 +977,7 @@ int migr_restore_message_metadata(long msgnum, int refcount)
 	);
 
 	PutMetaData(&smi);
-
 	CM_Free(msg);
-
 	return 0;
 }
 
@@ -978,9 +988,7 @@ void migr_check_room_msg(long msgnum, void *userdata) {
 
 
 void migr_check_rooms_backend(struct ctdlroom *buf, void *data) {
-
 	/* message list goes inside this tag */
-
 	CtdlGetRoom(&CC->room, buf->QRname);
 	CtdlForEachMessage(MSGS_ALL, 0L, NULL, NULL, NULL, migr_check_room_msg, NULL);
 }
@@ -1026,7 +1034,7 @@ void migr_do_restore_meta(void) {
 	 * exporting the message multiple times.)
 	 */
 	snprintf(cmd, sizeof cmd, "sort -n <%s >%s", migr_tempfilename1, migr_tempfilename2);
-	if (system(cmd) != 0) syslog(LOG_ALERT, "Error %d", errno);
+	if (system(cmd) != 0) syslog(LOG_ERR, "Error %d", errno);
 
 	RoomNames = NewStrBuf();
 	Ctx = CC;

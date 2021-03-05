@@ -166,8 +166,7 @@ void newsgroup_to_room(char *target, char *source, size_t target_size) {
 //
 // Here's where our NNTP session begins its happy day.
 //
-void nntp_greeting(void)
-{
+void nntp_greeting(void) {
 	strcpy(CC->cs_clientname, "NNTP session");
 	CC->cs_flags |= CS_STEALTH;
 
@@ -201,8 +200,7 @@ void nntps_greeting(void) {
 //
 // implements the STARTTLS command
 //
-void nntp_starttls(void)
-{
+void nntp_starttls(void) {
 	char ok_response[SIZ];
 	char nosup_response[SIZ];
 	char error_response[SIZ];
@@ -217,8 +215,7 @@ void nntp_starttls(void)
 //
 // Implements the CAPABILITY command
 //
-void nntp_capabilities(void)
-{
+void nntp_capabilities(void) {
 	cprintf("101 Capability list:\r\n");
 	cprintf("IMPLEMENTATION Citadel %d\r\n", REV_LEVEL);
 	cprintf("VERSION 2\r\n");
@@ -239,8 +236,7 @@ void nntp_capabilities(void)
 // 
 // Implements the QUIT command
 //
-void nntp_quit(void)
-{
+void nntp_quit(void) {
 	cprintf("221 Goodbye...\r\n");
 	CC->kill_me = KILLME_CLIENT_LOGGED_OUT;
 }
@@ -249,8 +245,7 @@ void nntp_quit(void)
 //
 // Implements the AUTHINFO USER command (RFC 4643)
 //
-void nntp_authinfo_user(const char *username)
-{
+void nntp_authinfo_user(const char *username) {
 	int a = CtdlLoginExistingUser(username);
 	switch (a) {
 	case login_already_logged_in:
@@ -274,8 +269,7 @@ void nntp_authinfo_user(const char *username)
 //
 // Implements the AUTHINFO PASS command (RFC 4643)
 //
-void nntp_authinfo_pass(const char *buf)
-{
+void nntp_authinfo_pass(const char *buf) {
 	int a;
 
 	a = CtdlTryPassword(buf, strlen(buf));
@@ -381,8 +375,7 @@ void output_roomname_in_list_format(struct ctdlroom *qrbuf, int which_format, ch
 //
 // Called once per room by nntp_newgroups() to qualify and possibly output a single room
 //
-void nntp_newgroups_backend(struct ctdlroom *qrbuf, void *data)
-{
+void nntp_newgroups_backend(struct ctdlroom *qrbuf, void *data) {
 	int ra;
 	int view;
 	time_t thetime = *(time_t *)data;
@@ -449,8 +442,7 @@ void nntp_newgroups(const char *cmd) {
 //
 // Called once per room by nntp_list() to qualify and possibly output a single room
 //
-void nntp_list_backend(struct ctdlroom *qrbuf, void *data)
-{
+void nntp_list_backend(struct ctdlroom *qrbuf, void *data) {
 	int ra;
 	int view;
 	struct nntp_list_data *nld = (struct nntp_list_data *)data;
@@ -813,7 +805,6 @@ void nntp_article(const char *cmd) {
 // The memory for the returned string is pwnz0red by the caller.
 //
 char *message_id_from_msgnum(long msgnum) {
-
 	char *fetched_message_id = NULL;
 	CC->redirect_buffer = NewStrBufPlain(NULL, SIZ);
 	CtdlOutputMsg(msgnum,
@@ -1027,8 +1018,7 @@ void nntp_xover(const char *cmd) {
 // 
 // Main command loop for NNTP server sessions.
 //
-void nntp_command_loop(void)
-{
+void nntp_command_loop(void) {
 	StrBuf *Cmd = NewStrBuf();
 	char cmdname[16];
 
@@ -1131,8 +1121,7 @@ void nntp_command_loop(void)
 // This cleanup function blows away the temporary memory used by
 // the NNTP server.
 //
-void nntp_cleanup_function(void)
-{
+void nntp_cleanup_function(void) {
 	/* Don't do this stuff if this is not an NNTP session! */
 	if (CC->h_command_function != nntp_command_loop) return;
 
