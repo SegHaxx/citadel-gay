@@ -204,10 +204,13 @@ void migr_export_rooms(void) {
 	 * exporting the message multiple times.)
 	 */
 	snprintf(cmd, sizeof cmd, "sort -n <%s >%s", migr_tempfilename1, migr_tempfilename2);
-	if (system(cmd) != 0) syslog(LOG_ERR, "Error %d", errno);
+	if (system(cmd) != 0) {
+		syslog(LOG_ERR, "migrate: error %d", errno);
+	}
 	snprintf(cmd, sizeof cmd, "uniq <%s >%s", migr_tempfilename2, migr_tempfilename1);
-	if (system(cmd) != 0) syslog(LOG_ERR, "Error %d", errno);
-
+	if (system(cmd) != 0) {
+		syslog(LOG_ERR, "migrate: error %d", errno);
+	}
 
 	snprintf(cmd, sizeof cmd, "wc -l %s", migr_tempfilename1);
 	FILE *fp = popen(cmd, "r");
@@ -219,7 +222,7 @@ void migr_export_rooms(void) {
 	else {
 		total_msgs = 1;	// any nonzero just to keep it from barfing
 	}
-	syslog(LOG_DEBUG, "Total messages to be exported: %d", total_msgs);
+	syslog(LOG_DEBUG, "migrate: total messages to be exported: %d", total_msgs);
 }
 
 
@@ -420,7 +423,7 @@ void migr_export_messages(void) {
 	Ctx = CC;
 	migr_global_message_list = fopen(migr_tempfilename1, "r");
 	if (migr_global_message_list != NULL) {
-		syslog(LOG_INFO, "Opened %s", migr_tempfilename1);
+		syslog(LOG_INFO, "migrate: opened %s", migr_tempfilename1);
 		while ((Ctx->kill_me == 0) && 
 		       (fgets(buf, sizeof(buf), migr_global_message_list) != NULL)) {
 			msgnum = atol(buf);
@@ -437,10 +440,10 @@ void migr_export_messages(void) {
 		fclose(migr_global_message_list);
 	}
 	if (Ctx->kill_me == 0) {
-		syslog(LOG_INFO, "Exported %d messages.", count);
+		syslog(LOG_INFO, "migrate: exported %d messages.", count);
 	}
 	else {
-		syslog(LOG_ERR, "Export aborted due to client disconnect!");
+		syslog(LOG_ERR, "migrate: export aborted due to client disconnect!");
 	}
 
 	migr_export_message(-1L);	/* This frees the encoding buffer */
@@ -508,12 +511,6 @@ long import_msgnum = 0;
  * This callback stores up the data which appears in between tags.
  */
 void migr_xml_chardata(void *data, const XML_Char *s, int len) {
-
-	char aaa[65536];
-	memcpy(aaa, s, len);
-	aaa[len] = 0;
-	syslog(LOG_DEBUG, "chardata <\033[35m%s\033[0m>", aaa);
-
 	StrBufAppendBufPlain(migr_chardata, s, len, 0);
 }
 
@@ -542,7 +539,7 @@ void migr_xml_start(void *data, const char *el, const char **attr) {
 	}
 
 	if (citadel_migrate_data != 1) {
-		syslog(LOG_ERR, "Out-of-sequence tag <%s> detected.  Warning: ODD-DATA!", el);
+		syslog(LOG_ERR, "migrate: out-of-sequence tag <%s> detected.  Warning: ODD-DATA!", el);
 		return;
 	}
 
@@ -674,7 +671,7 @@ void migr_xml_end(void *data, const char *el) {
 	}
 
 	if (citadel_migrate_data != 1) {
-		syslog(LOG_ERR, "Out-of-sequence tag <%s> detected.  Warning: ODD-DATA!", el);
+		syslog(LOG_ERR, "migrate: out-of-sequence tag <%s> detected.  Warning: ODD-DATA!", el);
 		return;
 	}
 
@@ -683,7 +680,7 @@ void migr_xml_end(void *data, const char *el) {
 	/*** CONFIG ***/
 
 	if (!strcasecmp(el, "config")) {
-		syslog(LOG_DEBUG, "Imported config key=%s", ikey);
+		syslog(LOG_DEBUG, "migrate: imported config key=%s", ikey);
 
 		if (ikey != NULL) {
 			CtdlSetConfigStr(ikey, (char *)ChrPtr(migr_chardata));
@@ -691,7 +688,7 @@ void migr_xml_end(void *data, const char *el) {
 			ikey = NULL;
 		}
 		else {
-			syslog(LOG_INFO, "Closed a <config> tag but no key name was supplied.");
+			syslog(LOG_INFO, "migrate: closed a <config> tag but no key name was supplied.");
 		}
 	}
 
@@ -701,7 +698,7 @@ void migr_xml_end(void *data, const char *el) {
 		; /* Nothing to do anymore */
 	else if (!strcasecmp(el, "user")) {
 		CtdlPutUser(&usbuf);
-		syslog(LOG_INFO, "Imported user: %s", usbuf.fullname);
+		syslog(LOG_INFO, "migrate: imported user: %s", usbuf.fullname);
 	}
 
 	/*** OPENID ***/
@@ -718,7 +715,7 @@ void migr_xml_end(void *data, const char *el) {
 		memcpy(&oid_data[sizeof(long)], openid_url, strlen(openid_url) + 1);
 		cdb_store(CDB_EXTAUTH, openid_url, strlen(openid_url), oid_data, oid_data_len);
 		free(oid_data);
-		syslog(LOG_INFO, "Imported OpenID: %s (%ld)", openid_url, openid_usernum);
+		syslog(LOG_INFO, "migrate: imported OpenID: %s (%ld)", openid_url, openid_usernum);
 	}
 
 	/*** ROOM ***/
@@ -727,7 +724,7 @@ void migr_xml_end(void *data, const char *el) {
 		; /* Nothing to do anymore */
 	else if (!strcasecmp(el, "room")) {
 		CtdlPutRoom(&qrbuf);
-		syslog(LOG_INFO, "Imported room: %s", qrbuf.QRname);
+		syslog(LOG_INFO, "migrate: imported room: %s", qrbuf.QRname);
 	}
 
 	/*** ROOM MESSAGE POINTERS ***/
@@ -742,10 +739,9 @@ void migr_xml_end(void *data, const char *el) {
 			msglist_alloc = 1000;
 			msglist = malloc(sizeof(long) * msglist_alloc);
 
-			syslog(LOG_DEBUG, "Message list for: %s", FRname);
+			syslog(LOG_DEBUG, "migrate: message list for: %s", FRname);
 
 			ptr = ChrPtr(migr_chardata);
-			syslog(LOG_DEBUG, "\033[31m%s\033[0m", ptr);
 			while (*ptr != 0) {
 				while ((*ptr != 0) && (!isdigit(*ptr))) {
 					++ptr;
@@ -758,7 +754,6 @@ void migr_xml_end(void *data, const char *el) {
 							msglist = realloc(msglist, sizeof(long) * msglist_alloc);
 						}
 						msglist[msgcount++] = msgnum;
-						syslog(LOG_DEBUG, "\033[32mmsgnum %ld , count is now %d\033[0m", msgnum, msgcount);
 						}
 					}
 					while ((*ptr != 0) && (isdigit(*ptr))) {
@@ -772,7 +767,7 @@ void migr_xml_end(void *data, const char *el) {
 			free(msglist);
 			msglist = NULL;
 			msglist_alloc = 0;
-			syslog(LOG_DEBUG, "Imported %d messages.", msgcount);
+			syslog(LOG_DEBUG, "migrate: imported %d messages.", msgcount);
 			if (server_shutting_down) {
 				return;
 		}
@@ -785,7 +780,7 @@ void migr_xml_end(void *data, const char *el) {
 
 	else if (!strcasecmp(el, "floor")) {
 		CtdlPutFloor(&flbuf, floornum);
-		syslog(LOG_INFO, "Imported floor #%d (%s)", floornum, flbuf.f_name);
+		syslog(LOG_INFO, "migrate: imported floor #%d (%s)", floornum, flbuf.f_name);
 	}
 
 	/*** VISITS ***/
@@ -794,7 +789,7 @@ void migr_xml_end(void *data, const char *el) {
 	}
 	else if (!strcasecmp(el, "visit")) {
 		put_visit(&vbuf);
-		syslog(LOG_INFO, "Imported visit: %ld/%ld/%ld", vbuf.v_roomnum, vbuf.v_roomgen, vbuf.v_usernum);
+		syslog(LOG_INFO, "migrate: imported visit: %ld/%ld/%ld", vbuf.v_roomnum, vbuf.v_roomgen, vbuf.v_usernum);
 	}
 
 	/*** MESSAGES ***/
@@ -826,7 +821,7 @@ void migr_xml_end(void *data, const char *el) {
 		}
 
 		syslog(LOG_INFO,
-		       "%s message #%ld, size=%d, refcount=%d, bodylength=%ld, content-type: %s",
+		       "migrate: %s message #%ld, size=%d, refcount=%d, bodylength=%ld, content-type: %s",
 		       (rc!= 0)?"failed to import ":"Imported ",
 		       import_msgnum,
 		       StrLength(migr_MsgData),
@@ -969,7 +964,7 @@ int migr_restore_message_metadata(long msgnum, int refcount) {
 	CC->redirect_buffer = NULL;
 
 	syslog(LOG_INFO,
-	       "Setting message #%ld meta data to: refcount=%d, bodylength=%ld, content-type: %s",
+	       "migrate: setting message #%ld meta data to: refcount=%d, bodylength=%ld, content-type: %s",
 	       smi.meta_msgnum,
 	       smi.meta_refcount,
 	       smi.meta_rfc822_length,
@@ -999,7 +994,7 @@ void RemoveMessagesFromRooms(StrBuf *RoomNameVec, long msgnum) {
 	const char *Pos = NULL;
 	StrBuf *oneRoom = NewStrBuf();
 
-	syslog(LOG_INFO, "removing message pointer %ld from these rooms: %s", msgnum, ChrPtr(RoomNameVec));
+	syslog(LOG_INFO, "migrate: removing message pointer %ld from these rooms: %s", msgnum, ChrPtr(RoomNameVec));
 
 	while (Pos != StrBufNOTNULL){
 		StrBufExtract_NextToken(oneRoom, RoomNameVec, &Pos, '|');
@@ -1034,13 +1029,15 @@ void migr_do_restore_meta(void) {
 	 * exporting the message multiple times.)
 	 */
 	snprintf(cmd, sizeof cmd, "sort -n <%s >%s", migr_tempfilename1, migr_tempfilename2);
-	if (system(cmd) != 0) syslog(LOG_ERR, "Error %d", errno);
+	if (system(cmd) != 0) {
+		syslog(LOG_ERR, "migrate: error %d", errno);
+	}
 
 	RoomNames = NewStrBuf();
 	Ctx = CC;
 	migr_global_message_list = fopen(migr_tempfilename2, "r");
 	if (migr_global_message_list != NULL) {
-		syslog(LOG_INFO, "Opened %s", migr_tempfilename1);
+		syslog(LOG_INFO, "migrate: opened %s", migr_tempfilename1);
 		while ((Ctx->kill_me == 0) && 
 		       (fgets(buf, sizeof(buf), migr_global_message_list) != NULL)) {
 			msgnum = atol(buf);

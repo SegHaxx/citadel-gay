@@ -38,7 +38,6 @@
 #include "citadel_dirs.h"
 
 
-
 /*
  * Replacement for gets() that doesn't throw a compiler warning.
  * We're only using it for some simple prompts, so we don't need
@@ -58,6 +57,22 @@ void getz(char *buf) {
 }
 
 
+// These variables are used by both main() and ctdlmigrate_exit()
+// They are global so that ctdlmigrate_exit can be called from a signal handler
+char socket_path[PATH_MAX];
+pid_t sshpid = (-1);
+
+void ctdlmigrate_exit(int cmdexit) {
+	unlink(socket_path);
+	if (sshpid > 0) {
+ 		printf("Shutting down the SSH session...\n");
+		kill(sshpid, SIGKILL);
+	}
+	printf("\n\n\033[3%dmExit code %d\033[0m\n", (cmdexit ? 1 : 2), cmdexit);
+	exit(cmdexit);
+}
+
+
 int uds_connectsock(char *sockpath) {
 	int s;
 	struct sockaddr_un addr;
@@ -69,13 +84,13 @@ int uds_connectsock(char *sockpath) {
 	s = socket(AF_UNIX, SOCK_STREAM, 0);
 	if (s < 0) {
 		fprintf(stderr, "sendcommand: Can't create socket: %s\n", strerror(errno));
-		exit(3);
+		ctdlmigrate_exit(3);
 	}
 
 	if (connect(s, (struct sockaddr *) &addr, sizeof(addr)) < 0) {
 		fprintf(stderr, "sendcommand: can't connect: %s\n", strerror(errno));
 		close(s);
-		exit(3);
+		ctdlmigrate_exit(3);
 	}
 
 	return s;
@@ -158,7 +173,6 @@ int main(int argc, char *argv[]) {
 	int cmdexit = 0;				// when something fails, set cmdexit to nonzero, and skip to the end
 	char cmd[PATH_MAX];
 	char buf[PATH_MAX];
-	char socket_path[PATH_MAX];
 	char remote_user[SIZ];
 	char remote_host[SIZ];
 	char remote_sendcommand[PATH_MAX];
@@ -166,7 +180,6 @@ int main(int argc, char *argv[]) {
 	int linecount = 0;
 	int a;
 	int local_admin_socket = (-1);
-	pid_t sshpid = (-1);
 
 	/* Parse command line */
 	while ((a = getopt(argc, argv, "h:")) != EOF) {
@@ -184,6 +197,13 @@ int main(int argc, char *argv[]) {
 		fprintf(stderr, "sendcommand: %s: %s\n", ctdldir, strerror(errno));
 		exit(errno);
 	}
+
+	signal(SIGINT, ctdlmigrate_exit);
+	signal(SIGQUIT, ctdlmigrate_exit);
+	signal(SIGTERM, ctdlmigrate_exit);
+	signal(SIGSEGV, ctdlmigrate_exit);
+	signal(SIGHUP, ctdlmigrate_exit);
+	signal(SIGPIPE, ctdlmigrate_exit);
 
 	printf(	"\033[2J\033[H\n"
 		"          \033[32m╔═══════════════════════════════════════════════╗\n"
@@ -371,10 +391,6 @@ int main(int argc, char *argv[]) {
 	 	printf("Closing the data connection from the source system...\n");
 		pclose(sourcefp);
 	}
- 	printf("Shutting down the socket connection...\n");
-	unlink(socket_path);
- 	printf("Shutting down the SSH session...\n");
-	kill(sshpid, SIGKILL);
-	printf("\033[3%dmExit code %d\033[0m\n", (cmdexit ? 1 : 2), cmdexit);
-	exit(cmdexit);
+
+	ctdlmigrate_exit(cmdexit);
 }
