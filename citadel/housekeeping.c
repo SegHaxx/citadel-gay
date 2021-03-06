@@ -92,11 +92,17 @@ void keep_an_eye_on_memory_usage(void) {
  * instance to run at a time.
  */
 static int housekeeping_in_progress = 0;
+static int housekeeping_disabled = 0;
 static time_t last_timer = 0L;
+
 void do_housekeeping(void) {
 	int do_housekeeping_now = 0;
 	int do_perminute_housekeeping_now = 0;
 	time_t now;
+
+	if (housekeeping_disabled) {
+		return;
+	}
 
 	/*
 	 * We do it this way instead of wrapping the whole loop in an
@@ -161,52 +167,21 @@ void do_housekeeping(void) {
 
 
 void CtdlDisableHouseKeeping(void) {
-	int ActiveBackgroundJobs;
-	int do_housekeeping_now = 0;
-	struct CitContext *nptr;
-	int nContexts, i;
+	syslog(LOG_INFO, "housekeeping: trying to disable");
+	while ( (!housekeeping_disabled) && (!server_shutting_down) && (!housekeeping_in_progress) ) {
 
-retry_block_housekeeping:
-	syslog(LOG_INFO, "housekeeping: trying to disable services");
-	begin_critical_section(S_HOUSEKEEPING);
-	if (housekeeping_in_progress == 0) {
-		do_housekeeping_now = 1;
-		housekeeping_in_progress = 1;
-	}
-	end_critical_section(S_HOUSEKEEPING);
-	if (do_housekeeping_now == 0) {
-		usleep(1000000);
-		goto retry_block_housekeeping;
-	}
-	
-	syslog(LOG_INFO, "housekeeping: checking for running server jobs");
-
-retry_wait_for_contexts:
-	/* So that we don't keep the context list locked for a long time
-	 * we create a copy of it first
-	 */
-	ActiveBackgroundJobs = 0;
-	nptr = CtdlGetContextArray(&nContexts) ;
-	if (nptr)
-	{
-		for (i=0; i<nContexts; i++) 
-		{
-			if ((nptr[i].state != CON_SYS) || (nptr[i].lastcmd == 0))
-				continue;
-			ActiveBackgroundJobs ++;
-			syslog(LOG_INFO, "jousekeeping: job CC[%d] active; use TERM if you don't want to wait for it", nptr[i].cs_pid);
-		
+		if (housekeeping_in_progress) {
+			sleep(1);
 		}
-	
-		free(nptr);
-
+		else {
+			begin_critical_section(S_HOUSEKEEPING);
+			if (!housekeeping_in_progress) {
+				housekeeping_disabled = 1;
+			}
+			end_critical_section(S_HOUSEKEEPING);
+		}
 	}
-	if (ActiveBackgroundJobs != 0) {
-		syslog(LOG_INFO, "housekeeping: found %d running jobs, need to wait", ActiveBackgroundJobs);
-		usleep(5000000);
-		goto retry_wait_for_contexts;
-	}
-	syslog(LOG_INFO, "housekeeping: disabled now.");
+	syslog(LOG_INFO, "housekeeping: disabled now");
 }
 
 
