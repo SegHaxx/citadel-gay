@@ -57,6 +57,7 @@ void listdeliver_do_msg(long msgnum, void *userdata) {
 	char buf[SIZ];
 	char *ch;
 	char bounce_to[256];
+	int i = 0;
 
 	ld->msgnum = msgnum;
 	if (msgnum <= 0) return;
@@ -83,7 +84,7 @@ void listdeliver_do_msg(long msgnum, void *userdata) {
 		recipients[0] = 0;
 
 		int config_lines = num_tokens(ld->netconf, '\n');
-		for (int i=0; i<config_lines; ++i) {
+		for (i=0; i<config_lines; ++i) {
 			extract_token(buf, ld->netconf, i, '\n', sizeof buf);
 			if (!strncasecmp(buf, "listrecp|", 9)) {
 				if (recipients[0] != 0) {
