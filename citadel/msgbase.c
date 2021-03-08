@@ -2556,7 +2556,7 @@ long send_message(struct CtdlMessage *msg) {
 
 
 /*
- * Serialize a struct CtdlMessage into the format used on disk and network.
+ * Serialize a struct CtdlMessage into the format used on disk.
  * 
  * This function loads up a "struct ser_ret" (defined in server.h) which
  * contains the length of the serialized message and a pointer to the

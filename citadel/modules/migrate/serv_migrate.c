@@ -309,12 +309,14 @@ void migr_export_message(long msgnum) {
 	struct MetaData smi;
 	struct CtdlMessage *msg;
 	struct ser_ret smr;
+	long bytes_written = 0;
+	long this_block = 0;
 
-	/* We can use a static buffer here because there will never be more than
-	 * one of this operation happening at any given time, and it's really best
-	 * to just keep it allocated once instead of torturing malloc/free.
-	 * Call this function with msgnum "-1" to free the buffer when finished.
-	 */
+	// We can use a static buffer here because there will never be more than
+	// one of this operation happening at any given time, and it's really best
+	// to just keep it allocated once instead of torturing malloc/free.
+	// Call this function with msgnum "-1" to free the buffer when finished.
+
 	static int encoded_alloc = 0;
 	static char *encoded_msg = NULL;
 
@@ -327,10 +329,10 @@ void migr_export_message(long msgnum) {
 		return;
 	}
 
-	/* Ok, here we go ... */
+	// Ok, here we go ...
 
 	msg = CtdlFetchMessage(msgnum, 1);
-	if (msg == NULL) return;	/* fail silently */
+	if (msg == NULL) return;				// fail silently
 
 	client_write(HKEY("<message>\n"));
 	GetMetaData(&smi, msgnum);
@@ -343,7 +345,7 @@ void migr_export_message(long msgnum) {
 	CtdlSerializeMessage(&smr, msg);
 	CM_Free(msg);
 
-	/* Predict the buffer size we need.  Expand the buffer if necessary. */
+	// Predict the buffer size we need.  Expand the buffer if necessary.
 	int encoded_len = smr.len * 15 / 10 ;
 	if (encoded_len > encoded_alloc) {
 		encoded_alloc = encoded_len;
@@ -351,13 +353,24 @@ void migr_export_message(long msgnum) {
 	}
 
 	if (encoded_msg == NULL) {
-		/* Questionable hack that hopes it'll work next time and we only lose one message */
+		// Questionable hack that hopes it'll work next time and we only lose one message
 		encoded_alloc = 0;
 	}
 	else {
-		/* Once we do the encoding we know the exact size */
+		// Once we do the encoding we know the exact size
 		encoded_len = CtdlEncodeBase64(encoded_msg, (char *)smr.ser, smr.len, 1);
-		client_write(encoded_msg, encoded_len);
+
+		// Careful now.  If the message is gargantuan, trying to write multiple gigamegs in one
+		// big write operation can make our transport unhappy.  So we'll chunk it up 10 KB at a time.
+		bytes_written = 0;
+		while ( (bytes_written < encoded_len) && (!server_shutting_down) ) {
+			this_block = encoded_len - bytes_written;
+			if (this_block > 10240) {
+				this_block = 10240;
+			}
+			client_write(&encoded_msg[bytes_written], this_block);
+			bytes_written += this_block;
+		}
 	}
 
 	free(smr.ser);
