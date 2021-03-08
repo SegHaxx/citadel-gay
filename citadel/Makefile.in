@@ -147,7 +147,7 @@ setup$(EXEEXT): setup.o citadel_dirs.o
 
 ctdlmigrate$(EXEEXT): ctdlmigrate.o citadel_dirs.o
 	$(CC) ctdlmigrate.o citadel_dirs.o \
-		$(LDFLAGS) -o ctdlmigrate$(EXEEXT) $(LIBS)
+		$(LDFLAGS) -lreadline -o ctdlmigrate$(EXEEXT) $(LIBS)
 
 chkpwd$(EXEEXT): chkpwd.o auth.o
 	$(CC) chkpwd.o auth.o $(LDFLAGS) -o chkpwd$(EXEEXT) $(chkpwd_LIBS)

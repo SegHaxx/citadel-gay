@@ -28,6 +28,7 @@
 #include <limits.h>
 #include <pwd.h>
 #include <time.h>
+#include <readline/readline.h>
 #include <sys/socket.h>
 #include <sys/un.h>
 #include <libcitadel.h>
@@ -38,31 +39,54 @@
 #include "citadel_dirs.h"
 
 
+
+// yeah, this wouldn't work in a multithreaded program.
+static int gmaxlen = 0;
+static char *gdeftext = NULL;
+
+static int limit_rl(FILE *dummy) {
+	if (rl_end > gmaxlen) {
+		return '\b';
+	}
+	return rl_getc(dummy);
+}
+
+
+static int getz_deftext(void) {
+	if (gdeftext) {
+		rl_insert_text(gdeftext);
+		gdeftext = NULL;
+		rl_startup_hook = NULL;
+	}
+	return 0;
+}
+
+
 /*
  * Replacement for gets() that doesn't throw a compiler warning.
  * We're only using it for some simple prompts, so we don't need
  * to worry about attackers exploiting it.
  */
-void getz(char *buf) {
-	char *ptr;
-
-	ptr = fgets(buf, SIZ, stdin);
-	if (!ptr) {
-		buf[0] = 0;
-		return;
-	}
-
-	ptr = strchr(buf, '\n');
-	if (ptr) *ptr = 0;
+void getz(char *buf, int maxlen, char *default_value, char *prompt) {
+	rl_startup_hook = getz_deftext;
+	rl_getc_function = limit_rl;
+	gmaxlen = maxlen;
+	gdeftext = default_value;
+	strcpy(buf, readline(prompt));
 }
 
 
 // These variables are used by both main() and ctdlmigrate_exit()
 // They are global so that ctdlmigrate_exit can be called from a signal handler
+FILE *sourcefp = NULL;
 char socket_path[PATH_MAX];
 pid_t sshpid = (-1);
 
 void ctdlmigrate_exit(int cmdexit) {
+	if (sourcefp) {
+	 	printf("Closing the data connection from the source system...\n");
+		pclose(sourcefp);
+	}
 	unlink(socket_path);
 	if (sshpid > 0) {
  		printf("Shutting down the SSH session...\n");
@@ -83,12 +107,12 @@ int uds_connectsock(char *sockpath) {
 
 	s = socket(AF_UNIX, SOCK_STREAM, 0);
 	if (s < 0) {
-		fprintf(stderr, "sendcommand: Can't create socket: %s\n", strerror(errno));
+		fprintf(stderr, "ctdlmigrate: Can't create socket: %s\n", strerror(errno));
 		ctdlmigrate_exit(3);
 	}
 
 	if (connect(s, (struct sockaddr *) &addr, sizeof(addr)) < 0) {
-		fprintf(stderr, "sendcommand: can't connect: %s\n", strerror(errno));
+		fprintf(stderr, "ctdlmigrate: can't connect: %s\n", strerror(errno));
 		close(s);
 		ctdlmigrate_exit(3);
 	}
@@ -176,10 +200,10 @@ int main(int argc, char *argv[]) {
 	char remote_user[SIZ];
 	char remote_host[SIZ];
 	char remote_sendcommand[PATH_MAX];
-	FILE *sourcefp = NULL;
 	int linecount = 0;
 	int a;
 	int local_admin_socket = (-1);
+	int progress = 0;
 
 	/* Parse command line */
 	while ((a = getopt(argc, argv, "h:")) != EOF) {
@@ -188,13 +212,13 @@ int main(int argc, char *argv[]) {
 			strcpy(ctdldir, optarg);
 			break;
 		default:
-			fprintf(stderr, "sendcommand: usage: ctdlmigrate [-h server_dir]\n");
+			fprintf(stderr, "ctdlmigrate: usage: ctdlmigrate [-h server_dir]\n");
 			return(1);
 		}
 	}
 
 	if (chdir(ctdldir) != 0) {
-		fprintf(stderr, "sendcommand: %s: %s\n", ctdldir, strerror(errno));
+		fprintf(stderr, "ctdlmigrate: %s: %s\n", ctdldir, strerror(errno));
 		exit(errno);
 	}
 
@@ -223,13 +247,13 @@ int main(int argc, char *argv[]) {
 		"You must run this utility on the TARGET SYSTEM.  Any existing data\n"
 		"on this system will be ERASED.  Your target system will be on this\n"
 		"host in %s.\n"
-		"\n"
-		"\033[33mDo you wish to continue? \033[0m"
-		,
+		"\n",
 		EXPORT_REV_MIN, ctdldir
 	);
 
-	if ((fgets(yesno, sizeof yesno, stdin) == NULL) || (tolower(yesno[0]) != 'y')) {
+	getz(yesno, 1, NULL, "Do you wish to continue? ");
+	puts(yesno);
+	if (tolower(yesno[0]) != 'y') {
 		cmdexit = 1;
 	}
 
@@ -264,20 +288,20 @@ int main(int argc, char *argv[]) {
 	}
 
 	if (!cmdexit) {
-		printf("\nOK, this side is ready to go.  Now we must connect to the source system.\n\n");
-		printf("Enter the host name or IP address of the source system\n"
-			"(example: ctdl.foo.org)\n"
-			"--> ");
-		getz(remote_host);
+		printf("\n");
+		printf("OK, this side is ready to go.  Now we must connect to the source system.\n\n");
+		printf("Enter the host name or IP address of the source system\n");
+		printf("(example: ctdl.foo.org)\n");
+		getz(remote_host, sizeof remote_host, NULL, "--> ");
 	
 		while (IsEmptyStr(remote_user)) {
-			printf("\nEnter the name of a user on %s who has full access to Citadel files\n"
-				"(usually root)\n--> ",
-				remote_host);
-			getz(remote_user);
+			printf("\n");
+			printf("Enter the name of a user on %s who has full access to Citadel files.\n", remote_host);
+			getz(remote_user, sizeof remote_user, "root", "--> ");
 		}
 
-		printf("\nEstablishing an SSH connection to the source system...\n\n");
+		printf("\n");
+		printf("Establishing an SSH connection to the source system...\n");
 		sprintf(socket_path, "/tmp/ctdlmigrate-socket.%ld.%d", time(NULL), getpid());
 		unlink(socket_path);
 
@@ -320,11 +344,11 @@ int main(int argc, char *argv[]) {
 		}
 
 		if (cmdexit) {
-			printf("\nUnable to locate Citadel programs on the remote system.  Please enter\n"
+			printf("\n");
+			printf("Unable to locate Citadel programs on the remote system.  Please enter\n"
 				"the name of the directory on %s which contains the 'sendcommand' program.\n"
-				"(example: /opt/foo/citadel)\n"
-				"--> ", remote_host);
-			getz(buf);
+				"(example: /opt/foo/citadel)\n", remote_host);
+			getz(remote_host, sizeof remote_host, "/usr/local/citadel", "--> ");
 			snprintf(remote_sendcommand, sizeof remote_sendcommand, "%s/sendcommand", buf);
 			snprintf(cmd, sizeof cmd, "ssh -S %s %s@%s %s NOOP", socket_path, remote_user, remote_host, remote_sendcommand);
 			cmdexit = system(cmd);
@@ -373,7 +397,8 @@ int main(int argc, char *argv[]) {
 			if (ptr) *ptr = 0;	// remove the newline character
 			++linecount;
 			if (!strncasecmp(buf, "<progress>", 10)) {
-				printf("\033[8;75H\033[33m%d\033[0m\033[20;0H\n", atoi(&buf[10]));
+				progress = atoi(&buf[10]);
+				printf("\033[8;75H\033[33m%d\033[0m\033[20;0H\n", progress);
 			}
 			if (time(NULL) != last_update) {
 				last_update = time(NULL);
@@ -385,12 +410,12 @@ int main(int argc, char *argv[]) {
 		serv_puts(local_admin_socket, "000");
 	}
 
-	// FIXME restart the local server now
-
-	if (sourcefp) {
-	 	printf("Closing the data connection from the source system...\n");
-		pclose(sourcefp);
+	if ( (cmdexit == 0) && (progress < 100) ) {
+		printf("\033[31mERROR: source stream ended before 100 percent of data was received.\033[0m\n");
+		ctdlmigrate_exit(86);
 	}
+
+	// FIXME restart the local server now
 
 	ctdlmigrate_exit(cmdexit);
 }
