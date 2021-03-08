@@ -1,16 +1,14 @@
-/*
- * Implements the message store.
- *
- * Copyright (c) 1987-2021 by the citadel.org team
- *
- * This program is open source software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 3.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- */
+// Implements the message store.
+//
+// Copyright (c) 1987-2021 by the citadel.org team
+//
+// This program is open source software; you can redistribute it and/or modify
+// it under the terms of the GNU General Public License version 3.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
 
 
 #include <stdlib.h>
@@ -34,10 +32,8 @@
 
 struct addresses_to_be_filed *atbf = NULL;
 
-/*
- * These are the four-character field headers we use when outputting
- * messages in Citadel format (as opposed to RFC822 format).
- */
+// These are the four-character field headers we use when outputting
+// messages in Citadel format (as opposed to RFC822 format).
 char *msgkeys[] = {
 	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 
 	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 
@@ -79,8 +75,7 @@ char *msgkeys[] = {
 
 HashList *msgKeyLookup = NULL;
 
-int GetFieldFromMnemonic(eMsgField *f, const char* c)
-{
+int GetFieldFromMnemonic(eMsgField *f, const char* c) {
 	void *v = NULL;
 	if (GetHash(msgKeyLookup, c, 4, &v)) {
 		*f = (eMsgField) v;
@@ -89,8 +84,7 @@ int GetFieldFromMnemonic(eMsgField *f, const char* c)
 	return 0;
 }
 
-void FillMsgKeyLookupTable(void)
-{
+void FillMsgKeyLookupTable(void) {
 	long i;
 
 	msgKeyLookup = NewHash (1, FourHash);
@@ -285,10 +279,8 @@ void CM_GetAsField(struct CtdlMessage *Msg, eMsgField which, char **ret, long *r
 }
 
 
-/*
- * Returns 1 if the supplied pointer points to a valid Citadel message.
- * If the pointer is NULL or the magic number check fails, returns 0.
- */
+// Returns 1 if the supplied pointer points to a valid Citadel message.
+// If the pointer is NULL or the magic number check fails, returns 0.
 int CM_IsValidMsg(struct CtdlMessage *msg) {
 	if (msg == NULL) {
 		return 0;
@@ -310,13 +302,11 @@ void CM_FreeContents(struct CtdlMessage *msg) {
 			msg->cm_lengths[i] = 0;
 		}
 
-	msg->cm_magic = 0;	/* just in case */
+	msg->cm_magic = 0;	// just in case
 }
 
 
-/*
- * 'Destructor' for struct CtdlMessage
- */
+// 'Destructor' for struct CtdlMessage
 void CM_Free(struct CtdlMessage *msg) {
 	if (CM_IsValidMsg(msg) == 0) {
 		if (msg != NULL) free (msg);
@@ -370,24 +360,21 @@ struct CtdlMessage *CM_Duplicate(struct CtdlMessage *OrgMsg) {
 }
 
 
-/* Determine if a given message matches the fields in a message template.
- * Return 0 for a successful match.
- */
+// Determine if a given message matches the fields in a message template.
+// Return 0 for a successful match.
 int CtdlMsgCmp(struct CtdlMessage *msg, struct CtdlMessage *template) {
 	int i;
 
-	/* If there aren't any fields in the template, all messages will
-	 * match.
-	 */
+	// If there aren't any fields in the template, all messages will match.
 	if (template == NULL) return(0);
 
-	/* Null messages are bogus. */
+	// Null messages are bogus.
 	if (msg == NULL) return(1);
 
 	for (i='A'; i<='Z'; ++i) {
 		if (template->cm_fields[i] != NULL) {
 			if (msg->cm_fields[i] == NULL) {
-				/* Considered equal if temmplate is empty string */
+				// Considered equal if temmplate is empty string
 				if (IsEmptyStr(template->cm_fields[i])) continue;
 				return 1;
 			}
@@ -402,13 +389,11 @@ int CtdlMsgCmp(struct CtdlMessage *msg, struct CtdlMessage *template) {
 }
 
 
-/*
- * Retrieve the "seen" message list for the current room.
- */
+// Retrieve the "seen" message list for the current room.
 void CtdlGetSeen(char *buf, int which_set) {
 	visit vbuf;
 
-	/* Learn about the user and room in question */
+	// Learn about the user and room in question
 	CtdlGetRelationship(&vbuf, &CC->user, &CC->room);
 
 	if (which_set == ctdlsetseen_seen) {
@@ -420,9 +405,7 @@ void CtdlGetSeen(char *buf, int which_set) {
 }
 
 
-/*
- * Manipulate the "seen msgs" string (or other message set strings)
- */
+// Manipulate the "seen msgs" string (or other message set strings)
 void CtdlSetSeen(long *target_msgnums, int num_target_msgnums,
 		int target_setting, int which_set,
 		struct ctdluser *which_user, struct ctdlroom *which_room) {
@@ -1103,11 +1086,11 @@ struct CtdlMessage *CtdlDeserializeMessage(long msgnum, int with_body, const cha
 		return NULL;
 	}
 
-	/* Parse the three bytes that begin EVERY message on disk.
-	 * The first is always 0xFF, the on-disk magic number.
-	 * The second is the anonymous/public type byte.
-	 * The third is the format type byte (vari, fixed, or MIME).
-	 */
+	// Parse the three bytes that begin EVERY message on disk.
+	// The first is always 0xFF, the on-disk magic number.
+	// The second is the anonymous/public type byte.
+	// The third is the format type byte (vari, fixed, or MIME).
+	//
 	ch = *mptr++;
 	if (ch != 255) {
 		syslog(LOG_ERR, "msgbase: message %ld appears to be corrupted", msgnum);
@@ -1117,20 +1100,18 @@ struct CtdlMessage *CtdlDeserializeMessage(long msgnum, int with_body, const cha
 	memset(ret, 0, sizeof(struct CtdlMessage));
 
 	ret->cm_magic = CTDLMESSAGE_MAGIC;
-	ret->cm_anon_type = *mptr++;	/* Anon type byte */
-	ret->cm_format_type = *mptr++;	/* Format type byte */
+	ret->cm_anon_type = *mptr++;				// Anon type byte
+	ret->cm_format_type = *mptr++;				// Format type byte
 
-	/*
-	 * The rest is zero or more arbitrary fields.  Load them in.
-	 * We're done when we encounter either a zero-length field or
-	 * have just processed the 'M' (message text) field.
-	 */
+	// The rest is zero or more arbitrary fields.  Load them in.
+	// We're done when we encounter either a zero-length field or
+	// have just processed the 'M' (message text) field.
+	//
 	do {
 		field_header = '\0';
 		long len;
 
-		/* work around possibly buggy messages: */
-		while (field_header == '\0') {
+		while (field_header == '\0') {			// work around possibly buggy messages
 			if (mptr >= upper_bound) {
 				break;
 			}
@@ -1144,30 +1125,27 @@ struct CtdlMessage *CtdlDeserializeMessage(long msgnum, int with_body, const cha
 
 		CM_SetField(ret, which, mptr, len);
 
-		mptr += len + 1;	/* advance to next field */
+		mptr += len + 1;				// advance to next field
 
 	} while ((mptr < upper_bound) && (field_header != 'M'));
-
 	return (ret);
 }
 
 
-/*
- * Load a message from disk into memory.
- * This is used by CtdlOutputMsg() and other fetch functions.
- *
- * NOTE: Caller is responsible for freeing the returned CtdlMessage struct
- *       using the CM_Free(); function.
- */
-struct CtdlMessage *CtdlFetchMessage(long msgnum, int with_body)
-{
+// Load a message from disk into memory.
+// This is used by CtdlOutputMsg() and other fetch functions.
+//
+// NOTE: Caller is responsible for freeing the returned CtdlMessage struct
+//       using the CM_Free(); function.
+//
+struct CtdlMessage *CtdlFetchMessage(long msgnum, int with_body) {
 	struct cdbdata *dmsgtext;
 	struct CtdlMessage *ret = NULL;
 
 	syslog(LOG_DEBUG, "msgbase: CtdlFetchMessage(%ld, %d)", msgnum, with_body);
 	dmsgtext = cdb_fetch(CDB_MSGMAIN, &msgnum, sizeof(long));
 	if (dmsgtext == NULL) {
-		syslog(LOG_ERR, "msgbase: CtdlFetchMessage(%ld, %d) Failed!", msgnum, with_body);
+		syslog(LOG_ERR, "msgbase: message #%ld was not found", msgnum);
 		return NULL;
 	}
 
@@ -1184,11 +1162,11 @@ struct CtdlMessage *CtdlFetchMessage(long msgnum, int with_body)
 		return NULL;
 	}
 
-	/* Always make sure there's something in the msg text field.  If
-	 * it's NULL, the message text is most likely stored separately,
-	 * so go ahead and fetch that.  Failing that, just set a dummy
-	 * body so other code doesn't barf.
-	 */
+	// Always make sure there's something in the msg text field.  If
+	// it's NULL, the message text is most likely stored separately,
+	// so go ahead and fetch that.  Failing that, just set a dummy
+	// body so other code doesn't barf.
+	//
 	if ( (CM_IsEmpty(ret, eMesageText)) && (with_body) ) {
 		dmsgtext = cdb_fetch(CDB_BIGMSGS, &msgnum, sizeof(long));
 		if (dmsgtext != NULL) {
@@ -1204,16 +1182,14 @@ struct CtdlMessage *CtdlFetchMessage(long msgnum, int with_body)
 }
 
 
-/*
- * Pre callback function for multipart/alternative
- *
- * NOTE: this differs from the standard behavior for a reason.  Normally when
- *       displaying multipart/alternative you want to show the _last_ usable
- *       format in the message.  Here we show the _first_ one, because it's
- *       usually text/plain.  Since this set of functions is designed for text
- *       output to non-MIME-aware clients, this is the desired behavior.
- *
- */
+// Pre callback function for multipart/alternative
+//
+// NOTE: this differs from the standard behavior for a reason.  Normally when
+//       displaying multipart/alternative you want to show the _last_ usable
+//       format in the message.  Here we show the _first_ one, because it's
+//       usually text/plain.  Since this set of functions is designed for text
+//       output to non-MIME-aware clients, this is the desired behavior.
+//
 void fixed_output_pre(char *name, char *filename, char *partnum, char *disp,
 	  	void *content, char *cbtype, char *cbcharset, size_t length, char *encoding,
 		char *cbid, void *cbuserdata)
@@ -1232,9 +1208,9 @@ void fixed_output_pre(char *name, char *filename, char *partnum, char *disp,
 }
 
 
-/*
- * Post callback function for multipart/alternative
- */
+//
+// Post callback function for multipart/alternative
+//
 void fixed_output_post(char *name, char *filename, char *partnum, char *disp,
 	  	void *content, char *cbtype, char *cbcharset, size_t length,
 		char *encoding, char *cbid, void *cbuserdata)
@@ -1253,9 +1229,8 @@ void fixed_output_post(char *name, char *filename, char *partnum, char *disp,
 }
 
 
-/*
- * Inline callback function for mime parser that wants to display text
- */
+// Inline callback function for mime parser that wants to display text
+//
 void fixed_output(char *name, char *filename, char *partnum, char *disp,
 	  	void *content, char *cbtype, char *cbcharset, size_t length,
 		char *encoding, char *cbid, void *cbuserdata)
@@ -1272,10 +1247,9 @@ void fixed_output(char *name, char *filename, char *partnum, char *disp,
 		partnum, filename, cbtype, (long)length
 	);
 
-	/*
-	 * If we're in the middle of a multipart/alternative scope and
-	 * we've already printed another section, skip this one.
-	 */	
+	// If we're in the middle of a multipart/alternative scope and
+	// we've already printed another section, skip this one.
+	//	
    	if ( (ma->is_ma) && (ma->did_print) ) {
 		syslog(LOG_DEBUG, "msgbase: skipping part %s (%s)", partnum, cbtype);
 		return;
@@ -1306,8 +1280,7 @@ void fixed_output(char *name, char *filename, char *partnum, char *disp,
 	}
 
 	if (ma->use_fo_hooks) {
-		if (PerformFixedOutputHooks(cbtype, content, length)) {
-		/* above function returns nonzero if it handled the part */
+		if (PerformFixedOutputHooks(cbtype, content, length)) {		// returns nonzero if it handled the part
 			return;
 		}
 	}
@@ -1320,17 +1293,16 @@ void fixed_output(char *name, char *filename, char *partnum, char *disp,
 }
 
 
-/*
- * The client is elegant and sophisticated and wants to be choosy about
- * MIME content types, so figure out which multipart/alternative part
- * we're going to send.
- *
- * We use a system of weights.  When we find a part that matches one of the
- * MIME types we've declared as preferential, we can store it in ma->chosen_part
- * and then set ma->chosen_pref to that MIME type's position in our preference
- * list.  If we then hit another match, we only replace the first match if
- * the preference value is lower.
- */
+// The client is elegant and sophisticated and wants to be choosy about
+// MIME content types, so figure out which multipart/alternative part
+// we're going to send.
+//
+// We use a system of weights.  When we find a part that matches one of the
+// MIME types we've declared as preferential, we can store it in ma->chosen_part
+// and then set ma->chosen_pref to that MIME type's position in our preference
+// list.  If we then hit another match, we only replace the first match if
+// the preference value is lower.
+//
 void choose_preferred(char *name, char *filename, char *partnum, char *disp,
 	  	void *content, char *cbtype, char *cbcharset, size_t length,
 		char *encoding, char *cbid, void *cbuserdata)
@@ -1354,9 +1326,8 @@ void choose_preferred(char *name, char *filename, char *partnum, char *disp,
 }
 
 
-/*
- * Now that we've chosen our preferred part, output it.
- */
+// Now that we've chosen our preferred part, output it.
+//
 void output_preferred(char *name, 
 		      char *filename, 
 		      char *partnum, 
@@ -1380,12 +1351,11 @@ void output_preferred(char *name,
 
 	ma = (struct ma_info *)cbuserdata;
 
-	/* This is not the MIME part you're looking for... */
+	// This is not the MIME part you're looking for...
 	if (strcasecmp(partnum, ma->chosen_part)) return;
 
-	/* If the content-type of this part is in our preferred formats
-	 * list, we can simply output it verbatim.
-	 */
+	// If the content-type of this part is in our preferred formats
+	// list, we can simply output it verbatim.
 	for (i=0; i<num_tokens(CC->preferred_formats, '|'); ++i) {
 		extract_token(buf, CC->preferred_formats, i, '|', sizeof buf);
 		if (!strcasecmp(buf, cbtype)) {
@@ -1397,7 +1367,7 @@ void output_preferred(char *name,
 						      &decoded,
 						      &bytes_decoded);
 			if (rc < 0)
-				break; /* Give us the chance, maybe theres another one. */
+				break; // Give us the chance, maybe theres another one.
 
 			if (rc == 0) text_content = (char *)content;
 			else {
@@ -1433,7 +1403,7 @@ void output_preferred(char *name,
 		}
 	}
 
-	/* No translations required or possible: output as text/plain */
+	// No translations required or possible: output as text/plain
 	cprintf("Content-type: text/plain\n\n");
 	rc = 0;
 	if (ma->dont_decode == 0)
@@ -1443,7 +1413,7 @@ void output_preferred(char *name,
 				      &decoded,
 				      &bytes_decoded);
 	if (rc < 0)
-		return; /* Give us the chance, maybe theres another one. */
+		return; // Give us the chance, maybe theres another one.
 	
 	if (rc == 0) text_content = (char *)content;
 	else {
@@ -1451,8 +1421,7 @@ void output_preferred(char *name,
 		length = bytes_decoded;
 	}
 
-	fixed_output(name, filename, partnum, disp, text_content, cbtype, cbcharset,
-			length, encoding, cbid, cbuserdata);
+	fixed_output(name, filename, partnum, disp, text_content, cbtype, cbcharset, length, encoding, cbid, cbuserdata);
 	if (decoded != NULL) free(decoded);
 }
 
@@ -1464,9 +1433,7 @@ struct encapmsg {
 };
 
 
-/*
- * Callback function for
- */
+// Callback function
 void extract_encapsulated_message(char *name, char *filename, char *partnum, char *disp,
 		   void *content, char *cbtype, char *cbcharset, size_t length,
 		   char *encoding, char *cbid, void *cbuserdata)
@@ -1475,7 +1442,7 @@ void extract_encapsulated_message(char *name, char *filename, char *partnum, cha
 
 	encap = (struct encapmsg *)cbuserdata;
 
-	/* Only proceed if this is the desired section... */
+	// Only proceed if this is the desired section...
 	if (!strcasecmp(encap->desired_section, partnum)) {
 		encap->msglen = length;
 		encap->msg = malloc(length + 2);
@@ -1485,20 +1452,17 @@ void extract_encapsulated_message(char *name, char *filename, char *partnum, cha
 }
 
 
-/*
- * Determine whether the specified message exists in the cached_msglist
- * (This is a security check)
- */
+// Determine whether the specified message exists in the cached_msglist
+// (This is a security check)
 int check_cached_msglist(long msgnum) {
 
-	/* cases in which we skip the check */
-	if (!CC) return om_ok;						/* not a session */
-	if (CC->client_socket <= 0) return om_ok;			/* not a client session */
-	if (CC->cached_msglist == NULL) return om_access_denied;	/* no msglist fetched */
-	if (CC->cached_num_msgs == 0) return om_access_denied;		/* nothing to check */
+	// cases in which we skip the check
+	if (!CC) return om_ok;						// not a session
+	if (CC->client_socket <= 0) return om_ok;			// not a client session
+	if (CC->cached_msglist == NULL) return om_access_denied;	// no msglist fetched
+	if (CC->cached_num_msgs == 0) return om_access_denied;		// nothing to check 
 
-
-	/* Do a binary search within the cached_msglist for the requested msgnum */
+	// Do a binary search within the cached_msglist for the requested msgnum
 	int min = 0;
 	int max = (CC->cached_num_msgs - 1);
 
@@ -1519,17 +1483,14 @@ int check_cached_msglist(long msgnum) {
 }
 
 
-/*
- * Get a message off disk.  (returns om_* values found in msgbase.h)
- * 
- */
-int CtdlOutputMsg(long msg_num,		/* message number (local) to fetch */
-		int mode,		/* how would you like that message? */
-		int headers_only,	/* eschew the message body? */
-		int do_proto,		/* do Citadel protocol responses? */
-		int crlf,		/* Use CRLF newlines instead of LF? */
-		char *section,	 	/* NULL or a message/rfc822 section */
-		int flags,		/* various flags; see msgbase.h */
+// Get a message off disk.  (returns om_* values found in msgbase.h)
+int CtdlOutputMsg(long msg_num,		// message number (local) to fetch
+		int mode,		// how would you like that message?
+		int headers_only,	// eschew the message body?
+		int do_proto,		// do Citadel protocol responses?
+		int crlf,		// Use CRLF newlines instead of LF?
+		char *section,	 	// NULL or a message/rfc822 section
+		int flags,		// various flags; see msgbase.h
 		char **Author,
 		char **Address,
 		char **MessageID

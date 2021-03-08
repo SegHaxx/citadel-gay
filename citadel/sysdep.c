@@ -428,7 +428,7 @@ void cprintf(const char *format, ...) {
 		buf[sizeof buf - 2] = '\n';
 	client_write(buf, strlen(buf)); 
 	va_end(arg_ptr);
-}   
+}
 
 
 /*
