@@ -305,7 +305,7 @@ int main(int argc, char *argv[]) {
 		sprintf(socket_path, "/tmp/ctdlmigrate-socket.%ld.%d", time(NULL), getpid());
 		unlink(socket_path);
 
-		snprintf(cmd, sizeof cmd, "ssh -MNf -S %s -l %s %s", socket_path, remote_user, remote_host);
+		snprintf(cmd, sizeof cmd, "ssh -MNf -o ServerAliveInterval=5 -S %s -l %s %s", socket_path, remote_user, remote_host);
 		sshpid = fork();
 		if (sshpid < 0) {
 			printf("%s\n", strerror(errno));
@@ -372,7 +372,7 @@ int main(int argc, char *argv[]) {
 			"\n", remote_host
 		);
 
-		snprintf(cmd, sizeof cmd, "ssh -S %s %s@%s %s -w3600 MIGR export", socket_path, remote_user, remote_host, remote_sendcommand);
+		snprintf(cmd, sizeof cmd, "ssh -o ServerAliveInterval=5 -S %s %s@%s %s -w3600 MIGR export", socket_path, remote_user, remote_host, remote_sendcommand);
 		sourcefp = popen(cmd, "r");
 		if (!sourcefp) {
 			cmdexit = errno;

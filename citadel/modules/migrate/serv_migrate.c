@@ -1103,7 +1103,7 @@ void migr_do_restore_meta(void) {
 void cmd_migr(char *cmdbuf) {
 	char cmd[32];
 	
-	if (CtdlAccessCheck(ac_internal)) return;
+	if (CtdlAccessCheck(ac_aide)) return;
 	
 	if (CtdlTrySingleUser()) {
 		CtdlDisableHouseKeeping();
