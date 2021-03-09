@@ -1,32 +1,28 @@
-/*
- * This module dumps and/or loads the Citadel database in XML format.
- *
- * Copyright (c) 1987-2021 by the citadel.org team
- *
- * This program is open source software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 3.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- */
-
-/*
- * Explanation of <progress> tags:
- *
- * 0%		started
- * 2%		finished exporting configuration
- * 7%		finished exporting users
- * 12%		finished exporting openids
- * 17%		finished exporting rooms
- * 18%		finished exporting floors
- * 25%		finished exporting visits
- * 26-99%	exporting messages
- * 100%		finished exporting messages
- *
- * These tags are inserted into the XML stream to give the reader an approximation of its progress.
- */
+// This module dumps and/or loads the Citadel database in XML format.
+//
+// Copyright (c) 1987-2021 by the citadel.org team
+//
+// This program is open source software; you can redistribute it and/or modify
+// it under the terms of the GNU General Public License version 3.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// Explanation of <progress> tags:
+//
+// 0%		started
+// 2%		finished exporting configuration
+// 7%		finished exporting users
+// 12%		finished exporting openids
+// 17%		finished exporting rooms
+// 18%		finished exporting floors
+// 25%		finished exporting visits
+// 26-99%	exporting messages
+// 100%		finished exporting messages
+//
+// These tags are inserted into the XML stream to give the reader an approximation of its progress.
 
 #include "sysdep.h"
 #include <stdlib.h>
@@ -61,13 +57,11 @@ FILE *migr_global_message_list;
 int total_msgs = 0;
 char *ikey = NULL;			// If we're importing a config key we store it here.
 
-/******************************************************************************
- *        Code which implements the export appears in this section            *
- ******************************************************************************/
+//*****************************************************************************
+//*       Code which implements the export appears in this section            *
+//*****************************************************************************
 
-/*
- * Output a string to the client with these characters escaped:  & < > " '
- */
+// Output a string to the client with these characters escaped:  & < > " '
 void xml_strout(char *str) {
 
 	char *c = str;
@@ -100,9 +94,7 @@ void xml_strout(char *str) {
 }
 
 
-/*
- * Export a user record as XML
- */
+// Export a user record as XML
 void migr_export_users_backend(char *username, void *data) {
 
 	struct ctdluser u;
@@ -176,7 +168,7 @@ void migr_export_rooms_backend(struct ctdlroom *buf, void *data) {
 	cprintf("<msgnum_pic>%ld</msgnum_pic>\n", buf->msgnum_pic);
 	client_write(HKEY("</room>\n"));
 
-	/* message list goes inside this tag */
+	// message list goes inside this tag
 	CtdlGetRoom(&CC->room, buf->QRname);
 	client_write(HKEY("<room_messages>"));
 	client_write(HKEY("<FRname>"));
@@ -197,12 +189,10 @@ void migr_export_rooms(void) {
 		fclose(migr_global_message_list);
 	}
 
-	/*
-	 * Process the 'global' message list.  (Sort it and remove dups.
-	 * Dups are ok because a message may be in more than one room, but
-	 * this will be handled by exporting the reference count, not by
-	 * exporting the message multiple times.)
-	 */
+	// Process the 'global' message list.  (Sort it and remove dups.
+	// Dups are ok because a message may be in more than one room, but
+	// this will be handled by exporting the reference count, not by
+	// exporting the message multiple times.)
 	snprintf(cmd, sizeof cmd, "sort -n <%s >%s", migr_tempfilename1, migr_tempfilename2);
 	if (system(cmd) != 0) {
 		syslog(LOG_ERR, "migrate: error %d", errno);
@@ -245,9 +235,7 @@ void migr_export_floors(void) {
 }
 
 
-/*
- * Return nonzero if the supplied string contains only characters which are valid in a sequence set.
- */
+// Return nonzero if the supplied string contains only characters which are valid in a sequence set.
 int is_sequence_set(char *s) {
 	if (!s) return(0);
 
@@ -262,9 +250,7 @@ int is_sequence_set(char *s) {
 }
 
 
-/* 
- *  Traverse the visits file...
- */
+// Traverse the visits file...
 void migr_export_visits(void) {
 	visit vbuf;
 	struct cdbdata *cdbv;
@@ -459,7 +445,7 @@ void migr_export_messages(void) {
 		syslog(LOG_ERR, "migrate: export aborted due to client disconnect!");
 	}
 
-	migr_export_message(-1L);	/* This frees the encoding buffer */
+	migr_export_message(-1L);	// This frees the encoding buffer
 }
 
 
@@ -475,7 +461,7 @@ void migr_do_export(void) {
 	cprintf("<version>%d</version>\n", REV_LEVEL);
 	cprintf("<progress>%d</progress>\n", 0);
 
-	/* export the configuration database */
+	// export the configuration database
 	migr_export_configs();
 	cprintf("<progress>%d</progress>\n", 2);
 	
@@ -497,16 +483,14 @@ void migr_do_export(void) {
 }
 
 
-/******************************************************************************
- *                              Import code                                   *
- *    Here's the code that implements the import side.  It's going to end up  *
- *        being one big loop with lots of global variables.  I don't care.    *
- * You wouldn't run multiple concurrent imports anyway.  If this offends your *
- * delicate sensibilities  then go rewrite it in Ruby on Rails or something.  *
- ******************************************************************************/
+//                              Import code
+//   Here's the code that implements the import side.  It's going to end up
+//       being one big loop with lots of global variables.  I don't care.
+// You wouldn't run multiple concurrent imports anyway.  If this offends your
+//  delicate sensibilities  then go rewrite it in Ruby on Rails or something.
 
 
-int citadel_migrate_data = 0;		/* Are we inside a <citadel_migrate_data> tag pair? */
+int citadel_migrate_data = 0;		// Are we inside a <citadel_migrate_data> tag pair?
 StrBuf *migr_chardata = NULL;
 StrBuf *migr_MsgData = NULL;
 struct ctdluser usbuf;
@@ -520,9 +504,7 @@ visit vbuf;
 struct MetaData smi;
 long import_msgnum = 0;
 
-/*
- * This callback stores up the data which appears in between tags.
- */
+// This callback stores up the data which appears in between tags.
 void migr_xml_chardata(void *data, const XML_Char *s, int len) {
 	StrBufAppendBufPlain(migr_chardata, s, len, 0);
 }
@@ -531,19 +513,19 @@ void migr_xml_chardata(void *data, const XML_Char *s, int len) {
 void migr_xml_start(void *data, const char *el, const char **attr) {
 	int i;
 
-	/*** GENERAL STUFF ***/
+	//  *** GENERAL STUFF ***
 
-	/* Reset chardata_len to zero and init buffer */
+	// Reset chardata_len to zero and init buffer
 	FlushStrBuf(migr_chardata);
 	FlushStrBuf(migr_MsgData);
 
 	if (!strcasecmp(el, "citadel_migrate_data")) {
 		++citadel_migrate_data;
 
-		/* As soon as it looks like the input data is a genuine Citadel XML export,
-		 * whack the existing database on disk to make room for the new one.
-		 */
+		// As soon as it looks like the input data is a genuine Citadel XML export,
+		// whack the existing database on disk to make room for the new one.
 		if (citadel_migrate_data == 1) {
+			syslog(LOG_INFO, "migrate: erasing existing databases so we can receive the incoming import");
 			for (i = 0; i < MAXCDB; ++i) {
 				cdb_trunc(i);
 			}
@@ -556,9 +538,8 @@ void migr_xml_start(void *data, const char *el, const char **attr) {
 		return;
 	}
 
-	/* When we begin receiving XML for one of these record types, clear out the associated
-	 * buffer so we don't accidentally carry over any data from a previous record.
-	 */
+	// When we begin receiving XML for one of these record types, clear out the associated
+	// buffer so we don't accidentally carry over any data from a previous record.
 	if (!strcasecmp(el, "user"))			memset(&usbuf, 0, sizeof (struct ctdluser));
 	else if (!strcasecmp(el, "openid"))		memset(openid_url, 0, sizeof openid_url);
 	else if (!strcasecmp(el, "room"))		memset(&qrbuf, 0, sizeof (struct ctdlroom));
@@ -676,7 +657,7 @@ void migr_xml_end(void *data, const char *el) {
 	long msgnum = 0L;
 	long *msglist = NULL;
 	int msglist_alloc = 0;
-	/*** GENERAL STUFF ***/
+	// *** GENERAL STUFF ***
 
 	if (!strcasecmp(el, "citadel_migrate_data")) {
 		--citadel_migrate_data;
@@ -690,7 +671,7 @@ void migr_xml_end(void *data, const char *el) {
 
 	// syslog(LOG_DEBUG, "END TAG: <%s> DATA: <%s>\n", el, (migr_chardata_len ? migr_chardata : ""));
 
-	/*** CONFIG ***/
+	// *** CONFIG ***
 
 	if (!strcasecmp(el, "config")) {
 		syslog(LOG_DEBUG, "migrate: imported config key=%s", ikey);
@@ -705,7 +686,7 @@ void migr_xml_end(void *data, const char *el) {
 		}
 	}
 
-	/*** USER ***/
+	// *** USER ***
 	else if ((!strncasecmp(el, HKEY("u_"))) && 
 		 migr_userrecord(data, el))
 		; /* Nothing to do anymore */
@@ -714,12 +695,12 @@ void migr_xml_end(void *data, const char *el) {
 		syslog(LOG_INFO, "migrate: imported user: %s", usbuf.fullname);
 	}
 
-	/*** OPENID ***/
+	// *** OPENID ***
 
 	else if (!strcasecmp(el, "oid_url"))			safestrncpy(openid_url, ChrPtr(migr_chardata), sizeof openid_url);
 	else if (!strcasecmp(el, "oid_usernum"))		openid_usernum = atol(ChrPtr(migr_chardata));
 
-	else if (!strcasecmp(el, "openid")) {			/* see serv_openid_rp.c for a description of the record format */
+	else if (!strcasecmp(el, "openid")) {			// see serv_openid_rp.c for a description of the record format
 		char *oid_data;
 		int oid_data_len;
 		oid_data_len = sizeof(long) + strlen(openid_url) + 1;
@@ -731,16 +712,16 @@ void migr_xml_end(void *data, const char *el) {
 		syslog(LOG_INFO, "migrate: imported OpenID: %s (%ld)", openid_url, openid_usernum);
 	}
 
-	/*** ROOM ***/
+	// *** ROOM ***
 	else if ((!strncasecmp(el, HKEY("QR"))) && 
 		 migr_roomrecord(data, el))
-		; /* Nothing to do anymore */
+		; // Nothing to do anymore
 	else if (!strcasecmp(el, "room")) {
 		CtdlPutRoom(&qrbuf);
 		syslog(LOG_INFO, "migrate: imported room: %s", qrbuf.QRname);
 	}
 
-	/*** ROOM MESSAGE POINTERS ***/
+	// *** ROOM MESSAGE POINTERS ***
 
 	else if (!strcasecmp(el, "FRname")) {
 		safestrncpy(FRname, ChrPtr(migr_chardata), sizeof FRname);
@@ -786,26 +767,26 @@ void migr_xml_end(void *data, const char *el) {
 		}
 	}
 
-	/*** FLOORS ***/
+	// *** FLOORS ***
 	else if ((!strncasecmp(el, HKEY("f_"))) && 
 		 migr_floorrecord(data, el))
-		; /* Nothing to do anymore */
+		; // Nothing to do anymore
 
 	else if (!strcasecmp(el, "floor")) {
 		CtdlPutFloor(&flbuf, floornum);
 		syslog(LOG_INFO, "migrate: imported floor #%d (%s)", floornum, flbuf.f_name);
 	}
 
-	/*** VISITS ***/
+	// *** VISITS ***
 	else if ((!strncasecmp(el, HKEY("v_"))) && migr_visitrecord(data, el)) {
-		; /* Nothing to do anymore */
+		; // Nothing to do anymore
 	}
 	else if (!strcasecmp(el, "visit")) {
 		put_visit(&vbuf);
 		syslog(LOG_INFO, "migrate: imported visit: %ld/%ld/%ld", vbuf.v_roomnum, vbuf.v_roomgen, vbuf.v_usernum);
 	}
 
-	/*** MESSAGES ***/
+	// *** MESSAGES ***
 	
 	else if (!strcasecmp(el, "msg_msgnum"))			smi.meta_msgnum = import_msgnum = atol(ChrPtr(migr_chardata));
 	else if (!strcasecmp(el, "msg_meta_refcount"))		smi.meta_refcount = atoi(ChrPtr(migr_chardata));
@@ -834,8 +815,8 @@ void migr_xml_end(void *data, const char *el) {
 		}
 
 		syslog(LOG_INFO,
-		       "migrate: %s message #%ld, size=%d, refcount=%d, bodylength=%ld, content-type: %s",
-		       (rc!= 0)?"failed to import ":"Imported ",
+		       "migrate: %s message #%ld, size=%d, ref=%d, body=%ld, content-type: %s",
+		       (rc!= 0)?"failed to import":"imported",
 		       import_msgnum,
 		       StrLength(migr_MsgData),
 		       smi.meta_refcount,
@@ -845,15 +826,13 @@ void migr_xml_end(void *data, const char *el) {
 		memset(&smi, 0, sizeof(smi));
 	}
 
-	/*** MORE GENERAL STUFF ***/
+	// *** MORE GENERAL STUFF ***
 
 	FlushStrBuf(migr_chardata);
 }
 
 
-/*
- * Import begins here
- */
+// Import begins here
 void migr_do_import(void) {
 	XML_Parser xp;
 	char buf[SIZ];
@@ -893,12 +872,11 @@ void migr_do_import(void) {
 }
 
 
-/******************************************************************************
- *                         Dispatcher, Common code                            *
- ******************************************************************************/
-/*
- * Dump out the pathnames of directories which can be copied "as is"
- */
+// ******************************************************************************
+// *                         Dispatcher, Common code                            *
+// ******************************************************************************
+
+// Dump out the pathnames of directories which can be copied "as is"
 void migr_do_listdirs(void) {
 	cprintf("%d Don't forget these:\n", LISTING_FOLLOWS);
 	cprintf("files|%s\n",		ctdl_file_dir);
@@ -908,9 +886,9 @@ void migr_do_listdirs(void) {
 }
 
 
-/******************************************************************************
- *                    Repair database integrity                               *
- ******************************************************************************/
+// ******************************************************************************
+// *                    Repair database integrity                               *
+// ******************************************************************************
 
 StrBuf *PlainMessageBuf = NULL;
 HashList *UsedMessageIDS = NULL;
@@ -920,11 +898,10 @@ int migr_restore_message_metadata(long msgnum, int refcount) {
 	struct CtdlMessage *msg;
 	char *mptr = NULL;
 
-	/* We can use a static buffer here because there will never be more than
-	 * one of this operation happening at any given time, and it's really best
-	 * to just keep it allocated once instead of torturing malloc/free.
-	 * Call this function with msgnum "-1" to free the buffer when finished.
-	 */
+	// We can use a static buffer here because there will never be more than
+	// one of this operation happening at any given time, and it's really best
+	// to just keep it allocated once instead of torturing malloc/free.
+	// Call this function with msgnum "-1" to free the buffer when finished.
 	static int encoded_alloc = 0;
 	static char *encoded_msg = NULL;
 
@@ -942,7 +919,7 @@ int migr_restore_message_metadata(long msgnum, int refcount) {
 		PlainMessageBuf = NewStrBufPlain(NULL, 10*SIZ);
 	}
 
-	/* Ok, here we go ... */
+	// Ok, here we go ...
 
 	msg = CtdlFetchMessage(msgnum, 1);
 	if (msg == NULL) {
@@ -953,7 +930,7 @@ int migr_restore_message_metadata(long msgnum, int refcount) {
 	smi.meta_msgnum = msgnum;
 	smi.meta_refcount = refcount;
 	
-	/* restore the content type from the message body: */
+	// restore the content type from the message body:
 	mptr = bmstrcasestr(msg->cm_fields[eMesageText], "Content-type:");
 	if (mptr != NULL) {
 		char *aptr;
@@ -996,7 +973,7 @@ void migr_check_room_msg(long msgnum, void *userdata) {
 
 
 void migr_check_rooms_backend(struct ctdlroom *buf, void *data) {
-	/* message list goes inside this tag */
+	// message list goes inside this tag
 	CtdlGetRoom(&CC->room, buf->QRname);
 	CtdlForEachMessage(MSGS_ALL, 0L, NULL, NULL, NULL, migr_check_room_msg, NULL);
 }
@@ -1035,12 +1012,10 @@ void migr_do_restore_meta(void) {
 		fclose(migr_global_message_list);
 	}
 
-	/*
-	 * Process the 'global' message list.  (Sort it and remove dups.
-	 * Dups are ok because a message may be in more than one room, but
-	 * this will be handled by exporting the reference count, not by
-	 * exporting the message multiple times.)
-	 */
+	// Process the 'global' message list.  (Sort it and remove dups.
+	// Dups are ok because a message may be in more than one room, but
+	// this will be handled by exporting the reference count, not by
+	// exporting the message multiple times.)
 	snprintf(cmd, sizeof cmd, "sort -n <%s >%s", migr_tempfilename1, migr_tempfilename2);
 	if (system(cmd) != 0) {
 		syslog(LOG_ERR, "migrate: error %d", errno);
@@ -1091,15 +1066,15 @@ void migr_do_restore_meta(void) {
 		fclose(migr_global_message_list);
 	}
 
-	migr_restore_message_metadata(-1L, -1);	/* This frees the encoding buffer */
+	migr_restore_message_metadata(-1L, -1);	// This frees the encoding buffer
 	cprintf("%d system analysis completed", CIT_OK);
 	Ctx->kill_me = 1;
 }
 
 
-/******************************************************************************
- *                         Dispatcher, Common code                            *
- ******************************************************************************/
+// ******************************************************************************
+// *                         Dispatcher, Common code                            *
+// ******************************************************************************
 void cmd_migr(char *cmdbuf) {
 	char cmd[32];
 	
@@ -1139,9 +1114,9 @@ void cmd_migr(char *cmdbuf) {
 }
 
 
-/******************************************************************************
- *                              Module Hook                                  *
- ******************************************************************************/
+// ******************************************************************************
+// *                              Module Hook                                   *
+// ******************************************************************************
 
 CTDL_MODULE_INIT(migrate)
 {
@@ -1150,6 +1125,6 @@ CTDL_MODULE_INIT(migrate)
 		CtdlRegisterProtoHook(cmd_migr, "MIGR", "Across-the-wire migration");
 	}
 	
-	/* return our module name for the log */
+	// return our module name for the log
 	return "migrate";
 }

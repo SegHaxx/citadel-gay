@@ -1,20 +1,18 @@
-/*
- * system-level password checking for host auth mode
- * by Nathan Bryant, March 1999
- * updated by Trey van Riper, June 2005
- *
- * Copyright (c) 1999-2016 by the citadel.org team
- *
- * This program is open source software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License, version 3.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- */
+// system-level password checking for host auth mode
+// by Nathan Bryant, March 1999
+// updated by Trey van Riper, June 2005
+//
+// Copyright (c) 1999-2016 by the citadel.org team
+//
+// This program is open source software; you can redistribute it and/or modify
+// it under the terms of the GNU General Public License, version 3.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
 
-#if defined(__linux) || defined(__sun)	/* needed for crypt(): */
+#if defined(__linux) || defined(__sun)	// needed for crypt():
 #define _XOPEN_SOURCE
 #define _XOPEN_SOURCE_EXTENDED 1
 #endif
@@ -35,24 +33,18 @@
 #ifdef HAVE_PAM_START
 #include <security/pam_appl.h>
 
-/*
- * struct appdata: passed to the conversation function
- */
+// struct appdata: passed to the conversation function
 struct appdata {
 	const char *name;
 	const char *pw;
 };
 
-/*
- * conv(): the PAM conversation function. this assumes that a
- * PAM_PROMPT_ECHO_ON is asking for a username, and a PAM_PROMPT_ECHO_OFF is
- * asking for a password. esoteric authentication modules will fail with this
- * code, but we can't really support them with the existing client protocol
- * anyway. the failure mode should be to deny access, in any case.
- */
-static int conv(int num_msg, const struct pam_message **msg,
-		struct pam_response **resp, void *appdata_ptr)
-{
+// conv(): the PAM conversation function. this assumes that a
+// PAM_PROMPT_ECHO_ON is asking for a username, and a PAM_PROMPT_ECHO_OFF is
+// asking for a password. esoteric authentication modules will fail with this
+// code, but we can't really support them with the existing client protocol
+// anyway. the failure mode should be to deny access, in any case.
+static int conv(int num_msg, const struct pam_message **msg, struct pam_response **resp, void *appdata_ptr) {
 	struct pam_response *temp_resp;
 	struct appdata *data = appdata_ptr;
 
@@ -77,15 +69,12 @@ static int conv(int num_msg, const struct pam_message **msg,
 	*resp = temp_resp;
 	return PAM_SUCCESS;
 }
-#endif				/* HAVE_PAM_START */
+#endif				// HAVE_PAM_START
 
 
-/*
- * check that `pass' is the correct password for `uid'
- * returns zero if no, nonzero if yes
- */
-int validate_password(uid_t uid, const char *pass)
-{
+// check that `pass' is the correct password for `uid'
+// returns zero if no, nonzero if yes
+int validate_password(uid_t uid, const char *pass) {
 	if (pass == NULL) {
 		return (0);
 	}
@@ -145,7 +134,7 @@ int validate_password(uid_t uid, const char *pass)
 	if (!strcmp(crypt(pass, crypted_pwd), crypted_pwd)) {
 		retval = -1;
 	}
-#endif				/* HAVE_PAM_START */
+#endif				// HAVE_PAM_START
 
 	return retval;
 }

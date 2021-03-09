@@ -423,19 +423,19 @@ void CtdlSetSeen(long *target_msgnums, int num_target_msgnums,
 	StrBuf *lostr;
 	StrBuf *histr;
 	const char *pvset;
-	char *is_set;	/* actually an array of booleans */
+	char *is_set;	// actually an array of booleans
 
-	/* Don't bother doing *anything* if we were passed a list of zero messages */
+	// Don't bother doing *anything* if we were passed a list of zero messages
 	if (num_target_msgnums < 1) {
 		return;
 	}
 
-	/* If no room was specified, we go with the current room. */
+	// If no room was specified, we go with the current room.
 	if (!which_room) {
 		which_room = &CC->room;
 	}
 
-	/* If no user was specified, we go with the current user. */
+	// If no user was specified, we go with the current user.
 	if (!which_user) {
 		which_user = &CC->user;
 	}
@@ -446,19 +446,19 @@ void CtdlSetSeen(long *target_msgnums, int num_target_msgnums,
 		   which_set,
 		   which_room->QRname);
 
-	/* Learn about the user and room in question */
+	// Learn about the user and room in question
 	CtdlGetRelationship(&vbuf, which_user, which_room);
 
-	/* Load the message list */
+	// Load the message list
 	cdbfr = cdb_fetch(CDB_MSGLISTS, &which_room->QRnumber, sizeof(long));
 	if (cdbfr != NULL) {
 		msglist = (long *) cdbfr->ptr;
-		cdbfr->ptr = NULL;	/* CtdlSetSeen() now owns this memory */
+		cdbfr->ptr = NULL;	// CtdlSetSeen() now owns this memory
 		num_msgs = cdbfr->len / sizeof(long);
 		cdb_free(cdbfr);
 	}
 	else {
-		return;	/* No messages at all?  No further action. */
+		return;	// No messages at all?  No further action.
 	}
 
 	is_set = malloc(num_msgs * sizeof(char));
@@ -477,7 +477,7 @@ void CtdlSetSeen(long *target_msgnums, int num_target_msgnums,
 	}
 
 
-#if 0	/* This is a special diagnostic section.  Do not allow it to run during normal operation. */
+#if 0	// This is a special diagnostic section.  Do not allow it to run during normal operation.
 	syslog(LOG_DEBUG, "There are %d messages in the room.\n", num_msgs);
 	for (i=0; i<num_msgs; ++i) {
 		if ((i > 0) && (msglist[i] <= msglist[i-1])) abort();
@@ -488,7 +488,7 @@ void CtdlSetSeen(long *target_msgnums, int num_target_msgnums,
 	}
 #endif
 
-	/* Translate the existing sequence set into an array of booleans */
+	// Translate the existing sequence set into an array of booleans
 	setstr = NewStrBuf();
 	lostr = NewStrBuf();
 	histr = NewStrBuf();
@@ -521,7 +521,7 @@ void CtdlSetSeen(long *target_msgnums, int num_target_msgnums,
 	FreeStrBuf(&lostr);
 	FreeStrBuf(&histr);
 
-	/* Now translate the array of booleans back into a sequence set */
+	// Now translate the array of booleans back into a sequence set
 	FlushStrBuf(vset);
 	was_seen = 0;
 	lo = (-1);
@@ -530,7 +530,7 @@ void CtdlSetSeen(long *target_msgnums, int num_target_msgnums,
 	for (i=0; i<num_msgs; ++i) {
 		is_seen = is_set[i];
 
-		/* Apply changes */
+		// Apply changes
 		for (k=0; k<num_target_msgnums; ++k) {
 			if (msglist[i] == target_msgnums[k]) {
 				is_seen = target_setting;
@@ -569,23 +569,19 @@ void CtdlSetSeen(long *target_msgnums, int num_target_msgnums,
 		was_seen = is_seen;
 	}
 
-	/*
-	 * We will have to stuff this string back into a 4096 byte buffer, so if it's
-	 * larger than that now, truncate it by removing tokens from the beginning.
-	 * The limit of 100 iterations is there to prevent an infinite loop in case
-	 * something unexpected happens.
-	 */
+	// We will have to stuff this string back into a 4096 byte buffer, so if it's
+	// larger than that now, truncate it by removing tokens from the beginning.
+	// The limit of 100 iterations is there to prevent an infinite loop in case
+	// something unexpected happens.
 	int number_of_truncations = 0;
 	while ( (StrLength(vset) > SIZ) && (number_of_truncations < 100) ) {
 		StrBufRemove_token(vset, 0, ',');
 		++number_of_truncations;
 	}
 
-	/*
-	 * If we're truncating the sequence set of messages marked with the 'seen' flag,
-	 * we want the earliest messages (the truncated ones) to be marked, not unmarked.
-	 * Otherwise messages at the beginning will suddenly appear to be 'unseen'.
-	 */
+	// If we're truncating the sequence set of messages marked with the 'seen' flag,
+	// we want the earliest messages (the truncated ones) to be marked, not unmarked.
+	// Otherwise messages at the beginning will suddenly appear to be 'unseen'.
 	if ( (which_set == ctdlsetseen_seen) && (number_of_truncations > 0) ) {
 		StrBuf *first_tok;
 		first_tok = NewStrBuf();
@@ -608,7 +604,7 @@ void CtdlSetSeen(long *target_msgnums, int num_target_msgnums,
 		vset = new_set;
 	}
 
-	/* Decide which message set we're manipulating */
+	// Decide which message set we're manipulating
 	switch (which_set) {
 		case ctdlsetseen_seen:
 			safestrncpy(vbuf.v_seen, ChrPtr(vset), sizeof vbuf.v_seen);
@@ -625,10 +621,8 @@ void CtdlSetSeen(long *target_msgnums, int num_target_msgnums,
 }
 
 
-/*
- * API function to perform an operation for each qualifying message in the
- * current room.  (Returns the number of messages processed.)
- */
+// API function to perform an operation for each qualifying message in the
+// current room.  (Returns the number of messages processed.)
 int CtdlForEachMessage(int mode, long ref, char *search_string,
 			char *content_type,
 			struct CtdlMessage *compare,

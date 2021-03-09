@@ -728,7 +728,8 @@ void cdb_trunc(int cdb) {
 	if (TSD->tid != NULL) {
 		syslog(LOG_ERR, "db: cdb_trunc must not be called in a transaction.");
 		cdb_abort();
-	} else {
+	}
+	else {
 		bailIfCursor(TSD->cursors, "attempt to write during r/o cursor");
 
 	      retry:

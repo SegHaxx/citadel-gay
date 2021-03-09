@@ -1,16 +1,14 @@
-/*
- * Across-the-wire migration utility for Citadel
- *
- * Copyright (c) 2009-2021 citadel.org
- *
- * This program is open source software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 3.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- */
+// Across-the-wire migration utility for Citadel
+//
+// Copyright (c) 2009-2021 citadel.org
+//
+// This program is open source software; you can redistribute it and/or modify
+// it under the terms of the GNU General Public License version 3.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
 
 #include <stdlib.h>
 #include <unistd.h>
@@ -39,11 +37,12 @@
 #include "citadel_dirs.h"
 
 
-
 // yeah, this wouldn't work in a multithreaded program.
 static int gmaxlen = 0;
 static char *gdeftext = NULL;
 
+
+// support function for getz()
 static int limit_rl(FILE *dummy) {
 	if (rl_end > gmaxlen) {
 		return '\b';
@@ -52,6 +51,7 @@ static int limit_rl(FILE *dummy) {
 }
 
 
+// support function for getz()
 static int getz_deftext(void) {
 	if (gdeftext) {
 		rl_insert_text(gdeftext);
@@ -62,11 +62,7 @@ static int getz_deftext(void) {
 }
 
 
-/*
- * Replacement for gets() that doesn't throw a compiler warning.
- * We're only using it for some simple prompts, so we don't need
- * to worry about attackers exploiting it.
- */
+// Replacement for gets() that uses libreadline.
 void getz(char *buf, int maxlen, char *default_value, char *prompt) {
 	rl_startup_hook = getz_deftext;
 	rl_getc_function = limit_rl;
@@ -76,15 +72,14 @@ void getz(char *buf, int maxlen, char *default_value, char *prompt) {
 }
 
 
+// Exit from the program while displaying an error code
 void ctdlmigrate_exit(int cmdexit) {
 	printf("\n\n\033[3%dmExit code %d\033[0m\n", (cmdexit ? 1 : 2), cmdexit);
 	exit(cmdexit);
 }
 
 
-/*
- * Connect to a Citadel on a remote host using a TCP/IP socket
- */
+// Connect to a Citadel on a remote host using a TCP/IP socket
 static int tcp_connectsock(char *host, char *service) {
 	struct in6_addr serveraddr;
 	struct addrinfo hints;
@@ -105,32 +100,27 @@ static int tcp_connectsock(char *host, char *service) {
 	hints.ai_family = AF_UNSPEC;
 	hints.ai_socktype = SOCK_STREAM;
 
-	/*
-	 * Handle numeric IPv4 and IPv6 addresses
-	 */
+	// Handle numeric IPv4 and IPv6 addresses
 	rc = inet_pton(AF_INET, host, &serveraddr);
-	if (rc == 1) {		/* dotted quad */
+	if (rc == 1) {					// dotted quad
 		hints.ai_family = AF_INET;
 		hints.ai_flags |= AI_NUMERICHOST;
 	} else {
 		rc = inet_pton(AF_INET6, host, &serveraddr);
-		if (rc == 1) {	/* IPv6 address */
+		if (rc == 1) {				// IPv6 address
 			hints.ai_family = AF_INET6;
 			hints.ai_flags |= AI_NUMERICHOST;
 		}
 	}
 
-	/* Begin the connection process */
-
+	// Begin the connection process
 	rc = getaddrinfo(host, service, &hints, &res);
 	if (rc != 0) {
 		fprintf(stderr, "ctdlmigrate: %s\n", strerror(errno));
 		return (-1);
 	}
 
-	/*
-	 * Try all available addresses until we connect to one or until we run out.
-	 */
+	// Try all available addresses until we connect to one or until we run out.
 	for (ai = res; ai != NULL; ai = ai->ai_next) {
 		sock = socket(ai->ai_family, ai->ai_socktype, ai->ai_protocol);
 		if (sock < 0) {
@@ -140,17 +130,18 @@ static int tcp_connectsock(char *host, char *service) {
 
 		rc = connect(sock, ai->ai_addr, ai->ai_addrlen);
 		if (rc >= 0) {
-			return (sock);	/* Connected! */
+			return (sock);	// Connected!
 		}
 		else {
 			fprintf(stderr, "ctdlmigrate: %s\n", strerror(errno));
-			close(sock);	/* Failed.  Close the socket to avoid fd leak! */
+			close(sock);	// Failed.  Close the socket to avoid fd leak!
 		}
 	}
 	return (-1);
 }
 
 
+// Connect to a Citadel on a remote host using a unix domaion socket
 int uds_connectsock(char *sockpath) {
 	int s;
 	struct sockaddr_un addr;
@@ -175,13 +166,11 @@ int uds_connectsock(char *sockpath) {
 }
 
 
-/*
- * input binary data from socket
- */
+// input binary data from socket
 void serv_read(int serv_sock, char *buf, int bytes) {
-	int len, rlen;
+	int len = 0;
+	int rlen = 0;
 
-	len = 0;
 	while (len < bytes) {
 		rlen = read(serv_sock, &buf[len], bytes - len);
 		if (rlen < 1) {
@@ -192,9 +181,7 @@ void serv_read(int serv_sock, char *buf, int bytes) {
 }
 
 
-/*
- * send binary to server
- */
+// send binary to server
 void serv_write(int serv_sock, char *buf, int nbytes) {
 	int bytes_written = 0;
 	int retval;
@@ -208,46 +195,37 @@ void serv_write(int serv_sock, char *buf, int nbytes) {
 }
 
 
-/*
- * input string from socket - implemented in terms of serv_read()
- */
+// input string from socket - implemented in terms of serv_read()
 void serv_gets(int serv_sock, char *buf) {
 	int i;
 
-	/* Read one character at a time.
-	 */
+	// Read one character at a time.
 	for (i = 0;; i++) {
 		serv_read(serv_sock, &buf[i], 1);
 		if (buf[i] == '\n' || i == (SIZ-1))
 			break;
 	}
 
-	/* If we got a long line, discard characters until the newline.
-	 */
+	// If we got a long line, discard characters until the newline.
 	if (i == (SIZ-1)) {
 		while (buf[i] != '\n') {
 			serv_read(serv_sock, &buf[i], 1);
 		}
 	}
 
-	/* Strip all trailing nonprintables (crlf)
-	 */
+	// Strip all trailing nonprintables (crlf)
 	buf[i] = 0;
 }
 
 
-/*
- * send line to server - implemented in terms of serv_write()
- */
+// send line to server - implemented in terms of serv_write()
 void serv_puts(int serv_sock, char *buf) {
 	serv_write(serv_sock, buf, strlen(buf));
 	serv_write(serv_sock, "\n", 1);
 }
 
 
-/*
- * serv_printf()	Send formatted printable data to the server
- */
+// send formatted printable data to the server
 void serv_printf(int serv_sock, const char *format, ...) {   
 	va_list arg_ptr;   
 	char buf[1024];
@@ -260,6 +238,7 @@ void serv_printf(int serv_sock, const char *format, ...) {
 }
 
 
+// You know what main() does.  If you don't, you shouldn't be trying to understand this program.
 int main(int argc, char *argv[]) {
 	char ctdldir[PATH_MAX]=CTDLDIR;
 	char yesno[2];
@@ -277,7 +256,7 @@ int main(int argc, char *argv[]) {
 	int local_admin_socket = (-1);
 	int progress = 0;
 
-	/* Parse command line */
+	// Parse command line
 	while ((a = getopt(argc, argv, "h:")) != EOF) {
 		switch (a) {
 		case 'h':
@@ -313,8 +292,7 @@ int main(int argc, char *argv[]) {
 		"the source system.  The target may be a different CPU architecture\n"
 		"and/or operating system.  The source system should be running\n"
 		"Citadel version \033[33m%d\033[0m or newer, and the target system should be running\n"
-		"either the same version or a newer version.  You will also need\n"
-		"the \033[33mrsync\033[0m utility, and OpenSSH v4 or newer.\n"
+		"either the same version or a newer version.\n"
 		"\n"
 		"You must run this utility on the TARGET SYSTEM.  Any existing data\n"
 		"on this system will be ERASED.  Your target system will be on this\n"
@@ -331,14 +309,15 @@ int main(int argc, char *argv[]) {
 
 	if (!cmdexit) {
 		printf(	"\033[2J\033[H\n"
-			"          \033[32m╔═══════════════════════════════════════════════╗\n"
-			"          ║                                               ║\n"
-			"          ║       \033[33mValidate source and target systems\033[32m      ║\n"
-			"          ║                                               ║\n"
-			"          ╚═══════════════════════════════════════════════╝\033[0m\n"
+			"\033[32m╔═══════════════════════════════════════════════╗\n"
+			"║                                               ║\n"
+			"║       \033[33mValidate source and target systems\033[32m      ║\n"
+			"║                                               ║\n"
+			"╚═══════════════════════════════════════════════╝\033[0m\n"
 			"\n\n");
 	
-		printf("First we must validate that the local target system is running and ready to receive data.\n");
+		printf("First we must validate that the local target system is running\n");
+		printf("and ready to receive data.\n");
 		printf("Checking connectivity to Citadel in %s...\n", ctdldir);
 		local_admin_socket = uds_connectsock("citadel-admin.socket");
 		if (local_admin_socket < 0) {
@@ -405,15 +384,15 @@ int main(int argc, char *argv[]) {
 
 	if (!cmdexit) {
 		printf(	"\033[2J\033[H\n"
-			"          \033[32m╔═══════════════════════════════════════════════════════════════════╗\n"
-			"          ║                                                                   ║\n"
-			"          ║ \033[33mMigrating from: %-50s\033[32m║\n"
-			"          ║                                                                   ║\n"
-			"          ╠═══════════════════════════════════════════════════════════════════╣\n"
-			"          ║                                                                   ║\n"
-			"          ║ Lines received: 0                           Percent complete: 0   ║\n"
-			"          ║                                                                   ║\n"
-			"          ╚═══════════════════════════════════════════════════════════════════╝\033[0m\n"
+			"\033[32m╔═══════════════════════════════════════════════════════════════════╗\n"
+			"║                                                                   ║\n"
+			"║ \033[33mMigrating from: %-50s\033[32m║\n"
+			"║                                                                   ║\n"
+			"╠═══════════════════════════════════════════════════════════════════╣\n"
+			"║                                                                   ║\n"
+			"║ Lines received: 0                           Percent complete: 0   ║\n"
+			"║                                                                   ║\n"
+			"╚═══════════════════════════════════════════════════════════════════╝\033[0m\n"
 			"\n", remote_host
 		);
 	}
@@ -446,11 +425,11 @@ int main(int argc, char *argv[]) {
 			++linecount;
 			if (!strncasecmp(buf, "<progress>", 10)) {
 				progress = atoi(&buf[10]);
-				printf("\033[8;75H\033[33m%d\033[0m\033[20;0H\n", progress);
+				printf("\033[8;65H\033[33m%d\033[0m\033[12;0H\n", progress);
 			}
 			if (time(NULL) != last_update) {
 				last_update = time(NULL);
-				printf("\033[8;29H\033[33m%d\033[0m\033[20;0H\n", linecount);
+				printf("\033[8;19H\033[33m%d\033[0m\033[12;0H\n", linecount);
 			}
 			serv_puts(local_admin_socket, buf);
 		}
@@ -463,7 +442,9 @@ int main(int argc, char *argv[]) {
 		ctdlmigrate_exit(86);
 	}
 
-	// FIXME restart the local server now
+	// FIXME restart the local server here
 
+	close(remote_server_socket);
+	close(local_admin_socket);
 	ctdlmigrate_exit(cmdexit);
 }
