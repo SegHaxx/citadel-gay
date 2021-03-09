@@ -37,7 +37,7 @@
 #include "citadel_dirs.h"
 
 
-// yeah, this wouldn't work in a multithreaded program.
+// support for getz() -- (globals would not be appropriate in a multithreaded program)
 static int gmaxlen = 0;
 static char *gdeftext = NULL;
 
@@ -304,7 +304,7 @@ int main(int argc, char *argv[]) {
 	getz(yesno, 1, NULL, "Do you wish to continue? ");
 	puts(yesno);
 	if (tolower(yesno[0]) != 'y') {
-		cmdexit = 1;
+		cmdexit = 101;
 	}
 
 	if (!cmdexit) {
@@ -321,7 +321,7 @@ int main(int argc, char *argv[]) {
 		printf("Checking connectivity to Citadel in %s...\n", ctdldir);
 		local_admin_socket = uds_connectsock("citadel-admin.socket");
 		if (local_admin_socket < 0) {
-			cmdexit = 1;
+			cmdexit = 102;
 		}
 	}
 
@@ -329,7 +329,7 @@ int main(int argc, char *argv[]) {
 		serv_gets(local_admin_socket, buf);
 		puts(buf);
 		if (buf[0] != '2') {
-			cmdexit = 1;
+			cmdexit = 103;
 		}
 	}
 
@@ -338,7 +338,7 @@ int main(int argc, char *argv[]) {
 		serv_gets(local_admin_socket, buf);
 		puts(buf);
 		if (buf[0] != '2') {
-			cmdexit = 1;
+			cmdexit = 104;
 		}
 	}
 
@@ -352,7 +352,7 @@ int main(int argc, char *argv[]) {
 
 		remote_server_socket = tcp_connectsock(remote_host, remote_port);
 		if (remote_server_socket < 0) {
-			cmdexit = 1;
+			cmdexit = 105;
 		}
 	}
 
@@ -360,7 +360,7 @@ int main(int argc, char *argv[]) {
 		serv_gets(remote_server_socket, buf);
 		puts(buf);
 		if (buf[0] != '2') {
-			cmdexit = 1;
+			cmdexit = 106;
 		}
 	}
 
@@ -369,7 +369,7 @@ int main(int argc, char *argv[]) {
 		serv_gets(remote_server_socket, buf);
 		puts(buf);
 		if (buf[0] != '3') {
-			cmdexit = 1;
+			cmdexit = 107;
 		}
 	}
 
@@ -378,7 +378,7 @@ int main(int argc, char *argv[]) {
 		serv_gets(remote_server_socket, buf);
 		puts(buf);
 		if (buf[0] != '2') {
-			cmdexit = 1;
+			cmdexit = 108;
 		}
 	}
 
@@ -402,7 +402,7 @@ int main(int argc, char *argv[]) {
 		serv_gets(remote_server_socket, buf);
 		if (buf[0] != '1') {
 			printf("\n\033[31m%s\033[0m\n", buf);
-			cmdexit = 3;
+			cmdexit = 109;
 		}
 	}
 
@@ -411,7 +411,7 @@ int main(int argc, char *argv[]) {
 		serv_gets(local_admin_socket, buf);
 		if (buf[0] != '4') {
 			printf("\n\033[31m%s\033[0m\n", buf);
-			cmdexit = 3;
+			cmdexit = 110;
 		}
 	}
 
@@ -439,10 +439,17 @@ int main(int argc, char *argv[]) {
 
 	if ( (cmdexit == 0) && (progress < 100) ) {
 		printf("\033[31mERROR: source stream ended before 100 percent of data was received.\033[0m\n");
-		ctdlmigrate_exit(86);
+		cmdexit = 111;
 	}
 
-	// FIXME restart the local server here
+	if (!cmdexit) {
+		printf("\033[36mMigration is complete.  Restarting the target server.\033[0m\n");
+		serv_puts(local_admin_socket, "DOWN 1");
+		serv_gets(local_admin_socket, buf);
+		puts(buf);
+		printf("\033[36mIt is recommended that you shut down the source server now.\033[0m\n");
+		printf("\033[36mRemember to copy over your SSL keys and file libraries if appropriate.\033[0m\n");
+	}
 
 	close(remote_server_socket);
 	close(local_admin_socket);

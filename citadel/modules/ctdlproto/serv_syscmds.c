@@ -1,17 +1,14 @@
-
-/* 
- * Main source module for the Citadel server
- *
- * Copyright (c) 1987-2018 by the citadel.org team
- *
- * This program is open source software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License, version 3.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- */
+// System management commands for Citadel server
+//
+// Copyright (c) 1987-2021 by the citadel.org team
+//
+// This program is open source software; you can redistribute it and/or modify
+// it under the terms of the GNU General Public License, version 3.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
 
 #include <stdio.h>
 #include <libcitadel.h>
@@ -20,16 +17,13 @@
 #include "ctdl_module.h"
 
 
-/*
- * Shut down the server
- */
+// Shut down or restart the server
 void cmd_down(char *argbuf) {
 	char *Reply ="%d Shutting down server.  Goodbye.\n";
 
 	if (CtdlAccessCheck(ac_aide)) return;
 
-	if (!IsEmptyStr(argbuf))
-	{
+	if (!IsEmptyStr(argbuf)) {
 		int state = CIT_OK;
 		restart_server = extract_int(argbuf, 0);
 		
@@ -46,11 +40,8 @@ void cmd_down(char *argbuf) {
 }
 
 
-/*
- * Halt the server without exiting the server process.
- */
+// Halt the server without exiting the server process.
 void cmd_halt(char *argbuf) {
-
 	if (CtdlAccessCheck(ac_aide)) return;
 
 	cprintf("%d Halting server.  Goodbye.\n", CIT_OK);
@@ -59,11 +50,8 @@ void cmd_halt(char *argbuf) {
 }
 
 
-/*
- * Schedule or cancel a server shutdown
- */
-void cmd_scdn(char *argbuf)
-{
+// Schedule or cancel a server shutdown
+void cmd_scdn(char *argbuf) {
 	int new_state;
 	int state = CIT_OK;
 	char *Reply = "%d %d\n";
@@ -83,9 +71,9 @@ void cmd_scdn(char *argbuf)
 }
 
 
-/*****************************************************************************/
-/*                      MODULE INITIALIZATION STUFF                          */
-/*****************************************************************************/
+// ****************************************************************************
+// *                     MODULE INITIALIZATION STUFF                          *
+// ****************************************************************************
 
 CTDL_MODULE_INIT(syscmd)
 {
@@ -94,6 +82,6 @@ CTDL_MODULE_INIT(syscmd)
 		CtdlRegisterProtoHook(cmd_halt, "HALT", "halt the server without exiting the server process");
 		CtdlRegisterProtoHook(cmd_scdn, "SCDN", "schedule or cancel a server shutdown");
 	}
-        /* return our id for the Log */
+        // return our id for the log
 	return "syscmd";
 }
