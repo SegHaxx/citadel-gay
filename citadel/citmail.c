@@ -1,18 +1,17 @@
-/*
- * This program attempts to act like a local MDA if you're using sendmail or
- * some other non-Citadel MTA.  It basically just contacts the Citadel LMTP
- * listener on a unix domain socket and transmits the message.
- *
- * Copyright (c) 1987-2021 by the citadel.org team
- *
- * This program is open source software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 3.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- */
+// This program attempts to act like a local MDA if you're using sendmail or
+// some other non-Citadel MTA.  It basically just contacts the Citadel LMTP
+// listener on a unix domain socket and transmits the message.  Really though,
+// if your MTA supports LMTP then you definitely should be using that instead.
+//
+// Copyright (c) 1987-2021 by the citadel.org team
+//
+// This program is open source software; you can redistribute it and/or modify
+// it under the terms of the GNU General Public License version 3.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
 
 #include "sysdep.h"
 #include <stdlib.h>
@@ -36,27 +35,25 @@
 int serv_sock;
 int debug = 0;
 
-void strip_trailing_nonprint(char *buf)
-{
-        while ( (!IsEmptyStr(buf)) && (!isprint(buf[strlen(buf) - 1])) )
+void strip_trailing_nonprint(char *buf) {
+        while ( (!IsEmptyStr(buf)) && (!isprint(buf[strlen(buf) - 1])) ) {
                 buf[strlen(buf) - 1] = 0;
+	}
 }
 
 
-void timeout(int signum)
-{
+void timeout(int signum) {
 	exit(signum);
 }
 
 
-int uds_connectsock(char *sockpath)
-{
+int uds_connectsock(char *sockpath) {
 	int s;
 	struct sockaddr_un addr;
 
 	memset(&addr, 0, sizeof(addr));
 	addr.sun_family = AF_UNIX;
-	strncpy(addr.sun_path, sockpath, sizeof addr.sun_path);
+	strcpy(addr.sun_path, sockpath);
 
 	s = socket(AF_UNIX, SOCK_STREAM, 0);
 	if (s < 0) {

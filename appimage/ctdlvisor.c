@@ -71,17 +71,18 @@ void signal_handler(int signal) {
 		else {
 			what_exited = "unknown";
 		}
-		if (WIFEXITED(status)) {
-			fprintf(stderr, "ctdlvisor: %d (%s) exited, exitcode=%d\n", who_exited, what_exited, WEXITSTATUS(status));
-		}
-		else if (WIFSIGNALED(status)) {
-			fprintf(stderr, "ctdlvisor: %d (%s) crashed, signal=%d\n", who_exited, what_exited, WTERMSIG(status));
-		}
-		else {
-			fprintf(stderr, "ctdlvisor: %d (%s) ended, status=%d\n", who_exited, what_exited, status);
+		if (who_exited >= 0) {
+			if (WIFEXITED(status)) {
+				fprintf(stderr, "ctdlvisor: %d (%s) exited, exitcode=%d\n", who_exited, what_exited, WEXITSTATUS(status));
+			}
+			else if (WIFSIGNALED(status)) {
+				fprintf(stderr, "ctdlvisor: %d (%s) crashed, signal=%d\n", who_exited, what_exited, WTERMSIG(status));
+			}
+			else {
+				fprintf(stderr, "ctdlvisor: %d (%s) ended, status=%d\n", who_exited, what_exited, status);
+			}
 		}
 	} while (who_exited >= 0);
-
 	ctdlvisor_exit(0);
 }
 
@@ -113,6 +114,7 @@ pid_t start_citadel() {
 		exit(errno);
 	}
 	else {
+		fprintf(stderr, "ctdlvisor: citserver running on pid=%d\n", pid);
 		return(pid);
 	}
 }
@@ -131,6 +133,7 @@ pid_t start_webcit() {
 		exit(errno);
 	}
 	else {
+		fprintf(stderr, "ctdlvisor: webcit (HTTP) running on pid=%d\n", pid);
 		return(pid);
 	}
 }
@@ -149,6 +152,7 @@ pid_t start_webcits() {
 		exit(errno);
 	}
 	else {
+		fprintf(stderr, "ctdlvisor: webcit (HTTPS) running on pid=%d\n", pid);
 		return(pid);
 	}
 }
@@ -177,7 +181,6 @@ void main_loop(void) {
 	int citserver_exit_code = 0;
 
 	do {
-		fprintf(stderr, "ctdlvisor: waiting for any child process to exit...\n");
 		who_exited = waitpid(-1, &status, 0);
 		fprintf(stderr, "ctdlvisor: pid=%d exited, status=%d, exitcode=%d\n", who_exited, status, WEXITSTATUS(status));
 

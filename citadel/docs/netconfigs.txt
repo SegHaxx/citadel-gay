@@ -31,13 +31,10 @@ is used for "list serve" applications.
 INSTRUCTION:  digestrecp
 SYNTAX:       digestrecp|friko@mumjiboolean.com
 DESCRIPTION:
-Defines a recipient to whom all messages in this room should be sent.  This
-is used for "list serve" applications.  The difference between listrecps and
-digestrecps is that the latter will have messages embedded inside a message
-sent by the listserver.  The message will appear to be sent by the room's
-e-mail address instead of the sender's e-mail address.
- 
- 
+As of 2021, this is now an alias for listrecp and may be converted to listrecp
+by the mailing list manager.
+
+
 INSTRUCTION:  subpending
 SYNTAX:       subpending|friko@mumjiboolean.com|listrecp|A234Z|1234567890|http://foo.com/lists
 "Subscription pending" for the specified address.  This means that
