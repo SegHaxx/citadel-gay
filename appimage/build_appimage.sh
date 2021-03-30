@@ -46,6 +46,12 @@ do
 done
 ldconfig -v citadel.AppDir/usr/lib
 
+# Copy over some utilities
+for bin in db_dump db_load db_recover
+do
+	cp `which $bin` citadel.AppDir/usr/bin/
+done
+
 # Install the Citadel Server application tree
 mkdir -p citadel.AppDir/usr/local/citadel
 rsync -va $CITADEL_BUILD_DIR/ ./citadel.AppDir/usr/local/citadel/
