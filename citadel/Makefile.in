@@ -300,7 +300,7 @@ clean:
 	rm -vf $(SERVER_TARGETS) $(UTIL_TARGETS) $(UTILBIN_TARGETS) $(NOINST_TARGETS)
 
 cleaner: clean
-	rm -vrf $(SERVER_TARGETS) $(UTIL_TARGETS) $(UTILBIN_TARGETS) $(NOINST_TARGETS) database_cleanup.sh *.la
+	rm -vrf $(SERVER_TARGETS) $(UTIL_TARGETS) $(UTILBIN_TARGETS) $(NOINST_TARGETS) *.la
 	rm -vrf modules_upgrade.c modules_init.c modules_init.h Make_modules Make_sources
 
 distclean: cleaner

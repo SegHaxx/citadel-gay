@@ -918,7 +918,7 @@ AC_SUBST(SETUP_LIBS)
 AC_SUBST(DIFF)
 AC_SUBST(PATCH)
 AC_CONFIG_FILES([Makefile])
-AC_OUTPUT(database_cleanup.sh po/citadel-setup/Makefile)
+AC_OUTPUT(po/citadel-setup/Makefile)
 
 if test -z "$DATABASE"; then
 	AC_MSG_WARN([No database driver was found. Please install Berkeley DB.])
