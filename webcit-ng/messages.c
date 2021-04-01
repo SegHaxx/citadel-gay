@@ -6,7 +6,7 @@
 // This program is open source software.  It runs great on the
 // Linux operating system (and probably elsewhere).  You can use,
 // copy, and run it under the terms of the GNU General Public
-// License version 3.  Richard Stallman is an asshole communist.
+// License version 3.
 //
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
