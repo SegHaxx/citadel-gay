@@ -1,18 +1,18 @@
 #!/bin/bash
 
-## This is an AppImage control script for the Citadel system.
-##
-## Copyright (c) 2021 by the citadel.org team
-##
-## This program is open source software.  It runs great on the
-## Linux operating system (and probably elsewhere).  You can use,
-## copy, and run it under the terms of the GNU General Public
-## License version 3.  Richard Stallman is an asshole communist.
-##
-## This program is distributed in the hope that it will be useful,
-## but WITHOUT ANY WARRANTY; without even the implied warranty of
-## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-## GNU General Public License for more details.
+# This is an AppImage control script for the Citadel system.
+#
+# Copyright (c) 2021 by the citadel.org team
+#
+# This program is open source software.  It runs great on the
+# Linux operating system (and probably elsewhere).  You can use,
+# copy, and run it under the terms of the GNU General Public
+# License version 3.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
 
 # Default values
 HTTP_PORT=80
@@ -23,7 +23,7 @@ ulimit -c unlimited
 
 usage() {
 	echo ${APPIMAGE}: usage: ${APPIMAGE} '[-h data_directory] [-p http_port] [-s https_port] command'
-	echo 'command must be one of: run, test, install'
+	echo 'command must be one of: run, test, install, database_cleanup'
 	exit 2
 }
 
@@ -193,6 +193,11 @@ case ${1} in
 		;;
 	install)
 		installation
+		;;
+	database_cleanup)
+		export LD_LIBRARY_PATH=$APPDIR/usr/lib
+		export PATH=$APPDIR/usr/bin:$PATH
+		exec $APPDIR/usr/local/citadel/database_cleanup.sh -h $CTDL_DIR
 		;;
 	*)
 		echo Unexpected command: ${1} 

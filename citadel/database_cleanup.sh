@@ -140,11 +140,11 @@ do
 		echo error $?
 		die
 	}
-	rm -f $DATA_DIR/$filename
+	rm -vf $DATA_DIR/$filename
 done
 
 echo Removing old databases
-rm -f ./data/*
+rm -vf $DATA_DIR/*
 
 for x in 00 01 02 03 04 05 06 07 08 09 0a 0b 0c 0d
 do
