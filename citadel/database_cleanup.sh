@@ -107,10 +107,8 @@ WARNING #3:
   tool only if that one fails to fix your problem.
 
 WARNING #4:
-  You must have an amount of free space on your disk that is at least twice
-  the size of your database, see the following output:
-  (for substantially better performance you should specify a location that is 
-   on another disk than $DATA_DIR)
+  You must have an amount of free space in /tmp that is at least twice
+  the size of your database. see the following output:
 
 `df -h`
 
