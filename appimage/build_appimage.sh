@@ -69,7 +69,7 @@ CPU=`uname -m`
 basefilename=citadel-`date +%s`
 if [ $CPU == x86_64 ] ; then
 	export ARCH=x86_64
-else
+elif [ $CPU == armv7l ] ; then
 	export ARCH=ARM
 fi
 echo ARCH: $ARCH
