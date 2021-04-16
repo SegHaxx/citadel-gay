@@ -65,12 +65,13 @@ rm -fr $CITADEL_BUILD_DIR $WEBCIT_BUILD_DIR
 
 cc ctdlvisor.c -o citadel.AppDir/usr/bin/ctdlvisor || exit 21
 
-cpu=`uname -p`
+CPU=`uname -m`
 basefilename=citadel-`date +%s`
-if [ $cpu == x86_64 ] ; then
-	ARCH=x86_64 appimagetool citadel.AppDir/ ${basefilename}-x64.appimage
+if [ $CPU == x86_64 ] ; then
+	export ARCH=x86_64
 else
-	ARCH=ARM appimagetool citadel.AppDir/ ${basefilename}-arm32.appimage
+	export ARCH=ARM
 fi
-
-
+echo ARCH: $ARCH
+echo CPU: $CPU
+appimagetool citadel.AppDir/ ${basefilename}-${CPU}.appimage
