@@ -200,10 +200,32 @@ void main_loop(void) {
 
 
 int main(int argc, char **argv) {
+	int a;
+	int migrate_mode = 0;
 
 	if (getenv("APPDIR") == NULL) {
 		fprintf(stderr, "ctdlvisor: APPDIR is not set.  This program must be run from within an AppImage.\n");
 		ctdlvisor_exit(1);
+	}
+
+	/* parse command-line arguments */
+	while ((a=getopt(argc, argv, "cm")) != EOF) switch(a) {
+
+		// test this binary for compatibility and exit
+		case 'c':
+			fprintf(stderr, "%s: binary compatibility confirmed\n", argv[0]);
+			exit(0);
+			break;
+
+		// run ctdlmigrate only
+		case 'm':
+			migrate_mode = 1;
+			break;
+
+		// any other parameter makes it crash and burn
+		default:
+			fprintf(stderr,	"usage\n");
+			exit(1);
 	}
 
 	fprintf(stderr, "ctdlvisor: Welcome to the Citadel System, brought to you using AppImage.\n");
@@ -219,15 +241,31 @@ int main(int argc, char **argv) {
 		ctdlvisor_exit(errno);
 	}
 
-	signal(SIGTERM, signal_handler);
 	signal(SIGHUP, signal_handler);
-	signal(SIGINT, signal_handler);
-	signal(SIGQUIT, signal_handler);
 
-	citserver_pid = start_citadel();
-	webcit_pid = start_webcit();
-	webcits_pid = start_webcits();
+	// "migrate mode" means we just start the server and then run ctdlmigrate interactively.
+	if (migrate_mode) {
+		citserver_pid = start_citadel();
+		fprintf(stderr, "ctdlvisor: waiting a moment for citserver to initialize...\n");
+		sleep(5);
+		char bin[1024];
+		sprintf(bin, "%s/usr/local/citadel/ctdlmigrate", getenv("APPDIR"));
+		system(bin);
+		kill(citserver_pid, SIGTERM);
+	}
 
-	main_loop();
+	// Otherwise, it's just a normal happy day in Citadel land.
+	else {
+		signal(SIGTERM, signal_handler);
+		signal(SIGINT, signal_handler);
+		signal(SIGQUIT, signal_handler);
+	
+		citserver_pid = start_citadel();
+		webcit_pid = start_webcit();
+		webcits_pid = start_webcits();
+	
+		main_loop();
+	}
+
 	ctdlvisor_exit(0);
 }

@@ -15,9 +15,8 @@ this is that we can supply ready-to-run binaries that will run on any Linux/Linu
 without modification or dependencies.  If you are an end user, stop here, go download the
 binary package, and use it.  Enjoy it and have fun.
 
-Still with us?  Then you must be a new member of the Citadel team and you're packaging
-the software for a new architecture or something.  So here's what you have to do to build
-the binary:
+Still with us?  Then you must be a new member of the build team.  So here's what you have
+to do to build the binary:
 
 1. Download the Citadel source tree (if you're reading this, you've already done that).
 2. Install all system dependencies.  The same ones needed for Easy Install are fine.

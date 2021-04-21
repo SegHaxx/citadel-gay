@@ -1,5 +1,7 @@
 #!/bin/bash
 
+rm -vf citadel-*appimage
+
 export CITADEL_BUILD_DIR=/tmp/citadel-build-$$
 export WEBCIT_BUILD_DIR=/tmp/webcit-build-$$
 rm -fr $CITADEL_BUILD_DIR $WEBCIT_BUILD_DIR
@@ -37,7 +39,7 @@ mkdir -p citadel.AppDir/usr/bin
 mkdir -p citadel.AppDir/usr/lib
 
 # Copy over all the libraries we used
-for bin in $CITADEL_BUILD_DIR/citserver $WEBCIT_BUILD_DIR/webcit
+for bin in $CITADEL_BUILD_DIR/citserver $WEBCIT_BUILD_DIR/webcit $CITADEL_BUILD_DIR/ctdlmigrate
 do
 	for x in `ldd $bin | awk ' { print $3 } ' | grep -v -e '^$' | grep -v 'libc.so' | grep -v 'libpthread.so' | grep -v 'libresolv.so'`
 	do
