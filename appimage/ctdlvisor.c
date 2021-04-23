@@ -71,15 +71,7 @@ void signal_handler(int signal) {
 			what_exited = "unknown";
 		}
 		if (who_exited >= 0) {
-			if (WIFEXITED(status)) {
-				fprintf(stderr, "ctdlvisor: %d (%s) exited, exitcode=%d\n", who_exited, what_exited, WEXITSTATUS(status));
-			}
-			else if (WIFSIGNALED(status)) {
-				fprintf(stderr, "ctdlvisor: %d (%s) crashed, signal=%d\n", who_exited, what_exited, WTERMSIG(status));
-			}
-			else {
-				fprintf(stderr, "ctdlvisor: %d (%s) ended, status=%d\n", who_exited, what_exited, status);
-			}
+			fprintf(stderr, "ctdlvisor: %d (%s) ended, status=%d\n", who_exited, what_exited, status);
 		}
 	} while (who_exited >= 0);
 	ctdlvisor_exit(0);
@@ -170,19 +162,22 @@ void main_loop(void) {
 		// If it crashes, however, we will start it back up.
 		if (who_exited == citserver_pid) {
 			citserver_exit_code = WEXITSTATUS(status);
-			if (citserver_exit_code == 0) {
+			if ((WIFEXITED(status)) && (citserver_exit_code == 0)) {
 				fprintf(stderr, "ctdlvisor: citserver exited normally - ending AppImage session\n");
 				shutting_down = 1;
 				kill(webcit_pid, SIGTERM);
 				kill(webcits_pid, SIGTERM);
 			}
-			else if ((citserver_exit_code >= 101) && (citserver_exit_code <= 109)) {
+			else if ((WIFEXITED(status)) && (citserver_exit_code >= 101) && (citserver_exit_code <= 109)) {
 				fprintf(stderr, "ctdlvisor: citserver exited intentionally - ending AppImage session\n");
 				shutting_down = 1;
 				kill(webcit_pid, SIGTERM);
 				kill(webcits_pid, SIGTERM);
 			}
 			else {
+				if (WIFSIGNALED(status)) {
+					fprintf(stderr, "ctdlvisor: citserver crashed on signal %d\n", WTERMSIG(status));
+				}
 				citserver_pid = start_citadel();
 			}
 		}

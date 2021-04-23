@@ -72,9 +72,7 @@ struct recptypes {
  * restart.
  */
 #define CTDLEXIT_CONFIG		101	// Could not read system configuration
-#define CTDLEXIT_CONTROL	102	// Could not acquire lock
 #define CTDLEXIT_HOME		103	// Citadel home directory not found
-#define CTDLEXIT_OOD		104	// Out Of Date config - rerun setup
 #define CTDLEXIT_DB		105	// Unable to initialize database
 #define CTDLEXIT_LIBCITADEL	106	// Incorrect version of libcitadel
 #define CTDL_EXIT_UNSUP_AUTH	107	// Unsupported auth mode configured
