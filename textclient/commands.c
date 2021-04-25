@@ -22,7 +22,8 @@ char *helpnames[] = {
 	"intro",
 	"mail",
 	"network",
-	"software"
+	"software",
+	"summary"
 };
 
 char *helptexts[] = {

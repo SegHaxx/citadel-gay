@@ -144,8 +144,7 @@ void InitializeMasterTSD(void) {
 /*
  * Initialize the thread system
  */
-void go_threading(void)
-{
+void go_threading(void) {
 	pthread_mutex_init(&ThreadCountMutex, NULL);
 
 	/* Second call to module init functions now that threading is up */
@@ -172,14 +171,4 @@ void go_threading(void)
 	/* We used to wait for all threads to exit.  Fuck that.  The only thing important is that the databases are
 	 * cleanly unmounted.  After that, exit the whole program.
 	 */
-#if 0
-	int countdown = 30;
-	while ( (num_workers > 0) && (countdown-- > 0)) {
-		syslog(LOG_DEBUG, "Waiting %d seconds for %d worker threads to exit",
-			countdown, num_workers
-		);
-		usleep(1000000);
-	}
-#endif
-
 }
