@@ -158,13 +158,12 @@ void formout(CtdlIPC * ipc, char *name)
 }
 
 
-void userlist(CtdlIPC * ipc, char *patn)
-{
+void userlist(CtdlIPC * ipc, char *patn) {
 	char buf[SIZ];
 	char fl[SIZ];
 	struct tm tmbuf;
 	time_t lc;
-	int r;			/* IPC response code */
+	int r;			// IPC response code
 	char *listing = NULL;
 
 	r = CtdlIPCUserListing(ipc, patn, &listing, buf);
@@ -201,8 +200,7 @@ void userlist(CtdlIPC * ipc, char *patn)
 /*
  * grab assorted info about the user...
  */
-void load_user_info(char *params)
-{
+void load_user_info(char *params) {
 	extract_token(fullname, params, 0, '|', sizeof fullname);
 	axlevel = extract_int(params, 1);
 	timescalled = extract_int(params, 2);
@@ -218,8 +216,7 @@ void load_user_info(char *params)
  * 'roomname' is set to _FLOOR_, in which case all rooms on the requested
  * floor will be removed from the march list.
  */
-void remove_march(char *roomname, int floornum)
-{
+void remove_march(char *roomname, int floornum) {
 	struct march *mptr, *mptr2;
 
 	if (marchptr == NULL)
@@ -242,7 +239,8 @@ void remove_march(char *roomname, int floornum)
 			mptr2->next = mptr->next;
 			free(mptr);
 			mptr = mptr2;
-		} else {
+		}
+		else {
 			mptr2 = mptr;
 		}
 	}
@@ -382,20 +380,18 @@ void dotgoto(CtdlIPC * ipc, char *towhere, int display_name, int fromungoto)
 	from_floor = curr_floor;
 	curr_floor = room->RRfloor;
 
-	/* Determine, based on the room's default view, whether an <E>nter message
-	 * command will be valid here.
-	 */
+	// Determine, based on the room's default view, whether an <E>nter message command will be valid here.
 	switch (room->RRdefaultview) {
-	case VIEW_BBS:
-	case VIEW_MAILBOX:
-		entmsg_ok = ENTMSG_OK_YES;
-		break;
-	case VIEW_BLOG:
-		entmsg_ok = ENTMSG_OK_BLOG;
-		break;
-	default:
-		entmsg_ok = ENTMSG_OK_NO;
-		break;
+		case VIEW_BBS:
+		case VIEW_MAILBOX:
+			entmsg_ok = ENTMSG_OK_YES;
+			break;
+		case VIEW_BLOG:
+			entmsg_ok = ENTMSG_OK_BLOG;
+			break;
+		default:
+			entmsg_ok = ENTMSG_OK_NO;
+			break;
 	}
 
 	remove_march(room_name, 0);
@@ -440,7 +436,8 @@ void dotgoto(CtdlIPC * ipc, char *towhere, int display_name, int fromungoto)
 		color(BRIGHT_RED);
 		if (newmailcount == 1) {
 			scr_printf("*** A new mail message has arrived.\n");
-		} else {
+		}
+		else {
 			scr_printf("*** %d new mail messages have arrived.\n", newmailcount);
 		}
 		color(DIM_WHITE);
@@ -458,13 +455,13 @@ void dotgoto(CtdlIPC * ipc, char *towhere, int display_name, int fromungoto)
 			 ipc->ServInfo.humannode, ipc->ServInfo.site_location, room_name, newmailcount);
 }
 
+
 /* Goto next room having unread messages.
  * We want to skip over rooms that the user has already been to, and take the
  * user back to the lobby when done.  The room we end up in is placed in
  * newroom - which is set to 0 (the lobby) initially.
  */
-void gotonext(CtdlIPC * ipc)
-{
+void gotonext(CtdlIPC * ipc) {
 	char buf[SIZ];
 	struct march *mptr, *mptr2;
 	char next_room[ROOMNAMELEN];
@@ -475,9 +472,8 @@ void gotonext(CtdlIPC * ipc)
 	if (marchptr == NULL) {
 		CtdlIPCKnownRooms(ipc, SubscribedRoomsWithNewMessages, AllFloors, &marchptr, buf);
 
-/* add _BASEROOM_ to the end of the march list, so the user will end up
- * in the system base room (usually the Lobby>) at the end of the loop
- */
+		// Add _BASEROOM_ to the end of the march list, so the user will end up
+		// in the system base room (usually the Lobby>) at the end of the loop.
 		mptr = (struct march *) malloc(sizeof(struct march));
 		mptr->next = NULL;
 		mptr->march_order = 0;
@@ -491,26 +487,25 @@ void gotonext(CtdlIPC * ipc)
 				mptr2 = mptr2->next;
 			mptr2->next = mptr;
 		}
-/*
- * ...and remove the room we're currently in, so a <G>oto doesn't make us
- * walk around in circles
- */
+
+		// ...and remove the room we're currently in, so a <G>oto doesn't make us walk around in circles
 		remove_march(room_name, 0);
 	}
 	if (marchptr != NULL) {
 		strcpy(next_room, pop_march(curr_floor, marchptr));
-	} else {
+	}
+	else {
 		strcpy(next_room, "_BASEROOM_");
 	}
 	remove_march(next_room, 0);
 	dotgoto(ipc, next_room, 1, 0);
 }
 
+
 /*
  * forget all rooms on a given floor
  */
-void forget_all_rooms_on(CtdlIPC * ipc, int ffloor)
-{
+void forget_all_rooms_on(CtdlIPC *ipc, int ffloor) {
 	char buf[SIZ];
 	struct march *flist = NULL;
 	struct march *fptr = NULL;
@@ -651,6 +646,7 @@ void gotofloor(CtdlIPC * ipc, char *towhere, int mode)
 	}
 }
 
+
 /*
  * Indexing mechanism for a room list, called by gotoroomstep()
  */
@@ -769,14 +765,17 @@ void gotoroomstep(CtdlIPC * ipc, int direction, int mode)
 		/* If we're at the first room, wrap to the last room */
 		if (rmslot == 0) {
 			rmslot = rmtotal - 1;
-		} else {
+		}
+		else {
 			rmslot--;
 		}
-	} else {		/* Next room */
+	}
+	else {		/* Next room */
 		/* If we're at the last room, wrap to the first room */
 		if (rmslot == rmtotal - 1) {
 			rmslot = 0;
-		} else {
+		}
+		else {
 			rmslot++;
 		}
 	}
@@ -806,8 +805,7 @@ void gotoroomstep(CtdlIPC * ipc, int direction, int mode)
 /*
  * step through floors on system
  */
-void gotofloorstep(CtdlIPC * ipc, int direction, int mode)
-{
+void gotofloorstep(CtdlIPC * ipc, int direction, int mode) {
 	int tofloor;
 
 	if (floorlist[0][0] == 0)
@@ -845,6 +843,7 @@ void gotofloorstep(CtdlIPC * ipc, int direction, int mode)
 		goto empty_keep_going;
 	}
 }
+
 
 /* 
  * Display user 'preferences'.
@@ -946,6 +945,7 @@ void read_config(CtdlIPC * ipc)
 	free(user);
 }
 
+
 /*
  * Display system statistics.
  */
@@ -985,6 +985,7 @@ void system_info(CtdlIPC * ipc)
 	scr_printf("Server uptime: %s\n", mrtg_server_uptime);
 	scr_printf("Your system administrator is %s.\n", ipc->ServInfo.sysadm);
 }
+
 
 /*
  * forget all rooms on current floor
@@ -1060,7 +1061,6 @@ int set_password(CtdlIPC * ipc)
 }
 
 
-
 /*
  * get info about the server we've connected to
  */
@@ -1098,7 +1098,6 @@ void get_serv_info(CtdlIPC * ipc, char *supplied_hostname)
 		logoff(ipc, 0);
 	}
 }
-
 
 
 /*
@@ -1204,7 +1203,6 @@ char *SortOnlineUsers(char *listing, int condense)
 }
 
 
-
 /*
  * Display list of users currently logged on to the server
  */
@@ -1290,11 +1288,13 @@ void who_is_online(CtdlIPC * ipc, int longlist)
 				}
 				scr_printf("\n");
 
-			} else {
+			}
+			else {
 				if (isidle == 0) {
 					if (extract_int(buf, 0) == last_session) {
 						scr_printf("        ");
-					} else {
+					}
+					else {
 						color(BRIGHT_MAGENTA);
 						scr_printf("%-3s", flags);
 					}
@@ -1312,16 +1312,20 @@ void who_is_online(CtdlIPC * ipc, int longlist)
 							if (idlehours > 23999) {
 								scr_printf("fish");
 								/* over 10 days */
-							} else if (idlehours > 239) {
+							}
+							else if (idlehours > 239) {
 								scr_printf("%3ldd", idlehours / 24);
 								/* over 10 hours */
-							} else if (idlehours > 9) {
+							}
+							else if (idlehours > 9) {
 								scr_printf("%1ldd%02ld", idlehours / 24, idlehours % 24);
 								/* less than 10 hours */
-							} else {
+							}
+							else {
 								scr_printf("%1ld:%02ld", idlehours, idlemins);
 							}
-						} else {
+						}
+						else {
 							scr_printf("    ");
 						}
 						scr_printf(" ");
@@ -1338,6 +1342,7 @@ void who_is_online(CtdlIPC * ipc, int longlist)
 	free(listing);
 }
 
+
 void enternew(CtdlIPC * ipc, char *desc, char *buf, int maxlen)
 {
 	char bbb[128];
@@ -1346,9 +1351,7 @@ void enternew(CtdlIPC * ipc, char *desc, char *buf, int maxlen)
 }
 
 
-
-int shift(int argc, char **argv, int start, int count)
-{
+int shift(int argc, char **argv, int start, int count) {
 	int i;
 
 	for (i = start; i < (argc - count); ++i) {
@@ -1358,16 +1361,16 @@ int shift(int argc, char **argv, int start, int count)
 	return argc;
 }
 
-static void statusHook(char *s)
-{
+
+static void statusHook(char *s) {
 	scr_printf(s);
 }
+
 
 /*
  * main
  */
-int main(int argc, char **argv)
-{
+int main(int argc, char **argv) {
 	int a, b, mcmd;
 	char aaa[100], bbb[100];	/* general purpose variables */
 	char argbuf[64];	/* command line buf */
@@ -1416,10 +1419,7 @@ int main(int argc, char **argv)
 	arg_encrypt = RC_DEFAULT;
 #endif
 
-	/* 
-	 * Handle command line options as if we were called like /bin/login
-	 * (i.e. from in.telnetd)
-	 */
+	// Handle command line options as if we were called like /bin/login (i.e. from in.telnetd)
 	for (a = 0; a < argc; ++a) {
 		if ((argc > a + 1) && (!strcmp(argv[a], "-h"))) {
 			telnet_client_host = argv[a + 1];
@@ -1451,11 +1451,6 @@ int main(int argc, char **argv)
 	 * Then attempt to read the actual screen size from the terminal.
 	 */
 	check_screen_dims();
-
-
-#ifdef __CYGWIN__
-	newprompt("Connect to (return for local server): ", hostbuf, 64);
-#endif
 
 	scr_printf("Attaching to server...\n");
 	ipc = CtdlIPC_new(argc, argv, hostbuf, portbuf);

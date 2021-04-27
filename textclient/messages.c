@@ -137,7 +137,6 @@ void add_newline(struct cittext *textlist)
 
 	while (ptr->text[strlen(ptr->text) - 1] == 32)
 		ptr->text[strlen(ptr->text) - 1] = 0;
-	/* strcat(ptr->text,"\n"); */
 
 	ptr->next = (struct cittext *)
 	    malloc(sizeof(struct cittext));
@@ -551,7 +550,8 @@ int read_message(CtdlIPC *ipc,
 
 	if (dest) {
 		fprintf(dest, "\n");
-	} else {
+	}
+	else {
 		scr_printf("\n");
 	}
 
@@ -560,7 +560,8 @@ int read_message(CtdlIPC *ipc,
 	if ((message->email != NULL) && (!IsEmptyStr(message->email))) {
 		if (!IsEmptyStr(message->author)) {
 			snprintf(reply_to, sizeof reply_to, "%s <%s>", message->author, message->email);
-		} else {
+		}
+		else {
 			safestrncpy(reply_to, message->email, sizeof reply_to);
 		}
 	}
@@ -575,10 +576,11 @@ int read_message(CtdlIPC *ipc,
 		safestrncpy(reply_inreplyto, message->msgid, sizeof reply_inreplyto);
 	}
 
-	if (message->references != NULL)
+	if (message->references != NULL) {
 		if (!IsEmptyStr(message->references)) {
 			safestrncpy(reply_references, message->references, sizeof reply_references);
 		}
+	}
 
 	if (message->subject != NULL) {
 		safestrncpy(reply_subject, message->subject, sizeof reply_subject);
@@ -657,7 +659,8 @@ int read_message(CtdlIPC *ipc,
 	 */
 	if (format_type == 0) {
 		fr = fmout(screenwidth, NULL, message->text, dest, 1);
-	} else {
+	}
+	else {
 		/* renderer for text/plain */
 
 		lineptr = message->text;
@@ -1083,7 +1086,8 @@ int entmsg(CtdlIPC * ipc, int is_reply,	/* nonzero if this was a <R>eply command
 
 	if (c > 0) {
 		mode = 1;
-	} else {
+	}
+	else {
 		mode = 0;
 	}
 

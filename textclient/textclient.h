@@ -14,7 +14,7 @@
 #define CLIENT_VERSION          926
 #define CLIENT_TYPE		0
 
-/* commands we can send to the stty_ctdl() routine */
+// commands we can send to the stty_ctdl() routine
 #define SB_NO_INTR     		0               // set to Citadel client mode, i/q disabled
 #define SB_YES_INTR		1               // set to Citadel client mode, i/q enabled
 #define SB_SAVE			2               // save settings
@@ -37,31 +37,29 @@
 #define	NEXT_KEY		15
 #define STOP_KEY		3
 
-/* citadel.rc stuff */
-#define RC_NO			0		/* always no */
-#define RC_YES			1		/* always yes */
-#define RC_DEFAULT		2		/* setting depends on user config */
+// citadel.rc stuff
+#define RC_NO			0		// always no
+#define RC_YES			1		// always yes
+#define RC_DEFAULT		2		// setting depends on user config
 
-/* keepalives */
+// keepalives
 enum {
-	KA_NO,				/* no keepalives */
-	KA_YES,				/* full keepalives */
-	KA_HALF				/* half keepalives */
+	KA_NO,					// no keepalives
+	KA_YES,					// full keepalives
+	KA_HALF					// half keepalives
 };
 
-/* for <;G>oto and <;S>kip commands */
-#define GF_GOTO		0		/* <;G>oto floor mode */
-#define GF_SKIP		1		/* <;S>kip floor mode */
-#define GF_ZAP		2		/* <;Z>ap floor mode */
+// for <;G>oto and <;S>kip commands
+#define GF_GOTO		0			// <;G>oto floor mode
+#define GF_SKIP		1			// <;S>kip floor mode
+#define GF_ZAP		2			// <;Z>ap floor mode
 
-/* Can messages be entered in this room? */
-#define ENTMSG_OK_NO	0		/* You may not enter messages here */
-#define ENTMSG_OK_YES	1		/* Go ahead! */
-#define ENTMSG_OK_BLOG	2		/* Yes, but warn the user about how blog rooms work */
+// Can messages be entered in this room?
+#define ENTMSG_OK_NO	0			// You may not enter messages here
+#define ENTMSG_OK_YES	1			// Go ahead!
+#define ENTMSG_OK_BLOG	2			// Yes, but warn the user about how blog rooms work
 
-/*
- * Colors for color() command
- */
+// Colors for color() command
 #define DIM_BLACK	0
 #define DIM_RED		1
 #define DIM_GREEN	2
@@ -78,9 +76,9 @@ enum {
 #define BRIGHT_MAGENTA	13
 #define BRIGHT_CYAN	14
 #define BRIGHT_WHITE	15
-#define COLOR_PUSH	16	/* Save current color */
-#define COLOR_POP	17	/* Restore saved color */
-#define ORIGINAL_PAIR	-1	/* Default terminal colors */
+#define COLOR_PUSH	16			// Save current color
+#define COLOR_POP	17			// Restore saved color
+#define ORIGINAL_PAIR	-1			// Default terminal colors
 
 typedef void (*sighandler_t)(int);
 
@@ -99,7 +97,6 @@ typedef void (*sighandler_t)(int);
 #include <sys/stat.h>
 #include <sys/ioctl.h>
 #include <termios.h>
-//	#include <sgtty.h>	not needed if we have termios.h
 #include <stdlib.h>
 #include <ctype.h>
 #include <sys/socket.h>
@@ -154,9 +151,7 @@ struct CtdlServInfo {
 };
 
 
-/*
- * This class is responsible for the server connection
- */
+// This class is responsible for the server connection
 typedef struct _CtdlIPC {
 	struct CtdlServInfo ServInfo;	/* The server info for this connection */
 #if defined(HAVE_OPENSSL)
@@ -212,17 +207,15 @@ extern int secure;
 void remove_march(char *roomname, int floornum);
 void calc_dirs_n_files(int relh, int home, const char *relhome, char  *ctdldir, int dbg);
 
-/*
- * This struct stores a list of rooms with new messages which the client
- * fetches from the server.  This allows the client to "march" through
- * relevant rooms without having to ask the server each time where to go next.
- */
 typedef struct ExpirePolicy ExpirePolicy;
 struct ExpirePolicy {
 	int expire_mode;
 	int expire_value;
 };
 
+// This struct stores a list of rooms with new messages which the client
+// fetches from the server.  This allows the client to "march" through
+// relevant rooms without having to ask the server each time where to go next.
 typedef struct march march;
 struct march {
 	struct march *next;
@@ -390,51 +383,36 @@ int CtdlIPCLogout(CtdlIPC *ipc);
 int CtdlIPCTryLogin(CtdlIPC *ipc, const char *username, char *cret);
 int CtdlIPCTryPassword(CtdlIPC *ipc, const char *passwd, char *cret);
 int CtdlIPCTryApopPassword(CtdlIPC *ipc, const char *response, char *cret);
-int CtdlIPCCreateUser(CtdlIPC *ipc, const char *username, int selfservice,
-		char *cret);
+int CtdlIPCCreateUser(CtdlIPC *ipc, const char *username, int selfservice, char *cret);
 int CtdlIPCChangePassword(CtdlIPC *ipc, const char *passwd, char *cret);
-int CtdlIPCKnownRooms(CtdlIPC *ipc, enum RoomList which, int floor,
-		struct march **listing, char *cret);
+int CtdlIPCKnownRooms(CtdlIPC *ipc, enum RoomList which, int floor, struct march **listing, char *cret);
 int CtdlIPCGetConfig(CtdlIPC *ipc, struct ctdluser **uret, char *cret);
 int CtdlIPCSetConfig(CtdlIPC *ipc, struct ctdluser *uret, char *cret);
-int CtdlIPCGotoRoom(CtdlIPC *ipc, const char *room, const char *passwd,
-		struct ctdlipcroom **rret, char *cret);
-int CtdlIPCGetMessages(CtdlIPC *ipc, enum MessageList which, int whicharg,
-		const char *mtemplate, unsigned long **mret, char *cret);
-int CtdlIPCGetSingleMessage(CtdlIPC *ipc, long msgnum, int headers, int as_mime,
-		struct ctdlipcmessage **mret, char *cret);
+int CtdlIPCGotoRoom(CtdlIPC *ipc, const char *room, const char *passwd, struct ctdlipcroom **rret, char *cret);
+int CtdlIPCGetMessages(CtdlIPC *ipc, enum MessageList which, int whicharg, const char *mtemplate, unsigned long **mret, char *cret);
+int CtdlIPCGetSingleMessage(CtdlIPC *ipc, long msgnum, int headers, int as_mime, struct ctdlipcmessage **mret, char *cret);
 int CtdlIPCWhoKnowsRoom(CtdlIPC *ipc, char **listing, char *cret);
 int CtdlIPCServerInfo(CtdlIPC *ipc, char *cret);
-/* int CtdlIPCReadDirectory(CtdlIPC *ipc, struct ctdlipcfile **files, char *cret); */
 int CtdlIPCReadDirectory(CtdlIPC *ipc, char **listing, char *cret);
 int CtdlIPCSetLastRead(CtdlIPC *ipc, long msgnum, char *cret);
 int CtdlIPCInviteUserToRoom(CtdlIPC *ipc, const char *username, char *cret);
 int CtdlIPCKickoutUserFromRoom(CtdlIPC *ipc, const char *username, char *cret);
 int CtdlIPCGetRoomAttributes(CtdlIPC *ipc, struct ctdlroom **qret, char *cret);
-int CtdlIPCSetRoomAttributes(CtdlIPC *ipc, int forget, struct ctdlroom *qret,
-		char *cret);
+int CtdlIPCSetRoomAttributes(CtdlIPC *ipc, int forget, struct ctdlroom *qret, char *cret);
 int CtdlIPCGetRoomAide(CtdlIPC *ipc, char *cret);
 int CtdlIPCSetRoomAide(CtdlIPC *ipc, const char *username, char *cret);
-int CtdlIPCPostMessage(CtdlIPC *ipc, int flag, int *subject_required, 
-					   struct ctdlipcmessage *mr,
-					   char *cret);
+int CtdlIPCPostMessage(CtdlIPC *ipc, int flag, int *subject_required, struct ctdlipcmessage *mr, char *cret);
 int CtdlIPCRoomInfo(CtdlIPC *ipc, char **iret, char *cret);
 int CtdlIPCDeleteMessage(CtdlIPC *ipc, long msgnum, char *cret);
-int CtdlIPCMoveMessage(CtdlIPC *ipc, int copy, long msgnum,
-		const char *destroom, char *cret);
+int CtdlIPCMoveMessage(CtdlIPC *ipc, int copy, long msgnum, const char *destroom, char *cret);
 int CtdlIPCDeleteRoom(CtdlIPC *ipc, int for_real, char *cret);
-int CtdlIPCCreateRoom(CtdlIPC *ipc, int for_real, const char *roomname,
-		int type, const char *password, int floor, char *cret);
+int CtdlIPCCreateRoom(CtdlIPC *ipc, int for_real, const char *roomname, int type, const char *password, int floor, char *cret);
 int CtdlIPCForgetRoom(CtdlIPC *ipc, char *cret);
-int CtdlIPCSystemMessage(CtdlIPC *ipc, const char *message, char **mret,
-		char *cret);
+int CtdlIPCSystemMessage(CtdlIPC *ipc, const char *message, char **mret, char *cret);
 int CtdlIPCNextUnvalidatedUser(CtdlIPC *ipc, char *cret);
-int CtdlIPCGetUserRegistration(CtdlIPC *ipc, const char *username, char **rret,
-		char *cret);
-int CtdlIPCValidateUser(CtdlIPC *ipc, const char *username, int axlevel,
-		char *cret);
-int CtdlIPCSetRoomInfo(CtdlIPC *ipc, int for_real, const char *info,
-		char *cret);
+int CtdlIPCGetUserRegistration(CtdlIPC *ipc, const char *username, char **rret, char *cret);
+int CtdlIPCValidateUser(CtdlIPC *ipc, const char *username, int axlevel, char *cret);
+int CtdlIPCSetRoomInfo(CtdlIPC *ipc, int for_real, const char *info, char *cret);
 int CtdlIPCUserListing(CtdlIPC *ipc, char *searchstring, char **list, char *cret);
 int CtdlIPCSetRegistration(CtdlIPC *ipc, const char *info, char *cret);
 int CtdlIPCMiscCheck(CtdlIPC *ipc, struct ctdlipcmisc *chek, char *cret);
@@ -442,33 +420,17 @@ int CtdlIPCDeleteFile(CtdlIPC *ipc, const char *filename, char *cret);
 int CtdlIPCMoveFile(CtdlIPC *ipc, const char *filename, const char *destroom, char *cret);
 int CtdlIPCNetSendFile(CtdlIPC *ipc, const char *filename, const char *destnode, char *cret);
 int CtdlIPCOnlineUsers(CtdlIPC *ipc, char **listing, time_t *stamp, char *cret);
-int CtdlIPCFileDownload(CtdlIPC *ipc, const char *filename, void **buf,
-		size_t resume,
-		void (*progress_gauge_callback)(CtdlIPC*, unsigned long, unsigned long),
-		char *cret);
-int CtdlIPCAttachmentDownload(CtdlIPC *ipc, long msgnum, const char *part,
-		void **buf,
-		void (*progress_gauge_callback)(CtdlIPC*, unsigned long, unsigned long),
-		char *cret);
-int CtdlIPCImageDownload(CtdlIPC *ipc, const char *filename, void **buf,
-		void (*progress_gauge_callback)(CtdlIPC*, unsigned long, unsigned long),
-		char *cret);
-int CtdlIPCFileUpload(CtdlIPC *ipc, const char *save_as, const char *comment,
-		const char *path, 
-		void (*progress_gauge_callback)(CtdlIPC*, unsigned long, unsigned long),
-		char *cret);
-int CtdlIPCImageUpload(CtdlIPC *ipc, int for_real, const char *path,
-		const char *save_as,
-		void (*progress_gauge_callback)(CtdlIPC*, unsigned long, unsigned long),
-		char *cret);
+int CtdlIPCFileDownload(CtdlIPC *ipc, const char *filename, void **buf, size_t resume, void (*progress_gauge_callback)(CtdlIPC*, unsigned long, unsigned long), char *cret);
+int CtdlIPCAttachmentDownload(CtdlIPC *ipc, long msgnum, const char *part, void **buf, void (*progress_gauge_callback)(CtdlIPC*, unsigned long, unsigned long), char *cret);
+int CtdlIPCImageDownload(CtdlIPC *ipc, const char *filename, void **buf, void (*progress_gauge_callback)(CtdlIPC*, unsigned long, unsigned long), char *cret);
+int CtdlIPCFileUpload(CtdlIPC *ipc, const char *save_as, const char *comment, const char *path, void (*progress_gauge_callback)(CtdlIPC*, unsigned long, unsigned long), char *cret);
+int CtdlIPCImageUpload(CtdlIPC *ipc, int for_real, const char *path, const char *save_as, void (*progress_gauge_callback)(CtdlIPC*, unsigned long, unsigned long), char *cret);
 int CtdlIPCQueryUsername(CtdlIPC *ipc, const char *username, char *cret);
 int CtdlIPCFloorListing(CtdlIPC *ipc, char **listing, char *cret);
 int CtdlIPCCreateFloor(CtdlIPC *ipc, int for_real, const char *name, char *cret);
 int CtdlIPCDeleteFloor(CtdlIPC *ipc, int for_real, int floornum, char *cret);
 int CtdlIPCEditFloor(CtdlIPC *ipc, int floornum, const char *floorname, char *cret);
-int CtdlIPCIdentifySoftware(CtdlIPC *ipc, int developerid, int clientid,
-		int revision, const char *software_name, const char *hostname,
-		char *cret);
+int CtdlIPCIdentifySoftware(CtdlIPC *ipc, int developerid, int clientid, int revision, const char *software_name, const char *hostname, char *cret);
 int CtdlIPCSendInstantMessage(CtdlIPC *ipc, const char *username, const char *text, char *cret);
 int CtdlIPCGetInstantMessage(CtdlIPC *ipc, char **listing, char *cret);
 int CtdlIPCEnableInstantMessageReceipt(CtdlIPC *ipc, int mode, char *cret);
@@ -509,26 +471,16 @@ char *CtdlIPCReadListing(CtdlIPC *ipc, char *dest);
 int CtdlIPCSendListing(CtdlIPC *ipc, const char *listing);
 size_t CtdlIPCPartialRead(CtdlIPC *ipc, void **buf, size_t offset, size_t bytes, char *cret);
 int CtdlIPCEndUpload(CtdlIPC *ipc, int discard, char *cret);
-int CtdlIPCWriteUpload(CtdlIPC *ipc, FILE *uploadFP,
-		void (*progress_gauge_callback)(CtdlIPC*, unsigned long, unsigned long),
-		char *cret);
+int CtdlIPCWriteUpload(CtdlIPC *ipc, FILE *uploadFP, void (*progress_gauge_callback)(CtdlIPC*, unsigned long, unsigned long), char *cret);
 int CtdlIPCEndDownload(CtdlIPC *ipc, char *cret);
-int CtdlIPCReadDownload(CtdlIPC *ipc, void **buf, size_t bytes, size_t resume,
-		void (*progress_gauge_callback)(CtdlIPC*, unsigned long, unsigned long),
-		char *cret);
-int CtdlIPCHighSpeedReadDownload(CtdlIPC *ipc, void **buf, size_t bytes,
-		size_t resume,
-		void (*progress_gauge_callback)(CtdlIPC*, unsigned long, unsigned long),
-		char *cret);
-int CtdlIPCGenericCommand(CtdlIPC *ipc, const char *command,
-		const char *to_send, size_t bytes_to_send, char **to_receive,
-		size_t *bytes_to_receive, char *proto_response);
+int CtdlIPCReadDownload(CtdlIPC *ipc, void **buf, size_t bytes, size_t resume, void (*progress_gauge_callback)(CtdlIPC*, unsigned long, unsigned long), char *cret);
+int CtdlIPCHighSpeedReadDownload(CtdlIPC *ipc, void **buf, size_t bytes, size_t resume, void (*progress_gauge_callback)(CtdlIPC*, unsigned long, unsigned long), char *cret);
+int CtdlIPCGenericCommand(CtdlIPC *ipc, const char *command, const char *to_send, size_t bytes_to_send, char **to_receive, size_t *bytes_to_receive, char *proto_response);
 
 /* Internals */
 int starttls(CtdlIPC *ipc);
 void setCryptoStatusHook(void (*hook)(char *s));
 void CtdlIPC_SetNetworkStatusCallback(CtdlIPC *ipc, void (*hook)(int state));
-/* This is all Ford's doing.  FIXME: figure out what it's doing */
 extern int (*error_printf)(char *s, ...);
 void setIPCDeathHook(void (*hook)(void));
 void setIPCErrorPrintf(int (*func)(char *s, ...));
@@ -545,21 +497,9 @@ void stealth_mode(CtdlIPC *ipc);
 extern char last_paged[];
 
 void determine_pwfilename(char *pwfile, size_t n);
-void get_stored_password(
-		char *host,
-		char *port,
-		char *username,
-		char *password);
-void set_stored_password(
-		char *host,
-		char *port,
-		char *username,
-		char *password);
-void offer_to_remember_password(CtdlIPC *ipc,
-		char *host,
-		char *port,
-		char *username,
-		char *password);
+void get_stored_password( char *host, char *port, char *username, char *password);
+void set_stored_password( char *host, char *port, char *username, char *password);
+void offer_to_remember_password(CtdlIPC *ipc, char *host, char *port, char *username, char *password);
 
 void load_command_set(void);
 void stty_ctdl(int cmd);
@@ -609,8 +549,7 @@ struct MD5Context {
 };
 
 void MD5Init(struct MD5Context *context);
-void MD5Update(struct MD5Context *context, unsigned char const *buf,
-	       unsigned len);
+void MD5Update(struct MD5Context *context, unsigned char const *buf, unsigned len);
 void MD5Final(unsigned char digest[16], struct MD5Context *context);
 void MD5Transform(uint32_t buf[4], uint32_t const in[16]);
 char *make_apop_string(char *realpass, char *nonce, char *buffer, size_t n);
@@ -628,7 +567,7 @@ typedef struct MD5Context MD5_CTX;
 #endif /* !MD5_H */
 
 
-#define MAXURLS		50	/* Max embedded URL's per message */
+#define MAXURLS		50			// Max embedded URL's per message (oooh, can we use our elastic array class here?)
 extern int num_urls;
 extern char urls[MAXURLS][SIZ];
 

@@ -12,7 +12,7 @@
 
 #include "textclient.h"
 
-/* work around solaris include files */
+// work around solaris include files
 #ifdef reg
 #undef reg
 #endif
@@ -26,24 +26,19 @@ extern unsigned room_flags;
 extern int screenwidth;
 
 
-/*
- * return proper room prompt character
- */
-int room_prompt(unsigned int qrflags)
-{
+// return proper room prompt character
+int room_prompt(unsigned int qrflags) {
 	int a;
 	a = '>';
-	if (qrflags & QR_DIRECTORY)
+	if (qrflags & QR_DIRECTORY) {
 		a = ']';
+	}
 	return (a);
 }
 
 
-/*
- * Register with name and address
- */
-void entregis(CtdlIPC * ipc)
-{
+// Register with name and address
+void entregis(CtdlIPC * ipc) {
 
 	char buf[SIZ];
 	char tmpname[30];
@@ -236,7 +231,8 @@ void cli_image_upload(CtdlIPC * ipc, char *keyname)
 	r = CtdlIPCImageUpload(ipc, 1, flnm, keyname, progress, buf);
 	if (r / 100 == 5) {
 		scr_printf("%s\n", buf);
-	} else if (r < 0) {
+	}
+	else if (r < 0) {
 		scr_printf("Cannot upload '%s': %s\n", flnm, strerror(errno));
 	}
 	/* else upload succeeded */
@@ -317,10 +313,10 @@ void upload(CtdlIPC * ipc, int c)
 			execlp("rz", "rz", NULL);
 			exit(1);
 		}
-	} else
-		do {
-			b = ka_wait(&a);
-		} while ((b != xfer_pid) && (b != (-1)));
+	}
+	else do {
+		b = ka_wait(&a);
+	} while ((b != xfer_pid) && (b != (-1)));
 	stty_ctdl(0);
 
 	if (a != 0) {
@@ -344,6 +340,7 @@ void upload(CtdlIPC * ipc, int c)
 	}
 	nukedir(tempdir);
 }
+
 
 /* 
  * validate a user (returns 0 for successful validation, nonzero if quitting)
@@ -453,6 +450,7 @@ void validate(CtdlIPC * ipc)
 	} while (finished == 0);
 }
 
+
 void subshell(void)
 {
 	int a, b;
@@ -537,11 +535,8 @@ void list_bio(CtdlIPC * ipc)
 }
 
 
-/*
- * read bio
- */
-void read_bio(CtdlIPC * ipc)
-{
+// read bio
+void read_bio(CtdlIPC * ipc) {
 	char who[256];
 	char buf[256];
 	char *resp = NULL;
