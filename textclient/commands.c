@@ -1,7 +1,7 @@
 // This file contains functions which implement parts of the
 // text-mode user interface.
 //
-// Copyright (c) 1987-2018 by the citadel.org team
+// Copyright (c) 1987-2021 by the citadel.org team
 //
 // This program is open source software.  Use, duplication, and/or
 // disclosure are subject to the GNU General Purpose License version 3.
@@ -12,6 +12,10 @@
 // GNU General Public License for more details.
 
 #include "textclient.h"
+
+
+// The help "files" are now just an embedded set of Very Long Strings.  helpnames[] is
+// an array of "file names" and helptexts[] is the "content".
 
 char *helpnames[] = {
 	"help",
@@ -26,6 +30,7 @@ char *helpnames[] = {
 
 char *helptexts[] = {
 
+	// <.H>elp HELP
 	"                          Citadel Help Menu\n"
 	    "  \n"
 	    " ?         Help. (Typing a '?' will give you a menu almost anywhere)\n"
@@ -59,6 +64,7 @@ char *helptexts[] = {
 	    "    \n"
 	    "      *** USE  .<H>elp ?    for additional help *** \n",
 
+	// <.H>elp ADMIN
 	"The following commands are available only to Admins.  A subset of these\n"
 	    "commands are available to room aides when they are currently in the room\n"
 	    "they are room aide for.\n"
@@ -88,6 +94,7 @@ char *helptexts[] = {
 	    " <.> <A>dmin <N>etwork room sharing     (Replication with other Citadels)\n"
 	    " \n" " In addition, the <M>ove and <D>elete commands are available at the\n" "message prompt.\n",
 
+	// <.H>elp FLOORS
 	" Floors\n"
 	    " ------\n"
 	    "   Floors in Citadel are used to group rooms into related subject areas,\n"
@@ -131,6 +138,7 @@ char *helptexts[] = {
 	    "   Feel free to experiment, you can't hurt yourself or the system with the\n"
 	    "floor stuff unless you ZForget a floor by accident.\n",
 
+	// <.H>elp INTRO
 	"                  New User's Introduction to the site\n"
 	    "  \n"
 	    " This is an introduction to the Citadel BBS concept.  It is intended\n"
@@ -266,6 +274,7 @@ char *helptexts[] = {
 	    "display as '<private room>'.  Along with this information is displayed the\n"
 	    "name of the host computer the user is logged in from.\n",
 
+	// <.H>elp MAIL
 	"To send mail on this system, go to the Mail> room (using the command .G Mail)\n"
 	    "and press E to enter a message.  You will be prompted with:\n"
 	    " \n"
@@ -284,14 +293,17 @@ char *helptexts[] = {
 	    "anyone on the Internet here.  Simply enter their address at the prompt:\n"
 	    "  \n" " Enter Recipient: ajc@herring.fishnet.com\n",
 
+	// <.H>elp NETWORK
 	"  Welcome to the network. Messages entered in a network room will appear in\n"
 	    "that room on all other systems carrying it (The name of the room, however,\n" "may be different on other systems).\n",
 
+	// <.H>elp SOFTWARE
 	"   Citadel is the premier 'online community' (i.e. Bulletin Board System)\n"
 	    "software.  It runs on all POSIX-compliant systems, including Linux.  It is an\n"
 	    "advanced client/server application, and is being actively maintained.\n"
 	    " \n" "   For more info, visit UNCENSORED! BBS at uncensored.citadel.org\n",
 
+	// <.H>elp SUMMARY
 	"Extended commands are available using the period ( . ) key. To use\n"
 	    "a dot command, press the . key, and then enter the first letter of\n"
 	    "each word in the command. The words will appear as you enter the keys.\n"
@@ -432,20 +444,18 @@ int next_lazy_cmd = 5;
 
 extern int screenwidth, screenheight;
 extern int termn8;
-extern CtdlIPC *ipc_for_signal_handlers;	/* KLUDGE cover your eyes */
+extern CtdlIPC *ipc_for_signal_handlers;	// KLUDGE cover your eyes
 struct citcmd *cmdlist = NULL;
 
 
-/* these variables are local to this module */
-char keepalives_enabled = KA_YES;	/* send NOOPs to server when idle */
-int ok_to_interrupt = 0;	/* print instant msgs asynchronously */
-time_t AnsiDetect;		/* when did we send the detect code? */
-int enable_color = 0;		/* nonzero for ANSI color */
+// these variables are local to this module
+char keepalives_enabled = KA_YES;		// send NOOPs to server when idle
+int ok_to_interrupt = 0;			// print instant msgs asynchronously
+time_t AnsiDetect;				// when did we send the detect code?
+int enable_color = 0;				// nonzero for ANSI color
 
 
-/*
- * If an interesting key has been pressed, return its value, otherwise 0
- */
+// If an interesting key has been pressed, return its value, otherwise 0
 char was_a_key_pressed(void) {
 	fd_set rfds;
 	struct timeval tv;
@@ -458,10 +468,9 @@ char was_a_key_pressed(void) {
 	tv.tv_usec = 0;
 	retval = select(1, &rfds, NULL, NULL, &tv);
 
-	/* Careful!  Disable keepalives during keyboard polling; we're probably
-	 * in the middle of a data transfer from the server, in which case
-	 * sending a NOOP would throw the client protocol out of sync.
-	 */
+	// Careful!  Disable keepalives during keyboard polling; we're probably
+	// in the middle of a data transfer from the server, in which case
+	// sending a NOOP would throw the client protocol out of sync.
 	if ((retval > 0) && FD_ISSET(0, &rfds)) {
 		set_keepalives(KA_NO);
 		the_character = inkey();
@@ -474,10 +483,8 @@ char was_a_key_pressed(void) {
 }
 
 
-/*
- * print_instant()  -  print instant messages if there are any
- */
-void print_instant(void) {
+// display_instant_messages()  -  print instant messages if there are any
+void display_instant_messages(void) {
 	char buf[1024];
 	FILE *outpipe;
 	time_t timestamp;
@@ -486,7 +493,7 @@ void print_instant(void) {
 	char sender[64];
 	char node[64];
 	char *listing = NULL;
-	int r;			/* IPC result code */
+	int r;			// IPC result code
 
 	if (instant_msgs == 0) {
 		return;
@@ -516,7 +523,7 @@ void print_instant(void) {
 
 		localtime_r(&timestamp, &stamp);
 
-		/* If the page is a Logoff Request, honor it. */
+		// If the message contains a Logoff Request, honor it.
 		if (flags & 2) {
 			termn8 = 1;
 			return;
@@ -525,7 +532,7 @@ void print_instant(void) {
 		if (!IsEmptyStr(rc_exp_cmd)) {
 			outpipe = popen(rc_exp_cmd, "w");
 			if (outpipe != NULL) {
-				/* Header derived from flags */
+				// Header derived from flags
 				if (flags & 2)
 					fprintf(outpipe, "Please log off now, as requested ");
 				else if (flags & 1)
@@ -534,12 +541,12 @@ void print_instant(void) {
 					fprintf(outpipe, "Chat request ");
 				else
 					fprintf(outpipe, "Message ");
-				/* Timestamp.  Can this be improved? */
+				// Timestamp.  Can this be improved?
 				if (stamp.tm_hour == 0 || stamp.tm_hour == 12)
 					fprintf(outpipe, "at 12:%02d%cm", stamp.tm_min, stamp.tm_hour ? 'p' : 'a');
-				else if (stamp.tm_hour > 12)	/* pm */
+				else if (stamp.tm_hour > 12)	// pm
 					fprintf(outpipe, "at %d:%02dpm", stamp.tm_hour - 12, stamp.tm_min);
-				else	/* am */
+				else	// am
 					fprintf(outpipe, "at %d:%02dam", stamp.tm_hour, stamp.tm_min);
 				fprintf(outpipe, " from %s", sender);
 				if (strncmp(ipc_for_signal_handlers->ServInfo.nodename, node, 32))
@@ -551,10 +558,10 @@ void print_instant(void) {
 				continue;
 			}
 		}
-		/* fall back to built-in instant message display */
+		// fall back to built-in instant message display
 		scr_printf("\n");
 
-		/* Header derived from flags */
+		// Header derived from flags
 		if (flags & 2)
 			scr_printf("Please log off now, as requested ");
 		else if (flags & 1)
@@ -564,18 +571,18 @@ void print_instant(void) {
 		else
 			scr_printf("Message ");
 
-		/* Timestamp.  Can this be improved? */
-		if (stamp.tm_hour == 0 || stamp.tm_hour == 12)	/* 12am/12pm */
+		// Timestamp.  Can this be improved?
+		if (stamp.tm_hour == 0 || stamp.tm_hour == 12)	// 12am/12pm
 			scr_printf("at 12:%02d%cm", stamp.tm_min, stamp.tm_hour ? 'p' : 'a');
-		else if (stamp.tm_hour > 12)	/* pm */
+		else if (stamp.tm_hour > 12)	// pm 
 			scr_printf("at %d:%02dpm", stamp.tm_hour - 12, stamp.tm_min);
-		else		/* am */
+		else		// am
 			scr_printf("at %d:%02dam", stamp.tm_hour, stamp.tm_min);
 
-		/* Sender */
+		// Sender
 		scr_printf(" from %s", sender);
 
-		/* Remote node, if any */
+		// Remote node, if any
 		if (strncmp(ipc_for_signal_handlers->ServInfo.nodename, node, 32))
 			scr_printf(" @%s", node);
 
@@ -596,37 +603,32 @@ void set_keepalives(int s) {
 }
 
 
-/* 
- * This loop handles the "keepalive" messages sent to the server when idling.
- */
+// This loop handles the "keepalive" messages sent to the server when idling.
 static time_t idlet = 0;
 static void really_do_keepalive(void) {
 	time(&idlet);
 
-	/* This may sometimes get called before we are actually connected
-	 * to the server.  Don't do anything if we aren't connected. -IO
-	 */
+	// This may sometimes get called before we are actually connected
+	// to the server.  Don't do anything if we aren't connected. -IO
 	if (!ipc_for_signal_handlers)
 		return;
 
-	/* If full keepalives are enabled, send a NOOP to the server and
-	 * wait for a response.
-	 */
+	// If full keepalives are enabled, send a NOOP to the server and
+	// wait for a response.
 	if (keepalives_enabled == KA_YES) {
 		CtdlIPCNoop(ipc_for_signal_handlers);
 		if (instant_msgs > 0) {
 			if (ok_to_interrupt == 1) {
 				scr_printf("\r%64s\r", "");
-				print_instant();
+				display_instant_messages();
 				scr_printf("%s%c ", room_name, room_prompt(room_flags));
 				scr_flush();
 			}
 		}
 	}
 
-	/* If half keepalives are enabled, send a QNOP to the server (if the
-	 * server supports it) and then do nothing.
-	 */
+	// If half keepalives are enabled, send a QNOP to the server (if the
+	// server supports it) and then do nothing.
 	if ((keepalives_enabled == KA_HALF)
 	    && (ipc_for_signal_handlers->ServInfo.supports_qnop > 0)) {
 		CtdlIPC_chat_send(ipc_for_signal_handlers, "QNOP");
@@ -634,12 +636,10 @@ static void really_do_keepalive(void) {
 }
 
 
-/* I changed this from static to not because I need to call it from
- * screen.c, either that or make something in screen.c not static.
- * Fix it how you like. Why all the staticness? stu
- */
-void do_keepalive(void)
-{
+// I changed this from static to not because I need to call it from
+// screen.c, either that or make something in screen.c not static.
+// Fix it how you like. Why all the staticness? stu
+void do_keepalive(void) {
 	time_t now;
 
 	time(&now);
@@ -647,7 +647,7 @@ void do_keepalive(void)
 		return;
 	}
 
-	/* Do a space-backspace to keep terminal sessions from idling out */
+	// Do a space-backspace to keep terminal sessions from idling out
 	scr_printf(" %c", 8);
 	scr_flush();
 
@@ -655,9 +655,9 @@ void do_keepalive(void)
 }
 
 
-int inkey(void)
-{				/* get a character from the keyboard, with   */
-	int a;			/* the watchdog timer in effect if necessary */
+// Get a character from the keyboard, with the watchdog timer in effect if necessary.
+int inkey(void) {
+	int a;
 	fd_set rfds;
 	struct timeval tv;
 	time_t start_time;
@@ -666,10 +666,9 @@ int inkey(void)
 	time(&start_time);
 
 	do {
-		/* This loop waits for keyboard input.  If the keepalive
-		 * timer expires, it sends a keepalive to the server if
-		 * necessary and then waits again.
-		 */
+		// This loop waits for keyboard input.  If the keepalive
+		// timer expires, it sends a keepalive to the server if
+		// necessary and then waits again.
 		do {
 			do_keepalive();
 
@@ -681,9 +680,8 @@ int inkey(void)
 			select(1, &rfds, NULL, NULL, &tv);
 		} while (!FD_ISSET(0, &rfds));
 
-		/* At this point, there's input, so fetch it.
-		 * (There's a hole in the bucket...)
-		 */
+		// At this point, there's input, so fetch it.
+		// (There's a hole in the bucket...)
 		a = scr_getc(SCR_BLOCK);
 		if (a == 127) {
 			a = 8;
@@ -696,8 +694,8 @@ int inkey(void)
 }
 
 
-int yesno(void)
-{				/* Returns 1 for yes, 0 for no */
+// Returns 1 for yes, 0 for no
+int yesno(void) {
 	int a;
 	while (1) {
 		a = inkey();
@@ -713,9 +711,9 @@ int yesno(void)
 	}
 }
 
-/* Returns 1 for yes, 0 for no, arg is default value */
-int yesno_d(int d)
-{
+
+// Returns 1 for yes, 0 for no, arg is default value
+int yesno_d(int d) {
 	int a;
 	while (1) {
 		a = inkey();
@@ -732,8 +730,6 @@ int yesno_d(int d)
 		}
 	}
 }
-
-
 
 
 /*
@@ -811,7 +807,7 @@ int ctdl_getline(char *string, int lim, int noshow, int bs)
  */
 void strprompt(char *prompt, char *str, int len)
 {
-	print_instant();
+	display_instant_messages();
 	color(DIM_WHITE);
 	scr_printf("%s", prompt);
 	color(DIM_WHITE);
@@ -1245,7 +1241,7 @@ int getcmd(CtdlIPC * ipc, char *argbuf)
 		scr_printf("-----------------------------------------------------------------------\n");
 	}
 
-	print_instant();
+	display_instant_messages();
 	strcpy(argbuf, "");
 	cmdpos = 0;
 	for (a = 0; a < 5; ++a)
@@ -1366,9 +1362,6 @@ int getcmd(CtdlIPC * ipc, char *argbuf)
 }
 
 
-
-
-
 /*
  * set tty modes.  commands are:
  * 
@@ -1376,8 +1369,7 @@ int getcmd(CtdlIPC * ipc, char *argbuf)
  * 2 - save current settings for later restoral
  * 3 - restore saved settings
  */
-void stty_ctdl(int cmd)
-{				/* SysV version of stty_ctdl() */
+void stty_ctdl(int cmd) {				/* SysV version of stty_ctdl() */
 	struct termios live;
 	static struct termios saved_settings;
 	static int last_cmd = 0;
@@ -1416,44 +1408,10 @@ void stty_ctdl(int cmd)
 }
 
 
-// this is the old version which uses sgtty.h instead of termios.h
-#if 0
-void stty_ctdl(int cmd)
-{				/* BSD version of stty_ctdl() */
-	struct sgttyb live;
-	static struct sgttyb saved_settings;
-	static int last_cmd = 0;
-
-	if (cmd == SB_LAST)
-		cmd = last_cmd;
-	else
-		last_cmd = cmd;
-
-	if ((cmd == 0) || (cmd == 1)) {
-		gtty(0, &live);
-		live.sg_flags |= CBREAK;
-		live.sg_flags |= CRMOD;
-		live.sg_flags |= NL1;
-		live.sg_flags &= ~ECHO;
-		if (cmd == 1)
-			live.sg_flags |= NOFLSH;
-		stty(0, &live);
-	}
-	if (cmd == 2) {
-		gtty(0, &saved_settings);
-	}
-	if (cmd == 3) {
-		stty(0, &saved_settings);
-	}
-}
-#endif
-
-
 /*
  * display_help()  -  help text viewer
  */
-void display_help(CtdlIPC * ipc, char *name)
-{
+void display_help(CtdlIPC * ipc, char *name) {
 	int i;
 	int num_helps = sizeof(helpnames) / sizeof(char *);
 
@@ -1475,10 +1433,10 @@ void display_help(CtdlIPC * ipc, char *name)
  * fmout() - Citadel text formatter and paginator
  */
 int fmout(int width,		/* screen width to use */
-	  FILE * fpin,		/* file to read from, or NULL to format given text */
-	  char *text,		/* text to be formatted (when fpin is NULL */
-	  FILE * fpout,		/* file to write to, or NULL to write to screen */
-	  int subst) {		/* nonzero if we should use hypertext mode */
+	FILE * fpin,		/* file to read from, or NULL to format given text */
+	char *text,		/* text to be formatted (when fpin is NULL */
+	FILE * fpout,		/* file to write to, or NULL to write to screen */
+	int subst) {		/* nonzero if we should use hypertext mode */
 	char *buffer = NULL;	/* The current message */
 	char *word = NULL;	/* What we are about to actually print */
 	char *e;		/* Pointer to position in text */
@@ -1583,9 +1541,9 @@ int fmout(int width,		/* screen width to use */
 			e[i] = ' ';
 
 		/* Break up really long words */
-		/* TODO: auto-hyphenation someday? */
-		if (i >= width)
+		if (i >= width) {
 			i = width - 1;
+		}
 		strncpy(word, e, i);
 		word[i] = 0;
 
@@ -1628,8 +1586,7 @@ int fmout(int width,		/* screen width to use */
 /*
  * support ANSI color if defined
  */
-void color(int colornum)
-{
+void color(int colornum) {
 	static int hold_color;
 	static int current_color;
 
@@ -1659,8 +1616,7 @@ void color(int colornum)
 	}
 }
 
-void cls(int colornum)
-{
+void cls(int colornum) {
 	if (enable_color) {
 		printf("\033[4%dm\033[2J\033[H\033[0m", colornum ? colornum : rc_color_use_bg);
 	}
@@ -1670,8 +1626,7 @@ void cls(int colornum)
 /*
  * Detect whether ANSI color is available (answerback)
  */
-void send_ansi_detect(void)
-{
+void send_ansi_detect(void) {
 	if (rc_ansi_color == 2) {
 		printf("\033[c");
 		scr_flush();
@@ -1679,8 +1634,8 @@ void send_ansi_detect(void)
 	}
 }
 
-void look_for_ansi(void)
-{
+
+void look_for_ansi(void) {
 	fd_set rfds;
 	struct timeval tv;
 	char abuf[512];
@@ -1731,8 +1686,7 @@ void look_for_ansi(void)
 /*
  * Display key options (highlight hotkeys inside angle brackets)
  */
-void keyopt(char *buf)
-{
+void keyopt(char *buf) {
 	int i;
 
 	color(DIM_WHITE);
@@ -1751,12 +1705,10 @@ void keyopt(char *buf)
 }
 
 
-
 /*
  * Present a key-menu line choice type of thing
  */
-char keymenu(char *menuprompt, char *menustring)
-{
+char keymenu(char *menuprompt, char *menustring) {
 	int i, c, a;
 	int choices;
 	int do_prompt = 0;
