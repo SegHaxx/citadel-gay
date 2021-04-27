@@ -627,10 +627,8 @@ static void really_do_keepalive(void) {
 		}
 	}
 
-	// If half keepalives are enabled, send a QNOP to the server (if the
-	// server supports it) and then do nothing.
-	if ((keepalives_enabled == KA_HALF)
-	    && (ipc_for_signal_handlers->ServInfo.supports_qnop > 0)) {
+	// If half keepalives are enabled, send a QNOP to the server, then do nothing.
+	if (keepalives_enabled == KA_HALF) {
 		CtdlIPC_chat_send(ipc_for_signal_handlers, "QNOP");
 	}
 }

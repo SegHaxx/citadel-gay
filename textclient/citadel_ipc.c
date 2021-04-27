@@ -834,9 +834,6 @@ int CtdlIPCServerInfo(CtdlIPC * ipc, char *cret)
 			case 10:
 				ipc->ServInfo.ok_floors = atoi(buf);
 				break;
-			case 13:
-				ipc->ServInfo.supports_qnop = atoi(buf);
-				break;
 			case 14:
 				ipc->ServInfo.supports_ldap = atoi(buf);
 				break;
