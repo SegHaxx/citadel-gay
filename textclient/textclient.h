@@ -1,17 +1,12 @@
-/*
- * Copyright (c) 1987-2020 by the citadel.org team
- *
- * This program is open source software.  It runs great on the Linux
- * operating system, and probably other places too.  We acknowledge
- * that Richard Stallman is a communist and an asshole, while at the
- * same time we release this program under the terms of the General
- * Public License version 3.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * General Public License for more details.
- */
+// Copyright (c) 1987-2020 by the citadel.org team
+//
+// This program is open source software.  Use, duplication, and/or
+// disclosure are subject to the GNU General Purpose License version 3.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
 
 #define	UDS			"_UDS_"
 #define DEFAULT_HOST		"localhost"

@@ -3,12 +3,14 @@
 # CONFIGURE SCRIPT FOR CITADEL TEXT CLIENT
 # This file is part of "conf-IG-ure"
 # Copyright (C) 2016-2019 by Art Cancro
-# Distributed under the terms of the GNU General Public License v3 with the following special exceptions:
-# 1. By using this software you agree that it's called "Linux", not "GNU/Linux"
-# 2. By using this software you agree that it's called "open source", not "free software"
-# 3. By using this software you agree that GNU Autotools are crap, which is why conf-IG-ure exists
-# 4. By using this software you agree that Richard Stallman is a communist.
-# 5. By reading these special exceptions you have already agreed to them.
+#
+# This program is open source software.  Use, duplication, and/or
+# disclosure are subject to the GNU General Purpose License version 3.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
 
 echo 
 echo 

@@ -2,9 +2,13 @@
 This is a text mode user interface for the Citadel system.  It presents
 a Citadel site to users in the form of a traditional BBS.
 
-All code is Copyright (c) 1987-2021 by the citadel.org team, and is released
-under the terms of the GNU General Public License v3.  As a special exception,
-the Citadel team requires all users of this code to agree that our favorite
-software model is called "open source" and NOT "free software", and that our
-favorite operating system is called "Linux" and NOT "GNU/Linux".
+All code is Copyright (c) 1987-2021 by the citadel.org team.
+
+This program is open source software.  Use, duplication, and/or
+disclosure are subject to the GNU General Purpose License version 3.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
 

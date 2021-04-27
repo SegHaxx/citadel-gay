@@ -1,17 +1,15 @@
-/*
- * This file contains functions which implement parts of the
- * text-mode user interface.
- *
- * Copyright (c) 1987-2018 by the citadel.org team
- *
- * This program is open source software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 3.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- */
+// This file contains functions which implement parts of the
+// text-mode user interface.
+//
+// Copyright (c) 1987-2018 by the citadel.org team
+//
+// This program is open source software.  Use, duplication, and/or
+// disclosure are subject to the GNU General Purpose License version 3.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
 
 #include "textclient.h"
 

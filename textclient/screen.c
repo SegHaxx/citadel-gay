@@ -1,19 +1,16 @@
-/*
- * Screen output handling
- *
- * Copyright (c) 1987-2018 by the citadel.org team
- *
- * This program is open source software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 3.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- */
+// Screen output handling
+//
+// Copyright (c) 1987-2021 by the citadel.org team
+//
+// This program is open source software.  Use, duplication, and/or
+// disclosure are subject to the GNU General Purpose License version 3.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
 
 #include "textclient.h"
-
 
 int enable_status_line = 0;
 char status_line[1024] = "     ";
@@ -34,8 +31,7 @@ void do_keepalive(void);
  * Attempt to discover the screen dimensions. 
  * WARNING: This is sometimes called from a signal handler.
  */
-void check_screen_dims(void)
-{
+void check_screen_dims(void) {
 #ifdef TIOCGWINSZ
 	struct {
 		unsigned short height;	/* rows */
@@ -57,8 +53,7 @@ void check_screen_dims(void)
 /*
  * Initialize the screen
  */
-void screen_new(void)
-{
+void screen_new(void) {
 	send_ansi_detect();
 	look_for_ansi();
 	cls(0);
@@ -66,23 +61,18 @@ void screen_new(void)
 }
 
 
-
 /*
  * Beep.
  */
-void ctdl_beep(void)
-{
+void ctdl_beep(void) {
 	putc(7, stdout);
 }
-
-
 
 
 /*
  * scr_printf() outputs to the terminal
  */
-int scr_printf(char *fmt, ...)
-{
+int scr_printf(char *fmt, ...) {
 	static char outbuf[4096];	/* static for performance -- not re-entrant -- change if needed */
 	va_list ap;
 	int retval;
@@ -103,8 +93,7 @@ int scr_printf(char *fmt, ...)
 /*
  * Read one character from the terminal
  */
-int scr_getc(int delay)
-{
+int scr_getc(int delay) {
 	unsigned char buf;
 
 	scr_flush();
@@ -117,11 +106,11 @@ int scr_getc(int delay)
 	return buf;
 }
 
+
 /*
  * Issue the paginator prompt (more / hit any key to continue)
  */
-void hit_any_key(void)
-{
+void hit_any_key(void) {
 	int a, b;
 
 	color(COLOR_PUSH);
@@ -153,8 +142,7 @@ void hit_any_key(void)
 /*
  * Output one character to the terminal
  */
-int scr_putc(int c)
-{
+int scr_putc(int c) {
 	/* handle tabs normally */
 	if (c == '\t') {
 		do {
@@ -171,9 +159,11 @@ int scr_putc(int c)
 	if (c == '\n') {
 		++lines_printed;
 		cols_printed = 0;
-	} else if (c == '\r') {
+	}
+	else if (c == '\r') {
 		cols_printed = 0;
-	} else if (isprint(c)) {
+	}
+	else if (isprint(c)) {
 		++cols_printed;
 		if ((screenwidth > 0) && (cols_printed > screenwidth)) {
 			++lines_printed;
@@ -197,8 +187,8 @@ int scr_putc(int c)
 	return c;
 }
 
-void scr_flush(void)
-{
+
+void scr_flush(void) {
 	if ((enable_color) && (screenwidth > 0) && (enable_status_line)) {
 		if (strlen(status_line) < screenwidth) {
 			memset(&status_line[strlen(status_line)], 32, screenwidth - strlen(status_line));
@@ -218,8 +208,7 @@ static volatile int caught_sigwinch = 0;
  * scr_winch() handles window size changes from SIGWINCH
  * resizes all our windows for us
  */
-sighandler_t scr_winch(int signum)
-{
+sighandler_t scr_winch(int signum) {
 	/* if we receive this signal, we must be running
 	 * in a terminal that supports resizing.
 	 */
@@ -229,12 +218,10 @@ sighandler_t scr_winch(int signum)
 }
 
 
-
 /*
  * Display a 3270-style "wait" indicator at the bottom of the screen
  */
-void scr_wait_indicator(int state)
-{
+void scr_wait_indicator(int state) {
 	int sp = (screenwidth - 2);
 
 	if (!enable_status_line)
