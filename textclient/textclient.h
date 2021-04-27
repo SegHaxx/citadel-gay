@@ -141,7 +141,6 @@ struct CtdlServInfo {
 	char sysadm[64];
 	char moreprompt[256];
 	int ok_floors;
-	int paging_level;
 	int supports_qnop;
 	int supports_ldap;
 	int newuser_disabled;

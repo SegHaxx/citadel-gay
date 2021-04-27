@@ -17,8 +17,7 @@
 extern char temp[];
 char last_paged[SIZ] = "";
 
-void chatmode(CtdlIPC * ipc)
-{
+void chatmode(CtdlIPC *ipc) {
 	char wbuf[SIZ];
 	char buf[SIZ];
 	char response[SIZ];
@@ -175,59 +174,42 @@ void chatmode(CtdlIPC * ipc)
 }
 
 
-/*
- * send an instant message
- */
-void page_user(CtdlIPC * ipc)
-{
+// send an instant message
+void page_user(CtdlIPC * ipc) {
 	char buf[SIZ], touser[SIZ], msg[SIZ];
 	FILE *pagefp;
 
 	strcpy(touser, last_paged);
 	strprompt("Page who", touser, 30);
 
-	/* old server -- use inline paging */
-	if (ipc->ServInfo.paging_level == 0) {
-		newprompt("Message: ", msg, 69);
-		snprintf(buf, sizeof buf, "SEXP %s|%s", touser, msg);
-		CtdlIPC_chat_send(ipc, buf);
-		CtdlIPC_chat_recv(ipc, buf);
-		if (!strncmp(buf, "200", 3)) {
-			strcpy(last_paged, touser);
-		}
+	snprintf(buf, sizeof buf, "SEXP %s||", touser);
+	CtdlIPC_chat_send(ipc, buf);
+	CtdlIPC_chat_recv(ipc, buf);
+	if (buf[0] != '2') {
 		scr_printf("%s\n", &buf[4]);
 		return;
 	}
-	/* new server -- use extended paging */
-	else if (ipc->ServInfo.paging_level >= 1) {
-		snprintf(buf, sizeof buf, "SEXP %s||", touser);
-		CtdlIPC_chat_send(ipc, buf);
-		CtdlIPC_chat_recv(ipc, buf);
-		if (buf[0] != '2') {
-			scr_printf("%s\n", &buf[4]);
-			return;
+	if (client_make_message(ipc, temp, touser, 0, 0, 0, NULL, 0) != 0) {
+		scr_printf("No message sent.\n");
+		return;
+	}
+	pagefp = fopen(temp, "r");
+	unlink(temp);
+	snprintf(buf, sizeof buf, "SEXP %s|-", touser);
+	CtdlIPC_chat_send(ipc, buf);
+	CtdlIPC_chat_recv(ipc, buf);
+	if (buf[0] == '4') {
+		strcpy(last_paged, touser);
+		while (fgets(buf, sizeof buf, pagefp) != NULL) {
+			buf[strlen(buf) - 1] = 0;
+			CtdlIPC_chat_send(ipc, buf);
 		}
-		if (client_make_message(ipc, temp, touser, 0, 0, 0, NULL, 0) != 0) {
-			scr_printf("No message sent.\n");
-			return;
-		}
-		pagefp = fopen(temp, "r");
-		unlink(temp);
-		snprintf(buf, sizeof buf, "SEXP %s|-", touser);
-		CtdlIPC_chat_send(ipc, buf);
-		CtdlIPC_chat_recv(ipc, buf);
-		if (buf[0] == '4') {
-			strcpy(last_paged, touser);
-			while (fgets(buf, sizeof buf, pagefp) != NULL) {
-				buf[strlen(buf) - 1] = 0;
-				CtdlIPC_chat_send(ipc, buf);
-			}
-			fclose(pagefp);
-			CtdlIPC_chat_send(ipc, "000");
-			scr_printf("Message sent.\n");
-		} else {
-			scr_printf("%s\n", &buf[4]);
-		}
+		fclose(pagefp);
+		CtdlIPC_chat_send(ipc, "000");
+		scr_printf("Message sent.\n");
+	}
+	else {
+		scr_printf("%s\n", &buf[4]);
 	}
 }
 
