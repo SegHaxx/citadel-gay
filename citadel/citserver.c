@@ -33,6 +33,7 @@ int ScheduledShutdown = 0;
 time_t server_startup_time;
 int panic_fd;
 int openid_level_supported = 0;
+char *backtrace_filename = NULL;
 
 
 /*

@@ -55,13 +55,25 @@ static RETSIGTYPE signal_cleanup(int signum) {
 	int bt_size;
 	char **bt_syms;
 	int i;
+	FILE *backtrace_fp = NULL;
+
+	if (backtrace_filename != NULL) {
+		backtrace_fp = fopen(backtrace_filename, "w");
+	}
 
 	bt_size = backtrace(bt, 1024);
 	bt_syms = backtrace_symbols(bt, bt_size);
 	for (i = 1; i < bt_size; i++) {
 		syslog(LOG_DEBUG, "%s", bt_syms[i]);
+		if (backtrace_fp) {
+			fprintf(backtrace_fp, "%s\n", bt_syms[i]);
+		}
 	}
 	free(bt_syms);
+
+	if (backtrace_fp) {
+		fclose(backtrace_fp);
+	}
 
 	exit_signal = signum;
 	server_shutting_down = 1;

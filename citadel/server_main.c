@@ -1,16 +1,15 @@
-/*
- * citserver's main() function lives here.
- * 
- * Copyright (c) 1987-2021 by the citadel.org team
- *
- * This program is open source software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 3.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- */
+// citserver's main() function lives here.
+// 
+// Copyright (c) 1987-2021 by the citadel.org team
+//
+// This program is open source software; you can redistribute it and/or modify
+// it under the terms of the GNU General Public License version 3.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+
 #include <stdlib.h>
 #include <unistd.h>
 #include <stdio.h>
@@ -70,7 +69,7 @@ void ctdl_lockfile(int op) {
 int main(int argc, char **argv) {
 
 	char facility[32];
-	int a;			/* General-purpose variables */
+	int a;			// General-purpose variables
 	struct passwd pw, *pwp = NULL;
 	char pwbuf[SIZ];
 	int drop_root_perms = 1;
@@ -101,7 +100,7 @@ int main(int argc, char **argv) {
 	syslog(LOG_INFO, "%s", libcitadel_version_string());
 
 	/* parse command-line arguments */
-	while ((a=getopt(argc, argv, "cl:dh:x:t:B:Dru:s:")) != EOF) switch(a) {
+	while ((a=getopt(argc, argv, "cl:dh:x:t:B:Dru:s:b:")) != EOF) switch(a) {
 
 		// test this binary for compatibility and exit
 		case 'c':
@@ -168,6 +167,10 @@ int main(int argc, char **argv) {
 		// -s tells the server to behave differently during sanity checks
 		case 's':
 			sanity_diag_mode = atoi(optarg);
+			break;
+
+		case 'b':
+			backtrace_filename = strdup(optarg);
 			break;
 
 		// any other parameter makes it crash and burn
