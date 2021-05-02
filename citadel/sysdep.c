@@ -1,19 +1,17 @@
-/*
- * Citadel "system dependent" stuff.
- *
- * Here's where we (hopefully) have most parts of the Citadel server that
- * might need tweaking when run on different operating system variants.
- *
- * Copyright (c) 1987-2021 by the citadel.org team
- *
- * This program is open source software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License, version 3.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- */
+// Citadel "system dependent" stuff.
+//
+// Here's where we (hopefully) have most parts of the Citadel server that
+// might need tweaking when run on different operating system variants.
+//
+// Copyright (c) 1987-2021 by the citadel.org team
+//
+// This program is open source software; you can redistribute it and/or modify
+// it under the terms of the GNU General Public License, version 3.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
 
 #include "sysdep.h"
 #include <stdlib.h>
@@ -24,6 +22,7 @@
 #include <stdio.h>
 #include <syslog.h>
 #include <sys/syslog.h>
+#include <execinfo.h>
 #include <netdb.h>
 #include <sys/un.h>
 #include <sys/types.h>
@@ -38,14 +37,11 @@
 #include "config.h"
 #include "ctdl_module.h"
 #include "sysdep_decls.h"
-#include "modules/crypto/serv_crypto.h"	/* Needed for init_ssl, client_write_ssl, client_read_ssl, destruct_ssl */
+#include "modules/crypto/serv_crypto.h"	// Needed for init_ssl, client_write_ssl, client_read_ssl, destruct_ssl
 #include "housekeeping.h"
 #include "context.h"
 
-/*
- * Signal handler to shut down the server.
- */
-
+// Signal handler to shut down the server.
 volatile int exit_signal = 0;
 volatile int shutdown_and_halt = 0;
 volatile int restart_server = 0;
@@ -53,24 +49,30 @@ volatile int running_as_daemon = 0;
 
 
 static RETSIGTYPE signal_cleanup(int signum) {
-	syslog(LOG_DEBUG, "sysdep: caught signal %d; shutting down.", signum);
+	syslog(LOG_DEBUG, "sysdep: caught signal %d - backtrace follows:", signum);
+
+	void *bt[1024];
+	int bt_size;
+	char **bt_syms;
+	int i;
+
+	bt_size = backtrace(bt, 1024);
+	bt_syms = backtrace_symbols(bt, bt_size);
+	for (i = 1; i < bt_size; i++) {
+		syslog(LOG_DEBUG, "%s", bt_syms[i]);
+	}
+	free(bt_syms);
+
 	exit_signal = signum;
 	server_shutting_down = 1;
 }
 
 
-static RETSIGTYPE signal_exit(int signum) {
-	exit(1);
-}
-
-
-/*
- * Some initialization stuff...
- */
+// Some initialization stuff...
 void init_sysdep(void) {
 	sigset_t set;
 
-	/* Avoid vulnerabilities related to FD_SETSIZE if we can. */
+	// Avoid vulnerabilities related to FD_SETSIZE if we can.
 #ifdef FD_SETSIZE
 #ifdef RLIMIT_NOFILE
 	struct rlimit rl;
@@ -81,7 +83,7 @@ void init_sysdep(void) {
 #endif
 #endif
 
-	/* If we've got OpenSSL, we're going to use it. */
+	// If we've got OpenSSL, we're going to use it.
 #ifdef HAVE_OPENSSL
 	init_ssl();
 #endif
@@ -96,40 +98,33 @@ void init_sysdep(void) {
 		abort();
 	}
 
-	/*
-	 * Interript, hangup, and terminate signals should cause the server
-	 * to gracefully clean up and shut down.
-	 */
+	// Interript, hangup, and terminate signals should cause the server to shut down.
 	sigemptyset(&set);
 	sigaddset(&set, SIGINT);
 	sigaddset(&set, SIGHUP);
 	sigaddset(&set, SIGTERM);
+	sigaddset(&set, SIGSEGV);
 	sigprocmask(SIG_UNBLOCK, &set, NULL);
 
 	signal(SIGINT, signal_cleanup);
 	signal(SIGHUP, signal_cleanup);
 	signal(SIGTERM, signal_cleanup);
-	signal(SIGUSR2, signal_exit);
+	signal(SIGSEGV, signal_cleanup);
 
-	/*
-	 * Do not shut down the server on broken pipe signals, otherwise the
-	 * whole Citadel service would come down whenever a single client
-	 * socket breaks.
-	 */
+	// Do not shut down the server on broken pipe signals, otherwise the
+	// whole Citadel service would come down whenever a single client
+	// socket breaks.
 	signal(SIGPIPE, SIG_IGN);
 }
 
 
-/* 
- * This is a generic function to set up a master socket for listening on
- * a TCP port.  The server shuts down if the bind fails.  (IPv4/IPv6 version)
- *
- * ip_addr 	IP address to bind
- * port_number	port number to bind
- * queue_len	number of incoming connections to allow in the queue
- */
-int ctdl_tcp_server(char *ip_addr, int port_number, int queue_len)
-{
+// This is a generic function to set up a master socket for listening on
+// a TCP port.  The server shuts down if the bind fails.  (IPv4/IPv6 version)
+//
+// ip_addr 	IP address to bind
+// port_number	port number to bind
+// queue_len	number of incoming connections to allow in the queue
+int ctdl_tcp_server(char *ip_addr, int port_number, int queue_len) {
 	struct protoent *p;
 	struct sockaddr_in6 sin6;
 	struct sockaddr_in sin4;
@@ -141,19 +136,19 @@ int ctdl_tcp_server(char *ip_addr, int port_number, int queue_len)
 	sin6.sin6_family = AF_INET6;
 	sin4.sin_family = AF_INET;
 
-	if (	(ip_addr == NULL)							/* any IPv6 */
+	if (	(ip_addr == NULL)							// any IPv6
 		|| (IsEmptyStr(ip_addr))
 		|| (!strcmp(ip_addr, "*"))
 	) {
 		ip_version = 6;
 		sin6.sin6_addr = in6addr_any;
 	}
-	else if (!strcmp(ip_addr, "0.0.0.0"))						/* any IPv4 */
+	else if (!strcmp(ip_addr, "0.0.0.0"))						// any IPv4
 	{
 		ip_version = 4;
 		sin4.sin_addr.s_addr = INADDR_ANY;
 	}
-	else if ((strchr(ip_addr, '.')) && (!strchr(ip_addr, ':')))			/* specific IPv4 */
+	else if ((strchr(ip_addr, '.')) && (!strchr(ip_addr, ':')))			// specific IPv4
 	{
 		ip_version = 4;
 		if (inet_pton(AF_INET, ip_addr, &sin4.sin_addr) <= 0) {
@@ -161,7 +156,7 @@ int ctdl_tcp_server(char *ip_addr, int port_number, int queue_len)
 			return (-1);
 		}
 	}
-	else										/* specific IPv6 */
+	else										// specific IPv6
 	{
 		ip_version = 6;
 		if (inet_pton(AF_INET6, ip_addr, &sin6.sin6_addr) <= 0) {
@@ -188,7 +183,7 @@ int ctdl_tcp_server(char *ip_addr, int port_number, int queue_len)
 		syslog(LOG_ALERT, "tcpserver: socket: %m");
 		return (-1);
 	}
-	/* Set some socket options that make sense. */
+	// Set some socket options that make sense.
 	i = 1;
 	setsockopt(s, SOL_SOCKET, SO_REUSEADDR, &i, sizeof(i));
 
@@ -214,11 +209,8 @@ int ctdl_tcp_server(char *ip_addr, int port_number, int queue_len)
 }
 
 
-/*
- * Create a Unix domain socket and listen on it
- */
-int ctdl_uds_server(char *sockpath, int queue_len)
-{
+// Create a Unix domain socket and listen on it
+int ctdl_uds_server(char *sockpath, int queue_len) {
 	struct sockaddr_un addr;
 	int s;
 	int i;
@@ -251,7 +243,7 @@ int ctdl_uds_server(char *sockpath, int queue_len)
 		return(-1);
 	}
 
-	/* set to nonblock - we need this for some obscure situations */
+	// set to nonblock - we need this for some obscure situations
 	if (fcntl(s, F_SETFL, O_NONBLOCK) < 0) {
 		syslog(LOG_ERR, "udsserver: fcntl: %m");
 		close(s);
@@ -272,10 +264,8 @@ int ctdl_uds_server(char *sockpath, int queue_len)
 }
 
 
-/*
- * The following functions implement output buffering on operating systems which
- * support it (such as Linux and various BSD flavors).
- */
+// The following functions implement output buffering on operating systems which
+// support it (such as Linux and various BSD flavors).
 #ifndef HAVE_DARWIN
 #ifdef TCP_CORK
 #	define HAVE_TCP_BUFFERING
@@ -284,8 +274,8 @@ int ctdl_uds_server(char *sockpath, int queue_len)
 #		define HAVE_TCP_BUFFERING
 #		define TCP_CORK TCP_NOPUSH
 #	endif
-#endif /* TCP_CORK */
-#endif /* HAVE_DARWIN */
+#endif // TCP_CORK
+#endif // HAVE_DARWIN
 
 static unsigned on = 1, off = 0;
 
@@ -315,20 +305,8 @@ void flush_output(void) {
 #endif
 }
 
-/*
-static void flush_client_inbuf(void)
-{
-	CitContext *CCC=CC;
 
-	FlushStrBuf(CCC->ReadBuf);
-	CCC->RecvBuf->ReadWritePointer = NULL;
-}
-*/
-
-
-/*
- * client_close()	...	close the client socket
- */
+// close the client socket
 void client_close(void) {
 	CitContext *CCC = CC;
 
@@ -340,9 +318,7 @@ void client_close(void) {
 }
 
 
-/*
- * client_write()   ...    Send binary data to the client.
- */
+// Send binary data to the client.
 int client_write(const char *buf, int nbytes)
 {
 	int bytes_written = 0;
@@ -386,7 +362,7 @@ int client_write(const char *buf, int nbytes)
 						CC->kill_me = KILLME_SELECT_INTERRUPTED;
 						return (-1);
 					} else {
-						/* can't trust fd's and stuff so we need to re-create them */
+						// can't trust fd's and stuff so we need to re-create them
 						continue;
 					}
 				} else {
@@ -415,10 +391,8 @@ void cputbuf(const StrBuf *Buf) {
 }   
 
 
-/*
- * cprintf()	Send formatted printable data to the client.
- *		Implemented in terms of client_write() so it's technically not sysdep...
- */
+// Send formatted printable data to the client.
+// Implemented in terms of client_write() so it's technically not sysdep...
 void cprintf(const char *format, ...) {   
 	va_list arg_ptr;   
 	char buf[1024];
@@ -431,21 +405,18 @@ void cprintf(const char *format, ...) {
 }
 
 
-/*
- * Read data from the client socket.
- *
- * sock		socket fd to read from
- * buf		buffer to read into 
- * bytes	number of bytes to read
- * timeout	Number of seconds to wait before timing out
- *
- * Possible return values:
- *      1       Requested number of bytes has been read.
- *      0       Request timed out.
- *	-1   	Connection is broken, or other error.
- */
-int client_read_blob(StrBuf *Target, int bytes, int timeout)
-{
+// Read data from the client socket.
+//
+// sock		socket fd to read from
+// buf		buffer to read into 
+// bytes	number of bytes to read
+// timeout	Number of seconds to wait before timing out
+//
+// Possible return values:
+//      1       Requested number of bytes has been read.
+//      0       Request timed out.
+//	-1   	Connection is broken, or other error.
+int client_read_blob(StrBuf *Target, int bytes, int timeout) {
 	CitContext *CCC=CC;
 	const char *Error;
 	int retval = 0;
@@ -479,10 +450,8 @@ int client_read_blob(StrBuf *Target, int bytes, int timeout)
 }
 
 
-/*
- * to make client_read_random_blob() more efficient, increase buffer size.
- * just use in greeting function, else your buffer may be flushed
- */
+// to make client_read_random_blob() more efficient, increase buffer size.
+// just use in greeting function, else your buffer may be flushed
 void client_set_inbound_buf(long N)
 {
 	CitContext *CCC=CC;
@@ -554,11 +523,9 @@ int HaveMoreLinesWaiting(CitContext *CCC) {
 }
 
 
-/*
- * Read data from the client socket with default timeout.
- * (This is implemented in terms of client_read_to() and could be
- * justifiably moved out of sysdep.c)
- */
+// Read data from the client socket with default timeout.
+// (This is implemented in terms of client_read_to() and could be
+// justifiably moved out of sysdep.c)
 INLINE int client_read(char *buf, int bytes) {
 	return(client_read_to(buf, bytes, CtdlGetConfigInt("c_sleeping")));
 }
@@ -590,11 +557,9 @@ int CtdlClientGetLine(StrBuf *Target) {
 }
 
 
-/*
- * client_getln()   ...   Get a LF-terminated line of text from the client.
- * (This is implemented in terms of client_read() and could be
- * justifiably moved out of sysdep.c)
- */
+// Get a LF-terminated line of text from the client.
+// (This is implemented in terms of client_read() and could be
+// justifiably moved out of sysdep.c)
 int client_getln(char *buf, int bufsize) {
 	int i, retval;
 	CitContext *CCC=CC;
@@ -607,8 +572,7 @@ int client_getln(char *buf, int bufsize) {
 
 	i = StrLength(CCC->MigrateBuf);
 	pCh = ChrPtr(CCC->MigrateBuf);
-	/* Strip the trailing LF, and the trailing CR if present.
-	 */
+	// Strip the trailing LF, and the trailing CR if present.
 	if (bufsize <= i)
 		i = bufsize - 1;
 	while ( (i > 0)
@@ -627,16 +591,12 @@ int client_getln(char *buf, int bufsize) {
 }
 
 
-/*
- * Cleanup any contexts that are left lying around
- */
+// Cleanup any contexts that are left lying around
 void close_masters(void) {
 	struct ServiceFunctionHook *serviceptr;
 	const char *Text;
 
-	/*
-	 * close all protocol master sockets
-	 */
+	// close all protocol master sockets
 	for (serviceptr = ServiceHookTable; serviceptr != NULL;
 	    serviceptr = serviceptr->next ) {
 
@@ -669,12 +629,12 @@ void close_masters(void) {
 			);
 		}
 
-                if (serviceptr->msock != -1) {
+		if (serviceptr->msock != -1) {
 			close(serviceptr->msock);
 			serviceptr->msock = -1;
 		}
 
-		/* If it's a Unix domain socket, remove the file. */
+		// If it's a Unix domain socket, remove the file.
 		if (serviceptr->sockpath != NULL) {
 			unlink(serviceptr->sockpath);
 			serviceptr->sockpath = NULL;
@@ -683,9 +643,7 @@ void close_masters(void) {
 }
 
 
-/*
- * The system-dependent part of master_cleanup() - close the master socket.
- */
+// The system-dependent part of master_cleanup() - close the master socket.
 void sysdep_master_cleanup(void) {
 	close_masters();
 	context_cleanup();
@@ -707,9 +665,7 @@ int nFireUps = 0;
 int nFireUpsNonRestart = 0;
 pid_t ForkedPid = 1;
 
-/*
- * Start running as a daemon.
- */
+// Start running as a daemon.
 void start_daemon(int unused) {
 	int status = 0;
 	pid_t child = 0;
@@ -717,14 +673,9 @@ void start_daemon(int unused) {
 	int do_restart = 0;
 	current_child = 0;
 
-	//if (chdir(ctdl_run_dir) != 0) {
-		//syslog(LOG_ERR, "%s: %m", ctdl_run_dir);
-	//}
-
-	/* Close stdin/stdout/stderr and replace them with /dev/null.
-	 * We don't just call close() because we don't want these fd's
-	 * to be reused for other files.
-	 */
+	// Close stdin/stdout/stderr and replace them with /dev/null.
+	// We don't just call close() because we don't want these fd's
+	// to be reused for other files.
 	child = fork();
 	if (child != 0) {
 		exit(0);
@@ -736,7 +687,7 @@ void start_daemon(int unused) {
 
 	setsid();
 	umask(0);
-        if (	(freopen("/dev/null", "r", stdin) != stdin) || 
+	if (	(freopen("/dev/null", "r", stdin) != stdin) || 
 		(freopen("/dev/null", "w", stdout) != stdout) || 
 		(freopen("/dev/null", "w", stderr) != stderr)
 	) {
@@ -751,7 +702,7 @@ void start_daemon(int unused) {
 			exit(errno);
 		}
 		else if (current_child == 0) {
-			return; /* continue starting citadel. */
+			return; // continue starting citadel.
 		}
 		else {
 			fp = fopen(file_pid_file, "w");
@@ -763,17 +714,17 @@ void start_daemon(int unused) {
 		}
 		nFireUpsNonRestart = nFireUps;
 		
-		/* Exit code 0 means the watcher should exit */
+		// Exit code 0 means the watcher should exit
 		if (WIFEXITED(status) && (WEXITSTATUS(status) == CTDLEXIT_SHUTDOWN)) {
 			do_restart = 0;
 		}
 
-		/* Exit code 101-109 means the watcher should exit */
+		// Exit code 101-109 means the watcher should exit
 		else if (WIFEXITED(status) && (WEXITSTATUS(status) >= 101) && (WEXITSTATUS(status) <= 109)) {
 			do_restart = 0;
 		}
 
-		/* Any other exit code, or no exit code, means we should restart. */
+		// Any other exit code, or no exit code, means we should restart.
 		else {
 			do_restart = 1;
 			nFireUps++;
@@ -812,10 +763,8 @@ void checkcrash(void) {
 }
 
 
-/*
- * Generic routine to convert a login name to a full name (gecos)
- * Returns nonzero if a conversion took place
- */
+// Generic routine to convert a login name to a full name (gecos)
+// Returns nonzero if a conversion took place
 int convert_login(char NameToConvert[]) {
 	struct passwd *pw;
 	unsigned int a;
@@ -841,18 +790,18 @@ void HuntBadSession(void) {
 	struct timeval tv;
 	struct ServiceFunctionHook *serviceptr;
 
-	/* Next, add all of the client sockets. */
+	// Next, add all of the client sockets
 	begin_critical_section(S_SESSION_TABLE);
 	for (ptr = ContextList; ptr != NULL; ptr = ptr->next) {
 		if ((ptr->state == CON_SYS) && (ptr->client_socket == 0))
 			continue;
-		/* Initialize the fdset. */
+		// Initialize the fdset.
 		FD_ZERO(&readfds);
 		highest = 0;
-		tv.tv_sec = 0;		/* wake up every second if no input */
+		tv.tv_sec = 0;		// wake up every second if no input
 		tv.tv_usec = 0;
 
-		/* Don't select on dead sessions, only truly idle ones */
+		// Don't select on dead sessions, only truly idle ones
 		if (	(ptr->state == CON_IDLE)
 			&& (ptr->kill_me == 0)
 			&& (ptr->client_socket > 0)
@@ -863,7 +812,7 @@ void HuntBadSession(void) {
 			
 			if ((select(highest + 1, &readfds, NULL, NULL, &tv) < 0) && (errno == EBADF))
 			{
-				/* Gotcha! */
+				// Gotcha!
 				syslog(LOG_ERR,
 				       "sysdep: killing session CC[%d] bad FD: [%d] User[%s] Host[%s:%s]",
 					ptr->cs_pid,
@@ -880,12 +829,12 @@ void HuntBadSession(void) {
 	}
 	end_critical_section(S_SESSION_TABLE);
 
-	/* First, add the various master sockets to the fdset. */
+	// First, add the various master sockets to the fdset.
 	for (serviceptr = ServiceHookTable; serviceptr != NULL; serviceptr = serviceptr->next ) {
 
-		/* Initialize the fdset. */
+		// Initialize the fdset.
 		highest = 0;
-		tv.tv_sec = 0;		/* wake up every second if no input */
+		tv.tv_sec = 0;		// wake up every second if no input
 		tv.tv_usec = 0;
 
 		FD_SET(serviceptr->msock, &readfds);
@@ -895,7 +844,7 @@ void HuntBadSession(void) {
 		if ((select(highest + 1, &readfds, NULL, NULL, &tv) < 0) &&
 		    (errno == EBADF))
 		{
-			/* Gotcha! server socket dead? commit suicide! */
+			// Gotcha! server socket dead? commit suicide!
 			syslog(LOG_ERR, "sysdep: found bad FD: %d and its a server socket! Shutting Down!", serviceptr->msock);
 			server_shutting_down = 1;
 			break;
@@ -904,9 +853,7 @@ void HuntBadSession(void) {
 }
 
 
-/* 
- * This loop just keeps going and going and going...
- */
+// This loop just keeps going and going and going...
 void *worker_thread(void *blah) {
 	int highest;
 	CitContext *ptr;
@@ -916,8 +863,8 @@ void *worker_thread(void *blah) {
 	struct timeval tv;
 	int force_purge = 0;
 	struct ServiceFunctionHook *serviceptr;
-	int ssock;                      /* Descriptor for client socket */
-	CitContext *con = NULL;         /* Temporary context pointer */
+	int ssock;                      // Descriptor for client socket
+	CitContext *con = NULL;         // Temporary context pointer
 	int i;
 
 	pthread_mutex_lock(&ThreadCountMutex);
@@ -926,16 +873,16 @@ void *worker_thread(void *blah) {
 
 	while (!server_shutting_down) {
 
-		/* make doubly sure we're not holding any stale db handles * which might cause a deadlock */
+		// make doubly sure we're not holding any stale db handles which might cause a deadlock
 		cdb_check_handles();
 do_select:	force_purge = 0;
-		bind_me = NULL;		/* Which session shall we handle? */
+		bind_me = NULL;		// Which session shall we handle?
 
-		/* Initialize the fdset. */
+		// Initialize the fdset
 		FD_ZERO(&readfds);
 		highest = 0;
 
-		/* First, add the various master sockets to the fdset. */
+		// First, add the various master sockets to the fdset.
 		for (serviceptr = ServiceHookTable; serviceptr != NULL; serviceptr = serviceptr->next ) {
 			FD_SET(serviceptr->msock, &readfds);
 			if (serviceptr->msock > highest) {
@@ -943,13 +890,13 @@ do_select:	force_purge = 0;
 			}
 		}
 
-		/* Next, add all of the client sockets. */
+		// Next, add all of the client sockets.
 		begin_critical_section(S_SESSION_TABLE);
 		for (ptr = ContextList; ptr != NULL; ptr = ptr->next) {
 			if ((ptr->state == CON_SYS) && (ptr->client_socket == 0))
 			    continue;
 
-			/* Don't select on dead sessions, only truly idle ones */
+			// Don't select on dead sessions, only truly idle ones
 			if (	(ptr->state == CON_IDLE)
 				&& (ptr->kill_me == 0)
 				&& (ptr->client_socket > 0)
@@ -975,13 +922,12 @@ do_select:	force_purge = 0;
 			goto SKIP_SELECT;
 		}
 
-		/* If we got this far, it means that there are no sessions
-		 * which a previous thread marked for attention, so we go
-		 * ahead and get ready to select().
-		 */
+		// If we got this far, it means that there are no sessions
+		// which a previous thread marked for attention, so we go
+		// ahead and get ready to select().
 
 		if (!server_shutting_down) {
-			tv.tv_sec = 1;		/* wake up every second if no input */
+			tv.tv_sec = 1;		// wake up every second if no input
 			tv.tv_usec = 0;
 			retval = select(highest + 1, &readfds, NULL, NULL, &tv);
 		}
@@ -990,9 +936,8 @@ do_select:	force_purge = 0;
 			return NULL;
 		}
 
-		/* Now figure out who made this select() unblock.
-		 * First, check for an error or exit condition.
-		 */
+		// Now figure out who made this select() unblock.
+		// First, check for an error or exit condition.
 		if (retval < 0) {
 			if (errno == EBADF) {
 				syslog(LOG_ERR, "sysdep: select() failed: %m");
@@ -1018,7 +963,7 @@ do_select:	force_purge = 0;
 			}
 		}
 
-		/* Next, check to see if it's a new client connecting on a master socket. */
+		// Next, check to see if it's a new client connecting on a master socket.
 
 		else if ((retval > 0) && (!server_shutting_down)) for (serviceptr = ServiceHookTable; serviceptr != NULL; serviceptr = serviceptr->next) {
 
@@ -1027,20 +972,18 @@ do_select:	force_purge = 0;
 				if (ssock >= 0) {
 					syslog(LOG_DEBUG, "sysdep: new client socket %d", ssock);
 
-					/* The master socket is non-blocking but the client
-					 * sockets need to be blocking, otherwise certain
-					 * operations barf on FreeBSD.  Not a fatal error.
-					 */
+					// The master socket is non-blocking but the client
+					// sockets need to be blocking, otherwise certain
+					// operations barf on FreeBSD.  Not a fatal error.
 					if (fcntl(ssock, F_SETFL, 0) < 0) {
 						syslog(LOG_ERR, "sysdep: Can't set socket to blocking: %m");
 					}
 
-					/* New context will be created already
-					 * set up in the CON_EXECUTING state.
-					 */
+					// New context will be created already
+					// set up in the CON_EXECUTING state.
 					con = CreateNewContext();
 
-					/* Assign our new socket number to it. */
+					// Assign our new socket number to it.
 					con->tcp_port = serviceptr->tcp_port;
 					con->client_socket = ssock;
 					con->h_command_function = serviceptr->h_command_function;
@@ -1048,12 +991,12 @@ do_select:	force_purge = 0;
 					con->h_greeting_function = serviceptr->h_greeting_function;
 					con->ServiceName = serviceptr->ServiceName;
 					
-					/* Connections on a local client are always from the same host */
+					// Connections on a local client are always from the same host
 					if (serviceptr->sockpath != NULL) {
 						con->is_local_client = 1;
 					}
 	
-					/* Set the SO_REUSEADDR socket option */
+					// Set the SO_REUSEADDR socket option
 					i = 1;
 					setsockopt(ssock, SOL_SOCKET, SO_REUSEADDR, &i, sizeof(i));
 					con->state = CON_GREETING;
@@ -1064,12 +1007,11 @@ do_select:	force_purge = 0;
 			}
 		}
 
-		/* It must be a client socket.  Find a context that has data
-		 * waiting on its socket *and* is in the CON_IDLE state.  Any
-		 * active sockets other than our chosen one are marked as
-		 * CON_READY so the next thread that comes around can just bind
-		 * to one without having to select() again.
-		 */
+		// It must be a client socket.  Find a context that has data
+		// waiting on its socket *and* is in the CON_IDLE state.  Any
+		// active sockets other than our chosen one are marked as
+		// CON_READY so the next thread that comes around can just bind
+		// to one without having to select() again.
 		begin_critical_section(S_SESSION_TABLE);
 		for (ptr = ContextList; ptr != NULL; ptr = ptr->next) {
 			int checkfd = ptr->client_socket;
@@ -1077,7 +1019,7 @@ do_select:	force_purge = 0;
 				if (FD_ISSET(checkfd, &readfds)) {
 					ptr->input_waiting = 1;
 					if (!bind_me) {
-						bind_me = ptr;	/* I choose you! */
+						bind_me = ptr;	// I choose you!
 						bind_me->state = CON_EXECUTING;
 					}
 					else {
@@ -1085,7 +1027,7 @@ do_select:	force_purge = 0;
 					}
 				} else if ((ptr->is_async) && (ptr->async_waiting) && (ptr->h_async_function)) {
 					if (!bind_me) {
-						bind_me = ptr;	/* I choose you! */
+						bind_me = ptr;	// I choose you!
 						bind_me->state = CON_EXECUTING;
 					}
 					else {
@@ -1097,7 +1039,7 @@ do_select:	force_purge = 0;
 		end_critical_section(S_SESSION_TABLE);
 
 SKIP_SELECT:
-		/* We're bound to a session */
+		// We're bound to a session
 		pthread_mutex_lock(&ThreadCountMutex);
 		++active_workers;
 		pthread_mutex_unlock(&ThreadCountMutex);
@@ -1110,7 +1052,7 @@ SKIP_SELECT:
 				begin_session(bind_me);
 				bind_me->h_greeting_function();
 			}
-			/* If the client has sent a command, execute it. */
+			// If the client has sent a command, execute it.
 			if (CC->input_waiting) {
 				CC->h_command_function();
 
@@ -1120,7 +1062,7 @@ SKIP_SELECT:
 				CC->input_waiting = 0;
 			}
 
-			/* If there are asynchronous messages waiting and the client supports it, do those now */
+			// If there are asynchronous messages waiting and the client supports it, do those now
 			if ((CC->is_async) && (CC->async_waiting) && (CC->h_async_function != NULL)) {
 				CC->h_async_function();
 				CC->async_waiting = 0;
@@ -1146,7 +1088,7 @@ SKIP_SELECT:
 		pthread_mutex_unlock(&ThreadCountMutex);
 	}
 
-	/* If control reaches this point, the server is shutting down */
+	// If control reaches this point, the server is shutting down
 	pthread_mutex_lock(&ThreadCountMutex);
 	--num_workers;
 	pthread_mutex_unlock(&ThreadCountMutex);
@@ -1154,10 +1096,8 @@ SKIP_SELECT:
 }
 
 
-/*
- * SyslogFacility()
- * Translate text facility name to syslog.h defined value.
- */
+// SyslogFacility()
+// Translate text facility name to syslog.h defined value.
 int SyslogFacility(char *name)
 {
 	int i;
