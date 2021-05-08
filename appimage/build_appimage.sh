@@ -39,7 +39,7 @@ mkdir -p citadel.AppDir/usr/bin
 mkdir -p citadel.AppDir/usr/lib
 
 # Copy over all the libraries we used
-for bin in $CITADEL_BUILD_DIR/citserver $WEBCIT_BUILD_DIR/webcit $CITADEL_BUILD_DIR/ctdlmigrate
+for bin in $CITADEL_BUILD_DIR/citserver $WEBCIT_BUILD_DIR/webcit $CITADEL_BUILD_DIR/ctdlmigrate `which gdb`
 do
 	for x in `ldd $bin | awk ' { print $3 } ' | grep -v -e '^$' | grep -v 'libc.so' | grep -v 'libpthread.so' | grep -v 'libresolv.so'`
 	do
@@ -49,7 +49,7 @@ done
 ldconfig -v citadel.AppDir/usr/lib
 
 # Copy over some utilities
-for bin in db_dump db_load db_recover
+for bin in db_dump db_load db_recover gdb
 do
 	cp `which $bin` citadel.AppDir/usr/bin/	|| exit 16
 done
