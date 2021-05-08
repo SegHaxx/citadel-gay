@@ -41,7 +41,8 @@ mkdir -p citadel.AppDir/usr/lib
 # Copy over all the libraries we used
 for bin in $CITADEL_BUILD_DIR/citserver $WEBCIT_BUILD_DIR/webcit $CITADEL_BUILD_DIR/ctdlmigrate
 do
-	for x in `ldd $bin | awk ' { print $3 } ' | grep -v -e '^$' | grep -v 'libc.so' | grep -v 'libpthread.so' | grep -v 'libresolv.so'`
+	#for x in `ldd $bin | awk ' { print $3 } ' | grep -v -e '^$' | grep -v 'libc.so' | grep -v 'libpthread.so' | grep -v 'libresolv.so'`
+	for x in `ldd $bin | awk ' { print $3 } ' | grep -v -e '^$' `
 	do
 		cp -v -L $x citadel.AppDir/usr/lib/
 	done
