@@ -100,7 +100,7 @@ int main(int argc, char **argv) {
 	syslog(LOG_INFO, "%s", libcitadel_version_string());
 
 	/* parse command-line arguments */
-	while ((a=getopt(argc, argv, "cl:dh:x:t:B:Dru:s:b:")) != EOF) switch(a) {
+	while ((a=getopt(argc, argv, "cl:dh:x:t:B:Dru:s:")) != EOF) switch(a) {
 
 		// test this binary for compatibility and exit
 		case 'c':
@@ -167,10 +167,6 @@ int main(int argc, char **argv) {
 		// -s tells the server to behave differently during sanity checks
 		case 's':
 			sanity_diag_mode = atoi(optarg);
-			break;
-
-		case 'b':
-			backtrace_filename = strdup(optarg);
 			break;
 
 		// any other parameter makes it crash and burn

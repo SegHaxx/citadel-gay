@@ -49,32 +49,7 @@ volatile int running_as_daemon = 0;
 
 
 static RETSIGTYPE signal_cleanup(int signum) {
-	syslog(LOG_DEBUG, "sysdep: caught signal %d - backtrace follows:", signum);
-
-	void *bt[1024];
-	int bt_size;
-	char **bt_syms;
-	int i;
-	FILE *backtrace_fp = NULL;
-
-	if (backtrace_filename != NULL) {
-		backtrace_fp = fopen(backtrace_filename, "w");
-	}
-
-	bt_size = backtrace(bt, 1024);
-	bt_syms = backtrace_symbols(bt, bt_size);
-	for (i = 1; i < bt_size; i++) {
-		syslog(LOG_DEBUG, "%s", bt_syms[i]);
-		if (backtrace_fp) {
-			fprintf(backtrace_fp, "%s\n", bt_syms[i]);
-		}
-	}
-	free(bt_syms);
-
-	if (backtrace_fp) {
-		fclose(backtrace_fp);
-	}
-
+	syslog(LOG_DEBUG, "sysdep: caught signal %d", signum);
 	exit_signal = signum;
 	server_shutting_down = 1;
 }
@@ -115,13 +90,11 @@ void init_sysdep(void) {
 	sigaddset(&set, SIGINT);
 	sigaddset(&set, SIGHUP);
 	sigaddset(&set, SIGTERM);
-	sigaddset(&set, SIGSEGV);
 	sigprocmask(SIG_UNBLOCK, &set, NULL);
 
 	signal(SIGINT, signal_cleanup);
 	signal(SIGHUP, signal_cleanup);
 	signal(SIGTERM, signal_cleanup);
-	signal(SIGSEGV, signal_cleanup);
 
 	// Do not shut down the server on broken pipe signals, otherwise the
 	// whole Citadel service would come down whenever a single client
