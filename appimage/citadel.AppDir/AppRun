@@ -214,11 +214,9 @@ case ${1} in
 		done
 		;;
 	debug)
-		echo Connecting to the debugger
-		echo Try this: run -x9 -h $CTDL_DIR
 		export LD_LIBRARY_PATH=$APPDIR/usr/lib
 		export PATH=$APPDIR/usr/bin:$PATH
-		exec $APPDIR/usr/bin/gdb $APPDIR/usr/local/citadel/citserver
+		exec $APPDIR/usr/local/citadel/citserver -x9 -h $CTDL_DIR
 		;;
 	*)
 		echo Unexpected command: ${1} 

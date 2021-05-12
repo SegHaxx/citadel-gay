@@ -41,11 +41,17 @@ mkdir -p citadel.AppDir/usr/lib
 # Copy over all the libraries we used
 for bin in $CITADEL_BUILD_DIR/citserver $WEBCIT_BUILD_DIR/webcit $CITADEL_BUILD_DIR/ctdlmigrate `which gdb`
 do
-	#for x in `ldd $bin | awk ' { print $3 } ' | grep -v -e '^$' | grep -v 'libc.so' | grep -v 'libpthread.so' | grep -v 'libresolv.so'`
-	for x in `ldd $bin | awk ' { print $3 } ' | grep -v -e '^$' `
-	do
-		cp -v -L $x citadel.AppDir/usr/lib/
-	done
+	ldd $bin
+done | sort | while read libname junk libpath
+do
+	if [ ! -e ${libpath} 2>/dev/null ] ; then
+		echo -e \\033[31m ${libname} was not found and will not be packaged. \\033[0m
+	elif grep ^${libname}$ excludelist >/dev/null 2>/dev/null ; then
+		echo -e \\033[33m ${libname} is in the exclude list and will not be packaged. \\033[0m
+	else
+		echo -e \\033[32m ${libname} will be packaged. \\033[0m
+		cp -L ${libpath} citadel.AppDir/usr/lib/ 2>/dev/null
+	fi
 done
 ldconfig -v citadel.AppDir/usr/lib
 
