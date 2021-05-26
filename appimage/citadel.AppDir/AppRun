@@ -203,7 +203,7 @@ case ${1} in
 		export APPDIR CTDL_DIR HTTP_PORT HTTPS_PORT
 		export LD_LIBRARY_PATH=$APPDIR/usr/lib
 		export PATH=$APPDIR/usr/bin
-		exec ctdlvisor -m -h $CTDL_DIR
+		exec ctdlvisor -m
 		;;
 	mount)
 		echo This mode of operation mounts the AppImage but does not run anything.

@@ -4,16 +4,9 @@
 //
 // Copyright (c) 2021 by the citadel.org team
 //
-// This program is open source software.  It runs great on the
-// Linux operating system (and probably elsewhere).  You can use,
-// copy, and run it under the terms of the GNU General Public
-// License version 3.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License for more details.
-
+// This program is open source software.  Use, duplication, or disclosure
+// is subject to the terms of the GNU General Public License, version 3.
+// The program is distributed without any warranty, expressed or implied.
 
 #include <stdlib.h>
 #include <unistd.h>
@@ -244,7 +237,7 @@ int main(int argc, char **argv) {
 		fprintf(stderr, "ctdlvisor: waiting a moment for citserver to initialize...\n");
 		sleep(5);
 		char bin[1024];
-		sprintf(bin, "%s/usr/local/citadel/ctdlmigrate", getenv("APPDIR"));
+		sprintf(bin, "%s/usr/local/citadel/ctdlmigrate -h %s", getenv("APPDIR"), getenv("CTDL_DIR"));
 		system(bin);
 		kill(citserver_pid, SIGTERM);
 	}
