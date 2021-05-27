@@ -1,4 +1,5 @@
 # retrieved from https://raw.githubusercontent.com/AppImage/pkg2appimage/master/excludelist by ajc on 2021may10
+# I also removed libexpat from this list
 
 # This file lists libraries that we will assume to be present on the host system and hence
 # should NOT be bundled inside AppImages. This is a working document; expect it to change
@@ -133,7 +134,6 @@ libharfbuzz.so.0
 # Removing these has worked e.g., for Krita. Feel free to report if
 # you think that some of these should go into AppImages and why.
 libcom_err.so.2
-libexpat.so.1
 libgcc_s.so.1
 libglib-2.0.so.0
 libgpg-error.so.0
