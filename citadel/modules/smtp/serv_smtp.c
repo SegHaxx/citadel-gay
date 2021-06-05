@@ -980,7 +980,7 @@ void smtp_command_loop(void) {
 			smtp_try_plain();
 		}
 		else {
-			smtp_get_user(5);
+			smtp_get_user(0);
 		}
 		return;
 	}
