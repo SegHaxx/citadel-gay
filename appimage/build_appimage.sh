@@ -15,6 +15,14 @@ make || exit 4
 make install || exit 5
 popd
 
+# Build the text mode client
+pushd ../textclient || exit 22
+make distclean 2>/dev/null
+./bootstrap || exit 23
+./configure --prefix=`pwd` || exit 24
+make || exit 25
+popd
+
 # Build the Citadel server
 pushd ../citadel || exit 6
 make distclean 2>/dev/null
@@ -39,7 +47,12 @@ mkdir -p citadel.AppDir/usr/bin
 mkdir -p citadel.AppDir/usr/lib
 
 # Copy over all the libraries we used
-for bin in $CITADEL_BUILD_DIR/citserver $WEBCIT_BUILD_DIR/webcit $CITADEL_BUILD_DIR/ctdlmigrate `which gdb`
+for bin in \
+	$CITADEL_BUILD_DIR/citserver \
+	$WEBCIT_BUILD_DIR/webcit \
+	$CITADEL_BUILD_DIR/ctdlmigrate \
+	../textclient/citadel \
+	`which gdb`
 do
 	ldd $bin
 done | sort | while read libname junk libpath
@@ -60,6 +73,10 @@ for bin in db_dump db_load db_recover gdb
 do
 	cp `which $bin` citadel.AppDir/usr/bin/	|| exit 16
 done
+
+# Copy over the client
+cp ../textclient/citadel citadel.AppDir/usr/bin/ || exit 26
+cp ../textclient/citadel.rc citadel.AppDir/ || exit 27
 
 # Install the Citadel Server application tree
 mkdir -p citadel.AppDir/usr/local/citadel || exit 17
