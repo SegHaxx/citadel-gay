@@ -218,6 +218,12 @@ case ${1} in
 		export PATH=$APPDIR/usr/bin:$PATH
 		exec $APPDIR/usr/local/citadel/citserver -x9 -h $CTDL_DIR
 		;;
+	connect)
+		export LD_LIBRARY_PATH=$APPDIR/usr/lib
+		export PATH=$APPDIR/usr/bin:$PATH
+		cd $APPDIR
+		exec citadel $*
+		;;
 	*)
 		echo Unexpected command: ${1} 
 		usage
