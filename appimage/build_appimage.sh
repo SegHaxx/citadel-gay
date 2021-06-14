@@ -92,7 +92,7 @@ rm -fr $CITADEL_BUILD_DIR $WEBCIT_BUILD_DIR
 cc ctdlvisor.c -o citadel.AppDir/usr/bin/ctdlvisor || exit 21
 
 CPU=`uname -m`
-basefilename=citadel-`date +%s`
+basefilename=citadel-`cat ../release_version.txt`
 if [ $CPU == x86_64 ] ; then
 	export ARCH=x86_64
 elif [ $CPU == armv7l ] ; then
