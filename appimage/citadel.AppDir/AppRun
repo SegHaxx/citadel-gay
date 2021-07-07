@@ -23,7 +23,7 @@ ulimit -c unlimited
 
 usage() {
 	echo ${APPIMAGE}: usage: ${APPIMAGE} '[-h data_directory] [-p http_port] [-s https_port] command'
-	echo 'command must be one of: run, test, install, database_cleanup, migrate'
+	echo 'command must be one of: run, test, install, client, database_cleanup, migrate'
 	exit 2
 }
 
@@ -193,6 +193,9 @@ case ${1} in
 		;;
 	install)
 		installation
+		;;
+	client)
+		exec $APPDIR/usr/bin/citadel
 		;;
 	database_cleanup)
 		export LD_LIBRARY_PATH=$APPDIR/usr/lib
