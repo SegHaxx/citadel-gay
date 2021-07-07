@@ -1,10 +1,15 @@
 #!/bin/bash
 
+# Work from the directory this script is in
+APPIMAGE_BUILD_DIR=$(dirname $(readlink -f $0))
+cd $APPIMAGE_BUILD_DIR || exit 28
+echo APPIMAGE_BUILD_DIR is `pwd`
+
+# Remove old versions
 rm -vf citadel-*appimage
 
 export CITADEL_BUILD_DIR=/tmp/citadel-build-$$
 export WEBCIT_BUILD_DIR=/tmp/webcit-build-$$
-rm -fr $CITADEL_BUILD_DIR $WEBCIT_BUILD_DIR
 
 # libcitadel has to be built in a "real" library directory
 pushd ../libcitadel || exit 1
