@@ -31,15 +31,19 @@ usage() {
 # Permanently install the Citadel AppImage to this system
 installation() {
 
-	clear
-	echo
+	# Clear the screen and draw the banner
+	echo -e '\033[2J\033[H\033[44m\033[37m\033[K\033[0m'
+	echo -e '\033[44m\033[37m\033[1m  Citadel installation\033[K\033[0m'
+	echo -e '\033[44m\033[37m \033[K\033[0m'
 	echo
 
 	# First ... check to make sure Citadel isn't already running.
 	echo Checking to make sure Citadel is not already running...
 	if ps ax | grep citserver | grep -v grep ; then
-		echo Installation cannot proceed while Citadel is running.
+		echo
+		echo -e '\033[31m\033[1mInstallation cannot proceed while Citadel is running.\033[0m'
 		echo Stop your services and try again.
+		echo
 		exit 1
 	fi
 	echo OK
@@ -51,11 +55,23 @@ installation() {
 		export LD_LIBRARY_PATH=$APPDIR/usr/lib
 		export PATH=$APPDIR/usr/bin
 		$APPDIR/usr/local/citadel/citserver -c || {
-			echo Compatibility failed.
+			echo
+			echo -e '\033[31m\033[1mCompatibility failed.\033[0m'
+			echo 'This AppImage is not compatible with your system.'
+			echo 'If you are attempting to run it on a compatible platform, please make sure you'
+			echo 'have all of the latest updates and patches applied.  Otherwise, you may have'
+			echo 'better luck with the Easy Install method.'
+			echo ''
 			exit 2
 		}
-	)
+	) || exit 2
 	echo OK
+	echo
+
+	# Clear the screen and draw the banner
+	echo -e '\033[2J\033[H\033[44m\033[37m\033[K\033[0m'
+	echo -e '\033[44m\033[37m\033[1m  Citadel installation\033[K\033[0m'
+	echo -e '\033[44m\033[37m \033[K\033[0m'
 	echo
 
 	# Locate the Citadel run directory
@@ -90,7 +106,7 @@ installation() {
 		echo Automatic installation is only supported with systemd.
 		echo You can still run Citadel but you will need to start it some other way.
 		exit 3
-	}
+	} | exit 3
 	echo OK
 	echo
 
@@ -105,13 +121,19 @@ installation() {
 	echo OK
 	echo
 
+	# Clear the screen and draw the banner
+	echo -e '\033[2J\033[H\033[44m\033[37m\033[K\033[0m'
+	echo -e '\033[44m\033[37m\033[1m  Citadel installation\033[K\033[0m'
+	echo -e '\033[44m\033[37m \033[K\033[0m'
+	echo
+
 	echo Ready to install ${APPIMAGE} in ${CTDL_DIR}
 	echo Copying the AppImage...
 	rm -f ${CTDL_DIR}/citadel.appimage 2>/dev/null
 	cp ${APPIMAGE} ${CTDL_DIR}/citadel.appimage || {
 		echo Installation has failed with error code $? .
 		exit 4
-	}
+	} | exit 4
 
 	echo Creating the systemd unit file...
 	(
@@ -134,7 +156,7 @@ installation() {
 	) >/etc/systemd/system/citadel.service || {
 		echo Installation has failed with error code $? .
 		exit 5
-	}
+	} | exit 5
 	echo OK
 	echo
 
@@ -142,7 +164,7 @@ installation() {
 	systemctl enable citadel || {
 		echo Installation has failed with error code $? .
 		exit 6
-	}
+	} | exit 6
 	echo OK
 	echo
 
@@ -150,12 +172,21 @@ installation() {
 	systemctl start citadel || {
 		echo Installation has failed with error code $? .
 		exit 6
-	}
+	} || exit 6
 	echo OK
+	echo
+
+	# Clear the screen and draw the banner
+	echo -e '\033[2J\033[H\033[44m\033[37m\033[K\033[0m'
+	echo -e '\033[44m\033[37m\033[1m  Citadel installation\033[K\033[0m'
+	echo -e '\033[44m\033[37m \033[K\033[0m'
 	echo
 
 	echo Installation has completed.
 	echo Please continue by browsing to http://`hostname`:${HTTP_PORT}
+	echo
+	echo -e 'If this is a new installation, the default administrator'
+	echo -e 'will be named \033[7madmin\033[0m with password \033[7mcitadel\033[0m.'
 	exit
 }
 
