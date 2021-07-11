@@ -101,7 +101,7 @@ basefilename=citadel-`cat ../release_version.txt`
 if [ $CPU == x86_64 ] ; then
 	export ARCH=x86_64
 elif [ $CPU == armv7l ] ; then
-	export ARCH=armhf
+	export ARCH=arm
 elif [ $CPU == aarch64 ] ; then
 	export ARCH=aarch64
 fi
