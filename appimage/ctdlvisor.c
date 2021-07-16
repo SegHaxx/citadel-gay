@@ -187,6 +187,31 @@ void main_loop(void) {
 }
 
 
+void install_client_link(void) {
+
+	FILE *fp;
+	char path_to_link[PATH_MAX];
+	snprintf(path_to_link, sizeof path_to_link, "%s/citadel", getenv("CTDL_DIR"));
+	fp = fopen(path_to_link, "w");
+	if (!fp) {
+		fprintf(stderr, "%s\n", strerror(errno));
+		return;
+	}
+
+	fprintf(fp,	"#!/bin/bash\n"
+			"export APPDIR=%s\n"
+			"export LD_LIBRARY_PATH=${APPDIR}/usr/bin:$LD_LIBRARY_PATH\n"
+			"export PATH=${APPDIR}/usr/bin:$PATH\n"
+			"exec citadel\n"
+	,
+			getenv("APPDIR")
+	);
+
+	fchmod(fileno(fp), 0755);
+	fclose(fp);
+}
+
+
 int main(int argc, char **argv) {
 	int a;
 	int migrate_mode = 0;
@@ -248,9 +273,11 @@ int main(int argc, char **argv) {
 		signal(SIGINT, signal_handler);
 		signal(SIGQUIT, signal_handler);
 	
-		citserver_pid = start_citadel();
-		webcit_pid = start_webcit();
-		webcits_pid = start_webcits();
+		citserver_pid = start_citadel();		// start Citadel Server
+		webcit_pid = start_webcit();			// start WebCit HTTP
+		webcits_pid = start_webcits();			// start WebCit HTTPS
+
+		install_client_link();
 	
 		main_loop();
 	}
