@@ -23,7 +23,7 @@ ulimit -c unlimited
 
 usage() {
 	echo ${APPIMAGE}: usage: ${APPIMAGE} '[-h data_directory] [-p http_port] [-s https_port] command'
-	echo 'command must be one of: run, test, install, client, database_cleanup, migrate'
+	echo 'command must be one of: run, test, install, database_cleanup, migrate'
 	exit 2
 }
 
@@ -182,7 +182,7 @@ installation() {
 	echo -e '\033[44m\033[37m \033[K\033[0m'
 	echo
 
-	echo Installation has completed.
+	echo -e '\033[32m\033[1mInstallation has completed.\033[0m'
 	echo Please continue by browsing to http://`hostname`:${HTTP_PORT}
 	echo
 	echo -e 'If this is a new installation, the default administrator'
@@ -225,9 +225,6 @@ case ${1} in
 	install)
 		installation
 		;;
-	client)
-		exec $APPDIR/usr/bin/citadel
-		;;
 	database_cleanup)
 		export LD_LIBRARY_PATH=$APPDIR/usr/lib
 		export PATH=$APPDIR/usr/bin:$PATH
@@ -251,12 +248,6 @@ case ${1} in
 		export LD_LIBRARY_PATH=$APPDIR/usr/lib
 		export PATH=$APPDIR/usr/bin:$PATH
 		exec $APPDIR/usr/local/citadel/citserver -x9 -h $CTDL_DIR
-		;;
-	connect)
-		export LD_LIBRARY_PATH=$APPDIR/usr/lib
-		export PATH=$APPDIR/usr/bin:$PATH
-		cd $APPDIR
-		exec citadel $*
 		;;
 	*)
 		echo Unexpected command: ${1} 

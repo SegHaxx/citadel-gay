@@ -6,9 +6,9 @@ The tooling in this directory can be used to build an AppImage, the entire Citad
 distributed as a single binary file.  Visit https://appimage.org/ to learn more about the
 AppImage format and how it works.
 
-Again, do NOT try to run this on your production machine.  For that matter, don't try to
-run it on anything other than a dedicated build host.  It may ERASE data you intended to
-keep.
+Again, do NOT try to build this on your production machine.  For that matter, don't try
+to build it on anything other than a dedicated build host.  It may ERASE data you
+intended to keep.
 
 If you're an end user you shouldn't have any need to do this at all.  The whole point of
 this is that we can supply ready-to-run binaries that will run on any Linux/Linux system
