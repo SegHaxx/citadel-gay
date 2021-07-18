@@ -932,6 +932,10 @@ void load_command_set(void)
 		snprintf(buf, sizeof buf, "%s/.citadelrc", getenv("HOME"));
 		ccfile = fopen(buf, "r");
 	}
+	if (getenv("APPDIR") != NULL) {
+		snprintf(buf, sizeof buf, "%s/citadel.rc", getenv("APPDIR"));
+		ccfile = fopen(buf, "r");
+	}
 	if (ccfile == NULL) {
 		ccfile = fopen(file_citadel_rc, "r");
 	}
