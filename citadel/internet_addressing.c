@@ -457,7 +457,6 @@ int alias(char *name) {				/* process alias and routing info for mail */
  * Caller needs to free the result using free_recipients()
  */
 struct recptypes *validate_recipients(const char *supplied_recipients, const char *RemoteIdentifier, int Flags) {
-	struct CitContext *CCC = CC;
 	struct recptypes *ret;
 	char *recipients = NULL;
 	char *org_recp;
@@ -465,7 +464,6 @@ struct recptypes *validate_recipients(const char *supplied_recipients, const cha
 	char this_recp_cooked[256];
 	char append[SIZ];
 	long len;
-	int num_recps = 0;
 	int i, j;
 	int mailtype;
 	int invalid;
@@ -520,7 +518,7 @@ struct recptypes *validate_recipients(const char *supplied_recipients, const cha
 	}
 
 	/* Now start extracting recipients... */
-
+	Array *recp_array = array_new(1024);
 	while (!IsEmptyStr(recipients)) {
 		for (i=0; i<=strlen(recipients); ++i) {
 			if (recipients[i] == '\"') in_quotes = 1 - in_quotes;
@@ -540,8 +538,12 @@ struct recptypes *validate_recipients(const char *supplied_recipients, const cha
 		striplt(this_recp);
 		if (IsEmptyStr(this_recp))
 			break;
-		syslog(LOG_DEBUG, "internet_addressing: evaluating recipient #%d: %s", num_recps, this_recp);
-		++num_recps;
+		syslog(LOG_DEBUG, "internet_addressing: evaluating recipient: %s", this_recp);
+		array_append(recp_array, this_recp);
+	}
+
+	for (int r=0; r<array_len(recp_array); ++r) {
+		strcpy(this_recp, (char *)array_get_element_at(recp_array, r));
 
 		strcpy(org_recp, this_recp);
 		alias(this_recp);
@@ -572,8 +574,8 @@ struct recptypes *validate_recipients(const char *supplied_recipients, const cha
 			else if ( (!strncasecmp(this_recp, "room_", 5)) && (!CtdlGetRoom(&tempQR, &this_recp_cooked[5])) ) {
 
 				/* Save room so we can restore it later */
-				tempQR2 = CCC->room;
-				CCC->room = tempQR;
+				tempQR2 = CC->room;
+				CC->room = tempQR;
 					
 				/* Check permissions to send mail to this room */
 				err = CtdlDoIHavePermissionToPostInThisRoom(
@@ -602,7 +604,7 @@ struct recptypes *validate_recipients(const char *supplied_recipients, const cha
 				}
 					
 				/* Restore room in case something needs it */
-				CCC->room = tempQR2;
+				CC->room = tempQR2;
 
 			}
 			else if (CtdlGetUser(&tempUS, this_recp) == 0) {
@@ -688,6 +690,8 @@ struct recptypes *validate_recipients(const char *supplied_recipients, const cha
 	);
 
 	free(recipients);
+	array_free(recp_array);
+
 	return(ret);
 }
 
