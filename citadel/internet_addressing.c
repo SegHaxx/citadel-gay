@@ -172,9 +172,7 @@ void utf8ify_rfc822_string(char *buf) {
 		end = nextend;
 	}
 
-	/* Now we handle foreign character sets properly encoded
-	 * in RFC2047 format.
-	 */
+	// Now we handle foreign character sets properly encoded in RFC2047 format.
 	start = strstr(buf, "=?");
 	FindNextEnd((start != NULL)? start : buf, end);
 	while (start != NULL && end != NULL && end > start) {
@@ -390,10 +388,18 @@ void remove_any_whitespace_to_the_left_or_right_of_at_symbol(char *name) {
 }
 
 
+// values that can be returned by expand_aliases()
+enum {
+	EA_ERROR,		// Can't send message due to bad address
+	EA_LOCAL,		// Local message, do no network processing
+	EA_INTERNET		// Convert msg and send as Internet mail
+};
+
+
 /*
  * Aliasing for network mail.
  */
-int alias(char *name) {				/* process alias and routing info for mail */
+int expand_aliases(char *name) {				/* process alias and routing info for mail */
 	int a;
 	char aaa[SIZ];
 	int at = 0;
@@ -411,9 +417,9 @@ int alias(char *name) {				/* process alias and routing info for mail */
 		strcpy(name, aaa);
 	}
 
-	if (strcasecmp(original_name, name)) {
+	//if (strcasecmp(original_name, name)) {
 		syslog(LOG_INFO, "internet_addressing: %s is being forwarded to %s", original_name, name);
-	}
+	//}
 
 	/* Change "user @ xxx" to "user" if xxx is an alias for this host */
 	for (a=0; name[a] != '\0'; ++a) {
@@ -428,8 +434,8 @@ int alias(char *name) {				/* process alias and routing info for mail */
 
 	/* determine local or remote type, see citadel.h */
 	at = haschar(name, '@');
-	if (at == 0) return(MES_LOCAL);		/* no @'s - local address */
-	if (at > 1) return(MES_ERROR);		/* >1 @'s - invalid address */
+	if (at == 0) return(EA_LOCAL);		/* no @'s - local address */
+	if (at > 1) return(EA_ERROR);		/* >1 @'s - invalid address */
 	remove_any_whitespace_to_the_left_or_right_of_at_symbol(name);
 
 	/* figure out the delivery mode */
@@ -439,11 +445,11 @@ int alias(char *name) {				/* process alias and routing info for mail */
 	 * is an FQDN and will attempt SMTP delivery to the Internet.
 	 */
 	if (haschar(node, '.') > 0) {
-		return(MES_INTERNET);
+		return(EA_INTERNET);
 	}
 
 	/* If we get to this point it's an invalid node name */
-	return (MES_ERROR);
+	return (EA_ERROR);
 }
 
 
@@ -536,20 +542,28 @@ struct recptypes *validate_recipients(const char *supplied_recipients, const cha
 		}
 
 		striplt(this_recp);
-		if (IsEmptyStr(this_recp))
-			break;
-		syslog(LOG_DEBUG, "internet_addressing: evaluating recipient: %s", this_recp);
-		array_append(recp_array, this_recp);
+		if (!IsEmptyStr(this_recp)) {
+			syslog(LOG_DEBUG, "internet_addressing: evaluating recipient: %s", this_recp);
+			array_append(recp_array, this_recp);
+		}
 	}
 
 	for (int r=0; r<array_len(recp_array); ++r) {
 		strcpy(this_recp, (char *)array_get_element_at(recp_array, r));
 
 		strcpy(org_recp, this_recp);
-		alias(this_recp);
-		alias(this_recp);
-		mailtype = alias(this_recp);
 
+
+
+		// To prevent endless aliasing loops, we will only do this three times.
+		for (int alias_loop=0; alias_loop<3; ++alias_loop) {
+			mailtype = expand_aliases(this_recp);
+		}
+
+
+
+		// Hmm.  Is this still needed?  It changes underscores to spaces, but maybe we don't
+		// need it anymore now that we index local user names without alphanumerics.
 		for (j = 0; !IsEmptyStr(&this_recp[j]); ++j) {
 			if (this_recp[j]=='_') {
 				this_recp_cooked[j] = ' ';
@@ -559,10 +573,12 @@ struct recptypes *validate_recipients(const char *supplied_recipients, const cha
 			}
 		}
 		this_recp_cooked[j] = '\0';
+
+
 		invalid = 0;
 		errmsg[0] = 0;
 		switch(mailtype) {
-		case MES_LOCAL:
+		case EA_LOCAL:
 			if (!strcasecmp(this_recp, "sysop")) {
 				++ret->num_room;
 				strcpy(this_recp, CtdlGetConfigStr("c_aideroom"));
@@ -584,7 +600,7 @@ struct recptypes *validate_recipients(const char *supplied_recipients, const cha
 					RemoteIdentifier,
 					Flags,
 					0			/* 0 = not a reply */
-					);
+				);
 				if (err) {
 					++ret->num_error;
 					invalid = 1;
@@ -628,7 +644,7 @@ struct recptypes *validate_recipients(const char *supplied_recipients, const cha
 				invalid = 1;
 			}
 			break;
-		case MES_INTERNET:
+		case EA_INTERNET:
 			/* Yes, you're reading this correctly: if the target
 			 * domain points back to the local system,
 			 * the address is invalid.  That's
@@ -647,7 +663,7 @@ struct recptypes *validate_recipients(const char *supplied_recipients, const cha
 				strcat(ret->recp_internet, this_recp);
 			}
 			break;
-		case MES_ERROR:
+		case EA_ERROR:
 			++ret->num_error;
 			invalid = 1;
 			break;

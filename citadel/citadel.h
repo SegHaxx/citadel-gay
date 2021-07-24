@@ -1,7 +1,7 @@
 /*
  * Main Citadel header file
  *
- * Copyright (c) 1987-2020 by the citadel.org team
+ * Copyright (c) 1987-2021 by the citadel.org team
  *
  * This program is open source software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3.
@@ -30,8 +30,7 @@ extern "C" {
 
 /*
  * Text description of this software
- * (We used to define this ourselves, but why bother when
- * the GNU build tools do it for us?)
+ * (We used to define this ourselves, but why bother when the build tools do it for us?)
  */
 #define CITADEL	PACKAGE_STRING
 
@@ -155,10 +154,6 @@ struct ctdlroom {
 #define MES_NORMAL	65		// Normal message
 #define MES_ANONONLY	66		// "****" header
 #define MES_ANONOPT	67		// "Anonymous" header
-
-#define MES_ERROR	(-1)		// Can't send message due to bad address
-#define MES_LOCAL	0		// Local message, do no network processing
-#define MES_INTERNET	1		// Convert msg and send as Internet mail
 
 /****************************************************************************/
 
