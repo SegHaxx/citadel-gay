@@ -260,11 +260,6 @@ inline void utf8ify_rfc822_string(char *a){};
 #endif
 
 
-struct trynamebuf {
-	char buffer1[SIZ];
-	char buffer2[SIZ];
-};
-
 char *inetcfg = NULL;
 
 /*
@@ -391,6 +386,7 @@ void remove_any_whitespace_to_the_left_or_right_of_at_symbol(char *name) {
 // values that can be returned by expand_aliases()
 enum {
 	EA_ERROR,		// Can't send message due to bad address
+	EA_MULTIPLE,		// Alias expanded into multiple recipients -- run me again!
 	EA_LOCAL,		// Local message, do no network processing
 	EA_INTERNET		// Convert msg and send as Internet mail
 };
@@ -405,6 +401,19 @@ int expand_aliases(char *name) {				/* process alias and routing info for mail *
 	int at = 0;
 	char node[64];
 
+
+
+
+	// temporary test of expansion
+	if (!strcasecmp(name, "root")) {
+		strcpy(name, "foo,bar,root,baz");
+		return(EA_MULTIPLE);
+	}
+
+
+
+
+
 	char original_name[256];
 	safestrncpy(original_name, name, sizeof original_name);
 
@@ -417,9 +426,9 @@ int expand_aliases(char *name) {				/* process alias and routing info for mail *
 		strcpy(name, aaa);
 	}
 
-	//if (strcasecmp(original_name, name)) {
+	if (strcasecmp(original_name, name)) {
 		syslog(LOG_INFO, "internet_addressing: %s is being forwarded to %s", original_name, name);
-	//}
+	}
 
 	/* Change "user @ xxx" to "user" if xxx is an alias for this host */
 	for (a=0; name[a] != '\0'; ++a) {
@@ -453,24 +462,62 @@ int expand_aliases(char *name) {				/* process alias and routing info for mail *
 }
 
 
-/*
- * Validate recipients, count delivery types and errors, and handle aliasing
- * FIXME check for dupes!!!!!
- *
- * Returns 0 if all addresses are ok, ret->num_error = -1 if no addresses 
- * were specified, or the number of addresses found invalid.
- *
- * Caller needs to free the result using free_recipients()
- */
-struct recptypes *validate_recipients(const char *supplied_recipients, const char *RemoteIdentifier, int Flags) {
+// Return a supplied list of email addresses as an array, removing superfluous information and syntax.
+Array *split_recps(char *addresses) {
+
+	// Copy the supplied address list into our own memory space, because we are going to mangle it.
+	char *a = malloc(strlen(addresses));
+	a[0] = 0;
+
+	// Strip out anything in double quotes
+	int toggle = 0;
+	int pos = 0;
+	char *t;
+	for (t=addresses; t[0]; ++t) {
+		if (t[0] == '\"') {
+			toggle = 1 - toggle;
+		}
+		else if (!toggle) {
+			a[pos++] = t[0];
+			a[pos] = 0;
+		}
+	}
+
+	// Transform all qualifying delimiters to commas
+	for (t=a; t[0]; ++t) {
+		if ((t[0]==';') || (t[0]=='|')) {
+			t[0]=',';
+		}
+	}
+
+	// Tokenize the recipients into an array
+	Array *recipients_array = array_new(256);		// no single recipient should be bigger than 256 bytes
+	char *r = a;
+	while ((t = strtok_r(r, ",", &r))) {
+		striplt(t);					// strip leading and trailing whitespace
+		stripout(t, '(', ')');				// remove any portion in parentheses
+		stripallbut(t, '<', '>');			// if angle brackets are present, keep only what is inside them
+		array_append(recipients_array, t);
+	}
+
+	free(a);						// We don't need this buffer anymore.
+	return(recipients_array);				// Return the completed array to the caller.
+}
+
+
+// Validate recipients, count delivery types and errors, and handle aliasing
+// FIXME check for dupes!!!!!
+//
+// Returns 0 if all addresses are ok, ret->num_error = -1 if no addresses 
+// were specified, or the number of addresses found invalid.
+//
+// Caller needs to free the result using free_recipients()
+//
+struct recptypes *validate_recipients(char *supplied_recipients, const char *RemoteIdentifier, int Flags) {
 	struct recptypes *ret;
 	char *recipients = NULL;
-	char *org_recp;
-	char this_recp[256];
-	char this_recp_cooked[256];
 	char append[SIZ];
 	long len;
-	int i, j;
 	int mailtype;
 	int invalid;
 	struct ctdluser tempUS;
@@ -478,14 +525,13 @@ struct recptypes *validate_recipients(const char *supplied_recipients, const cha
 	struct ctdlroom tempQR2;
 	int err = 0;
 	char errmsg[SIZ];
-	int in_quotes = 0;
+	char *org_recp;
+	char this_recp[256];
 
-	/* Initialize */
-	ret = (struct recptypes *) malloc(sizeof(struct recptypes));
+	ret = (struct recptypes *) malloc(sizeof(struct recptypes));			// Initialize
 	if (ret == NULL) return(NULL);
 
-	/* Set all strings to null and numeric values to zero */
-	memset(ret, 0, sizeof(struct recptypes));
+	memset(ret, 0, sizeof(struct recptypes));					// set all values to null/zero
 
 	if (supplied_recipients == NULL) {
 		recipients = strdup("");
@@ -494,18 +540,13 @@ struct recptypes *validate_recipients(const char *supplied_recipients, const cha
 		recipients = strdup(supplied_recipients);
 	}
 
-	/* Allocate some memory.  Yes, this allocates 500% more memory than we will
-	 * actually need, but it's healthier for the heap than doing lots of tiny
-	 * realloc() calls instead.
-	 */
-	len = strlen(recipients) + 1024;
+	len = strlen(recipients) + 1024;						// allocate memory
 	ret->errormsg = malloc(len);
 	ret->recp_local = malloc(len);
 	ret->recp_internet = malloc(len);
 	ret->recp_room = malloc(len);
 	ret->display_recp = malloc(len);
 	ret->recp_orgroom = malloc(len);
-	org_recp = malloc(len);
 
 	ret->errormsg[0] = 0;
 	ret->recp_local[0] = 0;
@@ -516,63 +557,34 @@ struct recptypes *validate_recipients(const char *supplied_recipients, const cha
 
 	ret->recptypes_magic = RECPTYPES_MAGIC;
 
-	/* Change all valid separator characters to commas */
-	for (i=0; !IsEmptyStr(&recipients[i]); ++i) {
-		if ((recipients[i] == ';') || (recipients[i] == '|')) {
-			recipients[i] = ',';
-		}
-	}
 
-	/* Now start extracting recipients... */
-	Array *recp_array = array_new(1024);
-	while (!IsEmptyStr(recipients)) {
-		for (i=0; i<=strlen(recipients); ++i) {
-			if (recipients[i] == '\"') in_quotes = 1 - in_quotes;
-			if ( ( (recipients[i] == ',') && (!in_quotes) ) || (recipients[i] == 0) ) {
-				safestrncpy(this_recp, recipients, i+1);
-				this_recp[i] = 0;
-				if (recipients[i] == ',') {
-					strcpy(recipients, &recipients[i+1]);
-				}
-				else {
-					strcpy(recipients, "");
-				}
-				break;
-			}
-		}
+	Array *recp_array = split_recps(supplied_recipients);
 
-		striplt(this_recp);
-		if (!IsEmptyStr(this_recp)) {
-			syslog(LOG_DEBUG, "internet_addressing: evaluating recipient: %s", this_recp);
-			array_append(recp_array, this_recp);
-		}
-	}
+
 
 	for (int r=0; r<array_len(recp_array); ++r) {
-		strcpy(this_recp, (char *)array_get_element_at(recp_array, r));
-
-		strcpy(org_recp, this_recp);
-
+		org_recp = (char *)array_get_element_at(recp_array, r);
+		strncpy(this_recp, org_recp, sizeof this_recp);
 
 
-		// To prevent endless aliasing loops, we will only do this three times.
-		for (int alias_loop=0; alias_loop<3; ++alias_loop) {
+
+		// To prevent endless aliasing loops, we will only do this five times.
+		for (int alias_loop=0; alias_loop<5; ++alias_loop) {
 			mailtype = expand_aliases(this_recp);
-		}
-
-
-
-		// Hmm.  Is this still needed?  It changes underscores to spaces, but maybe we don't
-		// need it anymore now that we index local user names without alphanumerics.
-		for (j = 0; !IsEmptyStr(&this_recp[j]); ++j) {
-			if (this_recp[j]=='_') {
-				this_recp_cooked[j] = ' ';
-			}
-			else {
-				this_recp_cooked[j] = this_recp[j];
+			if (mailtype == EA_MULTIPLE) {
+				// If an alias expanded to multiple recipients, strip off those recipients and append them
+				// to the end of the array.  This loop will hit those again when it gets there.
+				char *comma;
+				while (comma = strrchr(this_recp, ',')) {
+					comma[0] = 0;
+					array_append(recp_array, &comma[1]);
+					strcpy(org_recp, this_recp);
+				}
 			}
 		}
-		this_recp_cooked[j] = '\0';
+
+
+		syslog(LOG_DEBUG, "this_recp: \033[31m%s\033[0m   org_recp: \033[32m%s\033[0m", this_recp, org_recp);
 
 
 		invalid = 0;
@@ -587,19 +599,22 @@ struct recptypes *validate_recipients(const char *supplied_recipients, const cha
 				}
 				strcat(ret->recp_room, this_recp);
 			}
-			else if ( (!strncasecmp(this_recp, "room_", 5)) && (!CtdlGetRoom(&tempQR, &this_recp_cooked[5])) ) {
+			else if ( (!strncasecmp(this_recp, "room_", 5)) && (!CtdlGetRoom(&tempQR, &this_recp[5])) ) {
 
-				/* Save room so we can restore it later */
+
+				// FIXME -- handle the underscores
+
+
+											// Save room so we can restore it later
 				tempQR2 = CC->room;
 				CC->room = tempQR;
 					
-				/* Check permissions to send mail to this room */
-				err = CtdlDoIHavePermissionToPostInThisRoom(
+				err = CtdlDoIHavePermissionToPostInThisRoom(		// check for write permissions to room
 					errmsg, 
 					sizeof errmsg, 
 					RemoteIdentifier,
 					Flags,
-					0			/* 0 = not a reply */
+					0						// 0 means "not a reply"
 				);
 				if (err) {
 					++ret->num_error;
@@ -610,7 +625,7 @@ struct recptypes *validate_recipients(const char *supplied_recipients, const cha
 					if (!IsEmptyStr(ret->recp_room)) {
 						strcat(ret->recp_room, "|");
 					}
-					strcat(ret->recp_room, &this_recp_cooked[5]);
+					strcat(ret->recp_room, &this_recp[5]);
 
 					if (!IsEmptyStr(ret->recp_orgroom)) {
 						strcat(ret->recp_orgroom, "|");
@@ -624,14 +639,6 @@ struct recptypes *validate_recipients(const char *supplied_recipients, const cha
 
 			}
 			else if (CtdlGetUser(&tempUS, this_recp) == 0) {
-				++ret->num_local;
-				strcpy(this_recp, tempUS.fullname);
-				if (!IsEmptyStr(ret->recp_local)) {
-					strcat(ret->recp_local, "|");
-				}
-				strcat(ret->recp_local, this_recp);
-			}
-			else if (CtdlGetUser(&tempUS, this_recp_cooked) == 0) {
 				++ret->num_local;
 				strcpy(this_recp, tempUS.fullname);
 				if (!IsEmptyStr(ret->recp_local)) {
@@ -694,7 +701,6 @@ struct recptypes *validate_recipients(const char *supplied_recipients, const cha
 			}
 		}
 	}
-	free(org_recp);
 
 	if ( (ret->num_local + ret->num_internet + ret->num_room + ret->num_error) == 0) {
 		ret->num_error = (-1);
