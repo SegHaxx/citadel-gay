@@ -406,7 +406,11 @@ int expand_aliases(char *name) {				/* process alias and routing info for mail *
 
 	// temporary test of expansion
 	if (!strcasecmp(name, "root")) {
-		strcpy(name, "foo,bar,root,baz");
+		strcpy(name, "root");
+		return(EA_MULTIPLE);
+	}
+	if (!strcasecmp(name, "qux")) {
+		strcpy(name, "eggroll,blat,fun@eek.boop");
 		return(EA_MULTIPLE);
 	}
 
@@ -417,6 +421,7 @@ int expand_aliases(char *name) {				/* process alias and routing info for mail *
 	char original_name[256];
 	safestrncpy(original_name, name, sizeof original_name);
 
+	// should these checks still be here, or maybe move them to split_recps() ?
 	striplt(name);
 	remove_any_whitespace_to_the_left_or_right_of_at_symbol(name);
 	stripallbut(name, '<', '>');
@@ -554,26 +559,21 @@ struct recptypes *validate_recipients(char *supplied_recipients, const char *Rem
 	ret->recp_room[0] = 0;
 	ret->recp_orgroom[0] = 0;
 	ret->display_recp[0] = 0;
-
 	ret->recptypes_magic = RECPTYPES_MAGIC;
 
-
 	Array *recp_array = split_recps(supplied_recipients);
-
-
-
+	int original_array_len = array_len(recp_array);
 	for (int r=0; r<array_len(recp_array); ++r) {
 		org_recp = (char *)array_get_element_at(recp_array, r);
 		strncpy(this_recp, org_recp, sizeof this_recp);
 
+		mailtype = expand_aliases(this_recp);
 
-
-		// To prevent endless aliasing loops, we will only do this five times.
-		for (int alias_loop=0; alias_loop<5; ++alias_loop) {
-			mailtype = expand_aliases(this_recp);
-			if (mailtype == EA_MULTIPLE) {
-				// If an alias expanded to multiple recipients, strip off those recipients and append them
-				// to the end of the array.  This loop will hit those again when it gets there.
+		// If an alias expanded to multiple recipients, strip off those recipients and append them
+		// to the end of the array.  This loop will hit those again when it gets there.
+		// Note that we don't do this after we get past the *original* array length, to avoid aliasing loops.
+		if (mailtype == EA_MULTIPLE) {
+			if (r < original_array_len) {
 				char *comma;
 				while (comma = strrchr(this_recp, ',')) {
 					comma[0] = 0;
@@ -581,11 +581,12 @@ struct recptypes *validate_recipients(char *supplied_recipients, const char *Rem
 					strcpy(org_recp, this_recp);
 				}
 			}
+			else {
+				mailtype = EA_ERROR;
+			}
 		}
 
-
-		syslog(LOG_DEBUG, "this_recp: \033[31m%s\033[0m   org_recp: \033[32m%s\033[0m", this_recp, org_recp);
-
+		syslog(LOG_DEBUG, "org_recp: \033[31m%-30s\033[0m   this_recp: \033[32m%s\033[0m", org_recp, this_recp);
 
 		invalid = 0;
 		errmsg[0] = 0;
