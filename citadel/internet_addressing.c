@@ -390,6 +390,12 @@ enum {
 	EA_LOCAL,		// Local message, do no network processing
 	EA_INTERNET		// Convert msg and send as Internet mail
 };
+char *killo[] = {		// FIXME remove this when diags are complete
+	"error",
+	"multiple",
+	"local",
+	"internet"
+};
 
 
 /*
@@ -402,6 +408,9 @@ int expand_aliases(char *name) {				/* process alias and routing info for mail *
 	char node[64];
 
 
+
+
+	// FIXME write a "real" alias table here
 
 
 	// temporary test of expansion
@@ -535,7 +544,6 @@ struct recptypes *validate_recipients(char *supplied_recipients, const char *Rem
 
 	ret = (struct recptypes *) malloc(sizeof(struct recptypes));			// Initialize
 	if (ret == NULL) return(NULL);
-
 	memset(ret, 0, sizeof(struct recptypes));					// set all values to null/zero
 
 	if (supplied_recipients == NULL) {
@@ -575,7 +583,7 @@ struct recptypes *validate_recipients(char *supplied_recipients, const char *Rem
 		if (mailtype == EA_MULTIPLE) {
 			if (r < original_array_len) {
 				char *comma;
-				while (comma = strrchr(this_recp, ',')) {
+				while ((comma = strrchr(this_recp, ','))) {
 					comma[0] = 0;
 					array_append(recp_array, &comma[1]);
 					strcpy(org_recp, this_recp);
@@ -586,7 +594,10 @@ struct recptypes *validate_recipients(char *supplied_recipients, const char *Rem
 			}
 		}
 
-		syslog(LOG_DEBUG, "org_recp: \033[31m%-30s\033[0m   this_recp: \033[32m%s\033[0m", org_recp, this_recp);
+		mailtype = expand_aliases(this_recp);		// do it ONCE again to handle alias expansions
+		if (mailtype == EA_MULTIPLE) {
+			mailtype = EA_ERROR;			// and fail if it wants to expand a second time
+		}
 
 		invalid = 0;
 		errmsg[0] = 0;
@@ -602,12 +613,9 @@ struct recptypes *validate_recipients(char *supplied_recipients, const char *Rem
 			}
 			else if ( (!strncasecmp(this_recp, "room_", 5)) && (!CtdlGetRoom(&tempQR, &this_recp[5])) ) {
 
+				// FIXME -- handle the underscores here, strip them out for a room search.
 
-				// FIXME -- handle the underscores
-
-
-											// Save room so we can restore it later
-				tempQR2 = CC->room;
+				tempQR2 = CC->room;					// Remember where we parked
 				CC->room = tempQR;
 					
 				err = CtdlDoIHavePermissionToPostInThisRoom(		// check for write permissions to room
@@ -653,12 +661,9 @@ struct recptypes *validate_recipients(char *supplied_recipients, const char *Rem
 			}
 			break;
 		case EA_INTERNET:
-			/* Yes, you're reading this correctly: if the target
-			 * domain points back to the local system,
-			 * the address is invalid.  That's
-			 * because if the address were valid, we would have
-			 * already translated it to a local address by now.
-			 */
+			// Yes, you're reading this correctly: if the target domain points back to the local system,
+			// the address is invalid.  That's because if the address were valid, we would have
+			// already translated it to a local address by now.
 			if (IsDirectory(this_recp, 0)) {
 				++ret->num_error;
 				invalid = 1;
@@ -701,6 +706,7 @@ struct recptypes *validate_recipients(char *supplied_recipients, const char *Rem
 				strcat(ret->display_recp, append);
 			}
 		}
+		syslog(LOG_DEBUG, "org_recp: \033[31m%-30s\033[0m   this_recp: \033[32m%-30s\033[0m   mailtype: %s", org_recp, this_recp, killo[mailtype]);
 	}
 
 	if ( (ret->num_local + ret->num_internet + ret->num_room + ret->num_error) == 0) {
