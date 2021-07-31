@@ -452,6 +452,7 @@ void array_append(Array *arr, void *new_element);
 void *array_get_element_at(Array *arr, int index);
 int array_len(Array *arr);
 void array_sort(Array *arr, int (*compar)(const void *, const void *));
+void array_delete_element_at(Array *arr, int index);
 
 
 /* vCard stuff */

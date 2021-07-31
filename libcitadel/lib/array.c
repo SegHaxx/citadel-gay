@@ -65,7 +65,7 @@ void array_append(Array *arr, void *new_element) {
 
 	++arr->num_elements;
 	if (arr->num_elements > arr->num_alloc) {
-		arr->num_alloc = arr->num_alloc * 2;
+		arr->num_alloc = arr->num_alloc * 2;		// whenever we exceed the buffer size, we double it.
 		arr->the_elements = realloc(arr->the_elements, (arr->element_size * arr->num_alloc));
 	}
 
@@ -95,4 +95,27 @@ int array_len(Array *arr) {
  */
 void array_sort(Array *arr, int (*compar)(const void *, const void *)) {
 	qsort(arr->the_elements, arr->num_elements, arr->element_size, compar);
+}
+
+
+/*
+ * Delete an element from an array
+ */
+void array_delete_element_at(Array *arr, int index) {
+
+	if (index >= arr->num_elements) {		// If the supplied index is out of bounds, return quietly.
+		return;
+	}
+
+	--arr->num_elements;
+
+	if (index == arr->num_elements) {		// If we deleted the element at the end, there's no more to be done.
+		return;
+	}
+
+	memcpy(
+		(arr->the_elements + (index * arr->element_size)),
+		arr->the_elements + ((index+1) * arr->element_size),
+		(arr->num_elements - index) * arr->element_size
+	);
 }
