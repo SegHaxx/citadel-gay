@@ -535,8 +535,7 @@ struct recptypes *validate_recipients(char *supplied_recipients, const char *Rem
 	int mailtype;
 	int invalid;
 	struct ctdluser tempUS;
-	struct ctdlroom tempQR;
-	struct ctdlroom tempQR2;
+	struct ctdlroom original_room;
 	int err = 0;
 	char errmsg[SIZ];
 	char *org_recp;
@@ -602,7 +601,9 @@ struct recptypes *validate_recipients(char *supplied_recipients, const char *Rem
 		invalid = 0;
 		errmsg[0] = 0;
 		switch(mailtype) {
-		case EA_LOCAL:
+		case EA_LOCAL:					// There are several types of "local" recipients.
+
+			// Old BBS conventions require mail to "sysop" to go somewhere.  Send it to the admin room.
 			if (!strcasecmp(this_recp, "sysop")) {
 				++ret->num_room;
 				strcpy(this_recp, CtdlGetConfigStr("c_aideroom"));
@@ -611,42 +612,55 @@ struct recptypes *validate_recipients(char *supplied_recipients, const char *Rem
 				}
 				strcat(ret->recp_room, this_recp);
 			}
-			else if ( (!strncasecmp(this_recp, "room_", 5)) && (!CtdlGetRoom(&tempQR, &this_recp[5])) ) {
 
-				// FIXME -- handle the underscores here, strip them out for a room search.
+			// This handles rooms which can receive posts via email.
+			else if (!strncasecmp(this_recp, "room_", 5)) {
+				original_room = CC->room;				// Remember where we parked
 
-				tempQR2 = CC->room;					// Remember where we parked
-				CC->room = tempQR;
-					
-				err = CtdlDoIHavePermissionToPostInThisRoom(		// check for write permissions to room
-					errmsg, 
-					sizeof errmsg, 
-					RemoteIdentifier,
-					Flags,
-					0						// 0 means "not a reply"
-				);
-				if (err) {
+				char mail_to_room[ROOMNAMELEN];
+				char *m;
+				strncpy(mail_to_room, &this_recp[5], sizeof mail_to_room);
+				for (m = mail_to_room; *m; ++m) {
+					if (m[0] == '_') m[0]=' ';
+				}
+				if (!CtdlGetRoom(&CC->room, mail_to_room)) {		// Find the room they asked for
+
+					err = CtdlDoIHavePermissionToPostInThisRoom(	// check for write permissions to room
+						errmsg, 
+						sizeof errmsg, 
+						RemoteIdentifier,
+						Flags,
+						0					// 0 means "this is not a reply"
+					);
+					if (err) {
+						++ret->num_error;
+						invalid = 1;
+					} 
+					else {
+						++ret->num_room;
+						if (!IsEmptyStr(ret->recp_room)) {
+							strcat(ret->recp_room, "|");
+						}
+						strcat(ret->recp_room, &this_recp[5]);
+	
+						if (!IsEmptyStr(ret->recp_orgroom)) {
+							strcat(ret->recp_orgroom, "|");
+						}
+						strcat(ret->recp_orgroom, org_recp);
+	
+					}
+				}
+				else {							// no such room exists
 					++ret->num_error;
 					invalid = 1;
-				} 
-				else {
-					++ret->num_room;
-					if (!IsEmptyStr(ret->recp_room)) {
-						strcat(ret->recp_room, "|");
-					}
-					strcat(ret->recp_room, &this_recp[5]);
-
-					if (!IsEmptyStr(ret->recp_orgroom)) {
-						strcat(ret->recp_orgroom, "|");
-					}
-					strcat(ret->recp_orgroom, org_recp);
-
 				}
-					
-				/* Restore room in case something needs it */
-				CC->room = tempQR2;
+						
+				// Restore this session's original room location.
+				CC->room = original_room;
 
 			}
+
+			// This handles the most common case, which is mail to a user's inbox.
 			else if (CtdlGetUser(&tempUS, this_recp) == 0) {
 				++ret->num_local;
 				strcpy(this_recp, tempUS.fullname);
@@ -655,6 +669,8 @@ struct recptypes *validate_recipients(char *supplied_recipients, const char *Rem
 				}
 				strcat(ret->recp_local, this_recp);
 			}
+
+			// No match for this recipient
 			else {
 				++ret->num_error;
 				invalid = 1;
