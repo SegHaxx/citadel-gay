@@ -351,7 +351,6 @@ void cmd_lsub(char *cmdbuf) {
 	char cmd[20];
 	char roomname[ROOMNAMELEN];
 	char emailaddr[1024];
-	char options[256];
 	char url[1024];
 	char token[128];
 

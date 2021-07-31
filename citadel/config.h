@@ -1,50 +1,45 @@
-/*
- * Copyright (c) 1987-2016 by the citadel.org team
- *
- * This program is open source software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 3.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- */
+// Copyright (c) 1987-2016 by the citadel.org team
+//
+// This program is open source software; you can redistribute it and/or modify
+// it under the terms of the GNU General Public License version 3.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
 
 #include "serv_extensions.h"
 #include "citadel_dirs.h"
 
-
-
-/*
- * This is the format of the legacy config file.  Do not attempt to do anything with it other
- * than migrate it into the new format.    DO NOT EDIT -- EVER.
- */
+// This is the format of the legacy config file.  Do not attempt to do anything with it other
+// than migrate it into the new format.  Seriously -- DO NOT CHANGE IT.  The only purpose of this
+// struct is to represent the OLD configuration format.
 struct legacy_config {
-	char c_nodename[16];		/* short name of this node on a Citadel network */
-	char c_fqdn[64];		/* this site's fully qualified domain name */
-	char c_humannode[21];		/* human-readable site name */
+	char c_nodename[16];		// short name of this node on a Citadel network
+	char c_fqdn[64];		// this site's fully qualified domain name
+	char c_humannode[21];		// human-readable site name
 	char c_niu_7[16];
 	uid_t c_niu_6;
-	char c_creataide;		/* 1 = creating a room auto-grants room aide privileges */
-	int c_sleeping;			/* watchdog timer (seconds) */
-	char c_initax;			/* initial access level for new users */
-	char c_regiscall;		/* after c_regiscall logins user will be asked to register */
-	char c_twitdetect;		/* automatically move messages from problem users to trashcan */
-	char c_twitroom[ROOMNAMELEN];	/* name of trashcan */
-	char c_moreprompt[80];		/* paginator prompt */
-	char c_restrict;		/* require per-user permission to send Internet mail */
+	char c_creataide;		// 1 = creating a room auto-grants room aide privileges
+	int c_sleeping;			// watchdog timer (seconds)
+	char c_initax;			// initial access level for new users
+	char c_regiscall;		// after c_regiscall logins user will be asked to register
+	char c_twitdetect;		// automatically move messages from problem users to trashcan
+	char c_twitroom[ROOMNAMELEN];	// name of trashcan
+	char c_moreprompt[80];		// paginator prompt
+	char c_restrict;		// require per-user permission to send Internet mail
 	long c_niu_1;
-	char c_site_location[32];	/* geographic location of this Citadel site */
-	char c_sysadm[26];		/* name of system administrator */
+	char c_site_location[32];	// geographic location of this Citadel site
+	char c_sysadm[26];		// name of system administrator
 	char c_niu_2[15];
 	int c_niu_3;
-	int c_maxsessions;		/* maximum number of concurrent sessions allowed */
-	char c_ip_addr[20];		/* bind address for listening sockets */
-	int c_port_number;		/* port number for Citadel protocol (usually 504) */
+	int c_maxsessions;		// maximum number of concurrent sessions allowed
+	char c_ip_addr[20];		// bind address for listening sockets
+	int c_port_number;		// port number for Citadel protocol (usually 504)
 	int c_niu_4;
-	struct ExpirePolicy c_ep;	/* default expire policy for the entire site */
-	int c_userpurge;		/* user purge time (in days) */
-	int c_roompurge;		/* room purge time (in days) */
+	struct ExpirePolicy c_ep;	// default expire policy for the entire site
+	int c_userpurge;		// user purge time (in days)
+	int c_roompurge;		// room purge time (in days)
 	char c_logpages[ROOMNAMELEN];
 	char c_createax;
 	long c_maxmsglen;
@@ -99,8 +94,6 @@ struct legacy_config {
 	int c_nntp_port;
 	int c_nntps_port;
 };
-
-
 
 
 void initialize_config_system(void);

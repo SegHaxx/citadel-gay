@@ -1,16 +1,14 @@
-/*
- * Header file for TCP client socket library
- *
- * Copyright (c) 1987-2012 by the citadel.org team
- *
- *  This program is open source software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License version 3.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- */
+// Header file for TCP client socket library
+//
+// Copyright (c) 1987-2012 by the citadel.org team
+//
+//  This program is open source software; you can redistribute it and/or modify
+//  it under the terms of the GNU General Public License version 3.
+//
+//  This program is distributed in the hope that it will be useful,
+//  but WITHOUT ANY WARRANTY; without even the implied warranty of
+//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//  GNU General Public License for more details.
 
 int sock_connect(char *host, char *service);
 int sock_write(int *sock, const char *buf, int nbytes);

@@ -1,17 +1,15 @@
-/*
- * Tuning of various parameters of the system.
- * Normally you don't want to mess with any of this.
- *
- * Copyright (c) 1987-2018 by the citadel.org team
- *
- * This program is open source software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 3.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- */
+// Tuning of various parameters of the system.
+// Normally you don't want to mess with any of this.
+//
+// Copyright (c) 1987-2021 by the citadel.org team
+//
+// This program is open source software; you can redistribute it and/or modify
+// it under the terms of the GNU General Public License version 3.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
 
 /*
  * NLI is the string that shows up in a <W>ho's online listing for sessions
@@ -73,12 +71,6 @@
 #define PAGELOGROOM		"Sent/Received Pages"
 #define SYSCONFIGROOM		"Local System Configuration"
 #define SMTP_SPOOLOUT_ROOM	"__CitadelSMTPspoolout__"
-
-/*
- * Where we keep messages containing the vCards that source our directory.  It
- * makes no sense to change this, because you'd have to change it on every
- * system on the network.  That would be stupid.
- */
 #define ADDRESS_BOOK_ROOM	"Global Address Book"
 
 /*

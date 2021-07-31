@@ -1,16 +1,14 @@
-/*
- * Main Citadel header file
- *
- * Copyright (c) 1987-2021 by the citadel.org team
- *
- * This program is open source software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 3.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- */
+// Main Citadel header file
+//
+// Copyright (c) 1987-2021 by the citadel.org team
+//
+// This program is open source software; you can redistribute it and/or modify
+// it under the terms of the GNU General Public License version 3.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
 
 /* system customizations are in sysconfig.h */
 
@@ -72,23 +70,6 @@ struct ExpirePolicy {
 #define EXPIRE_MANUAL		1	// Don't expire messages at all
 #define EXPIRE_NUMMSGS		2	// Keep only latest n messages
 #define EXPIRE_AGE		3	// Expire messages after n days
-
-
-/*
- * This struct stores a list of rooms with new messages which the client
- * fetches from the server.  This allows the client to "march" through
- * relevant rooms without having to ask the server each time where to go next.
- */
-typedef struct march march;
-struct march {
-	struct march *next;
-	char march_name[ROOMNAMELEN];
-	unsigned int march_flags;
-	char march_floor;
-	char march_order;
-	unsigned int march_flags2;
-	int march_access;
-};
 
 
 /*
@@ -191,8 +172,8 @@ struct floor {
  */
 #define AUTHMODE_NATIVE		0	// Native (self-contained or "black box")
 #define AUTHMODE_HOST		1	// Authenticate against the host OS user database
-#define AUTHMODE_LDAP		2	// Authenticate against an LDAP server with RFC 2307 schema
-#define AUTHMODE_LDAP_AD	3	// Authenticate against non-standard MS Active Directory LDAP
+#define AUTHMODE_LDAP		2	// Authenticate using LDAP server with RFC 2307 schema
+#define AUTHMODE_LDAP_AD	3	// Authenticate using LDAP server with Active Directory schema
 
 #ifdef __cplusplus
 }

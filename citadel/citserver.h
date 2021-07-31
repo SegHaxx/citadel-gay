@@ -1,14 +1,12 @@
-/*
- * Copyright (c) 1987-2019 by the citadel.org team
- *
- * This program is open source software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 3.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- */
+// Copyright (c) 1987-2019 by the citadel.org team
+//
+// This program is open source software; you can redistribute it and/or modify
+// it under the terms of the GNU General Public License version 3.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
 
 /* I fucking hate const and want it to die. */
 #pragma GCC diagnostic ignored "-Wcast-qual"
@@ -44,10 +42,9 @@ void do_async_loop(void);
 void begin_session(struct CitContext *con);
 void citproto_begin_session(void);
 void citproto_begin_admin_session(void);
-
 void help_subst (char *strbuf, char *source, char *dest);
+char CtdlCheckExpress(void);
 
 extern int panic_fd;
-char CtdlCheckExpress(void);
 extern time_t server_startup_time;
 extern int openid_level_supported;
