@@ -3478,16 +3478,14 @@ void AdjRefCount(long msgnum, int incr)
 /*
  * Write a generic object to this room
  *
- * Note: this could be much more efficient.  Right now we use two temporary
- * files, and still pull the message into memory as with all others.
+ * Returns the message number of the written object, in case you need it.
  */
-void CtdlWriteObject(char *req_room,			/* Room to stuff it in */
+long CtdlWriteObject(char *req_room,			/* Room to stuff it in */
 		     char *content_type,		/* MIME type of this object */
 		     char *raw_message,			/* Data to be written */
 		     off_t raw_length,			/* Size of raw_message */
 		     struct ctdluser *is_mailbox,	/* Mailbox room? */
 		     int is_binary,			/* Is encoding necessary? */
-		     int is_unique,			/* Del others of this type? */
 		     unsigned int flags			/* Internal save flags */
 ) {
 	struct ctdlroom qrbuf;
@@ -3545,17 +3543,11 @@ void CtdlWriteObject(char *req_room,			/* Room to stuff it in */
 	if (CtdlGetRoom(&qrbuf, roomname) != 0) {
 		CtdlCreateRoom(roomname, ( (is_mailbox != NULL) ? 5 : 3 ), "", 0, 1, 0, VIEW_BBS);
 	}
-	/* If the caller specified this object as unique, delete all
-	 * other objects of this type that are currently in the room.
-	 */
-	if (is_unique) {
-		syslog(LOG_DEBUG, "msgbase: deleted %d other msgs of this type",
-			   CtdlDeleteMessages(roomname, NULL, 0, content_type)
-			);
-	}
+
 	/* Now write the data */
-	CtdlSubmitMsg(msg, NULL, roomname);
+	long new_msgnum = CtdlSubmitMsg(msg, NULL, roomname);
 	CM_Free(msg);
+	return new_msgnum;
 }
 
 

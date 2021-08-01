@@ -96,13 +96,12 @@ int CtdlForEachMessage(int mode,
                         ForEachMsgCallback CallBack,
 			void *userdata);
 int CtdlDeleteMessages(const char *, long *, int, char *);
-void CtdlWriteObject(char *req_room,			/* Room to stuff it in */
+long CtdlWriteObject(char *req_room,			/* Room to stuff it in */
 			char *content_type,		/* MIME type of this object */
 			char *raw_message,		/* Data to be written */
 			off_t raw_length,		/* Size of raw_message */
 			struct ctdluser *is_mailbox,	/* Mailbox room? */
 			int is_binary,			/* Is encoding necessary? */
-			int is_unique,			/* Del others of this type? */
 			unsigned int flags		/* Internal save flags */
 );
 struct CtdlMessage *CtdlFetchMessage(long msgnum, int with_body);

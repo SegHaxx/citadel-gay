@@ -447,9 +447,13 @@ void CtdlGetSysConfigBackend(long msgnum, void *userdata) {
 }
 
 
+
+/*
+ * This is for fetching longer configuration sets which are stored in the message base.
+ */
 char *CtdlGetSysConfig(char *sysconfname) {
 	char hold_rm[ROOMNAMELEN];
-	long msgnum;
+	long msgnum = -1;
 	char *conf;
 	struct CtdlMessage *msg;
 	char buf[SIZ];
@@ -460,14 +464,22 @@ char *CtdlGetSysConfig(char *sysconfname) {
 		return NULL;
 	}
 
-	/* We want the last (and probably only) config in this room */
-	begin_critical_section(S_CONFIG);
-	config_msgnum = (-1L);
-	CtdlForEachMessage(MSGS_LAST, 1, NULL, sysconfname, NULL, CtdlGetSysConfigBackend, NULL);
-	msgnum = config_msgnum;
-	end_critical_section(S_CONFIG);
+	/* The new way: hunt for the message number in the config database */
+	msgnum = CtdlGetConfigLong(sysconfname);
 
-	if (msgnum < 0L) {
+	/* Legacy format: hunt through the local system configuration room for a message with a matching MIME type */
+	if (msgnum <= 0) {
+		begin_critical_section(S_CONFIG);
+		config_msgnum = -1;
+		CtdlForEachMessage(MSGS_LAST, 1, NULL, sysconfname, NULL, CtdlGetSysConfigBackend, NULL);
+		msgnum = config_msgnum;
+		end_critical_section(S_CONFIG);
+		if (msgnum > 0) {
+			CtdlSetConfigLong(sysconfname, msgnum);		// store it the new way so we don't have to do this again
+		}
+	}
+
+	if (msgnum <= 0) {
 		conf = NULL;
 	}
 	else {
@@ -483,7 +495,7 @@ char *CtdlGetSysConfig(char *sysconfname) {
 
 	CtdlGetRoom(&CC->room, hold_rm);
 
-	if (conf != NULL) {
+	if (conf != NULL) {		// Strip the MIME headers, leaving only the content
 		do {
 			extract_token(buf, conf, 0, '\n', sizeof buf);
 			strcpy(conf, &conf[strlen(buf)+1]);
@@ -495,5 +507,17 @@ char *CtdlGetSysConfig(char *sysconfname) {
 
 
 void CtdlPutSysConfig(char *sysconfname, char *sysconfdata) {
-	CtdlWriteObject(SYSCONFIGROOM, sysconfname, sysconfdata, (strlen(sysconfdata)+1), NULL, 0, 1, 0);
+	long msgnum = -1;
+
+	// Search for the previous copy of this config item, deleting it if it is found.
+	msgnum = CtdlGetConfigLong(sysconfname);
+	if (msgnum > 0) {
+		CtdlDeleteMessages(SYSCONFIGROOM, &msgnum, 1, "");
+	}
+
+	// Go ahead and save it, and write the new msgnum to the config database so we can find it again
+	msgnum = CtdlWriteObject(SYSCONFIGROOM, sysconfname, sysconfdata, (strlen(sysconfdata)+1), NULL, 0, 0);
+	if (msgnum > 0) {
+		CtdlSetConfigLong(sysconfname, msgnum);
+	}
 }

@@ -533,7 +533,6 @@ void vcard_write_user(struct ctdluser *u, struct vCard *v) {
 			strlen(ser)+1,		/* length */
 			u,			/* which user */
 			0,			/* not binary */
-			0,			/* don't delete others of this type */
 			0);			/* no flags */
 
 	free(ser);

@@ -25,11 +25,7 @@ char editor_path[PATH_MAX];
 /* 
  * General system configuration command
  */
-void do_system_configuration(CtdlIPC * ipc)
-{
-
-	/* NUM_CONFIGS is now defined in citadel.h */
-
+void do_system_configuration(CtdlIPC * ipc) {
 	char buf[256];
 	char sc[NUM_CONFIGS][256];
 	char *resp = NULL;
@@ -53,8 +49,9 @@ void do_system_configuration(CtdlIPC * ipc)
 			}
 		}
 	}
-	if (resp)
+	if (resp) {
 		free(resp);
+	}
 	resp = NULL;
 	/* Fetch the expire policy (this will silently fail on old servers,
 	 * resulting in "default" policy)
@@ -91,13 +88,15 @@ void do_system_configuration(CtdlIPC * ipc)
 
 	if (!IsEmptyStr(&sc[18][0])) {
 		logpages = 1;
-	} else {
+	}
+	else {
 		logpages = 0;
 	}
 	logpages = boolprompt("Log all instant messages", logpages);
 	if (logpages) {
 		strprompt("Name of logging room", &sc[18][0], ROOMNAMELEN);
-	} else {
+	}
+	else {
 		sc[18][0] = 0;
 	}
 
@@ -117,7 +116,6 @@ void do_system_configuration(CtdlIPC * ipc)
 	strprompt("Minimum number of worker threads", &sc[21][0], 3);
 	strprompt("Maximum number of worker threads", &sc[22][0], 3);
 	snprintf(sc[43], sizeof sc[43], "%d", (boolprompt("Automatically delete committed database logs", atoi(&sc[43][0]))));
-
 	strprompt("Server IP address (* for 'any')", &sc[37][0], 15);
 	strprompt("POP3 server port (-1 to disable)", &sc[23][0], 5);
 	strprompt("POP3S server port (-1 to disable)", &sc[40][0], 5);
@@ -130,10 +128,8 @@ void do_system_configuration(CtdlIPC * ipc)
 	strprompt("NNTPS server port (-1 to disable)", &sc[71][0], 5);
 	strprompt("Postfix TCP Dictionary Port server port (-1 to disable)", &sc[50][0], 5);
 	strprompt("ManageSieve server port (-1 to disable)", &sc[51][0], 5);
-
 	strprompt("XMPP (Jabber) client to server port (-1 to disable)", &sc[62][0], 5);
-	/* No prompt because we don't implement this service yet, it's just a placeholder */
-	/* strprompt("XMPP (Jabber) server to server port (-1 to disable)", &sc[63][0], 5); */
+	// strprompt("XMPP (Jabber) server to server port (-1 to disable)", &sc[63][0], 5);   This is just a placeholder.
 
 	/* This logic flips the question around, because it's one of those
 	 * situations where 0=yes and 1=no
@@ -233,9 +229,7 @@ void do_system_configuration(CtdlIPC * ipc)
 	strprompt("Default frequency to run POP3 collection (in seconds)", &sc[64][0], 5);
 	strprompt("Fastest frequency to run POP3 collection (in seconds)", &sc[65][0], 5);
 	strprompt("Hour to run purges (0-23)", &sc[31][0], 2);
-	snprintf(sc[42], sizeof sc[42], "%d", (boolprompt("Enable full text search index (warning: resource intensive)",
-							  atoi(&sc[42][0]))));
-
+	snprintf(sc[42], sizeof sc[42], "%d", (boolprompt("Enable full text search index (warning: resource intensive)", atoi(&sc[42][0]))));
 	snprintf(sc[46], sizeof sc[46], "%d", (boolprompt("Perform journaling of email messages", atoi(&sc[46][0]))));
 	snprintf(sc[47], sizeof sc[47], "%d", (boolprompt("Perform journaling of non-email messages", atoi(&sc[47][0]))));
 	if ((atoi(&sc[46][0])) || (atoi(&sc[47][0]))) {
@@ -250,8 +244,9 @@ void do_system_configuration(CtdlIPC * ipc)
 
 	/* External pager stuff */
 	int yes_pager = 0;
-	if (strlen(sc[60]) > 0)
+	if (strlen(sc[60]) > 0) {
 		yes_pager = 1;
+	}
 	yes_pager = boolprompt("Configure an external pager tool", yes_pager);
 	if (yes_pager) {
 		strprompt("External pager tool", &sc[60][0], 255);
@@ -752,10 +747,6 @@ void do_pop3client_configuration(CtdlIPC * ipc)
 		free(recs);
 	}
 }
-
-
-
-
 
 
 /*
