@@ -641,7 +641,7 @@ void cmd_conf(char *argbuf)
 	}
 
 	// CONF GETVAL - retrieve configuration variables from the database
-	// CONF LOADVAL - same thing but can handle variables bigger than 1 KB
+	// CONF LOADVAL - same thing but can handle variables bigger than 1 KB (deprecated and probably safe to remove)
 	else if ( (!strcasecmp(cmd, "GETVAL")) || (!strcasecmp(cmd, "LOADVAL")) ) {
 		extract_token(confname, argbuf, 1, '|', sizeof confname);
 		char *v = CtdlGetConfigStr(confname);
@@ -670,7 +670,7 @@ void cmd_conf(char *argbuf)
 		}
 	}
 
-	// CONF STOREVAL - store configuration variables in the database bigger than 1 KB
+	// CONF STOREVAL - store configuration variables in the database bigger than 1 KB (deprecated and probably safe to remove)
 	else if (!strcasecmp(cmd, "STOREVAL")) {
 		if (num_tokens(argbuf, '|') < 3) {
 			cprintf("%d name and length required\n", ERROR);
