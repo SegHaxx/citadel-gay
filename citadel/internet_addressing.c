@@ -415,7 +415,7 @@ int expand_aliases(char *name) {
 				bar[0] = 0;
 				++bar;
 				if (!strcasecmp(name, t)) {
-					syslog(LOG_DEBUG, "\033[36mAliasing <%s> to <%s>\033[0m", name, bar);
+					syslog(LOG_DEBUG, "internet_addressing: global alias <%s> to <%s>", name, bar);
 					strcpy(name, bar);
 				}
 			}
@@ -427,10 +427,7 @@ int expand_aliases(char *name) {
 		}
 	}
 
-
-
-
-	char original_name[256];
+	char original_name[256];				// Now go for the regular aliases
 	safestrncpy(original_name, name, sizeof original_name);
 
 	// should these checks still be here, or maybe move them to split_recps() ?
@@ -444,7 +441,7 @@ int expand_aliases(char *name) {
 	}
 
 	if (strcasecmp(original_name, name)) {
-		syslog(LOG_INFO, "internet_addressing: %s is being forwarded to %s", original_name, name);
+		syslog(LOG_INFO, "internet_addressing: directory alias <%s> to <%s>", original_name, name);
 	}
 
 	/* Change "user @ xxx" to "user" if xxx is an alias for this host */
@@ -452,7 +449,7 @@ int expand_aliases(char *name) {
 		if (name[a] == '@') {
 			if (CtdlHostAlias(&name[a+1]) == hostalias_localhost) {
 				name[a] = 0;
-				syslog(LOG_DEBUG, "internet_addressing: changed to <%s>", name);
+				syslog(LOG_DEBUG, "internet_addressing: host is local, recipient is <%s>", name);
 				break;
 			}
 		}
@@ -725,7 +722,6 @@ struct recptypes *validate_recipients(char *supplied_recipients, const char *Rem
 				strcat(ret->display_recp, append);
 			}
 		}
-		syslog(LOG_DEBUG, "org_recp: \033[31m%-30s\033[0m   this_recp: \033[32m%-30s\033[0m   mailtype: %s", org_recp, this_recp, killo[mailtype]);
 	}
 
 	if ( (ret->num_local + ret->num_internet + ret->num_room + ret->num_error) == 0) {
