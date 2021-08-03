@@ -398,31 +398,34 @@ char *killo[] = {		// FIXME remove this when diags are complete
 };
 
 
-/*
- * Aliasing for network mail.
- */
-int expand_aliases(char *name) {				/* process alias and routing info for mail */
+// Process alias and routing info for email addresses
+int expand_aliases(char *name) {
 	int a;
 	char aaa[SIZ];
 	int at = 0;
 	char node[64];
+	char *t;
 
+	char *aliases = CtdlGetSysConfig(GLOBAL_ALIASES);	// First hit the Global Alias Table
+	if (aliases) {
+		char *aptr = aliases;
+		while ((t = strtok_r(aptr, "\n", &aptr))) {
+			char *bar = strchr(t, '|');
+			if (bar) {
+				bar[0] = 0;
+				++bar;
+				if (!strcasecmp(name, t)) {
+					syslog(LOG_DEBUG, "\033[36mAliasing <%s> to <%s>\033[0m", name, bar);
+					strcpy(name, bar);
+				}
+			}
+		}
 
-
-
-	// FIXME write a "real" alias table here
-
-
-	// temporary test of expansion
-	if (!strcasecmp(name, "root")) {
-		strcpy(name, "root");
-		return(EA_MULTIPLE);
+		free(aliases);
+		if (strchr(name, ',')) {
+			return(EA_MULTIPLE);
+		}
 	}
-	if (!strcasecmp(name, "qux")) {
-		strcpy(name, "eggroll,blat,fun@eek.boop");
-		return(EA_MULTIPLE);
-	}
-
 
 
 

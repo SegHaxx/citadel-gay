@@ -673,8 +673,9 @@ extern "C" {
 #define CFG_SMTP_FROM_NOFILTER 1
 #define CFG_SMTP_FROM_CORRECT 2
 #define CFG_SMTP_FROM_REJECT 3
+
 /*
- * MIME types used in Citadel for configuration stuff
+ * object types used in Citadel for configuration stuff (some of these are obsolete)
  */
 #define SPOOLMIME	"application/x-citadel-delivery-list"
 #define	INTERNETCFG	"application/x-citadel-internet-config"
@@ -683,6 +684,7 @@ extern "C" {
 #define FILTERLIST	"application/x-citadel-filter-list"
 #define SIEVECONFIG	"application/x-citadel-sieve-config"
 #define XMPPMORTUARY	"application/x-citadel-xmpp-mortuary"
+#define GLOBAL_ALIASES	"global_alias_table"
 
 #define FILE_MAILALIAS       "__MAIL_ALIAS__"
 
