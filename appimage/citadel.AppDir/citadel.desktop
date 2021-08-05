@@ -1,8 +1,0 @@
-[Desktop Entry]
-Version=1.0
-Type=Application
-Categories=Network;
-Terminal=true
-Exec=AppRun
-Name=Citadel
-Icon=citadel
