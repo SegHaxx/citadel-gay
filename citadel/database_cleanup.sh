@@ -38,15 +38,8 @@ done
 
 DATA_DIR=$DATA_DIR/data
 
-# If we're on an AppDir system, use the embedded db_tools.
-if [ "${APPDIR}" != "" ] ; then
-	export PATH=${APPDIR}/usr/bin:$PATH
-	RECOVER=${APPDIR}/usr/bin/db_recover
-	DUMP=${APPDIR}/usr/bin/db_dump
-	LOAD=${APPDIR}/usr/bin/db_load
-
-# If we're on an Easy Install system, use our own db_ tools.
-elif [ -x /usr/local/ctdlsupport/bin/db_dump ] ; then
+# If we're on a Docker or Easy Install system, use our own db_ tools.
+if [ -x /usr/local/ctdlsupport/bin/db_dump ] ; then
 	export PATH=/usr/local/ctdlsupport/bin:$PATH
 	RECOVER=/usr/local/ctdlsupport/bin/db_recover
 	DUMP=/usr/local/ctdlsupport/bin/db_dump
