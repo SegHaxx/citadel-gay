@@ -390,12 +390,6 @@ enum {
 	EA_LOCAL,		// Local message, do no network processing
 	EA_INTERNET		// Convert msg and send as Internet mail
 };
-char *killo[] = {		// FIXME remove this when diags are complete
-	"error",
-	"multiple",
-	"local",
-	"internet"
-};
 
 
 // Process alias and routing info for email addresses
