@@ -124,7 +124,7 @@ extern char *ssl_cipher_list;
 
 #define SLEEPING		180		/* TCP connection timeout */
 #define WEBCIT_TIMEOUT		900		/* WebCit session timeout */
-#define PORT_NUM		2000		/* port number to listen on */
+#define PORT_NUM		80		/* port number to listen on */
 #define DEVELOPER_ID		0
 #define CLIENT_ID		4
 #define CLIENT_VERSION 932		/* This version of WebCit */
