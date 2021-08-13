@@ -391,15 +391,15 @@ void end_ajax_response(void) {
 /*
  * Wraps a Citadel server command in an AJAX transaction.
  */
-void ajax_servcmd(void)
-{
+void ajax_servcmd(void) {
 	int Done = 0;
 	StrBuf *Buf;
 	char *junk;
 	size_t len;
 
-	if (verbose)
+	if (verbose) {
 		syslog(LOG_DEBUG, "ajax_servcmd() g_cmd=\"%s\"", bstr("g_cmd") );
+	}
 	begin_ajax_response();
 	Buf = NewStrBuf();
 	serv_puts(bstr("g_cmd"));
