@@ -7,21 +7,15 @@
 
 <script type="text/javascript">
 
-
-function load_aliases() {
-	var request77 = new XMLHttpRequest();
-	request77.open("GET", "ajax_servcmd?g_cmd=LIST", true);
-	request77.onreadystatechange = function() {
-		populate_aliases(this.responseText);
-	};
-	request77.send();
-	request77 = null;
-}
+load_aliases = async() => {
+	response = await fetch("ajax_servcmd?g_cmd=LIST");
+	data = await(response.text());
+	populate_aliases(data);
+};
 
 function populate_aliases(data) {
 	document.getElementById("wc_easterbunny77").innerHTML = data;
 }
-
 
 document.getElementById("wc_easterbunny77").innerHTML = "die easterbunny die easterbunny still fool";
 load_aliases();
