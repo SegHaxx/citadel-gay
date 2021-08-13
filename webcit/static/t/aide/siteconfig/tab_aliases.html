@@ -14,10 +14,12 @@ load_aliases = async() => {
 };
 
 function populate_aliases(data) {
-	document.getElementById("wc_easterbunny77").innerHTML = data;
+	lines = data.split("\n");
+	for (var i=1; i<lines.length && lines[i] != "000"; ++i) {
+		document.getElementById("wc_easterbunny77").innerHTML += i + " " + lines[i] + "<br>";
+	}
 }
 
-document.getElementById("wc_easterbunny77").innerHTML = "die easterbunny die easterbunny still fool";
 load_aliases();
 
 </script>
