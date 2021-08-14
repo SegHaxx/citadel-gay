@@ -1,7 +1,7 @@
 /*
  * WebCit "system dependent" code.
  *
- * Copyright (c) 1996-2012 by the citadel.org team
+ * Copyright (c) 1996-2021 by the citadel.org team
  *
  * This program is open source software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 3.
@@ -133,10 +133,9 @@ void LoadMimeBlacklist(void)
 void CheckGZipCompressionAllowed(const char *MimeType, long MLen)
 {
 	void *v;
-	wcsession *WCC = WC;
 
-	if (WCC->Hdr->HR.gzip_ok)
-	    WCC->Hdr->HR.gzip_ok = GetHash(GZMimeBlackList, MimeType, MLen, &v) == 0;
+	if (WC->Hdr->HR.gzip_ok)
+	    WC->Hdr->HR.gzip_ok = GetHash(GZMimeBlackList, MimeType, MLen, &v) == 0;
 }
 
 void InitialiseSemaphores(void)

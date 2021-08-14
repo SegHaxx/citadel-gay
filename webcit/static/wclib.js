@@ -999,7 +999,7 @@ function create_blog()
 	create_blog_room: {
 	    nonce:       Nonce,
 	    er_name:     roomname,
-	    type:        'public',
+	    type:	'public',
 	    er_view:     er_view_blog,
 	    er_floor:    floorID,
 	    template:    "room_result_json",
@@ -1008,8 +1008,8 @@ function create_blog()
 	setflags_blog_room: {
 	    nonce:       Nonce,
 	    er_name:     roomname,
-	    go:          roomname,
-	    type:        'public',
+	    go:	  roomname,
+	    type:	'public',
 	    er_floor:    floorID,
 
 	    directory:   "yes",
@@ -1019,7 +1019,7 @@ function create_blog()
 	    ulmsg:       "no",
 	    visdir:      "no",
 
-	    anon:        "no",
+	    anon:	"no",
 	    last_tabsel: 1,
 	    er_view:     er_view_blog,
 	    template:    "room_result_json",
@@ -1028,7 +1028,7 @@ function create_blog()
 	create_blog_edit_room: {
 	    nonce:       Nonce,
 	    er_name:     editroomname,
-	    type:        type_edit,
+	    type:	type_edit,
 	    er_view:     vselectedMarkup,
 	    er_floor:    floorID,
 	    er_password: passvoid,
@@ -1038,8 +1038,8 @@ function create_blog()
 	setflags_blog_edit_room: {
 	    nonce:       Nonce,
 	    er_name:     editroomname,
-	    go:          editroomname,
-	    type:        type_edit,
+	    go:	  editroomname,
+	    type:	type_edit,
 	    er_floor:    floorID,
 
 	    directory:   "yes",
@@ -1049,7 +1049,7 @@ function create_blog()
 	    ulmsg:       "no",
 	    visdir:      "yes",
 
-	    anon:        "no",
+	    anon:	"no",
 	    last_tabsel: 1,
 	    er_view:     er_view_blog,
 	    template:    "room_result_json",
@@ -1058,7 +1058,7 @@ function create_blog()
 	blog_wiki_startmessage : {
 	    nonce:       Nonce,
 	    force_room:  editroomname,
-	    page:        "home",
+	    page:	"home",
 	    markdown:    (isHtmlWiki)?0:1,
 	    msgtext:     starttext
 
@@ -1142,3 +1142,26 @@ function publishMessage()
 	}
     });
 }
+
+
+
+
+// Generate a random string of the specified length
+// Useful for generating one-time-use div names
+//
+function randomString(length) {
+	var chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghiklmnopqrstuvwxyz'.split('');
+	var str = '';
+
+	if (!length) {
+		length = Math.floor(Math.random() * chars.length);
+	}
+	for (var i = 0; i < length; i++) {
+		str += chars[Math.floor(Math.random() * chars.length)];
+	}
+	return str;
+}
+
+
+
+

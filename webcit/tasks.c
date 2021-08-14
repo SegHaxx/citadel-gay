@@ -87,7 +87,6 @@ int tasks_RenderView_or_Tail(SharedMessageStatus *Stat,
 	time_t due;
 	char buf[SIZ];
 	icalproperty *p;
-	wcsession *WCC = WC;
 
 	wc_printf("<table class=\"calendar_view_background\"><tbody id=\"taskview\">\n<tr>\n<th>");
 	wc_printf(_("Completed?"));
@@ -115,8 +114,8 @@ int tasks_RenderView_or_Tail(SharedMessageStatus *Stat,
 			      task_completed_cmp);
 	}
 
-	Pos = GetNewHashPos(WCC->disp_cal_items, 0);
-	while (GetNextHashPos(WCC->disp_cal_items, Pos, &hklen, &HashKey, &vCal)) {
+	Pos = GetNewHashPos(WC->disp_cal_items, 0);
+	while (GetNextHashPos(WC->disp_cal_items, Pos, &hklen, &HashKey, &vCal)) {
 		icalproperty_status todoStatus;
 		int is_date;
 
@@ -176,7 +175,6 @@ int tasks_RenderView_or_Tail(SharedMessageStatus *Stat,
 void display_edit_individual_task(icalcomponent *supplied_vtodo, long msgnum, char *from,
 			int unread, calview *calv)
 {
-	wcsession *WCC = WC;
 	icalcomponent *vtodo;
 	icalproperty *p;
 	struct icaltimetype IcalTime;
@@ -233,7 +231,7 @@ void display_edit_individual_task(icalcomponent *supplied_vtodo, long msgnum, ch
 	wc_printf("<div style=\"display: none;\">\n	");
 
 	wc_printf("<input type=\"hidden\" name=\"go\" value=\"");
-	StrEscAppend(WCC->WBuf, WCC->CurRoom.name, NULL, 0, 0);
+	StrEscAppend(WC->WBuf, WC->CurRoom.name, NULL, 0, 0);
 	wc_printf("\">\n");
 
 	wc_printf("<input type=\"hidden\" name=\"nonce\" value=\"%d\">\n", WC->nonce);
@@ -603,7 +601,6 @@ void load_task(icalcomponent *event, long msgnum, char *from, int unread, calvie
 {
 	icalproperty *ps = NULL;
 	struct icaltimetype dtstart, dtend;
-	wcsession *WCC = WC;
 	disp_cal *Cal;
 	size_t len;
 	icalcomponent *cptr = NULL;
@@ -611,8 +608,8 @@ void load_task(icalcomponent *event, long msgnum, char *from, int unread, calvie
 	dtstart = icaltime_null_time();
 	dtend = icaltime_null_time();
 	
-	if (WCC->disp_cal_items == NULL) {
-		WCC->disp_cal_items = NewHash(0, Flathash);
+	if (WC->disp_cal_items == NULL) {
+		WC->disp_cal_items = NewHash(0, Flathash);
 	}
 
 	Cal = (disp_cal*) malloc(sizeof(disp_cal));
@@ -655,7 +652,7 @@ void load_task(icalcomponent *event, long msgnum, char *from, int unread, calvie
 
 	/* Store it in the hash list. */
 	/* syslog(LOG_DEBUG, "INITIAL: %s", ctime(&Cal->event_start)); */
-	Put(WCC->disp_cal_items, 
+	Put(WC->disp_cal_items, 
 	    (char*) &Cal->event_start,
 	    sizeof(Cal->event_start), 
 	    Cal, 

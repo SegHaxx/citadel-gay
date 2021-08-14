@@ -1,7 +1,7 @@
 /*
  * Functions pertaining to rooms with a wiki view
  *
- * Copyright (c) 2009-2018 by the citadel.org team
+ * Copyright (c) 2009-2021 by the citadel.org team
  *
  * This program is open source software.  You can redistribute it and/or
  * modify it under the terms of the GNU General Public License, version 3.
@@ -32,14 +32,13 @@ void str_wiki_index(StrBuf *s)
  */
 void display_wiki_page_backend(StrBuf *pagename, char *rev, int do_revert)
 {
-	wcsession *WCC = WC;
 	const StrBuf *Mime;
 	long msgnum = (-1L);
 	char buf[256];
 
-	if ((WCC->CurRoom.view != VIEW_WIKI) &&
-	    (WCC->CurRoom.view != VIEW_WIKIMD)) {
-		wc_printf(_("'%s' is not a Wiki room."), ChrPtr(WCC->CurRoom.name) );
+	if ((WC->CurRoom.view != VIEW_WIKI) &&
+	    (WC->CurRoom.view != VIEW_WIKIMD)) {
+		wc_printf(_("'%s' is not a Wiki room."), ChrPtr(WC->CurRoom.name) );
 		return;
 	}
 
@@ -63,7 +62,7 @@ void display_wiki_page_backend(StrBuf *pagename, char *rev, int do_revert)
 	}
 
 	if (msgnum >= 0L) {
-		read_message(WCC->WBuf, HKEY("view_message"), msgnum, NULL, &Mime, NULL);
+		read_message(WC->WBuf, HKEY("view_message"), msgnum, NULL, &Mime, NULL);
 		return;
 	}
 	putbstr("pagename", pagename);
@@ -270,12 +269,11 @@ int ConditionalHaveWikiPage(StrBuf *Target, WCTemplputParams *TP)
 
 int ConditionalHavewikiType(StrBuf *Target, WCTemplputParams *TP)
 {
-	wcsession *WCC = WC;
 	const char *pch;
 	long len;
 
 	GetTemplateTokenString(Target, TP, 2, &pch, &len);
-	return bmstrcasestr((char *)ChrPtr(WCC->Hdr->HR.ReqLine), pch) != NULL;
+	return bmstrcasestr((char *)ChrPtr(WC->Hdr->HR.ReqLine), pch) != NULL;
 }
 
 

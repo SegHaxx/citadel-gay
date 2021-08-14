@@ -1,7 +1,7 @@
 /*
  * Administrative screen for site-wide configuration
  *
- * Copyright (c) 1996-2014 by the citadel.org team
+ * Copyright (c) 1996-2021 by the citadel.org team
  *
  * This program is open source software.  You can redistribute it and/or
  * modify it under the terms of the GNU General Public License, version 3.
@@ -39,7 +39,6 @@ ConstStr ExpirePolicyStrings[][2] = {
 void LoadExpirePolicy(GPEXWhichPolicy which)
 {
 	StrBuf *Buf;
-	wcsession *WCC = WC;
 	long State;
 	const char *Pos = NULL;
 
@@ -48,8 +47,8 @@ void LoadExpirePolicy(GPEXWhichPolicy which)
 	StrBuf_ServGetln(Buf);
 	if (GetServerStatus(Buf, &State) == 2) {
 		Pos = ChrPtr(Buf) + 4;
-		WCC->Policy[which].expire_mode = StrBufExtractNext_long(Buf, &Pos, '|');
-		WCC->Policy[which].expire_value = StrBufExtractNext_long(Buf, &Pos, '|');
+		WC->Policy[which].expire_mode = StrBufExtractNext_long(Buf, &Pos, '|');
+		WC->Policy[which].expire_value = StrBufExtractNext_long(Buf, &Pos, '|');
 	}
 	else if (State == 550)
 		AppendImportantMessage(_("Higher access is required to access this function."), -1);
@@ -76,7 +75,6 @@ void SaveExpirePolicyFromHTTP(GPEXWhichPolicy which)
 
 int ConditionalExpire(StrBuf *Target, WCTemplputParams *TP)
 {
-	wcsession *WCC = WC;
 	GPEXWhichPolicy which;
 	int CompareWith;
 
@@ -85,28 +83,26 @@ int ConditionalExpire(StrBuf *Target, WCTemplputParams *TP)
 
 	LoadExpirePolicy(which);
 	
-	return WCC->Policy[which].expire_mode == CompareWith;
+	return WC->Policy[which].expire_mode == CompareWith;
 }
 
 void tmplput_ExpireValue(StrBuf *Target, WCTemplputParams *TP)
 {
 	GPEXWhichPolicy which;
-	wcsession *WCC = WC;
 		
 	which = GetTemplateTokenNumber(Target, TP, 0, 0);
 	LoadExpirePolicy(which);
-	StrBufAppendPrintf(Target, "%d", WCC->Policy[which].expire_value);
+	StrBufAppendPrintf(Target, "%d", WC->Policy[which].expire_value);
 }
 
 
 void tmplput_ExpireMode(StrBuf *Target, WCTemplputParams *TP)
 {
 	GPEXWhichPolicy which;
-	wcsession *WCC = WC;
 		
 	which = GetTemplateTokenNumber(Target, TP, 2, 0);
 	LoadExpirePolicy(which);
-	StrBufAppendPrintf(Target, "%d", WCC->Policy[which].expire_mode);
+	StrBufAppendPrintf(Target, "%d", WC->Policy[which].expire_mode);
 }
 
 
@@ -232,15 +228,14 @@ CfgMapping ServerConfig[] = {
  */
 void load_siteconfig(void)
 {
-	wcsession *WCC = WC;
 	StrBuf *Buf;
 	HashList *Cfg;
 	long len;
 	int i, j;
 	
-	if (WCC->ServCfg == NULL)
-		WCC->ServCfg = NewHash(1, NULL);
-	Cfg = WCC->ServCfg;
+	if (WC->ServCfg == NULL)
+		WC->ServCfg = NewHash(1, NULL);
+	Cfg = WC->ServCfg;
 
 	Buf = NewStrBuf();
 
@@ -290,7 +285,6 @@ void load_siteconfig(void)
  */
 void siteconfig(void)
 {
-	wcsession *WCC = WC;
 	int i, value;
 	StrBuf *Line;
 
@@ -341,24 +335,25 @@ void siteconfig(void)
 	SaveExpirePolicyFromHTTP(sitepolicy);
 	SaveExpirePolicyFromHTTP(mailboxespolicy);
 
-	FreeStrBuf(&WCC->serv_info->serv_default_cal_zone);
-	WCC->serv_info->serv_default_cal_zone = NewStrBufDup(sbstr("c_default_cal_zone"));
+	FreeStrBuf(&WC->serv_info->serv_default_cal_zone);
+	WC->serv_info->serv_default_cal_zone = NewStrBufDup(sbstr("c_default_cal_zone"));
 
 	AppendImportantMessage(_("Your system configuration has been updated."), -1);
-	DeleteHash(&WCC->ServCfg);
+	DeleteHash(&WC->ServCfg);
 	display_aide_menu();
 }
 
+
+// if WebCit Classic wasn't obsolete we would replace this with a "CONF GETVAL" type of thing
 void tmplput_servcfg(StrBuf *Target, WCTemplputParams *TP)
 {
-	wcsession *WCC = WC;
 	void *vBuf;
 	StrBuf *Buf;
 
-	if (WCC->is_aide) {
-		if (WCC->ServCfg == NULL)
+	if (WC->is_aide) {
+		if (WC->ServCfg == NULL)
 			load_siteconfig();
-		GetHash(WCC->ServCfg, TKEY(0), &vBuf);
+		GetHash(WC->ServCfg, TKEY(0), &vBuf);
 		Buf = (StrBuf*) vBuf;
 		StrBufAppendTemplate(Target, TP, Buf, 1);
 	}
@@ -366,14 +361,13 @@ void tmplput_servcfg(StrBuf *Target, WCTemplputParams *TP)
 
 int ConditionalServCfg(StrBuf *Target, WCTemplputParams *TP)
 {
-	wcsession *WCC = WC;
 	void *vBuf;
 	StrBuf *Buf;
 
-	if (WCC->is_aide) {
-		if (WCC->ServCfg == NULL)
+	if (WC->is_aide) {
+		if (WC->ServCfg == NULL)
 			load_siteconfig();
-		GetHash(WCC->ServCfg, TKEY(2), &vBuf);
+		GetHash(WC->ServCfg, TKEY(2), &vBuf);
 		if (vBuf == NULL) return 0;
 		Buf = (StrBuf*) vBuf;
 		if (TP->Tokens->nParameters == 3) {
@@ -398,15 +392,14 @@ int ConditionalServCfg(StrBuf *Target, WCTemplputParams *TP)
 
 int ConditionalServCfgCTXStrBuf(StrBuf *Target, WCTemplputParams *TP)
 {
-	wcsession *WCC = WC;
 	void *vBuf;
 	StrBuf *Buf;
 	StrBuf *ZoneToCheck = (StrBuf*) CTX(CTX_STRBUF);
 
-	if ((WCC->is_aide) || (ZoneToCheck == NULL)) {
-		if (WCC->ServCfg == NULL)
+	if ((WC->is_aide) || (ZoneToCheck == NULL)) {
+		if (WC->ServCfg == NULL)
 			load_siteconfig();
-		GetHash(WCC->ServCfg, TKEY(2), &vBuf);
+		GetHash(WC->ServCfg, TKEY(2), &vBuf);
 		if (vBuf == NULL) return 0;
 		Buf = (StrBuf*) vBuf;
 

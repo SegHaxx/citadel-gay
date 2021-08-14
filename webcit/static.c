@@ -286,13 +286,12 @@ int LoadStaticDir(const char *DirName, HashList *DirList, const char *RelDir)
 
 void output_flat_static(void)
 {
-	wcsession *WCC = WC;
 	void *vFile;
 	StrBuf *File;
 
-	if (WCC->Hdr->HR.Handler == NULL)
+	if (WC->Hdr->HR.Handler == NULL)
 		return;
-	if (GetHash(StaticFilemappings[0], SKEY(WCC->Hdr->HR.Handler->Name), &vFile) &&
+	if (GetHash(StaticFilemappings[0], SKEY(WC->Hdr->HR.Handler->Name), &vFile) &&
 	    (vFile != NULL))
 	{
 		File = (StrBuf*) vFile;
@@ -302,12 +301,11 @@ void output_flat_static(void)
 
 void output_static_safe(HashList *DirList)
 {
-	wcsession *WCC = WC;
 	void *vFile;
 	StrBuf *File;
 	const char *MimeType;
 
-	if (GetHash(DirList, SKEY(WCC->Hdr->HR.ReqLine), &vFile) &&
+	if (GetHash(DirList, SKEY(WC->Hdr->HR.ReqLine), &vFile) &&
 	    (vFile != NULL))
 	{
 		File = (StrBuf*) vFile;
@@ -315,8 +313,8 @@ void output_static_safe(HashList *DirList)
 	}
 	else {
 		syslog(LOG_INFO, "output_static_safe() file %s not found. \n", 
-			ChrPtr(WCC->Hdr->HR.ReqLine));
-		MimeType =  GuessMimeByFilename(SKEY(WCC->Hdr->HR.ReqLine));
+			ChrPtr(WC->Hdr->HR.ReqLine));
+		MimeType =  GuessMimeByFilename(SKEY(WC->Hdr->HR.ReqLine));
 		if (strstr(MimeType, "image/") != NULL)
 		{
 			output_error_pic("the file you requested isn't known to our cache", "maybe reload webcit?");

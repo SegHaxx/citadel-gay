@@ -1,7 +1,7 @@
 /*
  * XML sitemap generator
  *
- * Copyright (c) 2010-2012 by the citadel.org team
+ * Copyright (c) 2010-2021 by the citadel.org team
  *
  * This program is open source software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 3.
@@ -20,7 +20,6 @@
  * XML sitemap generator -- go through the message list for a BBS room
  */
 void sitemap_do_bbs(void) {
-	wcsession *WCC = WC;
 	int num_msgs = 0;
 	int i;
 	SharedMessageStatus Stat;
@@ -34,7 +33,7 @@ void sitemap_do_bbs(void) {
 	if (num_msgs < 1) return;
 
 	for (i=0; i<num_msgs; i+=20) {
-		Msg = GetMessagePtrAt(i, WCC->summ);
+		Msg = GetMessagePtrAt(i, WC->summ);
 		if (Msg != NULL) {
 			wc_printf("<url><loc>%s/readfwd", ChrPtr(site_prefix));
 			wc_printf("?go=");
@@ -50,7 +49,6 @@ void sitemap_do_bbs(void) {
  * XML sitemap generator -- go through the message list for a wiki room
  */
 void sitemap_do_wiki(void) {
-	wcsession *WCC = WC;
 	int num_msgs = 0;
 	int i;
 	SharedMessageStatus Stat;
@@ -65,7 +63,7 @@ void sitemap_do_wiki(void) {
 	if (num_msgs < 1) return;
 
 	for (i=0; i<num_msgs; ++i) {
-		Msg = GetMessagePtrAt(i, WCC->summ);
+		Msg = GetMessagePtrAt(i, WC->summ);
 		if (Msg != NULL) {
 
 			serv_printf("MSG0 %ld|3", Msg->msgnum);

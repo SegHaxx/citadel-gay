@@ -1,9 +1,13 @@
-<div class="conftitle"><?_("Global email aliases")></div>
+<div class="conftitle">
 <a href="javascript:load_aliases()">&#8635;</a>
+<?_("Global email aliases")></div>
 <hr>
 
 <div id="wc_easterbunny77">
 </div>
+
+<textarea name="global_aliases" id="global_aliases">a
+</textarea>
 
 <script type="text/javascript">
 
@@ -13,15 +17,37 @@ load_aliases = async() => {
 	populate_aliases(data);
 };
 
+function delete_alias(rowid) {
+	var row = document.getElementById(rowid);
+	row.parentNode.removeChild(row);
+	repopulate_the_box();
+}
+
 function populate_aliases(data) {
+	var a = "<table id=killo9867>";
 	lines = data.split("\n");
 	for (var i=1; i<lines.length && lines[i] != "000"; ++i) {
-		document.getElementById("wc_easterbunny77").innerHTML += i + " " + lines[i] + "<br>";
+		config_line = lines[i].split("|");
+		lineid = randomString(10);
+		a +=	"<tr id=" + lineid + "><td>" + config_line[0] + "</td><td>" +
+			config_line[1] + "</td><td>" +
+			"<a href=\"javascript:delete_alias('" + lineid + "');\">" +
+			"<font color=#FF0000>&#10006;</font></a></td></tr>";
 	}
+	a += "</table>";
+	document.getElementById("wc_easterbunny77").innerHTML = a;
+	repopulate_the_box();
+}
+
+function repopulate_the_box() {
+	newbox = "";
+	t = document.getElementById("killo9867");
+	for (row of t.rows) {
+		newbox += row.cells[0].innerHTML + " - " + row.cells[1].innerHTML + "\n";
+	}
+	document.getElementById("global_aliases").innerHTML = newbox;
 }
 
 load_aliases();
 
 </script>
-
-<!-- This could end up being a design pattern in WebCit-NG -->

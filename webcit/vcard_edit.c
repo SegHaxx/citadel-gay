@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996-2020 by the citadel.org team
+ * Copyright (c) 1996-2021 by the citadel.org team
  *
  * This program is open source software.  You can redistribute it and/or
  * modify it under the terms of the GNU General Public License, version 3.
@@ -545,18 +545,17 @@ void display_vcard_photo_img(void)
 	struct vCard *v;
 	char *photosrc;
 	const char *contentType;
-	wcsession *WCC = WC;
 
-	msgnum = StrBufExtract_long(WCC->Hdr->HR.ReqLine, 0, '/');
+	msgnum = StrBufExtract_long(WC->Hdr->HR.ReqLine, 0, '/');
 	
 	vcard = load_mimepart(msgnum,"1");
 	v = VCardLoad(vcard);
 	
 	photosrc = vcard_get_prop(v, "PHOTO", 1,0,0);
-	FlushStrBuf(WCC->WBuf);
-	StrBufAppendBufPlain(WCC->WBuf, photosrc, -1, 0);
-	if (StrBufDecodeBase64(WCC->WBuf) <= 0) {
-		FlushStrBuf(WCC->WBuf);
+	FlushStrBuf(WC->WBuf);
+	StrBufAppendBufPlain(WC->WBuf, photosrc, -1, 0);
+	if (StrBufDecodeBase64(WC->WBuf) <= 0) {
+		FlushStrBuf(WC->WBuf);
 		
 		hprintf("HTTP/1.1 500 %s\n","Unable to get photo");
 		output_headers(0, 0, 0, 0, 0, 0);
@@ -566,7 +565,7 @@ void display_vcard_photo_img(void)
 		end_burst();
 		return;
 	}
-	contentType = GuessMimeType(ChrPtr(WCC->WBuf), StrLength(WCC->WBuf));
+	contentType = GuessMimeType(ChrPtr(WC->WBuf), StrLength(WC->WBuf));
 	http_transmit_thing(contentType, 0);
 	free(v);
 	free(photosrc);
@@ -626,7 +625,6 @@ void do_edit_vcard(long msgnum, char *partnum,
 		   const char *return_to, 
 		   const char *force_room) {
 	WCTemplputParams SubTP;
-	wcsession *WCC = WC;
 	message_summary *Msg = NULL;
 	wc_mime_attachment *VCMime = NULL;
 	struct vCard *v;
@@ -662,7 +660,7 @@ void do_edit_vcard(long msgnum, char *partnum,
 			v = VCardLoad(VCAtt->Data);
 		}
 
-		parse_vcard(WCC->WBuf, v, ab.VC, NULL);
+		parse_vcard(WC->WBuf, v, ab.VC, NULL);
 	
 	
 		vcard_free(v);
@@ -675,7 +673,7 @@ void do_edit_vcard(long msgnum, char *partnum,
 
 		StackContext(TP, &SubTP, &ab, CTX_VCARD, 0, NULL);
 
-		DoTemplate(HKEY("vcard_edit"), WCC->WBuf, &SubTP);
+		DoTemplate(HKEY("vcard_edit"), WC->WBuf, &SubTP);
 		UnStackContext(&SubTP);
 	}
 	DeleteHash(&ab.VC);
@@ -910,7 +908,6 @@ int vcard_LoadMsgFromServer(SharedMessageStatus *Stat,
 			    int is_new, 
 			    int i)
 {
-	wcsession *WCC = WC;
 	WCTemplputParams *TP = NULL;
 	WCTemplputParams SubTP;
 	vcardview_struct *VS;
@@ -934,13 +931,13 @@ int vcard_LoadMsgFromServer(SharedMessageStatus *Stat,
 	abEntry->VC = NewHash(0, lFlathash);
 	abEntry->ab_msgnum = Msg->msgnum;
 
-	parse_vcard(WCC->WBuf, v, abEntry->VC, VCMime);
+	parse_vcard(WC->WBuf, v, abEntry->VC, VCMime);
 
         memset(&SubTP, 0, sizeof(WCTemplputParams));    
 	StackContext(TP, &SubTP, abEntry, CTX_VCARD, 0, NULL);
 
 	// No, don't display the name, it just shits all over the screen
-	// DoTemplate(HKEY("vcard_list_name"), WCC->WBuf, &SubTP);
+	// DoTemplate(HKEY("vcard_list_name"), WC->WBuf, &SubTP);
 
 	UnStackContext(&SubTP);
 
@@ -972,7 +969,6 @@ void do_addrbook_view(vcardview_struct* VS) {
 	StrBuf **tablabels;
 	int num_ab = GetCount(VS->addrbook);
 	HashList *headlines;
-	wcsession *WCC = WC;
 
 	WCTemplputParams *TP = NULL;
 	WCTemplputParams SubTP;
@@ -1027,11 +1023,11 @@ void do_addrbook_view(vcardview_struct* VS) {
 	StrTabbedDialog(WC->WBuf, num_pages, tablabels);
 	StackContext(TP, &SubTP, VS->addrbook, CTX_VCARD_LIST, 0, NULL);
 
-	DoTemplate(HKEY("vcard_list"), WCC->WBuf, &SubTP);
+	DoTemplate(HKEY("vcard_list"), WC->WBuf, &SubTP);
 	UnStackContext(&SubTP);
 	DeleteHash(&headlines);
 	free(tablabels);
-	StrBufAppendBufPlain(WCC->WBuf, HKEY("</div>"), 0);/* closes: id=global */
+	StrBufAppendBufPlain(WC->WBuf, HKEY("</div>"), 0);/* closes: id=global */
 }
 
 
@@ -1070,7 +1066,6 @@ int vcard_Cleanup(void **ViewSpecific)
 void render_MIME_VCard(StrBuf *Target, WCTemplputParams *TP, StrBuf *FoundCharset)
 {
 	wc_mime_attachment *Mime = (wc_mime_attachment *) CTX(CTX_MIME_ATACH);
-	wcsession *WCC = WC;
 	if (StrLength(Mime->Data) == 0) {
 		MimeLoadData(Mime);
 	}
@@ -1080,10 +1075,10 @@ void render_MIME_VCard(StrBuf *Target, WCTemplputParams *TP, StrBuf *FoundCharse
 
 		Buf = NewStrBuf();
 		/** If it's my vCard I can edit it */
-		if (	(!strcasecmp(ChrPtr(WCC->CurRoom.name), USERCONFIGROOM))
-			|| ((StrLength(WCC->CurRoom.name) > 11) &&
-			    (!strcasecmp(&(ChrPtr(WCC->CurRoom.name)[11]), USERCONFIGROOM)))
-			|| (WCC->CurRoom.view == VIEW_ADDRESSBOOK)
+		if (	(!strcasecmp(ChrPtr(WC->CurRoom.name), USERCONFIGROOM))
+			|| ((StrLength(WC->CurRoom.name) > 11) &&
+			    (!strcasecmp(&(ChrPtr(WC->CurRoom.name)[11]), USERCONFIGROOM)))
+			|| (WC->CurRoom.view == VIEW_ADDRESSBOOK)
 			) {
 			StrBufAppendPrintf(Buf, "<a href=\"edit_vcard?msgnum=%ld?partnum=%s\">",
 				Mime->msgnum, ChrPtr(Mime->PartNum));

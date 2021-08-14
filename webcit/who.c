@@ -43,7 +43,6 @@ int CompareUserStruct(const void *VUser1, const void *VUser2)
 
 int GetWholistSection(HashList *List, time_t now, StrBuf *Buf, const char *FilterName, long FNLen)
 {
-	wcsession *WCC = WC;
 	UserStateStruct *User, *OldUser;
 	void *VOldUser;
 	size_t BufLen;
@@ -94,7 +93,7 @@ int GetWholistSection(HashList *List, time_t now, StrBuf *Buf, const char *Filte
 					OldUser = VOldUser;
 					OldUser->SessionCount++;
 					if (!User->Idle) {
-						if (User->Session == WCC->ctdl_pid) 
+						if (User->Session == WC->ctdl_pid) 
 							OldUser->Session = User->Session;
 						
 						OldUser->Idle = User->Idle;

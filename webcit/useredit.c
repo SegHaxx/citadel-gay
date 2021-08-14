@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1996-2020 by the citadel.org team
+ * Copyright (c) 1996-2021 by the citadel.org team
  *
  * This program is open source software.  You can redistribute it and/or
  * modify it under the terms of the GNU General Public License, version 3.
@@ -529,7 +529,6 @@ int Conditional_USER_HAS_PIC(StrBuf *Target, WCTemplputParams *TP)
  */
 long locate_user_vcard_in_this_room(message_summary **VCMsg, wc_mime_attachment **VCAtt)
 {
-	wcsession *WCC = WC;
 	HashPos *at;
 	HashPos *att;
 	const char *HashKey;
@@ -553,8 +552,8 @@ TRYAGAIN:
 	Stat.highest_found = (-1);
 	/* Search for the user's vCard */
 	if (load_msg_ptrs("MSGS ALL||||1", NULL, NULL, &Stat, NULL, NULL, NULL, NULL, 0) > 0) {
-		at = GetNewHashPos(WCC->summ, 0);
-		while (GetNextHashPos(WCC->summ, at, &HKLen, &HashKey, &vMsg)) {
+		at = GetNewHashPos(WC->summ, 0);
+		while (GetNextHashPos(WC->summ, at, &HKLen, &HashKey, &vMsg)) {
 			Msg = (message_summary*) vMsg;		
 			Msg->MsgBody =  (wc_mime_attachment*) malloc(sizeof(wc_mime_attachment));
 			memset(Msg->MsgBody, 0, sizeof(wc_mime_attachment));

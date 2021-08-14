@@ -1,7 +1,7 @@
 /*
  * Displays the "Summary Page"
  *
- * Copyright (c) 1996-2012 by the citadel.org team
+ * Copyright (c) 1996-2021 by the citadel.org team
  *
  * This program is open source software.  You can redistribute it and/or
  * modify it under the terms of the GNU General Public License, version 3.
@@ -94,7 +94,6 @@ void tasks_section(void) {
 	long HKLen;
 	void *vMsg;
 	message_summary *Msg;
-	wcsession *WCC = WC;
 	StrBuf *Buf;
 	SharedMessageStatus Stat;
 
@@ -107,7 +106,7 @@ void tasks_section(void) {
 	gotoroom(Buf);
 	FreeStrBuf(&Buf);
 
-	if (WCC->CurRoom.view != VIEW_TASKS) {
+	if (WC->CurRoom.view != VIEW_TASKS) {
 		num_msgs = 0;
 	}
 	else {
@@ -115,8 +114,8 @@ void tasks_section(void) {
 	}
 
 	if (num_msgs > 0) {
-		at = GetNewHashPos(WCC->summ, 0);
-		while (GetNextHashPos(WCC->summ, at, &HKLen, &HashKey, &vMsg)) {
+		at = GetNewHashPos(WC->summ, 0);
+		while (GetNextHashPos(WC->summ, at, &HKLen, &HashKey, &vMsg)) {
 			Msg = (message_summary*) vMsg;		
 			tasks_LoadMsgFromServer(NULL, NULL, Msg, 0, 0);
 		}
@@ -143,7 +142,6 @@ void calendar_section(void) {
 	long HKLen;
 	void *vMsg;
 	message_summary *Msg;
-	wcsession *WCC = WC;
 	StrBuf *Buf;
 	void *v = NULL;
 	SharedMessageStatus Stat;
@@ -172,8 +170,8 @@ void calendar_section(void) {
 
 
 	if (num_msgs > 0) {
-		at = GetNewHashPos(WCC->summ, 0);
-		while (GetNextHashPos(WCC->summ, at, &HKLen, &HashKey, &vMsg)) {
+		at = GetNewHashPos(WC->summ, 0);
+		while (GetNextHashPos(WC->summ, at, &HKLen, &HashKey, &vMsg)) {
 			Msg = (message_summary*) vMsg;		
 			calendar_LoadMsgFromServer(NULL, &v, Msg, 0, 0);
 		}

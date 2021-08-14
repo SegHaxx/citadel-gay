@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1987-2017 by the citadel.org team
+ * Copyright (c) 1987-2021 by the citadel.org team
  *
  * This program is open source software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 3.
@@ -161,19 +161,18 @@ int tcp_connectsock(char *host, char *service)
  */
 int serv_getln(char *strbuf, int bufsize)
 {
-	wcsession *WCC = WC;
 	int len;
 
 	*strbuf = '\0';
-	StrBuf_ServGetln(WCC->MigrateReadLineBuf);
-	len = StrLength(WCC->MigrateReadLineBuf);
+	StrBuf_ServGetln(WC->MigrateReadLineBuf);
+	len = StrLength(WC->MigrateReadLineBuf);
 	if (len > bufsize)
 		len = bufsize - 1;
-	memcpy(strbuf, ChrPtr(WCC->MigrateReadLineBuf), len);
-	FlushStrBuf(WCC->MigrateReadLineBuf);
+	memcpy(strbuf, ChrPtr(WC->MigrateReadLineBuf), len);
+	FlushStrBuf(WC->MigrateReadLineBuf);
 	strbuf[len] = '\0';
 #ifdef SERV_TRACE
-	syslog(LOG_DEBUG, "%3d<<<%s\n", WCC->serv_sock, strbuf);
+	syslog(LOG_DEBUG, "%3d<<<%s\n", WC->serv_sock, strbuf);
 #endif
 	return len;
 }
@@ -181,18 +180,17 @@ int serv_getln(char *strbuf, int bufsize)
 
 int StrBuf_ServGetln(StrBuf *buf)
 {
-	wcsession *WCC = WC;
 	const char *ErrStr = NULL;
 	int rc;
 	
-	if (!WCC->connected)
+	if (!WC->connected)
 		return -1;
 
 	FlushStrBuf(buf);
 	rc = StrBufTCP_read_buffered_line_fast(buf, 
-					       WCC->ReadBuf, 
-					       &WCC->ReadPos, 
-					       &WCC->serv_sock, 
+					       WC->ReadBuf, 
+					       &WC->ReadPos, 
+					       &WC->serv_sock, 
 					       5, 1, 
 					       &ErrStr);
 	if (rc < 0)
@@ -200,17 +198,17 @@ int StrBuf_ServGetln(StrBuf *buf)
 		syslog(LOG_INFO, "StrBuf_ServGetln(): Server connection broken: %s\n",
 			(ErrStr)?ErrStr:"");
 		wc_backtrace(LOG_INFO);
-		if (WCC->serv_sock > 0) close(WCC->serv_sock);
-		WCC->serv_sock = (-1);
-		WCC->connected = 0;
-		WCC->logged_in = 0;
+		if (WC->serv_sock > 0) close(WC->serv_sock);
+		WC->serv_sock = (-1);
+		WC->connected = 0;
+		WC->logged_in = 0;
 	}
 #ifdef SERV_TRACE
 	else 
 	{
 		long pos = 0;
-		if (WCC->ReadPos != NULL)
-			pos = WCC->ReadPos - ChrPtr(WCC->ReadBuf);
+		if (WC->ReadPos != NULL)
+			pos = WC->ReadPos - ChrPtr(WC->ReadBuf);
 		syslog(LOG_DEBUG, "%3d<<<[%ld]%s\n", WC->serv_sock, pos, ChrPtr(buf));
 	}
 #endif
@@ -219,14 +217,13 @@ int StrBuf_ServGetln(StrBuf *buf)
 
 int StrBuf_ServGetBLOBBuffered(StrBuf *buf, long BlobSize)
 {
-	wcsession *WCC = WC;
 	const char *ErrStr;
 	int rc;
 	
 	rc = StrBufReadBLOBBuffered(buf, 
-				    WCC->ReadBuf, 
-				    &WCC->ReadPos,
-				    &WCC->serv_sock, 
+				    WC->ReadBuf, 
+				    &WC->ReadPos,
+				    &WC->serv_sock, 
 				    1, 
 				    BlobSize, 
 				    NNN_TERM,
@@ -236,10 +233,10 @@ int StrBuf_ServGetBLOBBuffered(StrBuf *buf, long BlobSize)
 		syslog(LOG_INFO, "StrBuf_ServGetBLOBBuffered(): Server connection broken: %s\n",
 			(ErrStr)?ErrStr:"");
 		wc_backtrace(LOG_INFO);
-		if (WCC->serv_sock > 0) close(WCC->serv_sock);
-		WCC->serv_sock = (-1);
-		WCC->connected = 0;
-		WCC->logged_in = 0;
+		if (WC->serv_sock > 0) close(WC->serv_sock);
+		WC->serv_sock = (-1);
+		WC->connected = 0;
+		WC->logged_in = 0;
 	}
 #ifdef SERV_TRACE
         else
@@ -251,21 +248,20 @@ int StrBuf_ServGetBLOBBuffered(StrBuf *buf, long BlobSize)
 
 int StrBuf_ServGetBLOB(StrBuf *buf, long BlobSize)
 {
-	wcsession *WCC = WC;
 	const char *ErrStr;
 	int rc;
 	
-	WCC->ReadPos = NULL;
-	rc = StrBufReadBLOB(buf, &WCC->serv_sock, 1, BlobSize, &ErrStr);
+	WC->ReadPos = NULL;
+	rc = StrBufReadBLOB(buf, &WC->serv_sock, 1, BlobSize, &ErrStr);
 	if (rc < 0)
 	{
 		syslog(LOG_INFO, "StrBuf_ServGetBLOB(): Server connection broken: %s\n",
 			(ErrStr)?ErrStr:"");
 		wc_backtrace(LOG_INFO);
-		if (WCC->serv_sock > 0) close(WCC->serv_sock);
-		WCC->serv_sock = (-1);
-		WCC->connected = 0;
-		WCC->logged_in = 0;
+		if (WC->serv_sock > 0) close(WC->serv_sock);
+		WC->serv_sock = (-1);
+		WC->connected = 0;
+		WC->logged_in = 0;
 	}
 #ifdef SERV_TRACE
         else
@@ -281,21 +277,20 @@ void FlushReadBuf (void)
 	long len;
 	const char *pch;
 	const char *pche;
-	wcsession *WCC = WC;
 
-	len = StrLength(WCC->ReadBuf);
+	len = StrLength(WC->ReadBuf);
 	if ((len > 0) &&
-	    (WCC->ReadPos != NULL) && 
-	    (WCC->ReadPos != StrBufNOTNULL))
+	    (WC->ReadPos != NULL) && 
+	    (WC->ReadPos != StrBufNOTNULL))
 		
 	{
-		pch = ChrPtr(WCC->ReadBuf);
+		pch = ChrPtr(WC->ReadBuf);
 		pche = pch + len;
-		if (WCC->ReadPos != pche)
+		if (WC->ReadPos != pche)
 		{
 			syslog(LOG_ERR,
 				"ERROR: somebody didn't eat his soup! Remaing Chars: %ld [%s]\n", 
-				(long)(pche - WCC->ReadPos),
+				(long)(pche - WC->ReadPos),
 				pche
 			);
 			syslog(LOG_ERR, 
@@ -307,8 +302,8 @@ void FlushReadBuf (void)
 		}
 	}
 
-	FlushStrBuf(WCC->ReadBuf);
-	WCC->ReadPos = NULL;
+	FlushStrBuf(WC->ReadBuf);
+	WC->ReadPos = NULL;
 
 
 }
@@ -321,22 +316,21 @@ void FlushReadBuf (void)
  */
 int serv_write(const char *buf, int nbytes)
 {
-	wcsession *WCC = WC;
 	int bytes_written = 0;
 	int retval;
 
 	FlushReadBuf();
 	while (bytes_written < nbytes) {
-		retval = write(WCC->serv_sock, &buf[bytes_written],
+		retval = write(WC->serv_sock, &buf[bytes_written],
 			       nbytes - bytes_written);
 		if (retval < 1) {
 			const char *ErrStr = strerror(errno);
 			syslog(LOG_INFO, "serv_write(): Server connection broken: %s\n",
 				(ErrStr)?ErrStr:"");
-			if (WCC->serv_sock > 0) close(WCC->serv_sock);
-			WCC->serv_sock = (-1);
-			WCC->connected = 0;
-			WCC->logged_in = 0;
+			if (WC->serv_sock > 0) close(WC->serv_sock);
+			WC->serv_sock = (-1);
+			WC->connected = 0;
+			WC->logged_in = 0;
 			return 0;
 		}
 		bytes_written = bytes_written + retval;
@@ -413,7 +407,6 @@ int serv_printf(const char *format,...)
  */
 int serv_read_binary(StrBuf *Ret, size_t total_len, StrBuf *Buf) 
 {
-	wcsession *WCC = WC;
 	size_t bytes_read = 0;
 	size_t this_block = 0;
 	int rc = 6;
@@ -425,7 +418,7 @@ int serv_read_binary(StrBuf *Ret, size_t total_len, StrBuf *Buf)
 
 	while ((bytes_read < total_len) && (ServerRc == 6)) {
 
-		if (WCC->serv_sock==-1) {
+		if (WC->serv_sock==-1) {
 			FlushStrBuf(Ret); 
 			return -1; 
 		}
@@ -442,10 +435,10 @@ int serv_read_binary(StrBuf *Ret, size_t total_len, StrBuf *Buf)
 			if (rc < 0) {
 				syslog(LOG_INFO, "Server connection broken during download\n");
 				wc_backtrace(LOG_INFO);
-				if (WCC->serv_sock > 0) close(WCC->serv_sock);
-				WCC->serv_sock = (-1);
-				WCC->connected = 0;
-				WCC->logged_in = 0;
+				if (WC->serv_sock > 0) close(WC->serv_sock);
+				WC->serv_sock = (-1);
+				WC->connected = 0;
+				WC->logged_in = 0;
 				return rc;
 			}
 			bytes_read += rc;
@@ -458,7 +451,6 @@ int serv_read_binary(StrBuf *Ret, size_t total_len, StrBuf *Buf)
 
 int client_write(StrBuf *ThisBuf)
 {
-	wcsession *WCC = WC;
         const char *ptr, *eptr;
         long count;
 	ssize_t res = 0;
@@ -471,18 +463,18 @@ int client_write(StrBuf *ThisBuf)
 
 	fdflags = fcntl(WC->Hdr->http_sock, F_GETFL);
 
-        while ((ptr < eptr) && (WCC->Hdr->http_sock != -1)) {
+        while ((ptr < eptr) && (WC->Hdr->http_sock != -1)) {
                 if ((fdflags & O_NONBLOCK) == O_NONBLOCK) {
                         FD_ZERO(&wset);
-                        FD_SET(WCC->Hdr->http_sock, &wset);
-                        if (select(WCC->Hdr->http_sock + 1, NULL, &wset, NULL, NULL) == -1) {
+                        FD_SET(WC->Hdr->http_sock, &wset);
+                        if (select(WC->Hdr->http_sock + 1, NULL, &wset, NULL, NULL) == -1) {
                                 syslog(LOG_INFO, "client_write: Socket select failed (%s)\n", strerror(errno));
                                 return -1;
                         }
                 }
 
-                if ((WCC->Hdr->http_sock == -1) || 
-		    ((res = write(WCC->Hdr->http_sock, ptr, count)),
+                if ((WC->Hdr->http_sock == -1) || 
+		    ((res = write(WC->Hdr->http_sock, ptr, count)),
 		     (res == -1)))
 		{
                         syslog(LOG_INFO, "client_write: Socket write failed (%s)\n", strerror(errno));
@@ -506,7 +498,6 @@ read_serv_chunk(
 {
 	int rc;
 	int ServerRc;
-	wcsession *WCC = WC;
 
 	serv_printf("READ "SIZE_T_FMT"|"SIZE_T_FMT, *bytes_read, total_len-(*bytes_read));
 	if ( (rc = StrBuf_ServGetln(Buf) > 0) &&
@@ -519,14 +510,14 @@ read_serv_chunk(
 
 		StrBufCutLeft(Buf, 4);
 		this_block = StrTol(Buf);
-		rc = StrBuf_ServGetBLOBBuffered(WCC->WBuf, this_block);
+		rc = StrBuf_ServGetBLOBBuffered(WC->WBuf, this_block);
 		if (rc < 0) {
 			syslog(LOG_INFO, "Server connection broken during download\n");
 			wc_backtrace(LOG_INFO);
-			if (WCC->serv_sock > 0) close(WCC->serv_sock);
-			WCC->serv_sock = (-1);
-			WCC->connected = 0;
-			WCC->logged_in = 0;
+			if (WC->serv_sock > 0) close(WC->serv_sock);
+			WC->serv_sock = (-1);
+			WC->connected = 0;
+			WC->logged_in = 0;
 			return rc;
 		}
 		*bytes_read += rc;
@@ -550,7 +541,6 @@ static inline int send_http(StrBuf *Buf)
 void serv_read_binary_to_http(StrBuf *MimeType, size_t total_len, int is_static, int detect_mime)
 {
 	int ServerRc = 6;
-	wcsession *WCC = WC;
 	size_t bytes_read = 0;
 	int first = 1;
 	int client_con_state = 0;
@@ -567,15 +557,15 @@ void serv_read_binary_to_http(StrBuf *MimeType, size_t total_len, int is_static,
 
 	Buf = NewStrBuf();
 
-	if (WCC->Hdr->HaveRange)
+	if (WC->Hdr->HaveRange)
 	{
-		WCC->Hdr->HaveRange++;
-		WCC->Hdr->TotalBytes = total_len;
+		WC->Hdr->HaveRange++;
+		WC->Hdr->TotalBytes = total_len;
 		/* open range? or beyound file border? correct the numbers. */
-		if ((WCC->Hdr->RangeTil == -1) || (WCC->Hdr->RangeTil>= total_len))
-			WCC->Hdr->RangeTil = total_len - 1;
-		bytes_read = WCC->Hdr->RangeStart;
-		total_len = WCC->Hdr->RangeTil;
+		if ((WC->Hdr->RangeTil == -1) || (WC->Hdr->RangeTil>= total_len))
+			WC->Hdr->RangeTil = total_len - 1;
+		bytes_read = WC->Hdr->RangeStart;
+		total_len = WC->Hdr->RangeTil;
 	}
 	else
 		chunked = total_len > SIZ * 10; /* TODO: disallow for HTTP / 1.0 */
@@ -602,8 +592,8 @@ void serv_read_binary_to_http(StrBuf *MimeType, size_t total_len, int is_static,
 			FreeStrBuf(&Buf);
 			return;
 		}
-		CT = GuessMimeType(SKEY(WCC->WBuf));
-		FlushStrBuf(WCC->WBuf);
+		CT = GuessMimeType(SKEY(WC->WBuf));
+		FlushStrBuf(WC->WBuf);
 		StrBufPlain(MimeType, CT, -1);
 		CheckGZipCompressionAllowed(SKEY(MimeType));
 		detect_mime = 0;
@@ -611,7 +601,7 @@ void serv_read_binary_to_http(StrBuf *MimeType, size_t total_len, int is_static,
 	}
 
 	memset(&WriteBuffer, 0, sizeof(IOBuffer));
-	if (chunked && !DisableGzip && WCC->Hdr->HR.gzip_ok)
+	if (chunked && !DisableGzip && WC->Hdr->HR.gzip_ok)
 	{
 		is_gzip = 1;
 		SC = StrBufNewStreamContext (eZLibEncode, &Err);
@@ -622,21 +612,21 @@ void serv_read_binary_to_http(StrBuf *MimeType, size_t total_len, int is_static,
 		}
 
 		memset(&ReadBuffer, 0, sizeof(IOBuffer));
-		ReadBuffer.Buf = WCC->WBuf;
+		ReadBuffer.Buf = WC->WBuf;
 
 		WriteBuffer.Buf = NewStrBufPlain(NULL, SIZ*2);;
 		pBuf = WriteBuffer.Buf;
 	}
 	else
 	{
-		pBuf = WCC->WBuf;
+		pBuf = WC->WBuf;
 	}
 
 	if (!detect_mime)
 	{
 		http_transmit_headers(ChrPtr(MimeType), is_static, chunked, is_gzip);
 		
-		if (send_http(WCC->HBuf) < 0)
+		if (send_http(WC->HBuf) < 0)
 		{
 			FreeStrBuf(&Buf);
 			FreeStrBuf(&WriteBuffer.Buf);
@@ -653,8 +643,8 @@ void serv_read_binary_to_http(StrBuf *MimeType, size_t total_len, int is_static,
 	       (client_con_state == 0))
 	{
 
-		if (WCC->serv_sock==-1) {
-			FlushStrBuf(WCC->WBuf); 
+		if (WC->serv_sock==-1) {
+			FlushStrBuf(WC->WBuf); 
 			FreeStrBuf(&Buf);
 			FreeStrBuf(&WriteBuffer.Buf);
 			FreeStrBuf(&BufHeader);
@@ -677,15 +667,15 @@ void serv_read_binary_to_http(StrBuf *MimeType, size_t total_len, int is_static,
 			const char *CT;
 			detect_mime = 0;
 			
-			CT = GuessMimeType(SKEY(WCC->WBuf));
+			CT = GuessMimeType(SKEY(WC->WBuf));
 			StrBufPlain(MimeType, CT, -1);
 			if (is_gzip) {
 				CheckGZipCompressionAllowed(SKEY(MimeType));
-				is_gzip = WCC->Hdr->HR.gzip_ok;
+				is_gzip = WC->Hdr->HR.gzip_ok;
 			}
 			http_transmit_headers(ChrPtr(MimeType), is_static, chunked, is_gzip);
 			
-			client_con_state = send_http(WCC->HBuf);
+			client_con_state = send_http(WC->HBuf);
 		}
 
 		if (is_gzip)
@@ -710,7 +700,7 @@ void serv_read_binary_to_http(StrBuf *MimeType, size_t total_len, int is_static,
 					}
 				} while ((rc == 1) && (StrLength(pBuf) > 0));
 			}
-			FlushStrBuf(WCC->WBuf);
+			FlushStrBuf(WC->WBuf);
 		}
 		else {
 			if ((chunked) && (client_con_state == 0))
@@ -1051,16 +1041,15 @@ void begin_burst(void)
  */
 long end_burst(void)
 {
-	wcsession *WCC = WC;
         const char *ptr, *eptr;
         long count;
 	ssize_t res = 0;
         fd_set wset;
         int fdflags;
 
-	if (!DisableGzip && (WCC->Hdr->HR.gzip_ok))
+	if (!DisableGzip && (WC->Hdr->HR.gzip_ok))
 	{
-		if (CompressBuffer(WCC->WBuf) > 0)
+		if (CompressBuffer(WC->WBuf) > 0)
 			hprintf("Content-encoding: gzip\r\n");
 		else {
 			syslog(LOG_ALERT, "Compression failed: %d [%s] sending uncompressed\n", errno, strerror(errno));
@@ -1068,44 +1057,44 @@ long end_burst(void)
 		}
 	}
 
-	if (WCC->WFBuf != NULL) {
-		WildFireSerializePayload(WCC->WFBuf, WCC->HBuf, &WCC->Hdr->nWildfireHeaders, NULL);
-		FreeStrBuf(&WCC->WFBuf);
+	if (WC->WFBuf != NULL) {
+		WildFireSerializePayload(WC->WFBuf, WC->HBuf, &WC->Hdr->nWildfireHeaders, NULL);
+		FreeStrBuf(&WC->WFBuf);
 	}
 
-	if (WCC->Hdr->HR.prohibit_caching)
+	if (WC->Hdr->HR.prohibit_caching)
 		hprintf("Pragma: no-cache\r\nCache-Control: no-store\r\nExpires:-1\r\n");
-	hprintf("Content-length: %d\r\n\r\n", StrLength(WCC->WBuf));
+	hprintf("Content-length: %d\r\n\r\n", StrLength(WC->WBuf));
 
-	ptr = ChrPtr(WCC->HBuf);
-	count = StrLength(WCC->HBuf);
+	ptr = ChrPtr(WC->HBuf);
+	count = StrLength(WC->HBuf);
 	eptr = ptr + count;
 
 #ifdef HAVE_OPENSSL
 	if (is_https) {
-		client_write_ssl(WCC->HBuf);
-		client_write_ssl(WCC->WBuf);
+		client_write_ssl(WC->HBuf);
+		client_write_ssl(WC->WBuf);
 		return (count);
 	}
 #endif
 
-	if (WCC->Hdr->http_sock == -1) {
+	if (WC->Hdr->http_sock == -1) {
 		return -1;
 	}
 	fdflags = fcntl(WC->Hdr->http_sock, F_GETFL);
 
-	while ((ptr < eptr) && (WCC->Hdr->http_sock != -1)) {
+	while ((ptr < eptr) && (WC->Hdr->http_sock != -1)) {
                 if ((fdflags & O_NONBLOCK) == O_NONBLOCK) {
                         FD_ZERO(&wset);
-                        FD_SET(WCC->Hdr->http_sock, &wset);
-                        if (select(WCC->Hdr->http_sock + 1, NULL, &wset, NULL, NULL) == -1) {
+                        FD_SET(WC->Hdr->http_sock, &wset);
+                        if (select(WC->Hdr->http_sock + 1, NULL, &wset, NULL, NULL) == -1) {
                                 syslog(LOG_DEBUG, "client_write: Socket select failed (%s)\n", strerror(errno));
                                 return -1;
                         }
                 }
 
-                if ((WCC->Hdr->http_sock == -1) || 
-		    (res = write(WCC->Hdr->http_sock, 
+                if ((WC->Hdr->http_sock == -1) || 
+		    (res = write(WC->Hdr->http_sock, 
 				 ptr,
 				 count)) == -1) {
                         syslog(LOG_DEBUG, "client_write: Socket write failed (%s)\n", strerror(errno));
@@ -1116,22 +1105,22 @@ long end_burst(void)
 		ptr += res;
         }
 
-	ptr = ChrPtr(WCC->WBuf);
-	count = StrLength(WCC->WBuf);
+	ptr = ChrPtr(WC->WBuf);
+	count = StrLength(WC->WBuf);
 	eptr = ptr + count;
 
-        while ((ptr < eptr) && (WCC->Hdr->http_sock != -1)) {
+        while ((ptr < eptr) && (WC->Hdr->http_sock != -1)) {
                 if ((fdflags & O_NONBLOCK) == O_NONBLOCK) {
                         FD_ZERO(&wset);
-                        FD_SET(WCC->Hdr->http_sock, &wset);
-                        if (select(WCC->Hdr->http_sock + 1, NULL, &wset, NULL, NULL) == -1) {
+                        FD_SET(WC->Hdr->http_sock, &wset);
+                        if (select(WC->Hdr->http_sock + 1, NULL, &wset, NULL, NULL) == -1) {
                                 syslog(LOG_INFO, "client_write: Socket select failed (%s)\n", strerror(errno));
                                 return -1;
                         }
                 }
 
-                if ((WCC->Hdr->http_sock == -1) || 
-		    (res = write(WCC->Hdr->http_sock, 
+                if ((WC->Hdr->http_sock == -1) || 
+		    (res = write(WC->Hdr->http_sock, 
 				 ptr,
 				 count)) == -1) {
                         syslog(LOG_INFO, "client_write: Socket write failed (%s)\n", strerror(errno));
@@ -1142,7 +1131,7 @@ long end_burst(void)
 		ptr += res;
         }
 
-	return StrLength(WCC->WBuf);
+	return StrLength(WC->WBuf);
 }
 
 

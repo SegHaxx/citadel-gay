@@ -2,6 +2,7 @@
 
 CSOURCES=`find ../.. -name \*.c`
 HSOURCES=`find ../.. -name \*.html`
+JSOURCES=`find ../.. -name \*.js`
 
 echo Updating webcit.pot from strings in the source code ...
 xgettext \
