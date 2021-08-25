@@ -1,5 +1,5 @@
 /*
- * ajax-powered autocompletion...
+ * dynamic html autocompletion
  *
  * Copyright (c) 1996-2012 by the citadel.org team
  *
