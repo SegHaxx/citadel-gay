@@ -368,7 +368,6 @@ static char* fromimap(char* destp, char* destend, const char* src)
 }
 
 /* Undoes the special character conversion. */
-
 static int cfrommap(int c)
 {
 	switch (c)
@@ -380,10 +379,7 @@ static int cfrommap(int c)
 }
 
 
-
-
 /* Break a command down into tokens, unquoting any escaped characters. */
-
 void MakeStringOf(StrBuf *Buf, int skip)
 {
 	int i;
@@ -551,7 +547,6 @@ int imap_parameterize(citimap_command *Cmd)
 
 
 /* Convert a struct ctdlroom to an IMAP-compatible mailbox name. */
-
 long imap_mailboxname(char *buf, int bufsize, struct ctdlroom *qrbuf)
 {
 	char* bufend = buf+bufsize;
@@ -603,7 +598,6 @@ long imap_mailboxname(char *buf, int bufsize, struct ctdlroom *qrbuf)
  * including IR_MAILBOX if we're dealing with a personal room.
  *
  */
-
 int imap_roomname(char *rbuf, int bufsize, const char *foldername)
 {
 	int levels;
@@ -815,7 +809,7 @@ star:
 				return WILDMAT_TRUE;
 			}
 			while (!IsEmptyStr(text) &&
-			       /* make shure texst - 1 isn't before lcase_p */
+			       /* make sure text - 1 isn't before lcase_p */
 			       ((text == lcase_text) || (*(text - 1) != WILDMAT_DELIM)))
 			{
 				if ((matched = do_imap_match(text++, p))
@@ -830,7 +824,6 @@ star:
 	if ((*text == '\0') && (*p == '\0')) return WILDMAT_TRUE;
 	else return WILDMAT_FALSE;
 }
-
 
 
 /*
@@ -902,9 +895,6 @@ int imap_datecmp(const char *datestr, time_t msgtime) {
 }
 
 
-
-
-
 void IAPrintf(const char *Format, ...)
 {
 	va_list arg_ptr;
@@ -914,10 +904,12 @@ void IAPrintf(const char *Format, ...)
 	va_end(arg_ptr);
 }
 
+
 void iaputs(const char *Str, long Len)
 {
 	StrBufAppendBufPlain(IMAP->Reply, Str, Len, 0);
 }
+
 
 void ireply(const char *Msg, long len)
 {
@@ -934,6 +926,7 @@ void ireply(const char *Msg, long len)
 			     HKEY("\r\n"), 0);
 	
 }
+
 
 void IReplyPrintf(const char *Format, ...)
 {
@@ -959,8 +952,6 @@ void IReplyPrintf(const char *Format, ...)
 
 /* Output a string to the IMAP client, either as a literal or quoted.
  * (We do a literal if it has any double-quotes or backslashes.) */
-
-
 void IPutStr(const char *Msg, long Len)
 {
 	int i;

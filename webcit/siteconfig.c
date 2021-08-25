@@ -359,6 +359,22 @@ void tmplput_servcfg(StrBuf *Target, WCTemplputParams *TP)
 	}
 }
 
+// output the global alias table
+void tmplput_servcfg_globalaliases(StrBuf *Target, WCTemplputParams *TP) {
+	TRACE;
+	StrBufAppendTemplate(Target, TP, "wow\n", 0);
+	TRACE;
+}
+
+
+
+
+
+
+
+
+
+
 int ConditionalServCfg(StrBuf *Target, WCTemplputParams *TP)
 {
 	void *vBuf;
@@ -430,6 +446,8 @@ void tmplput_servcfg_LogName(StrBuf *Target, WCTemplputParams *TP)
 	StrBufAppendTemplate(Target, TP, Stat->Name, 1);
 }
 
+
+
 int ConditionalServCfgThisLogEnabled(StrBuf *Target, WCTemplputParams *TP)
 {
         LogStatusStruct *Stat = (LogStatusStruct*) CTX(CTX_SRVLOG);
@@ -483,6 +501,7 @@ InitModule_SITECONFIG
 	WebcitAddUrlHandler(HKEY("siteconfig"), "", 0, siteconfig, CTX_NONE);
 
 	RegisterNamespace("SERV:CFG", 1, 2, tmplput_servcfg, NULL, CTX_NONE);
+	RegisterNamespace("SERV:GLOBALALIASES", 0, 1, tmplput_servcfg_globalaliases, NULL, CTX_NONE);
 	RegisterConditional("COND:SERVCFG", 3, ConditionalServCfg, CTX_NONE);
 	RegisterConditional("COND:SERVCFG:CTXSTRBUF", 4, ConditionalServCfgCTXStrBuf, CTX_STRBUF);
 	RegisterIterator("PREF:ZONE", 0, ZoneHash, NULL, NULL, NULL, CTX_STRBUF, CTX_NONE, IT_NOFLAG);
@@ -505,7 +524,6 @@ InitModule_SITECONFIG
 	RegisterConditional("COND:EXPIRE:MODE", 2, ConditionalExpire, CTX_NONE);
 	RegisterNamespace("EXPIRE:VALUE", 1, 2, tmplput_ExpireValue, NULL, CTX_NONE);
 	RegisterNamespace("EXPIRE:MODE", 1, 2, tmplput_ExpireMode, NULL, CTX_NONE);
-
 	RegisterConditional("COND:SERVCFG:THISLOGENABLE", 4, ConditionalServCfgThisLogEnabled, CTX_SRVLOG);
 	RegisterIterator("SERVCFG:LOGENABLE", 0, NULL, iterate_GetSrvLogEnable, NULL, DeleteHash, CTX_SRVLOG, CTX_NONE, IT_NOFLAG);
 	RegisterNamespace("SERVCFG:LOGNAME", 0, 1, tmplput_servcfg_LogName, NULL, CTX_SRVLOG);
