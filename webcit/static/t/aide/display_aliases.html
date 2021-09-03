@@ -1,15 +1,19 @@
-<div class="conftitle">
-<a href="javascript:load_aliases()">&#8635;</a>
-<?_("Global email aliases")></div>
-<hr>
+<?=("head")><?%("COND:LOGGEDIN", 1, 1, 1, "", ="paging")>
+<div id="banner">
+<h1><a href="javascript:load_aliases()">&#8635;</a>
+<?_("Global email aliases")></h1>
+</div>
+<div id="content" class="service">
+<?!("COND:AIDE", 1)><?_("You need to be aide to view this.")><?!("X", 1)>
+<??("COND:AIDE", 2)>
 
 <div id="wc_easterbunny77">
 </div>
 
-<textarea name="global_aliases" id="global_aliases" VALUE="<?SERV:GLOBALALIASES>">
+<textarea name="global_aliases" id="global_aliases" VALUE="">
 </textarea>
 
-<fcript type="text/javascript">
+<script type="text/javascript">
 
 load_aliases = async() => {
 	response = await fetch("ajax_servcmd?g_cmd=LIST");
@@ -50,4 +54,10 @@ function repopulate_the_box() {
 
 load_aliases();
 
-</fcript>
+</script>
+
+
+<??("X", 2)>
+</div>
+</div>
+<?=("trailing")>

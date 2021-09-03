@@ -36,8 +36,8 @@ ConstStr ExpirePolicyStrings[][2] = {
 	{ { CStrOf(mailboxespolicy)} , { strof(mailboxespolicy)"_value", sizeof(strof(mailboxespolicy)"_value") - 1 } }
 };
 
-void LoadExpirePolicy(GPEXWhichPolicy which)
-{
+
+void LoadExpirePolicy(GPEXWhichPolicy which) {
 	StrBuf *Buf;
 	long State;
 	const char *Pos = NULL;
@@ -55,8 +55,8 @@ void LoadExpirePolicy(GPEXWhichPolicy which)
 	FreeStrBuf(&Buf);
 }
 
-void SaveExpirePolicyFromHTTP(GPEXWhichPolicy which)
-{
+
+void SaveExpirePolicyFromHTTP(GPEXWhichPolicy which) {
 	StrBuf *Buf;
 	long State;
 
@@ -73,8 +73,8 @@ void SaveExpirePolicyFromHTTP(GPEXWhichPolicy which)
 	FreeStrBuf(&Buf);
 }
 
-int ConditionalExpire(StrBuf *Target, WCTemplputParams *TP)
-{
+
+int ConditionalExpire(StrBuf *Target, WCTemplputParams *TP) {
 	GPEXWhichPolicy which;
 	int CompareWith;
 
@@ -86,8 +86,8 @@ int ConditionalExpire(StrBuf *Target, WCTemplputParams *TP)
 	return WC->Policy[which].expire_mode == CompareWith;
 }
 
-void tmplput_ExpireValue(StrBuf *Target, WCTemplputParams *TP)
-{
+
+void tmplput_ExpireValue(StrBuf *Target, WCTemplputParams *TP) {
 	GPEXWhichPolicy which;
 		
 	which = GetTemplateTokenNumber(Target, TP, 0, 0);
@@ -96,8 +96,7 @@ void tmplput_ExpireValue(StrBuf *Target, WCTemplputParams *TP)
 }
 
 
-void tmplput_ExpireMode(StrBuf *Target, WCTemplputParams *TP)
-{
+void tmplput_ExpireMode(StrBuf *Target, WCTemplputParams *TP) {
 	GPEXWhichPolicy which;
 		
 	which = GetTemplateTokenNumber(Target, TP, 2, 0);
@@ -106,8 +105,7 @@ void tmplput_ExpireMode(StrBuf *Target, WCTemplputParams *TP)
 }
 
 
-void LoadZoneFiles(void)
-{
+void LoadZoneFiles(void) {
 	icalarray *zones;
 	int z;
 	long len;
@@ -222,12 +220,10 @@ CfgMapping ServerConfig[] = {
 };
 
 
-
 /*
  *  display all configuration items
  */
-void load_siteconfig(void)
-{
+void load_siteconfig(void) {
 	StrBuf *Buf;
 	HashList *Cfg;
 	long len;
@@ -279,12 +275,10 @@ void load_siteconfig(void)
 }
 
 
-
 /*
  * parse siteconfig changes 
  */
-void siteconfig(void)
-{
+void siteconfig(void) {
 	int i, value;
 	StrBuf *Line;
 
@@ -345,8 +339,7 @@ void siteconfig(void)
 
 
 // if WebCit Classic wasn't obsolete we would replace this with a "CONF GETVAL" type of thing
-void tmplput_servcfg(StrBuf *Target, WCTemplputParams *TP)
-{
+void tmplput_servcfg(StrBuf *Target, WCTemplputParams *TP) {
 	void *vBuf;
 	StrBuf *Buf;
 
@@ -359,24 +352,8 @@ void tmplput_servcfg(StrBuf *Target, WCTemplputParams *TP)
 	}
 }
 
-// output the global alias table
-void tmplput_servcfg_globalaliases(StrBuf *Target, WCTemplputParams *TP) {
-	TRACE;
-	StrBufAppendTemplate(Target, TP, "wow\n", 0);
-	TRACE;
-}
 
-
-
-
-
-
-
-
-
-
-int ConditionalServCfg(StrBuf *Target, WCTemplputParams *TP)
-{
+int ConditionalServCfg(StrBuf *Target, WCTemplputParams *TP) {
 	void *vBuf;
 	StrBuf *Buf;
 
@@ -406,8 +383,7 @@ int ConditionalServCfg(StrBuf *Target, WCTemplputParams *TP)
 	else return 0;
 }
 
-int ConditionalServCfgCTXStrBuf(StrBuf *Target, WCTemplputParams *TP)
-{
+int ConditionalServCfgCTXStrBuf(StrBuf *Target, WCTemplputParams *TP) {
 	void *vBuf;
 	StrBuf *Buf;
 	StrBuf *ZoneToCheck = (StrBuf*) CTX(CTX_STRBUF);
@@ -501,7 +477,6 @@ InitModule_SITECONFIG
 	WebcitAddUrlHandler(HKEY("siteconfig"), "", 0, siteconfig, CTX_NONE);
 
 	RegisterNamespace("SERV:CFG", 1, 2, tmplput_servcfg, NULL, CTX_NONE);
-	RegisterNamespace("SERV:GLOBALALIASES", 0, 1, tmplput_servcfg_globalaliases, NULL, CTX_NONE);
 	RegisterConditional("COND:SERVCFG", 3, ConditionalServCfg, CTX_NONE);
 	RegisterConditional("COND:SERVCFG:CTXSTRBUF", 4, ConditionalServCfgCTXStrBuf, CTX_STRBUF);
 	RegisterIterator("PREF:ZONE", 0, ZoneHash, NULL, NULL, NULL, CTX_STRBUF, CTX_NONE, IT_NOFLAG);
