@@ -434,8 +434,7 @@ int CtdlGetConfigInt(char *key)
 /*
  * Fetch a system config value - long integer
  */
-long CtdlGetConfigLong(char *key)
-{
+long CtdlGetConfigLong(char *key) {
 	char *s = CtdlGetConfigStr(key);
 	if (s) return atol(s);
 	return 0;
@@ -445,7 +444,6 @@ long CtdlGetConfigLong(char *key)
 void CtdlGetSysConfigBackend(long msgnum, void *userdata) {
 	config_msgnum = msgnum;
 }
-
 
 
 /*
@@ -506,18 +504,24 @@ char *CtdlGetSysConfig(char *sysconfname) {
 }
 
 
+/*
+ * This is for storing longer configuration sets which are stored in the message base.
+ */
 void CtdlPutSysConfig(char *sysconfname, char *sysconfdata) {
-	long msgnum = -1;
+	long old_msgnum = -1;
+	long new_msgnum = -1;
 
-	// Search for the previous copy of this config item, deleting it if it is found.
-	msgnum = CtdlGetConfigLong(sysconfname);
-	if (msgnum > 0) {
-		CtdlDeleteMessages(SYSCONFIGROOM, &msgnum, 1, "");
-	}
+	// Search for the previous copy of this config item, so we can delete it
+	old_msgnum = CtdlGetConfigLong(sysconfname);
 
 	// Go ahead and save it, and write the new msgnum to the config database so we can find it again
-	msgnum = CtdlWriteObject(SYSCONFIGROOM, sysconfname, sysconfdata, (strlen(sysconfdata)+1), NULL, 0, 0);
-	if (msgnum > 0) {
-		CtdlSetConfigLong(sysconfname, msgnum);
+	new_msgnum = CtdlWriteObject(SYSCONFIGROOM, sysconfname, sysconfdata, (strlen(sysconfdata)+1), NULL, 0, 0);
+	if (new_msgnum > 0) {
+		CtdlSetConfigLong(sysconfname, new_msgnum);
+
+		// Now delete the old copy
+		if (old_msgnum > 0) {
+			CtdlDeleteMessages(SYSCONFIGROOM, &old_msgnum, 1, "");
+		}
 	}
 }
