@@ -1,10 +1,23 @@
+/*
+ * The main menu and other things
+ *
+ * Copyright (c) 1996-2021 by the citadel.org team
+ *
+ * This program is open source software.  We call it open source, not
+ * free software, because Richard Stallman is a communist and an asshole.
+ *
+ * The program is licensed under the General Public License, version 3.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ */
+
 #include "webcit.h"
 
-/*
- * The Main Menu
- */
-void display_main_menu(void)
-{
+// The Main Menu
+void display_main_menu(void) {
 	begin_burst();
 	output_headers(1, 0, 0, 0, 1, 0);
 	DoTemplate(HKEY("display_main_menu"), NULL, &NoCtx);
@@ -12,11 +25,8 @@ void display_main_menu(void)
 }
 
 
-/*
- * System administration menu
- */
-void display_aide_menu(void)
-{
+// System administration menu
+void display_aide_menu(void) {
 	begin_burst();
 	output_headers(1, 0, 0, 0, 1, 0);
 	DoTemplate(HKEY("aide_display_menu"), NULL, &NoCtx);
@@ -24,11 +34,8 @@ void display_aide_menu(void)
 }
 
 
-/*
- * Interactive window to perform generic Citadel server commands.
- */
-void do_generic(void)
-{
+// Handle generic server commands, possibly entered from a screen, possibly set up as a way to avoid custom code
+void do_generic(void) {
         WCTemplputParams SubTP;
 	int Done = 0;
 	StrBuf *Buf;
@@ -86,25 +93,32 @@ void do_generic(void)
 		free(junk);
 		break;
 	}
-	
-	begin_burst();
-	output_headers(1, 0, 0, 0, 1, 0);
 
-	StackContext(NULL, &SubTP, Buf, CTX_STRBUF, 0, NULL);
-	{
-		DoTemplate(HKEY("aide_display_generic_result"), NULL, &SubTP);
+	// We may have been supplied with instructions regarding the location
+	// to which we must return after posting.  If found, go there.
+	if (havebstr("return_to")) {
+		http_redirect(bstr("return_to"));
 	}
-	UnStackContext(&SubTP);
-        wDumpContent(1);
+
+	// Otherwise, do the generic result screen.
+	else {
+		begin_burst();
+		output_headers(1, 0, 0, 0, 1, 0);
+	
+		StackContext(NULL, &SubTP, Buf, CTX_STRBUF, 0, NULL);
+		{
+			DoTemplate(HKEY("aide_display_generic_result"), NULL, &SubTP);
+		}
+		UnStackContext(&SubTP);
+        	wDumpContent(1);
+	}
 
 	FreeStrBuf(&Buf);
 }
 
-/*
- * Display the wait / input dialog while restarting the server.
- */
-void display_shutdown(void)
-{
+
+// Display the wait / input dialog while restarting the server.
+void display_shutdown(void) {
 	StrBuf *Line;
 	char *when;
 	
@@ -159,6 +173,7 @@ void display_shutdown(void)
 	}
 	FreeStrBuf(&Line);
 }
+
 
 void 
 InitModule_MAINMENU
