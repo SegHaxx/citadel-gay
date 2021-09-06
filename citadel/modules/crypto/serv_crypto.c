@@ -1,14 +1,12 @@
-/*
- * Copyright (c) 1987-2018 by the citadel.org team
- *
- * This program is open source software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 3.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- */
+// Copyright (c) 1987-2021 by the citadel.org team
+//
+// This program is open source software; you can redistribute it and/or modify
+// it under the terms of the GNU General Public License version 3.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
 
 #include <string.h>
 #include <unistd.h>
@@ -47,13 +45,13 @@
 SSL_CTX *ssl_ctx;		/* SSL context */
 pthread_mutex_t **SSLCritters;	/* Things needing locking */
 
-static unsigned long id_callback(void)
-{
+
+static unsigned long id_callback(void) {
 	return (unsigned long) pthread_self();
 }
 
-void destruct_ssl(void)
-{
+
+void destruct_ssl(void) {
 	int a;
 	for (a = 0; a < CRYPTO_num_locks(); a++) 
 		free(SSLCritters[a]);
@@ -61,8 +59,7 @@ void destruct_ssl(void)
 }
 
 
-void generate_key(char *keyfilename)
-{
+void generate_key(char *keyfilename) {
 	int ret = 0;
 	RSA *rsa = NULL;
 	BIGNUM *bne = NULL;
@@ -114,8 +111,7 @@ free_all:
 }
 
 
-void init_ssl(void)
-{
+void init_ssl(void) {
 	const SSL_METHOD *ssl_method;
 	RSA *rsa = NULL;
 	X509_REQ *req = NULL;
@@ -129,7 +125,8 @@ void init_ssl(void)
 	if (!SSLCritters) {
 		syslog(LOG_ERR, "crypto: can't allocate memory!");
 		exit(CTDLEXIT_CRYPTO);
-	} else {
+	}
+	else {
 		int a;
 
 		for (a = 0; a < CRYPTO_num_locks(); a++) {
@@ -313,11 +310,8 @@ void init_ssl(void)
 }
 
 
-/*
- * client_write_ssl() Send binary data to the client encrypted.
- */
-void client_write_ssl(const char *buf, int nbytes)
-{
+// client_write_ssl() Send binary data to the client encrypted.
+void client_write_ssl(const char *buf, int nbytes) {
 	int retval;
 	int nremain;
 	char junk[1];
@@ -354,11 +348,8 @@ void client_write_ssl(const char *buf, int nbytes)
 }
 
 
-/*
- * read data from the encrypted layer.
- */
-int client_read_sslbuffer(StrBuf *buf, int timeout)
-{
+// read data from the encrypted layer.
+int client_read_sslbuffer(StrBuf *buf, int timeout) {
 	char sbuf[16384]; /* OpenSSL communicates in 16k blocks, so let's speak its native tongue. */
 	int rlen;
 	char junk[1];
@@ -391,9 +382,8 @@ int client_read_sslbuffer(StrBuf *buf, int timeout)
 	return (0);
 }
 
-int client_readline_sslbuffer(StrBuf *Line, StrBuf *IOBuf, const char **Pos, int timeout)
-{
-	CitContext *CCC = CC;
+
+int client_readline_sslbuffer(StrBuf *Line, StrBuf *IOBuf, const char **Pos, int timeout) {
 	const char *pos = NULL;
 	const char *pLF;
 	int len, rlen;
@@ -442,7 +432,7 @@ int client_readline_sslbuffer(StrBuf *Line, StrBuf *IOBuf, const char **Pos, int
 	pLF = NULL;
 	while ((nSuccessLess < timeout) && 
 	       (pLF == NULL) &&
-	       (CCC->ssl != NULL)) {
+	       (CC->ssl != NULL)) {
 
 		rlen = client_read_sslbuffer(IOBuf, timeout);
 		if (rlen < 1) {
@@ -471,71 +461,66 @@ int client_readline_sslbuffer(StrBuf *Line, StrBuf *IOBuf, const char **Pos, int
 }
 
 
-int client_read_sslblob(StrBuf *Target, long bytes, int timeout)
-{
+int client_read_sslblob(StrBuf *Target, long bytes, int timeout) {
 	long baselen;
 	long RemainRead;
 	int retval = 0;
-	CitContext *CCC = CC;
 
 	baselen = StrLength(Target);
 
-	if (StrLength(CCC->RecvBuf.Buf) > 0)
+	if (StrLength(CC->RecvBuf.Buf) > 0)
 	{
 		long RemainLen;
 		long TotalLen;
 		const char *pchs;
 
-		if (CCC->RecvBuf.ReadWritePointer == NULL)
+		if (CC->RecvBuf.ReadWritePointer == NULL)
 		{
-			CCC->RecvBuf.ReadWritePointer = ChrPtr(CCC->RecvBuf.Buf);
+			CC->RecvBuf.ReadWritePointer = ChrPtr(CC->RecvBuf.Buf);
 		}
-		pchs = ChrPtr(CCC->RecvBuf.Buf);
-		TotalLen = StrLength(CCC->RecvBuf.Buf);
-		RemainLen = TotalLen - (pchs - CCC->RecvBuf.ReadWritePointer);
+		pchs = ChrPtr(CC->RecvBuf.Buf);
+		TotalLen = StrLength(CC->RecvBuf.Buf);
+		RemainLen = TotalLen - (pchs - CC->RecvBuf.ReadWritePointer);
 		if (RemainLen > bytes)
 		{
 			RemainLen = bytes;
 		}
 		if (RemainLen > 0)
 		{
-			StrBufAppendBufPlain(Target, CCC->RecvBuf.ReadWritePointer, RemainLen, 0);
-			CCC->RecvBuf.ReadWritePointer += RemainLen;
+			StrBufAppendBufPlain(Target, CC->RecvBuf.ReadWritePointer, RemainLen, 0);
+			CC->RecvBuf.ReadWritePointer += RemainLen;
 		}
-		if ((ChrPtr(CCC->RecvBuf.Buf) + StrLength(CCC->RecvBuf.Buf)) <= CCC->RecvBuf.ReadWritePointer)
+		if ((ChrPtr(CC->RecvBuf.Buf) + StrLength(CC->RecvBuf.Buf)) <= CC->RecvBuf.ReadWritePointer)
 		{
-			CCC->RecvBuf.ReadWritePointer = NULL;
-			FlushStrBuf(CCC->RecvBuf.Buf);
+			CC->RecvBuf.ReadWritePointer = NULL;
+			FlushStrBuf(CC->RecvBuf.Buf);
 		}
 	}
 
-	if (StrLength(Target) >= bytes + baselen)
-	{
+	if (StrLength(Target) >= bytes + baselen) {
 		return 1;
 	}
 
-	CCC->RecvBuf.ReadWritePointer = NULL;
+	CC->RecvBuf.ReadWritePointer = NULL;
 
-	while ((StrLength(Target) < bytes + baselen) && (retval >= 0))
-	{
-		retval = client_read_sslbuffer(CCC->RecvBuf.Buf, timeout);
+	while ((StrLength(Target) < bytes + baselen) && (retval >= 0)) {
+		retval = client_read_sslbuffer(CC->RecvBuf.Buf, timeout);
 		if (retval >= 0) {
 			RemainRead = bytes - (StrLength (Target) - baselen);
-			if (RemainRead < StrLength(CCC->RecvBuf.Buf))
+			if (RemainRead < StrLength(CC->RecvBuf.Buf))
 			{
 				StrBufAppendBufPlain(
 					Target, 
-					ChrPtr(CCC->RecvBuf.Buf), 
+					ChrPtr(CC->RecvBuf.Buf), 
 					RemainRead, 0);
-				CCC->RecvBuf.ReadWritePointer = ChrPtr(CCC->RecvBuf.Buf) + RemainRead;
+				CC->RecvBuf.ReadWritePointer = ChrPtr(CC->RecvBuf.Buf) + RemainRead;
 				break;
 			}
-			StrBufAppendBuf(Target, CCC->RecvBuf.Buf, 0); /* todo: Buf > bytes? */
-			FlushStrBuf(CCC->RecvBuf.Buf);
+			StrBufAppendBuf(Target, CC->RecvBuf.Buf, 0); /* todo: Buf > bytes? */
+			FlushStrBuf(CC->RecvBuf.Buf);
 		}
-		else 
-		{
-			FlushStrBuf(CCC->RecvBuf.Buf);
+		else {
+			FlushStrBuf(CC->RecvBuf.Buf);
 			return -1;
 	
 		}
@@ -544,14 +529,19 @@ int client_read_sslblob(StrBuf *Target, long bytes, int timeout)
 }
 
 
-/*
- * CtdlStartTLS() starts SSL/TLS encryption for the current session.  It
- * must be supplied with pre-generated strings for responses of "ok," "no
- * support for TLS," and "error" so that we can use this in any protocol.
- */
-void CtdlStartTLS(char *ok_response, char *nosup_response, char *error_response)
-{
+// CtdlStartTLS() starts SSL/TLS encryption for the current session.  It
+// must be supplied with pre-generated strings for responses of "ok," "no
+// support for TLS," and "error" so that we can use this in any protocol.
+void CtdlStartTLS(char *ok_response, char *nosup_response, char *error_response) {
 	int retval, bits, alg_bits;
+
+	if (CC->redirect_ssl) {
+		syslog(LOG_ERR, "crypto: attempt to begin SSL on an already encrypted connection");
+		if (error_response != NULL) {
+			cprintf("%s", error_response);
+		}
+		return;
+	}
 
 	if (!ssl_ctx) {
 		syslog(LOG_ERR, "crypto: SSL failed: no ssl_ctx exists?");
@@ -604,11 +594,8 @@ void CtdlStartTLS(char *ok_response, char *nosup_response, char *error_response)
 }
 
 
-/*
- * cmd_stls() starts SSL/TLS encryption for the current session
- */
-void cmd_stls(char *params)
-{
+// cmd_stls() starts SSL/TLS encryption for the current session
+void cmd_stls(char *params) {
 	char ok_response[SIZ];
 	char nosup_response[SIZ];
 	char error_response[SIZ];
@@ -623,11 +610,8 @@ void cmd_stls(char *params)
 }
 
 
-/*
- * cmd_gtls() returns status info about the TLS connection
- */
-void cmd_gtls(char *params)
-{
+// cmd_gtls() returns status info about the TLS connection
+void cmd_gtls(char *params) {
 	int bits, alg_bits;
 
 	if (!CC->ssl || !CC->redirect_ssl) {
@@ -644,14 +628,11 @@ void cmd_gtls(char *params)
 }
 
 
-/*
- * endtls() shuts down the TLS connection
- *
- * WARNING:  This may make your session vulnerable to a known plaintext
- * attack in the current implmentation.
- */
-void endtls(void)
-{
+// endtls() shuts down the TLS connection
+//
+// WARNING:  This may make your session vulnerable to a known plaintext
+// attack in the current implmentation.
+void endtls(void) {
 	if (!CC->ssl) {
 		CC->redirect_ssl = 0;
 		return;
@@ -665,13 +646,9 @@ void endtls(void)
 }
 
 
-/*
- * ssl_lock() callback for OpenSSL mutex locks
- */
-void ssl_lock(int mode, int n, const char *file, int line)
-{
-	if (mode & CRYPTO_LOCK)
-	{
+// ssl_lock() callback for OpenSSL mutex locks
+void ssl_lock(int mode, int n, const char *file, int line) {
+	if (mode & CRYPTO_LOCK) {
 		pthread_mutex_lock(SSLCritters[n]);
 	}
 	else {

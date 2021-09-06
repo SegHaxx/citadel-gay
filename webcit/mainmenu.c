@@ -97,6 +97,7 @@ void do_generic(void) {
 	// We may have been supplied with instructions regarding the location
 	// to which we must return after posting.  If found, go there.
 	if (havebstr("return_to")) {
+		syslog(LOG_DEBUG, "return_to = %s", bstr("return_to"));
 		http_redirect(bstr("return_to"));
 	}
 
