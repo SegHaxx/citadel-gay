@@ -540,7 +540,6 @@ void pop_destination(void) {
 
 
 int ReadPostData(void) {
-	TRACE;
 	int rc;
 	int urlencoded_post = 0;
 	StrBuf *content = NULL;

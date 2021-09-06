@@ -1,11 +1,9 @@
-/*
- * Functions which handle communication with the Citadel server.
- *
- * Copyright (c) 1996-2018 by the citadel.org team
- *
- * This program is open source software.  You can redistribute it and/or
- * modify it under the terms of the GNU General Public License, version 3.
- */
+// Functions which handle communication with the Citadel server.
+//
+// Copyright (c) 1996-2021 by the citadel.org team
+//
+// This program is open source software.  You can redistribute it and/or
+// modify it under the terms of the GNU General Public License, version 3.
 
 #include "webcit.h"
 #include "webserver.h"
@@ -17,8 +15,7 @@ HashList *EmbeddableMimes = NULL;
 StrBuf *EmbeddableMimeStrs = NULL;
 
 
-void SetInlinMimeRenderers(void)
-{
+void SetInlinMimeRenderers(void) {
 	StrBuf *Buf;
 
 	Buf = NewStrBuf();
@@ -31,8 +28,7 @@ void SetInlinMimeRenderers(void)
 }
 
 
-void DeleteServInfo(ServInfo **FreeMe)
-{
+void DeleteServInfo(ServInfo **FreeMe) {
 	if (*FreeMe == NULL)
 		return;
 	FreeStrBuf(&(*FreeMe)->serv_nodename);
@@ -53,8 +49,7 @@ void DeleteServInfo(ServInfo **FreeMe)
  * browser_host		the citadel we want to connect to
  * user_agent		which browser uses our client?
  */
-ServInfo *get_serv_info(StrBuf *browser_host, StrBuf *user_agent)
-{
+ServInfo *get_serv_info(StrBuf *browser_host, StrBuf *user_agent) {
 	ServInfo *info;
 	StrBuf *Buf;
 	int a;
@@ -167,8 +162,7 @@ ServInfo *get_serv_info(StrBuf *browser_host, StrBuf *user_agent)
 	return info;
 }
 
-int GetConnected (void)
-{
+int GetConnected (void) {
 	StrBuf *Buf;
 	wcsession *WCC = WC;
 
@@ -263,8 +257,7 @@ int GetConnected (void)
 }
 
 
-void FmOut(StrBuf *Target, const char *align, const StrBuf *Source)
-{
+void FmOut(StrBuf *Target, const char *align, const StrBuf *Source) {
 	const char *ptr, *pte;
 	const char *BufPtr = NULL;
 	StrBuf *Line = NewStrBufPlain(NULL, SIZ);
@@ -343,8 +336,7 @@ void FmOut(StrBuf *Target, const char *align, const StrBuf *Source)
 /*
  *  Transmit message text (in memory) to the server.
  */
-void text_to_server(char *ptr)
-{
+void text_to_server(char *ptr) {
 	char buf[256];
 	int ch, a, pos, len;
 
@@ -353,7 +345,10 @@ void text_to_server(char *ptr)
 
 	while (ptr[pos] != 0) {
 		ch = ptr[pos++];
-		if (ch == 10) {
+		if (ch == 13) {
+			// ignore CR characters
+		}
+		else if (ch == 10) {
 			len = strlen(buf);
 			while ( (isspace(buf[len - 1]))
 				&& (buf[0] !=  '\0') 
@@ -384,8 +379,7 @@ void text_to_server(char *ptr)
 /*
  * Transmit message text (in memory) to the server, converting to Quoted-Printable encoding as we go.
  */
-void text_to_server_qp(const StrBuf *SendMeEncoded)
-{
+void text_to_server_qp(const StrBuf *SendMeEncoded) {
 	StrBuf *ServBuf;
 
 	ServBuf = StrBufRFC2047encodeMessage(SendMeEncoded);
@@ -399,8 +393,7 @@ void text_to_server_qp(const StrBuf *SendMeEncoded)
 /*
  * translate server message output to text (used for editing room info files and such)
  */
-void server_to_text()
-{
+void server_to_text() {
 	char buf[SIZ];
 
 	int count = 0;
@@ -422,8 +415,7 @@ void server_to_text()
  * usual 000 terminator is found.  Caller is responsible for freeing
  * the returned pointer.
  */
-int read_server_text(StrBuf *Buf, long *nLines)
-{
+int read_server_text(StrBuf *Buf, long *nLines) {
 	wcsession *WCC = WC;
 	StrBuf *ReadBuf;
 	long nRead;
@@ -447,8 +439,7 @@ int read_server_text(StrBuf *Buf, long *nLines)
 }
 
 
-int GetServerStatusMsg(StrBuf *Line, long* FullState, int PutImportantMessage, int MajorOK)
-{
+int GetServerStatusMsg(StrBuf *Line, long* FullState, int PutImportantMessage, int MajorOK) {
 	int rc;
 	if (FullState != NULL)
 		*FullState = StrTol(Line);
@@ -463,106 +454,92 @@ int GetServerStatusMsg(StrBuf *Line, long* FullState, int PutImportantMessage, i
 }
 
 
-void tmplput_serv_ip(StrBuf *Target, WCTemplputParams *TP)
-{
+void tmplput_serv_ip(StrBuf *Target, WCTemplputParams *TP) {
 	StrBufAppendPrintf(Target, "%d", WC->ctdl_pid);
 }
 
-void tmplput_serv_admin(StrBuf *Target, WCTemplputParams *TP)
-{
+void tmplput_serv_admin(StrBuf *Target, WCTemplputParams *TP) {
 	wcsession *WCC = WC;
 	if (WCC->serv_info == NULL)
 		return;
 	StrBufAppendTemplate(Target, TP, WCC->serv_info->serv_sysadm, 0);
 }
 
-void tmplput_serv_nodename(StrBuf *Target, WCTemplputParams *TP)
-{
+void tmplput_serv_nodename(StrBuf *Target, WCTemplputParams *TP) {
 	wcsession *WCC = WC;
 	if (WCC->serv_info == NULL)
 		return;
 	StrBufAppendTemplate(Target, TP, WCC->serv_info->serv_nodename, 0);
 }
 
-void tmplput_serv_humannode(StrBuf *Target, WCTemplputParams *TP)
-{
+void tmplput_serv_humannode(StrBuf *Target, WCTemplputParams *TP) {
 	wcsession *WCC = WC;
 	if (WCC->serv_info == NULL)
 		return;
 	StrBufAppendTemplate(Target, TP, WCC->serv_info->serv_humannode, 0);
 }
 
-void tmplput_serv_fqdn(StrBuf *Target, WCTemplputParams *TP)
-{
+void tmplput_serv_fqdn(StrBuf *Target, WCTemplputParams *TP) {
 	wcsession *WCC = WC;
 	if (WCC->serv_info == NULL)
 		return;
 	StrBufAppendTemplate(Target, TP, WCC->serv_info->serv_fqdn, 0);
 }
 
-void tmplput_serv_software(StrBuf *Target, WCTemplputParams *TP)
-{
+void tmplput_serv_software(StrBuf *Target, WCTemplputParams *TP) {
 	wcsession *WCC = WC;
 	if (WCC->serv_info == NULL)
 		return;
 	StrBufAppendTemplate(Target, TP, WCC->serv_info->serv_software, 0);
 }
 
-void tmplput_serv_rev_level(StrBuf *Target, WCTemplputParams *TP)
-{
+void tmplput_serv_rev_level(StrBuf *Target, WCTemplputParams *TP) {
 	if (WC->serv_info == NULL) return;
 	StrBufAppendPrintf(Target, "%d", WC->serv_info->serv_rev_level);
 }
-int conditional_serv_newuser_disabled(StrBuf *Target, WCTemplputParams *TP)
-{
+int conditional_serv_newuser_disabled(StrBuf *Target, WCTemplputParams *TP) {
 	wcsession *WCC = WC;
 	if (WCC->serv_info == NULL)
 		return 0;
 	return WCC->serv_info->serv_newuser_disabled != 0;
 }
 
-int conditional_serv_supports_guest(StrBuf *Target, WCTemplputParams *TP)                                                                                                                                       
-{
+int conditional_serv_supports_guest(StrBuf *Target, WCTemplputParams *TP) {
 	wcsession *WCC = WC;
         if (WCC->serv_info == NULL)
 		return 0;
         return WCC->serv_info->serv_supports_guest != 0;
 }
 
-int conditional_serv_supports_openid(StrBuf *Target, WCTemplputParams *TP)
-{
+int conditional_serv_supports_openid(StrBuf *Target, WCTemplputParams *TP) {
 	wcsession *WCC = WC;
 	if (WCC->serv_info == NULL)
 		return 0;
 	return WCC->serv_info->serv_supports_openid != 0;
 }
 
-int conditional_serv_fulltext_enabled(StrBuf *Target, WCTemplputParams *TP)
-{
+int conditional_serv_fulltext_enabled(StrBuf *Target, WCTemplputParams *TP) {
 	wcsession *WCC = WC;
 	if (WCC->serv_info == NULL)
 		return 0;
 	return WCC->serv_info->serv_fulltext_enabled != 0;
 }
 
-int conditional_serv_ldap_enabled(StrBuf *Target, WCTemplputParams *TP)
-{
+int conditional_serv_ldap_enabled(StrBuf *Target, WCTemplputParams *TP) {
 	wcsession *WCC = WC;
 	if (WCC->serv_info == NULL)
 		return 0;
 	return WCC->serv_info->serv_supports_ldap != 0;
 }
 
-void tmplput_serv_bbs_city(StrBuf *Target, WCTemplputParams *TP)
-{
+void tmplput_serv_bbs_city(StrBuf *Target, WCTemplputParams *TP) {
 	wcsession *WCC = WC;
 	if (WCC->serv_info == NULL)
 		return;
 	StrBufAppendTemplate(Target, TP, WC->serv_info->serv_bbs_city, 0);
 }
 
-void tmplput_mesg(StrBuf *Target, WCTemplputParams *TP)
-{
+void tmplput_mesg(StrBuf *Target, WCTemplputParams *TP) {
 	int n = 0;
 	int Done = 0;
 	StrBuf *Line;
@@ -602,15 +579,13 @@ void tmplput_site_prefix(StrBuf *Target, WCTemplputParams *TP) {
 	}
 }
 
-void RegisterEmbeddableMimeType(const char *MimeType, long MTLen, int Priority)
-{
+void RegisterEmbeddableMimeType(const char *MimeType, long MTLen, int Priority) {
 	StrBuf *MT;
 	MT = NewStrBufPlain(MimeType, MTLen);
 	Put(EmbeddableMimes, IKEY(Priority), MT, HFreeStrBuf);
 }
 
-void CreateMimeStr(void)
-{
+void CreateMimeStr(void) {
 	HashPos  *it;
 	void *vMime;
 	long len = 0;

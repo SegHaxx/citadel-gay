@@ -10,20 +10,19 @@
 <div id="wc_easterbunny77">
 </div>
 
-
-<br> ---form begins here ---<br>
-
 <form method="POST" action="do_generic">
-	<input type="hidden" name="return_to" value="/do_template?template=aide_display_aliases">
-	<textarea name="global_aliases" id="global_aliases" VALUE=""></textarea>
-	<input type="submit" value="<?_("Save")>">
-	<input type="submit" value="<?_("Cancel")>">
+	<input type="hidden" name="return_to" value="do_template?template=aide_display_menu">
+	<input type="hidden" name="g_cmd" value="conf putsys|global_alias_table">
+	<textarea name="g_input" id="g_input" rows="20" cols="80"  VALUE="" style="display:none;"></textarea>
+	<br><center>
+	<input type="submit" name="ok_button" onClick="javascript:add_alias();" value="<?_("Save")>">
+	<input type="submit" name="cancel_button" value="<?_("Cancel")>"></center>
 </form>
 
 <script type="text/javascript">
 
 load_aliases = async() => {
-	response = await fetch("ajax_servcmd?g_cmd=LIST");
+	response = await fetch("ajax_servcmd?g_cmd=conf getsys|global_alias_table");
 	data = await(response.text());
 	populate_aliases(data);
 };
@@ -40,23 +39,53 @@ function populate_aliases(data) {
 	for (var i=1; i<lines.length && lines[i] != "000"; ++i) {
 		config_line = lines[i].split("|");
 		lineid = randomString(10);
-		a +=	"<tr id=" + lineid + "><td>" + config_line[0] + "</td><td>" +
-			config_line[1] + "</td><td>" +
-			"<a href=\"javascript:delete_alias('" + lineid + "');\">" +
-			"<font color=#FF0000>&#10006;</font></a></td></tr>";
+		a +=	"<tr id=" + lineid + ">" +
+			"<td><a href=\"javascript:delete_alias('" + lineid + "');\">" +
+			"<font color=\"#FF0000\">&#10060;</font></a></td>" +
+			"<td>" + config_line[0] + "</td>" +
+			"<td>" + config_line[1] + "</td>" +
+			"</tr>";
 	}
+	a +=	"<tr id=\"newentry\">" +
+		"<td><a href=\"javascript:add_alias();\">" +
+		"<font color=\"#FF0000\">&#9989;</font></a></td>" +
+		"<td><input id=\"newalias1\" name=\"newalias1\" width=\"40\"></td>" +
+		"<td><input id=\"newalias2\" name=\"newalias2\" width=\"80\"></td>" +
+		"</tr>";
 	a += "</table>";
 	document.getElementById("wc_easterbunny77").innerHTML = a;
 	repopulate_the_box();
+}
+
+function add_alias() {
+	a = document.getElementById("g_input").innerHTML;
+	if (a != "") {
+		a += "\n";
+	}
+	a += document.getElementById("newentry").cells[1].firstChild.value + "|";
+	a += document.getElementById("newentry").cells[2].firstChild.value;
+	document.getElementById("g_input").innerHTML = a;
+	document.getElementById("newentry").cells[1].firstChild.value = "";
+	document.getElementById("newentry").cells[2].firstChild.value = "";
+	populate_aliases("100 \n" + a);
+	return true;
 }
 
 function repopulate_the_box() {
 	newbox = "";
 	t = document.getElementById("killo9867");
 	for (row of t.rows) {
-		newbox += row.cells[0].innerHTML + " - " + row.cells[1].innerHTML + "\n";
+		if (	(row.cells[1].innerHTML.trim() != "")
+			&& (row.cells[2].innerHTML.trim() != "")
+			&& (row.id != "newentry")
+		) {
+			if (newbox != "") {
+				newbox += "\n";
+			}
+			newbox += row.cells[1].innerHTML.trim() + "|" + row.cells[2].innerHTML.trim();
+		}
 	}
-	document.getElementById("global_aliases").innerHTML = newbox;
+	document.getElementById("g_input").innerHTML = newbox;
 }
 
 load_aliases();

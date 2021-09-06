@@ -43,57 +43,64 @@ void do_generic(void) {
 	char *junk;
 	size_t len;
 
-	if (!havebstr("sc_button")) {
+	if ( (!havebstr("sc_button")) && (!havebstr("ok_button")) && (!havebstr("cancel_button")) ) {
 		display_main_menu();
 		return;
 	}
 
-	Buf = NewStrBuf();
-	serv_puts(bstr("g_cmd"));
-	StrBuf_ServGetln(Buf);
-	
-	switch (GetServerStatus(Buf, NULL)) {
-	case 8:
-		serv_puts("\n\n000");
-		if ( (StrLength(Buf)==3) && 
-		     !strcmp(ChrPtr(Buf), "000")) {
-			StrBufAppendBufPlain(Buf, HKEY("\000"), 0);
-			break;
-		}
-	case 1:
-		LineBuf = NewStrBuf();
-		StrBufAppendBufPlain(Buf, HKEY("\n"), 0);
-		while (!Done) {
-			if (StrBuf_ServGetln(LineBuf) < 0)
-				break;
-			if ( (StrLength(LineBuf)==3) && 
-			     !strcmp(ChrPtr(LineBuf), "000")) {
-				Done = 1;
-			}
-			StrBufAppendBuf(Buf, LineBuf, 0);
-			StrBufAppendBufPlain(Buf, HKEY("\n"), 0);
-		}
-		FreeStrBuf(&LineBuf);
-		break;
-	case 2:
-		break;
-	case 4:
-		text_to_server(bstr("g_input"));
-		serv_puts("000");
-		break;
-	case 6:
-		len = atol(&ChrPtr(Buf)[4]);
-		StrBuf_ServGetBLOBBuffered(Buf, len);
-		break;
-	case 7:
-		len = atol(&ChrPtr(Buf)[4]);
-		junk = malloc(len);
-		memset(junk, 0, len);
-		serv_write(junk, len);
-		free(junk);
-		break;
+	if (havebstr("cancel_button")) {
+		AppendImportantMessage(_("Cancelled.  Changes were not saved."), -1);
 	}
 
+	if (havebstr("ok_button")) {
+		Buf = NewStrBuf();
+		serv_puts(bstr("g_cmd"));
+		StrBuf_ServGetln(Buf);
+		
+		switch (GetServerStatus(Buf, NULL)) {
+		case 8:
+			serv_puts("\n\n000");
+			if ( (StrLength(Buf)==3) && 
+		     	!strcmp(ChrPtr(Buf), "000")) {
+				StrBufAppendBufPlain(Buf, HKEY("\000"), 0);
+				break;
+			}
+		case 1:
+			LineBuf = NewStrBuf();
+			StrBufAppendBufPlain(Buf, HKEY("\n"), 0);
+			while (!Done) {
+				if (StrBuf_ServGetln(LineBuf) < 0)
+					break;
+				if ( (StrLength(LineBuf)==3) && 
+			     	!strcmp(ChrPtr(LineBuf), "000")) {
+					Done = 1;
+				}
+				StrBufAppendBuf(Buf, LineBuf, 0);
+				StrBufAppendBufPlain(Buf, HKEY("\n"), 0);
+			}
+			FreeStrBuf(&LineBuf);
+			break;
+		case 2:
+			break;
+		case 4:
+			text_to_server(bstr("g_input"));
+			serv_puts("000");
+			break;
+		case 6:
+			len = atol(&ChrPtr(Buf)[4]);
+			StrBuf_ServGetBLOBBuffered(Buf, len);
+			break;
+		case 7:
+			len = atol(&ChrPtr(Buf)[4]);
+			junk = malloc(len);
+			memset(junk, 0, len);
+			serv_write(junk, len);
+			free(junk);
+			break;
+		}
+		FreeStrBuf(&Buf);
+	}
+	
 	// We may have been supplied with instructions regarding the location
 	// to which we must return after posting.  If found, go there.
 	if (havebstr("return_to")) {
@@ -114,7 +121,6 @@ void do_generic(void) {
         	wDumpContent(1);
 	}
 
-	FreeStrBuf(&Buf);
 }
 
 
