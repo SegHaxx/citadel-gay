@@ -32,7 +32,6 @@
 #include <stdio.h>
 #include <dirent.h>
 #include <zlib.h>
-
 #include <db.h>
 
 #if DB_VERSION_MAJOR < 5
@@ -548,6 +547,13 @@ static DBC *localcursor(int cdb) {
  * using the cdb_free() routine.
  */
 struct cdbdata *cdb_fetch(int cdb, const void *key, int keylen) {
+
+	syslog(LOG_DEBUG, "\x1b[35mdatabase: fetch from db %d a key of length %d\x1b[0m", cdb, keylen);
+
+	if (keylen == 0) {
+		abort();
+	}
+
 	struct cdbdata *tempcdb;
 	DBT dkey, dret;
 	int ret;
@@ -559,8 +565,9 @@ struct cdbdata *cdb_fetch(int cdb, const void *key, int keylen) {
 	if (TSD->tid != NULL) {
 		memset(&dret, 0, sizeof(DBT));
 		dret.flags = DB_DBT_MALLOC;
-		ret = dbp[cdb]->get(dbp[cdb], TSD->tid, &dkey, &dret, 0);		// crashing here
-	} else {
+		ret = dbp[cdb]->get(dbp[cdb], TSD->tid, &dkey, &dret, 0);
+	}
+	else {
 		DBC *curs;
 
 		do {
@@ -588,7 +595,8 @@ struct cdbdata *cdb_fetch(int cdb, const void *key, int keylen) {
 		syslog(LOG_ERR, "db: cdb_fetch: Cannot allocate memory for tempcdb");
 		cdb_abort();
 		return NULL;	/* make it easier for static analysis... */
-	} else {
+	}
+	else {
 		tempcdb->len = dret.size;
 		tempcdb->ptr = dret.data;
 		cdb_decompress_if_necessary(tempcdb);

@@ -84,9 +84,12 @@ int CtdlGetUser(struct ctdluser *usbuf, char *name)
 	}
 
 	makeuserkey(usernamekey, name);
+	if (IsEmptyStr(usernamekey)) {
+		return(1);	// empty user name
+	}
 	cdbus = cdb_fetch(CDB_USERS, usernamekey, strlen(usernamekey));
 
-	if (cdbus == NULL) {	/* user not found */
+	if (cdbus == NULL) {	// user not found
 		return(1);
 	}
 	if (usbuf != NULL) {

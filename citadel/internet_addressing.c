@@ -313,8 +313,7 @@ int CtdlHostAlias(char *fqdn) {
 /*
  * Determine whether a given Internet address belongs to the current user
  */
-int CtdlIsMe(char *addr, int addr_buf_len)
-{
+int CtdlIsMe(char *addr, int addr_buf_len) {
 	struct recptypes *recp;
 	int i;
 
@@ -399,6 +398,8 @@ int expand_aliases(char *name) {
 	int at = 0;
 	char node[64];
 	char *t;
+
+	syslog(LOG_DEBUG, "internet_addressing: \x1b[34mexpand_aliases(%s)\x1b[0m", name);
 
 	char *aliases = CtdlGetSysConfig(GLOBAL_ALIASES);	// First hit the Global Alias Table
 	if (aliases) {
@@ -534,6 +535,8 @@ struct recptypes *validate_recipients(char *supplied_recipients, const char *Rem
 	char errmsg[SIZ];
 	char *org_recp;
 	char this_recp[256];
+
+	syslog(LOG_DEBUG, "internet_addressing: \x1b[32mvalidate_recipients(%s) \x1b[0m", supplied_recipients);
 
 	ret = (struct recptypes *) malloc(sizeof(struct recptypes));			// Initialize
 	if (ret == NULL) return(NULL);

@@ -1527,7 +1527,6 @@ InitModule_ROOMOPS
 	REGISTERTokenParamDefine(VIEW_JOURNAL);
 	REGISTERTokenParamDefine(VIEW_BLOG);
 	REGISTERTokenParamDefine(VIEW_QUEUE);
-	REGISTERTokenParamDefine(VIEW_WIKIMD);		
 
 	/* GNET types: */
 	/* server internal, we need to know but ignore them. */

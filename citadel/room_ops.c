@@ -365,6 +365,10 @@ int CtdlGetRoom(struct ctdlroom *qrbuf, const char *room_name) {
 
 	memset(qrbuf, 0, sizeof(struct ctdlroom));
 
+	if (IsEmptyStr(lowercase_name)) {
+		return(1);			// empty room name , not valid
+	}
+
 	/* First, try the public namespace */
 	cdbqr = cdb_fetch(CDB_ROOMS, lowercase_name, strlen(lowercase_name));
 

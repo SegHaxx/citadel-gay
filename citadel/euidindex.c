@@ -48,7 +48,6 @@ int DoesThisRoomNeedEuidIndexing(struct ctdlroom *qrbuf) {
 		case VIEW_TASKS:	return(1);
 		case VIEW_NOTES:	return(1);
 		case VIEW_WIKI:		return(1);
-		case VIEW_WIKIMD:	return(1);
 		case VIEW_BLOG:		return(1);
 	}
 	

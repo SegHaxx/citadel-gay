@@ -147,7 +147,6 @@ void sitemap(void) {
 			sitemap_do_bbs();
 			break;
 		case VIEW_WIKI:
-		case VIEW_WIKIMD:
 			sitemap_do_wiki();
 			break;
 		case VIEW_BLOG:

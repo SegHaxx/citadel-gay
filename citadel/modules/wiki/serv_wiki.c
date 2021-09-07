@@ -1,7 +1,7 @@
 /*
  * Server-side module for Wiki rooms.  This handles things like version control. 
  * 
- * Copyright (c) 2009-2020 by the citadel.org team
+ * Copyright (c) 2009-2021 by the citadel.org team
  *
  * This program is open source software.  You can redistribute it and/or
  * modify it under the terms of the GNU General Public License, version 3.
@@ -60,7 +60,6 @@ char *wwm = "9999999999.WikiWaybackMachine";
  * This involves fetching the old version of the page if it exists.
  */
 int wiki_upload_beforesave(struct CtdlMessage *msg, struct recptypes *recp) {
-	struct CitContext *CCC = CC;
 	long old_msgnum = (-1L);
 	struct CtdlMessage *old_msg = NULL;
 	long history_msgnum = (-1L);
@@ -82,11 +81,10 @@ int wiki_upload_beforesave(struct CtdlMessage *msg, struct recptypes *recp) {
 	long newmsgid;
 	StrBuf *msgidbuf;
 
-	if (!CCC->logged_in) return(0);	/* Only do this if logged in. */
+	if (!CC->logged_in) return(0);	/* Only do this if logged in. */
 
 	/* Is this a room with a Wiki in it, don't run this hook. */
-	if ((CCC->room.QRdefaultview != VIEW_WIKI) &&
-	    (CCC->room.QRdefaultview != VIEW_WIKIMD)) {
+	if (CC->room.QRdefaultview != VIEW_WIKI) {
 		return(0);
 	}
 
@@ -127,7 +125,7 @@ int wiki_upload_beforesave(struct CtdlMessage *msg, struct recptypes *recp) {
 	CM_CopyField(msg, eMsgSubject, eExclusiveID);
 
 	/* See if we can retrieve the previous version. */
-	old_msgnum = CtdlLocateMessageByEuid(msg->cm_fields[eExclusiveID], &CCC->room);
+	old_msgnum = CtdlLocateMessageByEuid(msg->cm_fields[eExclusiveID], &CC->room);
 	if (old_msgnum > 0L) {
 		old_msg = CtdlFetchMessage(old_msgnum, 1);
 	}
@@ -207,7 +205,7 @@ int wiki_upload_beforesave(struct CtdlMessage *msg, struct recptypes *recp) {
 
 	/* Now look for the existing edit history */
 
-	history_msgnum = CtdlLocateMessageByEuid(history_page, &CCC->room);
+	history_msgnum = CtdlLocateMessageByEuid(history_page, &CC->room);
 	history_msg = NULL;
 	if (history_msgnum > 0L) {
 		history_msg = CtdlFetchMessage(history_msgnum, 1);
@@ -224,8 +222,8 @@ int wiki_upload_beforesave(struct CtdlMessage *msg, struct recptypes *recp) {
 		history_msg->cm_anon_type = MES_NORMAL;
 		history_msg->cm_format_type = FMT_RFC822;
 		CM_SetField(history_msg, eAuthor, HKEY("Citadel"));
-		if (!IsEmptyStr(CCC->room.QRname)){
-			CM_SetField(history_msg, eRecipient, CCC->room.QRname, strlen(CCC->room.QRname));
+		if (!IsEmptyStr(CC->room.QRname)){
+			CM_SetField(history_msg, eRecipient, CC->room.QRname, strlen(CC->room.QRname));
 		}
 		CM_SetField(history_msg, eExclusiveID, history_page, history_page_len);
 		CM_SetField(history_msg, eMsgSubject, history_page, history_page_len);
@@ -306,7 +304,7 @@ int wiki_upload_beforesave(struct CtdlMessage *msg, struct recptypes *recp) {
 			memolen = snprintf(memo, sizeof(memo), "%s|%ld|%s|%s", 
 					   uuid,
 					   Now,
-					   CCC->user.fullname,
+					   CC->user.fullname,
 					   CtdlGetConfigStr("c_nodename"));
 
 			memolen = CtdlEncodeBase64(encoded_memo, memo, memolen, 0);
@@ -491,7 +489,6 @@ void wiki_rev_callback(char *name, char *filename, char *partnum, char *disp,
  */
 void wiki_rev(char *pagename, char *rev, char *operation)
 {
-	struct CitContext *CCC = CC;
 	int r;
 	char history_page_name[270];
 	long msgnum;
@@ -524,7 +521,7 @@ void wiki_rev(char *pagename, char *rev, char *operation)
 	/* Begin by fetching the current version of the page.  We're going to patch
 	 * backwards through the diffs until we get the one we want.
 	 */
-	msgnum = CtdlLocateMessageByEuid(pagename, &CCC->room);
+	msgnum = CtdlLocateMessageByEuid(pagename, &CC->room);
 	if (msgnum > 0L) {
 		msg = CtdlFetchMessage(msgnum, 1);
 	}
@@ -558,7 +555,7 @@ void wiki_rev(char *pagename, char *rev, char *operation)
 	/* Get the revision history */
 
 	snprintf(history_page_name, sizeof history_page_name, "%s_HISTORY_", pagename);
-	msgnum = CtdlLocateMessageByEuid(history_page_name, &CCC->room);
+	msgnum = CtdlLocateMessageByEuid(history_page_name, &CC->room);
 	if (msgnum > 0L) {
 		msg = CtdlFetchMessage(msgnum, 1);
 	}
@@ -630,30 +627,30 @@ void wiki_rev(char *pagename, char *rev, char *operation)
 			 * but only if the client fetches the message we just generated immediately
 			 * without first trying to perform other fetch operations.
 			 */
-			if (CCC->cached_msglist != NULL) {
-				free(CCC->cached_msglist);
-				CCC->cached_msglist = NULL;
-				CCC->cached_num_msgs = 0;
+			if (CC->cached_msglist != NULL) {
+				free(CC->cached_msglist);
+				CC->cached_msglist = NULL;
+				CC->cached_num_msgs = 0;
 			}
-			CCC->cached_msglist = malloc(sizeof(long));
-			if (CCC->cached_msglist != NULL) {
-				CCC->cached_num_msgs = 1;
-				CCC->cached_msglist[0] = msgnum;
+			CC->cached_msglist = malloc(sizeof(long));
+			if (CC->cached_msglist != NULL) {
+				CC->cached_num_msgs = 1;
+				CC->cached_msglist[0] = msgnum;
 			}
 
 		}
 		else if (!strcasecmp(operation, "revert")) {
 			CM_SetFieldLONG(msg, eTimestamp, time(NULL));
-			if (!IsEmptyStr(CCC->user.fullname)) {
-				CM_SetField(msg, eAuthor, CCC->user.fullname, strlen(CCC->user.fullname));
+			if (!IsEmptyStr(CC->user.fullname)) {
+				CM_SetField(msg, eAuthor, CC->user.fullname, strlen(CC->user.fullname));
 			}
 
-			if (!IsEmptyStr(CCC->cs_inet_email)) {
-				CM_SetField(msg, erFc822Addr, CCC->cs_inet_email, strlen(CCC->cs_inet_email));
+			if (!IsEmptyStr(CC->cs_inet_email)) {
+				CM_SetField(msg, erFc822Addr, CC->cs_inet_email, strlen(CC->cs_inet_email));
 			}
 
-			if (!IsEmptyStr(CCC->room.QRname)) {
-				CM_SetField(msg, eOriginalRoom, CCC->room.QRname, strlen(CCC->room.QRname));
+			if (!IsEmptyStr(CC->room.QRname)) {
+				CM_SetField(msg, eOriginalRoom, CC->room.QRname, strlen(CC->room.QRname));
 			}
 
 			if (!IsEmptyStr(pagename)) {

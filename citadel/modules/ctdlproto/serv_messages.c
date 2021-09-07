@@ -1,20 +1,17 @@
-/*
- * represent messages to the citadel clients
- *
- * Copyright (c) 1987-2020 by the citadel.org team
- *
- * This program is open source software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 3.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- */
+// Message-related protocol commands for Citadel clients
+//
+// Copyright (c) 1987-2021 by the citadel.org team
+//
+// This program is open source software; you can redistribute it and/or modify
+// it under the terms of the GNU General Public License version 3.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
 
 #include <stdio.h>
 #include <libcitadel.h>
-
 #include "citserver.h"
 #include "ctdl_module.h"
 #include "internet_addressing.h"
@@ -25,20 +22,14 @@
 extern char *msgkeys[];
 
 
-/*
- * Back end for the MSGS command: output message number only.
- */
-void simple_listing(long msgnum, void *userdata)
-{
+// Back end for the MSGS command: output message number only.
+void simple_listing(long msgnum, void *userdata) {
 	cprintf("%ld\n", msgnum);
 }
 
 
-/*
- * Back end for the MSGS command: output header summary.
- */
-void headers_listing(long msgnum, void *userdata)
-{
+// Back end for the MSGS command: output header summary.
+void headers_listing(long msgnum, void *userdata) {
 	struct CtdlMessage *msg;
 	int output_mode =  *(int *)userdata;
 
@@ -96,14 +87,14 @@ void headers_listing(long msgnum, void *userdata)
 	CM_Free(msg);
 }
 
-typedef struct _msg_filter{
+typedef struct _msg_filter {
 	HashList *Filter;
 	HashPos *p;
 	StrBuf *buffer;
-}msg_filter;
+} msg_filter;
 
-void headers_brief_filter(long msgnum, void *userdata)
-{
+
+void headers_brief_filter(long msgnum, void *userdata) {
 	long i, l;
 	struct CtdlMessage *msg;
 	msg_filter *flt = (msg_filter*) userdata;
@@ -134,11 +125,8 @@ void headers_brief_filter(long msgnum, void *userdata)
 	cputbuf(flt->buffer);
 }
 
-/*
- * Back end for the MSGS command: output EUID header.
- */
-void headers_euid(long msgnum, void *userdata)
-{
+// Back end for the MSGS command: output EUID header.
+void headers_euid(long msgnum, void *userdata) {
 	struct CtdlMessage *msg;
 
 	msg = CtdlFetchMessage(msgnum, 0);
@@ -155,13 +143,9 @@ void headers_euid(long msgnum, void *userdata)
 }
 
 
-
-/*
- * cmd_msgs()  -  get list of message #'s in this room
- *		implements the MSGS server command using CtdlForEachMessage()
- */
-void cmd_msgs(char *cmdbuf)
-{
+// cmd_msgs()  -  get list of message #'s in this room
+//		implements the MSGS server command using CtdlForEachMessage()
+void cmd_msgs(char *cmdbuf) {
 	int mode = 0;
 	char which[16];
 	char buf[256];
@@ -298,6 +282,7 @@ void cmd_msgs(char *cmdbuf)
 	cprintf("000\n");
 }
 
+
 /*
  * display a message (mode 0 - Citadel proprietary)
  */
@@ -314,11 +299,8 @@ void cmd_msg0(char *cmdbuf)
 }
 
 
-/*
- * display a message (mode 2 - RFC822)
- */
-void cmd_msg2(char *cmdbuf)
-{
+// display a message (mode 2 - RFC822)
+void cmd_msg2(char *cmdbuf) {
 	long msgid;
 	int headers_only = HEADERS_ALL;
 
@@ -329,11 +311,8 @@ void cmd_msg2(char *cmdbuf)
 }
 
 
-/* 
- * Display a message using MIME content types
- */
-void cmd_msg4(char *cmdbuf)
-{
+// Display a message using MIME content types
+void cmd_msg4(char *cmdbuf) {
 	long msgid;
 	char section[64];
 
@@ -343,11 +322,8 @@ void cmd_msg4(char *cmdbuf)
 }
 
 
-/* 
- * Client tells us its preferred message format(s)
- */
-void cmd_msgp(char *cmdbuf)
-{
+// Client tells us its preferred message format(s)
+void cmd_msgp(char *cmdbuf) {
 	if (!strcasecmp(cmdbuf, "dont_decode")) {
 		CC->msg4_dont_decode = 1;
 		cprintf("%d MSG4 will not pre-decode messages.\n", CIT_OK);
@@ -359,11 +335,8 @@ void cmd_msgp(char *cmdbuf)
 }
 
 
-/*
- * Open a component of a MIME message as a download file 
- */
-void cmd_opna(char *cmdbuf)
-{
+// Open a component of a MIME message as a download file 
+void cmd_opna(char *cmdbuf) {
 	long msgid;
 	char desired_section[128];
 
@@ -375,11 +348,8 @@ void cmd_opna(char *cmdbuf)
 }			
 
 
-/*
- * Open a component of a MIME message and transmit it all at once
- */
-void cmd_dlat(char *cmdbuf)
-{
+// Open a component of a MIME message and transmit it all at once
+void cmd_dlat(char *cmdbuf) {
 	long msgid;
 	char desired_section[128];
 
@@ -390,12 +360,9 @@ void cmd_dlat(char *cmdbuf)
 	CtdlOutputMsg(msgid, MT_SPEW_SECTION, 0, 1, 1, NULL, 0, NULL, NULL, NULL);
 }
 
-/*
- * message entry  -  mode 0 (normal)
- */
-void cmd_ent0(char *entargs)
-{
-	struct CitContext *CCC = CC;
+
+// message entry  -  mode 0 (normal)
+void cmd_ent0(char *entargs) {
 	int post = 0;
 	char recp[SIZ];
 	char cc[SIZ];
@@ -437,7 +404,6 @@ void cmd_ent0(char *entargs)
 	switch(CC->room.QRdefaultview) {
 	case VIEW_NOTES:
 	case VIEW_WIKI:
-	case VIEW_WIKIMD:
 		extract_token(supplied_euid, entargs, 9, '|', sizeof supplied_euid);
 		break;
 	default:
@@ -458,9 +424,8 @@ void cmd_ent0(char *entargs)
 		NULL,
 		POST_LOGGED_IN,
 		(!IsEmptyStr(references))		/* is this a reply?  or a top-level post? */
-		);
-	if (err)
-	{
+	);
+	if (err) {
 		cprintf("%d %s\n", err, errmsg);
 		return;
 	}
@@ -468,32 +433,31 @@ void cmd_ent0(char *entargs)
 	/* Check some other permission type things. */
 
 	if (IsEmptyStr(newusername)) {
-		strcpy(newusername, CCC->user.fullname);
+		strcpy(newusername, CC->user.fullname);
 	}
-	if (  (CCC->user.axlevel < AxAideU)
-	      && (strcasecmp(newusername, CCC->user.fullname))
-	      && (strcasecmp(newusername, CCC->cs_inet_fn))
-		) {	
+	if (  (CC->user.axlevel < AxAideU)
+	      && (strcasecmp(newusername, CC->user.fullname))
+	      && (strcasecmp(newusername, CC->cs_inet_fn))
+	) {	
 		cprintf("%d You don't have permission to author messages as '%s'.\n",
 			ERROR + HIGHER_ACCESS_REQUIRED,
 			newusername
-			);
+		);
 		return;
 	}
-
 
 	if (IsEmptyStr(newuseremail)) {
 		newuseremail_ok = 1;
 	}
 
 	if (!IsEmptyStr(newuseremail)) {
-		if (!strcasecmp(newuseremail, CCC->cs_inet_email)) {
+		if (!strcasecmp(newuseremail, CC->cs_inet_email)) {
 			newuseremail_ok = 1;
 		}
-		else if (!IsEmptyStr(CCC->cs_inet_other_emails)) {
-			j = num_tokens(CCC->cs_inet_other_emails, '|');
+		else if (!IsEmptyStr(CC->cs_inet_other_emails)) {
+			j = num_tokens(CC->cs_inet_other_emails, '|');
 			for (i=0; i<j; ++i) {
-				extract_token(buf, CCC->cs_inet_other_emails, i, '|', sizeof buf);
+				extract_token(buf, CC->cs_inet_other_emails, i, '|', sizeof buf);
 				if (!strcasecmp(newuseremail, buf)) {
 					newuseremail_ok = 1;
 				}
@@ -509,32 +473,35 @@ void cmd_ent0(char *entargs)
 		return;
 	}
 
-	CCC->cs_flags |= CS_POSTING;
+	CC->cs_flags |= CS_POSTING;
 
-	/* In mailbox rooms we have to behave a little differently --
-	 * make sure the user has specified at least one recipient.  Then
-	 * validate the recipient(s).  We do this for the Mail> room, as
-	 * well as any room which has the "Mailbox" view set - unless it
-	 * is the DRAFTS room which does not require recipients
-	 */
+	// In mailbox rooms we have to behave a little differently --
+	// make sure the user has specified at least one recipient.  Then
+	// validate the recipient(s).  We do this for the Mail> room, as
+	// well as any room which has the "Mailbox" view set - unless it
+	// is the DRAFTS room which does not require recipients.
 
-	if ( (  ( (CCC->room.QRflags & QR_MAILBOX) && (!strcasecmp(&CCC->room.QRname[11], MAILROOM)) )
-		|| ( (CCC->room.QRflags & QR_MAILBOX) && (CCC->curr_view == VIEW_MAILBOX) )
-		     ) && (strcasecmp(&CCC->room.QRname[11], USERDRAFTROOM)) !=0 ) {
-		if (CCC->user.axlevel < AxProbU) {
+	if ( (  ( (CC->room.QRflags & QR_MAILBOX) && (!strcasecmp(&CC->room.QRname[11], MAILROOM)) )
+		|| ( (CC->room.QRflags & QR_MAILBOX) && (CC->curr_view == VIEW_MAILBOX) )
+		     ) && (strcasecmp(&CC->room.QRname[11], USERDRAFTROOM)) !=0 ) {
+		if (CC->user.axlevel < AxProbU) {
 			strcpy(recp, "sysop");
 			strcpy(cc, "");
 			strcpy(bcc, "");
 		}
 
+		TRACE;
 		valid_to = validate_recipients(recp, NULL, 0);
+		TRACE;
 		if (valid_to->num_error > 0) {
 			cprintf("%d %s\n", ERROR + NO_SUCH_USER, valid_to->errormsg);
 			free_recipients(valid_to);
 			return;
 		}
 
+		TRACE;
 		valid_cc = validate_recipients(cc, NULL, 0);
+		TRACE;
 		if (valid_cc->num_error > 0) {
 			cprintf("%d %s\n", ERROR + NO_SUCH_USER, valid_cc->errormsg);
 			free_recipients(valid_to);
@@ -542,7 +509,9 @@ void cmd_ent0(char *entargs)
 			return;
 		}
 
+		TRACE;
 		valid_bcc = validate_recipients(bcc, NULL, 0);
+		TRACE;
 		if (valid_bcc->num_error > 0) {
 			cprintf("%d %s\n", ERROR + NO_SUCH_USER, valid_bcc->errormsg);
 			free_recipients(valid_to);
@@ -561,7 +530,7 @@ void cmd_ent0(char *entargs)
 		}
 
 		if (valid_to->num_internet + valid_cc->num_internet + valid_bcc->num_internet > 0) {
-			if (CtdlCheckInternetMailPermission(&CCC->user)==0) {
+			if (CtdlCheckInternetMailPermission(&CC->user)==0) {
 				cprintf("%d You do not have permission "
 					"to send Internet mail.\n",
 					ERROR + HIGHER_ACCESS_REQUIRED);
@@ -573,7 +542,7 @@ void cmd_ent0(char *entargs)
 		}
 
 		if ( ( (valid_to->num_internet + valid_to->num_ignet + valid_cc->num_internet + valid_cc->num_ignet + valid_bcc->num_internet + valid_bcc->num_ignet) > 0)
-		     && (CCC->user.axlevel < AxNetU) ) {
+		     && (CC->user.axlevel < AxNetU) ) {
 			cprintf("%d Higher access required for network mail.\n",
 				ERROR + HIGHER_ACCESS_REQUIRED);
 			free_recipients(valid_to);
@@ -584,8 +553,8 @@ void cmd_ent0(char *entargs)
 	
 		if ((RESTRICT_INTERNET == 1)
 		    && (valid_to->num_internet + valid_cc->num_internet + valid_bcc->num_internet > 0)
-		    && ((CCC->user.flags & US_INTERNET) == 0)
-		    && (!CCC->internal_pgm)) {
+		    && ((CC->user.flags & US_INTERNET) == 0)
+		    && (!CC->internal_pgm)) {
 			cprintf("%d You don't have access to Internet mail.\n",
 				ERROR + HIGHER_ACCESS_REQUIRED);
 			free_recipients(valid_to);
@@ -598,16 +567,16 @@ void cmd_ent0(char *entargs)
 
 	/* Is this a room which has anonymous-only or anonymous-option? */
 	anonymous = MES_NORMAL;
-	if (CCC->room.QRflags & QR_ANONONLY) {
+	if (CC->room.QRflags & QR_ANONONLY) {
 		anonymous = MES_ANONONLY;
 	}
-	if (CCC->room.QRflags & QR_ANONOPT) {
+	if (CC->room.QRflags & QR_ANONOPT) {
 		if (anon_flag == 1) {	/* only if the user requested it */
 			anonymous = MES_ANONOPT;
 		}
 	}
 
-	if ((CCC->room.QRflags & QR_MAILBOX) == 0) {
+	if ((CC->room.QRflags & QR_MAILBOX) == 0) {
 		recp[0] = 0;
 	}
 
@@ -615,7 +584,7 @@ void cmd_ent0(char *entargs)
 	 * strongly recommended in this room, if either the SUBJECTREQ flag
 	 * is set, or if there is one or more Internet email recipients.
 	 */
-	if (CCC->room.QRflags2 & QR2_SUBJECTREQ) subject_required = 1;
+	if (CC->room.QRflags2 & QR2_SUBJECTREQ) subject_required = 1;
 	if ((valid_to)	&& (valid_to->num_internet > 0))	subject_required = 1;
 	if ((valid_cc)	&& (valid_cc->num_internet > 0))	subject_required = 1;
 	if ((valid_bcc)	&& (valid_bcc->num_internet > 0))	subject_required = 1;
@@ -645,8 +614,8 @@ void cmd_ent0(char *entargs)
 		cprintf("%d send message\n", SEND_LISTING);
 	}
 
-	msg = CtdlMakeMessage(&CCC->user, recp, cc,
-			      CCC->room.QRname, anonymous, format_type,
+	msg = CtdlMakeMessage(&CC->user, recp, cc,
+			      CC->room.QRname, anonymous, format_type,
 			      newusername, newuseremail, subject,
 			      ((!IsEmptyStr(supplied_euid)) ? supplied_euid : NULL),
 			      NULL, references);
@@ -669,7 +638,9 @@ void cmd_ent0(char *entargs)
 		strcat(all_recps, bcc);
 	}
 	if (!IsEmptyStr(all_recps)) {
+		TRACE;
 		valid = validate_recipients(all_recps, NULL, 0);
+		TRACE;
 	}
 	else {
 		valid = NULL;
@@ -690,8 +661,8 @@ void cmd_ent0(char *entargs)
 		if (do_confirm) {
 			cprintf("%ld\n", msgnum);
 
-			if (StrLength(CCC->StatusMessage) > 0) {
-				cprintf("%s\n", ChrPtr(CCC->StatusMessage));
+			if (StrLength(CC->StatusMessage) > 0) {
+				cprintf("%s\n", ChrPtr(CC->StatusMessage));
 			}
 			else if (msgnum >= 0L) {
 				client_write(HKEY("Message accepted.\n"));
@@ -716,11 +687,9 @@ void cmd_ent0(char *entargs)
 	return;
 }
 
-/*
- * Delete message from current room
- */
-void cmd_dele(char *args)
-{
+
+// Delete message from current room
+void cmd_dele(char *args) {
 	int num_deleted;
 	int i;
 	char msgset[SIZ];
@@ -762,12 +731,8 @@ void cmd_dele(char *args)
 }
 
 
-
-/*
- * move or copy a message to another room
- */
-void cmd_move(char *args)
-{
+// move or copy a message to another room
+void cmd_move(char *args) {
 	char msgset[SIZ];
 	char msgtok[32];
 	long *msgs;

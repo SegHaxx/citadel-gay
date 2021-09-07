@@ -2712,7 +2712,6 @@ long CtdlSubmitMsg(struct CtdlMessage *msg,	/* message to save */
 
 	syslog(LOG_DEBUG, "msgbase: final selection: %s (%s)", actual_rm, room);
 	if (strcasecmp(actual_rm, CC->room.QRname)) {
-		/* CtdlGetRoom(&CC->room, actual_rm); */
 		CtdlUserGoto(actual_rm, 0, 1, NULL, NULL, NULL, NULL);
 	}
 
