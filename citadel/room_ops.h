@@ -12,7 +12,7 @@ void convert_room_name_macros(char *towhere, size_t maxlen);
 typedef enum _POST_TYPE{
 	POST_LOGGED_IN,
 	POST_EXTERNAL,
-	CHECK_EXISTANCE,
+	CHECK_EXIST,
 	POST_LMTP
 } PostType;
 

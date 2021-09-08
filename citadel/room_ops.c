@@ -57,7 +57,7 @@ int CtdlDoIHavePermissionToPostInThisRoom(
 		snprintf(errmsgbuf, n, "Not logged in.");
 		return (ERROR + NOT_LOGGED_IN);
 	}
-	else if (PostPublic == CHECK_EXISTANCE) {
+	else if (PostPublic == CHECK_EXIST) {
 		return (0);					// evaluate whether a recipient exists
 	}
 	else if (!(CC->logged_in)) {
@@ -65,14 +65,6 @@ int CtdlDoIHavePermissionToPostInThisRoom(
 			snprintf(errmsgbuf, n, "Not logged in.");
 			return (ERROR + NOT_LOGGED_IN);
 		}
-		if (CC->room.QRflags2 & QR2_MODERATED) {
-			snprintf(errmsgbuf, n, "Not logged in Moderation feature not yet implemented!");
-			return (ERROR + NOT_LOGGED_IN);
-		}
-		// FIXME what was this?  AJC 2021
-		//if ((PostPublic != POST_LMTP) && (CC->room.QRflags2 & QR2_SMTP_PUBLIC) == 0) {
-			//return CtdlNetconfigCheckRoomaccess(errmsgbuf, n, RemoteIdentifier);
-		//}
 		return (0);
 	}
 

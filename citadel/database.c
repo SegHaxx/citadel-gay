@@ -1,16 +1,14 @@
-/*
- * This is a data store backend for the Citadel server which uses Berkeley DB.
- *
- * Copyright (c) 1987-2021 by the citadel.org team
- *
- * This program is open source software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License version 3.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- */
+// This is a data store backend for the Citadel server which uses Berkeley DB.
+//
+// Copyright (c) 1987-2021 by the citadel.org team
+//
+// This program is open source software; you can redistribute it and/or
+// modify it under the terms of the GNU General Public License version 3.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
 
 /*****************************************************************************
        Tunable configuration parameters for the Berkeley DB back end
@@ -39,7 +37,6 @@
 #endif
 
 #include <libcitadel.h>
-
 #include "ctdl_module.h"
 #include "control.h"
 #include "citserver.h"
@@ -548,10 +545,8 @@ static DBC *localcursor(int cdb) {
  */
 struct cdbdata *cdb_fetch(int cdb, const void *key, int keylen) {
 
-	syslog(LOG_DEBUG, "\x1b[35mdatabase: fetch from db %d a key of length %d\x1b[0m", cdb, keylen);
-
-	if (keylen == 0) {
-		abort();
+	if (keylen == 0) {		// key length zero is impossible
+		return(NULL);
 	}
 
 	struct cdbdata *tempcdb;
@@ -576,8 +571,7 @@ struct cdbdata *cdb_fetch(int cdb, const void *key, int keylen) {
 			curs = localcursor(cdb);
 			ret = curs->c_get(curs, &dkey, &dret, DB_SET);
 			cclose(curs);
-		}
-		while (ret == DB_LOCK_DEADLOCK);
+		} while (ret == DB_LOCK_DEADLOCK);
 	}
 
 	if ((ret != 0) && (ret != DB_NOTFOUND)) {
@@ -590,9 +584,8 @@ struct cdbdata *cdb_fetch(int cdb, const void *key, int keylen) {
 	}
 
 	tempcdb = (struct cdbdata *) malloc(sizeof(struct cdbdata));
-
 	if (tempcdb == NULL) {
-		syslog(LOG_ERR, "db: cdb_fetch: Cannot allocate memory for tempcdb");
+		syslog(LOG_ERR, "db: cdb_fetch() cannot allocate memory for tempcdb: %m");
 		cdb_abort();
 		return NULL;	/* make it easier for static analysis... */
 	}
@@ -707,17 +700,19 @@ void cdb_begin_transaction(void) {
 void cdb_end_transaction(void) {
 	int i;
 
-	for (i = 0; i < MAXCDB; i++)
+	for (i = 0; i < MAXCDB; i++) {
 		if (TSD->cursors[i] != NULL) {
 			syslog(LOG_WARNING, "db: cdb_end_transaction: WARNING: cursor %d still open at transaction end", i);
 			cclose(TSD->cursors[i]);
 			TSD->cursors[i] = NULL;
 		}
+	}
 
 	if (TSD->tid == NULL) {
 		syslog(LOG_ERR, "db: cdb_end_transaction: ERROR: txcommit(NULL) !!");
 		cdb_abort();
-	} else {
+	}
+	else {
 		txcommit(TSD->tid);
 	}
 
@@ -757,16 +752,15 @@ void cdb_trunc(int cdb) {
 				}
 				exit(CTDLEXIT_DB);
 			}
-		} else {
+		}
+		else {
 			/* txcommit(tid); */
 		}
 	}
 }
 
 
-/*
- * compact (defragment) the database , possibly returning space back to the underlying filesystem
- */
+// compact (defragment) the database, possibly returning space back to the underlying filesystem
 void cdb_compact(void) {
 	int ret;
 	int i;

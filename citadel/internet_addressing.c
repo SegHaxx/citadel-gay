@@ -44,8 +44,8 @@
 #ifdef HAVE_ICONV
 #include <iconv.h>
 
-#if 0
 /* This is the non-define version in case it is needed for debugging */
+#if 0
 inline void FindNextEnd (char *bptr, char *end)
 {
 	/* Find the next ?Q? */
@@ -392,31 +392,30 @@ enum {
 
 
 // Process alias and routing info for email addresses
-int expand_aliases(char *name) {
+int expand_aliases(char *name, char *aliases) {
 	int a;
 	char aaa[SIZ];
 	int at = 0;
 	char node[64];
-	char *t;
 
 	syslog(LOG_DEBUG, "internet_addressing: \x1b[34mexpand_aliases(%s)\x1b[0m", name);
-
-	char *aliases = CtdlGetSysConfig(GLOBAL_ALIASES);	// First hit the Global Alias Table
 	if (aliases) {
-		char *aptr = aliases;
-		while ((t = strtok_r(aptr, "\n", &aptr))) {
-			char *bar = strchr(t, '|');
+		int num_aliases = num_tokens(aliases, '\n');
+		for (a=0; a<num_aliases; ++a) {
+			extract_token(aaa, aliases, a, '\n', sizeof aaa);
+			char *bar = strchr(aaa, '|');
 			if (bar) {
 				bar[0] = 0;
 				++bar;
-				if (!strcasecmp(name, t)) {
+				striplt(aaa);
+				striplt(bar);
+				syslog(LOG_DEBUG, "\x1b[32malias #%d: compare <%s> to <%s>\x1b[0m", a, name, aaa);
+				if (!strcasecmp(name, aaa)) {
 					syslog(LOG_DEBUG, "internet_addressing: global alias <%s> to <%s>", name, bar);
 					strcpy(name, bar);
 				}
 			}
 		}
-
-		free(aliases);
 		if (strchr(name, ',')) {
 			return(EA_MULTIPLE);
 		}
@@ -476,9 +475,13 @@ Array *split_recps(char *addresses) {
 
 	// Copy the supplied address list into our own memory space, because we are going to mangle it.
 	char *a = malloc(strlen(addresses));
-	a[0] = 0;
+	if (a == NULL) {
+		syslog(LOG_ERR, "internet_addressing: malloc() failed: %m");
+		return(NULL);
+	}
 
 	// Strip out anything in double quotes
+	a[0] = 0;
 	int toggle = 0;
 	int pos = 0;
 	char *t;
@@ -501,12 +504,18 @@ Array *split_recps(char *addresses) {
 
 	// Tokenize the recipients into an array
 	Array *recipients_array = array_new(256);		// no single recipient should be bigger than 256 bytes
-	char *r = a;
-	while ((t = strtok_r(r, ",", &r))) {
-		striplt(t);					// strip leading and trailing whitespace
-		stripout(t, '(', ')');				// remove any portion in parentheses
-		stripallbut(t, '<', '>');			// if angle brackets are present, keep only what is inside them
-		array_append(recipients_array, t);
+
+	int num_addresses = num_tokens(a, ',');
+	syslog(LOG_DEBUG, "\x1b[35mEXTRACING: %d addresses from <%s>\x1b[0m", num_addresses, a);
+	for (int i=0; i<num_addresses; ++i) {
+		char this_address[256];
+		extract_token(this_address, a, i, ',', sizeof this_address);
+		syslog(LOG_DEBUG, "\x1b[35mEXTRACTED: <%s>\x1b[0m", this_address);
+		striplt(this_address);				// strip leading and trailing whitespace
+		stripout(this_address, '(', ')');		// remove any portion in parentheses
+		stripallbut(this_address, '<', '>');		// if angle brackets are present, keep only what is inside them
+		syslog(LOG_DEBUG, "\x1b[35mPROCESSED: <%s>\x1b[0m", this_address);
+		array_append(recipients_array, this_address);
 	}
 
 	free(a);						// We don't need this buffer anymore.
@@ -565,13 +574,17 @@ struct recptypes *validate_recipients(char *supplied_recipients, const char *Rem
 	ret->display_recp[0] = 0;
 	ret->recptypes_magic = RECPTYPES_MAGIC;
 
+	//char *aliases = CtdlGetSysConfig(GLOBAL_ALIASES);	// First hit the Global Alias Table
+	char *aliases = strdup("root|admin,ajc@citadel.org,artcancro@gmail.com\n abuse|admin\n ajc|ajc@citadel.org\n");
+
 	Array *recp_array = split_recps(supplied_recipients);
 	int original_array_len = array_len(recp_array);
+	syslog(LOG_DEBUG, "\x1b[32moriginal_array_len=%d\x1b[0m", original_array_len);
 	for (int r=0; r<array_len(recp_array); ++r) {
+		syslog(LOG_DEBUG, "\x1b[32m\x1b[7mrecipient #%d is %s \x1b[0m", r, (char *)array_get_element_at(recp_array, r) );
 		org_recp = (char *)array_get_element_at(recp_array, r);
 		strncpy(this_recp, org_recp, sizeof this_recp);
-
-		mailtype = expand_aliases(this_recp);
+		mailtype = expand_aliases(this_recp, aliases);
 
 		// If an alias expanded to multiple recipients, strip off those recipients and append them
 		// to the end of the array.  This loop will hit those again when it gets there.
@@ -590,7 +603,7 @@ struct recptypes *validate_recipients(char *supplied_recipients, const char *Rem
 			}
 		}
 
-		mailtype = expand_aliases(this_recp);		// do it ONCE again to handle alias expansions
+		mailtype = expand_aliases(this_recp, aliases);		// do it ONCE again to handle alias expansions
 		if (mailtype == EA_MULTIPLE) {
 			mailtype = EA_ERROR;			// and fail if it wants to expand a second time
 		}
@@ -719,6 +732,10 @@ struct recptypes *validate_recipients(char *supplied_recipients, const char *Rem
 				strcat(ret->display_recp, append);
 			}
 		}
+	}
+
+	if (aliases != NULL) {		// ok, we're done with the global alias list now
+		free(aliases);
 	}
 
 	if ( (ret->num_local + ret->num_internet + ret->num_room + ret->num_error) == 0) {
