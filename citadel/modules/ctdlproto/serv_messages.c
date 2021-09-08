@@ -490,18 +490,14 @@ void cmd_ent0(char *entargs) {
 			strcpy(bcc, "");
 		}
 
-		TRACE;
 		valid_to = validate_recipients(recp, NULL, 0);
-		TRACE;
 		if (valid_to->num_error > 0) {
 			cprintf("%d %s\n", ERROR + NO_SUCH_USER, valid_to->errormsg);
 			free_recipients(valid_to);
 			return;
 		}
 
-		TRACE;
 		valid_cc = validate_recipients(cc, NULL, 0);
-		TRACE;
 		if (valid_cc->num_error > 0) {
 			cprintf("%d %s\n", ERROR + NO_SUCH_USER, valid_cc->errormsg);
 			free_recipients(valid_to);
@@ -509,9 +505,7 @@ void cmd_ent0(char *entargs) {
 			return;
 		}
 
-		TRACE;
 		valid_bcc = validate_recipients(bcc, NULL, 0);
-		TRACE;
 		if (valid_bcc->num_error > 0) {
 			cprintf("%d %s\n", ERROR + NO_SUCH_USER, valid_bcc->errormsg);
 			free_recipients(valid_to);
@@ -638,9 +632,7 @@ void cmd_ent0(char *entargs) {
 		strcat(all_recps, bcc);
 	}
 	if (!IsEmptyStr(all_recps)) {
-		TRACE;
 		valid = validate_recipients(all_recps, NULL, 0);
-		TRACE;
 	}
 	else {
 		valid = NULL;

@@ -939,7 +939,7 @@ void check_get(void) {
 		}
 		else 
 		{
-			cprintf("500 REJECT noone here by that name.\n");
+			cprintf("500 REJECT no one here by that name.\n");
 			
 			syslog(LOG_INFO, "vcard: sending 500 REJECT no one here by that name: %s", internet_addr);
 		}

@@ -45,6 +45,13 @@ if [ -x /usr/local/ctdlsupport/bin/db_dump ] ; then
 	DUMP=/usr/local/ctdlsupport/bin/db_dump
 	LOAD=/usr/local/ctdlsupport/bin/db_load
 
+# otherwise look in /usr/local
+elif [ -x /usr/local/bin/db_dump ] ; then
+	export PATH=/usr/local/bin:$PATH
+	RECOVER=/usr/local/bin/db_recover
+	DUMP=/usr/local/bin/db_dump
+	LOAD=/usr/local/bin/db_load
+
 # usual install
 else
 	if test -f /usr/bin/db_dump; then 

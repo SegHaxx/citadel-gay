@@ -61,12 +61,18 @@ void array_append(Array *arr, void *new_element) {
 		arr->num_alloc = 1;
 		arr->num_elements = 0;
 		arr->the_elements = malloc(arr->element_size * arr->num_alloc);
+		if (arr->the_elements == NULL) {
+			abort();
+		}
 	}
 
 	++arr->num_elements;
 	if (arr->num_elements > arr->num_alloc) {
 		arr->num_alloc = arr->num_alloc * 2;		// whenever we exceed the buffer size, we double it.
 		arr->the_elements = realloc(arr->the_elements, (arr->element_size * arr->num_alloc));
+		if (arr->the_elements == NULL) {
+			abort();
+		}
 	}
 
 	memcpy((arr->the_elements + ( (arr->num_elements-1) * arr->element_size )), new_element, arr->element_size);
@@ -104,6 +110,10 @@ void array_sort(Array *arr, int (*compar)(const void *, const void *)) {
 void array_delete_element_at(Array *arr, int index) {
 
 	if (index >= arr->num_elements) {		// If the supplied index is out of bounds, return quietly.
+		return;
+	}
+
+	if (index < 0) {				// If the supplied index is invalid, return quietly.
 		return;
 	}
 

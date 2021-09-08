@@ -396,9 +396,7 @@ int expand_aliases(char *name, char *aliases) {
 	int a;
 	char aaa[SIZ];
 	int at = 0;
-	char node[64];
 
-	syslog(LOG_DEBUG, "internet_addressing: \x1b[34mexpand_aliases(%s)\x1b[0m", name);
 	if (aliases) {
 		int num_aliases = num_tokens(aliases, '\n');
 		for (a=0; a<num_aliases; ++a) {
@@ -409,8 +407,7 @@ int expand_aliases(char *name, char *aliases) {
 				++bar;
 				striplt(aaa);
 				striplt(bar);
-				syslog(LOG_DEBUG, "\x1b[32malias #%d: compare <%s> to <%s>\x1b[0m", a, name, aaa);
-				if (!strcasecmp(name, aaa)) {
+				if ( (!IsEmptyStr(aaa)) && (!strcasecmp(name, aaa)) ) {
 					syslog(LOG_DEBUG, "internet_addressing: global alias <%s> to <%s>", name, bar);
 					strcpy(name, bar);
 				}
@@ -449,24 +446,17 @@ int expand_aliases(char *name, char *aliases) {
 		}
 	}
 
-	/* determine local or remote type, see citadel.h */
+	/* Is this a local or remote recipient? */
 	at = haschar(name, '@');
-	if (at == 0) return(EA_LOCAL);		/* no @'s - local address */
-	if (at > 1) return(EA_ERROR);		/* >1 @'s - invalid address */
-	remove_any_whitespace_to_the_left_or_right_of_at_symbol(name);
-
-	/* figure out the delivery mode */
-	extract_token(node, name, 1, '@', sizeof node);
-
-	/* If there are one or more dots in the nodename, we assume that it
-	 * is an FQDN and will attempt SMTP delivery to the Internet.
-	 */
-	if (haschar(node, '.') > 0) {
-		return(EA_INTERNET);
+	if (at == 0) {
+		return(EA_LOCAL);			/* no @'s = local address */
 	}
-
-	/* If we get to this point it's an invalid node name */
-	return (EA_ERROR);
+	else if (at == 1) {
+		return(EA_INTERNET);			/* one @ = internet address */
+	}
+	else {
+		return(EA_ERROR);			/* more than one @ = badly formed address */
+	}
 }
 
 
@@ -506,16 +496,15 @@ Array *split_recps(char *addresses) {
 	Array *recipients_array = array_new(256);		// no single recipient should be bigger than 256 bytes
 
 	int num_addresses = num_tokens(a, ',');
-	syslog(LOG_DEBUG, "\x1b[35mEXTRACING: %d addresses from <%s>\x1b[0m", num_addresses, a);
 	for (int i=0; i<num_addresses; ++i) {
 		char this_address[256];
 		extract_token(this_address, a, i, ',', sizeof this_address);
-		syslog(LOG_DEBUG, "\x1b[35mEXTRACTED: <%s>\x1b[0m", this_address);
 		striplt(this_address);				// strip leading and trailing whitespace
 		stripout(this_address, '(', ')');		// remove any portion in parentheses
 		stripallbut(this_address, '<', '>');		// if angle brackets are present, keep only what is inside them
-		syslog(LOG_DEBUG, "\x1b[35mPROCESSED: <%s>\x1b[0m", this_address);
-		array_append(recipients_array, this_address);
+		if (!IsEmptyStr(this_address)) {
+			array_append(recipients_array, this_address);
+		}
 	}
 
 	free(a);						// We don't need this buffer anymore.
@@ -545,8 +534,6 @@ struct recptypes *validate_recipients(char *supplied_recipients, const char *Rem
 	char *org_recp;
 	char this_recp[256];
 
-	syslog(LOG_DEBUG, "internet_addressing: \x1b[32mvalidate_recipients(%s) \x1b[0m", supplied_recipients);
-
 	ret = (struct recptypes *) malloc(sizeof(struct recptypes));			// Initialize
 	if (ret == NULL) return(NULL);
 	memset(ret, 0, sizeof(struct recptypes));					// set all values to null/zero
@@ -574,14 +561,17 @@ struct recptypes *validate_recipients(char *supplied_recipients, const char *Rem
 	ret->display_recp[0] = 0;
 	ret->recptypes_magic = RECPTYPES_MAGIC;
 
-	//char *aliases = CtdlGetSysConfig(GLOBAL_ALIASES);	// First hit the Global Alias Table
-	char *aliases = strdup("root|admin,ajc@citadel.org,artcancro@gmail.com\n abuse|admin\n ajc|ajc@citadel.org\n");
+	// char *aliases = CtdlGetSysConfig(GLOBAL_ALIASES);				// First hit the Global Alias Table
+	// char *aliases = strdup("root|admin,ajc@citadel.org,artcancro@gmail.com\n abuse|admin\n ajc|ajc@citadel.org\n");//crashes
+	// char *aliases = strdup("root|admin,eeeeee@example.com\nabuse|admin\neek|blat\nwoiwozerosf|wow\n"); //works
+	// char *aliases = strdup("root|admin,ajc@citadel.org");	// works
+	// char *aliases = strdup("root|admin,eeeeee@example.com");	// works
+	// char *aliases = strdup("root|admin,eeeeeee@example.com");	// crashes
+	char *aliases = strdup("root|admin,ignatius.t.foobar@uncensored.citadel.org");	// crashes on the first try
 
 	Array *recp_array = split_recps(supplied_recipients);
 	int original_array_len = array_len(recp_array);
-	syslog(LOG_DEBUG, "\x1b[32moriginal_array_len=%d\x1b[0m", original_array_len);
 	for (int r=0; r<array_len(recp_array); ++r) {
-		syslog(LOG_DEBUG, "\x1b[32m\x1b[7mrecipient #%d is %s \x1b[0m", r, (char *)array_get_element_at(recp_array, r) );
 		org_recp = (char *)array_get_element_at(recp_array, r);
 		strncpy(this_recp, org_recp, sizeof this_recp);
 		mailtype = expand_aliases(this_recp, aliases);
@@ -603,7 +593,9 @@ struct recptypes *validate_recipients(char *supplied_recipients, const char *Rem
 			}
 		}
 
-		mailtype = expand_aliases(this_recp, aliases);		// do it ONCE again to handle alias expansions
+		syslog(LOG_DEBUG, "\x1b[7m%s\x1b[0m", this_recp);
+
+		mailtype = expand_aliases(this_recp, aliases);	// do it ONCE again to handle alias expansions
 		if (mailtype == EA_MULTIPLE) {
 			mailtype = EA_ERROR;			// and fail if it wants to expand a second time
 		}
