@@ -574,8 +574,6 @@ const char *cmemreadlinelen(const char *start, char *buf, int maxlen, int *retle
 }
 
 
-
-
 /*
  * Strip a boundarized substring out of a string (for example, remove
  * parentheses and anything inside them).

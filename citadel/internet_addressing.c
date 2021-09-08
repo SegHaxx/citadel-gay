@@ -461,39 +461,46 @@ int expand_aliases(char *name, char *aliases) {
 
 
 // Return a supplied list of email addresses as an array, removing superfluous information and syntax.
-Array *split_recps(char *addresses) {
+// If an existing Array is supplied as "append_to" it will do so; otherwise a new Array is allocated.
+Array *split_recps(char *addresses, Array *append_to) {
 
-	// Copy the supplied address list into our own memory space, because we are going to mangle it.
-	char *a = malloc(strlen(addresses));
+	if (IsEmptyStr(addresses)) {		// nothing supplied, nothing returned
+		return(NULL);
+	}
+
+	// Copy the supplied address list into our own memory space, because we are going to modify it.
+	char *a = strdup(addresses);
 	if (a == NULL) {
 		syslog(LOG_ERR, "internet_addressing: malloc() failed: %m");
 		return(NULL);
 	}
 
 	// Strip out anything in double quotes
-	a[0] = 0;
-	int toggle = 0;
-	int pos = 0;
-	char *t;
-	for (t=addresses; t[0]; ++t) {
-		if (t[0] == '\"') {
-			toggle = 1 - toggle;
+	char *l = NULL;
+	char *r = NULL;
+	do {
+		l = strchr(a, '\"');
+		r = strrchr(a, '\"');
+		if (r > l) {
+			strcpy(l, r+1);
 		}
-		else if (!toggle) {
-			a[pos++] = t[0];
-			a[pos] = 0;
-		}
-	}
+	} while (r > l);
 
 	// Transform all qualifying delimiters to commas
-	for (t=a; t[0]; ++t) {
+	for (char *t=a; t[0]; ++t) {
 		if ((t[0]==';') || (t[0]=='|')) {
 			t[0]=',';
 		}
 	}
 
-	// Tokenize the recipients into an array
-	Array *recipients_array = array_new(256);		// no single recipient should be bigger than 256 bytes
+	// Tokenize the recipients into an array.  No single recipient should be larger than 256 bytes.
+	Array *recipients_array = NULL;
+	if (append_to) {
+		recipients_array = append_to;			// Append to an existing array of recipients
+	}
+	else {
+		recipients_array = array_new(256);		// This is a new array of recipients
+	}
 
 	int num_addresses = num_tokens(a, ',');
 	for (int i=0; i<num_addresses; ++i) {
@@ -561,43 +568,20 @@ struct recptypes *validate_recipients(char *supplied_recipients, const char *Rem
 	ret->display_recp[0] = 0;
 	ret->recptypes_magic = RECPTYPES_MAGIC;
 
-	// char *aliases = CtdlGetSysConfig(GLOBAL_ALIASES);				// First hit the Global Alias Table
-	// char *aliases = strdup("root|admin,ajc@citadel.org,artcancro@gmail.com\n abuse|admin\n ajc|ajc@citadel.org\n");//crashes
-	// char *aliases = strdup("root|admin,eeeeee@example.com\nabuse|admin\neek|blat\nwoiwozerosf|wow\n"); //works
-	// char *aliases = strdup("root|admin,ajc@citadel.org");	// works
-	// char *aliases = strdup("root|admin,eeeeee@example.com");	// works
-	// char *aliases = strdup("root|admin,eeeeeee@example.com");	// crashes
-	char *aliases = strdup("root|admin,ignatius.t.foobar@uncensored.citadel.org");	// crashes on the first try
+	Array *recp_array = split_recps(supplied_recipients, NULL);
 
-	Array *recp_array = split_recps(supplied_recipients);
-	int original_array_len = array_len(recp_array);
-	for (int r=0; r<array_len(recp_array); ++r) {
+	char *aliases = CtdlGetSysConfig(GLOBAL_ALIASES);				// First hit the Global Alias Table
+
+	for (int r=0; (recp_array && r<array_len(recp_array)); ++r) {
 		org_recp = (char *)array_get_element_at(recp_array, r);
 		strncpy(this_recp, org_recp, sizeof this_recp);
 		mailtype = expand_aliases(this_recp, aliases);
+		syslog(LOG_DEBUG, "Recipient #%d of type %d is <%s>", r, mailtype, this_recp);
 
 		// If an alias expanded to multiple recipients, strip off those recipients and append them
 		// to the end of the array.  This loop will hit those again when it gets there.
-		// Note that we don't do this after we get past the *original* array length, to avoid aliasing loops.
 		if (mailtype == EA_MULTIPLE) {
-			if (r < original_array_len) {
-				char *comma;
-				while ((comma = strrchr(this_recp, ','))) {
-					comma[0] = 0;
-					array_append(recp_array, &comma[1]);
-					strcpy(org_recp, this_recp);
-				}
-			}
-			else {
-				mailtype = EA_ERROR;
-			}
-		}
-
-		syslog(LOG_DEBUG, "\x1b[7m%s\x1b[0m", this_recp);
-
-		mailtype = expand_aliases(this_recp, aliases);	// do it ONCE again to handle alias expansions
-		if (mailtype == EA_MULTIPLE) {
-			mailtype = EA_ERROR;			// and fail if it wants to expand a second time
+			recp_array = split_recps(this_recp, recp_array);
 		}
 
 		invalid = 0;
@@ -694,6 +678,9 @@ struct recptypes *validate_recipients(char *supplied_recipients, const char *Rem
 				strcat(ret->recp_internet, this_recp);
 			}
 			break;
+		case EA_MULTIPLE:
+			// just skip the multiple here because we've already expanded it
+			break;
 		case EA_ERROR:
 			++ret->num_error;
 			invalid = 1;
@@ -740,7 +727,9 @@ struct recptypes *validate_recipients(char *supplied_recipients, const char *Rem
 	);
 
 	free(recipients);
-	array_free(recp_array);
+	if (recp_array) {
+		array_free(recp_array);
+	}
 
 	return(ret);
 }
