@@ -1,17 +1,15 @@
-/*
- * This file contains functions which handle the mapping of Internet addresses
- * to users on the Citadel system.
- *
- * Copyright (c) 1987-2021 by the citadel.org team
- *
- * This program is open source software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 3.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- */
+// This file contains functions which handle the mapping of Internet addresses
+// to users on the Citadel system.
+//
+// Copyright (c) 1987-2021 by the citadel.org team
+//
+// This program is open source software; you can redistribute it and/or modify
+// it under the terms of the GNU General Public License version 3.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
 
 #include "sysdep.h"
 #include <stdlib.h>
@@ -44,7 +42,7 @@
 #ifdef HAVE_ICONV
 #include <iconv.h>
 
-/* This is the non-define version in case it is needed for debugging */
+// This is the non-define version in case it is needed for debugging
 #if 0
 inline void FindNextEnd (char *bptr, char *end)
 {
@@ -71,10 +69,8 @@ inline void FindNextEnd (char *bptr, char *end)
 	} \
 }
 
-/*
- * Handle subjects with RFC2047 encoding such as:
- * =?koi8-r?B?78bP0s3Mxc7JxSDXz9rE1dvO2c3JINvB0sHNySDP?=
- */
+// Handle subjects with RFC2047 encoding such as:
+// =?koi8-r?B?78bP0s3Mxc7JxSDXz9rE1dvO2c3JINvB0sHNySDP?=
 void utf8ify_rfc822_string(char *buf) {
 	char *start, *end, *next, *nextend, *ptr;
 	char newbuf[1024];
@@ -92,12 +88,11 @@ void utf8ify_rfc822_string(char *buf) {
 	int i, len, delta;
 	int illegal_non_rfc2047_encoding = 0;
 
-	/* Sometimes, badly formed messages contain strings which were simply
-	 * written out directly in some foreign character set instead of
-	 * using RFC2047 encoding.  This is illegal but we will attempt to
-	 * handle it anyway by converting from a user-specified default
-	 * charset to UTF-8 if we see any nonprintable characters.
-	 */
+	// Sometimes, badly formed messages contain strings which were simply
+	// written out directly in some foreign character set instead of
+	// using RFC2047 encoding.  This is illegal but we will attempt to
+	// handle it anyway by converting from a user-specified default
+	// charset to UTF-8 if we see any nonprintable characters.
 	len = strlen(buf);
 	for (i=0; i<len; ++i) {
 		if ((buf[i] < 32) || (buf[i] > 126)) {
@@ -127,7 +122,7 @@ void utf8ify_rfc822_string(char *buf) {
 		}
 	}
 
-	/* pre evaluate the first pair */
+	// pre evaluate the first pair
 	nextend = end = NULL;
 	len = strlen(buf);
 	start = strstr(buf, "=?");
@@ -141,7 +136,7 @@ void utf8ify_rfc822_string(char *buf) {
 		if (nextend == NULL)
 			next = NULL;
 
-		/* did we find two partitions */
+		// did we find two partitions
 		if ((next != NULL) && ((next - end) > 2)) {
 			ptr = end + 2;
 			while ((ptr < next) && 
@@ -150,24 +145,21 @@ void utf8ify_rfc822_string(char *buf) {
 				(*ptr == '\n') || 
 				(*ptr == '\t')))
 				ptr ++;
-			/* did we find a gab just filled with blanks? */
-			if (ptr == next)
-			{
-				memmove (end + 2,
-					 next,
-					 len - (next - start));
+			// did we find a gab just filled with blanks?
+			if (ptr == next) {
+				memmove(end + 2, next, len - (next - start));
 
-				/* now terminate the gab at the end */
+				// now terminate the gab at the end
 				delta = (next - end) - 2;
 				len -= delta;
 				buf[len] = '\0';
 
-				/* move next to its new location. */
+				// move next to its new location.
 				next -= delta;
 				nextend -= delta;
 			}
 		}
-		/* our next-pair is our new first pair now. */
+		// our next-pair is our new first pair now.
 		start = next;
 		end = nextend;
 	}
@@ -240,12 +232,10 @@ void utf8ify_rfc822_string(char *buf) {
 
 		free(isav);
 
-		/*
-		 * Since spammers will go to all sorts of absurd lengths to get their
-		 * messages through, there are LOTS of corrupt headers out there.
-		 * So, prevent a really badly formed RFC2047 header from throwing
-		 * this function into an infinite loop.
-		 */
+		// Since spammers will go to all sorts of absurd lengths to get their
+		// messages through, there are LOTS of corrupt headers out there.
+		// So, prevent a really badly formed RFC2047 header from throwing
+		// this function into an infinite loop.
 		++passes;
 		if (passes > 20) return;
 
@@ -262,9 +252,7 @@ inline void utf8ify_rfc822_string(char *a){};
 
 char *inetcfg = NULL;
 
-/*
- * Return nonzero if the supplied name is an alias for this host.
- */
+// Return nonzero if the supplied name is an alias for this host.
 int CtdlHostAlias(char *fqdn) {
 	int config_lines;
 	int i;
@@ -287,9 +275,8 @@ int CtdlHostAlias(char *fqdn) {
 
 		found = 0;
 
-		/* Process these in a specific order, in case there are multiple matches.
-		 * We want localhost to override masq, for example.
-		 */
+		// Process these in a specific order, in case there are multiple matches.
+		// We want localhost to override masq, for example.
 
 		if ( (!strcasecmp(type, "masqdomain")) && (!strcasecmp(fqdn, host))) {
 			found = hostalias_masq;
@@ -310,9 +297,7 @@ int CtdlHostAlias(char *fqdn) {
 }
 
 
-/*
- * Determine whether a given Internet address belongs to the current user
- */
+// Determine whether a given Internet address belongs to the current user
 int CtdlIsMe(char *addr, int addr_buf_len) {
 	struct recptypes *recp;
 	int i;
@@ -338,9 +323,8 @@ int CtdlIsMe(char *addr, int addr_buf_len) {
 }
 
 
-/* If the last item in a list of recipients was truncated to a partial address,
- * remove it completely in order to avoid choking library functions.
- */
+// If the last item in a list of recipients was truncated to a partial address,
+// remove it completely in order to avoid choking library functions.
 void sanitize_truncated_recipient(char *str)
 {
 	if (!str) return;
@@ -362,10 +346,8 @@ void sanitize_truncated_recipient(char *str)
 }
 
 
-/*
- * This function is self explanatory.
- * (What can I say, I'm in a weird mood today...)
- */
+// This function is self explanatory.
+// (What can I say, I'm in a weird mood today...)
 void remove_any_whitespace_to_the_left_or_right_of_at_symbol(char *name) {
 	char *ptr;
 	if (!name) return;
@@ -387,7 +369,8 @@ enum {
 	EA_ERROR,		// Can't send message due to bad address
 	EA_MULTIPLE,		// Alias expanded into multiple recipients -- run me again!
 	EA_LOCAL,		// Local message, do no network processing
-	EA_INTERNET		// Convert msg and send as Internet mail
+	EA_INTERNET,		// Convert msg and send as Internet mail
+	EA_SKIP			// This recipient has been invalidated -- skip it!
 };
 
 
@@ -426,7 +409,7 @@ int expand_aliases(char *name, char *aliases) {
 	remove_any_whitespace_to_the_left_or_right_of_at_symbol(name);
 	stripallbut(name, '<', '>');
 
-	/* Hit the email address directory */
+	// Hit the email address directory
 	if (CtdlDirectoryLookup(aaa, name, sizeof aaa) == 0) {
 		strcpy(name, aaa);
 	}
@@ -435,7 +418,7 @@ int expand_aliases(char *name, char *aliases) {
 		syslog(LOG_INFO, "internet_addressing: directory alias <%s> to <%s>", original_name, name);
 	}
 
-	/* Change "user @ xxx" to "user" if xxx is an alias for this host */
+	// Change "user @ xxx" to "user" if xxx is an alias for this host
 	for (a=0; name[a] != '\0'; ++a) {
 		if (name[a] == '@') {
 			if (CtdlHostAlias(&name[a+1]) == hostalias_localhost) {
@@ -446,16 +429,16 @@ int expand_aliases(char *name, char *aliases) {
 		}
 	}
 
-	/* Is this a local or remote recipient? */
+	// Is this a local or remote recipient?
 	at = haschar(name, '@');
 	if (at == 0) {
-		return(EA_LOCAL);			/* no @'s = local address */
+		return(EA_LOCAL);			// no @'s = local address
 	}
 	else if (at == 1) {
-		return(EA_INTERNET);			/* one @ = internet address */
+		return(EA_INTERNET);			// one @ = internet address
 	}
 	else {
-		return(EA_ERROR);			/* more than one @ = badly formed address */
+		return(EA_ERROR);			// more than one @ = badly formed address
 	}
 }
 
@@ -520,7 +503,6 @@ Array *split_recps(char *addresses, Array *append_to) {
 
 
 // Validate recipients, count delivery types and errors, and handle aliasing
-// FIXME check for dupes!!!!!
 //
 // Returns 0 if all addresses are ok, ret->num_error = -1 if no addresses 
 // were specified, or the number of addresses found invalid.
@@ -578,7 +560,6 @@ struct recptypes *validate_recipients(char *supplied_recipients, const char *Rem
 
 		for (int i=0; i<3; ++i) {						// pass three times through the aliaser
 			mailtype = expand_aliases(this_recp, aliases);
-			syslog(LOG_DEBUG, "Recipient #%d of type %d is <%s>", r, mailtype, this_recp);
 	
 			// If an alias expanded to multiple recipients, strip off those recipients and append them
 			// to the end of the array.  This loop will hit those again when it gets there.
@@ -586,6 +567,13 @@ struct recptypes *validate_recipients(char *supplied_recipients, const char *Rem
 				recp_array = split_recps(this_recp, recp_array);
 			}
 		}
+
+		for (int j=0; j<r; ++j) {
+			if (!strcasecmp(this_recp , (char *)array_get_element_at(recp_array, j) )) {
+				mailtype = EA_SKIP;
+			}
+		}
+		syslog(LOG_DEBUG, "Recipient #%d of type %d is <%s>", r, mailtype, this_recp);
 
 		invalid = 0;
 		errmsg[0] = 0;
@@ -682,7 +670,8 @@ struct recptypes *validate_recipients(char *supplied_recipients, const char *Rem
 			}
 			break;
 		case EA_MULTIPLE:
-			// just skip the multiple here because we've already expanded it
+		case EA_SKIP:
+			// no action required, anything in this slot has already been processed elsewhere
 			break;
 		case EA_ERROR:
 			++ret->num_error;
@@ -738,9 +727,7 @@ struct recptypes *validate_recipients(char *supplied_recipients, const char *Rem
 }
 
 
-/*
- * Destructor for recptypes
- */
+// Destructor for recptypes
 void free_recipients(struct recptypes *valid) {
 
 	if (valid == NULL) {
@@ -832,7 +819,7 @@ char *qp_encode_email_addrs(char *source) {
 	for (i = 0; i < nColons; i++) {
 		source[AddrPtr[i]++] = '\0';
 	}
-	/* TODO: if libidn, this might get larger*/
+	// TODO: if libidn, this might get larger
 	user = malloc(SourceLen + 1);
 	node = malloc(SourceLen + 1);
 	name = malloc(SourceLen + 1);
@@ -843,7 +830,7 @@ char *qp_encode_email_addrs(char *source) {
 		nmax = EncodedMaxLen - (nPtr - Encoded);
 		if (AddrUtf8[i]) {
 			process_rfc822_addr(&source[AddrPtr[i]], user, node, name);
-			/* TODO: libIDN here ! */
+			// TODO: libIDN here !
 			if (IsEmptyStr(name)) {
 				n = snprintf(nPtr, nmax, (i==0)?"%s@%s" : ",%s@%s", user, node);
 			}
@@ -865,7 +852,7 @@ char *qp_encode_email_addrs(char *source) {
 			nnPtr = ptr + (nPtr - Encoded), nPtr = nnPtr;
 			free(Encoded), Encoded = ptr;
 			EncodedMaxLen *= 2;
-			i--; /* do it once more with properly lengthened buffer */
+			i--; // do it once more with properly lengthened buffer
 		}
 	}
 	for (i = 0; i < nColons; i++)
@@ -880,9 +867,7 @@ char *qp_encode_email_addrs(char *source) {
 }
 
 
-/*
- * Unfold a multi-line field into a single line, removing multi-whitespaces
- */
+// Unfold a multi-line field into a single line, removing multi-whitespaces
 void unfold_rfc822_field(char **field, char **FieldEnd) 
 {
 	int quote = 0;
@@ -892,14 +877,14 @@ void unfold_rfc822_field(char **field, char **FieldEnd)
 
 	while (isspace(*pField))
 		pField++;
-	/* remove leading/trailing whitespace */
+	// remove leading/trailing whitespace
 	;
 
 	while (isspace(*pFieldEnd))
 		pFieldEnd --;
 
 	*FieldEnd = pFieldEnd;
-	/* convert non-space whitespace to spaces, and remove double blanks */
+	// convert non-space whitespace to spaces, and remove double blanks
 	for (sField = *field = pField; 
 	     sField < pFieldEnd; 
 	     pField++, sField++)
@@ -936,10 +921,10 @@ void unfold_rfc822_field(char **field, char **FieldEnd)
 }
 
 
-/*
- * Split an RFC822-style address into userid, host, and full name
- *
- */
+// Split an RFC822-style address into userid, host, and full name
+//
+// Note: This still handles obsolete address syntaxes such as user%node@node and ...node!user
+//       We should probably remove that.
 void process_rfc822_addr(const char *rfc822, char *user, char *node, char *name) {
 	int a;
 
@@ -949,15 +934,15 @@ void process_rfc822_addr(const char *rfc822, char *user, char *node, char *name)
 
 	if (rfc822 == NULL) return;
 
-	/* extract full name - first, it's From minus <userid> */
+	// extract full name - first, it's From minus <userid>
 	strcpy(name, rfc822);
 	stripout(name, '<', '>');
 
-	/* strip anything to the left of a bang */
+	// strip anything to the left of a bang
 	while ((!IsEmptyStr(name)) && (haschar(name, '!') > 0))
 		strcpy(name, &name[1]);
 
-	/* and anything to the right of a @ or % */
+	// and anything to the right of a @ or %
 	for (a = 0; name[a] != '\0'; ++a) {
 		if (name[a] == '@') {
 			name[a] = 0;
@@ -969,13 +954,13 @@ void process_rfc822_addr(const char *rfc822, char *user, char *node, char *name)
 		}
 	}
 
-	/* but if there are parentheses, that changes the rules... */
+	// but if there are parentheses, that changes the rules...
 	if ((haschar(rfc822, '(') == 1) && (haschar(rfc822, ')') == 1)) {
 		strcpy(name, rfc822);
 		stripallbut(name, '(', ')');
 	}
 
-	/* but if there are a set of quotes, that supersedes everything */
+	// but if there are a set of quotes, that supersedes everything
 	if (haschar(rfc822, 34) == 2) {
 		strcpy(name, rfc822);
 		while ((!IsEmptyStr(name)) && (name[0] != 34)) {
@@ -988,22 +973,22 @@ void process_rfc822_addr(const char *rfc822, char *user, char *node, char *name)
 				break;
 			}
 	}
-	/* extract user id */
+	// extract user id
 	strcpy(user, rfc822);
 
-	/* first get rid of anything in parens */
+	// first get rid of anything in parens
 	stripout(user, '(', ')');
 
-	/* if there's a set of angle brackets, strip it down to that */
+	// if there's a set of angle brackets, strip it down to that
 	if ((haschar(user, '<') == 1) && (haschar(user, '>') == 1)) {
 		stripallbut(user, '<', '>');
 	}
 
-	/* strip anything to the left of a bang */
+	// strip anything to the left of a bang
 	while ((!IsEmptyStr(user)) && (haschar(user, '!') > 0))
 		strcpy(user, &user[1]);
 
-	/* and anything to the right of a @ or % */
+	// and anything to the right of a @ or %
 	for (a = 0; user[a] != '\0'; ++a) {
 		if (user[a] == '@') {
 			user[a] = 0;
@@ -1016,18 +1001,18 @@ void process_rfc822_addr(const char *rfc822, char *user, char *node, char *name)
 	}
 
 
-	/* extract node name */
+	// extract node name
 	strcpy(node, rfc822);
 
-	/* first get rid of anything in parens */
+	// first get rid of anything in parens
 	stripout(node, '(', ')');
 
-	/* if there's a set of angle brackets, strip it down to that */
+	// if there's a set of angle brackets, strip it down to that
 	if ((haschar(node, '<') == 1) && (haschar(node, '>') == 1)) {
 		stripallbut(node, '<', '>');
 	}
 
-	/* If no node specified, tack ours on instead */
+	// If no node specified, tack ours on instead
 	if (
 		(haschar(node, '@')==0)
 		&& (haschar(node, '%')==0)
@@ -1037,19 +1022,19 @@ void process_rfc822_addr(const char *rfc822, char *user, char *node, char *name)
 	}
 	else {
 
-		/* strip anything to the left of a @ */
+		// strip anything to the left of a @
 		while ((!IsEmptyStr(node)) && (haschar(node, '@') > 0))
 			strcpy(node, &node[1]);
 	
-		/* strip anything to the left of a % */
+		// strip anything to the left of a %
 		while ((!IsEmptyStr(node)) && (haschar(node, '%') > 0))
 			strcpy(node, &node[1]);
 	
-		/* reduce multiple system bang paths to node!user */
+		// reduce multiple system bang paths to node!user
 		while ((!IsEmptyStr(node)) && (haschar(node, '!') > 1))
 			strcpy(node, &node[1]);
 	
-		/* now get rid of the user portion of a node!user string */
+		// now get rid of the user portion of a node!user string
 		for (a = 0; node[a] != '\0'; ++a)
 			if (node[a] == '!') {
 				node[a] = 0;
@@ -1057,30 +1042,27 @@ void process_rfc822_addr(const char *rfc822, char *user, char *node, char *name)
 			}
 	}
 
-	/* strip leading and trailing spaces in all strings */
+	// strip leading and trailing spaces in all strings
 	striplt(user);
 	striplt(node);
 	striplt(name);
 
-	/* If we processed a string that had the address in angle brackets
-	 * but no name outside the brackets, we now have an empty name.  In
-	 * this case, use the user portion of the address as the name.
-	 */
+	// If we processed a string that had the address in angle brackets
+	// but no name outside the brackets, we now have an empty name.  In
+	// this case, use the user portion of the address as the name.
 	if ((IsEmptyStr(name)) && (!IsEmptyStr(user))) {
 		strcpy(name, user);
 	}
 }
 
 
-/*
- * convert_field() is a helper function for convert_internet_message().
- * Given start/end positions for an rfc822 field, it converts it to a Citadel
- * field if it wants to, and unfolds it if necessary.
- *
- * Returns 1 if the field was converted and inserted into the Citadel message
- * structure, implying that the source field should be removed from the
- * message text.
- */
+// convert_field() is a helper function for convert_internet_message().
+// Given start/end positions for an rfc822 field, it converts it to a Citadel
+// field if it wants to, and unfolds it if necessary.
+//
+// Returns 1 if the field was converted and inserted into the Citadel message
+// structure, implying that the source field should be removed from the
+// message text.
 int convert_field(struct CtdlMessage *msg, const char *beg, const char *end) {
 	char *key, *value, *valueend;
 	long len;
@@ -1108,18 +1090,15 @@ int convert_field(struct CtdlMessage *msg, const char *beg, const char *end) {
 	valueend = key + len;
 	* ( key + (colonpos - beg) ) = '\0';
 	value = &key[(colonpos - beg) + 1];
-/*	printf("Header: [%s]\nValue: [%s]\n", key, value); */
+	// printf("Header: [%s]\nValue: [%s]\n", key, value);
 	unfold_rfc822_field(&value, &valueend);
 	valuelen = valueend - value + 1;
-/*	printf("UnfoldedValue: [%s]\n", value); */
+	// printf("UnfoldedValue: [%s]\n", value);
 
-	/*
-	 * Here's the big rfc822-to-citadel loop.
-	 */
+	// Here's the big rfc822-to-citadel loop.
 
-	/* Date/time is converted into a unix timestamp.  If the conversion
-	 * fails, we replace it with the time the message arrived locally.
-	 */
+	// Date/time is converted into a unix timestamp.  If the conversion
+	// fails, we replace it with the time the message arrived locally.
 	if (!strcasecmp(key, "Date")) {
 		parsed_date = parsedate(value);
 		if (parsed_date < 0L) parsed_date = time(NULL);
@@ -1176,7 +1155,7 @@ int convert_field(struct CtdlMessage *msg, const char *beg, const char *end) {
 
 			pValue = value;
 			pValueLen = valuelen;
-			/* Strip angle brackets */
+			// Strip angle brackets
 			while (haschar(pValue, '<') > 0) {
 				pValue ++;
 				pValueLen --;
@@ -1217,22 +1196,20 @@ int convert_field(struct CtdlMessage *msg, const char *beg, const char *end) {
 	}
 
 	else if (!strcasecmp(key, "In-reply-to")) {
-		if (CM_IsEmpty(msg, eWeferences)) /* References: supersedes In-reply-to: */
+		if (CM_IsEmpty(msg, eWeferences)) // References: supersedes In-reply-to:
 			CM_SetField(msg, eWeferences, value, valuelen);
 		processed = 1;
 	}
 
 
 
-	/* Clean up and move on. */
-	free(key);	/* Don't free 'value', it's actually the same buffer */
+	// Clean up and move on.
+	free(key);	// Don't free 'value', it's actually the same buffer
 	return processed;
 }
 
 
-/*
- * Convert RFC822 references format (References) to Citadel references format (Weferences)
- */
+// Convert RFC822 references format (References) to Citadel references format (Weferences)
 void convert_references_to_wefewences(char *str) {
 	int bracket_nesting = 0;
 	char *ptr = str;
@@ -1265,13 +1242,11 @@ void convert_references_to_wefewences(char *str) {
 }
 
 
-/*
- * Convert an RFC822 message (headers + body) to a CtdlMessage structure.
- * NOTE: the supplied buffer becomes part of the CtdlMessage structure, and
- * will be deallocated when CM_Free() is called.  Therefore, the
- * supplied buffer should be DEREFERENCED.  It should not be freed or used
- * again.
- */
+// Convert an RFC822 message (headers + body) to a CtdlMessage structure.
+// NOTE: the supplied buffer becomes part of the CtdlMessage structure, and
+// will be deallocated when CM_Free() is called.  Therefore, the
+// supplied buffer should be DEREFERENCED.  It should not be freed or used
+// again.
 struct CtdlMessage *convert_internet_message(char *rfc822) {
 	StrBuf *RFCBuf = NewStrBufPlain(rfc822, -1);
 	free (rfc822);
@@ -1291,9 +1266,9 @@ struct CtdlMessage *convert_internet_message_buf(StrBuf **rfc822)
 	if (msg == NULL) return msg;
 
 	memset(msg, 0, sizeof(struct CtdlMessage));
-	msg->cm_magic = CTDLMESSAGE_MAGIC;	/* self check */
-	msg->cm_anon_type = 0;			/* never anonymous */
-	msg->cm_format_type = FMT_RFC822;	/* internet message */
+	msg->cm_magic = CTDLMESSAGE_MAGIC;	// self check
+	msg->cm_anon_type = 0;			// never anonymous
+	msg->cm_format_type = FMT_RFC822;	// internet message
 
 	pos = ChrPtr(*rfc822);
 	totalend = pos + StrLength(*rfc822);
