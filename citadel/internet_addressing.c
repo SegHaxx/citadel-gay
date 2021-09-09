@@ -568,13 +568,14 @@ struct recptypes *validate_recipients(char *supplied_recipients, const char *Rem
 			}
 		}
 
+		// This loop searches for duplicate recipients in the final list and marks them to be skipped.
 		for (int j=0; j<r; ++j) {
-			if (!strcasecmp(this_recp , (char *)array_get_element_at(recp_array, j) )) {
+			if (!strcasecmp(this_recp, (char *)array_get_element_at(recp_array, j) )) {
 				mailtype = EA_SKIP;
 			}
 		}
-		syslog(LOG_DEBUG, "Recipient #%d of type %d is <%s>", r, mailtype, this_recp);
 
+		syslog(LOG_DEBUG, "Recipient #%d of type %d is <%s>", r, mailtype, this_recp);
 		invalid = 0;
 		errmsg[0] = 0;
 		switch(mailtype) {
