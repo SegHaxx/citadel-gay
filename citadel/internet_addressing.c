@@ -575,13 +575,16 @@ struct recptypes *validate_recipients(char *supplied_recipients, const char *Rem
 	for (int r=0; (recp_array && r<array_len(recp_array)); ++r) {
 		org_recp = (char *)array_get_element_at(recp_array, r);
 		strncpy(this_recp, org_recp, sizeof this_recp);
-		mailtype = expand_aliases(this_recp, aliases);
-		syslog(LOG_DEBUG, "Recipient #%d of type %d is <%s>", r, mailtype, this_recp);
 
-		// If an alias expanded to multiple recipients, strip off those recipients and append them
-		// to the end of the array.  This loop will hit those again when it gets there.
-		if (mailtype == EA_MULTIPLE) {
-			recp_array = split_recps(this_recp, recp_array);
+		for (int i=0; i<3; ++i) {						// pass three times through the aliaser
+			mailtype = expand_aliases(this_recp, aliases);
+			syslog(LOG_DEBUG, "Recipient #%d of type %d is <%s>", r, mailtype, this_recp);
+	
+			// If an alias expanded to multiple recipients, strip off those recipients and append them
+			// to the end of the array.  This loop will hit those again when it gets there.
+			if (mailtype == EA_MULTIPLE) {
+				recp_array = split_recps(this_recp, recp_array);
+			}
 		}
 
 		invalid = 0;
