@@ -470,7 +470,8 @@ Array *split_recps(char *addresses, Array *append_to) {
 	} while (r > l);
 
 	// Transform all qualifying delimiters to commas
-	for (char *t=a; t[0]; ++t) {
+	char *t;
+	for (t=a; t[0]; ++t) {
 		if ((t[0]==';') || (t[0]=='|')) {
 			t[0]=',';
 		}
@@ -486,7 +487,8 @@ Array *split_recps(char *addresses, Array *append_to) {
 	}
 
 	int num_addresses = num_tokens(a, ',');
-	for (int i=0; i<num_addresses; ++i) {
+	int i;
+	for (i=0; i<num_addresses; ++i) {
 		char this_address[256];
 		extract_token(this_address, a, i, ',', sizeof this_address);
 		striplt(this_address);				// strip leading and trailing whitespace
@@ -554,11 +556,13 @@ struct recptypes *validate_recipients(char *supplied_recipients, const char *Rem
 
 	char *aliases = CtdlGetSysConfig(GLOBAL_ALIASES);				// First hit the Global Alias Table
 
-	for (int r=0; (recp_array && r<array_len(recp_array)); ++r) {
+	int r;
+	for (r=0; (recp_array && r<array_len(recp_array)); ++r) {
 		org_recp = (char *)array_get_element_at(recp_array, r);
 		strncpy(this_recp, org_recp, sizeof this_recp);
 
-		for (int i=0; i<3; ++i) {						// pass three times through the aliaser
+		int i;
+		for (i=0; i<3; ++i) {						// pass three times through the aliaser
 			mailtype = expand_aliases(this_recp, aliases);
 	
 			// If an alias expanded to multiple recipients, strip off those recipients and append them
@@ -569,7 +573,8 @@ struct recptypes *validate_recipients(char *supplied_recipients, const char *Rem
 		}
 
 		// This loop searches for duplicate recipients in the final list and marks them to be skipped.
-		for (int j=0; j<r; ++j) {
+		int j;
+		for (j=0; j<r; ++j) {
 			if (!strcasecmp(this_recp, (char *)array_get_element_at(recp_array, j) )) {
 				mailtype = EA_SKIP;
 			}
