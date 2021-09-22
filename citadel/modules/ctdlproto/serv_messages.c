@@ -639,12 +639,9 @@ void cmd_ent0(char *entargs) {
 	}
 	free(all_recps);
 
-	if ((valid != NULL) && (valid->num_room == 1) && !IsEmptyStr(valid->recp_orgroom))
-	{
-		/* posting into an ML room? set the envelope from 
-		 * to the actual mail address so others get a valid
-		 * reply-to-header.
-		 */
+	// posting into a mailing list room? set the envelope from 
+	// to the actual mail address so others get a valid reply-to-header.
+	if ((valid != NULL) && (valid->num_room == 1) && !IsEmptyStr(valid->recp_orgroom)) {
 		CM_SetField(msg, eenVelopeTo, valid->recp_orgroom, strlen(valid->recp_orgroom));
 	}
 

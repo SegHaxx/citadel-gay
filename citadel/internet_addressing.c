@@ -624,12 +624,12 @@ struct recptypes *validate_recipients(char *supplied_recipients, const char *Rem
 						if (!IsEmptyStr(ret->recp_room)) {
 							strcat(ret->recp_room, "|");
 						}
-						strcat(ret->recp_room, &this_recp[5]);
+						strcat(ret->recp_room, CC->room.QRname);
 	
 						if (!IsEmptyStr(ret->recp_orgroom)) {
 							strcat(ret->recp_orgroom, "|");
 						}
-						strcat(ret->recp_orgroom, org_recp);
+						strcat(ret->recp_orgroom, this_recp);
 	
 					}
 				}
