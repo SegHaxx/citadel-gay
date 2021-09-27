@@ -14,11 +14,8 @@
 #include "webcit.h"
 
 
-/*
- * /ctdl/c/info returns a JSON representation of the output of an INFO command.
- */
-void serv_info(struct http_transaction *h, struct ctdlsession *c)
-{
+// /ctdl/c/info returns a JSON representation of the output of an INFO command.
+void serv_info(struct http_transaction *h, struct ctdlsession *c) {
 	char buf[1024];
 
 	ctdl_printf(c, "INFO");
@@ -93,11 +90,8 @@ void serv_info(struct http_transaction *h, struct ctdlsession *c)
 }
 
 
-/*
- * Dispatcher for paths starting with /ctdl/c/
- */
-void ctdl_c(struct http_transaction *h, struct ctdlsession *c)
-{
+// Dispatcher for paths starting with /ctdl/c/
+void ctdl_c(struct http_transaction *h, struct ctdlsession *c) {
 	if (!strcasecmp(h->uri, "/ctdl/c/info")) {
 		serv_info(h, c);
 	} else {
