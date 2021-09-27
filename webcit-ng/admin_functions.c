@@ -16,11 +16,8 @@
 #include "webcit.h"
 
 
-/*
- * /ctdl/a/login is called when a user is trying to log in
- */
-void try_login(struct http_transaction *h, struct ctdlsession *c)
-{
+// /ctdl/a/login is called when a user is trying to log in
+void try_login(struct http_transaction *h, struct ctdlsession *c) {
 	char buf[1024];
 	char auth[AUTH_MAX];
 	char username[256];
@@ -50,11 +47,8 @@ void try_login(struct http_transaction *h, struct ctdlsession *c)
 }
 
 
-/*
- * /ctdl/a/logout is called when a user is trying to log out.   Don't use this as an ajax.
- */
-void logout(struct http_transaction *h, struct ctdlsession *c)
-{
+// /ctdl/a/logout is called when a user is trying to log out.   Don't use this as an ajax.
+void logout(struct http_transaction *h, struct ctdlsession *c) {
 	char buf[1024];
 	char auth[AUTH_MAX];
 	char username[256];
@@ -71,11 +65,8 @@ void logout(struct http_transaction *h, struct ctdlsession *c)
 }
 
 
-/*
- * /ctdl/a/whoami returns the name of the currently logged in user, or an empty string if not logged in
- */
-void whoami(struct http_transaction *h, struct ctdlsession *c)
-{
+// /ctdl/a/whoami returns the name of the currently logged in user, or an empty string if not logged in
+void whoami(struct http_transaction *h, struct ctdlsession *c) {
 	h->response_code = 200;
 	h->response_string = strdup("OK");
 	add_response_header(h, strdup("Content-type"), strdup("text/plain"));
@@ -84,11 +75,8 @@ void whoami(struct http_transaction *h, struct ctdlsession *c)
 }
 
 
-/*
- * Dispatcher for paths starting with /ctdl/a/
- */
-void ctdl_a(struct http_transaction *h, struct ctdlsession *c)
-{
+// Dispatcher for paths starting with /ctdl/a/
+void ctdl_a(struct http_transaction *h, struct ctdlsession *c) {
 	if (!strcasecmp(h->uri, "/ctdl/a/login")) {	// log in
 		try_login(h, c);
 		return;

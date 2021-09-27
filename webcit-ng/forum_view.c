@@ -27,9 +27,7 @@ struct mthread {
 
 // Commands we need to send to Citadel Server before we begin rendering forum view.
 // These are common to flat and threaded views.
-//
-void setup_for_forum_view(struct ctdlsession *c)
-{
+void setup_for_forum_view(struct ctdlsession *c) {
 	char buf[1024];
 	ctdl_printf(c, "MSGP text/html|text/plain");	// Declare the MIME types we know how to render
 	ctdl_readline(c, buf, sizeof(buf));		// Ignore the response
@@ -39,9 +37,7 @@ void setup_for_forum_view(struct ctdlsession *c)
 
 
 // Fetch a single message and return it in JSON format for client-side rendering
-//
-void json_render_one_message(struct http_transaction *h, struct ctdlsession *c, long msgnum)
-{
+void json_render_one_message(struct http_transaction *h, struct ctdlsession *c, long msgnum) {
 	StrBuf *raw_msg = NULL;
 	StrBuf *sanitized_msg = NULL;
 	char buf[1024];

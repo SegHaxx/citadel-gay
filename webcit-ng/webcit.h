@@ -1,11 +1,9 @@
-/*
- * webcit.h - "header of headers"
- *
- * Copyright (c) 1996-2018 by the citadel.org team
- *
- * This program is open source software.  You can redistribute it and/or
- * modify it under the terms of the GNU General Public License, version 3.
- */
+// webcit.h - "header of headers"
+//
+// Copyright (c) 1996-2021 by the citadel.org team
+//
+// This program is open source software.  You can redistribute it and/or
+// modify it under the terms of the GNU General Public License, version 3.
 
 #define SHOW_ME_VAPPEND_PRINTF
 
@@ -44,7 +42,7 @@
 #define _(x)	x				// temporary hack until we add i18n back in
 //#define DEBUG_HTTP				// uncomment to debug HTTP headers
 
-/* XML_StopParser is present in expat 2.x */
+// XML_StopParser is present in expat 2.x
 #if XML_MAJOR_VERSION > 1
 #define HAVE_XML_STOPPARSER
 #endif

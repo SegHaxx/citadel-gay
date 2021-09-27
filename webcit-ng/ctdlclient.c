@@ -19,12 +19,9 @@ struct ctdlsession *cpool = NULL;				// linked list of connections to the Citade
 pthread_mutex_t cpool_mutex = PTHREAD_MUTEX_INITIALIZER;	// Lock it before modifying
 
 
-/*
- * Read a specific number of bytes of binary data from the Citadel server.
- * Returns the number of bytes read or -1 for error.
- */
-int ctdl_read_binary(struct ctdlsession *ctdl, char *buf, int bytes_requested)
-{
+// Read a specific number of bytes of binary data from the Citadel server.
+// Returns the number of bytes read or -1 for error.
+int ctdl_read_binary(struct ctdlsession *ctdl, char *buf, int bytes_requested) {
 	int bytes_read = 0;
 	int c = 0;
 
@@ -40,12 +37,9 @@ int ctdl_read_binary(struct ctdlsession *ctdl, char *buf, int bytes_requested)
 }
 
 
-/*
- * Read a newline-terminated line of text from the Citadel server.
- * Returns the string length or -1 for error.
- */
-int ctdl_readline(struct ctdlsession *ctdl, char *buf, int maxbytes)
-{
+// Read a newline-terminated line of text from the Citadel server.
+// Returns the string length or -1 for error.
+int ctdl_readline(struct ctdlsession *ctdl, char *buf, int maxbytes) {
 	int len = 0;
 	int c = 0;
 
@@ -73,13 +67,10 @@ int ctdl_readline(struct ctdlsession *ctdl, char *buf, int maxbytes)
 }
 
 
-/*
- * Read lines of text from the Citadel server until a 000 terminator is received.
- * Implemented in terms of ctdl_readline() and is therefore transparent...
- * Returns a newly allocated StrBuf or NULL for error.
- */
-StrBuf *ctdl_readtextmsg(struct ctdlsession * ctdl)
-{
+// Read lines of text from the Citadel server until a 000 terminator is received.
+// Implemented in terms of ctdl_readline() and is therefore transparent...
+// Returns a newly allocated StrBuf or NULL for error.
+StrBuf *ctdl_readtextmsg(struct ctdlsession * ctdl) {
 	char buf[1024];
 	StrBuf *sj = NewStrBuf();
 	if (!sj) {
@@ -94,21 +85,15 @@ StrBuf *ctdl_readtextmsg(struct ctdlsession * ctdl)
 }
 
 
-/*
- * Write to the Citadel server.  For now we're just wrapping write() in case we
- * need to add anything else later.
- */
-ssize_t ctdl_write(struct ctdlsession * ctdl, const void *buf, size_t count)
-{
+// Write to the Citadel server.  For now we're just wrapping write() in case we
+// need to add anything else later.
+ssize_t ctdl_write(struct ctdlsession * ctdl, const void *buf, size_t count) {
 	return write(ctdl->sock, buf, count);
 }
 
 
-/*
- * printf() type function to send data to the Citadel Server.
- */
-void ctdl_printf(struct ctdlsession *ctdl, const char *format, ...)
-{
+// printf() type function to send data to the Citadel Server.
+void ctdl_printf(struct ctdlsession *ctdl, const char *format, ...) {
 	va_list arg_ptr;
 	StrBuf *Buf = NewStrBuf();
 
@@ -123,11 +108,8 @@ void ctdl_printf(struct ctdlsession *ctdl, const char *format, ...)
 }
 
 
-/*
- * Client side - connect to a unix domain socket
- */
-int uds_connectsock(char *sockpath)
-{
+// Client side - connect to a unix domain socket
+int uds_connectsock(char *sockpath) {
 	struct sockaddr_un addr;
 	int s;
 
@@ -150,11 +132,8 @@ int uds_connectsock(char *sockpath)
 }
 
 
-/*
- * TCP client - connect to a host/port 
- */
-int tcp_connectsock(char *host, char *service)
-{
+// TCP client - connect to a host/port 
+int tcp_connectsock(char *host, char *service) {
 	struct in6_addr serveraddr;
 	struct addrinfo hints;
 	struct addrinfo *res = NULL;
@@ -174,22 +153,20 @@ int tcp_connectsock(char *host, char *service)
 	hints.ai_family = AF_UNSPEC;
 	hints.ai_socktype = SOCK_STREAM;
 
-	/*
-	 * Handle numeric IPv4 and IPv6 addresses
-	 */
+	// Handle numeric IPv4 and IPv6 addresses
 	rc = inet_pton(AF_INET, host, &serveraddr);
-	if (rc == 1) {		/* dotted quad */
+	if (rc == 1) {		// dotted quad
 		hints.ai_family = AF_INET;
 		hints.ai_flags |= AI_NUMERICHOST;
 	} else {
 		rc = inet_pton(AF_INET6, host, &serveraddr);
-		if (rc == 1) {	/* IPv6 address */
+		if (rc == 1) {	// IPv6 address
 			hints.ai_family = AF_INET6;
 			hints.ai_flags |= AI_NUMERICHOST;
 		}
 	}
 
-	/* Begin the connection process */
+	// Begin the connection process
 
 	rc = getaddrinfo(host, service, &hints, &res);
 	if (rc != 0) {
@@ -198,9 +175,7 @@ int tcp_connectsock(char *host, char *service)
 		return (-1);
 	}
 
-	/*
-	 * Try all available addresses until we connect to one or until we run out.
-	 */
+	// Try all available addresses until we connect to one or until we run out.
 	for (ai = res; ai != NULL; ai = ai->ai_next) {
 
 		if (ai->ai_family == AF_INET)
@@ -245,12 +220,9 @@ int tcp_connectsock(char *host, char *service)
 }
 
 
-/*
- * Extract from the headers, the username and password the client is attempting to use.
- * This could be HTTP AUTH or it could be in the cookies.
- */
-void extract_auth(struct http_transaction *h, char *authbuf, int authbuflen)
-{
+// Extract from the headers, the username and password the client is attempting to use.
+// This could be HTTP AUTH or it could be in the cookies.
+void extract_auth(struct http_transaction *h, char *authbuf, int authbuflen) {
 	if (authbuf == NULL)
 		return;
 	authbuf[0] = 0;
@@ -282,16 +254,13 @@ void extract_auth(struct http_transaction *h, char *authbuf, int authbuflen)
 }
 
 
-/*
- * Log in to the Citadel server.  Returns 0 on success or nonzero on error.
- *
- * 'auth' should be a base64-encoded "username:password" combination (like in http-auth)
- *
- * If 'resultbuf' is not NULL, it should be a buffer of at least 1024 characters,
- * and will be filled with the result from a Citadel server command.
- */
-int login_to_citadel(struct ctdlsession *c, char *auth, char *resultbuf)
-{
+// Log in to the Citadel server.  Returns 0 on success or nonzero on error.
+//
+// 'auth' should be a base64-encoded "username:password" combination (like in http-auth)
+//
+// If 'resultbuf' is not NULL, it should be a buffer of at least 1024 characters,
+// and will be filled with the result from a Citadel server command.
+int login_to_citadel(struct ctdlsession *c, char *auth, char *resultbuf) {
 	char localbuf[1024];
 	char *buf;
 	int buflen;
@@ -300,7 +269,8 @@ int login_to_citadel(struct ctdlsession *c, char *auth, char *resultbuf)
 
 	if (resultbuf != NULL) {
 		buf = resultbuf;
-	} else {
+	}
+	else {
 		buf = localbuf;
 	}
 
@@ -331,11 +301,8 @@ int login_to_citadel(struct ctdlsession *c, char *auth, char *resultbuf)
 }
 
 
-/*
- * Hunt for, or create, a connection to our Citadel Server
- */
-struct ctdlsession *connect_to_citadel(struct http_transaction *h)
-{
+// Hunt for, or create, a connection to our Citadel Server
+struct ctdlsession *connect_to_citadel(struct http_transaction *h) {
 	struct ctdlsession *cptr = NULL;
 	struct ctdlsession *my_session = NULL;
 	int is_new_session = 0;
@@ -411,11 +378,8 @@ struct ctdlsession *connect_to_citadel(struct http_transaction *h)
 }
 
 
-/*
- * Release our Citadel Server connection back into the pool.
- */
-void disconnect_from_citadel(struct ctdlsession *ctdl)
-{
+// Release our Citadel Server connection back into the pool.
+void disconnect_from_citadel(struct ctdlsession *ctdl) {
 	pthread_mutex_lock(&cpool_mutex);
 	ctdl->is_bound = 0;
 	pthread_mutex_unlock(&cpool_mutex);

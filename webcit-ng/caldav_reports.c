@@ -17,9 +17,7 @@
 #include "webcit.h"
 
 
-/*
- * A CalDAV REPORT can only be one type.  This is stored in the report_type member.
- */
+// A CalDAV REPORT can only be one type.  This is stored in the report_type member.
 enum cr_type {
 	cr_calendar_query,
 	cr_calendar_multiget,
@@ -27,11 +25,9 @@ enum cr_type {
 };
 
 
-/*
- * Data type for CalDAV Report Parameters.
- * As we slog our way through the XML we learn what the client is asking for
- * and build up the contents of this data type.
- */
+// Data type for CalDAV Report Parameters.
+// As we slog our way through the XML we learn what the client is asking for
+// and build up the contents of this data type.
 struct cr_parms {
 	int tag_nesting_level;		// not needed, just kept for pretty-printing
 	enum cr_type report_type;	// which RFC4791 section 7 REPORT are we generating
@@ -40,11 +36,8 @@ struct cr_parms {
 };
 
 
-/*
- * XML parser callback
- */
-void caldav_xml_start(void *data, const char *el, const char **attr)
-{
+// XML parser callback
+void caldav_xml_start(void *data, const char *el, const char **attr) {
 	struct cr_parms *crp = (struct cr_parms *) data;
 	int i;
 
@@ -70,11 +63,8 @@ void caldav_xml_start(void *data, const char *el, const char **attr)
 }
 
 
-/*
- * XML parser callback
- */
-void caldav_xml_end(void *data, const char *el)
-{
+// XML parser callback
+void caldav_xml_end(void *data, const char *el) {
 	struct cr_parms *crp = (struct cr_parms *) data;
 	--crp->tag_nesting_level;
 
@@ -99,11 +89,8 @@ void caldav_xml_end(void *data, const char *el)
 }
 
 
-/*
- * XML parser callback
- */
-void caldav_xml_chardata(void *data, const XML_Char * s, int len)
-{
+// XML parser callback
+void caldav_xml_chardata(void *data, const XML_Char * s, int len) {
 	struct cr_parms *crp = (struct cr_parms *) data;
 
 	if (crp->Chardata == NULL) {
@@ -116,15 +103,12 @@ void caldav_xml_chardata(void *data, const XML_Char * s, int len)
 }
 
 
-/*
- * Called by caldav_response() to fetch a message (by number) in the current room,
- * and return only the icalendar data as a StrBuf.  Returns NULL if not found.
- *
- * NOTE: this function expects that "MSGP text/calendar" was issued at the beginning
- * of a REPORT operation to set our preferred MIME type to calendar data.
- */
-StrBuf *fetch_ical(struct ctdlsession * c, long msgnum)
-{
+// Called by caldav_response() to fetch a message (by number) in the current room,
+// and return only the icalendar data as a StrBuf.  Returns NULL if not found.
+//
+// NOTE: this function expects that "MSGP text/calendar" was issued at the beginning
+// of a REPORT operation to set our preferred MIME type to calendar data.
+StrBuf *fetch_ical(struct ctdlsession * c, long msgnum) {
 	char buf[1024];
 	StrBuf *Buf = NULL;
 
@@ -165,12 +149,9 @@ StrBuf *fetch_ical(struct ctdlsession * c, long msgnum)
 }
 
 
-/*
- * Called by caldav_report() to output a single item.
- * Our policy is to throw away the list of properties the client asked for, and just send everything.
- */
-void caldav_response(struct http_transaction *h, struct ctdlsession *c, StrBuf * ReportOut, StrBuf * ThisHref)
-{
+// Called by caldav_report() to output a single item.
+// Our policy is to throw away the list of properties the client asked for, and just send everything.
+void caldav_response(struct http_transaction *h, struct ctdlsession *c, StrBuf * ReportOut, StrBuf * ThisHref) {
 	long msgnum;
 	StrBuf *Caldata = NULL;
 	char *euid;
@@ -226,13 +207,10 @@ void caldav_response(struct http_transaction *h, struct ctdlsession *c, StrBuf *
 }
 
 
-/*
- * Called by report_the_room_itself() in room_functions.c when a CalDAV REPORT method
- * is requested on a calendar room.  We fire up an XML Parser to decode the request and
- * hopefully produce the correct output.
- */
-void caldav_report(struct http_transaction *h, struct ctdlsession *c)
-{
+// Called by report_the_room_itself() in room_functions.c when a CalDAV REPORT method
+// is requested on a calendar room.  We fire up an XML Parser to decode the request and
+// hopefully produce the correct output.
+void caldav_report(struct http_transaction *h, struct ctdlsession *c) {
 	struct cr_parms crp;
 	char buf[1024];
 
@@ -257,16 +235,12 @@ void caldav_report(struct http_transaction *h, struct ctdlsession *c)
 		crp.Chardata = NULL;
 	}
 
-	/*
-	 * We're going to make a lot of MSG4 calls, and the preferred MIME type we want is "text/calendar".
-	 * The iCalendar standard is mature now, and we are no longer interested in text/x-vcal or application/ics.
-	 */
+	// We're going to make a lot of MSG4 calls, and the preferred MIME type we want is "text/calendar".
+	// The iCalendar standard is mature now, and we are no longer interested in text/x-vcal or application/ics.
 	ctdl_printf(c, "MSGP text/calendar");
 	ctdl_readline(c, buf, sizeof buf);
 
-	/*
-	 * Now begin the REPORT.
-	 */
+	// Now begin the REPORT.
 	syslog(LOG_DEBUG, "CalDAV REPORT type is: %d", crp.report_type);
 	StrBuf *ReportOut = NewStrBuf();
 	StrBufAppendPrintf(ReportOut, "<?xml version=\"1.0\" encoding=\"utf-8\"?>"

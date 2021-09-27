@@ -18,11 +18,8 @@
 char *ctdlhost = CTDLHOST;
 char *ctdlport = CTDLPORT;
 
-/*
- * Main entry point for the web server.
- */
-int main(int argc, char **argv)
-{
+// Main entry point for the web server.
+int main(int argc, char **argv) {
 	int webserver_port = WEBSERVER_PORT;
 	char *webserver_interface = WEBSERVER_INTERFACE;
 	int running_as_daemon = 0;
@@ -30,7 +27,7 @@ int main(int argc, char **argv)
 	int a;
 	char *pid_file = NULL;
 
-	/* Parse command line */
+	// Parse command line
 	while ((a = getopt(argc, argv, "u:h:i:p:t:T:B:x:g:dD:G:cfsS:Z:v:")) != EOF)
 		switch (a) {
 		case 'u':
@@ -53,7 +50,7 @@ int main(int argc, char **argv)
 		case 'x':
 		case 'T':
 		case 'v':
-			/* The above options are no longer used, but ignored so old scripts don't break */
+			// The above options are no longer used, but ignored so old scripts don't break
 			break;
 		case 'i':
 			webserver_interface = optarg;
@@ -100,12 +97,12 @@ int main(int argc, char **argv)
 			ctdlport = argv[optind];
 	}
 
-	/* Start the logger */
+	// Start the logger
 	openlog("webcit", (running_as_daemon ? (LOG_PID) : (LOG_PID | LOG_PERROR)), LOG_DAEMON);
 
-	/* Tell 'em who's in da house */
+	// Tell 'em who's in da house
 	syslog(LOG_NOTICE, "MAKE WEBCIT GREAT AGAIN!");
-	syslog(LOG_NOTICE, "Copyright (C) 1996-2020 by the citadel.org team");
+	syslog(LOG_NOTICE, "Copyright (C) 1996-2021 by the citadel.org team");
 	syslog(LOG_NOTICE, " ");
 	syslog(LOG_NOTICE, "This program is open source software: you can redistribute it and/or");
 	syslog(LOG_NOTICE, "modify it under the terms of the GNU General Public License, version 3.");
@@ -116,14 +113,14 @@ int main(int argc, char **argv)
 	syslog(LOG_NOTICE, "GNU General Public License for more details.");
 	syslog(LOG_NOTICE, " ");
 
-	/* Ensure that we are linked to the correct version of libcitadel */
+	// Ensure that we are linked to the correct version of libcitadel
 	if (libcitadel_version_number() < LIBCITADEL_VERSION_NUMBER) {
 		syslog(LOG_INFO, " You are running libcitadel version %d", libcitadel_version_number());
 		syslog(LOG_INFO, "WebCit was compiled against version %d", LIBCITADEL_VERSION_NUMBER);
 		return (1);
 	}
 
-	/* Go into the background if we were asked to run as a daemon */
+	// Go into the background if we were asked to run as a daemon
 	if (running_as_daemon) {
 		daemon(1, 0);
 		if (pid_file != NULL) {

@@ -15,13 +15,9 @@
 
 #include "webcit.h"
 
-
-/*
- * Delete one or more messages from the connected Citadel server.
- * This function expects the session to already be "in" the room from which the messages will be deleted.
- */
-void ctdl_delete_msgs(struct ctdlsession *c, long *msgnums, int num_msgs)
-{
+// Delete one or more messages from the connected Citadel server.
+// This function expects the session to already be "in" the room from which the messages will be deleted.
+void ctdl_delete_msgs(struct ctdlsession *c, long *msgnums, int num_msgs) {
 	int i = 0;
 	char buf[1024];
 

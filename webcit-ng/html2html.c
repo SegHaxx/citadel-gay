@@ -17,11 +17,8 @@
 #include "webcit.h"
 
 
-/*
- * Strip surrounding single or double quotes from a string.
- */
-void stripquotes(char *s)
-{
+// Strip surrounding single or double quotes from a string.
+void stripquotes(char *s) {
 	int len;
 
 	if (!s)
@@ -38,15 +35,12 @@ void stripquotes(char *s)
 }
 
 
-/*
- * Check to see if a META tag has overridden the declared MIME character set.
- *
- * charset		Character set name (left unchanged if we don't do anything)
- * meta_http_equiv	Content of the "http-equiv" portion of the META tag
- * meta_content		Content of the "content" portion of the META tag
- */
-void extract_charset_from_meta(char *charset, char *meta_http_equiv, char *meta_content)
-{
+// Check to see if a META tag has overridden the declared MIME character set.
+//
+// charset		Character set name (left unchanged if we don't do anything)
+// meta_http_equiv	Content of the "http-equiv" portion of the META tag
+// meta_content		Content of the "content" portion of the META tag
+void extract_charset_from_meta(char *charset, char *meta_http_equiv, char *meta_content) {
 	char *ptr;
 	char buf[64];
 
@@ -69,18 +63,16 @@ void extract_charset_from_meta(char *charset, char *meta_http_equiv, char *meta_
 	if (!strncasecmp(buf, "charset=", 8)) {
 		strcpy(charset, &buf[8]);
 
-		/*
-		 * The brain-damaged webmail program in Microsoft Exchange declares
-		 * a charset of "unicode" when they really mean "UTF-8".  GNU iconv
-		 * treats "unicode" as an alias for "UTF-16" so we have to manually
-		 * fix this here, otherwise messages generated in Exchange webmail
-		 * show up as a big pile of weird characters.
-		 */
+		// The brain-damaged webmail program in Microsoft Exchange declares
+		// a charset of "unicode" when they really mean "UTF-8".  GNU iconv
+		// treats "unicode" as an alias for "UTF-16" so we have to manually
+		// fix this here, otherwise messages generated in Exchange webmail
+		// show up as a big pile of weird characters.
 		if (!strcasecmp(charset, "unicode")) {
 			strcpy(charset, "UTF-8");
 		}
 
-		/* Remove wandering punctuation */
+		// Remove wandering punctuation
 		if ((ptr = strchr(charset, '\"')))
 			*ptr = 0;
 		striplt(charset);
@@ -88,14 +80,10 @@ void extract_charset_from_meta(char *charset, char *meta_http_equiv, char *meta_
 }
 
 
-/*
- * Sanitize and enhance an HTML message for display.
- * Also convert weird character sets to UTF-8 if necessary.
- * Also fixup img src="cid:..." type inline images to fetch the image
- *
- */
-StrBuf *html2html(const char *supplied_charset, int treat_as_wiki, char *roomname, long msgnum, StrBuf *Source)
-{
+// Sanitize and enhance an HTML message for display.
+// Also convert weird character sets to UTF-8 if necessary.
+// Also fixup img src="cid:..." type inline images to fetch the image
+StrBuf *html2html(const char *supplied_charset, int treat_as_wiki, char *roomname, long msgnum, StrBuf *Source) {
 	char buf[SIZ];
 	char *msg;
 	char *ptr;
@@ -116,11 +104,11 @@ StrBuf *html2html(const char *supplied_charset, int treat_as_wiki, char *roomnam
 	StrBuf *BodyArea = NULL;
 
 	iconv_t ic = (iconv_t) (-1);
-	char *ibuf;		/* Buffer of characters to be converted */
-	char *obuf;		/* Buffer for converted characters      */
-	size_t ibuflen;		/* Length of input buffer               */
-	size_t obuflen;		/* Length of output buffer              */
-	char *osav;		/* Saved pointer to output buffer       */
+	char *ibuf;		// Buffer of characters to be converted
+	char *obuf;		// Buffer for converted characters
+	size_t ibuflen;		// Length of input buffer
+	size_t obuflen;		// Length of output buffer
+	char *osav;		// Saved pointer to output buffer
 
 	StrBuf *Target = NewStrBuf();
 	if (Target == NULL) {
@@ -134,14 +122,14 @@ StrBuf *html2html(const char *supplied_charset, int treat_as_wiki, char *roomnam
 	msg = (char *) ChrPtr(Source);
 	buffer_length = content_length;
 
-	/* Do a first pass to isolate the message body */
+	// Do a first pass to isolate the message body
 	ptr = msg + 1;
 	msgstart = msg;
 	msgend = &msg[content_length];
 
 	while (ptr < msgend) {
 
-		/* Advance to next tag */
+		// Advance to next tag
 		ptr = strchr(ptr, '<');
 		if ((ptr == NULL) || (ptr >= msgend))
 			break;
@@ -149,12 +137,10 @@ StrBuf *html2html(const char *supplied_charset, int treat_as_wiki, char *roomnam
 		if ((ptr == NULL) || (ptr >= msgend))
 			break;
 
-		/*
-		 *  Look for META tags.  Some messages (particularly in
-		 *  Asian locales) illegally declare a message's character
-		 *  set in the HTML instead of in the MIME headers.  This
-		 *  is wrong but we have to work around it anyway.
-		 */
+		//  Look for META tags.  Some messages (particularly in
+		//  Asian locales) illegally declare a message's character
+		//  set in the HTML instead of in the MIME headers.  This
+		//  is wrong but we have to work around it anyway.
 		if (!strncasecmp(ptr, "META", 4)) {
 
 			char *meta_start;
@@ -193,10 +179,8 @@ StrBuf *html2html(const char *supplied_charset, int treat_as_wiki, char *roomnam
 			}
 		}
 
-		/*
-		 * Any of these tags cause everything up to and including
-		 * the tag to be removed.
-		 */
+		// Any of these tags cause everything up to and including
+		// the tag to be removed.
 		if ((!strncasecmp(ptr, "HTML", 4))
 		    || (!strncasecmp(ptr, "HEAD", 4))
 		    || (!strncasecmp(ptr, "/HEAD", 5))
@@ -227,11 +211,11 @@ StrBuf *html2html(const char *supplied_charset, int treat_as_wiki, char *roomnam
 						while ((*cid_end != '"') && !isspace(*cid_end) && (cid_end < ptr))
 							cid_end++;
 
-						/* copy tag and attributes up to src="cid: */
+						// copy tag and attributes up to src="cid:
 						StrBufAppendBufPlain(BodyArea, pBody, src - pBody, 0);
 
-						/* add in /webcit/mimepart/<msgno>/CID/ 
-						   trailing / stops dumb URL filters getting excited */
+						// add in /webcit/mimepart/<msgno>/CID/ 
+						// trailing / stops dumb URL filters getting excited
 						StrBufAppendPrintf(BodyArea, "/webcit/mimepart/%ld/", msgnum);
 						StrBufAppendBufPlain(BodyArea, cid_start, cid_end - cid_start, 0);
 
@@ -248,10 +232,8 @@ StrBuf *html2html(const char *supplied_charset, int treat_as_wiki, char *roomnam
 			msgstart = ptr;
 		}
 
-		/*
-		 * Any of these tags cause everything including and following
-		 * the tag to be removed.
-		 */
+		// Any of these tags cause everything including and following
+		// the tag to be removed.
 		if ((!strncasecmp(ptr, "/HTML", 5)) || (!strncasecmp(ptr, "/BODY", 5))) {
 			--ptr;
 			msgend = ptr;
@@ -264,10 +246,10 @@ StrBuf *html2html(const char *supplied_charset, int treat_as_wiki, char *roomnam
 		strcpy(msg, msgstart);
 	}
 
-	/* Now go through the message, parsing tags as necessary. */
+	// Now go through the message, parsing tags as necessary.
 	converted_msg = NewStrBufPlain(NULL, content_length + 8192);
 
-	/* Convert foreign character sets to UTF-8 if necessary. */
+	// Convert foreign character sets to UTF-8 if necessary
 	if ((strcasecmp(charset, "us-ascii"))
 	    && (strcasecmp(charset, "UTF-8"))
 	    && (strcasecmp(charset, ""))
@@ -298,17 +280,15 @@ StrBuf *html2html(const char *supplied_charset, int treat_as_wiki, char *roomnam
 			StrBufConvert(Source, Buf, &ic);
 			FreeStrBuf(&Buf);
 			iconv_close(ic);
-			msg = (char *) ChrPtr(Source);	/* TODO: get rid of this. */
+			msg = (char *) ChrPtr(Source);	// TODO: get rid of this.
 		}
 	}
 
-	/*
-	 * At this point, the message has been stripped down to
-	 * only the content inside the <BODY></BODY> tags, and has
-	 * been converted to UTF-8 if it was originally in a foreign
-	 * character set.  The text is also guaranteed to be null
-	 * terminated now.
-	 */
+	// At this point, the message has been stripped down to
+	// only the content inside the <BODY></BODY> tags, and has
+	// been converted to UTF-8 if it was originally in a foreign
+	// character set.  The text is also guaranteed to be null
+	// terminated now.
 
 	if (converted_msg == NULL) {
 		StrBufAppendPrintf(Target, "Error %d: %s<br>%s:%d", errno, strerror(errno), __FILE__, __LINE__);
@@ -324,7 +304,7 @@ StrBuf *html2html(const char *supplied_charset, int treat_as_wiki, char *roomnam
 	msgend = strchr(msg, 0);
 	while (ptr < msgend) {
 
-		/* Try to sanitize the html of any rogue scripts */
+		// Try to sanitize the html of any rogue scripts
 		if (!strncasecmp(ptr, "<script", 7)) {
 			if (scriptlevel == 0) {
 				script_start_pos = StrLength(converted_msg);
@@ -335,25 +315,25 @@ StrBuf *html2html(const char *supplied_charset, int treat_as_wiki, char *roomnam
 			--scriptlevel;
 		}
 
-		/*
-		 * Change mailto: links to WebCit mail, by replacing the
-		 * link with one that points back to our mail room.  Due to
-		 * the way we parse URL's, it'll even handle mailto: links
-		 * that have "?subject=" in them.
-		 */
+		// Change mailto: links to WebCit mail, by replacing the
+		// link with one that points back to our mail room.  Due to
+		// the way we parse URL's, it'll even handle mailto: links
+		// that have "?subject=" in them.
+		// FIXME change URL syntax for webcit-ng
 		if (!strncasecmp(ptr, "<a href=\"mailto:", 16)) {
 			content_length += 64;
-			StrBufAppendPrintf(converted_msg, "<a href=\"display_enter?force_room=_MAIL_?recp=");	// FIXME make compatible with webcit-ng
+			StrBufAppendPrintf(converted_msg, "<a href=\"display_enter?force_room=_MAIL_?recp=");
 			ptr = &ptr[16];
 			++alevel;
 			++brak;
 		}
-		/* Make external links open in a separate window */
+
+		// Make external links open in a separate window
 		else if (!strncasecmp(ptr, "<a href=\"", 9)) {
 			++alevel;
 			++brak;
 			if (((strchr(ptr, ':') < strchr(ptr, '/'))) && ((strchr(ptr, '/') < strchr(ptr, '>')))) {
-				/* open external links to new window */
+				// open external links to new window
 				StrBufAppendPrintf(converted_msg, new_window);
 				ptr = &ptr[8];
 			} else if ((treat_as_wiki)
@@ -371,14 +351,14 @@ StrBuf *html2html(const char *supplied_charset, int treat_as_wiki, char *roomnam
 				ptr = &ptr[9];
 			}
 		}
-		/* Fixup <img src="cid:... ...> to fetch the mime part */
+
+		// Fixup <img src="cid:... ...> to fetch the mime part
 		else if (!strncasecmp(ptr, "<img ", 5)) {
 			char *cid_start, *cid_end;
 			char *tag_end = strchr(ptr, '>');
 			char *src;
-			/* FIXME - handle this situation (maybe someone opened an <img cid... 
-			 * and then ended the message)
-			 */
+			// FIXME - handle this situation (maybe someone opened an <img cid... 
+			// and then ended the message)
 			if (!tag_end) {
 				syslog(LOG_DEBUG, "tag_end is null and ptr is:");
 				syslog(LOG_DEBUG, "%s", ptr);
@@ -393,12 +373,12 @@ StrBuf *html2html(const char *supplied_charset, int treat_as_wiki, char *roomnam
 			    && (cid_end = strchr(cid_start, '"'))
 			    && (cid_end < tag_end)
 			    ) {
-				/* copy tag and attributes up to src="cid: */
+				// copy tag and attributes up to src="cid:
 				StrBufAppendBufPlain(converted_msg, ptr, src - ptr, 0);
 				cid_start++;
 
-				/* add in /webcit/mimepart/<msgnum>/CID/ 
-				   trailing / stops dumb URL filters getting excited */
+				// add in /webcit/mimepart/<msgnum>/CID/ 
+				// trailing / stops dumb URL filters getting excited
 				StrBufAppendPrintf(converted_msg, " src=\"/ctdl/r/");
 				StrBufXMLEscAppend(converted_msg, NULL, roomname, strlen(roomname), 0);
 				syslog(LOG_DEBUG, "room name is '%s'", roomname);
@@ -411,12 +391,10 @@ StrBuf *html2html(const char *supplied_charset, int treat_as_wiki, char *roomnam
 			ptr = tag_end;
 		}
 
-		/*
-		 * Turn anything that looks like a URL into a real link, as long
-		 * as it's not inside a tag already
-		 */
+		// Turn anything that looks like a URL into a real link, as long
+		// as it's not inside a tag already
 		else if ((brak == 0) && (alevel == 0) && ((!strncasecmp(ptr, "http://", 7)) || (!strncasecmp(ptr, "https://", 8)))) {
-			/* Find the end of the link */
+			// Find the end of the link
 			int strlenptr;
 			linklen = 0;
 
@@ -436,7 +414,7 @@ StrBuf *html2html(const char *supplied_charset, int treat_as_wiki, char *roomnam
 				    || (ptr[i] == '\'')
 				    )
 					linklen = i;
-				/* entity tag? */
+				// entity tag?
 				if (ptr[i] == '&') {
 					if ((ptr[i + 2] == ';') ||
 					    (ptr[i + 3] == ';') ||
