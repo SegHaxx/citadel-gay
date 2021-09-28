@@ -15,12 +15,9 @@
 
 #include "webcit.h"
 
-/*
- * lingering_close() a`la Apache. see
- * http://httpd.apache.org/docs/2.0/misc/fin_wait_2.html for rationale
- */
-int lingering_close(int fd)
-{
+// lingering_close() a`la Apache. see
+// http://httpd.apache.org/docs/2.0/misc/fin_wait_2.html for rationale
+int lingering_close(int fd) {
 	char buf[SIZ];
 	int i;
 	fd_set set;
@@ -54,16 +51,13 @@ int lingering_close(int fd)
 }
 
 
-/* 
- * This is a generic function to set up a master socket for listening on
- * a TCP port.  The server shuts down if the bind fails.  (IPv4/IPv6 version)
- *
- * ip_addr 	IP address to bind
- * port_number	port number to bind
- * queue_len	number of incoming connections to allow in the queue
- */
-int webcit_tcp_server(const char *ip_addr, int port_number, int queue_len)
-{
+// This is a generic function to set up a master socket for listening on
+// a TCP port.  The server shuts down if the bind fails.  (IPv4/IPv6 version)
+//
+// ip_addr 	IP address to bind
+// port_number	port number to bind
+// queue_len	number of incoming connections to allow in the queue
+int webcit_tcp_server(const char *ip_addr, int port_number, int queue_len) {
 	const char *ipv4broadcast = "0.0.0.0";
 	int IsDefault = 0;
 	struct protoent *p;
@@ -72,29 +66,32 @@ int webcit_tcp_server(const char *ip_addr, int port_number, int queue_len)
 	int s, i, b;
 	int ip_version = 6;
 
-      retry:
+retry:
 	memset(&sin6, 0, sizeof(sin6));
 	memset(&sin4, 0, sizeof(sin4));
 	sin6.sin6_family = AF_INET6;
 	sin4.sin_family = AF_INET;
 
-	if ((ip_addr == NULL)	/* any IPv6 */
-	    ||(IsEmptyStr(ip_addr))
-	    || (!strcmp(ip_addr, "*"))
-	    ) {
+	if (	(ip_addr == NULL)					// any IPv6
+		|| (IsEmptyStr(ip_addr))
+		|| (!strcmp(ip_addr, "*"))
+	) {
 		IsDefault = 1;
 		ip_version = 6;
 		sin6.sin6_addr = in6addr_any;
-	} else if (!strcmp(ip_addr, "0.0.0.0")) {	/* any IPv4 */
+	}
+	else if (!strcmp(ip_addr, "0.0.0.0")) {				// any IPv4
 		ip_version = 4;
 		sin4.sin_addr.s_addr = INADDR_ANY;
-	} else if ((strchr(ip_addr, '.')) && (!strchr(ip_addr, ':'))) {	/* specific IPv4 */
+	}
+	else if ((strchr(ip_addr, '.')) && (!strchr(ip_addr, ':'))) {	// specific IPv4
 		ip_version = 4;
 		if (inet_pton(AF_INET, ip_addr, &sin4.sin_addr) <= 0) {
 			syslog(LOG_WARNING, "Error binding to [%s] : %s\n", ip_addr, strerror(errno));
 			return (-1);
 		}
-	} else {		/* specific IPv6 */
+	}
+	else {								// specific IPv6
 
 		ip_version = 6;
 		if (inet_pton(AF_INET6, ip_addr, &sin6.sin6_addr) <= 0) {
@@ -122,13 +119,15 @@ int webcit_tcp_server(const char *ip_addr, int port_number, int queue_len)
 		syslog(LOG_WARNING, "Can't create a listening socket: %s\n", strerror(errno));
 		return (-1);
 	}
-	/* Set some socket options that make sense. */
+
+	// Set some socket options that make sense.
 	i = 1;
 	setsockopt(s, SOL_SOCKET, SO_REUSEADDR, &i, sizeof(i));
 
 	if (ip_version == 6) {
 		b = bind(s, (struct sockaddr *) &sin6, sizeof(sin6));
-	} else {
+	}
+	else {
 		b = bind(s, (struct sockaddr *) &sin4, sizeof(sin4));
 	}
 
@@ -147,13 +146,10 @@ int webcit_tcp_server(const char *ip_addr, int port_number, int queue_len)
 }
 
 
-/*
- * Create a Unix domain socket and listen on it
- * sockpath - file name of the unix domain socket
- * queue_len - Number of incoming connections to allow in the queue
- */
-int webcit_uds_server(char *sockpath, int queue_len)
-{
+// Create a Unix domain socket and listen on it
+// sockpath - file name of the unix domain socket
+// queue_len - Number of incoming connections to allow in the queue
+int webcit_uds_server(char *sockpath, int queue_len) {
 	struct sockaddr_un addr;
 	int s;
 	int i;

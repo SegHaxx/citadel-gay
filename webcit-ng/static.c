@@ -16,11 +16,8 @@
 #include "webcit.h"
 
 
-/*
- * Called from perform_request() to handle the /ctdl/s/ prefix -- always static content.
- */
-void output_static(struct http_transaction *h)
-{
+// Called from perform_request() to handle the /ctdl/s/ prefix -- always static content.
+void output_static(struct http_transaction *h) {
 	char filename[PATH_MAX];
 	struct stat statbuf;
 
@@ -42,7 +39,8 @@ void output_static(struct http_transaction *h)
 	h->response_body = malloc(h->response_body_length);
 	if (h->response_body != NULL) {
 		fread(h->response_body, h->response_body_length, 1, fp);
-	} else {
+	}
+	else {
 		h->response_body_length = 0;
 	}
 	fclose(fp);		// Content is now in memory.

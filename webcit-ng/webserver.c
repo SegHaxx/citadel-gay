@@ -25,44 +25,39 @@ int is_https = 0;			// Set to nonzero if we are running as an HTTPS server today
 static void *original_brk = NULL;	// Remember the original program break so we can test for leaks
 
 
-/*
- * Spawn an additional worker thread into the pool.
- */
-void spawn_another_worker_thread(int *pointer_to_master_socket)
-{
+// Spawn an additional worker thread into the pool.
+void spawn_another_worker_thread(int *pointer_to_master_socket) {
 	pthread_t th;		// Thread descriptor
 	pthread_attr_t attr;	// Thread attributes
 
-	/* set attributes for the new thread */
+	// set attributes for the new thread
 	pthread_attr_init(&attr);
 	pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
 	pthread_attr_setstacksize(&attr, 1048576);	// Large stacks to prevent MIME parser crash on FreeBSD
 
-	/* now create the thread */
+	// now create the thread
 	if (pthread_create(&th, &attr, (void *(*)(void *)) worker_entry, (void *) pointer_to_master_socket) != 0) {
 		syslog(LOG_WARNING, "Can't create thread: %s", strerror(errno));
-	} else {
+	}
+	else {
 		++num_threads_existing;
 		++num_threads_executing;
 	}
 
-	/* free up the attributes */
+	// free up the attributes
 	pthread_attr_destroy(&attr);
 }
 
 
-/*
- * Entry point for worker threads
- */
-void worker_entry(int *pointer_to_master_socket)
-{
+// Entry point for worker threads
+void worker_entry(int *pointer_to_master_socket) {
 	int master_socket = *pointer_to_master_socket;
 	int i = 0;
 	int fail_this_transaction = 0;
 	struct client_handle ch;
 
 	while (1) {
-		/* Each worker thread blocks on accept() while waiting for something to do. */
+		// Each worker thread blocks on accept() while waiting for something to do.
 		memset(&ch, 0, sizeof ch);
 		ch.sock = -1;
 		errno = EAGAIN;
@@ -80,24 +75,25 @@ void worker_entry(int *pointer_to_master_socket)
 			       num_threads_executing, num_threads_existing);
 		} while ((master_socket > 0) && (ch.sock < 0));
 
-		/* If all threads are executing, spawn more, up to the maximum */
+		// If all threads are executing, spawn more, up to the maximum
 		if ((num_threads_executing >= num_threads_existing) && (num_threads_existing <= MAX_WORKER_THREADS)) {
 			spawn_another_worker_thread(pointer_to_master_socket);
 		}
 
-		/* We have a client.  Do some work. */
+		// We have a client.  Do some work.
 
-		/* Set the SO_REUSEADDR socket option */
+		// Set the SO_REUSEADDR socket option
 		i = 1;
 		setsockopt(ch.sock, SOL_SOCKET, SO_REUSEADDR, &i, sizeof(i));
 
-		/* If we are an HTTPS server, go crypto now. */
+		// If we are an HTTPS server, go crypto now.
 		if (is_https) {
 			starttls(&ch);
 			if (ch.ssl_handle == NULL) {
 				fail_this_transaction = 1;
 			}
-		} else {
+		}
+		else {
 			int fdflags;
 			fdflags = fcntl(ch.sock, F_GETFL);
 			if (fdflags < 0) {
@@ -105,16 +101,16 @@ void worker_entry(int *pointer_to_master_socket)
 			}
 		}
 
-		/* Perform an HTTP transaction... */
+		// Perform an HTTP transaction...
 		if (fail_this_transaction == 0) {
 			perform_one_http_transaction(&ch);
 		}
 
-		/* Shut down SSL/TLS if required... */
+		// Shut down SSL/TLS if required...
 		if (is_https) {
 			endtls(&ch);
 		}
-		/* ...and close the socket. */
+		// ...and close the socket.
 		//syslog(LOG_DEBUG, "Closing socket %d...", ch.sock);
 		//lingering_close(ch.sock);
 		close(ch.sock);
@@ -123,11 +119,8 @@ void worker_entry(int *pointer_to_master_socket)
 }
 
 
-/*
- * Start up a TCP HTTP[S] server on the requested port
- */
-int webserver(char *webserver_interface, int webserver_port, int webserver_protocol)
-{
+// Start up a TCP HTTP[S] server on the requested port
+int webserver(char *webserver_interface, int webserver_port, int webserver_protocol) {
 	int master_socket = (-1);
 	original_brk = sbrk(0);
 

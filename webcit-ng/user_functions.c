@@ -16,11 +16,8 @@
 #include "webcit.h"
 
 
-/*
- * Fetch a user photo (avatar)
- */
-void fetch_user_photo(struct http_transaction *h, struct ctdlsession *c, char *username)
-{
+// Fetch a user photo (avatar)
+void fetch_user_photo(struct http_transaction *h, struct ctdlsession *c, char *username) {
 	char buf[1024];
 	int content_length = 0;
 	char content_type[1024];
@@ -52,20 +49,14 @@ void fetch_user_photo(struct http_transaction *h, struct ctdlsession *c, char *u
 }
 
 
-/*
- * Fetch a user bio (profile)
- */
-void fetch_user_bio(struct http_transaction *h, struct ctdlsession *c, char *username)
-{
+// Fetch a user bio (profile)
+void fetch_user_bio(struct http_transaction *h, struct ctdlsession *c, char *username) {
 	do_404(h);	// FIXME finish this
 }
 
 
-/*
- * Client requested an object related to a user.
- */
-void object_in_user(struct http_transaction *h, struct ctdlsession *c, char *requested_username)
-{
+// Client requested an object related to a user.
+void object_in_user(struct http_transaction *h, struct ctdlsession *c, char *requested_username) {
 	char object_name[1024];
 
 	extract_token(object_name, h->uri, 4, '/', sizeof object_name);
@@ -85,30 +76,21 @@ void object_in_user(struct http_transaction *h, struct ctdlsession *c, char *req
 }
 
 
-/*
- * Handle REST/DAV requests for the user itself (such as /ctdl/u/username
- * or /ctdl/i/username/ but *not* specific properties of the user)
- */
-void the_user_itself(struct http_transaction *h, struct ctdlsession *c, char *username)
-{
+// Handle REST/DAV requests for the user itself (such as /ctdl/u/username
+// or /ctdl/i/username/ but *not* specific properties of the user)
+void the_user_itself(struct http_transaction *h, struct ctdlsession *c, char *username) {
 	do_404(h);
 }
 
 
-/*
- * Dispatcher for "/ctdl/u" and "/ctdl/u/" for the user list
- */
-void user_list(struct http_transaction *h, struct ctdlsession *c)
-{
+// Dispatcher for "/ctdl/u" and "/ctdl/u/" for the user list
+void user_list(struct http_transaction *h, struct ctdlsession *c) {
 	do_404(h);
 }
 
 
-/*
- * Dispatcher for paths starting with /ctdl/u/
- */
-void ctdl_u(struct http_transaction *h, struct ctdlsession *c)
-{
+// Dispatcher for paths starting with /ctdl/u/
+void ctdl_u(struct http_transaction *h, struct ctdlsession *c) {
 	char requested_username[128];
 	char buf[1024];
 

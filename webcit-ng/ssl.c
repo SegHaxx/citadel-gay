@@ -22,25 +22,20 @@ char *ssl_cipher_list = DEFAULT_SSL_CIPHER_LIST;
 void ssl_lock(int mode, int n, const char *file, int line);
 
 
-/*
- * OpenSSL wants a callback function to identify the currently running thread.
- * Since we are a pthreads program, we convert the output of pthread_self() to a long.
- */
-static unsigned long id_callback(void)
-{
+// OpenSSL wants a callback function to identify the currently running thread.
+// Since we are a pthreads program, we convert the output of pthread_self() to a long.
+static unsigned long id_callback(void) {
 	return (unsigned long) pthread_self();
 }
 
 
-/*
- * OpenSSL wants a callback function to set and clear various types of locks.
- * Since we are a pthreads program, we use mutexes.
- */
-void ssl_lock(int mode, int n, const char *file, int line)
-{
+// OpenSSL wants a callback function to set and clear various types of locks.
+// Since we are a pthreads program, we use mutexes.
+void ssl_lock(int mode, int n, const char *file, int line) {
 	if (mode & CRYPTO_LOCK) {
 		pthread_mutex_lock(SSLCritters[n]);
-	} else {
+	}
+	else {
 		pthread_mutex_unlock(SSLCritters[n]);
 	}
 }
@@ -49,8 +44,7 @@ void ssl_lock(int mode, int n, const char *file, int line)
 /*
  * Generate a private key for SSL
  */
-void generate_key(char *keyfilename)
-{
+void generate_key(char *keyfilename) {
 	int ret = 0;
 	RSA *rsa = NULL;
 	BIGNUM *bne = NULL;
@@ -80,14 +74,14 @@ void generate_key(char *keyfilename)
 	fp = fopen(keyfilename, "w");
 	if (fp != NULL) {
 		chmod(keyfilename, 0600);
-		if (PEM_write_RSAPrivateKey(fp,	/* the file */
-					    rsa,	/* the key */
-					    NULL,	/* no enc */
-					    NULL,	/* no passphr */
-					    0,	/* no passphr */
-					    NULL,	/* no callbk */
-					    NULL	/* no callbk */
-		    ) != 1) {
+		if (PEM_write_RSAPrivateKey(fp,		// the file */
+					    rsa,	// the key */
+					    NULL,	// no enc */
+					    NULL,	// no passphrase
+					    0,		// no passphrase
+					    NULL,	// no callback
+					    NULL	// no callbk
+		) != 1) {
 			syslog(LOG_ERR, "crypto: cannot write key: %s", ERR_reason_error_string(ERR_get_error()));
 			unlink(keyfilename);
 		}
@@ -100,11 +94,8 @@ void generate_key(char *keyfilename)
 }
 
 
-/*
- * Initialize ssl engine, load certs and initialize openssl internals
- */
-void init_ssl(void)
-{
+// Initialize ssl engine, load certs and initialize openssl internals
+void init_ssl(void) {
 	const SSL_METHOD *ssl_method;
 	RSA *rsa = NULL;
 	X509_REQ *req = NULL;
@@ -120,7 +111,8 @@ void init_ssl(void)
 	if (!SSLCritters) {
 		syslog(LOG_ERR, "citserver: can't allocate memory!!");
 		exit(1);
-	} else {
+	}
+	else {
 		int a;
 		for (a = 0; a < CRYPTO_num_locks(); a++) {
 			SSLCritters[a] = malloc(sizeof(pthread_mutex_t));
@@ -132,9 +124,7 @@ void init_ssl(void)
 		}
 	}
 
-	/*
-	 * Initialize SSL transport layer
-	 */
+	// Initialize SSL transport layer
 	SSL_library_init();
 	SSL_load_error_strings();
 	ssl_method = SSLv23_server_method();
@@ -152,22 +142,16 @@ void init_ssl(void)
 	CRYPTO_set_locking_callback(ssl_lock);
 	CRYPTO_set_id_callback(id_callback);
 
-	/*
-	 * Get our certificates in order.
-	 * First, create the key/cert directory if it's not there already...
-	 */
+	// Get our certificates in order.
+	// First, create the key/cert directory if it's not there already...
 	mkdir(CTDL_CRYPTO_DIR, 0700);
 
-	/*
-	 * If we still don't have a private key, generate one.
-	 */
+	// If we still don't have a private key, generate one.
 	generate_key(CTDL_KEY_PATH);
 
-	/*
-	 * If there is no certificate file on disk, we will be generating a self-signed certificate
-	 * in the next step.  Therefore, if we have neither a CSR nor a certificate, generate
-	 * the CSR in this step so that the next step may commence.
-	 */
+	// If there is no certificate file on disk, we will be generating a self-signed certificate
+	// in the next step.  Therefore, if we have neither a CSR nor a certificate, generate
+	// the CSR in this step so that the next step may commence.
 	if ((access(CTDL_CER_PATH, R_OK) != 0) && (access(CTDL_CSR_PATH, R_OK) != 0)) {
 		syslog(LOG_INFO, "Generating a certificate signing request.");
 
@@ -205,14 +189,16 @@ void init_ssl(void)
 					/* Sign the CSR */
 					if (!X509_REQ_sign(req, pk, EVP_md5())) {
 						syslog(LOG_WARNING, "X509_REQ_sign(): error");
-					} else {
+					}
+					else {
 						/* Write it to disk. */
 						fp = fopen(CTDL_CSR_PATH, "w");
 						if (fp != NULL) {
 							chmod(CTDL_CSR_PATH, 0600);
 							PEM_write_X509_REQ(fp, req);
 							fclose(fp);
-						} else {
+						}
+						else {
 							syslog(LOG_WARNING, "Cannot write key: %s", CTDL_CSR_PATH);
 							exit(1);
 						}
@@ -221,7 +207,8 @@ void init_ssl(void)
 				}
 			}
 			RSA_free(rsa);
-		} else {
+		}
+		else {
 			syslog(LOG_WARNING, "Unable to read private key.");
 		}
 	}
@@ -271,13 +258,15 @@ void init_ssl(void)
 					/* Sign the cert */
 					if (!X509_sign(cer, pk, EVP_md5())) {
 						syslog(LOG_WARNING, "X509_sign(): error");
-					} else {	/* Write it to disk. */
+					}
+					else {	/* Write it to disk. */
 						fp = fopen(CTDL_CER_PATH, "w");
 						if (fp != NULL) {
 							chmod(CTDL_CER_PATH, 0600);
 							PEM_write_X509(fp, cer);
 							fclose(fp);
-						} else {
+						}
+						else {
 							syslog(LOG_WARNING, "Cannot write key: %s", CTDL_CER_PATH);
 							exit(1);
 						}
@@ -306,8 +295,7 @@ void init_ssl(void)
 /*
  * starts SSL/TLS encryption for the current session.
  */
-void starttls(struct client_handle *ch)
-{
+void starttls(struct client_handle *ch) {
 	int retval, bits, alg_bits;
 
 	if (!ssl_ctx) {
@@ -331,7 +319,8 @@ void starttls(struct client_handle *ch)
 		ssl_error_reason = ERR_reason_error_string(ERR_get_error());
 		if (ssl_error_reason == NULL) {
 			syslog(LOG_WARNING, "SSL_accept failed: errval=%ld, retval=%d %s", errval, retval, strerror(errval));
-		} else {
+		}
+		else {
 			syslog(LOG_WARNING, "SSL_accept failed: %s\n", ssl_error_reason);
 		}
 		sleep(1);
@@ -345,13 +334,15 @@ void starttls(struct client_handle *ch)
 		ssl_error_reason = ERR_reason_error_string(ERR_get_error());
 		if (ssl_error_reason == NULL) {
 			syslog(LOG_WARNING, "SSL_accept failed: errval=%ld, retval=%d (%s)", errval, retval, strerror(errval));
-		} else {
+		}
+		else {
 			syslog(LOG_WARNING, "SSL_accept failed: %s", ssl_error_reason);
 		}
 		SSL_free(ch->ssl_handle);
 		ch->ssl_handle = NULL;
 		return;
-	} else {
+	}
+	else {
 		syslog(LOG_INFO, "SSL_accept success");
 	}
 	bits = SSL_CIPHER_get_bits(SSL_get_current_cipher(ch->ssl_handle), &alg_bits);
@@ -366,8 +357,7 @@ void starttls(struct client_handle *ch)
 /*
  * shuts down the TLS connection
  */
-void endtls(struct client_handle *ch)
-{
+void endtls(struct client_handle *ch) {
 	syslog(LOG_INFO, "Ending SSL/TLS");
 	if (ch->ssl_handle != NULL) {
 		SSL_shutdown(ch->ssl_handle);
@@ -381,8 +371,7 @@ void endtls(struct client_handle *ch)
 /*
  * Send binary data to the client encrypted.
  */
-int client_write_ssl(struct client_handle *ch, char *buf, int nbytes)
-{
+int client_write_ssl(struct client_handle *ch, char *buf, int nbytes) {
 	int retval;
 	int nremain;
 	char junk[1];
@@ -422,8 +411,7 @@ int client_write_ssl(struct client_handle *ch, char *buf, int nbytes)
 /*
  * read data from the encrypted layer.
  */
-int client_read_ssl(struct client_handle *ch, char *buf, int nbytes)
-{
+int client_read_ssl(struct client_handle *ch, char *buf, int nbytes) {
 	int bytes_read = 0;
 	int rlen = 0;
 	char junk[1];

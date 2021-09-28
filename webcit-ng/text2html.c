@@ -16,11 +16,8 @@
 #include "webcit.h"
 
 
-/*
- * Convert a text/plain message to text/html
- */
-StrBuf *text2html(const char *supplied_charset, int treat_as_wiki, char *roomname, long msgnum, StrBuf * Source)
-{
+// Convert a text/plain message to text/html
+StrBuf *text2html(const char *supplied_charset, int treat_as_wiki, char *roomname, long msgnum, StrBuf * Source) {
 	StrBuf *sj = NULL;
 
 	sj = NewStrBuf();
@@ -36,11 +33,8 @@ StrBuf *text2html(const char *supplied_charset, int treat_as_wiki, char *roomnam
 }
 
 
-/*
- * Convert a text/x-citadel-variformat message to text/html
- */
-StrBuf *variformat2html(StrBuf * Source)
-{
+// Convert a text/x-citadel-variformat message to text/html
+StrBuf *variformat2html(StrBuf * Source) {
 	StrBuf *Target = NULL;
 
 	Target = NewStrBuf();
@@ -82,11 +76,9 @@ StrBuf *variformat2html(StrBuf * Source)
 				}
 			}
 
-			/*
-			 * Quoted text should be displayed in italics and in a
-			 * different colour.  This code understands Citadel-style
-			 * " >" quotes and will convert to <BLOCKQUOTE> tags.
-			 */
+			// Quoted text should be displayed in italics and in a
+			// different colour.  This code understands Citadel-style
+			// " >" quotes and will convert to <BLOCKQUOTE> tags.
 			if (i > 0)
 				StrBufCutLeft(Line, i);
 
@@ -99,7 +91,7 @@ StrBuf *variformat2html(StrBuf * Source)
 			if (StrLength(Line) == 0)
 				continue;
 
-			/* Activate embedded URL's */
+			// Activate embedded URL's
 			UrlizeText(Line1, Line, Line2);
 
 			StrEscAppend(Target, Line1, NULL, 0, 0);

@@ -16,11 +16,8 @@
 #include "webcit.h"
 
 
-/*   
- * remove escaped strings from i.e. the url string (like %20 for blanks)
- */
-int unescape_input(char *buf)
-{
+// remove escaped strings from i.e. the url string (like %20 for blanks)
+int unescape_input(char *buf) {
 	unsigned int a, b;
 	char hex[3];
 	long buflen;
@@ -38,11 +35,12 @@ int unescape_input(char *buf)
 		if (buf[a] == '+')
 			buf[a] = ' ';
 		if (buf[a] == '%') {
-			/* don't let % chars through, rather truncate the input. */
+			// don't let % chars through, rather truncate the input.
 			if (a + 2 > buflen) {
 				buf[a] = '\0';
 				buflen = a;
-			} else {
+			}
+			else {
 				hex[0] = buf[a + 1];
 				hex[1] = buf[a + 2];
 				hex[2] = 0;
@@ -62,20 +60,17 @@ int unescape_input(char *buf)
 }
 
 
-/*
- * Supplied with a unix timestamp, generate a textual time/date stamp.
- * Caller owns the returned memory.
- */
-char *http_datestring(time_t xtime)
-{
+// Supplied with a unix timestamp, generate a textual time/date stamp.
+// Caller owns the returned memory.
+char *http_datestring(time_t xtime) {
 
-	/* HTTP Months - do not translate - these are not for human consumption */
+	// HTTP Months - do not translate - these are not for human consumption
 	static char *httpdate_months[] = {
 		"Jan", "Feb", "Mar", "Apr", "May", "Jun",
 		"Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
 	};
 
-	/* HTTP Weekdays - do not translate - these are not for human consumption */
+	// HTTP Weekdays - do not translate - these are not for human consumption
 	static char *httpdate_weekdays[] = {
 		"Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"
 	};
@@ -90,7 +85,7 @@ char *http_datestring(time_t xtime)
 
 	localtime_r(&xtime, &t);
 
-	/* Convert "seconds west of GMT" to "hours/minutes offset" */
+	// Convert "seconds west of GMT" to "hours/minutes offset"
 	offset = t.tm_gmtoff;
 	if (offset > 0) {
 		offsign = '+';
