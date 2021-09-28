@@ -34,12 +34,12 @@ var views = {
 // This function is the dispatcher that determines the correct view for a room,
 // and calls the correct renderer.  Greater/Less than bounds are accepted.
 //
-function render_room_view(gt_msg, lt_msg)
-{
+function render_room_view(gt_msg, lt_msg) {
 	switch(current_view) {
 		case views.VIEW_MAILBOX:						// FIXME view mail rooms as forums for now
 		case views.VIEW_BBS:
-			forum_readmessages("ctdl-main", gt_msg, lt_msg);
+			document.getElementById("ctdl-main").innerHTML = "<div id=\"ctdl-mrp\" class=\"ctdl-msg-reading-pane\"></div>";
+			forum_readmessages("ctdl-mrp", gt_msg, lt_msg);
 			break;
 		default:
 			document.getElementById("ctdl-main").innerHTML =
@@ -52,8 +52,7 @@ function render_room_view(gt_msg, lt_msg)
 
 // Forum view (flat) -- let's have another go at this with the rendering done client-side
 //
-function forum_readmessages(target_div, gt_msg, lt_msg)
-{
+function forum_readmessages(target_div, gt_msg, lt_msg) {
 	original_text = document.getElementById(target_div).innerHTML;		// in case we need to replace it after an error
 	document.getElementById(target_div).innerHTML = 
 		"<div align=\"center\"><i class=\"fas fa-spinner fa-spin\"></i>&nbsp;&nbsp;"
@@ -147,8 +146,7 @@ function forum_readmessages(target_div, gt_msg, lt_msg)
 
 // Render a range of messages, with the div prefix specified
 //
-function forum_render_messages(msgs, prefix, scroll_to)
-{
+function forum_render_messages(msgs, prefix, scroll_to) {
 	for (i=0; i<msgs.length; ++i) {
 		forum_render_one(prefix+msgs[i], msgs[i], scroll_to);
 	}
