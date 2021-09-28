@@ -15,9 +15,7 @@
 
 #include "webcit.h"
 
-/*
- * Write data to the HTTP client.  Encrypt if necessary.
- */
+// Write data to the HTTP client.  Encrypt if necessary.
 int client_write(struct client_handle *ch, char *buf, int nbytes) {
 	if (is_https) {
 		return client_write_ssl(ch, buf, nbytes);
@@ -28,10 +26,8 @@ int client_write(struct client_handle *ch, char *buf, int nbytes) {
 }
 
 
-/*
- * Read data from the HTTP client.  Decrypt if necessary.
- * Returns number of bytes read, or -1 to indicate an error.
- */
+// Read data from the HTTP client.  Decrypt if necessary.
+// Returns number of bytes read, or -1 to indicate an error.
 int client_read(struct client_handle *ch, char *buf, int nbytes) {
 	if (is_https) {
 		return client_read_ssl(ch, buf, nbytes);
@@ -51,11 +47,9 @@ int client_read(struct client_handle *ch, char *buf, int nbytes) {
 }
 
 
-/*
- * Read a newline-terminated line of text from the client.
- * Implemented in terms of client_read() and is therefore transparent...
- * Returns the string length or -1 for error.
- */
+// Read a newline-terminated line of text from the client.
+// Implemented in terms of client_read() and is therefore transparent...
+// Returns the string length or -1 for error.
 int client_readline(struct client_handle *ch, char *buf, int maxbytes) {
 	int len = 0;
 	int c = 0;
@@ -83,9 +77,7 @@ int client_readline(struct client_handle *ch, char *buf, int maxbytes) {
 }
 
 
-/*
- * printf() type function to send data to the web client.
- */
+// printf() type function to send data to the web client.
 void client_printf(struct client_handle *ch, const char *format, ...) {
 	va_list arg_ptr;
 	StrBuf *Buf = NewStrBuf();
@@ -99,10 +91,8 @@ void client_printf(struct client_handle *ch, const char *format, ...) {
 }
 
 
-/*
- * Push one new header into the response of an HTTP request.
- * When completed, the HTTP transaction now owns the memory allocated for key and val.
- */
+// Push one new header into the response of an HTTP request.
+// When completed, the HTTP transaction now owns the memory allocated for key and val.
 void add_response_header(struct http_transaction *h, char *key, char *val) {
 	struct http_header *new_response_header = malloc(sizeof(struct http_header));
 	new_response_header->key = key;
@@ -112,10 +102,8 @@ void add_response_header(struct http_transaction *h, char *key, char *val) {
 }
 
 
-/*
- * Entry point for this layer.  Socket is connected.  If running as an HTTPS
- * server, SSL has already been negotiated.  Now perform one transaction.
- */
+// Entry point for this layer.  Socket is connected.  If running as an HTTPS
+// server, SSL has already been negotiated.  Now perform one transaction.
 void perform_one_http_transaction(struct client_handle *ch) {
 	char buf[1024];
 	int len;
@@ -269,12 +257,10 @@ void perform_one_http_transaction(struct client_handle *ch) {
 }
 
 
-/*
- * Utility function to fetch a specific header from a completely read-in request.
- * Returns the value of the requested header, or NULL if the specified header was not sent.
- * The caller does NOT own the memory of the returned pointer, but can count on the pointer
- * to still be valid through the end of the transaction.
- */
+// Utility function to fetch a specific header from a completely read-in request.
+// Returns the value of the requested header, or NULL if the specified header was not sent.
+// The caller does NOT own the memory of the returned pointer, but can count on the pointer
+// to still be valid through the end of the transaction.
 char *header_val(struct http_transaction *h, char *requested_header) {
 	struct http_header *clh;	// general purpose iterator variable
 	for (clh = h->request_headers; clh != NULL; clh = clh->next) {

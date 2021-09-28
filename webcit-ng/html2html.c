@@ -433,7 +433,7 @@ StrBuf *html2html(const char *supplied_charset, int treat_as_wiki, char *roomnam
 				len = linklen;
 				linkedchar = ptr[len];
 				ptr[len] = '\0';
-				/* spot for some subject strings tinymce tends to give us. */
+				// spot for some subject strings tinymce tends to give us.
 				ltreviewptr = strchr(ptr, '<');
 				if (ltreviewptr != NULL) {
 					*ltreviewptr = '\0';
@@ -442,7 +442,7 @@ StrBuf *html2html(const char *supplied_charset, int treat_as_wiki, char *roomnam
 
 				nbspreviewptr = strstr(ptr, "&nbsp;");
 				if (nbspreviewptr != NULL) {
-					/* nbspreviewptr = '\0'; */
+					// nbspreviewptr = '\0';
 					linklen = nbspreviewptr - ptr;
 				}
 				if (ltreviewptr != 0)
@@ -458,17 +458,16 @@ StrBuf *html2html(const char *supplied_charset, int treat_as_wiki, char *roomnam
 				ptr += linklen;
 				StrBufAppendPrintf(converted_msg, "</a>");
 			}
-		} else {
+		}
+		else {
 			StrBufAppendBufPlain(converted_msg, ptr, 1, 0);
 			ptr++;
 		}
 
 		if ((ptr >= msg) && (ptr <= msgend)) {
-			/*
-			 * We need to know when we're inside a tag,
-			 * so we don't turn things that look like URL's into
-			 * links, when they're already links - or image sources.
-			 */
+			// We need to know when we're inside a tag,
+			// so we don't turn things that look like URL's into
+			// links, when they're already links - or image sources.
 			if ((ptr > msg) && (*(ptr - 1) == '<')) {
 				++brak;
 			}
@@ -489,17 +488,17 @@ StrBuf *html2html(const char *supplied_charset, int treat_as_wiki, char *roomnam
 		FreeStrBuf(&BodyArea);	// from the original <body> tag
 	}
 
-	/*      uncomment these two lines to override conversion        */
-	/*      memcpy(converted_msg, msg, content_length);             */
-	/*      output_length = content_length;                         */
+	//      uncomment these two lines to override conversion
+	//      memcpy(converted_msg, msg, content_length);
+	//      output_length = content_length;
 
 	/* Output our big pile of markup */
 	StrBufAppendBuf(Target, converted_msg, 0);
 
-      BAIL:			/* A little trailing vertical whitespace... */
+      BAIL:			// A little trailing vertical whitespace...
 	StrBufAppendPrintf(Target, "<br>\n");
 
-	/* Now give back the memory */
+	// Now give back the memory
 	FreeStrBuf(&converted_msg);
 	if ((msg != NULL) && (Source == NULL))
 		free(msg);
@@ -507,12 +506,9 @@ StrBuf *html2html(const char *supplied_charset, int treat_as_wiki, char *roomnam
 }
 
 
-/*
- * Look for URL's embedded in a buffer and make them linkable.  We use a
- * target window in order to keep the Citadel session in its own window.
- */
-void UrlizeText(StrBuf * Target, StrBuf * Source, StrBuf * WrkBuf)
-{
+// Look for URL's embedded in a buffer and make them linkable.  We use a
+// target window in order to keep the Citadel session in its own window.
+void UrlizeText(StrBuf * Target, StrBuf * Source, StrBuf * WrkBuf) {
 	int len, UrlLen, Offset, TrailerLen;
 	const char *start, *end, *pos;
 
@@ -568,8 +564,7 @@ void UrlizeText(StrBuf * Target, StrBuf * Source, StrBuf * WrkBuf)
 }
 
 
-void url(char *buf, size_t bufsize)
-{
+void url(char *buf, size_t bufsize) {
 	int len, UrlLen, Offset, TrailerLen, outpos;
 	char *start, *end, *pos;
 	char urlbuf[SIZ];

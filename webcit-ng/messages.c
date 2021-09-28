@@ -16,14 +16,10 @@
 #include "webcit.h"
 
 
-/*
- * Given an encoded UID, translate that to an unencoded Citadel EUID and
- * then search for it in the current room.  Return a message number or -1
- * if not found.
- *
- */
-long locate_message_by_uid(struct ctdlsession *c, char *uid)
-{
+// Given an encoded UID, translate that to an unencoded Citadel EUID and
+// then search for it in the current room.  Return a message number or -1
+// if not found.
+long locate_message_by_uid(struct ctdlsession *c, char *uid) {
 	char buf[1024];
 
 	ctdl_printf(c, "EUID %s", uid);
@@ -33,7 +29,7 @@ long locate_message_by_uid(struct ctdlsession *c, char *uid)
 
 	}
 
-	/* Ugly hack to handle Mozilla Thunderbird, try stripping ".ics" if present */
+	// Ugly hack to handle Mozilla Thunderbird, try stripping ".ics" if present
 	if (!strcasecmp(&uid[strlen(uid) - 4], ".ics")) {
 		safestrncpy(buf, uid, sizeof buf);
 		buf[strlen(buf) - 4] = 0;
@@ -49,22 +45,16 @@ long locate_message_by_uid(struct ctdlsession *c, char *uid)
 }
 
 
-/*
- * DAV delete an object in a room.
- */
-void dav_delete_message(struct http_transaction *h, struct ctdlsession *c, long msgnum)
-{
+// DAV delete an object in a room.
+void dav_delete_message(struct http_transaction *h, struct ctdlsession *c, long msgnum) {
 	ctdl_delete_msgs(c, &msgnum, 1);
 	h->response_code = 204;
 	h->response_string = strdup("no content");
 }
 
 
-/*
- * GET method directly on a message in a room
- */
-void dav_get_message(struct http_transaction *h, struct ctdlsession *c, long msgnum)
-{
+// GET method directly on a message in a room
+void dav_get_message(struct http_transaction *h, struct ctdlsession *c, long msgnum) {
 	char buf[1024];
 	int in_body = 0;
 	int encoding = 0;
@@ -136,11 +126,8 @@ void dav_get_message(struct http_transaction *h, struct ctdlsession *c, long msg
 }
 
 
-/*
- * PUT a message into a room
- */
-void dav_put_message(struct http_transaction *h, struct ctdlsession *c, char *euid, long old_msgnum)
-{
+// PUT a message into a room
+void dav_put_message(struct http_transaction *h, struct ctdlsession *c, char *euid, long old_msgnum) {
 	char buf[1024];
 	char *content_type = NULL;
 	int n;
@@ -173,9 +160,7 @@ void dav_put_message(struct http_transaction *h, struct ctdlsession *c, char *eu
 	}
 	ctdl_printf(c, "000");
 
-	/*
-	 * Now handle the response from the Citadel server.
-	 */
+	// Now handle the response from the Citadel server.
 
 	n = 0;
 	new_msgnum = 0;
@@ -198,9 +183,9 @@ void dav_put_message(struct http_transaction *h, struct ctdlsession *c, char *eu
 			break;
 		}
 
-	/* Tell the client what happened. */
+	// Tell the client what happened.
 
-	/* Citadel failed in some way? */
+	// Citadel failed in some way?
 	char *new_location = malloc(1024);
 	if ((new_msgnum < 0L) || (new_location == NULL)) {
 		h->response_code = 502;
@@ -231,20 +216,16 @@ void dav_put_message(struct http_transaction *h, struct ctdlsession *c, char *eu
 		h->response_code = 204;	// We modified an existing item.
 		h->response_string = strdup("no content");
 
-		/* The item we replaced has probably already been deleted by
-		 * the Citadel server, but we'll do this anyway, just in case.
-		 */
+		// The item we replaced has probably already been deleted by
+		// the Citadel server, but we'll do this anyway, just in case.
 		ctdl_delete_msgs(c, &old_msgnum, 1);
 	}
 
 }
 
 
-/*
- * Download a single component of a MIME-encoded message
- */
-void download_mime_component(struct http_transaction *h, struct ctdlsession *c, long msgnum, char *partnum)
-{
+// Download a single component of a MIME-encoded message
+void download_mime_component(struct http_transaction *h, struct ctdlsession *c, long msgnum, char *partnum) {
 	char buf[1024];
 	char content_type[1024];
 

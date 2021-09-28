@@ -16,10 +16,8 @@
 #include "webcit.h"
 
 
-/*
- * Return a "zero-terminated" array of message numbers in the current room.
- * Caller owns the memory and must free it.  Returns NULL if any problems.
- */
+// Return a "zero-terminated" array of message numbers in the current room.
+// Caller owns the memory and must free it.  Returns NULL if any problems.
 long *get_msglist(struct ctdlsession *c, char *which_msgs) {
 	char buf[1024];
 	long *msglist = NULL;
@@ -47,11 +45,9 @@ long *get_msglist(struct ctdlsession *c, char *which_msgs) {
 }
 
 
-/*
- * Supplied with a list of potential matches from an If-Match: or If-None-Match: header, and
- * a message number (which we always use as the entity tag in Citadel), return nonzero if the
- * message number matches any of the supplied tags in the string.
- */
+// Supplied with a list of potential matches from an If-Match: or If-None-Match: header, and
+// a message number (which we always use as the entity tag in Citadel), return nonzero if the
+// message number matches any of the supplied tags in the string.
 int match_etags(char *taglist, long msgnum) {
 	int num_tags = num_tokens(taglist, ',');
 	int i = 0;
@@ -84,9 +80,7 @@ int match_etags(char *taglist, long msgnum) {
 }
 
 
-/*
- * Client is requesting a message list
- */
+// Client is requesting a message list
 void json_msglist(struct http_transaction *h, struct ctdlsession *c, char *which) {
 	int i = 0;
 	long *msglist = get_msglist(c, which);
@@ -111,9 +105,7 @@ void json_msglist(struct http_transaction *h, struct ctdlsession *c, char *which
 }
 
 
-/*
- * Client requested an object in a room.
- */
+// Client requested an object in a room.
 void object_in_room(struct http_transaction *h, struct ctdlsession *c) {
 	char buf[1024];
 	long msgnum = (-1);
@@ -147,27 +139,22 @@ void object_in_room(struct http_transaction *h, struct ctdlsession *c) {
 		safestrncpy(unescaped_euid, buf, sizeof unescaped_euid);
 		unescape_input(unescaped_euid);
 		msgnum = locate_message_by_uid(c, unescaped_euid);
-	} else {
+	}
+	else {
 		msgnum = atol(buf);
 	}
 
-	/*
-	 * All methods except PUT require the message to already exist
-	 */
+	// All methods except PUT require the message to already exist
 	if ((msgnum <= 0) && (strcasecmp(h->method, "PUT"))) {
 		do_404(h);
 	}
 
-	/*
-	 * If we get to this point we have a valid message number in an accessible room.
-	 */
+	// If we get to this point we have a valid message number in an accessible room.
 	syslog(LOG_DEBUG, "msgnum is %ld, method is %s", msgnum, h->method);
 
-	/*
-	 * A sixth component in the URL can be one of two things:
-	 * (1) a MIME part specifier, in which case the client wants to download that component within the message
-	 * (2) a content-type, in which ase the client wants us to try to render it a certain way
-	 */
+	// A sixth component in the URL can be one of two things:
+	// (1) a MIME part specifier, in which case the client wants to download that component within the message
+	// (2) a content-type, in which ase the client wants us to try to render it a certain way
 	if (num_tokens(h->uri, '/') == 6) {
 		extract_token(buf, h->uri, 5, '/', sizeof buf);
 		if (!IsEmptyStr(buf)) {
@@ -180,9 +167,7 @@ void object_in_room(struct http_transaction *h, struct ctdlsession *c) {
 		}
 	}
 
-	/*
-	 * Ok, we want a full message, but first let's check for the if[-none]-match headers.
-	 */
+	// Ok, we want a full message, but first let's check for the if[-none]-match headers.
 	char *if_match = header_val(h, "If-Match");
 	if ((if_match != NULL) && (!match_etags(if_match, msgnum))) {
 		do_412(h);
@@ -195,9 +180,7 @@ void object_in_room(struct http_transaction *h, struct ctdlsession *c) {
 		return;
 	}
 
-	/*
-	 * DOOOOOO ITTTTT!!!
-	 */
+	// DOOOOOO ITTTTT!!!
 
 	if (!strcasecmp(h->method, "DELETE")) {
 		dav_delete_message(h, c, msgnum);
@@ -215,9 +198,7 @@ void object_in_room(struct http_transaction *h, struct ctdlsession *c) {
 }
 
 
-/*
- * Called by the_room_itself() when the HTTP method is REPORT
- */
+// Called by the_room_itself() when the HTTP method is REPORT
 void report_the_room_itself(struct http_transaction *h, struct ctdlsession *c) {
 	if (c->room_default_view == VIEW_CALENDAR) {
 		caldav_report(h, c);	// CalDAV REPORTs ... fmgwac
@@ -228,9 +209,7 @@ void report_the_room_itself(struct http_transaction *h, struct ctdlsession *c) {
 }
 
 
-/*
- * Called by the_room_itself() when the HTTP method is OPTIONS
- */
+// Called by the_room_itself() when the HTTP method is OPTIONS
 void options_the_room_itself(struct http_transaction *h, struct ctdlsession *c) {
 	h->response_code = 200;
 	h->response_string = strdup("OK");
@@ -247,9 +226,7 @@ void options_the_room_itself(struct http_transaction *h, struct ctdlsession *c) 
 }
 
 
-/*
- * Called by the_room_itself() when the HTTP method is PROPFIND
- */
+// Called by the_room_itself() when the HTTP method is PROPFIND
 void propfind_the_room_itself(struct http_transaction *h, struct ctdlsession *c) {
 	char *e;
 	long timestamp;
@@ -260,7 +237,7 @@ void propfind_the_room_itself(struct http_transaction *h, struct ctdlsession *c)
 	StrBufAppendPrintf(Buf, "<?xml version=\"1.0\" encoding=\"utf-8\"?>"
 			   "<D:multistatus " "xmlns:D=\"DAV:\" " "xmlns:C=\"urn:ietf:params:xml:ns:caldav\"" ">");
 
-	/* Transmit the collection resource */
+	// Transmit the collection resource
 	StrBufAppendPrintf(Buf, "<D:response>");
 	StrBufAppendPrintf(Buf, "<D:href>");
 	StrBufXMLEscAppend(Buf, NULL, h->site_prefix, strlen(h->site_prefix), 0);
@@ -309,11 +286,10 @@ void propfind_the_room_itself(struct http_transaction *h, struct ctdlsession *c)
 		break;
 	}
 
-	/* FIXME get the mtime
-	   StrBufAppendPrintf(Buf, "<D:getlastmodified>");
-	   escputs(datestring);
-	   StrBufAppendPrintf(Buf, "</D:getlastmodified>");
-	 */
+	// FIXME get the mtime
+	// StrBufAppendPrintf(Buf, "<D:getlastmodified>");
+	// escputs(datestring);
+	// StrBufAppendPrintf(Buf, "</D:getlastmodified>");
 
 	StrBufAppendPrintf(Buf, "</D:prop>");
 	StrBufAppendPrintf(Buf, "</D:propstat>");
@@ -412,11 +388,8 @@ void propfind_the_room_itself(struct http_transaction *h, struct ctdlsession *c)
 // http://blogs.nologin.es/rickyepoderi/index.php?/archives/14-Introducing-CalDAV-Part-I.html
 
 
-/*
- * Called by the_room_itself() when the HTTP method is PROPFIND
- */
-void get_the_room_itself(struct http_transaction *h, struct ctdlsession *c)
-{
+// Called by the_room_itself() when the HTTP method is PROPFIND
+void get_the_room_itself(struct http_transaction *h, struct ctdlsession *c) {
 	JsonValue *j = NewJsonObject(HKEY("gotoroom"));
 
 	JsonObjectAppend(j, NewJsonPlainString(HKEY("name"), c->room, -1));
@@ -438,10 +411,8 @@ void get_the_room_itself(struct http_transaction *h, struct ctdlsession *c)
 }
 
 
-/*
- * Handle REST/DAV requests for the room itself (such as /ctdl/r/roomname
- * or /ctdl/r/roomname/ but *not* specific objects within the room)
- */
+// Handle REST/DAV requests for the room itself (such as /ctdl/r/roomname
+// or /ctdl/r/roomname/ but *not* specific objects within the room)
 void the_room_itself(struct http_transaction *h, struct ctdlsession *c) {
 
 	// OPTIONS method on the room itself usually is a DAV client assessing what's here.
@@ -473,9 +444,7 @@ void the_room_itself(struct http_transaction *h, struct ctdlsession *c) {
 }
 
 
-/*
- * Dispatcher for "/ctdl/r" and "/ctdl/r/" for the room list
- */
+// Dispatcher for "/ctdl/r" and "/ctdl/r/" for the room list
 void room_list(struct http_transaction *h, struct ctdlsession *c) {
 	char buf[1024];
 	char roomname[1024];
@@ -520,9 +489,7 @@ void room_list(struct http_transaction *h, struct ctdlsession *c) {
 }
 
 
-/*
- * Dispatcher for paths starting with /ctdl/r/
- */
+// Dispatcher for paths starting with /ctdl/r/
 void ctdl_r(struct http_transaction *h, struct ctdlsession *c) {
 	char requested_roomname[128];
 	char buf[1024];
