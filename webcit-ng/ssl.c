@@ -16,8 +16,8 @@
 
 #include "webcit.h"
 
-SSL_CTX *ssl_ctx;		/* SSL context */
-pthread_mutex_t **SSLCritters;	/* Things needing locking */
+SSL_CTX *ssl_ctx;		// SSL context
+pthread_mutex_t **SSLCritters;	// Things needing locking
 char *ssl_cipher_list = DEFAULT_SSL_CIPHER_LIST;
 void ssl_lock(int mode, int n, const char *file, int line);
 
@@ -41,9 +41,7 @@ void ssl_lock(int mode, int n, const char *file, int line) {
 }
 
 
-/*
- * Generate a private key for SSL
- */
+// Generate a private key for SSL
 void generate_key(char *keyfilename) {
 	int ret = 0;
 	RSA *rsa = NULL;
@@ -155,12 +153,10 @@ void init_ssl(void) {
 	if ((access(CTDL_CER_PATH, R_OK) != 0) && (access(CTDL_CSR_PATH, R_OK) != 0)) {
 		syslog(LOG_INFO, "Generating a certificate signing request.");
 
-		/*
-		 * Read our key from the file.  No, we don't just keep this
-		 * in memory from the above key-generation function, because
-		 * there is the possibility that the key was already on disk
-		 * and we didn't just generate it now.
-		 */
+		// Read our key from the file.  No, we don't just keep this
+		// in memory from the above key-generation function, because
+		// there is the possibility that the key was already on disk
+		// and we didn't just generate it now.
 		fp = fopen(CTDL_KEY_PATH, "r");
 		if (fp) {
 			rsa = PEM_read_RSAPrivateKey(fp, NULL, NULL, NULL);
@@ -168,30 +164,26 @@ void init_ssl(void) {
 		}
 
 		if (rsa) {
-			/* Create a public key from the private key */
+			// Create a public key from the private key
 			if (pk = EVP_PKEY_new(), pk != NULL) {
 				EVP_PKEY_assign_RSA(pk, rsa);
 				if (req = X509_REQ_new(), req != NULL) {
 					const char *env;
-					/* Set the public key */
+					// Set the public key
 					X509_REQ_set_pubkey(req, pk);
 					X509_REQ_set_version(req, 0L);
 					name = X509_REQ_get_subject_name(req);
-					X509_NAME_add_entry_by_txt(name, "O", MBSTRING_ASC,
-								   (unsigned char *) "Citadel Server", -1, -1, 0);
-					X509_NAME_add_entry_by_txt(name, "OU", MBSTRING_ASC,
-								   (unsigned char *) "Default Certificate PLEASE CHANGE",
-								   -1, -1, 0);
+					X509_NAME_add_entry_by_txt(name, "O", MBSTRING_ASC, (unsigned char *) "Citadel Server", -1, -1, 0);
+					X509_NAME_add_entry_by_txt(name, "OU", MBSTRING_ASC, (unsigned char *) "Default Certificate PLEASE CHANGE", -1, -1, 0);
 					X509_NAME_add_entry_by_txt(name, "CN", MBSTRING_ASC, (unsigned char *) "*", -1, -1, 0);
-
 					X509_REQ_set_subject_name(req, name);
 
-					/* Sign the CSR */
+					// Sign the CSR
 					if (!X509_REQ_sign(req, pk, EVP_md5())) {
 						syslog(LOG_WARNING, "X509_REQ_sign(): error");
 					}
 					else {
-						/* Write it to disk. */
+						// Write it to disk
 						fp = fopen(CTDL_CSR_PATH, "w");
 						if (fp != NULL) {
 							chmod(CTDL_CSR_PATH, 0600);
@@ -213,22 +205,19 @@ void init_ssl(void) {
 		}
 	}
 
-	/*
-	 * Generate a self-signed certificate if we don't have one.
-	 */
+	// Generate a self-signed certificate if we don't have one.
 	if (access(CTDL_CER_PATH, R_OK) != 0) {
 		syslog(LOG_INFO, "Generating a self-signed certificate.");
 
-		/* Same deal as before: always read the key from disk because
-		 * it may or may not have just been generated.
-		 */
+		// Same deal as before: always read the key from disk because
+		// it may or may not have just been generated.
 		fp = fopen(CTDL_KEY_PATH, "r");
 		if (fp) {
 			rsa = PEM_read_RSAPrivateKey(fp, NULL, NULL, NULL);
 			fclose(fp);
 		}
 
-		/* This also holds true for the CSR. */
+		// This also holds true for the CSR
 		req = NULL;
 		cer = NULL;
 		pk = NULL;
@@ -250,16 +239,15 @@ void init_ssl(void) {
 					X509_set_subject_name(cer, X509_REQ_get_subject_name(req));
 					X509_gmtime_adj(X509_get_notBefore(cer), 0);
 					X509_gmtime_adj(X509_get_notAfter(cer), (long) 60 * 60 * 24 * SIGN_DAYS);
-
 					req_pkey = X509_REQ_get_pubkey(req);
 					X509_set_pubkey(cer, req_pkey);
 					EVP_PKEY_free(req_pkey);
 
-					/* Sign the cert */
+					// Sign the cert
 					if (!X509_sign(cer, pk, EVP_md5())) {
 						syslog(LOG_WARNING, "X509_sign(): error");
 					}
-					else {	/* Write it to disk. */
+					else {	// Write it to disk
 						fp = fopen(CTDL_CER_PATH, "w");
 						if (fp != NULL) {
 							chmod(CTDL_CER_PATH, 0600);
@@ -278,11 +266,9 @@ void init_ssl(void) {
 		}
 	}
 
-	/*
-	 * Now try to bind to the key and certificate.
-	 * Note that we use SSL_CTX_use_certificate_chain_file() which allows
-	 * the certificate file to contain intermediate certificates.
-	 */
+	// Now try to bind to the key and certificate.
+	// Note that we use SSL_CTX_use_certificate_chain_file() which allows
+	// the certificate file to contain intermediate certificates.
 	SSL_CTX_use_certificate_chain_file(ssl_ctx, CTDL_CER_PATH);
 	SSL_CTX_use_PrivateKey_file(ssl_ctx, CTDL_KEY_PATH, SSL_FILETYPE_PEM);
 	if (!SSL_CTX_check_private_key(ssl_ctx)) {
@@ -292,9 +278,7 @@ void init_ssl(void) {
 }
 
 
-/*
- * starts SSL/TLS encryption for the current session.
- */
+// starts SSL/TLS encryption for the current session.
 void starttls(struct client_handle *ch) {
 	int retval, bits, alg_bits;
 
@@ -354,9 +338,7 @@ void starttls(struct client_handle *ch) {
 }
 
 
-/*
- * shuts down the TLS connection
- */
+// shuts down the TLS connection
 void endtls(struct client_handle *ch) {
 	syslog(LOG_INFO, "Ending SSL/TLS");
 	if (ch->ssl_handle != NULL) {
@@ -368,9 +350,7 @@ void endtls(struct client_handle *ch) {
 }
 
 
-/*
- * Send binary data to the client encrypted.
- */
+// Send binary data to the client encrypted.
 int client_write_ssl(struct client_handle *ch, char *buf, int nbytes) {
 	int retval;
 	int nremain;
@@ -408,9 +388,7 @@ int client_write_ssl(struct client_handle *ch, char *buf, int nbytes) {
 }
 
 
-/*
- * read data from the encrypted layer.
- */
+// read data from the encrypted layer
 int client_read_ssl(struct client_handle *ch, char *buf, int nbytes) {
 	int bytes_read = 0;
 	int rlen = 0;

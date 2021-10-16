@@ -492,7 +492,7 @@ StrBuf *html2html(const char *supplied_charset, int treat_as_wiki, char *roomnam
 	//      memcpy(converted_msg, msg, content_length);
 	//      output_length = content_length;
 
-	/* Output our big pile of markup */
+	// Output our big pile of markup
 	StrBufAppendBuf(Target, converted_msg, 0);
 
       BAIL:			// A little trailing vertical whitespace...

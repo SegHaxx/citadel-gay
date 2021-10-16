@@ -80,8 +80,9 @@ char *http_datestring(time_t xtime) {
 	char offsign;
 	int n = 40;
 	char *buf = malloc(n);
-	if (!buf)
+	if (!buf) {
 		return (NULL);
+	}
 
 	localtime_r(&xtime, &t);
 
@@ -89,7 +90,8 @@ char *http_datestring(time_t xtime) {
 	offset = t.tm_gmtoff;
 	if (offset > 0) {
 		offsign = '+';
-	} else {
+	}
+	else {
 		offset = 0L - offset;
 		offsign = '-';
 	}

@@ -23,8 +23,8 @@ void output_static(struct http_transaction *h) {
 
 	snprintf(filename, sizeof filename, "static/%s", &h->uri[8]);
 
-	if (strstr(filename, "../")) {	// 100% guaranteed attacker.
-		do_404(h);	// Die in a car fire.
+	if (strstr(filename, "../")) {		// 100% guaranteed attacker.
+		do_404(h);			// Die in a car fire.
 		return;
 	}
 
@@ -43,7 +43,7 @@ void output_static(struct http_transaction *h) {
 	else {
 		h->response_body_length = 0;
 	}
-	fclose(fp);		// Content is now in memory.
+	fclose(fp);				// Content is now in memory.
 
 	h->response_code = 200;
 	h->response_string = strdup("OK");

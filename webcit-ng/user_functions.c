@@ -71,7 +71,7 @@ void object_in_user(struct http_transaction *h, struct ctdlsession *c, char *req
 		return;
 	}
 
-	do_404(h);					// unknown object
+	do_404(h);						// unknown object
 	return;
 }
 
