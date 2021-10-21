@@ -633,21 +633,21 @@ int CtdlIPCGetSingleMessage(CtdlIPC * ipc, long msgnum, int headers, int as_mime
 				if (!strncasecmp(aaa, "nhdr=yes", 8))
 					mret[0]->nhdr = 1;
 				else if (!strncasecmp(aaa, "from=", 5))
-					safestrncpy(mret[0]->author, &aaa[5], SIZ);
+					strncpy(mret[0]->author, &aaa[5], SIZ);
 				else if (!strncasecmp(aaa, "type=", 5))
 					mret[0]->type = atoi(&aaa[5]);
 				else if (!strncasecmp(aaa, "msgn=", 5))
-					safestrncpy(mret[0]->msgid, &aaa[5], SIZ);
+					strncpy(mret[0]->msgid, &aaa[5], SIZ);
 				else if (!strncasecmp(aaa, "subj=", 5))
-					safestrncpy(mret[0]->subject, &aaa[5], SIZ);
+					strncpy(mret[0]->subject, &aaa[5], SIZ);
 				else if (!strncasecmp(aaa, "rfca=", 5))
-					safestrncpy(mret[0]->email, &aaa[5], SIZ);
+					strncpy(mret[0]->email, &aaa[5], SIZ);
 				else if (!strncasecmp(aaa, "room=", 5))
-					safestrncpy(mret[0]->room, &aaa[5], SIZ);
+					strncpy(mret[0]->room, &aaa[5], SIZ);
 				else if (!strncasecmp(aaa, "rcpt=", 5))
-					safestrncpy(mret[0]->recipient, &aaa[5], SIZ);
+					strncpy(mret[0]->recipient, &aaa[5], SIZ);
 				else if (!strncasecmp(aaa, "wefw=", 5))
-					safestrncpy(mret[0]->references, &aaa[5], SIZ);
+					strncpy(mret[0]->references, &aaa[5], SIZ);
 				else if (!strncasecmp(aaa, "time=", 5))
 					mret[0]->time = atol(&aaa[5]);
 				else if (!strncasecmp(aaa, "locl", 4))
@@ -2880,7 +2880,7 @@ static int uds_connectsock(int *isLocal, char *sockpath)
 
 	memset(&addr, 0, sizeof(addr));
 	addr.sun_family = AF_UNIX;
-	safestrncpy(addr.sun_path, sockpath, sizeof addr.sun_path);
+	strncpy(addr.sun_path, sockpath, sizeof addr.sun_path);
 
 	s = socket(AF_UNIX, SOCK_STREAM, 0);
 	if (s < 0) {

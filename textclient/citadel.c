@@ -374,7 +374,7 @@ void dotgoto(CtdlIPC * ipc, char *towhere, int display_name, int fromungoto)
 		scr_printf("%s\n", aaa);
 		return;
 	}
-	safestrncpy(room_name, room->RRname, ROOMNAMELEN);
+	strncpy(room_name, room->RRname, ROOMNAMELEN);
 	room_flags = room->RRflags;
 	room_flags2 = room->RRflags2;
 	from_floor = curr_floor;

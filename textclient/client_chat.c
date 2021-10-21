@@ -153,7 +153,7 @@ void chatmode(CtdlIPC *ipc) {
 				} else {
 					size_t i = MIN(sizeof buf - 1, strlen(c_user) + 2);
 					memset(buf, ' ', i);
-					safestrncpy(&buf[i], c_text, sizeof buf - i);
+					strncpy(&buf[i], c_text, sizeof buf - i);
 				}
 				while (strlen(buf) < 79) {
 					strcat(buf, " ");

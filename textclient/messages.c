@@ -562,28 +562,28 @@ int read_message(CtdlIPC *ipc,
 			snprintf(reply_to, sizeof reply_to, "%s <%s>", message->author, message->email);
 		}
 		else {
-			safestrncpy(reply_to, message->email, sizeof reply_to);
+			strncpy(reply_to, message->email, sizeof reply_to);
 		}
 	}
 
 	/* But if we can't do that, set it to a Citadel address.
 	 */
 	if (!strcmp(reply_to, NO_REPLY_TO)) {
-		safestrncpy(reply_to, message->author, sizeof(reply_to));
+		strncpy(reply_to, message->author, sizeof(reply_to));
 	}
 
 	if (message->msgid != NULL) {
-		safestrncpy(reply_inreplyto, message->msgid, sizeof reply_inreplyto);
+		strncpy(reply_inreplyto, message->msgid, sizeof reply_inreplyto);
 	}
 
 	if (message->references != NULL) {
 		if (!IsEmptyStr(message->references)) {
-			safestrncpy(reply_references, message->references, sizeof reply_references);
+			strncpy(reply_references, message->references, sizeof reply_references);
 		}
 	}
 
 	if (message->subject != NULL) {
-		safestrncpy(reply_subject, message->subject, sizeof reply_subject);
+		strncpy(reply_subject, message->subject, sizeof reply_subject);
 		if (!IsEmptyStr(message->subject)) {
 			if (dest) {
 				fprintf(dest, "Subject: %s\n", message->subject);
@@ -640,7 +640,7 @@ int read_message(CtdlIPC *ipc,
 		while ((searchptr != NULL) && (num_urls < MAXURLS)) {
 			searchptr = strstr(searchptr, urlprefixes[p]);
 			if (searchptr != NULL) {
-				safestrncpy(urls[num_urls], searchptr, sizeof(urls[num_urls]));
+				strncpy(urls[num_urls], searchptr, sizeof(urls[num_urls]));
 				for (i = 0; i < strlen(urls[num_urls]); i++) {
 					ch = urls[num_urls][i];
 					if (ch == '>' || ch == '\"' || ch == ')' || ch == ' ' || ch == '\n') {

@@ -75,21 +75,21 @@ void entregis(CtdlIPC * ipc) {
 			remove_token(reg, 0, '\n');
 
 			if (a == 2)
-				safestrncpy(tmpname, buf, sizeof tmpname);
+				strncpy(tmpname, buf, sizeof tmpname);
 			else if (a == 3)
-				safestrncpy(tmpaddr, buf, sizeof tmpaddr);
+				strncpy(tmpaddr, buf, sizeof tmpaddr);
 			else if (a == 4)
-				safestrncpy(tmpcity, buf, sizeof tmpcity);
+				strncpy(tmpcity, buf, sizeof tmpcity);
 			else if (a == 5)
-				safestrncpy(tmpstate, buf, sizeof tmpstate);
+				strncpy(tmpstate, buf, sizeof tmpstate);
 			else if (a == 6)
-				safestrncpy(tmpzip, buf, sizeof tmpzip);
+				strncpy(tmpzip, buf, sizeof tmpzip);
 			else if (a == 7)
-				safestrncpy(tmpphone, buf, sizeof tmpphone);
+				strncpy(tmpphone, buf, sizeof tmpphone);
 			else if (a == 9)
-				safestrncpy(tmpemail, buf, sizeof tmpemail);
+				strncpy(tmpemail, buf, sizeof tmpemail);
 			else if (a == 10)
-				safestrncpy(tmpcountry, buf, sizeof tmpcountry);
+				strncpy(tmpcountry, buf, sizeof tmpcountry);
 			++a;
 		}
 	}
@@ -103,7 +103,7 @@ void entregis(CtdlIPC * ipc) {
 
 	do {
 		ok = 1;
-		safestrncpy(holdemail, tmpemail, sizeof holdemail);
+		strncpy(holdemail, tmpemail, sizeof holdemail);
 		strprompt("Email address", tmpemail, 31);
 		r = CtdlIPCDirectoryLookup(ipc, tmpemail, buf);
 		if (r / 100 == 2) {
@@ -116,7 +116,7 @@ void entregis(CtdlIPC * ipc) {
 				scr_printf("\nYou can't use %s as your address.\n", tmpemail);
 				scr_printf("It is already in use by %s @ %s.\n", diruser, dirnode);
 				ok = 0;
-				safestrncpy(tmpemail, holdemail, sizeof tmpemail);
+				strncpy(tmpemail, holdemail, sizeof tmpemail);
 			}
 		}
 	} while (ok == 0);

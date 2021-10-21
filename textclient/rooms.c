@@ -415,7 +415,7 @@ int select_floor(CtdlIPC * ipc, int rfloor)
 
 		do {
 			newfloor = (-1);
-			safestrncpy(floorstr, floorlist[rfloor], sizeof floorstr);
+			strncpy(floorstr, floorlist[rfloor], sizeof floorstr);
 			strprompt("Which floor", floorstr, 255);
 			for (a = 0; a < 128; ++a) {
 				if (!strcasecmp(floorstr, &floorlist[a][0]))
@@ -473,7 +473,7 @@ void editthisroom(CtdlIPC * ipc)
 	/* Fetch the name of the current room admin */
 	r = CtdlIPCGetRoomAide(ipc, buf);
 	if (r / 100 == 2) {
-		safestrncpy(room_admin_name, buf, sizeof room_admin_name);
+		strncpy(room_admin_name, buf, sizeof room_admin_name);
 	} else {
 		strcpy(room_admin_name, "");
 	}
@@ -656,7 +656,7 @@ void dotungoto(CtdlIPC * ipc, char *towhere)
 	if (r / 100 != 2) {
 		scr_printf("%s\n", buf);
 	}
-	safestrncpy(buf, uglist[found], sizeof(buf));
+	strncpy(buf, uglist[found], sizeof(buf));
 	/* we queue ungoto information here, because we're not really
 	   ungotoing, we're really going to a random spot in some arbitrary
 	   room list. */
@@ -683,7 +683,7 @@ void ungoto(CtdlIPC * ipc)
 	if (r / 100 != 2) {
 		scr_printf("%s\n", buf);
 	}
-	safestrncpy(buf, uglist[uglistsize - 1], sizeof(buf));
+	strncpy(buf, uglist[uglistsize - 1], sizeof(buf));
 	uglistsize--;
 	free(uglist[uglistsize]);
 	/* Don't queue ungoto info or we end up in a loop */
@@ -1054,7 +1054,7 @@ void readinfo(CtdlIPC * ipc)
 	/* Name of currernt room admin */
 	r = CtdlIPCGetRoomAide(ipc, buf);
 	if (r / 100 == 2)
-		safestrncpy(room_admin_name, buf, sizeof room_admin_name);
+		strncpy(room_admin_name, buf, sizeof room_admin_name);
 	else
 		strcpy(room_admin_name, "");
 
