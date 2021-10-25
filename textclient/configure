@@ -64,7 +64,7 @@ done
 [ "$PREFIX" = "" ] 	&& PREFIX=/usr/local
 [ "$BINDIR" = "" ]	&& BINDIR=${PREFIX}/bin
 [ "$CTDLDIR" = "" ]	&& CTDLDIR=/usr/local/citadel
-[ "$CFLAGS" = "" ]	&& CFLAGS='-ggdb'
+[ "$CFLAGS" = "" ]	&& CFLAGS='-Wformat-truncation=0 -ggdb'
 [ "$LDFLAGS" = "" ]	&& LDFLAGS=''
 
 # Test for OpenSSL
