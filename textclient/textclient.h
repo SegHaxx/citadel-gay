@@ -80,9 +80,6 @@ enum {
 #define COLOR_POP	17			// Restore saved color
 #define ORIGINAL_PAIR	-1			// Default terminal colors
 
-typedef void (*sighandler_t)(int);
-
-
 
 #include <stdlib.h>
 #include <unistd.h>
@@ -672,7 +669,7 @@ int scr_getc(int delay);
 int scr_putc(int c);
 void scr_flush(void);
 int scr_blockread(void);
-sighandler_t scr_winch(int signum);
+void scr_winch(int signum);
 void wait_indicator(int state);
 void ctdl_beep(void);
 void scr_wait_indicator(int);

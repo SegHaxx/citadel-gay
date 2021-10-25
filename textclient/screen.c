@@ -208,7 +208,7 @@ static volatile int caught_sigwinch = 0;
  * scr_winch() handles window size changes from SIGWINCH
  * resizes all our windows for us
  */
-sighandler_t scr_winch(int signum) {
+void scr_winch(int signum) {
 	/* if we receive this signal, we must be running
 	 * in a terminal that supports resizing.
 	 */
