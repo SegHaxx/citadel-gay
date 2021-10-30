@@ -12,6 +12,7 @@ html,body,h1,h2,h3,h4,h5 {
 }
 
 .ctdl-msg-wrapper {
+	overflow: hidden;
 	border-radius: 25px;
 	background-color: white;
 	margin-left: 4px;
@@ -28,6 +29,7 @@ html,body,h1,h2,h3,h4,h5 {
 .ctdl-username {
 	font-weight: bold;
 	color: #000055;
+	padding: 4px;
 }
 
 .ctdl-username a {

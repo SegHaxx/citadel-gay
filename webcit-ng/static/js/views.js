@@ -15,19 +15,19 @@
 // List of defined views shamelessly swiped from libcitadel headers
 //
 var views = {
-	VIEW_BBS		: 0,	/* Bulletin board view */
-	VIEW_MAILBOX		: 1,	/* Mailbox summary */
-	VIEW_ADDRESSBOOK	: 2,	/* Address book view */
-	VIEW_CALENDAR		: 3,	/* Calendar view */
-	VIEW_TASKS		: 4,	/* Tasks view */
-	VIEW_NOTES		: 5,	/* Notes view */
-	VIEW_WIKI		: 6,	/* Wiki view */
-	VIEW_CALBRIEF		: 7,	/* Brief Calendar view */
-	VIEW_JOURNAL		: 8,	/* Journal view */
-	VIEW_DRAFTS		: 9,	/* Drafts view */
-	VIEW_BLOG		: 10,	/* Blog view */
-	VIEW_QUEUE		: 11,   /* SMTP QUEUE rooms */
-	VIEW_WIKIMD		: 12,	/* Markdown Wiki view */
+	VIEW_BBS		: 0,	// Bulletin board view
+	VIEW_MAILBOX		: 1,	// Mailbox summary
+	VIEW_ADDRESSBOOK	: 2,	// Address book view
+	VIEW_CALENDAR		: 3,	// Calendar view
+	VIEW_TASKS		: 4,	// Tasks view
+	VIEW_NOTES		: 5,	// Notes view
+	VIEW_WIKI		: 6,	// Wiki view
+	VIEW_CALBRIEF		: 7,	// Brief Calendar view
+	VIEW_JOURNAL		: 8,	// Journal view
+	VIEW_DRAFTS		: 9,	// Drafts view
+	VIEW_BLOG		: 10,	// Blog view
+	VIEW_QUEUE		: 11,   // SMTP queue rooms
+	VIEW_WIKIMD		: 12,	// markdown wiki (no longer implemented)
 };
 
 
@@ -50,7 +50,7 @@ function render_room_view(gt_msg, lt_msg) {
 }
 
 
-// Forum view (flat) -- let's have another go at this with the rendering done client-side
+// Forum view (flat) -- all rendering is done client-side
 //
 function forum_readmessages(target_div, gt_msg, lt_msg) {
 	original_text = document.getElementById(target_div).innerHTML;		// in case we need to replace it after an error
@@ -159,7 +159,6 @@ function forum_render_one(div, msgnum, scroll_to) {
 		response = await fetch("/ctdl/r/" + escapeHTMLURI(current_room) + "/" + msgs[i] + "/json");
 		msg = await response.json();
 		if (response.ok) {
-
 			document.getElementById(div).innerHTML =
 			  "<div class=\"ctdl-msg-wrapper\">"				// begin message wrapper
 			+ "<div class=\"ctdl-avatar\">"					// begin avatar
@@ -168,7 +167,7 @@ function forum_render_one(div, msgnum, scroll_to) {
 			+ "</div>"							// end avatar
 			+ "<div class=\"ctdl-msg-content\">"				// begin content
 			+ "<div class=\"ctdl-msg-header\">"				// begin header
-			+ "<span class=\"ctdl-username\"><a href=\"#\">"	// FIXME link to user profile
+			+ "<span class=\"ctdl-username\"><a href=\"#\">"		// FIXME link to user profile
 			+ msg.from
 			+ "</a></span>"
 			+ "<span class=\"ctdl-msgdate\">"
