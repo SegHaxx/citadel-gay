@@ -22,6 +22,24 @@ html,body,h1,h2,h3,h4,h5 {
 	padding: 4px;		/* inside the box */
 }
 
+.ctdl-msg-header {
+	padding: 4px;
+}
+
+.ctdl-msg-header-info {
+	float: left;
+}
+
+.ctdl-msg-header-buttons {
+	float: right;
+}
+
+.ctdl-msg-button {
+	padding-left: 2px;
+	padding-right: 2px;
+	font-weight: bold;
+}
+
 .ctdl-avatar {
 	width: 32px;
 }
@@ -29,11 +47,19 @@ html,body,h1,h2,h3,h4,h5 {
 .ctdl-username {
 	font-weight: bold;
 	color: #000055;
-	padding: 4px;
 }
 
 .ctdl-username a {
 	text-decoration: none;
+	padding-right: 4px;
+}
+
+.ctdl-msgdate {
+	padding-left: 4px;
+}
+
+.ctdl-msgsubject {
+	font-weight: bold;
 }
 
 .ctdl-msg-content {

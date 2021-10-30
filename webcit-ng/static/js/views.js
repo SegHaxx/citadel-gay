@@ -167,12 +167,20 @@ function forum_render_one(div, msgnum, scroll_to) {
 			+ "</div>"							// end avatar
 			+ "<div class=\"ctdl-msg-content\">"				// begin content
 			+ "<div class=\"ctdl-msg-header\">"				// begin header
+			+ "<span class=\"ctdl-msg-header-info\">"			// begin header info on left side
 			+ "<span class=\"ctdl-username\"><a href=\"#\">"		// FIXME link to user profile
 			+ msg.from
-			+ "</a></span>"
+			+ "</a></span>"							// end username
 			+ "<span class=\"ctdl-msgdate\">"
 			+ msg.time
-			+ "</span>"
+			+ "</span>"							// end msgdate
+			+ "</span>"							// end header info on left side
+			+ "<span class=\"ctdl-msg-header-buttons\">"			// begin buttons on right side
+			+ "<span class=\"ctdl-msg-button\">Reply</span>"
+			+ "<span class=\"ctdl-msg-button\">Delete</span>"
+			+ "<span class=\"ctdl-msg-button\">Flame</span>"
+			+ "</span>"							// end buttons on right side
+			+ "<br><span class=\"ctdl-msgsubject\">This is a message subject, if present</span>"
 			+ "</div>"							// end header
 			+ "<div>"							// begin body
 			+ msg.text
