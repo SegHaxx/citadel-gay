@@ -159,7 +159,7 @@ function forum_render_one(div, msgnum, scroll_to) {
 		response = await fetch("/ctdl/r/" + escapeHTMLURI(current_room) + "/" + msgs[i] + "/json");
 		msg = await response.json();
 		if (response.ok) {
-			document.getElementById(div).innerHTML =
+			outmsg =
 			  "<div class=\"ctdl-msg-wrapper\">"				// begin message wrapper
 			+ "<div class=\"ctdl-avatar\">"					// begin avatar
 			+ "<img src=\"/ctdl/u/" + msg.from + "/userpic\" width=\"32\" "
@@ -179,15 +179,22 @@ function forum_render_one(div, msgnum, scroll_to) {
 			+ "<span class=\"ctdl-msg-button\">Reply</span>"
 			+ "<span class=\"ctdl-msg-button\">Delete</span>"
 			+ "<span class=\"ctdl-msg-button\">Flame</span>"
-			+ "</span>"							// end buttons on right side
-			+ "<br><span class=\"ctdl-msgsubject\">This is a message subject, if present</span>"
-			+ "</div>"							// end header
-			+ "<div>"							// begin body
+			+ "</span>";							// end buttons on right side
+
+			if (msg.subj) {
+				outmsg +=
+			  	"<br><span class=\"ctdl-msgsubject\">" + msg.subj + "</span>";
+			}
+
+			outmsg +=
+			  "</div><br>"							// end header
+			+ "<div class=\"ctdl-msg-body\">"				// begin body
 			+ msg.text
 			+ "</div>"							// end body
 			+ "</div>"							// end content
 			+ "</div>"							// end wrapper
 			;
+			document.getElementById(div).innerHTML = outmsg;
 		}
 		else {
 			document.getElementById(div).innerHTML = "ERROR";
