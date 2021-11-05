@@ -176,9 +176,12 @@ function forum_render_one(div, msgnum, scroll_to) {
 			+ "</span>"							// end msgdate
 			+ "</span>"							// end header info on left side
 			+ "<span class=\"ctdl-msg-header-buttons\">"			// begin buttons on right side
-			+ "<span class=\"ctdl-msg-button\">Reply</span>"
-			+ "<span class=\"ctdl-msg-button\">Delete</span>"
-			+ "<span class=\"ctdl-msg-button\">Flame</span>"
+			+ "<span class=\"ctdl-msg-button\"><a href=\"#\">"
+			+ "<i class=\"fa fa-reply\" aria-hidden=\"true\"></i> " 
+			+ _("Reply")
+			+ "</a></span>"
+			+ "<span class=\"ctdl-msg-button\"><a href=\"#\">Delete</a></span>"
+			+ "<span class=\"ctdl-msg-button\"><a href=\"#\">Flame</a></span>"
 			+ "</span>";							// end buttons on right side
 			if (msg.subj) {
 				outmsg +=

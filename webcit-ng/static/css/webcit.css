@@ -38,9 +38,23 @@ html,body,h1,h2,h3,h4,h5 {
 }
 
 .ctdl-msg-button {
-	padding-left: 2px;
-	padding-right: 2px;
-	font-weight: bold;
+	margin-left: 2px;
+	border-radius: 5px;
+	background-color: blue;
+	padding: 2px;
+	background-color: GhostWhite;
+	border-style: solid;
+	border-width: thin;
+}
+
+.ctdl-msg-button:hover {
+	background-color: black;
+	color: GhostWhite;
+	border-style: none;
+}
+
+.ctdl-msg-button a {
+	text-decoration: none;
 }
 
 .ctdl-avatar {
