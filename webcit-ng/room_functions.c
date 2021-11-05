@@ -113,20 +113,18 @@ void object_in_room(struct http_transaction *h, struct ctdlsession *c) {
 
 	extract_token(buf, h->uri, 4, '/', sizeof buf);
 
-	if (!strncasecmp(buf, "msgs.", 5))	// Client is requesting a list of message numbers
-	{
+	if (!strncasecmp(buf, "msgs.", 5)) {	// Client is requesting a list of message numbers
+		unescape_input(&buf[5]);
 		json_msglist(h, c, &buf[5]);
 		return;
 	}
 #if 0
-	if (!strncasecmp(buf, "threads", 5))	// Client is requesting a threaded view (still kind of fuzzy here)
-	{
+	if (!strncasecmp(buf, "threads", 5)) {	// Client is requesting a threaded view (still kind of fuzzy here)
 		threaded_view(h, c, &buf[5]);
 		return;
 	}
 
-	if (!strncasecmp(buf, "flat", 5))	// Client is requesting a flat view (still kind of fuzzy here)
-	{
+	if (!strncasecmp(buf, "flat", 5)) {	// Client is requesting a flat view (still kind of fuzzy here)
 		flat_view(h, c, &buf[5]);
 		return;
 	}
