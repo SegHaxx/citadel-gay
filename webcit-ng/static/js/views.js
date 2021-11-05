@@ -167,6 +167,7 @@ function forum_render_one(div, msgnum, scroll_to) {
 			+ "</div>"							// end avatar
 			+ "<div class=\"ctdl-msg-content\">"				// begin content
 			+ "<div class=\"ctdl-msg-header\">"				// begin header
+
 			+ "<span class=\"ctdl-msg-header-info\">"			// begin header info on left side
 			+ "<span class=\"ctdl-username\"><a href=\"#\">"		// FIXME link to user profile
 			+ msg.from
@@ -175,6 +176,8 @@ function forum_render_one(div, msgnum, scroll_to) {
 			+ msg.time
 			+ "</span>"							// end msgdate
 			+ "</span>"							// end header info on left side
+
+
 			+ "<span class=\"ctdl-msg-header-buttons\">"			// begin buttons on right side
 			+ "<span class=\"ctdl-msg-button\">Reply</span>"
 			+ "<span class=\"ctdl-msg-button\">Delete</span>"
@@ -188,6 +191,7 @@ function forum_render_one(div, msgnum, scroll_to) {
 
 			outmsg +=
 			  "</div><br>"							// end header
+
 			+ "<div class=\"ctdl-msg-body\">"				// begin body
 			+ msg.text
 			+ "</div>"							// end body

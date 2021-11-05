@@ -24,7 +24,9 @@ html,body,h1,h2,h3,h4,h5 {
 }
 
 .ctdl-msg-header {
+	overflow: hidden;
 	padding: 4px;
+	background-color: GhostWhite;
 }
 
 .ctdl-msg-header-info {
