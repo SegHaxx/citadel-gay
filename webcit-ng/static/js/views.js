@@ -55,7 +55,7 @@ function render_room_view(gt_msg, lt_msg) {
 function forum_readmessages(target_div, gt_msg, lt_msg) {
 	original_text = document.getElementById(target_div).innerHTML;		// in case we need to replace it after an error
 	document.getElementById(target_div).innerHTML = 
-		"<div align=\"center\"><i class=\"fas fa-spinner fa-spin\"></i>&nbsp;&nbsp;"
+		"<div class=\"ctdl-forum-nav\"><i class=\"fas fa-spinner fa-spin\"></i>&nbsp;&nbsp;"
 		+ _("Loading messages from server, please wait") + "</div>";
 
 	if (lt_msg < 9999999999) {
@@ -91,7 +91,7 @@ function forum_readmessages(target_div, gt_msg, lt_msg) {
 				}
 				document.getElementById(target_div).innerHTML +=
 					"<div id=\"" + new_old_div_name + "\">" +
-					"<div align=\"center\">" +
+					"<div class=\"ctdl-forum-nav\">" +
 					"<a href=\"javascript:forum_readmessages('" + new_old_div_name + "', 0, " + newlt + ");\">" +
 					"<i class=\"fa fa-arrow-circle-up\"></i>&nbsp;&nbsp;" +
 					_("Older posts") + "&nbsp;&nbsp;<i class=\"fa fa-arrow-circle-up\"></a></div></div></a></div></div>" ;
@@ -112,7 +112,7 @@ function forum_readmessages(target_div, gt_msg, lt_msg) {
 				}
 				document.getElementById(target_div).innerHTML +=
 					"<div id=\"" + new_new_div_name + "\">" +
-					"<div align=\"center\">" +
+					"<div class=\"ctdl-forum-nav\">" +
 					"<a href=\"javascript:forum_readmessages('" + new_new_div_name + "', " + newgt + ", 9999999999);\">" +
 					"<i class=\"fa fa-arrow-circle-down\"></i>&nbsp;&nbsp;" +
 					_("Newer posts") + "&nbsp;&nbsp;<i class=\"fa fa-arrow-circle-down\"></a></div></div>" ;
