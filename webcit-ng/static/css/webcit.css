@@ -45,12 +45,14 @@ html,body,h1,h2,h3,h4,h5 {
 	background-color: GhostWhite;
 	border-style: solid;
 	border-width: thin;
+	border-color: black;
 }
 
 .ctdl-msg-button:hover {
-	background-color: black;
+	background-color: #123456;
 	color: GhostWhite;
-	border-style: none;
+	transition: .3s;
+	border-color: #123456;
 }
 
 .ctdl-msg-button a {
