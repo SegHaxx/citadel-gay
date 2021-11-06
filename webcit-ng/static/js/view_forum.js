@@ -12,7 +12,7 @@
 // GNU General Public License for more details.
 
 
-// Forum view (flat) -- all rendering is done client-side
+// Forum view (flat)
 //
 function forum_readmessages(target_div, gt_msg, lt_msg) {
 	original_text = document.getElementById(target_div).innerHTML;		// in case we need to replace it after an error
@@ -139,17 +139,17 @@ function forum_render_one(div, msgnum, scroll_to) {
 			+ "</span>"							// end header info on left side
 			+ "<span class=\"ctdl-msg-header-buttons\">"			// begin buttons on right side
 
-			+ "<span class=\"ctdl-msg-button\"><a href=\"#\">"		// Reply button
+			+ "<span class=\"ctdl-msg-button\"><a href=\"#\">"		// Reply button FIXME make this work
 			+ "<i class=\"fa fa-reply\"></i> " 
 			+ _("Reply")
 			+ "</a></span>"
 
-			+ "<span class=\"ctdl-msg-button\"><a href=\"#\">"		// ReplyQuoted , only show in forums
+			+ "<span class=\"ctdl-msg-button\"><a href=\"#\">"		// ReplyQuoted , only show in forums FIXME
 			+ "<i class=\"fa fa-reply\"></i> " 
 			+ _("ReplyQuoted")
 			+ "</a></span>"
 
-			+ "<span class=\"ctdl-msg-button\"><a href=\"#\">"		// Delete , show only with permission
+			+ "<span class=\"ctdl-msg-button\"><a href=\"#\">"		// Delete , show only with permission FIXME
 			+ "<i class=\"fa fa-trash\"></i> " 
 			+ _("Delete")
 			+ "</a></span>"
