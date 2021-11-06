@@ -1,7 +1,7 @@
 //
 // Convert text/plain to text/html
 //
-// Copyright (c) 2017-2018 by the citadel.org team
+// Copyright (c) 2017-2021 by the citadel.org team
 //
 // This program is open source software.  It runs great on the
 // Linux operating system (and probably elsewhere).  You can use,
@@ -17,7 +17,7 @@
 
 
 // Convert a text/plain message to text/html
-StrBuf *text2html(const char *supplied_charset, int treat_as_wiki, char *roomname, long msgnum, StrBuf * Source) {
+StrBuf *text2html(const char *supplied_charset, int treat_as_wiki, char *roomname, long msgnum, StrBuf *Source) {
 	StrBuf *sj = NULL;
 
 	sj = NewStrBuf();
@@ -79,13 +79,15 @@ StrBuf *variformat2html(StrBuf * Source) {
 			// Quoted text should be displayed in italics and in a
 			// different colour.  This code understands Citadel-style
 			// " >" quotes and will convert to <BLOCKQUOTE> tags.
-			if (i > 0)
+			if (i > 0) {
 				StrBufCutLeft(Line, i);
-
-			for (i = bn; i < bq; i++)
+			}
+			for (i = bn; i < bq; i++) {
 				StrBufAppendBufPlain(Target, HKEY("<blockquote>"), 0);
-			for (i = bq; i < bn; i++)
+			}
+			for (i = bq; i < bn; i++) {
 				StrBufAppendBufPlain(Target, HKEY("</blockquote>"), 0);
+			}
 			bn = bq;
 
 			if (StrLength(Line) == 0)
@@ -93,9 +95,7 @@ StrBuf *variformat2html(StrBuf * Source) {
 
 			// Activate embedded URL's
 			UrlizeText(Line1, Line, Line2);
-
 			StrEscAppend(Target, Line1, NULL, 0, 0);
-
 			StrBufAppendBufPlain(Target, HKEY("\n"), 0);
 		}
 		while ((BufPtr != StrBufNOTNULL) && (BufPtr != NULL));
@@ -107,5 +107,5 @@ StrBuf *variformat2html(StrBuf * Source) {
 	FreeStrBuf(&Line);
 	FreeStrBuf(&Line1);
 	FreeStrBuf(&Line2);
-	return (Target);
+	return(Target);
 }
