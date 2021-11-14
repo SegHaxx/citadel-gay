@@ -16,10 +16,7 @@ html,body,h1,h2,h3,h4,h5 {
 	overflow: hidden;
 	border-radius: 25px;
 	background-color: white;
-	margin-left: 4px;
-	margin-top: 4px;
-	margin-bottom: 4px;
-	margin-right: 4px;
+	margin: 8px;
 	padding: 4px;		/* inside the box */
 }
 
