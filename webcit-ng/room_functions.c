@@ -32,7 +32,8 @@ long *get_msglist(struct ctdlsession *c, char *which_msgs) {
 				if (num_alloc == 0) {
 					num_alloc = 1024;
 					msglist = malloc(num_alloc * sizeof(long));
-				} else {
+				}
+				else {
 					num_alloc *= 2;
 					msglist = realloc(msglist, num_alloc * sizeof(long));
 				}
@@ -158,7 +159,8 @@ void object_in_room(struct http_transaction *h, struct ctdlsession *c) {
 		if (!IsEmptyStr(buf)) {
 			if (!strcasecmp(buf, "json")) {
 				json_render_one_message(h, c, msgnum);
-			} else {
+			}
+			else {
 				download_mime_component(h, c, msgnum, buf);
 			}
 			return;
@@ -360,8 +362,7 @@ void propfind_the_room_itself(struct http_transaction *h, struct ctdlsession *c)
 						StrBufAppendPrintf(Buf, "</D:getlastmodified>");
 						free(datestring);
 					}
-					if (enumerate_by_euid)	// FIXME ajc 2017oct30 should this be inside the timestamp conditional?
-					{
+					if (enumerate_by_euid) {	// FIXME ajc 2017oct30 should this be inside the timestamp conditional?
 						StrBufAppendPrintf(Buf, "<D:getetag>\"%ld\"</D:getetag>", msglist[i]);
 					}
 				}
@@ -496,8 +497,7 @@ void ctdl_r(struct http_transaction *h, struct ctdlsession *c) {
 	extract_token(requested_roomname, h->uri, 3, '/', sizeof requested_roomname);
 	unescape_input(requested_roomname);
 
-	if (IsEmptyStr(requested_roomname))	//      /ctdl/r/
-	{
+	if (IsEmptyStr(requested_roomname)) {	//      /ctdl/r/
 		room_list(h, c);
 		return;
 	}
@@ -511,18 +511,18 @@ void ctdl_r(struct http_transaction *h, struct ctdlsession *c) {
 			c->new_messages = extract_int(&buf[4], 1);
 			c->total_messages = extract_int(&buf[4], 2);
 			//      3       (int)info                       Info flag: set to nonzero if the user needs to read this room's info file
-			//      4       (int)CCC->room.QRflags          Various flags associated with this room.
-			//      5       (long)CCC->room.QRhighest       The highest message number present in this room
+			//      4       (int)CC->room.QRflags           Various flags associated with this room.
+			//      5       (long)CC->room.QRhighest        The highest message number present in this room
 			c->last_seen = extract_long(&buf[4], 6);	// The highest message number the user has read in this room
 			//      7       (int)rmailflag                  Boolean flag: 1 if this is a Mail> room, 0 otherwise.
 			//      8       (int)raideflag                  Nonzero if user is either Aide or a Room Aide in this room
 			//      9       (int)newmailcount               The number of new Mail messages the user has
-			//      10      (int)CCC->room.QRfloor          The floor number this room resides on
+			//      10      (int)CC->room.QRfloor           The floor number this room resides on
 			c->room_current_view = extract_int(&buf[4], 11);
 			c->room_default_view = extract_int(&buf[4], 12);
 			//      13      (int)is_trash                   Boolean flag: 1 if this is the user's Trash folder, 0 otherwise.
-			//      14      (int)CCC->room.QRflags2         More flags associated with this room
-			//      15      (long)CCC->room.QRmtime         Timestamp of the last write activity in this room
+			//      14      (int)CC->room.QRflags2          More flags associated with this room
+			//      15      (long)CC->room.QRmtime          Timestamp of the last write activity in this room
 		} else {
 			do_404(h);
 			return;
@@ -540,7 +540,8 @@ void ctdl_r(struct http_transaction *h, struct ctdlsession *c) {
 	if (num_tokens(h->uri, '/') == 5) {
 		if (IsEmptyStr(buf)) {
 			the_room_itself(h, c);	//      /ctdl/r/roomname/       ( same as /ctdl/r/roomname )
-		} else {
+		}
+		else {
 			object_in_room(h, c);	//      /ctdl/r/roomname/object
 		}
 		return;
