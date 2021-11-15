@@ -265,15 +265,6 @@ void initialize_config_system(void) {
 		brand_new_installation_set_defaults();
 	}
 
-	/* Only allow LDAP auth mode if we actually have LDAP support */
-#ifndef HAVE_LDAP
-	if ((CtdlGetConfigInt("c_auth_mode") == AUTHMODE_LDAP) || (CtdlGetConfigInt("c_auth_mode") == AUTHMODE_LDAP_AD)) {
-		fprintf(stderr, "Your system is configured for LDAP authentication,\n"
-				"but you are running a server built without OpenLDAP support.\n");
-		exit(CTDL_EXIT_UNSUP_AUTH);
-	}
-#endif
-
         /* Default maximum message length is 10 megabytes.  This is site
 	 * configurable.  Also check to make sure the limit has not been
 	 * set below 8192 bytes.

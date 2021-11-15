@@ -146,13 +146,12 @@ void do_housekeeping(void) {
 		cdb_check_handles();
 		PerformSessionHooks(EVT_TIMER);		// Run all registered TIMER hooks
 
-#ifdef HAVE_LDAP					// LDAP sync isn't in a module so we can put it here
+		// LDAP sync isn't in a module so we can put it here
 		static time_t last_ldap_sync = 0L;
 		if ( (now - last_ldap_sync) > (time_t)CtdlGetConfigLong("c_ldap_sync_freq") ) {
 			CtdlSynchronizeUsersFromLDAP();
 			last_ldap_sync = time(NULL);
 		}
-#endif
 
 	keep_an_eye_on_memory_usage();
 	}

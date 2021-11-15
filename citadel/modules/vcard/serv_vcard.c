@@ -2,7 +2,7 @@
  * A server-side module for Citadel which supports address book information
  * using the standard vCard format.
  * 
- * Copyright (c) 1999-2020 by the citadel.org team
+ * Copyright (c) 1999-2021 by the citadel.org team
  *
  * This program is open source software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3.
@@ -721,8 +721,6 @@ void vcard_newuser(struct ctdluser *usbuf) {
 	}
 #endif
 
-
-#ifdef HAVE_LDAP
 	/*
 	 * Is this an LDAP session?  If so, copy various LDAP attributes from the directory entry
 	 * into the user's vCard.
@@ -745,7 +743,7 @@ syslog(LOG_DEBUG, "\033[31m FIXME BORK BORK BORK try lookup by uid , or maybe dn
 			}
 		}
 	}
-#endif
+
 	if (need_default_vcard!=0) {
 		/* Everyone gets an email address based on their display name */
 		snprintf(buf, sizeof buf, "%s@%s", usbuf->fullname, CtdlGetConfigStr("c_fqdn"));
@@ -995,7 +993,6 @@ void vcard_CtdlCreateRoom(void)
 void vcard_session_login_hook(void) {
 	struct vCard *v = NULL;
 
-#ifdef HAVE_LDAP
 	/*
 	 * Is this an LDAP session?  If so, copy various LDAP attributes from the directory entry
 	 * into the user's vCard.
@@ -1010,7 +1007,6 @@ void vcard_session_login_hook(void) {
 			}
 		}
 	}
-#endif
 
 	/*
 	 * Extract the user's friendly/screen name

@@ -1,17 +1,15 @@
-/*
- * These functions implement the portions of AUTHMODE_LDAP and AUTHMODE_LDAP_AD which
- * actually speak to the LDAP server.
- *
- * Copyright (c) 2011-2017 by the citadel.org development team.
- *
- * This program is open source software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License, version 3.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- */
+// These functions implement the portions of AUTHMODE_LDAP and AUTHMODE_LDAP_AD which
+// actually speak to the LDAP server.
+//
+// Copyright (c) 2011-2021 by the citadel.org development team.
+//
+// This program is open source software; you can redistribute it and/or modify
+// it under the terms of the GNU General Public License, version 3.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
 
 int ctdl_require_ldap_version = 3;
 
@@ -24,10 +22,9 @@ int ctdl_require_ldap_version = 3;
 #include "user_ops.h"
 #include "internet_addressing.h"
 #include "config.h"
-
-#ifdef HAVE_LDAP
-#define LDAP_DEPRECATED 1 	// Suppress libldap's warning that we are using deprecated API calls
 #include <ldap.h>
+
+#define LDAP_DEPRECATED 1 	// Suppress libldap's warning that we are using deprecated API calls
 
 
 /*
@@ -632,5 +629,3 @@ void CtdlSynchronizeUsersFromLDAP(void)
 	/* unbind so we can go back in as the authenticating user */
 	ldap_unbind(ldserver);
 }
-
-#endif /* HAVE_LDAP */

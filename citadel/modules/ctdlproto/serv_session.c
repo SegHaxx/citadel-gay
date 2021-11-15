@@ -66,12 +66,7 @@ void cmd_info(char *cmdbuf) {
 	cprintf("1\n"); /* 1 = we support the extended paging options */
 	cprintf("\n");	/* no longer used */
 	cprintf("1\n"); /* 1 = yes, this system supports the QNOP command */
-
-#ifdef HAVE_LDAP
 	cprintf("1\n"); /* 1 = yes, this server is LDAP-enabled */
-#else
-	cprintf("0\n"); /* 1 = no, this server is not LDAP-enabled */
-#endif
 
 	if ((CtdlGetConfigInt("c_auth_mode") == AUTHMODE_NATIVE) && (CtdlGetConfigInt("c_disable_newu") == 0))
 	{

@@ -1,16 +1,14 @@
-/* 
- * Server functions which perform operations on user objects.
- *
- * Copyright (c) 1987-2020 by the citadel.org team
- *
- * This program is open source software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License, version 3.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- */
+// Server functions which perform operations on user objects.
+//
+// Copyright (c) 1987-2021 by the citadel.org team
+//
+// This program is open source software; you can redistribute it and/or
+// modify it under the terms of the GNU General Public License, version 3.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
 
 #include <stdlib.h>
 #include <unistd.h>
@@ -595,7 +593,6 @@ int CtdlLoginExistingUser(const char *trythisname)
 
 	}
 
-#ifdef HAVE_LDAP
 	else if ((CtdlGetConfigInt("c_auth_mode") == AUTHMODE_LDAP) || (CtdlGetConfigInt("c_auth_mode") == AUTHMODE_LDAP_AD)) {
 	
 		/* LDAP auth mode */
@@ -621,7 +618,6 @@ int CtdlLoginExistingUser(const char *trythisname)
 		}
 
 	}
-#endif
 
 	else {
 		/* native auth mode */
@@ -685,7 +681,6 @@ void do_login(void)
 	CtdlPutUserLock(&CC->user);
 
 	/* If we are using LDAP authentication, extract the user's email addresses from the directory. */
-#ifdef HAVE_LDAP
 	if ((CtdlGetConfigInt("c_auth_mode") == AUTHMODE_LDAP) || (CtdlGetConfigInt("c_auth_mode") == AUTHMODE_LDAP_AD)) {
 		char new_emailaddrs[512];
 		if (CtdlGetConfigInt("c_ldap_sync_email_addrs") > 0) {
@@ -694,7 +689,6 @@ void do_login(void)
 			}
 		}
 	}
-#endif
 
 	/* If the user does not have any email addresses assigned, generate one. */
 	if (IsEmptyStr(CC->user.emailaddrs)) {
@@ -917,7 +911,6 @@ int CtdlTryPassword(const char *password, long len)
 		}
 	}
 
-#ifdef HAVE_LDAP
 	else if ((CtdlGetConfigInt("c_auth_mode") == AUTHMODE_LDAP) || (CtdlGetConfigInt("c_auth_mode") == AUTHMODE_LDAP_AD)) {
 
 		/* LDAP auth mode */
@@ -929,7 +922,6 @@ int CtdlTryPassword(const char *password, long len)
 			code = (-1);
 		}
 	}
-#endif
 
 	else {
 

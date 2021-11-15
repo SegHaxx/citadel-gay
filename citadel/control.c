@@ -295,19 +295,11 @@ void cmd_conf(char *argbuf)
 		cprintf("%d\n",		CtdlGetConfigInt("c_disable_newu"));
 		cprintf("1\n");	/* niu */
 		cprintf("%d\n",		CtdlGetConfigInt("c_purge_hour"));
-#ifdef HAVE_LDAP
 		cprintf("%s\n",		CtdlGetConfigStr("c_ldap_host"));
 		cprintf("%d\n",		CtdlGetConfigInt("c_ldap_port"));
 		cprintf("%s\n",		CtdlGetConfigStr("c_ldap_base_dn"));
 		cprintf("%s\n",		CtdlGetConfigStr("c_ldap_bind_dn"));
 		cprintf("%s\n",		CtdlGetConfigStr("c_ldap_bind_pw"));
-#else
-		cprintf("\n");
-		cprintf("0\n");
-		cprintf("\n");
-		cprintf("\n");
-		cprintf("\n");
-#endif
 		cprintf("%s\n",		CtdlGetConfigStr("c_ip_addr"));
 		cprintf("%d\n",		CtdlGetConfigInt("c_msa_port"));
 		cprintf("%d\n",		CtdlGetConfigInt("c_imaps_port"));
