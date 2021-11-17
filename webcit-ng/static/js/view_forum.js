@@ -145,7 +145,7 @@ function forum_render_one(div, msgnum, scroll_to) {
 			+ "</a></span>"
 
 			+ "<span class=\"ctdl-msg-button\"><a href=\"#\">"		// ReplyQuoted , only show in forums FIXME
-			+ "<i class=\"fa fa-reply\"></i> " 
+			+ "<i class=\"fa fa-comment\"></i> " 
 			+ _("ReplyQuoted")
 			+ "</a></span>"
 
