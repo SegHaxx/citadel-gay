@@ -185,10 +185,17 @@ function forum_render_one(prefix, msgnum, scroll_to) {
 
 // Open a reply box directly below a specific message
 function open_reply_box(prefix, msgnum, is_quoted) {
+	target_div_name = prefix+msgnum;
+	new_div_name = prefix + "_reply_to_" + msgnum;
+	document.getElementById(target_div_name).outerHTML += "<div id=\"" + new_div_name + "\">reply box put here</div>";
 
-	target_div = prefix+msgnum;
-	new_div = prefix + "_reply_to_" + msgnum;
-	existing = document.getElementById(target_div).outerHTML;
-	new_text = existing + "<div id=\"" + new_div + "\">This is some more schtuff!</div>";
-	document.getElementById(target_div).outerHTML = new_text;
+	replybox =	"<div class=\"ctdl-msg-wrapper\">"				// begin message wrapper
+		+	"This is going to be the reply box.  We will put ... things here.<br>"
+		+	"We are replying to message number " + msgnum + "<br>";
+	if (is_quoted) {
+		replybox += "and it is a quoted reply.<br>";
+	}
+	replybox +=	"</div>";							// end wrapper
+
+	document.getElementById(new_div_name).innerHTML = replybox;
 }
