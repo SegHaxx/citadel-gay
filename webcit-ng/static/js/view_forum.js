@@ -189,13 +189,42 @@ function open_reply_box(prefix, msgnum, is_quoted) {
 	new_div_name = prefix + "_reply_to_" + msgnum;
 	document.getElementById(target_div_name).outerHTML += "<div id=\"" + new_div_name + "\">reply box put here</div>";
 
-	replybox =	"<div class=\"ctdl-msg-wrapper\">"				// begin message wrapper
-		+	"This is going to be the reply box.  We will put ... things here.<br>"
-		+	"We are replying to message number " + msgnum + "<br>";
-	if (is_quoted) {
-		replybox += "and it is a quoted reply.<br>";
+	replybox =
+	  "<div class=\"ctdl-msg-wrapper\">"				// begin message wrapper
+	+ "<div class=\"ctdl-avatar\">"					// begin avatar
+	+ "<img src=\"/ctdl/u/" + "FIXME my name" + "/userpic\" width=\"32\" "
+	+ "onerror=\"this.parentNode.innerHTML='&lt;i class=&quot;fa fa-user-circle fa-2x&quot;&gt;&lt;/i&gt; '\">"
+	+ "</div>"							// end avatar
+	+ "<div class=\"ctdl-msg-content\">"				// begin content
+	+ "<div class=\"ctdl-msg-header\">"				// begin header
+	+ "<span class=\"ctdl-msg-header-info\">"			// begin header info on left side
+	+ "<span class=\"ctdl-username\"><a href=\"#\">"		// FIXME link to user profile
+	+ "FIXME my name"
+	+ "</a></span>"							// end username
+	+ "<span class=\"ctdl-msgdate\">"
+	+ "FIXME now time"
+	+ "</span>"							// end msgdate
+	+ "</span>"							// end header info on left side
+	+ "<span class=\"ctdl-msg-header-buttons\">"			// begin buttons on right side
+
+	+ "<span class=\"ctdl-msg-button\"><a href=\"#\">"		// FIXME save and cancel buttons
+	+ "<i class=\"fa fa-trash\"></i> " 
+	+ _("FIXME")
+	+ "</a></span>"
+
+	+ "</span>";							// end buttons on right side
+	if (msg.subj) {
+		replybox +=
+	  	"<br><span class=\"ctdl-msgsubject\">" + "FIXME subject" + "</span>";
 	}
-	replybox +=	"</div>";							// end wrapper
+	replybox +=
+	  "</div><br>"							// end header
+	+ "<div class=\"ctdl-msg-body\">"				// begin body
+	+ "This is where the reply text will go."
+	+ "</div>"							// end body
+	+ "</div>"							// end content
+	+ "</div>"							// end wrapper
+	;
 
 	document.getElementById(new_div_name).innerHTML = replybox;
 }
