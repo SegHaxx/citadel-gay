@@ -110,13 +110,13 @@ function forum_readmessages(target_div, gt_msg, lt_msg) {
 //
 function forum_render_messages(msgs, prefix, scroll_to) {
 	for (i=0; i<msgs.length; ++i) {
-		forum_render_one(prefix+msgs[i], msgs[i], scroll_to);
+		forum_render_one(prefix, msgs[i], scroll_to);
 	}
 }
 
 
 // We have to put each XHR for forum_render_messages() into its own stack frame, otherwise it jumbles them together.  I don't know why.
-function forum_render_one(div, msgnum, scroll_to) {
+function forum_render_one(prefix, msgnum, scroll_to) {
 	fetch_message = async() => {
 		response = await fetch("/ctdl/r/" + escapeHTMLURI(current_room) + "/" + msgs[i] + "/json");
 		msg = await response.json();
@@ -139,12 +139,14 @@ function forum_render_one(div, msgnum, scroll_to) {
 			+ "</span>"							// end header info on left side
 			+ "<span class=\"ctdl-msg-header-buttons\">"			// begin buttons on right side
 
-			+ "<span class=\"ctdl-msg-button\"><a href=\"#\">"		// Reply button FIXME make this work
+			+ "<span class=\"ctdl-msg-button\">"				// Reply button FIXME make this work
+			+ "<a href=\"javascript:open_reply_box('"+prefix+"',"+msgnum+",false);\">"
 			+ "<i class=\"fa fa-reply\"></i> " 
 			+ _("Reply")
 			+ "</a></span>"
 
-			+ "<span class=\"ctdl-msg-button\"><a href=\"#\">"		// ReplyQuoted , only show in forums FIXME
+			+ "<span class=\"ctdl-msg-button\">"				// ReplyQuoted , only show in forums FIXME
+			+ "<a href=\"javascript:open_reply_box('"+prefix+"',"+msgnum+",true);\">"
 			+ "<i class=\"fa fa-comment\"></i> " 
 			+ _("ReplyQuoted")
 			+ "</a></span>"
@@ -167,15 +169,26 @@ function forum_render_one(div, msgnum, scroll_to) {
 			+ "</div>"							// end content
 			+ "</div>"							// end wrapper
 			;
-			document.getElementById(div).innerHTML = outmsg;
+			document.getElementById(prefix+msgnum).innerHTML = outmsg;
 		}
 		else {
-			document.getElementById(div).innerHTML = "ERROR";
+			document.getElementById(prefix+msgnum).innerHTML = "ERROR";
 		}
-		document.getElementById(div).style.display  = "inline";
+		document.getElementById(prefix+msgnum).style.display  = "inline";
 		if (msgnum == scroll_to) {
-			window.location.hash = div;
+			window.location.hash = prefix+msgnum;
 		}
 	}
 	fetch_message();
+}
+
+
+// Open a reply box directly below a specific message
+function open_reply_box(prefix, msgnum, is_quoted) {
+
+	target_div = prefix+msgnum;
+	new_div = prefix + "_reply_to_" + msgnum;
+	existing = document.getElementById(target_div).outerHTML;
+	new_text = existing + "<div id=\"" + new_div + "\">This is some more schtuff!</div>";
+	document.getElementById(target_div).outerHTML = new_text;
 }
