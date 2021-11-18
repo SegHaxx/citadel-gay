@@ -209,7 +209,12 @@ function open_reply_box(prefix, msgnum, is_quoted) {
 
 	+ "<span class=\"ctdl-msg-button\"><a href=\"#\">"		// FIXME save and cancel buttons
 	+ "<i class=\"fa fa-trash\"></i> " 
-	+ _("FIXME")
+	+ _("Post message")
+	+ "</a></span>"
+
+	+ "<span class=\"ctdl-msg-button\"><a href=\"#\">"		// FIXME save and cancel buttons
+	+ "<i class=\"fa fa-trash\"></i> " 
+	+ _("Cancel")
 	+ "</a></span>"
 
 	+ "</span>";							// end buttons on right side
