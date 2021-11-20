@@ -190,7 +190,7 @@ function open_reply_box(prefix, msgnum, is_quoted) {
 	document.getElementById(target_div_name).outerHTML += "<div id=\"" + new_div_name + "\">reply box put here</div>";
 
 	replybox =
-	  "<div class=\"ctdl-msg-wrapper\">"				// begin message wrapper
+	  "<div class=\"ctdl-msg-wrapper\" style=\"height:50vh\">"	// begin message wrapper
 	+ "<div class=\"ctdl-avatar\">"					// begin avatar
 	+ "<img src=\"/ctdl/u/" + "FIXME my name" + "/userpic\" width=\"32\" "
 	+ "onerror=\"this.parentNode.innerHTML='&lt;i class=&quot;fa fa-user-circle fa-2x&quot;&gt;&lt;/i&gt; '\">"
@@ -232,4 +232,5 @@ function open_reply_box(prefix, msgnum, is_quoted) {
 	;
 
 	document.getElementById(new_div_name).innerHTML = replybox;
+	document.getElementById(new_div_name).scrollIntoView({behavior: "smooth", block: "end", inline: "nearest"});
 }
