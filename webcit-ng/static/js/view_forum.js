@@ -176,7 +176,7 @@ function forum_render_one(prefix, msgnum, scroll_to) {
 		}
 		document.getElementById(prefix+msgnum).style.display  = "inline";
 		if (msgnum == scroll_to) {
-			window.location.hash = prefix+msgnum;
+			document.getElementById(prefix+msgnum).scrollIntoView({behavior: "smooth", block: "start", inline: "nearest"});
 		}
 	}
 	fetch_message();
@@ -206,6 +206,26 @@ function open_reply_box(prefix, msgnum, is_quoted) {
 	+ "</span>"							// end msgdate
 	+ "</span>"							// end header info on left side
 	+ "<span class=\"ctdl-msg-header-buttons\">"			// begin buttons on right side
+	+ "x"
+	+ "</span>";							// end buttons on right side
+	if (msg.subj) {
+		replybox +=
+	  	"<br><span class=\"ctdl-msgsubject\">" + "FIXME subject" + "</span>";
+	}
+	replybox +=
+	  "</div><br>"							// end header
+
+
+	+ "<div class=\"ctdl-msg-body\">"				// begin body
+	+ "This is where the reply text will go."
+	+ "</div>"							// end body
+
+
+	+ "<div class=\"ctdl-msg-header\" style=\"bottom:0px\">"	// begin footer
+	+ "<span class=\"ctdl-msg-header-info\">"			// begin footer info on left side
+	+ "x"
+	+ "</span>"							// end footer info on left side
+	+ "<span class=\"ctdl-msg-header-buttons\">"			// begin buttons on right side
 
 	+ "<span class=\"ctdl-msg-button\"><a href=\"#\">"		// FIXME save and cancel buttons
 	+ "<i class=\"fa fa-trash\"></i> " 
@@ -223,10 +243,9 @@ function open_reply_box(prefix, msgnum, is_quoted) {
 	  	"<br><span class=\"ctdl-msgsubject\">" + "FIXME subject" + "</span>";
 	}
 	replybox +=
-	  "</div><br>"							// end header
-	+ "<div class=\"ctdl-msg-body\">"				// begin body
-	+ "This is where the reply text will go."
-	+ "</div>"							// end body
+	  "</div><br>"							// end footer
+
+
 	+ "</div>"							// end content
 	+ "</div>"							// end wrapper
 	;
