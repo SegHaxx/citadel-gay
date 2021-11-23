@@ -190,7 +190,7 @@ function open_reply_box(prefix, msgnum, is_quoted) {
 	document.getElementById(target_div_name).outerHTML += "<div id=\"" + new_div_name + "\">reply box put here</div>";
 
 	replybox =
-	  "<div class=\"ctdl-msg-wrapper\" style=\"height:50vh\">"	// begin message wrapper
+	  "<div class=\"ctdl-msg-wrapper\">"				// begin message wrapper
 	+ "<div class=\"ctdl-avatar\">"					// begin avatar
 	+ "<img src=\"/ctdl/u/" + "FIXME my name" + "/userpic\" width=\"32\" "
 	+ "onerror=\"this.parentNode.innerHTML='&lt;i class=&quot;fa fa-user-circle fa-2x&quot;&gt;&lt;/i&gt; '\">"
@@ -216,12 +216,12 @@ function open_reply_box(prefix, msgnum, is_quoted) {
 	  "</div><br>"							// end header
 
 
-	+ "<div class=\"ctdl-msg-body\">"				// begin body
+	+ "<div class=\"ctdl-msg-body\" style=\"height:30vh;\">"	// begin body
 	+ "This is where the reply text will go."
 	+ "</div>"							// end body
 
 
-	+ "<div class=\"ctdl-msg-header\" style=\"bottom:0px\">"	// begin footer
+	+ "<div class=\"ctdl-msg-header\">"				// begin footer
 	+ "<span class=\"ctdl-msg-header-info\">"			// begin footer info on left side
 	+ "x"
 	+ "</span>"							// end footer info on left side
