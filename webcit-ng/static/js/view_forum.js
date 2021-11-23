@@ -227,13 +227,13 @@ function open_reply_box(prefix, msgnum, is_quoted) {
 	+ "</span>"							// end footer info on left side
 	+ "<span class=\"ctdl-msg-header-buttons\">"			// begin buttons on right side
 
-	+ "<span class=\"ctdl-msg-button\"><a href=\"#\">"		// FIXME save and cancel buttons
-	+ "<i class=\"fa fa-trash\"></i> " 
+	+ "<span class=\"ctdl-msg-button\"><a href=\"javascript:save_message('" +  new_div_name + "', '" + msgnum + "');\">"
+	+ "<i class=\"fa fa-check\" style=\"color:green\"></i> "	// save button
 	+ _("Post message")
 	+ "</a></span>"
 
-	+ "<span class=\"ctdl-msg-button\"><a href=\"#\">"		// FIXME save and cancel buttons
-	+ "<i class=\"fa fa-trash\"></i> " 
+	+ "<span class=\"ctdl-msg-button\"><a href=\"javascript:cancel_post('" +  new_div_name + "');\">"
+	+ "<i class=\"fa fa-trash\" style=\"color:red\"></i> " 		// cancel button
 	+ _("Cancel")
 	+ "</a></span>"
 
@@ -259,4 +259,29 @@ function open_reply_box(prefix, msgnum, is_quoted) {
             	tag.focus();						// sets the focus
 		window.getSelection().collapse(tag.firstChild, 0);	// positions the cursor
 	}, 0);
+}
+
+
+// Abort a message post (it simply destroys the div)
+function cancel_post(div_name) {
+	document.getElementById(div_name).outerHTML = "";		// make it cease to exist
+}
+
+
+// Save the posted message to the server
+function save_message(div_name, reply_to_msgnum) {
+
+	msg_text = "<html><body>" + document.getElementById("ctdl-editor-body").innerHTML + "</body></html>\n";
+	url = "/ctdl/r/" + escapeHTMLURI(current_room) + "/dummy_name_for_new_message";
+
+	var request = new XMLHttpRequest();
+	request.open("PUT", url, true);
+	request.setRequestHeader("Content-type", "text/html");
+	request.setRequestHeader("Content-length", msg_text.length);
+	request.onreadystatechange = function() {
+		alert("well, something happened");
+	};
+	request.send(msg_text);
+	request = null;
+
 }
