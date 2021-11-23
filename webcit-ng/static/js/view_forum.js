@@ -253,16 +253,10 @@ function open_reply_box(prefix, msgnum, is_quoted) {
 	document.getElementById(new_div_name).innerHTML = replybox;
 	document.getElementById(new_div_name).scrollIntoView({behavior: "smooth", block: "end", inline: "nearest"});
 
-	// This puts the focus and cursor in the edit box.
+	// These actions must happen *after* the initial render loop completes.
 	setTimeout(function() {
             	var tag = document.getElementById("ctdl-editor-body");
-              
-            	// Set cursor on focus
-            	tag.focus();
-
-		// cursor
-		var sel = window.getSelection();
-		sel.collapse(tag.firstChild, 0);
-
+            	tag.focus();						// sets the focus
+		window.getSelection().collapse(tag.firstChild, 0);	// positions the cursor
 	}, 0);
 }

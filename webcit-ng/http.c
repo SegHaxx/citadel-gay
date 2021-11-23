@@ -177,7 +177,7 @@ void perform_one_http_transaction(struct client_handle *ch) {
 		syslog(LOG_DEBUG, "Client disconnected");
 	}
 	else {
-		syslog(LOG_DEBUG, "< %s %s", h.method, h.uri);
+		syslog(LOG_DEBUG, "\033[33m\033[1m< %s %s\033[0m", h.method, h.uri);
 
 		// If there is a request body, read it now.
 		char *ccl = header_val(&h, "Content-Length");
