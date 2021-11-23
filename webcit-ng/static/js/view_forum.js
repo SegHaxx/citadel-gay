@@ -216,7 +216,7 @@ function open_reply_box(prefix, msgnum, is_quoted) {
 	  "</div><br>"							// end header
 
 
-	+ "<div class=\"ctdl-msg-body\" style=\"height:30vh;\">"	// begin body
+	+ "<div class=\"ctdl-msg-body\" id=\"ctdl-editor-body\" style=\"height:30vh; padding:5px;\" contenteditable=\"true\">"	// begin body
 	+ "This is where the reply text will go."
 	+ "</div>"							// end body
 
@@ -252,4 +252,17 @@ function open_reply_box(prefix, msgnum, is_quoted) {
 
 	document.getElementById(new_div_name).innerHTML = replybox;
 	document.getElementById(new_div_name).scrollIntoView({behavior: "smooth", block: "end", inline: "nearest"});
+
+	// This puts the focus and cursor in the edit box.
+	setTimeout(function() {
+            	var tag = document.getElementById("ctdl-editor-body");
+              
+            	// Set cursor on focus
+            	tag.focus();
+
+		// cursor
+		var sel = window.getSelection();
+		sel.collapse(tag.firstChild, 0);
+
+	}, 0);
 }
