@@ -265,14 +265,35 @@ function cancel_post(div_name) {
 
 // Save the posted message to the server
 function save_message(div_name, reply_to_msgnum) {
-	msg_text = "<html><body>" + document.getElementById("ctdl-editor-body").innerHTML + "</body></html>\n";
+
+	document.body.style.cursor = "wait";
+
 	url = "/ctdl/r/" + escapeHTMLURI(current_room) + "/dummy_name_for_new_message";
+	boundary = randomString(20);
+
+	// This converts the message to base64, then splits it into 76-character chunks
+	encoded_msg_lines =
+		btoa("<html><body>" + document.getElementById("ctdl-editor-body").innerHTML + "</body></html>")
+		.match(/.{1,76}/g);
+
+	body_text =
+		"--" + boundary + "\r\n"
+		+ "Content-type: text/html\r\n"
+		+ "Content-transfer-encoding: base64\r\n"
+		+ "\r\n";
+	for (var i=0; i<encoded_msg_lines.length; ++i) {
+		body_text += encoded_msg_lines[i] + "\r\n";
+	}
+	body_text += "\r\n"
+		+ "--" + boundary + "--\r\n"
+	;
 
 	var request = new XMLHttpRequest();
 	request.open("PUT", url, true);
-	request.setRequestHeader("Content-type", "text/html");
+	request.setRequestHeader("Content-type", "multipart/mixed; boundary=\"" + boundary + "\"");
 	request.onreadystatechange = function() {
 		if (request.readyState == 4) {
+			document.body.style.cursor = "default";
 			if (Math.trunc(request.status / 100) == 2) {
 				alert("headers: " + request.getAllResponseHeaders());
 				document.getElementById(div_name).outerHTML = "";		// close the editor
@@ -286,5 +307,5 @@ function save_message(div_name, reply_to_msgnum) {
 			}
 		}
 	};
-	request.send(msg_text);
+	request.send(body_text);
 }
