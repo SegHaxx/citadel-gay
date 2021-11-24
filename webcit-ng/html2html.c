@@ -2,7 +2,7 @@
 // Output an HTML message, modifying it slightly to make sure it plays nice
 // with the rest of our web framework.
 //
-// Copyright (c) 2005-2020 by the citadel.org team
+// Copyright (c) 2005-2021 by the citadel.org team
 //
 // This program is open source software.  It runs great on the
 // Linux operating system (and probably elsewhere).  You can use,
@@ -221,8 +221,10 @@ StrBuf *html2html(const char *supplied_charset, int treat_as_wiki, char *roomnam
 
 						if (ptr - cid_end > 0)
 							StrBufAppendBufPlain(BodyArea, cid_end + 1, ptr - cid_end, 0);
-					} else
+					}
+					else {
 						StrBufAppendBufPlain(BodyArea, pBody, ptr - pBody, 0);
+					}
 				}
 				*ptr = '>';
 			}
@@ -274,7 +276,8 @@ StrBuf *html2html(const char *supplied_charset, int treat_as_wiki, char *roomnam
 			msg = osav;
 			iconv_close(ic);
 		}
-	} else {
+	}
+	else {
 		if (ic != (iconv_t) (-1)) {
 			StrBuf *Buf = NewStrBufPlain(NULL, StrLength(Source) + 8096);;
 			StrBufConvert(Source, Buf, &ic);
@@ -336,7 +339,8 @@ StrBuf *html2html(const char *supplied_charset, int treat_as_wiki, char *roomnam
 				// open external links to new window
 				StrBufAppendPrintf(converted_msg, new_window);
 				ptr = &ptr[8];
-			} else if ((treat_as_wiki)
+			}
+			else if ((treat_as_wiki)
 				   && (strncasecmp(ptr, "<a href=\"wiki?", 14))
 				   && (strncasecmp(ptr, "<a href=\"dotgoto?", 17))
 				   && (strncasecmp(ptr, "<a href=\"knrooms?", 17))
@@ -346,7 +350,8 @@ StrBuf *html2html(const char *supplied_charset, int treat_as_wiki, char *roomnam
 				//StrBufUrlescAppend(converted_msg, "FIXME ROOM NAME", NULL);                   // FIXME make compatible with webcit-ng
 				StrBufAppendPrintf(converted_msg, "?page=");
 				ptr = &ptr[9];
-			} else {
+			}
+			else {
 				StrBufAppendPrintf(converted_msg, "<a href=\"");
 				ptr = &ptr[9];
 			}

@@ -1,7 +1,7 @@
 //
 // Message base functions
 //
-// Copyright (c) 1996-2018 by the citadel.org team
+// Copyright (c) 1996-2021 by the citadel.org team
 //
 // This program is open source software.  It runs great on the
 // Linux operating system (and probably elsewhere).  You can use,
@@ -77,7 +77,8 @@ void dav_get_message(struct http_transaction *h, struct ctdlsession *c, long msg
 		if (IsEmptyStr(buf) && (in_body == 0)) {
 			in_body = 1;
 			Body = NewStrBuf();
-		} else if (in_body == 0) {
+		}
+		else if (in_body == 0) {
 			char *k = buf;
 			char *v = strchr(buf, ':');
 			if (v) {
@@ -86,17 +87,20 @@ void dav_get_message(struct http_transaction *h, struct ctdlsession *c, long msg
 				striplt(v);	// we now have a key (k) and a value (v)
 				if ((!strcasecmp(k, "content-type"))	// fields which can be passed from RFC822 to HTTP as-is
 				    || (!strcasecmp(k, "date"))
-				    ) {
+				) {
 					add_response_header(h, strdup(k), strdup(v));
-				} else if (!strcasecmp(k, "content-transfer-encoding")) {
+				}
+				else if (!strcasecmp(k, "content-transfer-encoding")) {
 					if (!strcasecmp(v, "base64")) {
 						encoding = 'b';
-					} else if (!strcasecmp(v, "quoted-printable")) {
+					}
+					else if (!strcasecmp(v, "quoted-printable")) {
 						encoding = 'q';
 					}
 				}
 			}
-		} else if ((in_body == 1) && (Body != NULL)) {
+		}
+		else if ((in_body == 1) && (Body != NULL)) {
 			StrBufAppendPrintf(Body, "%s\n", buf);
 		}
 	}
@@ -112,13 +116,15 @@ void dav_get_message(struct http_transaction *h, struct ctdlsession *c, long msg
 				    CtdlDecodeQuotedPrintable(h->response_body, (char *) ChrPtr(Body), StrLength(Body));
 			}
 			FreeStrBuf(&Body);
-		} else if (encoding == 'b') {
+		}
+		else if (encoding == 'b') {
 			h->response_body = malloc(StrLength(Body));
 			if (h->response_body != NULL) {
 				h->response_body_length = CtdlDecodeBase64(h->response_body, ChrPtr(Body), StrLength(Body));
 			}
 			FreeStrBuf(&Body);
-		} else {
+		}
+		else {
 			h->response_body_length = StrLength(Body);
 			h->response_body = SmashStrBuf(&Body);
 		}
@@ -212,7 +218,8 @@ void dav_put_message(struct http_transaction *h, struct ctdlsession *c, char *eu
 	if (old_msgnum <= 0) {
 		h->response_code = 201;	// We created this item for the first time.
 		h->response_string = strdup("created");
-	} else {
+	}
+	else {
 		h->response_code = 204;	// We modified an existing item.
 		h->response_string = strdup("no content");
 

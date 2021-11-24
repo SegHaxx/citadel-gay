@@ -1,7 +1,7 @@
 //
 // Functions that handle communication with a Citadel Server
 //
-// Copyright (c) 1987-2018 by the citadel.org team
+// Copyright (c) 1987-2021 by the citadel.org team
 //
 // This program is open source software.  It runs great on the
 // Linux operating system (and probably elsewhere).  You can use,
@@ -158,7 +158,8 @@ int tcp_connectsock(char *host, char *service) {
 	if (rc == 1) {		// dotted quad
 		hints.ai_family = AF_INET;
 		hints.ai_flags |= AI_NUMERICHOST;
-	} else {
+	}
+	else {
 		rc = inet_pton(AF_INET6, host, &serveraddr);
 		if (rc == 1) {	// IPv6 address
 			hints.ai_family = AF_INET6;
@@ -210,7 +211,8 @@ int tcp_connectsock(char *host, char *service) {
 			}
 
 			return (s);
-		} else {
+		}
+		else {
 			syslog(LOG_WARNING, "connect() failed: %s", strerror(errno));
 			close(s);
 		}
@@ -341,7 +343,8 @@ struct ctdlsession *connect_to_citadel(struct http_transaction *h) {
 
 	if (my_session->sock < 3) {
 		is_new_session = 1;
-	} else {		// make sure our Citadel session is still good
+	}
+	else {		// make sure our Citadel session is still good
 		int test_conn;
 		test_conn = ctdl_write(my_session, HKEY("NOOP\n"));
 		if (test_conn < 5) {
@@ -349,7 +352,8 @@ struct ctdlsession *connect_to_citadel(struct http_transaction *h) {
 			close(my_session->sock);
 			my_session->sock = 0;
 			is_new_session = 1;
-		} else {
+		}
+		else {
 			test_conn = ctdl_readline(my_session, buf, sizeof(buf));
 			if (test_conn < 1) {
 				syslog(LOG_DEBUG, "Citadel session is broken , must reconnect");

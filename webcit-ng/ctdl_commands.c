@@ -1,5 +1,5 @@
 //
-// Copyright (c) 1996-2018 by the citadel.org team
+// Copyright (c) 1996-2021 by the citadel.org team
 //
 // This program is open source software.  It runs great on the
 // Linux operating system (and probably elsewhere).  You can use,
@@ -94,7 +94,8 @@ void serv_info(struct http_transaction *h, struct ctdlsession *c) {
 void ctdl_c(struct http_transaction *h, struct ctdlsession *c) {
 	if (!strcasecmp(h->uri, "/ctdl/c/info")) {
 		serv_info(h, c);
-	} else {
+	}
+	else {
 		do_404(h);
 	}
 }

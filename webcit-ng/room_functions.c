@@ -523,7 +523,8 @@ void ctdl_r(struct http_transaction *h, struct ctdlsession *c) {
 			//      13      (int)is_trash                   Boolean flag: 1 if this is the user's Trash folder, 0 otherwise.
 			//      14      (int)CC->room.QRflags2          More flags associated with this room
 			//      15      (long)CC->room.QRmtime          Timestamp of the last write activity in this room
-		} else {
+		}
+		else {
 			do_404(h);
 			return;
 		}

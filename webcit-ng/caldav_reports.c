@@ -2,7 +2,7 @@
 // This file contains functions which handle all of the CalDAV "REPORT" queries
 // specified in RFC4791 section 7.
 //
-// Copyright (c) 2018 by the citadel.org team
+// Copyright (c) 2021 by the citadel.org team
 //
 // This program is open source software.  It runs great on the
 // Linux operating system (and probably elsewhere).  You can use,
@@ -76,7 +76,8 @@ void caldav_xml_end(void *data, const char *el) {
 	if ((!strcasecmp(el, "DAV::href")) || (!strcasecmp(el, "DAV:href"))) {
 		if (crp->Hrefs == NULL) {	// append crp->Chardata to crp->Hrefs
 			crp->Hrefs = NewStrBuf();
-		} else {
+		}
+		else {
 			StrBufAppendBufPlain(crp->Hrefs, HKEY("|"), 0);
 		}
 		StrBufAppendBuf(crp->Hrefs, crp->Chardata, 0);
@@ -121,7 +122,8 @@ StrBuf *fetch_ical(struct ctdlsession * c, long msgnum) {
 	while (ctdl_readline(c, buf, sizeof(buf)), strcmp(buf, "000")) {
 		if (Buf != NULL) {	// already in body
 			StrBufAppendPrintf(Buf, "%s\n", buf);
-		} else if (IsEmptyStr(buf)) {	// beginning of body
+		}
+		else if (IsEmptyStr(buf)) {	// beginning of body
 			Buf = NewStrBuf();
 		}
 	}
@@ -159,7 +161,8 @@ void caldav_response(struct http_transaction *h, struct ctdlsession *c, StrBuf *
 	euid = strrchr(ChrPtr(ThisHref), '/');
 	if (euid != NULL) {
 		++euid;
-	} else {
+	}
+	else {
 		euid = (char *) ChrPtr(ThisHref);
 	}
 
@@ -195,7 +198,8 @@ void caldav_response(struct http_transaction *h, struct ctdlsession *c, StrBuf *
 		StrBufAppendPrintf(ReportOut, "</D:prop>");
 		FreeStrBuf(&Caldata);
 		Caldata = NULL;
-	} else {
+	}
+	else {
 		// syslog(LOG_DEBUG, "caldav_response(%s) 404 not found", ChrPtr(ThisHref));
 		StrBufAppendPrintf(ReportOut, "<D:status>");
 		StrBufAppendPrintf(ReportOut, "HTTP/1.1 404 not found");

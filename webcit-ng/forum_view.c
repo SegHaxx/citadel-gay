@@ -1,7 +1,7 @@
 //
 // Forum view (threaded/flat)
 //
-// Copyright (c) 1996-2020 by the citadel.org team
+// Copyright (c) 1996-2021 by the citadel.org team
 //
 // This program is open source software.  It runs great on the
 // Linux operating system (and probably elsewhere).  You can use,
@@ -104,7 +104,8 @@ void json_render_one_message(struct http_transaction *h, struct ctdlsession *c, 
 			}
 		}
 		raw_msg = ctdl_readtextmsg(c);
-	} else {
+	}
+	else {
 		raw_msg = NULL;
 	}
 

@@ -1,7 +1,7 @@
 //
 // These utility functions loosely make up a Citadel protocol client library.
 //
-// Copyright (c) 2016-2018 by the citadel.org team
+// Copyright (c) 2016-2021 by the citadel.org team
 //
 // This program is open source software.  It runs great on the
 // Linux operating system (and probably elsewhere).  You can use,
@@ -35,7 +35,8 @@ void ctdl_delete_msgs(struct ctdlsession *c, long *msgnums, int num_msgs) {
 			ctdl_printf(c, "%s", buf);
 			ctdl_readline(c, buf, sizeof(buf));
 			syslog(LOG_DEBUG, "%s", buf);
-		} else {
+		}
+		else {
 			strcat(buf, ",");
 		}
 	} while (++i < num_msgs);

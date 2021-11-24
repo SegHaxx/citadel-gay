@@ -264,8 +264,15 @@ function cancel_post(div_name) {
 
 
 // Save the posted message to the server
-function save_message(div_name, reply_to_msgnum) {
+function Xsave_message(div_name, reply_to_msgnum) {
+	msg_text = "<html><body>" + document.getElementById("ctdl-editor-body").innerHTML + "</body></html>\n";
+	m = btoa(msg_text);
+	alert(m);
+}
 
+
+// Save the posted message to the server
+function save_message(div_name, reply_to_msgnum) {
 	msg_text = "<html><body>" + document.getElementById("ctdl-editor-body").innerHTML + "</body></html>\n";
 	url = "/ctdl/r/" + escapeHTMLURI(current_room) + "/dummy_name_for_new_message";
 

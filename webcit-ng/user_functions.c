@@ -1,7 +1,7 @@
 //
 // User functions
 //
-// Copyright (c) 1996-2018 by the citadel.org team
+// Copyright (c) 1996-2021 by the citadel.org team
 //
 // This program is open source software.  It runs great on the
 // Linux operating system (and probably elsewhere).  You can use,
@@ -115,7 +115,8 @@ void ctdl_u(struct http_transaction *h, struct ctdlsession *c) {
 	if (num_tokens(h->uri, '/') == 5) {
 		if (IsEmptyStr(buf)) {
 			the_user_itself(h, c, requested_username);	//      /ctdl/u/username/       ( same as /ctdl/u/username )
-		} else {
+		}
+		else {
 			object_in_user(h, c, requested_username);	//      /ctdl/u/username/object
 		}
 		return;
