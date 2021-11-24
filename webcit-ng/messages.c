@@ -136,7 +136,7 @@ void dav_put_message(struct http_transaction *h, struct ctdlsession *c, char *eu
 	char response_string[1024];
 
 	if ((h->request_body == NULL) || (h->request_body_length < 1)) {
-		do_404(h);	// Refuse to post a null message
+		do_404(h);			// Refuse to post a null message
 		return;
 	}
 

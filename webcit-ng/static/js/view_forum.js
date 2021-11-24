@@ -237,13 +237,8 @@ function open_reply_box(prefix, msgnum, is_quoted) {
 	+ _("Cancel")
 	+ "</a></span>"
 
-	+ "</span>";							// end buttons on right side
-	if (msg.subj) {
-		replybox +=
-	  	"<br><span class=\"ctdl-msgsubject\">" + "FIXME subject" + "</span>";
-	}
-	replybox +=
-	  "</div><br>"							// end footer
+	+ "</span>"							// end buttons on right side
+	+ "</div><br>"							// end footer
 
 
 	+ "</div>"							// end content
@@ -285,7 +280,11 @@ function save_message(div_name, reply_to_msgnum) {
 				document.getElementById(div_name).outerHTML = "";		// close the editor
 			}
 			else {
-				alert(_("An error has occurred."));	// inelegant but hopefully infrequent
+				error_message = request.responseText;
+				if (error_message.length == 0) {
+					error_message = _("An error has occurred.");
+				}
+				alert(error_message);						// FIXME make this pretty
 			}
 		}
 	};
