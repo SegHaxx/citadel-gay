@@ -206,7 +206,27 @@ function open_reply_box(prefix, msgnum, is_quoted) {
 	+ "</span>"							// end msgdate
 	+ "</span>"							// end header info on left side
 	+ "<span class=\"ctdl-msg-header-buttons\">"			// begin buttons on right side
-	+ "x"
+
+	+ "<span class=\"ctdl-msg-button\">"				// bold button FIXME make this work
+	+ "<a href=\"#\">"
+	+ "<i class=\"fa fa-bold fa-fw\"></i>" 
+	+ "</a></span>"
+
+	+ "<span class=\"ctdl-msg-button\">"				// italic button FIXME make this work
+	+ "<a href=\"#\">"
+	+ "<i class=\"fa fa-italic fa-fw\"></i>" 
+	+ "</a></span>"
+
+	+ "<span class=\"ctdl-msg-button\">"				// list button FIXME make this work
+	+ "<a href=\"#\">"
+	+ "<i class=\"fa fa-list fa-fw\"></i>" 
+	+ "</a></span>"
+
+	+ "<span class=\"ctdl-msg-button\">"				// link button FIXME make this work
+	+ "<a href=\"#\">"
+	+ "<i class=\"fa fa-link fa-fw\"></i>" 
+	+ "</a></span>"
+
 	+ "</span>";							// end buttons on right side
 	if (msg.subj) {
 		replybox +=
@@ -215,11 +235,10 @@ function open_reply_box(prefix, msgnum, is_quoted) {
 	replybox +=
 	  "</div><br>"							// end header
 
-
-	+ "<div class=\"ctdl-msg-body\" id=\"ctdl-editor-body\" style=\"padding:5px;\" contenteditable=\"true\">"	// begin body
+									// begin body
+	+ "<div class=\"ctdl-msg-body\" id=\"ctdl-editor-body\" style=\"padding:5px;\" contenteditable=\"true\">"
 	+ "\n"								// empty initial content
 	+ "</div>"							// end body
-
 
 	+ "<div class=\"ctdl-msg-header\">"				// begin footer
 	+ "<span class=\"ctdl-msg-header-info\">"			// begin footer info on left side
