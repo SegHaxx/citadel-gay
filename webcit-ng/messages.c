@@ -136,7 +136,6 @@ void dav_get_message(struct http_transaction *h, struct ctdlsession *c, long msg
 void dav_put_message(struct http_transaction *h, struct ctdlsession *c, char *euid, long old_msgnum) {
 	char buf[1024];
 	char *content_type = NULL;
-	char *content_transfer_encoding = NULL;
 	int n;
 	long new_msgnum;
 	char new_euid[1024];
@@ -160,12 +159,6 @@ void dav_put_message(struct http_transaction *h, struct ctdlsession *c, char *eu
 
 	content_type = header_val(h, "Content-type");
 	ctdl_printf(c, "Content-type: %s\r\n", (content_type ? content_type : "application/octet-stream"));
-
-	content_transfer_encoding = header_val(h, "Content-Transfer-Encoding");
-	if (!IsEmptyStr(content_transfer_encoding)) {
-		ctdl_printf(c, "Content-Transfer-Encoding: %s\r\n", content_transfer_encoding);
-	}
-
 	ctdl_printf(c, "\r\n");
 	ctdl_write(c, h->request_body, h->request_body_length);
 	if (h->request_body[h->request_body_length] != '\n') {

@@ -264,14 +264,6 @@ function cancel_post(div_name) {
 
 
 // Save the posted message to the server
-function Xsave_message(div_name, reply_to_msgnum) {
-	msg_text = "<html><body>" + document.getElementById("ctdl-editor-body").innerHTML + "</body></html>\n";
-	m = btoa(msg_text);
-	alert(m);
-}
-
-
-// Save the posted message to the server
 function save_message(div_name, reply_to_msgnum) {
 	msg_text = "<html><body>" + document.getElementById("ctdl-editor-body").innerHTML + "</body></html>\n";
 	url = "/ctdl/r/" + escapeHTMLURI(current_room) + "/dummy_name_for_new_message";
@@ -279,7 +271,6 @@ function save_message(div_name, reply_to_msgnum) {
 	var request = new XMLHttpRequest();
 	request.open("PUT", url, true);
 	request.setRequestHeader("Content-type", "text/html");
-	request.setRequestHeader("Content-length", msg_text.length);
 	request.onreadystatechange = function() {
 		if (request.readyState == 4) {
 			if (Math.trunc(request.status / 100) == 2) {
