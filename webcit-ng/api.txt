@@ -10,6 +10,7 @@ GET		/ctdl/r/ROOMNAME/msgs.all	JSON array of message list in room
 GET		/ctdl/r/ROOMNAME/msgs.new	JSON array of message list in room (new messages)
 GET		/ctdl/r/ROOMNAME/MSGNUM		Retrieve the content of an individual message (message headers are HTTP headers)
 PUT		/ctdl/r/ROOMNAME/xxx		DAV operation to insert a new message into a room
+						(The returned ETag will be the new message number)
 GET		/ctdl/r/ROOMNAME/MSGNUM/json	Retrieve an individual message in a room, encapsulated in JSON
 GET		/ctdl/c/info			Returns a JSON representation of the output of an INFO server command
 POST		/ctdl/a/login			Send it a your credentials and it will log you in

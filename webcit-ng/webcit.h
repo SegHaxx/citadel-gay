@@ -117,7 +117,7 @@ enum {
 #define DEFAULT_SSL_CIPHER_LIST "DEFAULT"       // See http://openssl.org/docs/apps/ciphers.html
 #define WEBSERVER_PORT		80
 #define WEBSERVER_INTERFACE	"*"
-#define CTDLHOST		"uncensored.citadel.org"
+#define CTDLHOST		"dev.citadel.org"
 #define CTDLPORT		"504"
 #define DEVELOPER_ID		0
 #define CLIENT_ID		4

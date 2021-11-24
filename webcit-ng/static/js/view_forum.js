@@ -216,8 +216,8 @@ function open_reply_box(prefix, msgnum, is_quoted) {
 	  "</div><br>"							// end header
 
 
-	+ "<div class=\"ctdl-msg-body\" id=\"ctdl-editor-body\" style=\"height:30vh; padding:5px;\" contenteditable=\"true\">"	// begin body
-	+ "This is where the reply text will go."
+	+ "<div class=\"ctdl-msg-body\" id=\"ctdl-editor-body\" style=\"padding:5px;\" contenteditable=\"true\">"	// begin body
+	+ "\n"								// empty initial content
 	+ "</div>"							// end body
 
 
@@ -279,9 +279,15 @@ function save_message(div_name, reply_to_msgnum) {
 	request.setRequestHeader("Content-type", "text/html");
 	request.setRequestHeader("Content-length", msg_text.length);
 	request.onreadystatechange = function() {
-		alert("well, something happened");
+		if (request.readyState == 4) {
+			if (Math.trunc(request.status / 100) == 2) {
+				alert("headers: " + request.getAllResponseHeaders());
+				document.getElementById(div_name).outerHTML = "";		// close the editor
+			}
+			else {
+				alert(_("An error has occurred."));	// inelegant but hopefully infrequent
+			}
+		}
 	};
 	request.send(msg_text);
-	request = null;
-
 }
