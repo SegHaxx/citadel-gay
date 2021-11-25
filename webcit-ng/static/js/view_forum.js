@@ -207,23 +207,23 @@ function open_reply_box(prefix, msgnum, is_quoted) {
 	+ "</span>"							// end header info on left side
 	+ "<span class=\"ctdl-msg-header-buttons\">"			// begin buttons on right side
 
-	+ "<span class=\"ctdl-msg-button\">"				// bold button FIXME make this work
-	+ "<a href=\"#\">"
+	+ "<span class=\"ctdl-msg-button\">"				// bold button
+	+ "<a href=\"javascript:void(0)\" onclick=\"forum_format('bold')\">"
 	+ "<i class=\"fa fa-bold fa-fw\"></i>" 
 	+ "</a></span>"
 
-	+ "<span class=\"ctdl-msg-button\">"				// italic button FIXME make this work
-	+ "<a href=\"#\">"
+	+ "<span class=\"ctdl-msg-button\">"				// italic button
+	+ "<a href=\"javascript:void(0)\" onclick=\"forum_format('italic')\">" 
 	+ "<i class=\"fa fa-italic fa-fw\"></i>" 
 	+ "</a></span>"
 
-	+ "<span class=\"ctdl-msg-button\">"				// list button FIXME make this work
-	+ "<a href=\"#\">"
+	+ "<span class=\"ctdl-msg-button\">"				// list button
+	+ "<a href=\"javascript:void(0)\" onclick=\"forum_format('insertunorderedlist')\">"
 	+ "<i class=\"fa fa-list fa-fw\"></i>" 
 	+ "</a></span>"
 
-	+ "<span class=\"ctdl-msg-button\">"				// link button FIXME make this work
-	+ "<a href=\"#\">"
+	+ "<span class=\"ctdl-msg-button\">"				// link button
+	+ "<a href=\"javascript:void(0)\" onclick=\"forum_seturl()\">"
 	+ "<i class=\"fa fa-link fa-fw\"></i>" 
 	+ "</a></span>"
 
@@ -246,12 +246,12 @@ function open_reply_box(prefix, msgnum, is_quoted) {
 	+ "</span>"							// end footer info on left side
 	+ "<span class=\"ctdl-msg-header-buttons\">"			// begin buttons on right side
 
-	+ "<span class=\"ctdl-msg-button\"><a href=\"javascript:save_message('" +  new_div_name + "', '" + msgnum + "');\">"
+	+ "<span class=\"ctdl-msg-button\"><a href=\"javascript:forum_save_message('" +  new_div_name + "', '" + msgnum + "');\">"
 	+ "<i class=\"fa fa-check\" style=\"color:green\"></i> "	// save button
 	+ _("Post message")
 	+ "</a></span>"
 
-	+ "<span class=\"ctdl-msg-button\"><a href=\"javascript:cancel_post('" +  new_div_name + "');\">"
+	+ "<span class=\"ctdl-msg-button\"><a href=\"javascript:forum_cancel_post('" +  new_div_name + "');\">"
 	+ "<i class=\"fa fa-trash\" style=\"color:red\"></i> " 		// cancel button
 	+ _("Cancel")
 	+ "</a></span>"
@@ -277,13 +277,13 @@ function open_reply_box(prefix, msgnum, is_quoted) {
 
 
 // Abort a message post (it simply destroys the div)
-function cancel_post(div_name) {
+function forum_cancel_post(div_name) {
 	document.getElementById(div_name).outerHTML = "";		// make it cease to exist
 }
 
 
 // Save the posted message to the server
-function save_message(div_name, reply_to_msgnum) {
+function forum_save_message(div_name, reply_to_msgnum) {
 
 	document.body.style.cursor = "wait";
 
@@ -320,4 +320,17 @@ function save_message(div_name, reply_to_msgnum) {
 		}
 	};
 	request.send(body_text);
+}
+
+
+function forum_format(command, value) {
+	document.execCommand(command, false, value);
+}
+
+
+function forum_seturl() {
+	var url = document.getElementById('txtFormatUrl').value;
+	var sText = document.getSelection();
+	document.execCommand('insertHTML', false, '<a href="' + url + '" target="_blank">' + sText + '</a>');
+	document.getElementById('txtFormatUrl').value = '';
 }
