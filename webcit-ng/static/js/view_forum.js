@@ -117,6 +117,7 @@ function forum_render_messages(msgs, prefix, scroll_to) {
 
 // We have to put each XHR for forum_render_messages() into its own stack frame, otherwise it jumbles them together.  I don't know why.
 function forum_render_one(prefix, msgnum, scroll_to) {
+	document.body.style.cursor = "wait";
 	fetch_message = async() => {
 		response = await fetch("/ctdl/r/" + escapeHTMLURI(current_room) + "/" + msgs[i] + "/json");
 		msg = await response.json();
@@ -177,6 +178,7 @@ function forum_render_one(prefix, msgnum, scroll_to) {
 		document.getElementById(prefix+msgnum).style.display  = "inline";
 		if (msgnum == scroll_to) {
 			document.getElementById(prefix+msgnum).scrollIntoView({behavior: "smooth", block: "start", inline: "nearest"});
+			document.body.style.cursor = "default";
 		}
 	}
 	fetch_message();
@@ -223,7 +225,7 @@ function open_reply_box(prefix, msgnum, is_quoted) {
 	+ "</a></span>"
 
 	+ "<span class=\"ctdl-msg-button\">"				// link button
-	+ "<a href=\"javascript:void(0)\" onclick=\"forum_seturl()\">"
+	+ "<a href=\"javascript:void(0)\" onclick=\"forum_display_urlbox()\">"
 	+ "<i class=\"fa fa-link fa-fw\"></i>" 
 	+ "</a></span>"
 
@@ -262,6 +264,30 @@ function open_reply_box(prefix, msgnum, is_quoted) {
 
 	+ "</div>"							// end content
 	+ "</div>"							// end wrapper
+
+	+ "<div id=\"forum_url_entry_box\" class=\"w3-modal\">"		// begin URL entry modal
+	+ "	<div class=\"w3-modal-content w3-animate-top w3-card-4\">"
+	+ "		<header class=\"w3-container w3-blue\"> "
+	+ "			<p><span>URL:</span></p>"
+	+ "		</header>"
+	+ "		<div class=\"w3-container w3-blue\">"
+	+ "			<input id=\"forum_txtFormatUrl\" placeholder=\"http://\" style=\"width:100%\">"
+	+ "		</div>"
+	+ "		<footer class=\"w3-container w3-blue\">"
+	+ "			<p><span class=\"ctdl-msg-button\"><a href=\"javascript:forum_close_urlbox(true);\">"
+	+ "				<i class=\"fa fa-check\" style=\"color:green\"></i> "
+	+ 				_("Save")
+	+ 			"</a></span>"
+	+ "			<span class=\"ctdl-msg-button\"><a href=\"javascript:forum_close_urlbox(false);\">"
+	+ "				<i class=\"fa fa-trash\" style=\"color:red\"></i> "
+	+ 				_("Cancel")
+	+ 			"</a></span></p>"
+	+ "		</footer>"
+	+ "		</div>"
+	+ "	</div>"
+	+ "	<input id=\"forum_selection_start\" style=\"display:none\"></input>"	// hidden fields
+	+ "	<input id=\"forum_selection_end\" style=\"display:none\"></input>"	// to store selection range
+	+ "</div>"							// end URL entry modal
 	;
 
 	document.getElementById(new_div_name).innerHTML = replybox;
@@ -323,14 +349,34 @@ function forum_save_message(div_name, reply_to_msgnum) {
 }
 
 
+// Bold, italics, etc.
 function forum_format(command, value) {
 	document.execCommand(command, false, value);
 }
 
 
-function forum_seturl() {
-	var url = document.getElementById('txtFormatUrl').value;
-	var sText = document.getSelection();
-	document.execCommand('insertHTML', false, '<a href="' + url + '" target="_blank">' + sText + '</a>');
-	document.getElementById('txtFormatUrl').value = '';
+// Make the URL entry box appear.
+// When the user clicks into the URL box it will make the previous focus disappear, so we have to save it.
+function forum_display_urlbox() {
+	document.getElementById("forum_selection_start").value = window.getSelection().anchorOffset;
+	document.getElementById("forum_selection_end").value = window.getSelection().focusOffset;
+	document.getElementById("forum_url_entry_box").style.display = "block";
+}
+
+
+// When the URL box is closed, this gets called.  do_save is true for Save, false for Cancel.
+function forum_close_urlbox(do_save) {
+	if (do_save) {
+            	var tag = document.getElementById("ctdl-editor-body");
+		var start_replace = document.getElementById("forum_selection_start").value;	// use saved selection range
+		var end_replace = document.getElementById("forum_selection_end").value;
+		new_text = tag.innerHTML.substring(0, start_replace)
+			+ "<a href=\"" + document.getElementById("forum_txtFormatUrl").value + "\">"
+			+ tag.innerHTML.substring(start_replace, end_replace)
+			+ "</a>"
+			+ tag.innerHTML.substring(end_replace);
+		tag.innerHTML = new_text;
+	}
+	document.getElementById("forum_txtFormatUrl").value = "";				// clear url box for next time
+	document.getElementById("forum_url_entry_box").style.display = "none";
 }
