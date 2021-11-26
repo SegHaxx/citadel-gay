@@ -333,7 +333,13 @@ function forum_save_message(div_name, reply_to_msgnum) {
 		if (request.readyState == 4) {
 			document.body.style.cursor = "default";
 			if (Math.trunc(request.status / 100) == 2) {
-				alert("headers: " + request.getAllResponseHeaders());
+				headers = request.getAllResponseHeaders().split("\n");
+				for (var i in headers) {
+					if (headers[i].startsWith("etag: ")) {
+						new_msg_num = headers[i].split(" ")[1];
+						alert(new_msg_num);
+					}
+				}
 				document.getElementById(div_name).outerHTML = "";		// close the editor
 			}
 			else {
