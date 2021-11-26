@@ -191,6 +191,8 @@ function open_reply_box(prefix, msgnum, is_quoted) {
 	new_div_name = prefix + "_reply_to_" + msgnum;
 	document.getElementById(target_div_name).outerHTML += "<div id=\"" + new_div_name + "\">reply box put here</div>";
 
+	// FIXME - we need to retain the message number being replied to
+
 	replybox =
 	  "<div class=\"ctdl-msg-wrapper\">"				// begin message wrapper
 	+ "<div class=\"ctdl-avatar\">"					// begin avatar
