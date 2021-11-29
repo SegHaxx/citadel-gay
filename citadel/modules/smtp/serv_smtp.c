@@ -705,13 +705,14 @@ void smtp_rcpt(void) {
 		return;
 	}
 
-	if (valid->num_internet > 0) {
-		if ( (SMTP->message_originated_locally == 0)
-		   && (SMTP->is_lmtp == 0) ) {
-			cprintf("551 <%s> - relaying denied\r\n", ChrPtr(SMTP->OneRcpt));
-			free_recipients(valid);
-			return;
-		}
+	if (
+		(valid->num_internet > 0)					// If it's outbound Internet mail...
+		&& (SMTP->message_originated_locally == 0)			// ...and also inbound Internet mail...
+		&& (SMTP->is_lmtp == 0)						/// ...and didn't arrive via LMTP...
+	) {
+		cprintf("551 <%s> - relaying denied\r\n", ChrPtr(SMTP->OneRcpt));
+		free_recipients(valid);
+		return;
 	}
 
 	cprintf("250 RCPT ok <%s>\r\n", ChrPtr(SMTP->OneRcpt));
