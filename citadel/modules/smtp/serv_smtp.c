@@ -681,26 +681,28 @@ void smtp_rcpt(void) {
 		return;								// no need to free_recipients(valid)
 	}									// because it hasn't been allocated yet
 
+	// This is a *preliminary* call to validate_recipients() to evaluate one recipient.
 	valid = validate_recipients(
 		(char *)ChrPtr(SMTP->OneRcpt), 
 		smtp_get_Recipients(),
 		(SMTP->is_lmtp)? POST_LMTP: (CC->logged_in)? POST_LOGGED_IN: POST_EXTERNAL
 	);
+
+	// Any type of error thrown by validate_recipients() will make the SMTP transaction fail at this point.
 	if (valid->num_error != 0) {
 		cprintf("550 %s\r\n", valid->errormsg);
 		free_recipients(valid);
 		return;
 	}
 
-	if (valid->num_internet > 0) {
-		if (CC->logged_in) {
-                        if (CtdlCheckInternetMailPermission(&CC->user)==0) {
-				cprintf("551 <%s> - you do not have permission to send Internet mail\r\n", 
-					ChrPtr(SMTP->OneRcpt));
-                                free_recipients(valid);
-                                return;
-                        }
-                }
+	if (
+		(valid->num_internet > 0)					// If it's outbound Internet mail...
+		&& (CC->logged_in)						// ...and we're a logged-in user...
+		&& (CtdlCheckInternetMailPermission(&CC->user)==0)		// ...who does not have Internet mail rights...
+	) {
+		cprintf("551 <%s> - you do not have permission to send Internet mail\r\n", ChrPtr(SMTP->OneRcpt));
+		free_recipients(valid);
+		return;
 	}
 
 	if (valid->num_internet > 0) {
