@@ -1,35 +1,33 @@
-/*
- * This module is an SMTP and ESMTP server for the Citadel system.
- * It is compliant with all of the following:
- *
- * RFC  821 - Simple Mail Transfer Protocol
- * RFC  876 - Survey of SMTP Implementations
- * RFC 1047 - Duplicate messages and SMTP
- * RFC 1652 - 8 bit MIME
- * RFC 1869 - Extended Simple Mail Transfer Protocol
- * RFC 1870 - SMTP Service Extension for Message Size Declaration
- * RFC 2033 - Local Mail Transfer Protocol
- * RFC 2197 - SMTP Service Extension for Command Pipelining
- * RFC 2476 - Message Submission
- * RFC 2487 - SMTP Service Extension for Secure SMTP over TLS
- * RFC 2554 - SMTP Service Extension for Authentication
- * RFC 2821 - Simple Mail Transfer Protocol
- * RFC 2822 - Internet Message Format
- * RFC 2920 - SMTP Service Extension for Command Pipelining
- *  
- * The VRFY and EXPN commands have been removed from this implementation
- * because nobody uses these commands anymore, except for spammers.
- *
- * Copyright (c) 1998-2021 by the citadel.org team
- *
- * This program is open source software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 3.
- *  
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- */
+// This module is an SMTP and ESMTP server for the Citadel system.
+// It is compliant with all of the following:
+//
+// RFC  821 - Simple Mail Transfer Protocol
+// RFC  876 - Survey of SMTP Implementations
+// RFC 1047 - Duplicate messages and SMTP
+// RFC 1652 - 8 bit MIME
+// RFC 1869 - Extended Simple Mail Transfer Protocol
+// RFC 1870 - SMTP Service Extension for Message Size Declaration
+// RFC 2033 - Local Mail Transfer Protocol
+// RFC 2197 - SMTP Service Extension for Command Pipelining
+// RFC 2476 - Message Submission
+// RFC 2487 - SMTP Service Extension for Secure SMTP over TLS
+// RFC 2554 - SMTP Service Extension for Authentication
+// RFC 2821 - Simple Mail Transfer Protocol
+// RFC 2822 - Internet Message Format
+// RFC 2920 - SMTP Service Extension for Command Pipelining
+//  
+// The VRFY and EXPN commands have been removed from this implementation
+// because nobody uses these commands anymore, except for spammers.
+//
+// Copyright (c) 1998-2021 by the citadel.org team
+//
+// This program is open source software; you can redistribute it and/or modify
+// it under the terms of the GNU General Public License version 3.
+//  
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
 
 #include "sysdep.h"
 #include <stdlib.h>
@@ -672,23 +670,19 @@ void smtp_rcpt(void) {
 		return;
 	}
 
-	/* RBL check */
-	if ( (!CC->logged_in)	/* Don't RBL authenticated users */
-	   && (!SMTP->is_lmtp) ) {	/* Don't RBL LMTP clients */
-		if (CtdlGetConfigInt("c_rbl_at_greeting") == 0) {	/* Don't RBL again if we already did it */
-			if (rbl_check(CC->cs_addr, message_to_spammer)) {
-				if (server_shutting_down)
-					cprintf("421 %s\r\n", message_to_spammer);
-				else
-					cprintf("550 %s\r\n", message_to_spammer);
-				/* no need to free_recipients(valid), it's not allocated yet */
-				return;
-			}
-		}
-	}
+	// RBL check
+	if (
+		(!CC->logged_in)						// Don't RBL authenticated users
+		&& (!SMTP->is_lmtp)						// Don't RBL LMTP clients
+		&& (CtdlGetConfigInt("c_rbl_at_greeting") == 0)			// Don't RBL if we did it at connection time
+		&& (rbl_check(CC->cs_addr, message_to_spammer))
+	) {
+		cprintf("550 %s\r\n", message_to_spammer);
+		return;								// no need to free_recipients(valid)
+	}									// because it hasn't been allocated yet
 
 	valid = validate_recipients(
-		ChrPtr(SMTP->OneRcpt), 
+		(char *)ChrPtr(SMTP->OneRcpt), 
 		smtp_get_Recipients(),
 		(SMTP->is_lmtp)? POST_LMTP: (CC->logged_in)? POST_LOGGED_IN: POST_EXTERNAL
 	);
@@ -854,7 +848,7 @@ void smtp_data(void) {
 
 	/* Submit the message into the Citadel system. */
 	valid = validate_recipients(
-		ChrPtr(SMTP->recipients),
+		(char *)ChrPtr(SMTP->recipients),
 		smtp_get_Recipients(),
 		(SMTP->is_lmtp)? POST_LMTP: (CC->logged_in)? POST_LOGGED_IN: POST_EXTERNAL
 	);
