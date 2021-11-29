@@ -1,9 +1,7 @@
 #!/bin/bash
 
-# Identify the version numbers embedded in these components.
-# This is not very useful on its own.  It will become part of a build system later.
-
-
+# Find the highest version number used in any component, increment it by one, and update
+# all components to use the new version number.  Then generate a commit and a tag.
 
 echo -e '\033[2J\033[H'
 echo -e '\033[34m\033[1m'
