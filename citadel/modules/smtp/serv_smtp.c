@@ -720,7 +720,7 @@ void smtp_rcpt(void) {
 		&& (SMTP->message_originated_locally == 0)			// ...and also inbound Internet mail...
 		&& (is_email_subscribed_to_list((char *)ChrPtr(SMTP->from), valid->recp_room) == 0)	// ...and not a subscriber
 	) {
-		cprintf("551 <%s> - This mailing list only accepts messages from subscribers.\r\n", ChrPtr(SMTP->OneRcpt));
+		cprintf("551 <%s> - The message is not from a list member\r\n", ChrPtr(SMTP->OneRcpt));
 		free_recipients(valid);
 		return;
 	}
