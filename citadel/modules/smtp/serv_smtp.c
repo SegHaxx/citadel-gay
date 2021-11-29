@@ -715,6 +715,16 @@ void smtp_rcpt(void) {
 		return;
 	}
 
+	if (
+		(valid->num_room > 0)						// If it's mail to a room (mailing list)...
+		&& (SMTP->message_originated_locally == 0)			// ...and also inbound Internet mail...
+		&& (is_email_subscribed_to_list((char *)ChrPtr(SMTP->from), valid->recp_room) == 0)	// ...and not a subscriber
+	) {
+		cprintf("551 <%s> - This mailing list only accepts messages from subscribers.\r\n", ChrPtr(SMTP->OneRcpt));
+		free_recipients(valid);
+		return;
+	}
+
 	cprintf("250 RCPT ok <%s>\r\n", ChrPtr(SMTP->OneRcpt));
 	if (StrLength(SMTP->recipients) > 0) {
 		StrBufAppendBufPlain(SMTP->recipients, HKEY(","), 0);

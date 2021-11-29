@@ -21,6 +21,7 @@ struct CtdlMessage *convert_internet_message_buf(StrBuf **rfc822);
 int CtdlIsMe(char *addr, int addr_buf_len);
 int CtdlHostAlias(char *fqdn);
 char *harvest_collected_addresses(struct CtdlMessage *msg);
+int is_email_subscribed_to_list(char *email, char *room_name);
 
 /* 
  * Values that can be returned by CtdlHostAlias()

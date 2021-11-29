@@ -1655,8 +1655,7 @@ void CtdlSetEmailAddressesForUser(char *requested_user, char *new_emailaddrs)
 /*
  * Auto-generate an Internet email address for a user account
  */
-void AutoGenerateEmailAddressForUser(struct ctdluser *user)
-{
+void AutoGenerateEmailAddressForUser(struct ctdluser *user) {
 	char synthetic_email_addr[1024];
 	int i, j;
 	int u = 0;
@@ -1687,4 +1686,34 @@ void AutoGenerateEmailAddressForUser(struct ctdluser *user)
 	CtdlSetEmailAddressesForUser(user->fullname, synthetic_email_addr);
 	strncpy(CC->user.emailaddrs, synthetic_email_addr, sizeof(user->emailaddrs));
 	syslog(LOG_DEBUG, "user_ops: auto-generated email address <%s> for <%s>", synthetic_email_addr, user->fullname);
+}
+
+
+// Determine whether the supplied email address is subscribed to the supplied room's mailing list service.
+int is_email_subscribed_to_list(char *email, char *room_name) {
+	struct ctdlroom room;
+	long roomnum;
+	char *roomnetconfig;
+	int found_it = 0;
+
+	if (CtdlGetRoom(&room, room_name)) {
+		return(0);					// room not found, so definitely not subscribed
+	}
+	roomnum = room.QRnumber;
+	roomnetconfig = LoadRoomNetConfigFile(roomnum);
+	if (roomnetconfig == NULL) {
+		return(0);
+	}
+
+	// We're going to do a very sloppy match here and simply search for the specified email address
+	// anywhere in the room's netconfig.  If you don't like this, fix it yourself.
+	if (bmstrcasestr(roomnetconfig, email)) {
+		found_it = 1;
+	}
+	else {
+		found_it = 0;
+	}
+
+	free(roomnetconfig);
+	return(found_it);
 }
