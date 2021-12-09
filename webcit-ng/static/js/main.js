@@ -87,11 +87,11 @@ function escapeJS(text) {
 //
 ctdl_startup = async() => {
 	response = await fetch("/ctdl/c/info");
-	serv_info = await(response.json());
 
 	if (response.ok) {
+		serv_info = await(response.json());
 		if (serv_info.serv_rev_level < 905) {
-			alert("Citadel server is too old, some functions may not work");
+			alert(_("Citadel server is too old, some functions may not work"));
 		}
 
 		update_banner();
@@ -99,6 +99,12 @@ ctdl_startup = async() => {
 		// for now, show a room list in the main div
 		gotoroom("_BASEROOM_");
 		display_room_list();
+	}
+	else {
+		document.getElementById("ctdl-main").innerHTML =
+			"<div class=\"w3-panel w3-red\"><p>"
+			+ _("This program was unable to connect or stay connected to the Citadel server.  Please report this problem to your system administrator.")
+			+ "</div>";
 	}
 }
 
