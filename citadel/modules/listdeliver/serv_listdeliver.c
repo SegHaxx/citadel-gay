@@ -71,11 +71,13 @@ void listdeliver_do_msg(long msgnum, void *userdata) {
 		CM_SetField(TheMessage, eMsgSubject, buf, strlen(buf));
 	}
 
-	// Reply-to: should be set so that replies come to the list.
+	// From: should be set to the list address because doing otherwise makes DKIM parsers angry.
+	// Reply-to: should be set to the list address so that replies come to the list.
 	snprintf(buf, sizeof buf, "room_%s@%s", CC->room.QRname, CtdlGetConfigStr("c_fqdn"));
 	for (ch=buf; *ch; ++ch) {
 		if (isspace(*ch)) *ch = '_';
 	}
+	CM_SetField(TheMessage, erFc822Addr, buf, strlen(buf));
 	CM_SetField(TheMessage, eReplyTo, buf, strlen(buf));
 
 	// With that out of the way, let's figure out who this message needs to be sent to.
@@ -207,11 +209,17 @@ void listdeliver_queue_room(struct ctdlroom *qrbuf, void *data) {
 void listdeliver_sweep(void) {
 	static time_t last_run = 0L;
 	int i = 0;
+	time_t now = time(NULL);
 
 	/*
 	 * Run mailing list delivery no more frequently than once every 15 minutes (we should make this configurable)
 	 */
-	if ( (time(NULL) - last_run) < 900 ) {
+	if ( (now - last_run) < 900 ) {
+		syslog(LOG_DEBUG,
+			"listdeliver: delivery interval not yet reached; last run was %ldm%lds ago",
+			((now - last_run) / 60),
+			((now - last_run) % 60)
+		);
 		return;
 	}
 
