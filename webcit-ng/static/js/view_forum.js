@@ -194,7 +194,7 @@ function open_reply_box(prefix, msgnum, is_quoted) {
 	// FIXME - we need to retain the message number being replied to
 
 	replybox =
-	  "<div class=\"ctdl-msg-wrapper\">"				// begin message wrapper
+	  "<div class=\"ctdl-msg-wrapper ctdl-msg-reply\">"		// begin message wrapper
 	+ "<div class=\"ctdl-avatar\">"					// begin avatar
 	+ "<img src=\"/ctdl/u/" + "FIXME my name" + "/userpic\" width=\"32\" "
 	+ "onerror=\"this.parentNode.innerHTML='&lt;i class=&quot;fa fa-user-circle fa-2x&quot;&gt;&lt;/i&gt; '\">"
@@ -349,7 +349,7 @@ function forum_save_message(div_name, reply_to_msgnum) {
 				if (error_message.length == 0) {
 					error_message = _("An error has occurred.");
 				}
-				alert(error_message);						// FIXME make this pretty
+				alert(error_message);
 			}
 		}
 	};

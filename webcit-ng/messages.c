@@ -157,12 +157,13 @@ void dav_put_message(struct http_transaction *h, struct ctdlsession *c, char *eu
 		return;
 	}
 
+	// Remember, ctdl_printf() appends \n on its own, so we only need \r here.
 	content_type = header_val(h, "Content-type");
-	ctdl_printf(c, "Content-type: %s\r\n", (content_type ? content_type : "application/octet-stream"));
-	ctdl_printf(c, "\r\n");
+	ctdl_printf(c, "Content-type: %s\r", (content_type ? content_type : "application/octet-stream"));
+	ctdl_printf(c, "\r");
 	ctdl_write(c, h->request_body, h->request_body_length);
 	if (h->request_body[h->request_body_length] != '\n') {
-		ctdl_printf(c, "\r\n");
+		ctdl_printf(c, "\r");
 	}
 	ctdl_printf(c, "000");
 

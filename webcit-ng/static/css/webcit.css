@@ -9,15 +9,19 @@ html,body,h1,h2,h3,h4,h5 {
 }
 
 .ctdl-msg-reading-pane {
-	background-color: #123456;
+	background-color: #456789;
 }
 
 .ctdl-msg-wrapper {
 	overflow: hidden;
-	border-radius: 25px;
+	border-radius: 10px;
 	background-color: white;
-	margin: 8px;
-	padding: 4px;		/* inside the box */
+	margin: 1vw;
+	padding: 5px;		/* inside the box */
+}
+
+.ctdl-msg-reply {
+	margin-left: 5vw;
 }
 
 .ctdl-msg-header {
