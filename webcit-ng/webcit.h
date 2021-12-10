@@ -52,6 +52,11 @@ struct client_handle {				// this gets passed up the stack from the webserver to
 	SSL *ssl_handle;
 };
 
+struct keyval {					// key/value pair (for array)
+	char *key;
+	char *val;
+};
+
 struct key_val_list {				// linked list of keys and values
 	struct key_val_list *next;
 	char *key;
@@ -63,7 +68,7 @@ struct http_transaction {			// The lifetime of an HTTP request goes through this
 	char *url;				// application stack.  The second half is built up by the application
 	char *http_version;			// stack and sent back down to the web server, which transmits it to
 	char *site_prefix;			// the client.
-	struct key_val_list *request_headers;
+	Array *request_headers;
 	char *request_body;
 	long request_body_length;
 	int response_code;

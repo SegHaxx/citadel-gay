@@ -114,6 +114,7 @@ void perform_one_http_transaction(struct client_handle *ch) {
 	struct key_val_list *clh;		// general purpose iterator variable
 
 	memset(&h, 0, sizeof h);
+	h.request_headers = array_new(sizeof(struct keyval));
 
 	while (len = client_readline(ch, buf, sizeof buf), (len > 0)) {
 		++lines_read;
@@ -140,15 +141,15 @@ void perform_one_http_transaction(struct client_handle *ch) {
 		else {			// Subsequent lines are headers.
 			c = strchr(buf, ':');	// Header line folding is obsolete so we don't support it.
 			if (c != NULL) {
-				struct key_val_list *new_request_header = malloc(sizeof(struct key_val_list));
+
+				struct keyval *new_request_header = malloc(sizeof(struct keyval));
 				*c = 0;
 				new_request_header->key = strdup(buf);
 				++c;
 				new_request_header->val = strdup(c);
 				striplt(new_request_header->key);
 				striplt(new_request_header->val);
-				new_request_header->next = h.request_headers;
-				h.request_headers = new_request_header;
+				array_append(h.request_headers, new_request_header);
 #ifdef DEBUG_HTTP
 				syslog(LOG_DEBUG, "\033[1m\033[35m{ %s: %s\033[0m", new_request_header->key, new_request_header->val);
 #endif
@@ -226,15 +227,13 @@ void perform_one_http_transaction(struct client_handle *ch) {
 	}
 
 	// free the transaction memory
-	while (h.request_headers) {
-		if (h.request_headers->key)
-			free(h.request_headers->key);
-		if (h.request_headers->val)
-			free(h.request_headers->val);
-		clh = h.request_headers->next;
-		free(h.request_headers);
-		h.request_headers = clh;
+	while (array_len(h.request_headers) > 0) {
+		struct keyval *kv = array_get_element_at(h.request_headers, 0);
+		if (kv->key) free(kv->key);
+		if (kv->val) free(kv->val);
+		array_delete_element_at(h.request_headers, 0);
 	}
+	array_free(h.request_headers);
 	while (h.response_headers) {
 		if (h.response_headers->key)
 			free(h.response_headers->key);
@@ -244,16 +243,21 @@ void perform_one_http_transaction(struct client_handle *ch) {
 		free(h.response_headers);
 		h.response_headers = clh;
 	}
-	if (h.method)
+	if (h.method) {
 		free(h.method);
-	if (h.url)
+	}
+	if (h.url) {
 		free(h.url);
-	if (h.request_body)
+	}
+	if (h.request_body) {
 		free(h.request_body);
-	if (h.response_string)
+	}
+	if (h.response_string) {
 		free(h.response_string);
-	if (h.site_prefix)
+	}
+	if (h.site_prefix) {
 		free(h.site_prefix);
+	}
 }
 
 
@@ -262,10 +266,12 @@ void perform_one_http_transaction(struct client_handle *ch) {
 // The caller does NOT own the memory of the returned pointer, but can count on the pointer
 // to still be valid through the end of the transaction.
 char *header_val(struct http_transaction *h, char *requested_header) {
-	struct key_val_list *clh;	// general purpose iterator variable
-	for (clh = h->request_headers; clh != NULL; clh = clh->next) {
-		if (!strcasecmp(clh->key, requested_header)) {
-			return (clh->val);
+	struct keyval *kv;
+	int i;
+	for (i=0; i<array_len(h->request_headers); ++i) {
+		kv = array_get_element_at(h->request_headers, i);
+		if (!strcasecmp(kv->key, requested_header)) {
+			return (kv->val);
 		}
 	}
 	return (NULL);
