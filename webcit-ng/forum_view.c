@@ -82,6 +82,12 @@ void json_render_one_message(struct http_transaction *h, struct ctdlsession *c, 
 		else if (!strncasecmp(buf, "subj=", 5)) {
 			JsonObjectAppend(j, NewJsonPlainString(HKEY("subj"), &buf[5], -1));
 		}
+		else if (!strncasecmp(buf, "msgn=", 5)) {
+			JsonObjectAppend(j, NewJsonPlainString(HKEY("msgn"), &buf[5], -1));
+		}
+		else if (!strncasecmp(buf, "wefw=", 5)) {
+			JsonObjectAppend(j, NewJsonPlainString(HKEY("wefw"), &buf[5], -1));
+		}
 	}
 
 	if (message_originated_locally) {

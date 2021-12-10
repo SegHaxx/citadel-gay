@@ -140,14 +140,14 @@ function forum_render_one(prefix, msgnum, scroll_to) {
 			+ "</span>"							// end header info on left side
 			+ "<span class=\"ctdl-msg-header-buttons\">"			// begin buttons on right side
 
-			+ "<span class=\"ctdl-msg-button\">"				// Reply button FIXME make this work
-			+ "<a href=\"javascript:open_reply_box('"+prefix+"',"+msgnum+",false);\">"
+			+ "<span class=\"ctdl-msg-button\">"				// Reply
+			+ "<a href=\"javascript:open_reply_box('"+prefix+"',"+msgnum+",false,'"+msg.wefw+"','"+msg.msgn+"');\">"
 			+ "<i class=\"fa fa-reply\"></i> " 
 			+ _("Reply")
 			+ "</a></span>"
 
-			+ "<span class=\"ctdl-msg-button\">"				// ReplyQuoted , only show in forums FIXME
-			+ "<a href=\"javascript:open_reply_box('"+prefix+"',"+msgnum+",true);\">"
+			+ "<span class=\"ctdl-msg-button\">"				// ReplyQuoted
+			+ "<a href=\"javascript:open_reply_box('"+prefix+"',"+msgnum+",true,'"+msg.wefw+"','"+msg.msgn+"');\">"
 			+ "<i class=\"fa fa-comment\"></i> " 
 			+ _("ReplyQuoted")
 			+ "</a></span>"
@@ -185,10 +185,34 @@ function forum_render_one(prefix, msgnum, scroll_to) {
 }
 
 
+// Compose a references string using existing references plus the message being replied to
+function compose_references(references, msgid) {
+	if (references.includes("@")) {
+		refs = references + "|";
+	}
+	else {
+		refs = "";
+	}
+	refs += msgid;
+
+	console.log("initial len: " + refs.length);
+	// If the resulting string is too big, we can trim it here
+	while (refs.length > 900) {
+		r = refs.split("|");
+		r.splice(1,1);		// remove the second element so we keep the root
+		refs = r.join("|");
+		console.log("split len: " + refs.length);
+	}
+
+
+	return refs;
+}
+
+
 // Open a reply box directly below a specific message
-function open_reply_box(prefix, msgnum, is_quoted) {
+function open_reply_box(prefix, msgnum, is_quoted, references, msgid) {
 	target_div_name = prefix+msgnum;
-	new_div_name = prefix + "_reply_to_" + msgnum;
+	new_div_name = prefix + "reply_to_" + msgnum;
 	document.getElementById(target_div_name).outerHTML += "<div id=\"" + new_div_name + "\">reply box put here</div>";
 
 	// FIXME - we need to retain the message number being replied to
@@ -238,9 +262,9 @@ function open_reply_box(prefix, msgnum, is_quoted) {
 	}
 	replybox +=
 	  "</div><br>"							// end header
-
 									// begin body
 	+ "<div class=\"ctdl-msg-body\" id=\"ctdl-editor-body\" style=\"padding:5px;\" contenteditable=\"true\">"
+	+ "refs: " + compose_references(references,msgid) + "<br>"
 	+ "\n"								// empty initial content
 	+ "</div>"							// end body
 
@@ -339,7 +363,7 @@ function forum_save_message(div_name, reply_to_msgnum) {
 				for (var i in headers) {
 					if (headers[i].startsWith("etag: ")) {
 						new_msg_num = headers[i].split(" ")[1];
-						alert(new_msg_num);
+						alert("div_name=" + div_name + " , reply_to_msgnum = " + reply_to_msgnum + " , new_msg_num = " + new_msg_num);
 					}
 				}
 				document.getElementById(div_name).outerHTML = "";		// close the editor
