@@ -94,7 +94,7 @@ void client_printf(struct client_handle *ch, const char *format, ...) {
 // Push one new header into the response of an HTTP request.
 // When completed, the HTTP transaction now owns the memory allocated for key and val.
 void add_response_header(struct http_transaction *h, char *key, char *val) {
-	struct http_header *new_response_header = malloc(sizeof(struct http_header));
+	struct key_val_list *new_response_header = malloc(sizeof(struct key_val_list));
 	new_response_header->key = key;
 	new_response_header->val = val;
 	new_response_header->next = h->response_headers;
@@ -111,7 +111,7 @@ void perform_one_http_transaction(struct client_handle *ch) {
 	struct http_transaction h;
 	char *c, *d;
 	struct sockaddr_in sin;
-	struct http_header *clh;		// general purpose iterator variable
+	struct key_val_list *clh;		// general purpose iterator variable
 
 	memset(&h, 0, sizeof h);
 
@@ -140,7 +140,7 @@ void perform_one_http_transaction(struct client_handle *ch) {
 		else {			// Subsequent lines are headers.
 			c = strchr(buf, ':');	// Header line folding is obsolete so we don't support it.
 			if (c != NULL) {
-				struct http_header *new_request_header = malloc(sizeof(struct http_header));
+				struct key_val_list *new_request_header = malloc(sizeof(struct key_val_list));
 				*c = 0;
 				new_request_header->key = strdup(buf);
 				++c;
@@ -150,7 +150,7 @@ void perform_one_http_transaction(struct client_handle *ch) {
 				new_request_header->next = h.request_headers;
 				h.request_headers = new_request_header;
 #ifdef DEBUG_HTTP
-				syslog(LOG_DEBUG, "{ %s: %s", new_request_header->key, new_request_header->val);
+				syslog(LOG_DEBUG, "\033[1m\033[35m{ %s: %s\033[0m", new_request_header->key, new_request_header->val);
 #endif
 			}
 		}
@@ -215,7 +215,7 @@ void perform_one_http_transaction(struct client_handle *ch) {
 		client_printf(ch, "Content-encoding: identity\r\n");	// change if we gzip/deflate
 		for (clh = h.response_headers; clh != NULL; clh = clh->next) {
 #ifdef DEBUG_HTTP
-			syslog(LOG_DEBUG, "} %s: %s", clh->key, clh->val);
+			syslog(LOG_DEBUG, "\033[1m\033[35m} %s: %s\033[0m", clh->key, clh->val);
 #endif
 			client_printf(ch, "%s: %s\r\n", clh->key, clh->val);
 		}
@@ -262,7 +262,7 @@ void perform_one_http_transaction(struct client_handle *ch) {
 // The caller does NOT own the memory of the returned pointer, but can count on the pointer
 // to still be valid through the end of the transaction.
 char *header_val(struct http_transaction *h, char *requested_header) {
-	struct http_header *clh;	// general purpose iterator variable
+	struct key_val_list *clh;	// general purpose iterator variable
 	for (clh = h->request_headers; clh != NULL; clh = clh->next) {
 		if (!strcasecmp(clh->key, requested_header)) {
 			return (clh->val);

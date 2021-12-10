@@ -40,7 +40,7 @@
 #include <openssl/rand.h>
 #include <expat.h>
 #define _(x)	x				// temporary hack until we add i18n back in
-//#define DEBUG_HTTP				// uncomment to debug HTTP headers
+#define DEBUG_HTTP				// uncomment to debug HTTP headers
 
 // XML_StopParser is present in expat 2.x
 #if XML_MAJOR_VERSION > 1
@@ -52,8 +52,8 @@ struct client_handle {				// this gets passed up the stack from the webserver to
 	SSL *ssl_handle;
 };
 
-struct http_header {				// request and response headers in struct http_transaction use this format
-	struct http_header *next;
+struct key_val_list {				// linked list of keys and values
+	struct key_val_list *next;
 	char *key;
 	char *val;
 };
@@ -63,12 +63,12 @@ struct http_transaction {			// The lifetime of an HTTP request goes through this
 	char *url;				// application stack.  The second half is built up by the application
 	char *http_version;			// stack and sent back down to the web server, which transmits it to
 	char *site_prefix;			// the client.
-	struct http_header *request_headers;
+	struct key_val_list *request_headers;
 	char *request_body;
 	long request_body_length;
 	int response_code;
 	char *response_string;
-	struct http_header *response_headers;
+	struct key_val_list *response_headers;
 	char *response_body;
 	long response_body_length;
 };
