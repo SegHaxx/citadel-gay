@@ -25,7 +25,7 @@ DESIGN GOALS:
 
 
 
-REST format URIs will generally take the form of:
+REST format URLs will generally take the form of:
 
 	/ctdl/objectClass/[container/]object[/operation]
 

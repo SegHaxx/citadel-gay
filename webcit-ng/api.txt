@@ -1,5 +1,5 @@
 
-Method		URI				Function
+Method		URL				Function
 ------		------------------------------	-------------------------------------
 GET		/ctdl/a/landing.html		Site root redirects to here
 GET		/ctdl/r/			returns a JSON-encoded list of accessible rooms

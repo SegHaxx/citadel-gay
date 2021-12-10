@@ -72,11 +72,11 @@ void http_redirect(struct http_transaction *h, char *to_where) {
 void perform_request(struct http_transaction *h) {
 	struct ctdlsession *c;
 
-	// Determine which code path to take based on the beginning of the URI.
+	// Determine which code path to take based on the beginning of the URL.
 	// This is implemented as a series of strncasecmp() calls rather than a
 	// lookup table in order to make the code more readable.
 
-	if (IsEmptyStr(h->uri)) {	// Sanity check
+	if (IsEmptyStr(h->url)) {	// Sanity check
 		do_404(h);
 		return;
 	}
@@ -85,27 +85,27 @@ void perform_request(struct http_transaction *h) {
 	// with the /ctdl/ prefix.
 	// Root (/) ...
 
-	if ((!strcmp(h->uri, "/")) && (!strcasecmp(h->method, "GET"))) {
+	if ((!strcmp(h->url, "/")) && (!strcasecmp(h->method, "GET"))) {
 		http_redirect(h, "/ctdl/s/index.html");
 		return;
 	}
 
-	// Legacy URI patterns (/readnew?gotoroom=xxx&start_reading_at=yyy) ...
+	// Legacy URL patterns (/readnew?gotoroom=xxx&start_reading_at=yyy) ...
 	// Direct room name (/my%20blog) ...
 
-	// Everything below this line is strictly REST URI patterns.
+	// Everything below this line is strictly REST URL patterns.
 
-	if (strncasecmp(h->uri, HKEY("/ctdl/"))) {	// Reject non-REST
+	if (strncasecmp(h->url, HKEY("/ctdl/"))) {	// Reject non-REST
 		do_404(h);
 		return;
 	}
 
-	if (!strncasecmp(h->uri, HKEY("/ctdl/s/"))) {	// Static content
+	if (!strncasecmp(h->url, HKEY("/ctdl/s/"))) {	// Static content
 		output_static(h);
 		return;
 	}
 
-	if (h->uri[7] != '/') {
+	if (h->url[7] != '/') {
 		do_404(h);
 		return;
 	}
@@ -134,8 +134,8 @@ void perform_request(struct http_transaction *h) {
 		}
 	}
 
-	// Break down the URI by path and send the request to the appropriate part of the program.
-	switch (h->uri[6]) {
+	// Break down the URL by path and send the request to the appropriate part of the program.
+	switch (h->url[6]) {
 	case 'a':		// /ctdl/a/ == RESTful path to admin functions
 		ctdl_a(h, c);
 		break;
@@ -161,7 +161,7 @@ void perform_request(struct http_transaction *h) {
 		add_response_header(h, strdup("Set-Cookie"), strdup(koekje));
 	}
 
-	// During development we are foiling the browser cache completely.  In production we'll be more selective.
+	// Durlng development we are foiling the browser cache completely.  In production we'll be more selective.
 	add_response_header(h, strdup("Cache-Control"), strdup("no-store, must-revalidate"));
 	add_response_header(h, strdup("Pragma"), strdup("no-cache"));
 	add_response_header(h, strdup("Expires"), strdup("0"));

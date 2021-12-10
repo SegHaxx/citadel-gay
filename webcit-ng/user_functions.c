@@ -59,7 +59,7 @@ void fetch_user_bio(struct http_transaction *h, struct ctdlsession *c, char *use
 void object_in_user(struct http_transaction *h, struct ctdlsession *c, char *requested_username) {
 	char object_name[1024];
 
-	extract_token(object_name, h->uri, 4, '/', sizeof object_name);
+	extract_token(object_name, h->url, 4, '/', sizeof object_name);
 
 	if (!strcasecmp(object_name, "userpic")) {		// user photo (avatar)
 		fetch_user_photo(h, c, requested_username);
@@ -95,7 +95,7 @@ void ctdl_u(struct http_transaction *h, struct ctdlsession *c) {
 	char buf[1024];
 
 	// All user-related functions require accessing the user in question.
-	extract_token(requested_username, h->uri, 3, '/', sizeof requested_username);
+	extract_token(requested_username, h->url, 3, '/', sizeof requested_username);
 	unescape_input(requested_username);
 
 	if (IsEmptyStr(requested_username)) {				//      /ctdl/u/
@@ -106,13 +106,13 @@ void ctdl_u(struct http_transaction *h, struct ctdlsession *c) {
 	// At this point we have extracted the name of the user we're interested in.
 	// FIXME should we validate it?
 
-	if (num_tokens(h->uri, '/') == 4) {				//      /ctdl/u/username
+	if (num_tokens(h->url, '/') == 4) {				//      /ctdl/u/username
 		the_user_itself(h, c, requested_username);
 		return;
 	}
 
-	extract_token(buf, h->uri, 4, '/', sizeof buf);
-	if (num_tokens(h->uri, '/') == 5) {
+	extract_token(buf, h->url, 4, '/', sizeof buf);
+	if (num_tokens(h->url, '/') == 5) {
 		if (IsEmptyStr(buf)) {
 			the_user_itself(h, c, requested_username);	//      /ctdl/u/username/       ( same as /ctdl/u/username )
 		}
@@ -122,7 +122,7 @@ void ctdl_u(struct http_transaction *h, struct ctdlsession *c) {
 		return;
 	}
 
-	if (num_tokens(h->uri, '/') == 6) {
+	if (num_tokens(h->url, '/') == 6) {
 		object_in_user(h, c, requested_username);		//      /ctdl/u/username/object/ or possibly /ctdl/u/username/object/component
 		return;
 	}

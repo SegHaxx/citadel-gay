@@ -77,17 +77,17 @@ void whoami(struct http_transaction *h, struct ctdlsession *c) {
 
 // Dispatcher for paths starting with /ctdl/a/
 void ctdl_a(struct http_transaction *h, struct ctdlsession *c) {
-	if (!strcasecmp(h->uri, "/ctdl/a/login")) {	// log in
+	if (!strcasecmp(h->url, "/ctdl/a/login")) {	// log in
 		try_login(h, c);
 		return;
 	}
 
-	if (!strcasecmp(h->uri, "/ctdl/a/logout")) {	// log out
+	if (!strcasecmp(h->url, "/ctdl/a/logout")) {	// log out
 		logout(h, c);
 		return;
 	}
 
-	if (!strcasecmp(h->uri, "/ctdl/a/whoami")) {	// return display name of user
+	if (!strcasecmp(h->url, "/ctdl/a/whoami")) {	// return display name of user
 		whoami(h, c);
 		return;
 	}

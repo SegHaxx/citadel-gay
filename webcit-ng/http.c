@@ -118,11 +118,11 @@ void perform_one_http_transaction(struct client_handle *ch) {
 	while (len = client_readline(ch, buf, sizeof buf), (len > 0)) {
 		++lines_read;
 
-		if (lines_read == 1) {		// First line is method and URI.
+		if (lines_read == 1) {		// First line is method and URL.
 			c = strchr(buf, ' ');	// IGnore the HTTP-version.
 			if (c == NULL) {
 				h.method = strdup("NULL");
-				h.uri = strdup("/");
+				h.url = strdup("/");
 			}
 			else {
 				*c = 0;
@@ -134,7 +134,7 @@ void perform_one_http_transaction(struct client_handle *ch) {
 					*c = 0;
 				}
 				++c;
-				h.uri = strdup(d);
+				h.url = strdup(d);
 			}
 		}
 		else {			// Subsequent lines are headers.
@@ -177,7 +177,7 @@ void perform_one_http_transaction(struct client_handle *ch) {
 		syslog(LOG_DEBUG, "Client disconnected");
 	}
 	else {
-		syslog(LOG_DEBUG, "\033[33m\033[1m< %s %s\033[0m", h.method, h.uri);
+		syslog(LOG_DEBUG, "\033[33m\033[1m< %s %s\033[0m", h.method, h.url);
 
 		// If there is a request body, read it now.
 		char *ccl = header_val(&h, "Content-Length");
@@ -246,8 +246,8 @@ void perform_one_http_transaction(struct client_handle *ch) {
 	}
 	if (h.method)
 		free(h.method);
-	if (h.uri)
-		free(h.uri);
+	if (h.url)
+		free(h.url);
 	if (h.request_body)
 		free(h.request_body);
 	if (h.response_string)

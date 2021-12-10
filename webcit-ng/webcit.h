@@ -60,7 +60,7 @@ struct http_header {				// request and response headers in struct http_transacti
 
 struct http_transaction {			// The lifetime of an HTTP request goes through this data structure.
 	char *method;				// The top half is built up by the web server and sent up to the
-	char *uri;				// application stack.  The second half is built up by the application
+	char *url;				// application stack.  The second half is built up by the application
 	char *http_version;			// stack and sent back down to the web server, which transmits it to
 	char *site_prefix;			// the client.
 	struct http_header *request_headers;

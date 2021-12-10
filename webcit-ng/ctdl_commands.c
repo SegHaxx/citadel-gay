@@ -92,7 +92,7 @@ void serv_info(struct http_transaction *h, struct ctdlsession *c) {
 
 // Dispatcher for paths starting with /ctdl/c/
 void ctdl_c(struct http_transaction *h, struct ctdlsession *c) {
-	if (!strcasecmp(h->uri, "/ctdl/c/info")) {
+	if (!strcasecmp(h->url, "/ctdl/c/info")) {
 		serv_info(h, c);
 	}
 	else {

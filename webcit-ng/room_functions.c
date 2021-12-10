@@ -112,7 +112,7 @@ void object_in_room(struct http_transaction *h, struct ctdlsession *c) {
 	long msgnum = (-1);
 	char unescaped_euid[1024];
 
-	extract_token(buf, h->uri, 4, '/', sizeof buf);
+	extract_token(buf, h->url, 4, '/', sizeof buf);
 
 	if (!strncasecmp(buf, "msgs.", 5)) {	// Client is requesting a list of message numbers
 		unescape_input(&buf[5]);
@@ -154,8 +154,8 @@ void object_in_room(struct http_transaction *h, struct ctdlsession *c) {
 	// A sixth component in the URL can be one of two things:
 	// (1) a MIME part specifier, in which case the client wants to download that component within the message
 	// (2) a content-type, in which ase the client wants us to try to render it a certain way
-	if (num_tokens(h->uri, '/') == 6) {
-		extract_token(buf, h->uri, 5, '/', sizeof buf);
+	if (num_tokens(h->url, '/') == 6) {
+		extract_token(buf, h->url, 5, '/', sizeof buf);
 		if (!IsEmptyStr(buf)) {
 			if (!strcasecmp(buf, "json")) {
 				json_render_one_message(h, c, msgnum);
@@ -494,7 +494,7 @@ void ctdl_r(struct http_transaction *h, struct ctdlsession *c) {
 	char buf[1024];
 
 	// All room-related functions require being "in" the room specified.  Are we in that room already?
-	extract_token(requested_roomname, h->uri, 3, '/', sizeof requested_roomname);
+	extract_token(requested_roomname, h->url, 3, '/', sizeof requested_roomname);
 	unescape_input(requested_roomname);
 
 	if (IsEmptyStr(requested_roomname)) {	//      /ctdl/r/
@@ -531,14 +531,14 @@ void ctdl_r(struct http_transaction *h, struct ctdlsession *c) {
 	}
 	// At this point our Citadel client session is "in" the specified room.
 
-	if (num_tokens(h->uri, '/') == 4)	//      /ctdl/r/roomname
+	if (num_tokens(h->url, '/') == 4)	//      /ctdl/r/roomname
 	{
 		the_room_itself(h, c);
 		return;
 	}
 
-	extract_token(buf, h->uri, 4, '/', sizeof buf);
-	if (num_tokens(h->uri, '/') == 5) {
+	extract_token(buf, h->url, 4, '/', sizeof buf);
+	if (num_tokens(h->url, '/') == 5) {
 		if (IsEmptyStr(buf)) {
 			the_room_itself(h, c);	//      /ctdl/r/roomname/       ( same as /ctdl/r/roomname )
 		}
@@ -547,7 +547,7 @@ void ctdl_r(struct http_transaction *h, struct ctdlsession *c) {
 		}
 		return;
 	}
-	if (num_tokens(h->uri, '/') == 6) {
+	if (num_tokens(h->url, '/') == 6) {
 		object_in_room(h, c);	//      /ctdl/r/roomname/object/ or possibly /ctdl/r/roomname/object/component
 		return;
 	}

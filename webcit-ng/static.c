@@ -21,7 +21,7 @@ void output_static(struct http_transaction *h) {
 	char filename[PATH_MAX];
 	struct stat statbuf;
 
-	snprintf(filename, sizeof filename, "static/%s", &h->uri[8]);
+	snprintf(filename, sizeof filename, "static/%s", &h->url[8]);
 
 	if (strstr(filename, "../")) {		// 100% guaranteed attacker.
 		do_404(h);			// Die in a car fire.
