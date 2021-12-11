@@ -94,11 +94,10 @@ void client_printf(struct client_handle *ch, const char *format, ...) {
 // Push one new header into the response of an HTTP request.
 // When completed, the HTTP transaction now owns the memory allocated for key and val.
 void add_response_header(struct http_transaction *h, char *key, char *val) {
-	struct key_val_list *new_response_header = malloc(sizeof(struct key_val_list));
-	new_response_header->key = key;
-	new_response_header->val = val;
-	new_response_header->next = h->response_headers;
-	h->response_headers = new_response_header;
+	struct keyval new_response_header;
+	new_response_header.key = key;
+	new_response_header.val = val;
+	array_append(h->response_headers, &new_response_header);
 }
 
 
@@ -111,10 +110,11 @@ void perform_one_http_transaction(struct client_handle *ch) {
 	struct http_transaction h;
 	char *c, *d;
 	struct sockaddr_in sin;
-	struct key_val_list *clh;		// general purpose iterator variable
+	int i;					// general purpose iterator variable
 
 	memset(&h, 0, sizeof h);
 	h.request_headers = array_new(sizeof(struct keyval));
+	h.response_headers = array_new(sizeof(struct keyval));
 
 	while (len = client_readline(ch, buf, sizeof buf), (len > 0)) {
 		++lines_read;
@@ -142,16 +142,16 @@ void perform_one_http_transaction(struct client_handle *ch) {
 			c = strchr(buf, ':');	// Header line folding is obsolete so we don't support it.
 			if (c != NULL) {
 
-				struct keyval *new_request_header = malloc(sizeof(struct keyval));
+				struct keyval new_request_header;
 				*c = 0;
-				new_request_header->key = strdup(buf);
+				new_request_header.key = strdup(buf);
 				++c;
-				new_request_header->val = strdup(c);
-				striplt(new_request_header->key);
-				striplt(new_request_header->val);
-				array_append(h.request_headers, new_request_header);
+				new_request_header.val = strdup(c);
+				striplt(new_request_header.key);
+				striplt(new_request_header.val);
+				array_append(h.request_headers, &new_request_header);
 #ifdef DEBUG_HTTP
-				syslog(LOG_DEBUG, "\033[1m\033[35m{ %s: %s\033[0m", new_request_header->key, new_request_header->val);
+				syslog(LOG_DEBUG, "\033[1m\033[35m{ %s: %s\033[0m", new_request_header.key, new_request_header.val);
 #endif
 			}
 		}
@@ -214,11 +214,13 @@ void perform_one_http_transaction(struct client_handle *ch) {
 		}
 
 		client_printf(ch, "Content-encoding: identity\r\n");	// change if we gzip/deflate
-		for (clh = h.response_headers; clh != NULL; clh = clh->next) {
+		int number_of_response_headers = array_len(h.response_headers);
+		for (i=0; i<number_of_response_headers; ++i) {
+			struct keyval *kv = array_get_element_at(h.response_headers, i);
 #ifdef DEBUG_HTTP
-			syslog(LOG_DEBUG, "\033[1m\033[35m} %s: %s\033[0m", clh->key, clh->val);
+			syslog(LOG_DEBUG, "\033[1m\033[35m} %s: %s\033[0m", kv->key, kv->val);
 #endif
-			client_printf(ch, "%s: %s\r\n", clh->key, clh->val);
+			client_printf(ch, "%s: %s\r\n", kv->key, kv->val);
 		}
 		client_printf(ch, "\r\n");
 		if ((h.response_body_length > 0) && (h.response_body != NULL)) {
@@ -234,15 +236,13 @@ void perform_one_http_transaction(struct client_handle *ch) {
 		array_delete_element_at(h.request_headers, 0);
 	}
 	array_free(h.request_headers);
-	while (h.response_headers) {
-		if (h.response_headers->key)
-			free(h.response_headers->key);
-		if (h.response_headers->val)
-			free(h.response_headers->val);
-		clh = h.response_headers->next;
-		free(h.response_headers);
-		h.response_headers = clh;
+	while (array_len(h.response_headers) > 0) {
+		struct keyval *kv = array_get_element_at(h.response_headers, 0);
+		if (kv->key) free(kv->key);
+		if (kv->val) free(kv->val);
+		array_delete_element_at(h.response_headers, 0);
 	}
+	array_free(h.response_headers);
 	if (h.method) {
 		free(h.method);
 	}

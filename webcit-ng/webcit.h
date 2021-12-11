@@ -57,12 +57,6 @@ struct keyval {					// key/value pair (for array)
 	char *val;
 };
 
-struct key_val_list {				// linked list of keys and values
-	struct key_val_list *next;
-	char *key;
-	char *val;
-};
-
 struct http_transaction {			// The lifetime of an HTTP request goes through this data structure.
 	char *method;				// The top half is built up by the web server and sent up to the
 	char *url;				// application stack.  The second half is built up by the application
@@ -73,7 +67,7 @@ struct http_transaction {			// The lifetime of an HTTP request goes through this
 	long request_body_length;
 	int response_code;
 	char *response_string;
-	struct key_val_list *response_headers;
+	Array *response_headers;
 	char *response_body;
 	long response_body_length;
 };
