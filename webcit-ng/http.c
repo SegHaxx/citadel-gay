@@ -173,6 +173,7 @@ void perform_one_http_transaction(struct client_handle *ch) {
 				kv.key = strdup(tok);
 				kv.val = strdup(eq);
 				array_append(h.request_parms, &kv);
+				syslog(LOG_DEBUG, "\033[1m\033[33m| %s = %s\033[0m", kv.key, kv.val);
 			}
 		}
 	}
@@ -297,6 +298,23 @@ char *header_val(struct http_transaction *h, char *requested_header) {
 	for (i=0; i<array_len(h->request_headers); ++i) {
 		kv = array_get_element_at(h->request_headers, i);
 		if (!strcasecmp(kv->key, requested_header)) {
+			return (kv->val);
+		}
+	}
+	return (NULL);
+}
+
+
+// Utility function to fetch a specific URL parameter from a completely read-in request.
+// Returns the value of the requested parameter, or NULL if the specified parameter was not sent.
+// The caller does NOT own the memory of the returned pointer, but can count on the pointer
+// to still be valid through the end of the transaction.
+char *get_url_param(struct http_transaction *h, char *requested_param) {
+	struct keyval *kv;
+	int i;
+	for (i=0; i<array_len(h->request_parms); ++i) {
+		kv = array_get_element_at(h->request_parms, i);
+		if (!strcasecmp(kv->key, requested_param)) {
 			return (kv->val);
 		}
 	}

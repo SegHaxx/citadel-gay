@@ -146,7 +146,13 @@ void dav_put_message(struct http_transaction *h, struct ctdlsession *c, char *eu
 		return;
 	}
 
-	ctdl_printf(c, "ENT0 1|||4|||1|");	// This protocol syntax will give us metadata back after upload
+	char *wefw = get_url_param(h, "wefw");	// references
+	if (!wefw) wefw = "";
+	char *subj = get_url_param(h, "subj");	// subject
+	if (!subj) subj = "";
+
+	// Mode 4 will give us metadata back after upload
+	ctdl_printf(c, "ENT0 1|||4|%s||1|||||%s|", subj, wefw);
 	ctdl_readline(c, buf, sizeof buf);
 	if (buf[0] != '8') {
 		h->response_code = 502;

@@ -258,13 +258,18 @@ function open_reply_box(prefix, msgnum, is_quoted, references, msgid) {
 	+ "</span>";							// end buttons on right side
 	if (msg.subj) {
 		replybox +=
-	  	"<br><span class=\"ctdl-msgsubject\">" + "FIXME subject" + "</span>";
+	  	"<br><span id=\"ctdl-subject\" class=\"ctdl-msgsubject\">" + "FIXME subject" + "</span>";
+	}
+	else {								// hidden filed for empty subject
+		replybox += "<span id=\"ctdl-subject\" style=\"display:none\"></span>";
 	}
 	replybox +=
 	  "</div><br>"							// end header
+
+	+ "<span id=\"ctdl-replyreferences\" style=\"display:none\">"	// hidden field for references
+	+ compose_references(references,msgid) + "</span>"
 									// begin body
 	+ "<div class=\"ctdl-msg-body\" id=\"ctdl-editor-body\" style=\"padding:5px;\" contenteditable=\"true\">"
-	+ "refs: " + compose_references(references,msgid) + "<br>"
 	+ "\n"								// empty initial content
 	+ "</div>"							// end body
 
@@ -338,8 +343,13 @@ function forum_cancel_post(div_name) {
 function forum_save_message(div_name, reply_to_msgnum) {
 
 	document.body.style.cursor = "wait";
+	wefw = (document.getElementById("ctdl-replyreferences").innerHTML).replaceAll("|","!");	// references (if present)
+	subj = document.getElementById("ctdl-subject").innerHTML;				// subject (if present)
 
-	url = "/ctdl/r/" + escapeHTMLURI(current_room) + "/dummy_name_for_new_message";
+	url = "/ctdl/r/" + escapeHTMLURI(current_room)
+		+ "/dummy_name_for_new_message"
+		+ "?wefw=" + wefw
+		+ "&subj=" + subj
 	boundary = randomString(20);
 	body_text =
 		"--" + boundary + "\r\n"

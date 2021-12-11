@@ -137,6 +137,7 @@ void ctdl_u(struct http_transaction *, struct ctdlsession *);
 struct ctdlsession *connect_to_citadel(struct http_transaction *);
 void disconnect_from_citadel(struct ctdlsession *);
 char *header_val(struct http_transaction *h, char *requested_header);
+char *get_url_param(struct http_transaction *h, char *requested_param);
 int unescape_input(char *);
 void http_redirect(struct http_transaction *h, char *to_where);
 char *http_datestring(time_t xtime);
