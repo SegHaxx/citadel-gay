@@ -114,6 +114,7 @@ void perform_one_http_transaction(struct client_handle *ch) {
 
 	memset(&h, 0, sizeof h);
 	h.request_headers = array_new(sizeof(struct keyval));
+	h.request_parms = array_new(sizeof(struct keyval));
 	h.response_headers = array_new(sizeof(struct keyval));
 
 	while (len = client_readline(ch, buf, sizeof buf), (len > 0)) {
@@ -156,6 +157,24 @@ void perform_one_http_transaction(struct client_handle *ch) {
 			}
 		}
 
+	}
+
+	// If the URL had any query parameters in it, parse them out now.
+	char *p = strchr(h.url, '?');
+	if (p) {
+		*p++ = 0;						// insert a null to remove parameters from the URL
+		char *tok, *saveptr = NULL;
+		for (tok = strtok_r(p, "&", &saveptr); tok!=NULL; tok = strtok_r(NULL, "&", &saveptr)) {
+			char *eq = strchr(tok, '=');
+			if (eq) {
+				*eq++ = 0;
+				unescape_input(eq);
+				struct keyval kv;
+				kv.key = strdup(tok);
+				kv.val = strdup(eq);
+				array_append(h.request_parms, &kv);
+			}
+		}
 	}
 
 	// build up the site prefix, such as https://foo.bar.com:4343
@@ -236,6 +255,13 @@ void perform_one_http_transaction(struct client_handle *ch) {
 		array_delete_element_at(h.request_headers, 0);
 	}
 	array_free(h.request_headers);
+	while (array_len(h.request_parms) > 0) {
+		struct keyval *kv = array_get_element_at(h.request_parms, 0);
+		if (kv->key) free(kv->key);
+		if (kv->val) free(kv->val);
+		array_delete_element_at(h.request_parms, 0);
+	}
+	array_free(h.request_parms);
 	while (array_len(h.response_headers) > 0) {
 		struct keyval *kv = array_get_element_at(h.response_headers, 0);
 		if (kv->key) free(kv->key);

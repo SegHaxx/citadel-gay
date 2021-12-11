@@ -65,6 +65,7 @@ struct http_transaction {			// The lifetime of an HTTP request goes through this
 	Array *request_headers;
 	char *request_body;
 	long request_body_length;
+	Array *request_parms;			// anything after the "?" in the URL
 	int response_code;
 	char *response_string;
 	Array *response_headers;
