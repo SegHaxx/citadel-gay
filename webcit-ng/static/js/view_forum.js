@@ -209,8 +209,10 @@ function compose_references(references, msgid) {
 
 // Open a reply box directly below a specific message
 function open_reply_box(prefix, msgnum, is_quoted, references, msgid) {
-	new_div_name = prefix + "reply_to_" + msgnum;
-	document.getElementById(prefix+msgnum).outerHTML += "<div id=\"" + new_div_name + "\">reply box put here</div>";
+	let new_div = document.createElement("div");
+	let new_div_name = prefix + "reply_to_" + msgnum;
+	new_div.id = new_div_name;
+	document.getElementById(prefix+msgnum).append(new_div);
 
 	replybox =
 	  "<div class=\"ctdl-msg-wrapper ctdl-msg-reply\">"		// begin message wrapper
