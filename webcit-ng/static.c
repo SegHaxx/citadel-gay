@@ -1,4 +1,3 @@
-//
 // Output static content
 //
 // Copyright (c) 1996-2021 by the citadel.org team

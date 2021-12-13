@@ -13,7 +13,6 @@
 
 
 // Forum view (flat)
-//
 function forum_readmessages(target_div, gt_msg, lt_msg) {
 	original_text = document.getElementById(target_div).innerHTML;		// in case we need to replace it after an error
 	document.getElementById(target_div).innerHTML = 
@@ -107,7 +106,6 @@ function forum_readmessages(target_div, gt_msg, lt_msg) {
 
 
 // Render a range of messages, with the div prefix specified
-//
 function forum_render_messages(msgs, prefix, scroll_to) {
 	for (i=0; i<msgs.length; ++i) {
 		forum_render_one(prefix, msgs[i], scroll_to);
@@ -195,16 +193,12 @@ function compose_references(references, msgid) {
 	}
 	refs += msgid;
 
-	console.log("initial len: " + refs.length);
 	// If the resulting string is too big, we can trim it here
 	while (refs.length > 900) {
 		r = refs.split("|");
 		r.splice(1,1);		// remove the second element so we keep the root
 		refs = r.join("|");
-		console.log("split len: " + refs.length);
 	}
-
-
 	return refs;
 }
 
@@ -214,8 +208,6 @@ function open_reply_box(prefix, msgnum, is_quoted, references, msgid) {
 	target_div_name = prefix+msgnum;
 	new_div_name = prefix + "reply_to_" + msgnum;
 	document.getElementById(target_div_name).outerHTML += "<div id=\"" + new_div_name + "\">reply box put here</div>";
-
-	// FIXME - we need to retain the message number being replied to
 
 	replybox =
 	  "<div class=\"ctdl-msg-wrapper ctdl-msg-reply\">"		// begin message wrapper
@@ -373,9 +365,9 @@ function forum_save_message(div_name, reply_to_msgnum) {
 				for (var i in headers) {
 					if (headers[i].startsWith("etag: ")) {
 						new_msg_num = headers[i].split(" ")[1];
-						alert("div_name=" + div_name + " , reply_to_msgnum = " + reply_to_msgnum + " , new_msg_num = " + new_msg_num);
 					}
 				}
+				alert("div_name=" + div_name + " , reply_to_msgnum = " + reply_to_msgnum + " , new_msg_num = " + new_msg_num);
 				document.getElementById(div_name).outerHTML = "";		// close the editor
 			}
 			else {
@@ -383,7 +375,7 @@ function forum_save_message(div_name, reply_to_msgnum) {
 				if (error_message.length == 0) {
 					error_message = _("An error has occurred.");
 				}
-				alert(error_message);
+				alert(error_message);						// editor remains open
 			}
 		}
 	};

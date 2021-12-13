@@ -1,4 +1,3 @@
-//
 // This module handles HTTP transactions.
 //
 // Copyright (c) 1996-2021 by the citadel.org team
@@ -210,19 +209,26 @@ void perform_one_http_transaction(struct client_handle *ch) {
 			h.request_body = malloc(h.request_body_length);
 			client_read(ch, h.request_body, h.request_body_length);
 
-			//write(2, HKEY("\033[31m"));
-			//write(2, h.request_body, h.request_body_length);
-			//write(2, HKEY("\033[0m\n"));
+			// Write the entire request body to stderr -- not what you want during normal operation.
+			#ifdef BODY_TO_STDERR
+			write(2, HKEY("\033[31m"));
+			write(2, h.request_body, h.request_body_length);
+			write(2, HKEY("\033[0m\n"));
+			#endif
 
 		}
+
 		// Now pass control up to the next layer to perform the request.
 		perform_request(&h);
 
-		// Output the results back to the client.
-		//write(2, HKEY("\033[32m"));
-		//write(2, h.response_body, h.response_body_length);
-		//write(2, HKEY("\033[0m\n"));
+		// Write the entire response body to stderr -- not what you want during normal operation.
+		#ifdef BODY_TO_STDERR
+		write(2, HKEY("\033[32m"));
+		write(2, h.response_body, h.response_body_length);
+		write(2, HKEY("\033[0m\n"));
+		#endif
 
+		// Output the results back to the client.
 		syslog(LOG_DEBUG, "> %03d %s", h.response_code, h.response_string);
 		client_printf(ch, "HTTP/1.1 %03d %s\r\n", h.response_code, h.response_string);
 		client_printf(ch, "Connection: close\r\n");

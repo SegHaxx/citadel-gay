@@ -1,4 +1,3 @@
-//
 // Main entry point for the program.
 //
 // Copyright (c) 1996-2021 by the citadel.org team

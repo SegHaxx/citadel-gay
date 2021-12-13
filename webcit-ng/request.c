@@ -41,9 +41,7 @@ void do_502(struct http_transaction *h) {
 	h->response_code = 502;
 	h->response_string = strdup("bad gateway");
 	add_response_header(h, strdup("Content-type"), strdup("text/plain"));
-	h->response_body =
-	    strdup(_
-		   ("This program was unable to connect or stay connected to the Citadel server.  Please report this problem to your system administrator."));
+	h->response_body = strdup(_("This program was unable to connect or stay connected to the Citadel server.  Please report this problem to your system administrator."));
 	h->response_body_length = strlen(h->response_body);
 }
 
@@ -123,11 +121,11 @@ void perform_request(struct http_transaction *h) {
 	// WebDAV methods like OPTIONS and PROPFIND *require* a logged-in session,
 	// even if the Citadel server allows anonymous access.
 	if (IsEmptyStr(c->auth)) {
-		if ((!strcasecmp(h->method, "OPTIONS"))
-		    || (!strcasecmp(h->method, "PROPFIND"))
-		    || (!strcasecmp(h->method, "REPORT"))
-		    || (!strcasecmp(h->method, "DELETE"))
-		    ) {
+		if (	(!strcasecmp(h->method, "OPTIONS"))
+			|| (!strcasecmp(h->method, "PROPFIND"))
+			|| (!strcasecmp(h->method, "REPORT"))
+			|| (!strcasecmp(h->method, "DELETE"))
+		) {
 			request_http_authenticate(h);
 			disconnect_from_citadel(c);
 			return;
