@@ -115,6 +115,10 @@ function forum_render_messages(msgs, prefix, scroll_to) {
 
 // We have to put each XHR for forum_render_messages() into its own stack frame, otherwise it jumbles them together.  I don't know why.
 function forum_render_one(prefix, msgnum, scroll_to) {
+
+	console.log("Rendering message " + msgnum + " in div " + prefix+msgnum);
+	document.getElementById(prefix+msgnum).innerHTML = "render the stuff here";
+
 	document.body.style.cursor = "wait";
 	fetch_message = async() => {
 		response = await fetch("/ctdl/r/" + escapeHTMLURI(current_room) + "/" + msgs[i] + "/json");
@@ -205,9 +209,8 @@ function compose_references(references, msgid) {
 
 // Open a reply box directly below a specific message
 function open_reply_box(prefix, msgnum, is_quoted, references, msgid) {
-	target_div_name = prefix+msgnum;
 	new_div_name = prefix + "reply_to_" + msgnum;
-	document.getElementById(target_div_name).outerHTML += "<div id=\"" + new_div_name + "\">reply box put here</div>";
+	document.getElementById(prefix+msgnum).outerHTML += "<div id=\"" + new_div_name + "\">reply box put here</div>";
 
 	replybox =
 	  "<div class=\"ctdl-msg-wrapper ctdl-msg-reply\">"		// begin message wrapper
@@ -271,7 +274,7 @@ function open_reply_box(prefix, msgnum, is_quoted, references, msgid) {
 	+ "</span>"							// end footer info on left side
 	+ "<span class=\"ctdl-msg-header-buttons\">"			// begin buttons on right side
 
-	+ "<span class=\"ctdl-msg-button\"><a href=\"javascript:forum_save_message('" +  new_div_name + "', '" + msgnum + "');\">"
+	+ "<span class=\"ctdl-msg-button\"><a href=\"javascript:forum_save_message('" + prefix + "', '" + new_div_name + "');\">"
 	+ "<i class=\"fa fa-check\" style=\"color:green\"></i> "	// save button
 	+ _("Post message")
 	+ "</a></span>"
@@ -332,7 +335,7 @@ function forum_cancel_post(div_name) {
 
 
 // Save the posted message to the server
-function forum_save_message(div_name, reply_to_msgnum) {
+function forum_save_message(prefix, editor_div_name) {
 
 	document.body.style.cursor = "wait";
 	wefw = (document.getElementById("ctdl-replyreferences").innerHTML).replaceAll("|","!");	// references (if present)
@@ -367,8 +370,9 @@ function forum_save_message(div_name, reply_to_msgnum) {
 						new_msg_num = headers[i].split(" ")[1];
 					}
 				}
-				alert("div_name=" + div_name + " , reply_to_msgnum = " + reply_to_msgnum + " , new_msg_num = " + new_msg_num);
-				document.getElementById(div_name).outerHTML = "";		// close the editor
+
+				// change the name of the editor div to make it look like a regular message...
+				document.getElementById(editor_div_name).innerHTML = "fixme render message " + new_msg_num;
 			}
 			else {
 				error_message = request.responseText;
