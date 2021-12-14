@@ -58,15 +58,9 @@ function forum_readmessages(target_div, gt_msg, lt_msg) {
 					_("Older posts") + "&nbsp;&nbsp;<i class=\"fa fa-arrow-circle-up\"></a></div></div></a></div></div>" ;
 			}
 
-			// Render an empty div for each message.  We will fill them in later.
-			//for (var i in msgs) {
-				//document.getElementById(target_div).innerHTML += "<div id=\"ctdl_msg_" + msgs[i] + "\"> </div>" ;
-			//}
-
 			// The messages will go here.
 			let msgs_div_name = "ctdl_msgs_" + randomString(5);
 			document.getElementById(target_div).innerHTML += "<div id=\"" + msgs_div_name + "\"> </div>" ;
-
 
 			if (lt_msg == 9999999999) {
 				new_new_div_name = randomString(5);
@@ -110,7 +104,7 @@ function forum_readmessages(target_div, gt_msg, lt_msg) {
 }
 
 
-// Render a range of messages into the specified prefix
+// Render a range of messages into the specified target div
 function forum_render_messages(message_numbers, msgs_div_name, scroll_to) {
 
 	// Build an array of Promises and then wait for them all to resolve.
@@ -134,13 +128,18 @@ function forum_render_messages(message_numbers, msgs_div_name, scroll_to) {
 		
 		// At this point all of the Promises are resolved and we can render.
 		// Note: "let" keeps "i" in scope even through the .then scope
+		let scroll_to_div = null;
 		for (let i=0; i<num_msgs; ++i) {
 			msg_promises[i].then((one_message) => {
-				document.getElementById(msgs_div_name).append(forum_render_one(one_message));
+				let new_msg_div = forum_render_one(one_message);
+				document.getElementById(msgs_div_name).append(new_msg_div);
+				if (message_numbers[i] == scroll_to) {
+					scroll_to_div = new_msg_div;
+				}
+				if (i == num_msgs - 1) {
+					scroll_to_div.scrollIntoView({behavior: "smooth", block: "start", inline: "nearest"});
+				}
 			});
-			//if (msgnum == scroll_to) {
-				//document.getElementById(prefix+msgnum).scrollIntoView({behavior: "smooth", block: "start", inline: "nearest"});
-			//}
 		}
 	}
 
