@@ -59,10 +59,15 @@ function forum_readmessages(target_div, gt_msg, lt_msg) {
 			}
 
 			// Render an empty div for each message.  We will fill them in later.
-			for (var i in msgs) {
-				document.getElementById(target_div).innerHTML += "<div id=\"ctdl_msg_" + msgs[i] + "\"> </div>" ;
-				document.getElementById("ctdl_msg_"+msgs[i]).style.display = "none";
-			}
+			//for (var i in msgs) {
+				//document.getElementById(target_div).innerHTML += "<div id=\"ctdl_msg_" + msgs[i] + "\"> </div>" ;
+			//}
+
+			// The messages will go here.
+			let msgs_div_name = "ctdl_msgs_" + randomString(5);
+			document.getElementById(target_div).innerHTML += "<div id=\"" + msgs_div_name + "\"> </div>" ;
+
+
 			if (lt_msg == 9999999999) {
 				new_new_div_name = randomString(5);
 				if (msgs.length <= 0) {
@@ -94,7 +99,7 @@ function forum_readmessages(target_div, gt_msg, lt_msg) {
 			}
 
 			// Render the individual messages in the divs
-			forum_render_messages(msgs, "ctdl_msg_", scroll_to)
+			forum_render_messages(msgs, msgs_div_name, scroll_to)
 		}
 		else {
 			// if xhr fails, this will make the link reappear so the user can try again
@@ -105,85 +110,97 @@ function forum_readmessages(target_div, gt_msg, lt_msg) {
 }
 
 
-// Render a range of messages, with the div prefix specified
-function forum_render_messages(msgs, prefix, scroll_to) {
-	for (i=0; i<msgs.length; ++i) {
-		forum_render_one(prefix, msgs[i], scroll_to);
+// Render a range of messages into the specified prefix
+function forum_render_messages(message_numbers, msgs_div_name, scroll_to) {
+
+	// Build an array of Promises and then wait for them all to resolve.
+	let num_msgs = message_numbers.length;
+	let msg_promises = Array.apply(null, Array(num_msgs));
+	for (i=0; i<num_msgs; ++i) {
+		msg_promises[i] = fetch("/ctdl/r/" + escapeHTMLURI(current_room) + "/" + message_numbers[i] + "/json")
+			.then((response) => response.json());
 	}
+
+	// Here is the async function that waits for all the messages to be loaded, and then renders them.
+	fetch_msg_list = async() => {
+		document.body.style.cursor = "wait";
+		await Promise.all(msg_promises);
+		document.body.style.cursor = "default";
+		
+		// At this point all of the Promises are resolved and we can render.
+		// Note: "let" keeps "i" in scope even through the .then scope
+		for (let i=0; i<num_msgs; ++i) {
+			msg_promises[i].then((one_message) => {
+				document.getElementById(msgs_div_name).innerHTML +=
+					forum_render_one(message_numbers[i], one_message);
+			});
+			//if (msgnum == scroll_to) {
+				//document.getElementById(prefix+msgnum).scrollIntoView({behavior: "smooth", block: "start", inline: "nearest"});
+			//}
+		}
+	}
+
+	fetch_msg_list();
 }
 
 
 // We have to put each XHR for forum_render_messages() into its own stack frame, otherwise it jumbles them together.  I don't know why.
-function forum_render_one(prefix, msgnum, scroll_to) {
+function forum_render_one(msgnum, msg) {
 
-	console.log("Rendering message " + msgnum + " in div " + prefix+msgnum);
-	document.getElementById(prefix+msgnum).innerHTML = "render the stuff here";
+	mdiv = randomString(10);					// div name for this message
 
-	document.body.style.cursor = "wait";
-	fetch_message = async() => {
-		response = await fetch("/ctdl/r/" + escapeHTMLURI(current_room) + "/" + msgs[i] + "/json");
-		msg = await response.json();
-		if (response.ok) {
-			outmsg =
-			  "<div class=\"ctdl-msg-wrapper\">"				// begin message wrapper
-			+ "<div class=\"ctdl-avatar\">"					// begin avatar
-			+ "<img src=\"/ctdl/u/" + msg.from + "/userpic\" width=\"32\" "
-			+ "onerror=\"this.parentNode.innerHTML='&lt;i class=&quot;fa fa-user-circle fa-2x&quot;&gt;&lt;/i&gt; '\">"
-			+ "</div>"							// end avatar
-			+ "<div class=\"ctdl-msg-content\">"				// begin content
-			+ "<div class=\"ctdl-msg-header\">"				// begin header
-			+ "<span class=\"ctdl-msg-header-info\">"			// begin header info on left side
-			+ "<span class=\"ctdl-username\"><a href=\"#\">"		// FIXME link to user profile
-			+ msg.from
-			+ "</a></span>"							// end username
-			+ "<span class=\"ctdl-msgdate\">"
-			+ msg.time
-			+ "</span>"							// end msgdate
-			+ "</span>"							// end header info on left side
-			+ "<span class=\"ctdl-msg-header-buttons\">"			// begin buttons on right side
+	outmsg =
+	  "<div id=\"" + mdiv + "\">"					// begin message div
+	+ "<div class=\"ctdl-msg-wrapper\">"				// begin message wrapper
+	+ "<div class=\"ctdl-avatar\">"					// begin avatar
+	+ "<img src=\"/ctdl/u/" + msg.from + "/userpic\" width=\"32\" "
+	+ "onerror=\"this.parentNode.innerHTML='&lt;i class=&quot;fa fa-user-circle fa-2x&quot;&gt;&lt;/i&gt; '\">"
+	+ "</div>"							// end avatar
+	+ "<div class=\"ctdl-msg-content\">"				// begin content
+	+ "<div class=\"ctdl-msg-header\">"				// begin header
+	+ "<span class=\"ctdl-msg-header-info\">"			// begin header info on left side
+	+ "<span class=\"ctdl-username\"><a href=\"#\">"		// FIXME link to user profile
+	+ msg.from
+	+ "</a></span>"							// end username
+	+ "<span class=\"ctdl-msgdate\">"
+	+ msg.time
+	+ "</span>"							// end msgdate
+	+ "</span>"							// end header info on left side
+	+ "<span class=\"ctdl-msg-header-buttons\">"			// begin buttons on right side
 
-			+ "<span class=\"ctdl-msg-button\">"				// Reply
-			+ "<a href=\"javascript:open_reply_box('"+prefix+"',"+msgnum+",false,'"+msg.wefw+"','"+msg.msgn+"');\">"
-			+ "<i class=\"fa fa-reply\"></i> " 
-			+ _("Reply")
-			+ "</a></span>"
+	+ "<span class=\"ctdl-msg-button\">"				// Reply
+	+ "<a href=\"javascript:open_reply_box('"+mdiv+"',false,'"+msg.wefw+"','"+msg.msgn+"');\">"
+	+ "<i class=\"fa fa-reply\"></i> " 
+	+ _("Reply")
+	+ "</a></span>"
 
-			+ "<span class=\"ctdl-msg-button\">"				// ReplyQuoted
-			+ "<a href=\"javascript:open_reply_box('"+prefix+"',"+msgnum+",true,'"+msg.wefw+"','"+msg.msgn+"');\">"
-			+ "<i class=\"fa fa-comment\"></i> " 
-			+ _("ReplyQuoted")
-			+ "</a></span>"
+	+ "<span class=\"ctdl-msg-button\">"				// ReplyQuoted
+	+ "<a href=\"javascript:open_reply_box('"+mdiv+"',true,'"+msg.wefw+"','"+msg.msgn+"');\">"
+	+ "<i class=\"fa fa-comment\"></i> " 
+	+ _("ReplyQuoted")
+	+ "</a></span>"
 
-			+ "<span class=\"ctdl-msg-button\"><a href=\"#\">"		// Delete , show only with permission FIXME
-			+ "<i class=\"fa fa-trash\"></i> " 
-			+ _("Delete")
-			+ "</a></span>"
+	+ "<span class=\"ctdl-msg-button\"><a href=\"#\">"		// Delete , show only with permission FIXME
+	+ "<i class=\"fa fa-trash\"></i> " 
+	+ _("Delete")
+	+ "</a></span>"
 
-			+ "</span>";							// end buttons on right side
-			if (msg.subj) {
-				outmsg +=
-			  	"<br><span class=\"ctdl-msgsubject\">" + msg.subj + "</span>";
-			}
-			outmsg +=
-			  "</div><br>"							// end header
-			+ "<div class=\"ctdl-msg-body\">"				// begin body
-			+ msg.text
-			+ "</div>"							// end body
-			+ "</div>"							// end content
-			+ "</div>"							// end wrapper
-			;
-			document.getElementById(prefix+msgnum).innerHTML = outmsg;
-		}
-		else {
-			document.getElementById(prefix+msgnum).innerHTML = "ERROR";
-		}
-		document.getElementById(prefix+msgnum).style.display  = "inline";
-		if (msgnum == scroll_to) {
-			document.getElementById(prefix+msgnum).scrollIntoView({behavior: "smooth", block: "start", inline: "nearest"});
-			document.body.style.cursor = "default";
-		}
+	+ "</span>";							// end buttons on right side
+	if (msg.subj) {
+		outmsg +=
+	  	"<br><span class=\"ctdl-msgsubject\">" + msg.subj + "</span>";
 	}
-	fetch_message();
+	outmsg +=
+	  "</div><br>"							// end header
+	+ "<div class=\"ctdl-msg-body\">"				// begin body
+	+ msg.text
+	+ "</div>"							// end body
+	+ "</div>"							// end content
+	+ "</div>"							// end wrapper
+	+ "</div>"							// end message div
+	;
+
+	return(outmsg);
 }
 
 
@@ -208,11 +225,12 @@ function compose_references(references, msgid) {
 
 
 // Open a reply box directly below a specific message
-function open_reply_box(prefix, msgnum, is_quoted, references, msgid) {
+function open_reply_box(parent_div, is_quoted, references, msgid) {
 	let new_div = document.createElement("div");
-	let new_div_name = prefix + "reply_to_" + msgnum;
+	let new_div_name = randomString(10);
 	new_div.id = new_div_name;
-	document.getElementById(prefix+msgnum).append(new_div);
+
+	document.getElementById(parent_div).append(new_div);
 
 	replybox =
 	  "<div class=\"ctdl-msg-wrapper ctdl-msg-reply\">"		// begin message wrapper
@@ -253,13 +271,13 @@ function open_reply_box(prefix, msgnum, is_quoted, references, msgid) {
 	+ "</a></span>"
 
 	+ "</span>";							// end buttons on right side
-	if (msg.subj) {
-		replybox +=
-	  	"<br><span id=\"ctdl-subject\" class=\"ctdl-msgsubject\">" + "FIXME subject" + "</span>";
-	}
-	else {								// hidden filed for empty subject
+	//if (msg.subj) {
+		//replybox +=
+	  	//"<br><span id=\"ctdl-subject\" class=\"ctdl-msgsubject\">" + "FIXME subject" + "</span>";
+	//}
+	//else {								// hidden filed for empty subject
 		replybox += "<span id=\"ctdl-subject\" style=\"display:none\"></span>";
-	}
+	//}
 	replybox +=
 	  "</div><br>"							// end header
 
@@ -276,7 +294,7 @@ function open_reply_box(prefix, msgnum, is_quoted, references, msgid) {
 	+ "</span>"							// end footer info on left side
 	+ "<span class=\"ctdl-msg-header-buttons\">"			// begin buttons on right side
 
-	+ "<span class=\"ctdl-msg-button\"><a href=\"javascript:forum_save_message('" + prefix + "', '" + new_div_name + "');\">"
+	+ "<span class=\"ctdl-msg-button\"><a href=\"javascript:forum_save_message('" + new_div_name + "');\">"
 	+ "<i class=\"fa fa-check\" style=\"color:green\"></i> "	// save button
 	+ _("Post message")
 	+ "</a></span>"
@@ -337,7 +355,7 @@ function forum_cancel_post(div_name) {
 
 
 // Save the posted message to the server
-function forum_save_message(prefix, editor_div_name) {
+function forum_save_message(editor_div_name) {
 
 	document.body.style.cursor = "wait";
 	wefw = (document.getElementById("ctdl-replyreferences").innerHTML).replaceAll("|","!");	// references (if present)

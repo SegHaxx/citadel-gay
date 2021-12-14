@@ -31,58 +31,6 @@ function _(x) {
 }
 
 
-// Generate a random string of the specified length
-// Useful for generating one-time-use div names
-//
-function randomString(length) {
-	var chars = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghiklmnopqrstuvwxyz'.split('');
-	var str = '';
-
-	if (!length) {
-		length = Math.floor(Math.random() * chars.length);
-	}
-	for (var i = 0; i < length; i++) {
-		str += chars[Math.floor(Math.random() * chars.length)];
-	}
-	return str;
-}
-
-
-// string escape for html display
-//
-function escapeHTML(text) {
-	'use strict';
-	return text.replace(/[\"&<>]/g, function (a) {
-		return {
-			'"': '&quot;',
-			'&': '&amp;',
-			'<': '&lt;',
-			'>': '&gt;'
-		}[a];
-	});
-}
-
-
-// string escape for html display
-//
-function escapeHTMLURI(text) {
-	'use strict';
-	return text.replace(/./g, function (a) {
-		return '%' + a.charCodeAt(0).toString(16);
-	});
-}
-
-
-// string escape for JavaScript string
-//
-function escapeJS(text) {
-	'use strict';
-	return text.replace(/[\"\']/g, function (a) {
-		return '\\' + a ;
-	});
-}
-
-
 // This is called at the very beginning of the main page load.
 //
 ctdl_startup = async() => {

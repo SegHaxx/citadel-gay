@@ -1,4 +1,3 @@
-//
 // Forum view (threaded/flat)
 //
 // Copyright (c) 1996-2021 by the citadel.org team
@@ -14,16 +13,6 @@
 // GNU General Public License for more details.
 
 #include "webcit.h"
-
-struct mthread {
-	long msgnum;
-	time_t datetime;
-	int threadhash;
-	int refhashes[10];
-	char from[64];
-	int parent;
-};
-
 
 // Commands we need to send to Citadel Server before we begin rendering forum view.
 // These are common to flat and threaded views.
