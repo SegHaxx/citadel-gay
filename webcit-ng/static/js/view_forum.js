@@ -15,9 +15,7 @@
 function forum_readmessages(target_div_name, gt_msg, lt_msg) {
 	target_div = document.getElementById(target_div_name);
 	original_text = target_div.innerHTML;					// in case we need to replace it after an error
-	target_div.innerHTML = 
-		"<div class=\"ctdl-forum-nav\"><i class=\"fas fa-spinner fa-spin\"></i>&nbsp;&nbsp;"
-		+ _("Loading messages from server, please wait") + "</div>";
+	target_div.innerHTML = ""
 
 	if (lt_msg < 9999999999) {
 		url = "/ctdl/r/" + escapeHTMLURI(current_room) + "/msgs.lt|" + lt_msg;
@@ -123,7 +121,9 @@ function forum_render_messages(message_numbers, msgs_div_name, scroll_to) {
 	// Here is the async function that waits for all the messages to be loaded, and then renders them.
 	fetch_msg_list = async() => {
 		document.body.style.cursor = "wait";
+		activate_loading_modal();
 		await Promise.all(msg_promises);
+		deactivate_loading_modal();
 		document.body.style.cursor = "default";
 		
 		// At this point all of the Promises are resolved and we can render.

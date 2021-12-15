@@ -193,3 +193,18 @@ function load_new_march_list() {
 	}
 	fetchm();
 }
+
+
+// Activate the "Loading..." modal
+function activate_loading_modal() {
+	document.getElementById("ctdl_big_modal_content").innerHTML =
+		"<i class=\"fas fa-spinner fa-spin\"></i>&nbsp;&nbsp;"
+		+ _("Loading messages from server, please wait");
+	document.getElementById("ctdl_big_modal").style.display = "block";
+}
+
+
+// Disappear the "Loading..." modal
+function deactivate_loading_modal() {
+	document.getElementById("ctdl_big_modal").style.display = "none";
+}
