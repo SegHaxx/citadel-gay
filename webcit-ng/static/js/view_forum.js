@@ -43,7 +43,7 @@ function forum_readmessages(target_div_name, gt_msg, lt_msg) {
 				if (msgs.length > messages_per_page) {
 					msgs = msgs.slice(msgs.length - messages_per_page);
 				}
-				new_old_div_name = randomString(5);
+				new_old_div_name = randomString(10);
 				if (msgs.length < 1) {
 					newlt = lt_msg;
 				}
@@ -59,11 +59,11 @@ function forum_readmessages(target_div_name, gt_msg, lt_msg) {
 			}
 
 			// The messages will go here.
-			let msgs_div_name = "ctdl_msgs_" + randomString(5);
+			let msgs_div_name = randomString(10);
 			target_div.innerHTML += "<div id=\"" + msgs_div_name + "\"> </div>" ;
 
 			if (lt_msg == 9999999999) {
-				new_new_div_name = randomString(5);
+				new_new_div_name = randomString(10);
 				if (msgs.length <= 0) {
 					newgt = gt_msg;
 				}
@@ -401,7 +401,7 @@ function forum_save_message(editor_div_name) {
 				}
 
 				// change the name of the editor div to make it look like a regular message...
-				document.getElementById(editor_div_name).innerHTML = "fixme render message " + new_msg_num;
+				document.getElementById(editor_div_name).innerHTML = "FIXME render message " + new_msg_num;
 			}
 			else {
 				error_message = request.responseText;
