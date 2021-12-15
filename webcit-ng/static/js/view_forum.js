@@ -1,4 +1,3 @@
-//
 // Copyright (c) 2016-2021 by the citadel.org team
 //
 // This program is open source software.  It runs great on the
@@ -13,9 +12,10 @@
 
 
 // Forum view (flat)
-function forum_readmessages(target_div, gt_msg, lt_msg) {
-	original_text = document.getElementById(target_div).innerHTML;		// in case we need to replace it after an error
-	document.getElementById(target_div).innerHTML = 
+function forum_readmessages(target_div_name, gt_msg, lt_msg) {
+	target_div = document.getElementById(target_div_name);
+	original_text = target_div.innerHTML;					// in case we need to replace it after an error
+	target_div.innerHTML = 
 		"<div class=\"ctdl-forum-nav\"><i class=\"fas fa-spinner fa-spin\"></i>&nbsp;&nbsp;"
 		+ _("Loading messages from server, please wait") + "</div>";
 
@@ -30,7 +30,7 @@ function forum_readmessages(target_div, gt_msg, lt_msg) {
 		response = await fetch(url);
 		msgs = await(response.json());
 		if (response.ok) {
-			document.getElementById(target_div).innerHTML = "" ;
+			target_div.innerHTML = "" ;
 
 			// If we were given an explicit starting point, by all means start there.
 			// Note that we don't have to remove them from the array because we did a 'msgs gt|xxx' command to Citadel.
@@ -50,7 +50,7 @@ function forum_readmessages(target_div, gt_msg, lt_msg) {
 				else {
 					newlt = msgs[0];
 				}
-				document.getElementById(target_div).innerHTML +=
+				target_div.innerHTML +=
 					"<div id=\"" + new_old_div_name + "\">" +
 					"<div class=\"ctdl-forum-nav\">" +
 					"<a href=\"javascript:forum_readmessages('" + new_old_div_name + "', 0, " + newlt + ");\">" +
@@ -60,7 +60,7 @@ function forum_readmessages(target_div, gt_msg, lt_msg) {
 
 			// The messages will go here.
 			let msgs_div_name = "ctdl_msgs_" + randomString(5);
-			document.getElementById(target_div).innerHTML += "<div id=\"" + msgs_div_name + "\"> </div>" ;
+			target_div.innerHTML += "<div id=\"" + msgs_div_name + "\"> </div>" ;
 
 			if (lt_msg == 9999999999) {
 				new_new_div_name = randomString(5);
@@ -70,7 +70,7 @@ function forum_readmessages(target_div, gt_msg, lt_msg) {
 				else {
 					newgt = msgs[msgs.length-1];
 				}
-				document.getElementById(target_div).innerHTML +=
+				target_div.innerHTML +=
 					"<div id=\"" + new_new_div_name + "\">" +
 					"<div class=\"ctdl-forum-nav\">" +
 					"<a href=\"javascript:forum_readmessages('" + new_new_div_name + "', " + newgt + ", 9999999999);\">" +
@@ -97,7 +97,7 @@ function forum_readmessages(target_div, gt_msg, lt_msg) {
 		}
 		else {
 			// if xhr fails, this will make the link reappear so the user can try again
-			document.getElementById(target_div).innerHTML = original_text;
+			target_div.innerHTML = original_text;
 		}
 	}
 	fetch_msg_list();
