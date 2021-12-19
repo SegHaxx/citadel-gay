@@ -1,25 +1,23 @@
-/*
- * POP3 service for the Citadel system
- *
- * Copyright (c) 1998-2019 by the citadel.org team
- *
- * This program is open source software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 3.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * Current status of standards conformance:
- *
- * -> All required POP3 commands described in RFC1939 are implemented.
- * -> All optional POP3 commands described in RFC1939 are also implemented.
- * -> The deprecated "LAST" command is included in this implementation, because
- *    there exist mail clients which insist on using it (such as Bynari
- *    TradeMail, and certain versions of Eudora).
- * -> Capability detection via the method described in RFC2449 is implemented.
- */
+// POP3 service for the Citadel system
+//
+// Copyright (c) 1998-2021 by the citadel.org team
+//
+// This program is open source software; you can redistribute it and/or modify
+// it under the terms of the GNU General Public License version 3.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// Current status of standards conformance:
+//
+// -> All required POP3 commands described in RFC1939 are implemented.
+// -> All optional POP3 commands described in RFC1939 are also implemented.
+// -> The deprecated "LAST" command is included in this implementation, because
+//    there exist mail clients which insist on using it (such as Bynari
+//    TradeMail, and certain versions of Eudora).
+// -> Capability detection via the method described in RFC2449 is implemented.
 
 #include "sysdep.h"
 #include <stdlib.h>
@@ -49,18 +47,13 @@
 #include "ctdl_module.h"
 
 
-/*
- * This cleanup function blows away the temporary memory and files used by
- * the POP3 server.
- */
-void pop3_cleanup_function(void)
-{
-	struct CitContext *CCC = CC;
-
+// This cleanup function blows away the temporary memory and files used by
+// the POP3 server.
+void pop3_cleanup_function(void) {
 	/* Don't do this stuff if this is not a POP3 session! */
-	if (CCC->h_command_function != pop3_command_loop) return;
+	if (CC->h_command_function != pop3_command_loop) return;
 
-	struct citpop3 *pop3 = ((struct citpop3 *)CCC->session_specific_data);
+	struct citpop3 *pop3 = ((struct citpop3 *)CC->session_specific_data);
 	syslog(LOG_DEBUG, "pop3: performing cleanup hook");
 	if (pop3->msgs != NULL) {
 		free(pop3->msgs);
@@ -70,50 +63,37 @@ void pop3_cleanup_function(void)
 }
 
 
-/*
- * Here's where our POP3 session begins its happy day.
- */
-void pop3_greeting(void)
-{
-	struct CitContext *CCC = CC;
-
-	strcpy(CCC->cs_clientname, "POP3 session");
-	CCC->internal_pgm = 1;
-	CCC->session_specific_data = malloc(sizeof(struct citpop3));
+// Here's where our POP3 session begins its happy day.
+void pop3_greeting(void) {
+	strcpy(CC->cs_clientname, "POP3 session");
+	CC->internal_pgm = 1;
+	CC->session_specific_data = malloc(sizeof(struct citpop3));
 	memset(POP3, 0, sizeof(struct citpop3));
 
 	cprintf("+OK Citadel POP3 server ready.\r\n");
 }
 
 
-/*
- * POP3S is just like POP3, except it goes crypto right away.
- */
-void pop3s_greeting(void)
-{
-	struct CitContext *CCC = CC;
+// POP3S is just like POP3, except it goes crypto right away.
+void pop3s_greeting(void) {
 	CtdlModuleStartCryptoMsgs(NULL, NULL, NULL);
 
 /* kill session if no crypto */
 #ifdef HAVE_OPENSSL
-	if (!CCC->redirect_ssl) CCC->kill_me = KILLME_NO_CRYPTO;
+	if (!CC->redirect_ssl) CC->kill_me = KILLME_NO_CRYPTO;
 #else
-	CCC->kill_me = KILLME_NO_CRYPTO;
+	CC->kill_me = KILLME_NO_CRYPTO;
 #endif
 
 	pop3_greeting();
 }
 
 
-/*
- * Specify user name (implements POP3 "USER" command)
- */
-void pop3_user(char *argbuf)
-{
-	struct CitContext *CCC = CC;
+// Specify user name (implements POP3 "USER" command)
+void pop3_user(char *argbuf) {
 	char username[SIZ];
 
-	if (CCC->logged_in) {
+	if (CC->logged_in) {
 		cprintf("-ERR You are already logged in.\r\n");
 		return;
 	}
@@ -130,56 +110,50 @@ void pop3_user(char *argbuf)
 }
 
 
-/*
- * Back end for pop3_grab_mailbox()
- */
-void pop3_add_message(long msgnum, void *userdata)
-{
-	struct CitContext *CCC = CC;
+// Back end for pop3_grab_mailbox()
+void pop3_add_message(long msgnum, void *userdata) {
 	struct MetaData smi;
 
 	++POP3->num_msgs;
-	if (POP3->num_msgs < 2) POP3->msgs = malloc(sizeof(struct pop3msg));
-	else POP3->msgs = realloc(POP3->msgs, 
-		(POP3->num_msgs * sizeof(struct pop3msg)) ) ;
+	if (POP3->num_msgs < 2) {
+		POP3->msgs = malloc(sizeof(struct pop3msg));
+	}
+	else {
+		POP3->msgs = realloc(POP3->msgs, (POP3->num_msgs * sizeof(struct pop3msg)) ) ;
+	}
 	POP3->msgs[POP3->num_msgs-1].msgnum = msgnum;
 	POP3->msgs[POP3->num_msgs-1].deleted = 0;
 
-	/* We need to know the length of this message when it is printed in
-	 * RFC822 format.  Perhaps we have cached this length in the message's
-	 * metadata record.  If so, great; if not, measure it and then cache
-	 * it for next time.
-	 */
+	// We need to know the length of this message when it is printed in
+	// RFC822 format.  Perhaps we have cached this length in the message's
+	// metadata record.  If so, great; if not, measure it and then cache
+	// it for next time.
 	GetMetaData(&smi, msgnum);
 	if (smi.meta_rfc822_length <= 0L) {
-		CCC->redirect_buffer = NewStrBufPlain(NULL, SIZ);
+		CC->redirect_buffer = NewStrBufPlain(NULL, SIZ);
 		CtdlOutputMsg(msgnum, MT_RFC822, HEADERS_ALL, 0, 1, NULL, SUPPRESS_ENV_TO, NULL, NULL, NULL);
-		smi.meta_rfc822_length = StrLength(CCC->redirect_buffer);
-		FreeStrBuf(&CCC->redirect_buffer);
+		smi.meta_rfc822_length = StrLength(CC->redirect_buffer);
+		FreeStrBuf(&CC->redirect_buffer);
 		PutMetaData(&smi);
 	}
 	POP3->msgs[POP3->num_msgs-1].rfc822_length = smi.meta_rfc822_length;
 }
 
 
-/*
- * Open the inbox and read its contents.
- * (This should be called only once, by pop3_pass(), and returns the number
- * of messages in the inbox, or -1 for error)
- */
-int pop3_grab_mailbox(void)
-{
-	struct CitContext *CCC = CC;
+// Open the inbox and read its contents.
+// (This should be called only once, by pop3_pass(), and returns the number
+// of messages in the inbox, or -1 for error)
+int pop3_grab_mailbox(void) {
         visit vbuf;
 	int i;
 
-	if (CtdlGetRoom(&CCC->room, MAILROOM) != 0) return(-1);
+	if (CtdlGetRoom(&CC->room, MAILROOM) != 0) return(-1);
 
 	/* Load up the messages */
 	CtdlForEachMessage(MSGS_ALL, 0L, NULL, NULL, NULL, pop3_add_message, NULL);
 
 	/* Figure out which are old and which are new */
-        CtdlGetRelationship(&vbuf, &CCC->user, &CCC->room);
+        CtdlGetRelationship(&vbuf, &CC->user, &CC->room);
 	POP3->lastseen = (-1);
 	if (POP3->num_msgs) for (i=0; i<POP3->num_msgs; ++i) {
 		if (is_msg_in_sequence_set(vbuf.v_seen, (POP3->msgs[POP3->num_msgs-1].msgnum) )) {
@@ -191,16 +165,14 @@ int pop3_grab_mailbox(void)
 }
 
 
-void pop3_login(void)
-{
-	struct CitContext *CCC = CC;
+void pop3_login(void) {
 	int msgs;
 	
 	msgs = pop3_grab_mailbox();
 	if (msgs >= 0) {
 		cprintf("+OK %s is logged in (%d messages)\r\n",
-			CCC->user.fullname, msgs);
-		syslog(LOG_DEBUG, "pop3: authenticated %s", CCC->user.fullname);
+			CC->user.fullname, msgs);
+		syslog(LOG_DEBUG, "pop3: authenticated %s", CC->user.fullname);
 	}
 	else {
 		cprintf("-ERR Can't open your mailbox\r\n");
@@ -209,9 +181,7 @@ void pop3_login(void)
 }
 
 
-/*
- * Authorize with password (implements POP3 "PASS" command)
- */
+// Authorize with password (implements POP3 "PASS" command)
 void pop3_pass(char *argbuf) {
 	char password[SIZ];
 
@@ -227,16 +197,14 @@ void pop3_pass(char *argbuf) {
 }
 
 
-/*
- * list available msgs
- */
+// list available msgs
 void pop3_list(char *argbuf) {
 	int i;
 	int which_one;
 
 	which_one = atoi(argbuf);
 
-	/* "list one" mode */
+	// "list one" mode
 	if (which_one > 0) {
 		if (which_one > POP3->num_msgs) {
 			cprintf("-ERR no such message, only %d are here\r\n", POP3->num_msgs);
@@ -252,7 +220,7 @@ void pop3_list(char *argbuf) {
 		}
 	}
 
-	/* "list all" (scan listing) mode */
+	// "list all" (scan listing) mode
 	else {
 		cprintf("+OK Here's your mail:\r\n");
 		if (POP3->num_msgs > 0) for (i=0; i<POP3->num_msgs; ++i) {
@@ -265,9 +233,7 @@ void pop3_list(char *argbuf) {
 }
 
 
-/*
- * STAT (tally up the total message count and byte count) command
- */
+// STAT (tally up the total message count and byte count) command
 void pop3_stat(char *argbuf) {
 	int total_msgs = 0;
 	size_t total_octets = 0;
@@ -284,9 +250,7 @@ void pop3_stat(char *argbuf) {
 }
 
 
-/*
- * RETR command (fetch a message)
- */
+// RETR command (fetch a message)
 void pop3_retr(char *argbuf) {
 	int which_one;
 
@@ -310,12 +274,8 @@ void pop3_retr(char *argbuf) {
 }
 
 
-/*
- * TOP command (dumb way of fetching a partial message or headers-only)
- */
-void pop3_top(char *argbuf)
-{
-	struct CitContext *CCC = CC;
+// TOP command (dumb way of fetching a partial message or headers-only)
+void pop3_top(char *argbuf) {
 	int which_one;
 	int lines_requested = 0;
 	int lines_dumped = 0;
@@ -336,7 +296,7 @@ void pop3_top(char *argbuf)
 		return;
 	}
 
-	CCC->redirect_buffer = NewStrBufPlain(NULL, SIZ);
+	CC->redirect_buffer = NewStrBufPlain(NULL, SIZ);
 
 	CtdlOutputMsg(POP3->msgs[which_one - 1].msgnum,
 		      MT_RFC822,
@@ -345,8 +305,8 @@ void pop3_top(char *argbuf)
 		      SUPPRESS_ENV_TO,
 		      NULL, NULL, NULL);
 
-	msgtext = CCC->redirect_buffer;
-	CCC->redirect_buffer = NULL;
+	msgtext = CC->redirect_buffer;
+	CC->redirect_buffer = NULL;
 
 	cprintf("+OK Message %d:\r\n", which_one);
 	
@@ -375,9 +335,7 @@ void pop3_top(char *argbuf)
 }
 
 
-/*
- * DELE (delete message from mailbox)
- */
+// DELE (delete message from mailbox)
 void pop3_dele(char *argbuf) {
 	int which_one;
 
@@ -392,25 +350,22 @@ void pop3_dele(char *argbuf) {
 		return;
 	}
 
-	/* Flag the message as deleted.  Will expunge during QUIT command. */
+	// Flag the message as deleted.  Will expunge during QUIT command.
 	POP3->msgs[which_one - 1].deleted = 1;
 	cprintf("+OK Message %d deleted.\r\n",
 		which_one);
 }
 
 
-/* Perform "UPDATE state" stuff
- */
-void pop3_update(void)
-{
-	struct CitContext *CCC = CC;
+// Perform "UPDATE state" stuff
+void pop3_update(void) {
 	int i;
         visit vbuf;
 
 	long *deletemsgs = NULL;
 	int num_deletemsgs = 0;
 
-	/* Remove messages marked for deletion */
+	// Remove messages marked for deletion
 	if (POP3->num_msgs > 0) {
 		deletemsgs = malloc(POP3->num_msgs * sizeof(long));
 		for (i=0; i<POP3->num_msgs; ++i) {
@@ -424,21 +379,19 @@ void pop3_update(void)
 		free(deletemsgs);
 	}
 
-	/* Set last read pointer */
+	// Set last read pointer
 	if (POP3->num_msgs > 0) {
 		CtdlLockGetCurrentUser();
-		CtdlGetRelationship(&vbuf, &CCC->user, &CCC->room);
+		CtdlGetRelationship(&vbuf, &CC->user, &CC->room);
 		snprintf(vbuf.v_seen, sizeof vbuf.v_seen, "*:%ld", POP3->msgs[POP3->num_msgs-1].msgnum);
-		CtdlSetRelationship(&vbuf, &CCC->user, &CCC->room);
+		CtdlSetRelationship(&vbuf, &CC->user, &CC->room);
 		CtdlPutCurrentUserLock();
 	}
 
 }
 
 
-/* 
- * RSET (reset, i.e. undelete any deleted messages) command
- */
+// RSET (reset, i.e. undelete any deleted messages) command
 void pop3_rset(char *argbuf) {
 	int i;
 
@@ -451,17 +404,13 @@ void pop3_rset(char *argbuf) {
 }
 
 
-/* 
- * LAST (Determine which message is the last unread message)
- */
+// LAST (Determine which message is the last unread message)
 void pop3_last(char *argbuf) {
 	cprintf("+OK %d\r\n", POP3->lastseen + 1);
 }
 
 
-/*
- * CAPA is a command which tells the client which POP3 extensions are supported.
- */
+// CAPA is a command which tells the client which POP3 extensions are supported.
 void pop3_capa(void) {
 	cprintf("+OK Capability list follows\r\n"
 		"TOP\r\n"
@@ -475,17 +424,15 @@ void pop3_capa(void) {
 }
 
 
-/*
- * UIDL (Universal IDentifier Listing) is easy.  Our 'unique' message
- * identifiers are simply the Citadel message numbers in the database.
- */
+// UIDL (Universal IDentifier Listing) is easy.  Our 'unique' message
+// identifiers are simply the Citadel message numbers in the database.
 void pop3_uidl(char *argbuf) {
 	int i;
 	int which_one;
 
 	which_one = atoi(argbuf);
 
-	/* "list one" mode */
+	// "list one" mode
 	if (which_one > 0) {
 		if (which_one > POP3->num_msgs) {
 			cprintf("-ERR no such message, only %d are here\r\n", POP3->num_msgs);
@@ -501,7 +448,7 @@ void pop3_uidl(char *argbuf) {
 		}
 	}
 
-	/* "list all" (scan listing) mode */
+	// "list all" (scan listing) mode
 	else {
 		cprintf("+OK Here's your mail:\r\n");
 		if (POP3->num_msgs > 0) for (i=0; i<POP3->num_msgs; ++i) {
@@ -514,11 +461,8 @@ void pop3_uidl(char *argbuf) {
 }
 
 
-/*
- * implements the STLS command (Citadel API version)
- */
-void pop3_stls(void)
-{
+// implements the STLS command (Citadel API version)
+void pop3_stls(void) {
 	char ok_response[SIZ];
 	char nosup_response[SIZ];
 	char error_response[SIZ];
@@ -530,19 +474,15 @@ void pop3_stls(void)
 }
 
 
-/* 
- * Main command loop for POP3 sessions.
- */
-void pop3_command_loop(void)
-{
-	struct CitContext *CCC = CC;
+// Main command loop for POP3 sessions.
+void pop3_command_loop(void) {
 	char cmdbuf[SIZ];
 
-	time(&CCC->lastcmd);
-	memset(cmdbuf, 0, sizeof cmdbuf); /* Clear it, just in case */
+	time(&CC->lastcmd);
+	memset(cmdbuf, 0, sizeof cmdbuf);			// Clear it, just in case
 	if (client_getln(cmdbuf, sizeof cmdbuf) < 1) {
 		syslog(LOG_INFO, "pop3: client disconnected; ending session.");
-		CCC->kill_me = KILLME_CLIENT_DISCONNECTED;
+		CC->kill_me = KILLME_CLIENT_DISCONNECTED;
 		return;
 	}
 	if (!strncasecmp(cmdbuf, "PASS", 4)) {
@@ -564,7 +504,7 @@ void pop3_command_loop(void)
 	else if (!strncasecmp(cmdbuf, "QUIT", 4)) {
 		cprintf("+OK Goodbye...\r\n");
 		pop3_update();
-		CCC->kill_me = KILLME_CLIENT_LOGGED_OUT;
+		CC->kill_me = KILLME_CLIENT_LOGGED_OUT;
 		return;
 	}
 
@@ -582,13 +522,13 @@ void pop3_command_loop(void)
 	}
 #endif
 
-	else if (!CCC->logged_in) {
+	else if (!CC->logged_in) {
 		cprintf("-ERR Not logged in.\r\n");
 	}
 	
-	else if (CCC->nologin) {
+	else if (CC->nologin) {
 		cprintf("-ERR System busy, try later.\r\n");
-		CCC->kill_me = KILLME_NOLOGIN;
+		CC->kill_me = KILLME_NOLOGIN;
 	}
 
 	else if (!strncasecmp(cmdbuf, "LIST", 4)) {
