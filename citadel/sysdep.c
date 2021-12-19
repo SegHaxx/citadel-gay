@@ -37,7 +37,7 @@
 #include "config.h"
 #include "ctdl_module.h"
 #include "sysdep_decls.h"
-#include "modules/crypto/serv_crypto.h"	// Needed for init_ssl, client_write_ssl, client_read_ssl, destruct_ssl
+#include "modules/crypto/serv_crypto.h"	// Needed for init_ssl, client_write_ssl, client_read_ssl
 #include "housekeeping.h"
 #include "context.h"
 
@@ -632,9 +632,6 @@ void close_masters(void) {
 void sysdep_master_cleanup(void) {
 	close_masters();
 	context_cleanup();
-#ifdef HAVE_OPENSSL
-	destruct_ssl();
-#endif
 }
 
 

@@ -37,25 +37,15 @@
 #include "sysdep_decls.h"
 #include "citadel.h"
 #include "config.h"
-
-
 #include "ctdl_module.h"
 
 #ifdef HAVE_OPENSSL
-SSL_CTX *ssl_ctx;		/* SSL context */
-pthread_mutex_t **SSLCritters;	/* Things needing locking */
+SSL_CTX *ssl_ctx;			// SSL context
+pthread_mutex_t **SSLCritters;		// Things needing locking
 
 
 static unsigned long id_callback(void) {
 	return (unsigned long) pthread_self();
-}
-
-
-void destruct_ssl(void) {
-	int a;
-	for (a = 0; a < CRYPTO_num_locks(); a++) 
-		free(SSLCritters[a]);
-	free (SSLCritters);
 }
 
 
@@ -90,13 +80,13 @@ void generate_key(char *keyfilename) {
 	fp = fopen(keyfilename, "w");
 	if (fp != NULL) {
 		chmod(keyfilename, 0600);
-		if (PEM_write_RSAPrivateKey(fp,	/* the file */
-					rsa,	/* the key */
-					NULL,	/* no enc */
-					NULL,	/* no passphr */
-					0,	/* no passphr */
-					NULL,	/* no callbk */
-					NULL	/* no callbk */
+		if (PEM_write_RSAPrivateKey(fp,	// the file
+					rsa,	// the key
+					NULL,	// no enc
+					NULL,	// no passphrase
+					0,	// no passphrase
+					NULL,	// no callback
+					NULL	// no callback
 		) != 1) {
 			syslog(LOG_ERR, "crypto: cannot write key: %s", ERR_reason_error_string(ERR_get_error()));
 			unlink(keyfilename);
@@ -104,7 +94,7 @@ void generate_key(char *keyfilename) {
 		fclose(fp);
 	}
 
-    // 4. free
+    // free the memory we used
 free_all:
     RSA_free(rsa);
     BN_free(bne);
@@ -139,9 +129,7 @@ void init_ssl(void) {
 		}
 	}
 
-	/*
-	 * Initialize SSL transport layer
-	 */
+	// Initialize SSL transport layer
 	SSL_library_init();
 	SSL_load_error_strings();
 	ssl_method = SSLv23_server_method();
@@ -162,20 +150,16 @@ void init_ssl(void) {
 	mkdir(ctdl_key_dir, 0700);		// If the keys directory does not exist, create it
 	generate_key(file_crpt_file_key);	// If a private key does not exist, create it
 
-	/*
-	 * If there is no certificate file on disk, we will be generating a self-signed certificate
-	 * in the next step.  Therefore, if we have neither a CSR nor a certificate, generate
-	 * the CSR in this step so that the next step may commence.
-	 */
+	// If there is no certificate file on disk, we will be generating a self-signed certificate
+	// in the next step.  Therefore, if we have neither a CSR nor a certificate, generate
+	// the CSR in this step so that the next step may commence.
 	if ( (access(file_crpt_file_cer, R_OK) != 0) && (access(file_crpt_file_csr, R_OK) != 0) ) {
 		syslog(LOG_INFO, "crypto: generating a generic certificate signing request.");
 
-		/*
-		 * Read our key from the file.  No, we don't just keep this
-		 * in memory from the above key-generation function, because
-		 * there is the possibility that the key was already on disk
-		 * and we didn't just generate it now.
-		 */
+		// Read our key from the file.  No, we don't just keep this
+		// in memory from the above key-generation function, because
+		// there is the possibility that the key was already on disk
+		// and we didn't just generate it now.
 		fp = fopen(file_crpt_file_key, "r");
 		if (fp) {
 			rsa = PEM_read_RSAPrivateKey(fp, NULL, NULL, NULL);
@@ -184,18 +168,18 @@ void init_ssl(void) {
 
 		if (rsa) {
 
-			/* Create a public key from the private key */
+			// Create a public key from the private key
 			if (pk=EVP_PKEY_new(), pk != NULL) {
 				EVP_PKEY_assign_RSA(pk, rsa);
 				if (req = X509_REQ_new(), req != NULL) {
 
-					/* Set the public key */
+					// Set the public key
 					X509_REQ_set_pubkey(req, pk);
 					X509_REQ_set_version(req, 0L);
 
 					name = X509_REQ_get_subject_name(req);
 
-					/* Tell it who we are */
+					// Tell it who we are
 					X509_NAME_add_entry_by_txt(name, "C", MBSTRING_ASC, (unsigned const char *)"ZZ", -1, -1, 0);
 					X509_NAME_add_entry_by_txt(name, "ST", MBSTRING_ASC, (unsigned const char *)"The World", -1, -1, 0);
 					X509_NAME_add_entry_by_txt(name, "L", MBSTRING_ASC, (unsigned const char *)"My Location", -1, -1, 0);
@@ -204,12 +188,12 @@ void init_ssl(void) {
 					X509_NAME_add_entry_by_txt(name, "CN", MBSTRING_ASC, (unsigned const char *)"*", -1, -1, 0);
 					X509_REQ_set_subject_name(req, name);
 
-					/* Sign the CSR */
+					// Sign the CSR
 					if (!X509_REQ_sign(req, pk, EVP_md5())) {
 						syslog(LOG_ERR, "crypto: X509_REQ_sign(): error");
 					}
 					else {
-						/* Write it to disk. */	
+						// Write it to disk
 						fp = fopen(file_crpt_file_csr, "w");
 						if (fp != NULL) {
 							chmod(file_crpt_file_csr, 0600);
@@ -230,23 +214,19 @@ void init_ssl(void) {
 		}
 	}
 
-
-	/*
-	 * Generate a self-signed certificate if we don't have one.
-	 */
+	// Generate a self-signed certificate if we don't have one.
 	if (access(file_crpt_file_cer, R_OK) != 0) {
 		syslog(LOG_INFO, "crypto: generating a generic self-signed certificate.");
 
-		/* Same deal as before: always read the key from disk because
-		 * it may or may not have just been generated.
-		 */
+		// Same deal as before: always read the key from disk because
+		// it may or may not have just been generated.
 		fp = fopen(file_crpt_file_key, "r");
 		if (fp) {
 			rsa = PEM_read_RSAPrivateKey(fp, NULL, NULL, NULL);
 			fclose(fp);
 		}
 
-		/* This also holds true for the CSR. */
+		// This also holds true for the CSR.
 		req = NULL;
 		cer = NULL;
 		pk = NULL;
@@ -272,12 +252,12 @@ void init_ssl(void) {
 					X509_set_pubkey(cer, req_pkey);
 					EVP_PKEY_free(req_pkey);
 					
-					/* Sign the cert */
+					// Sign the cert
 					if (!X509_sign(cer, pk, EVP_md5())) {
 						syslog(LOG_ERR, "crypto: X509_sign() error");
 					}
 					else {
-						/* Write it to disk. */	
+						// Write it to disk.
 						fp = fopen(file_crpt_file_cer, "w");
 						if (fp != NULL) {
 							chmod(file_crpt_file_cer, 0600);
@@ -293,17 +273,14 @@ void init_ssl(void) {
 		}
 	}
 
-
-	/*
-	 * Now try to bind to the key and certificate.
-	 */
+	// Now try to bind to the key and certificate.
         SSL_CTX_use_certificate_chain_file(ssl_ctx, file_crpt_file_cer);
         SSL_CTX_use_PrivateKey_file(ssl_ctx, file_crpt_file_key, SSL_FILETYPE_PEM);
         if ( !SSL_CTX_check_private_key(ssl_ctx) ) {
 		syslog(LOG_ERR, "crypto: cannot install certificate: %s", ERR_reason_error_string(ERR_get_error()));
         }
 
-	/* Finally let the server know we're here */
+	// Finally let the server know we're here
 	CtdlRegisterProtoHook(cmd_stls, "STLS", "Start SSL/TLS session");
 	CtdlRegisterProtoHook(cmd_gtls, "GTLS", "Get SSL/TLS session status");
 	CtdlRegisterSessionHook(endtls, EVT_STOP, PRIO_STOP + 10);
@@ -350,7 +327,7 @@ void client_write_ssl(const char *buf, int nbytes) {
 
 // read data from the encrypted layer.
 int client_read_sslbuffer(StrBuf *buf, int timeout) {
-	char sbuf[16384]; /* OpenSSL communicates in 16k blocks, so let's speak its native tongue. */
+	char sbuf[16384];	// OpenSSL communicates in 16k blocks, so let's speak its native tongue.
 	int rlen;
 	char junk[1];
 	SSL *pssl = CC->ssl;
@@ -468,30 +445,25 @@ int client_read_sslblob(StrBuf *Target, long bytes, int timeout) {
 
 	baselen = StrLength(Target);
 
-	if (StrLength(CC->RecvBuf.Buf) > 0)
-	{
+	if (StrLength(CC->RecvBuf.Buf) > 0) {
 		long RemainLen;
 		long TotalLen;
 		const char *pchs;
 
-		if (CC->RecvBuf.ReadWritePointer == NULL)
-		{
+		if (CC->RecvBuf.ReadWritePointer == NULL) {
 			CC->RecvBuf.ReadWritePointer = ChrPtr(CC->RecvBuf.Buf);
 		}
 		pchs = ChrPtr(CC->RecvBuf.Buf);
 		TotalLen = StrLength(CC->RecvBuf.Buf);
 		RemainLen = TotalLen - (pchs - CC->RecvBuf.ReadWritePointer);
-		if (RemainLen > bytes)
-		{
+		if (RemainLen > bytes) {
 			RemainLen = bytes;
 		}
-		if (RemainLen > 0)
-		{
+		if (RemainLen > 0) {
 			StrBufAppendBufPlain(Target, CC->RecvBuf.ReadWritePointer, RemainLen, 0);
 			CC->RecvBuf.ReadWritePointer += RemainLen;
 		}
-		if ((ChrPtr(CC->RecvBuf.Buf) + StrLength(CC->RecvBuf.Buf)) <= CC->RecvBuf.ReadWritePointer)
-		{
+		if ((ChrPtr(CC->RecvBuf.Buf) + StrLength(CC->RecvBuf.Buf)) <= CC->RecvBuf.ReadWritePointer) {
 			CC->RecvBuf.ReadWritePointer = NULL;
 			FlushStrBuf(CC->RecvBuf.Buf);
 		}
@@ -507,8 +479,7 @@ int client_read_sslblob(StrBuf *Target, long bytes, int timeout) {
 		retval = client_read_sslbuffer(CC->RecvBuf.Buf, timeout);
 		if (retval >= 0) {
 			RemainRead = bytes - (StrLength (Target) - baselen);
-			if (RemainRead < StrLength(CC->RecvBuf.Buf))
-			{
+			if (RemainRead < StrLength(CC->RecvBuf.Buf)) {
 				StrBufAppendBufPlain(
 					Target, 
 					ChrPtr(CC->RecvBuf.Buf), 
@@ -516,7 +487,7 @@ int client_read_sslblob(StrBuf *Target, long bytes, int timeout) {
 				CC->RecvBuf.ReadWritePointer = ChrPtr(CC->RecvBuf.Buf) + RemainRead;
 				break;
 			}
-			StrBufAppendBuf(Target, CC->RecvBuf.Buf, 0); /* todo: Buf > bytes? */
+			StrBufAppendBuf(Target, CC->RecvBuf.Buf, 0);	// todo: Buf > bytes?
 			FlushStrBuf(CC->RecvBuf.Buf);
 		}
 		else {
@@ -565,11 +536,9 @@ void CtdlStartTLS(char *ok_response, char *nosup_response, char *error_response)
 	if (ok_response != NULL) cprintf("%s", ok_response);
 	retval = SSL_accept(CC->ssl);
 	if (retval < 1) {
-		/*
-		 * Can't notify the client of an error here; they will
-		 * discover the problem at the SSL layer and should
-		 * revert to unencrypted communications.
-		 */
+		// Can't notify the client of an error here; they will
+		// discover the problem at the SSL layer and should
+		// revert to unencrypted communications.
 		long errval;
 		char error_string[128];
 
@@ -655,4 +624,4 @@ void ssl_lock(int mode, int n, const char *file, int line) {
 		pthread_mutex_unlock(SSLCritters[n]);
 	}
 }
-#endif				/* HAVE_OPENSSL */
+#endif	// HAVE_OPENSSL

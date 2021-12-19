@@ -12,7 +12,6 @@
 
 #ifdef HAVE_OPENSSL
 #define OPENSSL_NO_KRB5		/* work around redhat b0rken ssl headers */
-void destruct_ssl(void);
 void init_ssl(void);
 void client_write_ssl (const char *buf, int nbytes);
 int client_read_sslbuffer(StrBuf *buf, int timeout);
