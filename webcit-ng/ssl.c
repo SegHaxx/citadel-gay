@@ -17,28 +17,7 @@
 #include "webcit.h"
 
 SSL_CTX *ssl_ctx;		// SSL context
-pthread_mutex_t **SSLCritters;	// Things needing locking
 char *ssl_cipher_list = DEFAULT_SSL_CIPHER_LIST;
-void ssl_lock(int mode, int n, const char *file, int line);
-
-
-// OpenSSL wants a callback function to identify the currently running thread.
-// Since we are a pthreads program, we convert the output of pthread_self() to a long.
-static unsigned long id_callback(void) {
-	return (unsigned long) pthread_self();
-}
-
-
-// OpenSSL wants a callback function to set and clear various types of locks.
-// Since we are a pthreads program, we use mutexes.
-void ssl_lock(int mode, int n, const char *file, int line) {
-	if (mode & CRYPTO_LOCK) {
-		pthread_mutex_lock(SSLCritters[n]);
-	}
-	else {
-		pthread_mutex_unlock(SSLCritters[n]);
-	}
-}
 
 
 // Generate a private key for SSL
@@ -105,23 +84,6 @@ void init_ssl(void) {
 	char buf[SIZ];
 	int rv = 0;
 
-	SSLCritters = malloc(CRYPTO_num_locks() * sizeof(pthread_mutex_t *));
-	if (!SSLCritters) {
-		syslog(LOG_ERR, "citserver: can't allocate memory!!");
-		exit(1);
-	}
-	else {
-		int a;
-		for (a = 0; a < CRYPTO_num_locks(); a++) {
-			SSLCritters[a] = malloc(sizeof(pthread_mutex_t));
-			if (!SSLCritters[a]) {
-				syslog(LOG_INFO, "citserver: can't allocate memory!!");
-				exit(1);
-			}
-			pthread_mutex_init(SSLCritters[a], NULL);
-		}
-	}
-
 	// Initialize SSL transport layer
 	SSL_library_init();
 	SSL_load_error_strings();
@@ -136,9 +98,6 @@ void init_ssl(void) {
 		syslog(LOG_WARNING, "SSL_CTX_set_cipher_list failed: %s", ERR_reason_error_string(ERR_get_error()));
 		return;
 	}
-
-	CRYPTO_set_locking_callback(ssl_lock);
-	CRYPTO_set_id_callback(id_callback);
 
 	// Get our certificates in order.
 	// First, create the key/cert directory if it's not there already...
