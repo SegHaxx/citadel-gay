@@ -24,34 +24,16 @@
 #define SIGN_DAYS		3650			/* how long our certificate should live */
 
 SSL_CTX *ssl_ctx;		/* SSL context */
-pthread_mutex_t **SSLCritters;	/* Things needing locking */
 char *ssl_cipher_list = DEFAULT_SSL_CIPHER_LIST;
 
 pthread_key_t ThreadSSL;	/* Per-thread SSL context */
 
-void ssl_lock(int mode, int n, const char *file, int line);
-
-static unsigned long id_callback(void)
-{
-	return (unsigned long) pthread_self();
-}
-
-void shutdown_ssl(void)
-{
+void shutdown_ssl(void) {
 	ERR_free_strings();
-
-	/* Openssl requires these while shutdown. 
-	 * Didn't find a way to get out of this clean.
-	 * int i, n = CRYPTO_num_locks();
-	 * for (i = 0; i < n; i++)
-	 * 	free(SSLCritters[i]);
-	 * free(SSLCritters);
-	 */
 }
 
 
-void generate_key(char *keyfilename)
-{
+void generate_key(char *keyfilename) {
 	int ret = 0;
 	RSA *rsa = NULL;
 	BIGNUM *bne = NULL;
@@ -128,27 +110,6 @@ void init_ssl(void)
 	if (!RAND_status()) {
 		syslog(LOG_WARNING, "PRNG not adequately seeded, won't do SSL/TLS\n");
 		return;
-	}
-	SSLCritters = malloc(CRYPTO_num_locks() * sizeof(pthread_mutex_t *));
-	if (!SSLCritters) {
-		syslog(LOG_ERR, "citserver: can't allocate memory!!\n");
-		/* Nothing's been initialized, just die */
-		ShutDownWebcit();
-		exit(WC_EXIT_SSL);
-	} else {
-		int a;
-
-		for (a = 0; a < CRYPTO_num_locks(); a++) {
-			SSLCritters[a] = malloc(sizeof(pthread_mutex_t));
-			if (!SSLCritters[a]) {
-				syslog(LOG_ERR,
-					"citserver: can't allocate memory!!\n");
-				/** Nothing's been initialized, just die */
-				ShutDownWebcit();
-				exit(WC_EXIT_SSL);
-			}
-			pthread_mutex_init(SSLCritters[a], NULL);
-		}
 	}
 
 	/*
@@ -505,19 +466,6 @@ void endtls(void)
 	pthread_setspecific(ThreadSSL, NULL);
 }
 
-
-/*
- * callback for OpenSSL mutex locks
- */
-void ssl_lock(int mode, int n, const char *file, int line)
-{
-	if (mode & CRYPTO_LOCK) {
-		pthread_mutex_lock(SSLCritters[n]);
-	}
-	else {
-		pthread_mutex_unlock(SSLCritters[n]);
-	}
-}
 
 /*
  * Send binary data to the client encrypted.
