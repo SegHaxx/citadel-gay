@@ -41,12 +41,6 @@
 
 #ifdef HAVE_OPENSSL
 SSL_CTX *ssl_ctx;			// SSL context
-pthread_mutex_t **SSLCritters;		// Things needing locking
-
-
-static unsigned long id_callback(void) {
-	return (unsigned long) pthread_self();
-}
 
 
 void generate_key(char *keyfilename) {
@@ -111,24 +105,6 @@ void init_ssl(void) {
 	X509_NAME *name = NULL;
 	FILE *fp;
 
-	SSLCritters = malloc(CRYPTO_num_locks() * sizeof(pthread_mutex_t *));
-	if (!SSLCritters) {
-		syslog(LOG_ERR, "crypto: can't allocate memory!");
-		exit(CTDLEXIT_CRYPTO);
-	}
-	else {
-		int a;
-
-		for (a = 0; a < CRYPTO_num_locks(); a++) {
-			SSLCritters[a] = malloc(sizeof(pthread_mutex_t));
-			if (!SSLCritters[a]) {
-				syslog(LOG_ERR, "crypto: can't allocate memory!!");
-				exit(CTDLEXIT_CRYPTO);
-			}
-			pthread_mutex_init(SSLCritters[a], NULL);
-		}
-	}
-
 	// Initialize SSL transport layer
 	SSL_library_init();
 	SSL_load_error_strings();
@@ -143,9 +119,6 @@ void init_ssl(void) {
 		ssl_ctx = NULL;
 		return;
 	}
-
-	CRYPTO_set_locking_callback(ssl_lock);
-	CRYPTO_set_id_callback(id_callback);
 
 	mkdir(ctdl_key_dir, 0700);		// If the keys directory does not exist, create it
 	generate_key(file_crpt_file_key);	// If a private key does not exist, create it
@@ -614,14 +587,4 @@ void endtls(void) {
 	CC->redirect_ssl = 0;
 }
 
-
-// ssl_lock() callback for OpenSSL mutex locks
-void ssl_lock(int mode, int n, const char *file, int line) {
-	if (mode & CRYPTO_LOCK) {
-		pthread_mutex_lock(SSLCritters[n]);
-	}
-	else {
-		pthread_mutex_unlock(SSLCritters[n]);
-	}
-}
 #endif	// HAVE_OPENSSL
