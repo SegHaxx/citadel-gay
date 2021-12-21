@@ -40,7 +40,7 @@
 #include "ctdl_module.h"
 
 #ifdef HAVE_OPENSSL
-SSL_CTX *ssl_ctx;			// SSL context
+SSL_CTX *ssl_ctx;				// SSL context for all sessions
 
 
 void generate_key(char *keyfilename) {
@@ -51,7 +51,7 @@ void generate_key(char *keyfilename) {
 	unsigned long e = RSA_F4;
 	FILE *fp;
 
-	if (access(keyfilename, R_OK) == 0) {
+	if (access(keyfilename, R_OK) == 0) {	// we already have a key, so don't generate a new one
 		return;
 	}
 
@@ -88,10 +88,25 @@ void generate_key(char *keyfilename) {
 		fclose(fp);
 	}
 
-    // free the memory we used
+	// free the memory we used
 free_all:
-    RSA_free(rsa);
-    BN_free(bne);
+	RSA_free(rsa);
+	BN_free(bne);
+}
+
+
+// Set the private key and certificate chain for the global SSL Context.
+// This is called during initialization, and can be called again later if the certificate changes.
+void bind_to_key_and_certificate(void) {
+
+	syslog(LOG_DEBUG, "crypto: using certificate chain %s", file_crpt_file_cer);
+        SSL_CTX_use_certificate_chain_file(ssl_ctx, file_crpt_file_cer);
+
+	syslog(LOG_DEBUG, "crypto: using private key %s", file_crpt_file_key);
+        SSL_CTX_use_PrivateKey_file(ssl_ctx, file_crpt_file_key, SSL_FILETYPE_PEM);
+        if ( !SSL_CTX_check_private_key(ssl_ctx) ) {
+		syslog(LOG_ERR, "crypto: cannot install certificate: %s", ERR_reason_error_string(ERR_get_error()));
+        }
 }
 
 
@@ -140,7 +155,6 @@ void init_ssl(void) {
 		}
 
 		if (rsa) {
-
 			// Create a public key from the private key
 			if (pk=EVP_PKEY_new(), pk != NULL) {
 				EVP_PKEY_assign_RSA(pk, rsa);
@@ -178,10 +192,8 @@ void init_ssl(void) {
 					X509_REQ_free(req);
 				}
 			}
-
 			RSA_free(rsa);
 		}
-
 		else {
 			syslog(LOG_ERR, "crypto: unable to read private key.");
 		}
@@ -247,11 +259,7 @@ void init_ssl(void) {
 	}
 
 	// Now try to bind to the key and certificate.
-        SSL_CTX_use_certificate_chain_file(ssl_ctx, file_crpt_file_cer);
-        SSL_CTX_use_PrivateKey_file(ssl_ctx, file_crpt_file_key, SSL_FILETYPE_PEM);
-        if ( !SSL_CTX_check_private_key(ssl_ctx) ) {
-		syslog(LOG_ERR, "crypto: cannot install certificate: %s", ERR_reason_error_string(ERR_get_error()));
-        }
+	bind_to_key_and_certificate();
 
 	// Finally let the server know we're here
 	CtdlRegisterProtoHook(cmd_stls, "STLS", "Start SSL/TLS session");
@@ -340,18 +348,15 @@ int client_readline_sslbuffer(StrBuf *Line, StrBuf *IOBuf, const char **Pos, int
 	int nSuccessLess = 0;
 	const char *pch = NULL;
 	
-	if ((Line == NULL) || (Pos == NULL) || (IOBuf == NULL))
-	{
-		if (Pos != NULL)
-		{
+	if ((Line == NULL) || (Pos == NULL) || (IOBuf == NULL)) {
+		if (Pos != NULL) {
 			*Pos = NULL;
 		}
 		return -1;
 	}
 
 	pos = *Pos;
-	if ((StrLength(IOBuf) > 0) && (pos != NULL) && (pos < ChrPtr(IOBuf) + StrLength(IOBuf))) 
-	{
+	if ((StrLength(IOBuf) > 0) && (pos != NULL) && (pos < ChrPtr(IOBuf) + StrLength(IOBuf))) {
 		pch = pos;
 		pch = strchr(pch, '\n');
 		
@@ -488,8 +493,10 @@ void CtdlStartTLS(char *ok_response, char *nosup_response, char *error_response)
 	}
 
 	if (!ssl_ctx) {
-		syslog(LOG_ERR, "crypto: SSL failed: no ssl_ctx exists?");
-		if (nosup_response != NULL) cprintf("%s", nosup_response);
+		syslog(LOG_ERR, "crypto: SSL failed: context has not been initialized");
+		if (nosup_response != NULL) {
+			cprintf("%s", nosup_response);
+		}
 		return;
 	}
 	if (!(CC->ssl = SSL_new(ssl_ctx))) {
@@ -503,10 +510,14 @@ void CtdlStartTLS(char *ok_response, char *nosup_response, char *error_response)
 		syslog(LOG_ERR, "crypto: SSL_set_fd failed: %s", ERR_reason_error_string(ERR_get_error()));
 		SSL_free(CC->ssl);
 		CC->ssl = NULL;
-		if (error_response != NULL) cprintf("%s", error_response);
+		if (error_response != NULL) {
+			cprintf("%s", error_response);
+		}
 		return;
 	}
-	if (ok_response != NULL) cprintf("%s", ok_response);
+	if (ok_response != NULL) {
+		cprintf("%s", ok_response);
+	}
 	retval = SSL_accept(CC->ssl);
 	if (retval < 1) {
 		// Can't notify the client of an error here; they will
@@ -525,7 +536,6 @@ void CtdlStartTLS(char *ok_response, char *nosup_response, char *error_response)
 		CC->ssl = NULL;
 		return;
 	}
-	// BIO_set_close(CC->ssl->rbio, BIO_NOCLOSE); not needed anymore in openssl 1.1 ?
 	bits = SSL_CIPHER_get_bits(SSL_get_current_cipher(CC->ssl), &alg_bits);
 	syslog(LOG_INFO, "crypto: SSL/TLS using %s on %s (%d of %d bits)",
 		SSL_CIPHER_get_name(SSL_get_current_cipher(CC->ssl)),
