@@ -1,75 +1,28 @@
-/*
- * This is the main transaction loop of the web service.  It maintains a
- * persistent session to the Citadel server, handling HTTP WebCit requests as
- * they arrive and presenting a user interface.
- */
+// The functions in this file handle static pages and objects -- a basic web server.
+
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <dirent.h>
 #include <errno.h>
-
 #include <unistd.h>
 #include <stdio.h>
 #include <stdarg.h>
 #include <stddef.h>
-
-
 #include "webcit.h"
 #include "webserver.h"
 
 unsigned char OnePixelGif[37] = {
-		0x47,
-		0x49,
-		0x46,
-		0x38,
-		0x37,
-		0x61,
-		0x01,
-		0x00,
-		0x01,
-		0x00,
-		0x80,
-		0x00,
-		0x00,
-		0xff,
-		0xff,
-		0xff,
-		0xff,
-		0xff,
-		0xff,
-		0x2c,
-		0x00,
-		0x00,
-		0x00,
-		0x00,
-		0x01,
-		0x00,
-		0x01,
-		0x00,
-		0x00,
-		0x02,
-		0x02,
-		0x44,
-		0x01,
-		0x00,
-		0x3b 
+		0x47, 0x49, 0x46, 0x38, 0x37, 0x61, 0x01, 0x00,
+		0x01, 0x00, 0x80, 0x00, 0x00, 0xff, 0xff, 0xff,
+		0xff, 0xff, 0xff, 0x2c, 0x00, 0x00, 0x00, 0x00,
+		0x01, 0x00, 0x01, 0x00, 0x00, 0x02, 0x02, 0x44,
+		0x01, 0x00, 0x3b 
 };
 
 
 HashList *StaticFilemappings[5] = {NULL, NULL, NULL, NULL, NULL};
-/*
-  {
-  syslog(LOG_DEBUG, "Suspicious request. Ignoring.");
-  hprintf("HTTP/1.1 404 Security check failed\r\n");
-  hprintf("Content-Type: text/plain\r\n\r\n");
-  wc_printf("You have sent a malformed or invalid request.\r\n");
-  end_burst();
-  }
-*/
 
-
-void output_error_pic(const char *ErrMsg1, const char *ErrMsg2)
-{
+void output_error_pic(const char *ErrMsg1, const char *ErrMsg2) {
 	hprintf("HTTP/1.1 200 %s\r\n", ErrMsg1);
 	hprintf("Content-Type: image/gif\r\n");
 	hprintf("x-webcit-errormessage: %s\r\n", ErrMsg2);
@@ -81,8 +34,7 @@ void output_error_pic(const char *ErrMsg1, const char *ErrMsg2)
 /*
  * dump out static pages from disk
  */
-void output_static(const char *what)
-{
+void output_static(const char *what) {
 	int fd;
 	struct stat statbuf;
 	off_t bytes;
@@ -90,32 +42,30 @@ void output_static(const char *what)
 	int len;
 	const char *Err;
 
+	syslog(LOG_DEBUG, "output_static(%s)", what);
 	len = strlen (what);
 	content_type = GuessMimeByFilename(what, len);
 	fd = open(what, O_RDONLY);
 	if (fd <= 0) {
-		syslog(LOG_INFO, "output_static('%s') [%s]  -- NOT FOUND --\n", what, ChrPtr(WC->Hdr->this_page));
-		if (strstr(content_type, "image/") != NULL)
-		{
+		syslog(LOG_INFO, "output_static('%s') [%s] : %s", what, ChrPtr(WC->Hdr->this_page), strerror(errno));
+		if (strstr(content_type, "image/") != NULL) {
 			output_error_pic("the file you requsted is gone.", strerror(errno));
 		}
-		else
-		{
+		else {
 			hprintf("HTTP/1.1 404 %s\r\n", strerror(errno));
 			hprintf("Content-Type: text/plain\r\n");
 			begin_burst();
 			wc_printf("Cannot open %s: %s\r\n", what, strerror(errno));
 			end_burst();
 		}
-	} else {
+	}
+	else {
 		if (fstat(fd, &statbuf) == -1) {
 			syslog(LOG_INFO, "output_static('%s')  -- FSTAT FAILED --\n", what);
-			if (strstr(content_type, "image/") != NULL)
-			{
+			if (strstr(content_type, "image/") != NULL) {
 				output_error_pic("Stat failed!", strerror(errno));
 			}
-			else
-			{
+			else {
 				hprintf("HTTP/1.1 404 %s\r\n", strerror(errno));
 				hprintf("Content-Type: text/plain\r\n");
 				begin_burst();
@@ -128,8 +78,7 @@ void output_static(const char *what)
 
 		bytes = statbuf.st_size;
 
-		if (StrBufReadBLOB(WC->WBuf, &fd, 1, bytes, &Err) < 0)
-		{
+		if (StrBufReadBLOB(WC->WBuf, &fd, 1, bytes, &Err) < 0) {
 			if (fd > 0) close(fd);
 			syslog(LOG_INFO, "output_static('%s')  -- FREAD FAILED (%s) --\n", what, strerror(errno));
 				hprintf("HTTP/1.1 500 internal server error \r\n");
@@ -137,7 +86,6 @@ void output_static(const char *what)
 				end_burst();
 				return;
 		}
-
 
 		close(fd);
 		http_transmit_thing(content_type, 2);
@@ -148,8 +96,7 @@ void output_static(const char *what)
 }
 
 
-int LoadStaticDir(const char *DirName, HashList *DirList, const char *RelDir)
-{
+int LoadStaticDir(const char *DirName, HashList *DirList, const char *RelDir) {
 	char dirname[PATH_MAX];
 	char reldir[PATH_MAX];
 	StrBuf *FileName = NULL;
@@ -163,20 +110,17 @@ int LoadStaticDir(const char *DirName, HashList *DirList, const char *RelDir)
         int d_namelen;
 	int istoplevel;
 		
-	if (IsEmptyStr(DirName))
-	{
+	if (IsEmptyStr(DirName)) {
 		return 0;
 	}
 
 	filedir = opendir (DirName);
-	if (filedir == NULL)
-	{
+	if (filedir == NULL) {
 		return 0;
 	}
 
 	d = (struct dirent *)malloc(offsetof(struct dirent, d_name) + PATH_MAX + 1);
-	if (d == NULL)
-	{
+	if (d == NULL) {
 		closedir(filedir);
 		return 0;
 	}
@@ -186,12 +130,9 @@ int LoadStaticDir(const char *DirName, HashList *DirList, const char *RelDir)
 	istoplevel = IsEmptyStr(RelDir);
 	OneWebName = NewStrBuf();
 
-	while ((readdir_r(filedir, d, &filedir_entry) == 0) &&
-	       (filedir_entry != NULL))
-	{
+	while ((readdir_r(filedir, d, &filedir_entry) == 0) && (filedir_entry != NULL)) {
 #ifdef _DIRENT_HAVE_D_NAMLEN
 		d_namelen = filedir_entry->d_namlen;
-
 #else
 		d_namelen = strlen(filedir_entry->d_name);
 #endif
@@ -233,8 +174,7 @@ int LoadStaticDir(const char *DirName, HashList *DirList, const char *RelDir)
 			}
 		}
 
-		switch (d_type)
-		{
+		switch (d_type) {
 		case DT_DIR:
 			/* Skip directories we are not interested in... */
 			if ((strcmp(filedir_entry->d_name, ".svn") == 0) ||
@@ -284,61 +224,53 @@ int LoadStaticDir(const char *DirName, HashList *DirList, const char *RelDir)
 }
 
 
-void output_flat_static(void)
-{
+void output_flat_static(void) {
 	void *vFile;
 	StrBuf *File;
 
 	if (WC->Hdr->HR.Handler == NULL)
 		return;
-	if (GetHash(StaticFilemappings[0], SKEY(WC->Hdr->HR.Handler->Name), &vFile) &&
-	    (vFile != NULL))
-	{
+	if (GetHash(StaticFilemappings[0], SKEY(WC->Hdr->HR.Handler->Name), &vFile) && (vFile != NULL)) {
 		File = (StrBuf*) vFile;
 		output_static(ChrPtr(File));
 	}
 }
 
-void output_static_safe(HashList *DirList)
-{
+void output_static_safe(HashList *DirList) {
 	void *vFile;
 	StrBuf *File;
 	const char *MimeType;
 
-	if (GetHash(DirList, SKEY(WC->Hdr->HR.ReqLine), &vFile) &&
-	    (vFile != NULL))
-	{
+	if (GetHash(DirList, SKEY(WC->Hdr->HR.ReqLine), &vFile) && (vFile != NULL)) {
 		File = (StrBuf*) vFile;
 		output_static(ChrPtr(File));
 	}
 	else {
-		syslog(LOG_INFO, "output_static_safe() file %s not found. \n", 
-			ChrPtr(WC->Hdr->HR.ReqLine));
+		syslog(LOG_INFO, "output_static_safe() %s: %s", ChrPtr(WC->Hdr->HR.ReqLine), strerror(errno));
 		MimeType =  GuessMimeByFilename(SKEY(WC->Hdr->HR.ReqLine));
-		if (strstr(MimeType, "image/") != NULL)
-		{
+		if (strstr(MimeType, "image/") != NULL) {
 			output_error_pic("the file you requested isn't known to our cache", "maybe reload webcit?");
 		}
-		else
-		{		    
+		else {		    
 			do_404();
 		}
 	}
 }
-void output_static_0(void)
-{
+
+
+void output_static_0(void) {
 	output_static_safe(StaticFilemappings[0]);
 }
-void output_static_1(void)
-{
+
+void output_static_1(void) {
 	output_static_safe(StaticFilemappings[1]);
 }
-void output_static_2(void)
-{
+
+void output_static_2(void) {
 	output_static_safe(StaticFilemappings[2]);
 }
-void output_static_3(void)
-{
+
+void output_static_3(void) {
 	output_static_safe(StaticFilemappings[4]);
 }
 

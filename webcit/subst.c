@@ -1,11 +1,11 @@
+// Spaghetti, technical debt, and an unmaintainable big mess.
+// No one knows how this works.  This is why we started over with WebCit-NG.
+
 #include "sysdep.h"
-
-
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <dirent.h>
 #include <errno.h>
-
 #include <unistd.h>
 #include <stdio.h>
 #include <stdarg.h>
@@ -219,7 +219,6 @@ void DestroySortStruct(void *vSort)
 
 void LogTemplateError (StrBuf *Target, const char *Type, int ErrorPos, WCTemplputParams *TP, const char *Format, ...)
 {
-	wcsession *WCC;
 	StrBuf *Error;
 	StrBuf *Info;
         va_list arg_ptr;
@@ -258,14 +257,13 @@ void LogTemplateError (StrBuf *Target, const char *Type, int ErrorPos, WCTemplpu
 		       Type, 
 		       ChrPtr(Error));
 	}
-	WCC = WC;
-	if (WCC == NULL) {
+	if (WC == NULL) {
 		FreeStrBuf(&Info);
 		FreeStrBuf(&Error);
 		return; 
 	}
 
-	if (WCC->WFBuf == NULL) WCC->WFBuf = NewStrBuf();
+	if (WC->WFBuf == NULL) WC->WFBuf = NewStrBuf();
 	if (TP->Tokens != NULL) 
 	{
 		/* deprecated: 
@@ -286,45 +284,25 @@ void LogTemplateError (StrBuf *Target, const char *Type, int ErrorPos, WCTemplpu
 			     ChrPtr(TP->Tokens->FlatToken));
 
 
-		SerializeJson(WCC->WFBuf, WildFireException(SKEY(TP->Tokens->FileName),
+		SerializeJson(WC->WFBuf, WildFireException(SKEY(TP->Tokens->FileName),
 							TP->Tokens->Line,
 							Info,
 							1), 1);
-/*
-		SerializeJson(Header, WildFireMessage(SKEY(TP->Tokens->FileName),
-						      TP->Tokens->Line,
-						      Error,
-						      eERROR), 1);
-*/
-		
 	}
-	else
-	{
-		/* deprecated.
-		StrBufAppendPrintf(                                                          
-			Target,                                                              
-			"<pre>\n%s: %s\n</pre>\n",
-			Type, 
-			ChrPtr(Error));
-		*/
+	else {
 		StrBufPrintf(Info, "%s [%s]  %s; [%s]", 
 			     Type, 
 			     Err, 
 			     ChrPtr(Error), 
 			     ChrPtr(TP->Tokens->FlatToken));
-		SerializeJson(WCC->WFBuf, WildFireException(HKEY(__FILE__), __LINE__, Info, 1), 1);
+		SerializeJson(WC->WFBuf, WildFireException(HKEY(__FILE__), __LINE__, Info, 1), 1);
 	}
 	FreeStrBuf(&Info);
 	FreeStrBuf(&Error);
-/*
-	if (dbg_backtrace_template_errors)
-		wc_backtrace(LOG_DEBUG); 
-*/
 }
 
-void LogError (StrBuf *Target, const char *Type, const char *Format, ...)
-{
-	wcsession *WCC;
+
+void LogError (StrBuf *Target, const char *Type, const char *Format, ...) {
 	StrBuf *Error;
 	StrBuf *Info;
         va_list arg_ptr;
@@ -338,20 +316,15 @@ void LogError (StrBuf *Target, const char *Type, const char *Format, ...)
 
 	syslog(LOG_WARNING, "%s", ChrPtr(Error));
 
-	WCC = WC;
-	if (WCC->WFBuf == NULL) WCC->WFBuf = NewStrBuf();
+	if (WC->WFBuf == NULL) WC->WFBuf = NewStrBuf();
 
-	SerializeJson(WCC->WFBuf, WildFireException(Type, strlen(Type),
+	SerializeJson(WC->WFBuf, WildFireException(Type, strlen(Type),
 						    0,
 						    Info,
 						    1), 1);
 
 	FreeStrBuf(&Info);
 	FreeStrBuf(&Error);
-/*
-	if (dbg_backtrace_template_errors)
-		wc_backtrace(LOG_DEBUG); 
-*/
 }
 
 
@@ -402,29 +375,10 @@ int CheckContext(StrBuf *Target, ContextFilter *Need, WCTemplputParams *TP, cons
 			ContextName(TP->Filter.ContextType));
 		return 0;
 	}
-/*			
-	if (TP->Tokens->nParameters < Need->nMinArgs) {
-		LogTemplateError(Target, ErrType, ERR_NAME, TP,
-				 "needs at least %ld params, have %ld", 
-				 Need->nMinArgs, 
-				 TP->Tokens->nParameters);
-		return 0;
-
-	}
-	else if (TP->Tokens->nParameters > Need->nMaxArgs) {
-		LogTemplateError(Target, ErrType, ERR_NAME, TP,
-				 "just needs %ld params, you gave %ld",
-				 Need->nMaxArgs,
-				 TP->Tokens->nParameters); 
-		return 0;
-
-	}
-*/
 	return 1;
 }
 
-void FreeToken(WCTemplateToken **Token)
-{
+void FreeToken(WCTemplateToken **Token) {
 	int i; 
 	FreeStrBuf(&(*Token)->FlatToken);
 	if ((*Token)->HaveParameters) 
@@ -435,9 +389,7 @@ void FreeToken(WCTemplateToken **Token)
 }
 
 
-
-void FreeWCTemplate(void *vFreeMe)
-{
+void FreeWCTemplate(void *vFreeMe) {
 	int i;
 	WCTemplate *FreeMe = (WCTemplate*)vFreeMe;
 
@@ -479,12 +431,7 @@ int HaveTemplateTokenString(StrBuf *Target,
 	}
 }
 
-void GetTemplateTokenString(StrBuf *Target, 
-			    WCTemplputParams *TP,
-			    int N,
-			    const char **Value, 
-			    long *len)
-{
+void GetTemplateTokenString(StrBuf *Target, WCTemplputParams *TP, int N, const char **Value, long *len) {
 	StrBuf *Buf;
 
 	if (N >= TP->Tokens->nParameters) {
@@ -583,8 +530,7 @@ void GetTemplateTokenString(StrBuf *Target,
 	}
 }
 
-long GetTemplateTokenNumber(StrBuf *Target, WCTemplputParams *TP, int N, long dflt)
-{
+long GetTemplateTokenNumber(StrBuf *Target, WCTemplputParams *TP, int N, long dflt) {
 	long Ret;
 	if (N >= TP->Tokens->nParameters) {
 		LogTemplateError(Target, 
@@ -1293,12 +1239,11 @@ WCTemplateToken *NewTemplateSubstitute(StrBuf *Buf,
 
 
 
-/**
- * \brief Display a variable-substituted template
- * \param templatename template file to load
+/*
+ * Display a variable-substituted template
+ * templatename template file to load
  */
-void *prepare_template(StrBuf *filename, StrBuf *Key, HashList *PutThere)
-{
+void *prepare_template(StrBuf *filename, StrBuf *Key, HashList *PutThere) {
 	WCTemplate *NewTemplate;
 
 	NewTemplate = (WCTemplate *) malloc(sizeof(WCTemplate));
@@ -1322,12 +1267,11 @@ void *prepare_template(StrBuf *filename, StrBuf *Key, HashList *PutThere)
 	return NewTemplate;
 }
 
-/**
- * \brief Display a variable-substituted template
- * \param templatename template file to load
+/*
+ * Display a variable-substituted template
+ * templatename template file to load
  */
-void *duplicate_template(WCTemplate *OldTemplate)
-{
+void *duplicate_template(WCTemplate *OldTemplate) {
 	WCTemplate *NewTemplate;
 
 	NewTemplate = (WCTemplate *) malloc(sizeof(WCTemplate));
@@ -1343,16 +1287,13 @@ void *duplicate_template(WCTemplate *OldTemplate)
 }
 
 
-void SanityCheckTemplate(StrBuf *Target, WCTemplate *CheckMe)
-{
+void SanityCheckTemplate(StrBuf *Target, WCTemplate *CheckMe) {
 	int i = 0;
 	int j;
 	int FoundConditionalEnd;
 
-	for (i = 0; i < CheckMe->nTokensUsed; i++)
-	{
-		switch(CheckMe->Tokens[i]->Flags)
-		{
+	for (i = 0; i < CheckMe->nTokensUsed; i++) {
+		switch(CheckMe->Tokens[i]->Flags) {
 		case SV_CONDITIONAL:
 		case SV_NEG_CONDITIONAL:
 			FoundConditionalEnd = 0;
@@ -1388,9 +1329,9 @@ void SanityCheckTemplate(StrBuf *Target, WCTemplate *CheckMe)
 	}
 }
 
-/**
- * \brief Display a variable-substituted template
- * \param templatename template file to load
+/*
+ * Display a variable-substituted template
+ * templatename template file to load
  */
 void *load_template(StrBuf *Target, WCTemplate *NewTemplate)
 {
