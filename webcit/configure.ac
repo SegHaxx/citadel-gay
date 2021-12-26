@@ -492,7 +492,6 @@ if test "$prefix" = NONE; then
 	wwwdir=$ac_default_prefix
 	rundir=$ac_default_prefix
 	editordir=$ac_default_prefix/tiny_mce
-	markdowneditordir=$ac_default_prefix/epic
 	etcdir=$ac_default_prefix
 else
 	localedir=$prefix
@@ -500,7 +499,6 @@ else
 	datadir=$prefix
 	rundir=$prefix
 	editordir=$prefix/tiny_mce
-	markdowneditordir=$prefix/epic
 	etcdir=$prefix
 fi
 
@@ -584,7 +582,6 @@ AC_OUTPUT(Makefile po/webcit/Makefile tests/Makefile)
 if test "$abs_srcdir" != "$abs_builddir"; then
    ln -s $abs_srcdir/static $abs_builddir
    ln -s $abs_srcdir/tiny_mce $abs_builddir
-   ln -s $abs_srcdir/epic $abs_builddir
    ln -s $abs_srcdir/*.h $abs_builddir
    make mkdir-init
    

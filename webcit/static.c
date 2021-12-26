@@ -346,5 +346,4 @@ InitModule_STATIC
 	WebcitAddUrlHandler(HKEY("static.local"), "", 0, output_static_1, ANONYMOUS|COOKIEUNNEEDED|ISSTATIC|LOGCHATTY);
 	WebcitAddUrlHandler(HKEY("tinymce"), "", 0, output_static_2, ANONYMOUS|COOKIEUNNEEDED|ISSTATIC|LOGCHATTY);
 	WebcitAddUrlHandler(HKEY("tiny_mce"), "", 0, output_static_2, ANONYMOUS|COOKIEUNNEEDED|ISSTATIC|LOGCHATTY);
-	WebcitAddUrlHandler(HKEY("epiceditor"), "", 0, output_static_3, ANONYMOUS|COOKIEUNNEEDED|ISSTATIC|LOGCHATTY);
 }
