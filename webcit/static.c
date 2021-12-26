@@ -61,7 +61,7 @@ void output_static(const char *what) {
 	}
 	else {
 		if (fstat(fd, &statbuf) == -1) {
-			syslog(LOG_INFO, "output_static('%s')  -- FSTAT FAILED --\n", what);
+			syslog(LOG_INFO, "output_static('%s') : %s", what, strerror(errno));
 			if (strstr(content_type, "image/") != NULL) {
 				output_error_pic("Stat failed!", strerror(errno));
 			}

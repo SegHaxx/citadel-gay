@@ -1,5 +1,6 @@
-// Spaghetti, technical debt, and an unmaintainable big mess.
-// No one knows how this works.  This is why we started over with WebCit-NG.
+// This is a template substitution engine, which began with good intentions, but ended up becoming
+// more complex and unmaintainable than what it replaced.  We are barely hanging on with this until
+// webcit-ng replaces webcit classic.
 
 #include "sysdep.h"
 #include <sys/types.h>
@@ -1587,22 +1588,16 @@ void InitTemplateCache(void)
 
 	/* Primary Template set... */
 	StrBufPrintf(Dir, "%s/t", static_dirs[0]);
-	LoadTemplateDir(Dir,
-			TemplateCache, 
-			Key);
+	LoadTemplateDir(Dir, TemplateCache, Key);
 
 	/* User local Template set */
 	StrBufPrintf(Dir, "%s/t", static_dirs[1]);
-	LoadTemplateDir(Dir,
-			LocalTemplateCache, 
-			Key);
+	LoadTemplateDir(Dir, LocalTemplateCache, Key);
 	
 	/* Debug Templates, just to be loaded while debugging. */
 	
 	StrBufPrintf(Dir, "%s/dbg", static_dirs[0]);
-	LoadTemplateDir(Dir,
-			TemplateCache, 
-			Key);
+	LoadTemplateDir(Dir, TemplateCache, Key);
 	Templates[0] = TemplateCache;
 	Templates[1] = LocalTemplateCache;
 
@@ -1615,13 +1610,7 @@ void InitTemplateCache(void)
 			void *vTemplate;
 
 			At = GetNewHashPos(Templates[i], 0);
-			while (GetNextHashPos(Templates[i], 
-					      At, 
-					      &KLen,
-					      &Key, 
-					      &vTemplate) && 
-			       (vTemplate != NULL))
-			{
+			while (GetNextHashPos(Templates[i], At, &KLen, &Key, &vTemplate) && (vTemplate != NULL)) {
 				load_template(NULL, (WCTemplate *)vTemplate);
 			}
 			DeleteHashPos(&At);
@@ -1684,17 +1673,11 @@ int EvaluateToken(StrBuf *Target, int state, WCTemplputParams **TPP)
 		if (TP->Tokens->nParameters >= 6) {
 			if (EvaluateConditional(Target, 0, state, TPP)) {
 				GetTemplateTokenString(Target, TP, 5, &AppendMe, &AppendMeLen);
-				StrBufAppendBufPlain(Target, 
-						     AppendMe, 
-						     AppendMeLen,
-						     0);
+				StrBufAppendBufPlain(Target, AppendMe, AppendMeLen, 0);
 			}
 			else{
 				GetTemplateTokenString(Target, TP, 4, &AppendMe, &AppendMeLen);
-				StrBufAppendBufPlain(Target, 
-						     AppendMe, 
-						     AppendMeLen,
-						     0);
+				StrBufAppendBufPlain(Target, AppendMe, AppendMeLen, 0);
 			}
 			if (*TPP != TP)
 			{
@@ -1702,9 +1685,7 @@ int EvaluateToken(StrBuf *Target, int state, WCTemplputParams **TPP)
 			}
 		}
 		else  {
-			LogTemplateError(
-				Target, "Conditional", ERR_NAME, TP,
-				"needs at least 6 Params!"); 
+			LogTemplateError( Target, "Conditional", ERR_NAME, TP, "needs at least 6 Params!"); 
 		}
 		break;
 	case SV_SUBTEMPL:
@@ -1764,8 +1745,7 @@ const StrBuf *ProcessTemplate(WCTemplate *Tmpl, StrBuf *Target, WCTemplputParams
 				ChrPtr(Tmpl->FileName));
 		pTmpl = duplicate_template(Tmpl);
 		if(load_template(Target, pTmpl) == NULL) {
-			StrBufAppendPrintf(
-				Target, 
+			StrBufAppendPrintf( Target,
 				"<pre>\nError loading Template [%s]\n See Logfile for details\n</pre>\n", 
 				ChrPtr(Tmpl->FileName));
 			FreeWCTemplate(pTmpl);
@@ -1780,30 +1760,22 @@ const StrBuf *ProcessTemplate(WCTemplate *Tmpl, StrBuf *Target, WCTemplputParams
 	state = eNext;
 	while (!done) {
 		if (i >= pTmpl->nTokensUsed) {
-			StrBufAppendBufPlain(Target, 
-					     pData, 
-					     len - (pData - pS), 0);
+			StrBufAppendBufPlain(Target, pData, len - (pData - pS), 0);
 			done = 1;
 		}
 		else {
 			int TokenRc = 0;
 
-			StrBufAppendBufPlain(
-				Target, pData, 
-				pTmpl->Tokens[i]->pTokenStart - pData, 0);
+			StrBufAppendBufPlain( Target, pData, pTmpl->Tokens[i]->pTokenStart - pData, 0);
 			TPtr->Tokens = pTmpl->Tokens[i];
 			TPtr->nArgs = pTmpl->Tokens[i]->nParameters;
 
 		        TokenRc = EvaluateToken(Target, TokenRc, &TPtr);
-			if (TokenRc > 0)
-			{
+			if (TokenRc > 0) {
 				state = eSkipTilEnd;
 			}
-			else if (TokenRc < 0)
-			{
-				if ((TPtr != &TP) &&
-				    (TPtr->ExitCTXID == -TokenRc))
-				{
+			else if (TokenRc < 0) {
+				if ((TPtr != &TP) && (TPtr->ExitCTXID == -TokenRc)) {
 					UnStackDynamicContext(Target, &TPtr);
 				}
 				TokenRc = 0;
@@ -1823,13 +1795,10 @@ const StrBuf *ProcessTemplate(WCTemplate *Tmpl, StrBuf *Target, WCTemplputParams
 						pTmpl->Tokens[i]->Flags, 
 						TokenRc, 
 						&TPtr);
-					if (-rc == TokenRc)
-					{
+					if (-rc == TokenRc) {
 						TokenRc = 0;
 						state = eNext;
-						if ((TPtr != &TP) &&
-						    (TPtr->ExitCTXID == - rc))
-						{
+						if ((TPtr != &TP) && (TPtr->ExitCTXID == - rc)) {
 							UnStackDynamicContext(Target, &TPtr);
 						}
 					}
@@ -1872,8 +1841,7 @@ const StrBuf *DoTemplate(const char *templatename, long len, StrBuf *Target, WCT
 	Static = TemplateCache;
 	StaticLocal = LocalTemplateCache;
 
-	if (len == 0)
-	{
+	if (len == 0) {
 		syslog(LOG_WARNING, "Can't to load a template with empty name!\n");
 		StrBufAppendPrintf(Target, "<pre>\nCan't to load a template with empty name!\n</pre>");
 		return textPlainType;
