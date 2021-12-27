@@ -1,4 +1,9 @@
 // The functions in this file handle static pages and objects -- a basic web server.
+//
+// Copyright (c) 1996-2021 by the citadel.org team
+//
+// This program is open source software.  You can redistribute it and/or
+// modify it under the terms of the GNU General Public License, version 3.
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -20,8 +25,6 @@ unsigned char OnePixelGif[37] = {
 };
 
 
-HashList *StaticFilemappings[5] = {NULL, NULL, NULL, NULL, NULL};
-
 void output_error_pic(const char *ErrMsg1, const char *ErrMsg2) {
 	hprintf("HTTP/1.1 200 %s\r\n", ErrMsg1);
 	hprintf("Content-Type: image/gif\r\n");
@@ -34,13 +37,15 @@ void output_error_pic(const char *ErrMsg1, const char *ErrMsg2) {
 /*
  * dump out static pages from disk
  */
-void output_static(const char *what) {
+void output_static(char *prefix) {
 	int fd;
 	struct stat statbuf;
 	off_t bytes;
 	const char *content_type;
 	int len;
 	const char *Err;
+	char what[SIZ];
+	snprintf(what, sizeof what, "./%s/%s", prefix, (char *)ChrPtr(WC->Hdr->HR.ReqLine));
 
 	syslog(LOG_DEBUG, "output_static(%s)", what);
 	len = strlen (what);
@@ -96,185 +101,6 @@ void output_static(const char *what) {
 }
 
 
-int LoadStaticDir(const char *DirName, HashList *DirList, const char *RelDir) {
-	char dirname[PATH_MAX];
-	char reldir[PATH_MAX];
-	StrBuf *FileName = NULL;
-	StrBuf *Dir = NULL;
-	StrBuf *WebDir = NULL;
-	StrBuf *OneWebName = NULL;
-	DIR *filedir = NULL;
-	struct dirent *d;
-	struct dirent *filedir_entry;
-	int d_type = 0;
-        int d_namelen;
-	int istoplevel;
-		
-	if (IsEmptyStr(DirName)) {
-		return 0;
-	}
-
-	filedir = opendir (DirName);
-	if (filedir == NULL) {
-		return 0;
-	}
-
-	d = (struct dirent *)malloc(offsetof(struct dirent, d_name) + PATH_MAX + 1);
-	if (d == NULL) {
-		closedir(filedir);
-		return 0;
-	}
-
-	Dir = NewStrBufPlain(DirName, -1);
-	WebDir = NewStrBufPlain(RelDir, -1);
-	istoplevel = IsEmptyStr(RelDir);
-	OneWebName = NewStrBuf();
-
-	while ((readdir_r(filedir, d, &filedir_entry) == 0) && (filedir_entry != NULL)) {
-#ifdef _DIRENT_HAVE_D_NAMLEN
-		d_namelen = filedir_entry->d_namlen;
-#else
-		d_namelen = strlen(filedir_entry->d_name);
-#endif
-
-#ifdef _DIRENT_HAVE_D_TYPE
-		d_type = filedir_entry->d_type;
-#else
-
-#ifndef DT_UNKNOWN
-#define DT_UNKNOWN     0
-#define DT_DIR         4
-#define DT_REG         8
-#define DT_LNK         10
-
-#define IFTODT(mode)   (((mode) & 0170000) >> 12)
-#define DTTOIF(dirtype)        ((dirtype) << 12)
-#endif
-		d_type = DT_UNKNOWN;
-#endif
-		if ((d_namelen > 1) && filedir_entry->d_name[d_namelen - 1] == '~')
-			continue; /* Ignore backup files... */
-
-		if ((d_namelen == 1) && 
-		    (filedir_entry->d_name[0] == '.'))
-			continue;
-
-		if ((d_namelen == 2) && 
-		    (filedir_entry->d_name[0] == '.') &&
-		    (filedir_entry->d_name[1] == '.'))
-			continue;
-
-		if (d_type == DT_UNKNOWN) {
-			struct stat s;
-			char path[PATH_MAX];
-			snprintf(path, PATH_MAX, "%s/%s", 
-				DirName, filedir_entry->d_name);
-			if (lstat(path, &s) == 0) {
-				d_type = IFTODT(s.st_mode);
-			}
-		}
-
-		switch (d_type) {
-		case DT_DIR:
-			/* Skip directories we are not interested in... */
-			if ((strcmp(filedir_entry->d_name, ".svn") == 0) ||
-			    (strcmp(filedir_entry->d_name, "t") == 0))
-				break;
-			snprintf(dirname, PATH_MAX, "%s/%s/", 
-				 DirName, filedir_entry->d_name);
-			if (istoplevel)
-				snprintf(reldir, PATH_MAX, "%s/", 
-					 filedir_entry->d_name);
-			else
-				snprintf(reldir, PATH_MAX, "%s/%s/", 
-					 RelDir, filedir_entry->d_name);
-			StripSlashes(dirname, 1);
-			StripSlashes(reldir, 1);
-			LoadStaticDir(dirname, DirList, reldir); 				 
-			break;
-		case DT_LNK: /* TODO: check whether its a file or a directory */
-		case DT_REG:
-			FileName = NewStrBufDup(Dir);
-			if (ChrPtr(FileName) [ StrLength(FileName) - 1] != '/')
-				StrBufAppendBufPlain(FileName, "/", 1, 0);
-			StrBufAppendBufPlain(FileName, filedir_entry->d_name, d_namelen, 0);
-
-			FlushStrBuf(OneWebName);
-			StrBufAppendBuf(OneWebName, WebDir, 0);
-			if ((StrLength(OneWebName) != 0) && 
-			    (ChrPtr(OneWebName) [ StrLength(OneWebName) - 1] != '/'))
-				StrBufAppendBufPlain(OneWebName, "/", 1, 0);
-			StrBufAppendBufPlain(OneWebName, filedir_entry->d_name, d_namelen, 0);
-
-			Put(DirList, SKEY(OneWebName), FileName, HFreeStrBuf);
-			/* syslog(LOG_DEBUG, "[%s | %s]\n", ChrPtr(OneWebName), ChrPtr(FileName)); */
-			break;
-		default:
-			break;
-		}
-
-
-	}
-	free(d);
-	closedir(filedir);
-	FreeStrBuf(&Dir);
-	FreeStrBuf(&WebDir);
-	FreeStrBuf(&OneWebName);
-	return 1;
-}
-
-
-void output_flat_static(void) {
-	void *vFile;
-	StrBuf *File;
-
-	if (WC->Hdr->HR.Handler == NULL)
-		return;
-	if (GetHash(StaticFilemappings[0], SKEY(WC->Hdr->HR.Handler->Name), &vFile) && (vFile != NULL)) {
-		File = (StrBuf*) vFile;
-		output_static(ChrPtr(File));
-	}
-}
-
-void output_static_safe(HashList *DirList) {
-	void *vFile;
-	StrBuf *File;
-	const char *MimeType;
-
-	if (GetHash(DirList, SKEY(WC->Hdr->HR.ReqLine), &vFile) && (vFile != NULL)) {
-		File = (StrBuf*) vFile;
-		output_static(ChrPtr(File));
-	}
-	else {
-		syslog(LOG_INFO, "output_static_safe() %s: %s", ChrPtr(WC->Hdr->HR.ReqLine), strerror(errno));
-		MimeType =  GuessMimeByFilename(SKEY(WC->Hdr->HR.ReqLine));
-		if (strstr(MimeType, "image/") != NULL) {
-			output_error_pic("the file you requested isn't known to our cache", "maybe reload webcit?");
-		}
-		else {		    
-			do_404();
-		}
-	}
-}
-
-
-void output_static_0(void) {
-	output_static_safe(StaticFilemappings[0]);
-}
-
-void output_static_1(void) {
-	output_static_safe(StaticFilemappings[1]);
-}
-
-void output_static_2(void) {
-	output_static_safe(StaticFilemappings[2]);
-}
-
-void output_static_3(void) {
-	output_static_safe(StaticFilemappings[4]);
-}
-
-
 /*
  * robots.txt
  */
@@ -308,42 +134,34 @@ void robots_txt(void) {
 }
 
 
+// These are the various prefixes we can use to fetch static pages.
+void output_static_root(void)		{	output_static(".");		}
+void output_static_static(void)		{	output_static("static");	}
+void output_static_tinymce(void)	{	output_static("tiny_mce");	}
+void output_static_acme(void)		{	output_static(".well-known");	}
+
+
 void 
 ServerStartModule_STATIC
 (void)
 {
-	StaticFilemappings[0] = NewHash(1, NULL);
-	StaticFilemappings[1] = NewHash(1, NULL);
-	StaticFilemappings[2] = NewHash(1, NULL);
-	StaticFilemappings[3] = NewHash(1, NULL);
-	StaticFilemappings[4] = NewHash(1, NULL);
 }
+
+
 void 
 ServerShutdownModule_STATIC
 (void)
 {
-	DeleteHash(&StaticFilemappings[0]);
-	DeleteHash(&StaticFilemappings[1]);
-	DeleteHash(&StaticFilemappings[2]);
-	DeleteHash(&StaticFilemappings[3]);
-	DeleteHash(&StaticFilemappings[4]);
 }
-
 
 void 
 InitModule_STATIC
 (void)
 {
-	LoadStaticDir(static_dirs[0], StaticFilemappings[0], "");
-	LoadStaticDir(static_dirs[1], StaticFilemappings[1], "");
-	LoadStaticDir(static_dirs[2], StaticFilemappings[2], "");
-	LoadStaticDir(static_dirs[3], StaticFilemappings[3], "");
-	LoadStaticDir(static_dirs[4], StaticFilemappings[4], "");
-
 	WebcitAddUrlHandler(HKEY("robots.txt"), "", 0, robots_txt, ANONYMOUS|COOKIEUNNEEDED|ISSTATIC|LOGCHATTY);
-	WebcitAddUrlHandler(HKEY("favicon.ico"), "", 0, output_flat_static, ANONYMOUS|COOKIEUNNEEDED|ISSTATIC|LOGCHATTY);
-	WebcitAddUrlHandler(HKEY("static"), "", 0, output_static_0, ANONYMOUS|COOKIEUNNEEDED|ISSTATIC|LOGCHATTY);
-	WebcitAddUrlHandler(HKEY("static.local"), "", 0, output_static_1, ANONYMOUS|COOKIEUNNEEDED|ISSTATIC|LOGCHATTY);
-	WebcitAddUrlHandler(HKEY("tinymce"), "", 0, output_static_2, ANONYMOUS|COOKIEUNNEEDED|ISSTATIC|LOGCHATTY);
-	WebcitAddUrlHandler(HKEY("tiny_mce"), "", 0, output_static_2, ANONYMOUS|COOKIEUNNEEDED|ISSTATIC|LOGCHATTY);
+	WebcitAddUrlHandler(HKEY("favicon.ico"), "", 0, output_static_root, ANONYMOUS|COOKIEUNNEEDED|ISSTATIC|LOGCHATTY);
+	WebcitAddUrlHandler(HKEY("static"), "", 0, output_static_static, ANONYMOUS|COOKIEUNNEEDED|ISSTATIC|LOGCHATTY);
+	WebcitAddUrlHandler(HKEY("tinymce"), "", 0, output_static_tinymce, ANONYMOUS|COOKIEUNNEEDED|ISSTATIC|LOGCHATTY);
+	WebcitAddUrlHandler(HKEY("tiny_mce"), "", 0, output_static_tinymce, ANONYMOUS|COOKIEUNNEEDED|ISSTATIC|LOGCHATTY);
+	WebcitAddUrlHandler(HKEY(".well-known"), "", 0, output_static_acme, ANONYMOUS|COOKIEUNNEEDED|ISSTATIC|LOGCHATTY);
 }

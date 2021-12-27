@@ -1,13 +1,12 @@
-/*
- * This is the main transaction loop of the web service.  It maintains a
- * persistent session to the Citadel server, handling HTTP WebCit requests as
- * they arrive and presenting a user interface.
- *
- * Copyright (c) 1996-2018 by the citadel.org team
- *
- * This program is open source software.  You can redistribute it and/or
- * modify it under the terms of the GNU General Public License, version 3.
- */
+// This is the main transaction loop of the web service.  It maintains a
+// persistent session to the Citadel server, handling HTTP WebCit requests as
+// they arrive and presenting a user interface.
+//
+// Copyright (c) 1996-2021 by the citadel.org team
+//
+// This program is open source software.  You can redistribute it and/or
+// modify it under the terms of the GNU General Public License, version 3.
+
 
 #define SHOW_ME_VAPPEND_PRINTF
 #include <stdio.h>
@@ -642,15 +641,15 @@ void session_loop(void)
 	}
 
 	/* If there are variables in the URL, we must grab them now */
-	if (WC->Hdr->PlainArgs != NULL)
+	if (WC->Hdr->PlainArgs != NULL) {
 		ParseURLParams(WC->Hdr->PlainArgs);
+	}
 
 	/* If the client sent a nonce that is incorrect, kill the request. */
 	if (havebstr("nonce")) {
-		if (verbose)
-			syslog(LOG_DEBUG, "Comparing supplied nonce %s to session nonce %d", 
-			       bstr("nonce"), WC->nonce
-				);
+		if (verbose) {
+			syslog(LOG_DEBUG, "Comparing supplied nonce %s to session nonce %d", bstr("nonce"), WC->nonce);
+		}
 		if (ibstr("nonce") != WC->nonce) {
 			syslog(LOG_INFO, "Ignoring request with mismatched nonce.");
 			hprintf("HTTP/1.1 404 Security check failed\r\n");
@@ -703,9 +702,9 @@ void session_loop(void)
 			serv_printf("PASS %s", ChrPtr(WC->Hdr->c_password));
 			StrBuf_ServGetln(Buf);
 			if (GetServerStatus(Buf, NULL) == 2) {
-				become_logged_in(WC->Hdr->c_username,
-						 WC->Hdr->c_password, Buf);
-			} else {
+				become_logged_in(WC->Hdr->c_username, WC->Hdr->c_password, Buf);
+			}
+			else {
 				/* Should only display when password is wrong */
 				WC->ImportantMsg = NewStrBufPlain(ChrPtr(Buf) + 4, StrLength(Buf) - 4);
 				authorization_required();

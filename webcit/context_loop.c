@@ -357,8 +357,7 @@ int ReadHttpSubject(ParsedHttpHdrs *Hdr, StrBuf *Line, StrBuf *Buf)
 	return 0;
 }
 
-int AnalyseHeaders(ParsedHttpHdrs *Hdr)
-{
+int AnalyseHeaders(ParsedHttpHdrs *Hdr) {
 	OneHttpHeader *pHdr;
 	void *vHdr;
 	long HKLen;
@@ -376,13 +375,11 @@ int AnalyseHeaders(ParsedHttpHdrs *Hdr)
 	return 0;
 }
 
-/*const char *nix(void *vptr) {return ChrPtr( (StrBuf*)vptr);}*/
 
 /*
  * Read in the request
  */
-int ReadHTTPRequest (ParsedHttpHdrs *Hdr)
-{
+int ReadHTTPRequest(ParsedHttpHdrs *Hdr) {
 	const char *pch, *pchs, *pche;
 	OneHttpHeader *pHdr;
 	StrBuf *Line, *LastLine, *HeaderName;
@@ -412,20 +409,21 @@ int ReadHTTPRequest (ParsedHttpHdrs *Hdr)
 			memset(pHdr, 0, sizeof(OneHttpHeader));
 			pHdr->Val = Line;
 			Put(Hdr->HTTPHeaders, HKEY("GET /"), pHdr, DestroyHttpHeaderHandler);
-			if (verbose || strstr(ChrPtr(Line), "sslg") == NULL)
+			if (verbose || strstr(ChrPtr(Line), "sslg") == NULL) {
 				syslog(LOG_DEBUG, "%s", ChrPtr(Line));
+			}
 			isbogus = ReadHttpSubject(Hdr, Line, HeaderName);
 			if (isbogus) break;
 			continue;
 		}
 
 		/* Do we need to Unfold? */
-		if ((LastLine != NULL) && 
-		    (isspace(*ChrPtr(Line)))) {
+		if ((LastLine != NULL) && (isspace(*ChrPtr(Line)))) {
 			pch = pchs = ChrPtr(Line);
 			pche = pchs + StrLength(Line);
-			while (isspace(*pch) && (pch < pche))
+			while (isspace(*pch) && (pch < pche)) {
 				pch ++;
+			}
 			StrBufCutLeft(Line, pch - pchs);
 			StrBufAppendBuf(LastLine, Line, 0);
 
@@ -440,19 +438,17 @@ int ReadHTTPRequest (ParsedHttpHdrs *Hdr)
 		pche = pchs + StrLength(Line);
 		pch = pchs + StrLength(HeaderName) + 1;
 		pche = pchs + StrLength(Line);
-		while ((pch < pche) && isspace(*pch))
+		while ((pch < pche) && isspace(*pch)) {
 			pch ++;
+		}
 		StrBufCutLeft(Line, pch - pchs);
-
 		StrBufUpCase(HeaderName);
 
 		pHdr = (OneHttpHeader*) malloc(sizeof(OneHttpHeader));
 		memset(pHdr, 0, sizeof(OneHttpHeader));
 		pHdr->Val = Line;
 
-		if (GetHash(HttpHeaderHandler, SKEY(HeaderName), &vF) &&
-		    (vF != NULL))
-		{
+		if (GetHash(HttpHeaderHandler, SKEY(HeaderName), &vF) && (vF != NULL)) {
 			OneHttpHeader *FHdr = (OneHttpHeader*) vF;
 			pHdr->H = FHdr->H;
 			pHdr->HaveEvaluator = 1;
@@ -495,8 +491,7 @@ void OverrideRequest(ParsedHttpHdrs *Hdr, const char *Line, long len)
  * function returns, the worker thread is then free to handle another
  * transaction.
  */
-void context_loop(ParsedHttpHdrs *Hdr)
-{
+void context_loop(ParsedHttpHdrs *Hdr) {
 	int isbogus = 0;
 	wcsession *TheSession;
 	struct timeval tx_start;
@@ -535,8 +530,7 @@ void context_loop(ParsedHttpHdrs *Hdr)
 		return;
 	}
 
-	if ((Hdr->HR.Handler != NULL) && ((Hdr->HR.Handler->Flags & ISSTATIC) != 0))
-	{
+	if ((Hdr->HR.Handler != NULL) && ((Hdr->HR.Handler->Flags & ISSTATIC) != 0)) {
 		wcsession *Static;
 		Static = CreateSession(0, 1, NULL, Hdr, NULL);
 		
@@ -614,8 +608,9 @@ void context_loop(ParsedHttpHdrs *Hdr)
 	 * If a language was requested via a cookie, select that language now.
 	 */
 	if (StrLength(Hdr->c_language) > 0) {
-		if (verbose)
+		if (verbose) {
 			syslog(LOG_DEBUG, "Session cookie requests language '%s'", ChrPtr(Hdr->c_language));
+		}
 		set_selected_language(ChrPtr(Hdr->c_language));
 		go_selected_language();
 	}
