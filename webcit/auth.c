@@ -409,45 +409,9 @@ void finalize_openid_login(void)
 
 /*
  * Display a welcome screen to the user.
- *
- * If this is the first time login, and the web based setup is enabled, 
- * lead the user through the setup routines
  */
-void do_welcome(void)
-{
+void do_welcome(void) {
 	StrBuf *Buf;
-#ifdef XXX_NOT_FINISHED_YET_XXX
-	FILE *fp;
-	int i;
-
-	/**
-	 * See if we have to run the first-time setup wizard
-	 */
-	if (WC->is_aide) {
-		if (!setup_wizard) {
-			int len;
-			sprintf(wizard_filename, "setupwiz.%s.%s",
-				abs(HashLittle(ctdlhost, strlen(ctdlhost))),
-				abs(HashLittle(ctdlport, strlen(ctdlport)))
-			);
-
-			fp = fopen(wizard_filename, "r");
-			if (fp != NULL) {
-				fgets(buf, sizeof buf, fp);
-				buf[strlen(buf)-1] = 0;
-				fclose(fp);
-				if (atoi(buf) == serv_info.serv_rev_level) {
-					setup_wizard = 1;	/* already run */
-				}
-			}
-		}
-
-		if (!setup_wizard) {
-			http_redirect("setup_wizard");
-		}
-	}
-#endif
-
 	/*
 	 * Go to the user's preferred start page
 	 */

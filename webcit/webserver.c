@@ -1,18 +1,15 @@
-/*
- * Copyright (c) 1996-2021 by the citadel.org team
- *
- * This program is open source software.  You can redistribute it and/or
- * modify it under the terms of the GNU General Public License version 3.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- */
+// Copyright (c) 1996-2021 by the citadel.org team
+//
+// This program is open source software.  You can redistribute it and/or
+// modify it under the terms of the GNU General Public License version 3.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
 
 #include "webcit.h"
 #include "webserver.h"
-
 #include "modules_init.h"
 
 extern int msock;				/* master listening socket */
@@ -38,8 +35,6 @@ char *server_cookie = NULL;	/* our Cookie connection to the client */
 int http_port = PORT_NUM;	/* Port to listen on */
 char *ctdlhost = DEFAULT_HOST;	/* Host name or IP address of Citadel server */
 char *ctdlport = DEFAULT_PORT;	/* Port number of Citadel server */
-int setup_wizard = 0;		/* should we run the setup wizard? */
-char wizard_filename[PATH_MAX];	/* location of file containing the last webcit version against which we ran setup wizard */
 int running_as_daemon = 0;	/* should we deamonize on startup? */
 
 /* #define DBG_PRINNT_HOOKS_AT_START */
@@ -61,8 +56,7 @@ void LoadMimeBlacklist(void);
 /*
  * Here's where it all begins.
  */
-int main(int argc, char **argv)
-{
+int main(int argc, char **argv) {
 	uid_t UID = -1;
 	pthread_t SessThread;		/* Thread descriptor */
 	pthread_attr_t attr;		/* Thread attributes */
@@ -159,12 +153,8 @@ int main(int argc, char **argv)
 		case 'c':
 			server_cookie = malloc(256);
 			if (server_cookie != NULL) {
-				safestrncpy(server_cookie,
-				       "Set-cookie: wcserver=",
-					256);
-				if (gethostname
-				    (&server_cookie[strlen(server_cookie)],
-				     200) != 0) {
+				safestrncpy(server_cookie, "Set-cookie: wcserver=", 256);
+				if (gethostname (&server_cookie[strlen(server_cookie)], 200) != 0) {
 					syslog(LOG_INFO, "gethostname: %s", strerror(errno));
 					free(server_cookie);
 				}

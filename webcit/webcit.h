@@ -548,8 +548,6 @@ extern char *ctdlhost, *ctdlport;
 extern char *axdefs[];
 extern int num_threads_existing;
 extern int num_threads_executing;
-extern int setup_wizard;
-extern char wizard_filename[];
 
 void InitialiseSemaphores(void);
 void begin_critical_section(int which_one);

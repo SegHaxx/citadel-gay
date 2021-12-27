@@ -23,7 +23,7 @@ HEADERS=calendar.h  dav.h  messages.h  modules_init.h  paramhandling.h  preferen
 
 # End of configuration section
 
-all: buildinfo all-progs-recursive webcit setup
+all: buildinfo all-progs-recursive webcit
 
 buildinfo:
 	echo
@@ -40,7 +40,7 @@ mkdir-init:
 .SUFFIXES: .cpp .c .o
 
 clean:
-	rm -f *.o webcit webcit setup
+	rm -f *.o webcit webcit
 	rm -fr locale/*
 
 distclean: clean
@@ -48,10 +48,6 @@ distclean: clean
 		po/webcit/Makefile \
 		ical_maps.c \
 		$(srcdir)/TAGS
-
-setup: setup.o gettext.o
-	$(CC) $(LDFLAGS) $(LIBOBJS) gettext.o setup.o -o setup \
-	$(LIBS) $(SETUP_LIBS)
 
 webcit: webserver.o context_loop.o ical_dezonify.o \
 	cookie_conversion.o locate_host.o summary.o \
@@ -65,7 +61,7 @@ webcit: webserver.o context_loop.o ical_dezonify.o \
 	availability.o iconbar.o icontheme.o crypto.o inetconf.o notes.o wiki.o \
 	dav_main.o dav_get.o dav_propfind.o dav_report.o fmt_date.o \
 	dav_options.o autocompletion.o gettext.o tabs.o sieve.o sitemap.o \
-	dav_delete.o dav_put.o http_datestring.o setup_wizard.o \
+	dav_delete.o dav_put.o http_datestring.o \
 	downloads.o addressbook_popup.o pushemail.o sysdep.o openid.o \
 	decode.o modules_init.o paramhandling.o utils.o \
 	ical_maps.o ical_subst.o static.o feed_generator.o \
@@ -83,7 +79,7 @@ webcit: webserver.o context_loop.o ical_dezonify.o \
 	availability.o ical_dezonify.o iconbar.o icontheme.o crypto.o inetconf.o notes.o \
 	dav_main.o dav_get.o dav_propfind.o dav_report.o dav_delete.o \
 	dav_options.o autocompletion.o tabs.o smtpqueue.o sieve.o sitemap.o \
-	dav_put.o http_datestring.o setup_wizard.o fmt_date.o modules_init.o \
+	dav_put.o http_datestring.o fmt_date.o modules_init.o \
 	gettext.o downloads.o addressbook_popup.o pushemail.o sysdep.o decode.o \
 	paramhandling.o utils.o ical_maps.o ical_subst.o static.o feed_generator.o \
 	$(LIBS)

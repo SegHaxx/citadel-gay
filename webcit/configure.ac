@@ -577,7 +577,7 @@ if test "$abs_srcdir" != "$abs_builddir"; then
    CFLAGS="$CFLAGS -I $abs_builddir"
 fi
 AC_CONFIG_HEADER(sysdep.h)
-AC_OUTPUT(Makefile po/webcit/Makefile tests/Makefile)
+AC_OUTPUT(Makefile po/webcit/Makefile)
 
 if test "$abs_srcdir" != "$abs_builddir"; then
    ln -s $abs_srcdir/static $abs_builddir
