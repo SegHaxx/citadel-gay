@@ -1,7 +1,7 @@
 /*
  * These functions handle authentication of users to a Citadel server.
  *
- * Copyright (c) 1996-2012 by the citadel.org team
+ * Copyright (c) 1996-2021 by the citadel.org team
  *
  * This program is open source software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 3.
@@ -486,8 +486,7 @@ void monitor(void)
 	);
 	begin_burst();
 
-	wc_printf("Connection to Citadel server at %s:%s : %s\r\n",
-		ctdlhost, ctdlport,
+	wc_printf("Connection to Citadel server in %s : %s\r\n", ctdl_dir,
 		(WC->connected ? "SUCCESS" : "FAIL")
 	);
 

@@ -8,12 +8,8 @@
 #include "webcit.h"
 #include "webserver.h"
 
-int is_uds = 0;
-char serv_sock_name[PATH_MAX] = "";
-
 HashList *EmbeddableMimes = NULL;
 StrBuf *EmbeddableMimeStrs = NULL;
-
 
 void SetInlinMimeRenderers(void) {
 	StrBuf *Buf;
@@ -164,25 +160,30 @@ ServInfo *get_serv_info(StrBuf *browser_host, StrBuf *user_agent) {
 
 int GetConnected (void) {
 	StrBuf *Buf;
-	wcsession *WCC = WC;
 
-	if (WCC->ReadBuf == NULL)
-		WCC->ReadBuf = NewStrBufPlain(NULL, SIZ * 4);
-	if (is_uds) /* unix domain socket */
-		WCC->serv_sock = uds_connectsock(serv_sock_name);
-	else        /* tcp socket */
-		WCC->serv_sock = tcp_connectsock(ctdlhost, ctdlport);
+	TRACE;
+	syslog(LOG_DEBUG, "GetConnected() has been called, and ctdl_dir is \"%s\"", ctdl_dir);
+
+	if (WC->ReadBuf == NULL) {
+		WC->ReadBuf = NewStrBufPlain(NULL, SIZ * 4);
+	}
+
+	static char serv_sock_name[PATH_MAX] = "";
+	if (IsEmptyStr(serv_sock_name)) {
+		snprintf(serv_sock_name, sizeof serv_sock_name, "%s/citadel.socket", ctdl_dir);
+	}
+	WC->serv_sock = connect_to_citadel(serv_sock_name);
 	
-	if (WCC->serv_sock < 0) {
-		WCC->connected = 0;
-		FreeStrBuf(&WCC->ReadBuf);
+	if (WC->serv_sock < 0) {
+		WC->connected = 0;
+		FreeStrBuf(&WC->ReadBuf);
 		return 1;
 	}
 	else {
 		long Status;
 		int short_status;
 		Buf = NewStrBuf();
-		WCC->connected = 1;
+		WC->connected = 1;
 		StrBuf_ServGetln(Buf);	/* get the server greeting */
 		short_status = GetServerStatus(Buf, &Status);
 		FreeStrBuf(&Buf);
@@ -213,18 +214,18 @@ int GetConnected (void) {
 		 * unless we are following X-Forwarded-For: headers
 		 * and such a header has already turned up something.
 		 */
-		if ( (!follow_xff) || (StrLength(WCC->Hdr->HR.browser_host) == 0) ) {
-			if (WCC->Hdr->HR.browser_host == NULL) {
-				WCC->Hdr->HR.browser_host = NewStrBuf();
-				Put(WCC->Hdr->HTTPHeaders, HKEY("FreeMeWithTheOtherHeaders"), 
-				    WCC->Hdr->HR.browser_host, HFreeStrBuf);
+		if ( (!follow_xff) || (StrLength(WC->Hdr->HR.browser_host) == 0) ) {
+			if (WC->Hdr->HR.browser_host == NULL) {
+				WC->Hdr->HR.browser_host = NewStrBuf();
+				Put(WC->Hdr->HTTPHeaders, HKEY("FreeMeWithTheOtherHeaders"), 
+				    WC->Hdr->HR.browser_host, HFreeStrBuf);
 			}
-			locate_host(WCC->Hdr->HR.browser_host, WCC->Hdr->http_sock);
+			locate_host(WC->Hdr->HR.browser_host, WC->Hdr->http_sock);
 		}
-		if (WCC->serv_info == NULL) {
-			WCC->serv_info = get_serv_info(WCC->Hdr->HR.browser_host, WCC->Hdr->HR.user_agent);
+		if (WC->serv_info == NULL) {
+			WC->serv_info = get_serv_info(WC->Hdr->HR.browser_host, WC->Hdr->HR.user_agent);
 		}
-		if (WCC->serv_info == NULL){
+		if (WC->serv_info == NULL){
 			begin_burst();
 			wc_printf(_("Received unexpected answer from Citadel server; bailing out."));
 			hprintf("HTTP/1.1 502 Bad Gateway\r\n");
@@ -233,14 +234,14 @@ int GetConnected (void) {
 			end_webcit_session();
 			return 1;
 		}
-		if (WCC->serv_info->serv_rev_level < MINIMUM_CIT_VERSION) {
+		if (WC->serv_info->serv_rev_level < MINIMUM_CIT_VERSION) {
 			begin_burst();
 			wc_printf(_("You are connected to a Citadel "
 				  "server running Citadel %d.%02d. \n"
 				  "In order to run this version of WebCit "
 				  "you must also have Citadel %d.%02d or"
 				  " newer.\n\n\n"),
-				WCC->serv_info->serv_rev_level,
+				WC->serv_info->serv_rev_level,
 				0,
 				MINIMUM_CIT_VERSION,
 				0
@@ -416,7 +417,6 @@ void server_to_text() {
  * the returned pointer.
  */
 int read_server_text(StrBuf *Buf, long *nLines) {
-	wcsession *WCC = WC;
 	StrBuf *ReadBuf;
 	long nRead;
 	long nTotal = 0;
@@ -424,7 +424,7 @@ int read_server_text(StrBuf *Buf, long *nLines) {
 	
 	nlines = 0;
 	ReadBuf = NewStrBuf();
-	while ((WCC->serv_sock!=-1) &&
+	while ((WC->serv_sock!=-1) &&
 	       (nRead = StrBuf_ServGetln(ReadBuf), (nRead >= 0) &&
 		((nRead != 3)||(strcmp(ChrPtr(ReadBuf), "000") != 0))))
 	{
@@ -459,38 +459,33 @@ void tmplput_serv_ip(StrBuf *Target, WCTemplputParams *TP) {
 }
 
 void tmplput_serv_admin(StrBuf *Target, WCTemplputParams *TP) {
-	wcsession *WCC = WC;
-	if (WCC->serv_info == NULL)
+	if (WC->serv_info == NULL)
 		return;
-	StrBufAppendTemplate(Target, TP, WCC->serv_info->serv_sysadm, 0);
+	StrBufAppendTemplate(Target, TP, WC->serv_info->serv_sysadm, 0);
 }
 
 void tmplput_serv_nodename(StrBuf *Target, WCTemplputParams *TP) {
-	wcsession *WCC = WC;
-	if (WCC->serv_info == NULL)
+	if (WC->serv_info == NULL)
 		return;
-	StrBufAppendTemplate(Target, TP, WCC->serv_info->serv_nodename, 0);
+	StrBufAppendTemplate(Target, TP, WC->serv_info->serv_nodename, 0);
 }
 
 void tmplput_serv_humannode(StrBuf *Target, WCTemplputParams *TP) {
-	wcsession *WCC = WC;
-	if (WCC->serv_info == NULL)
+	if (WC->serv_info == NULL)
 		return;
-	StrBufAppendTemplate(Target, TP, WCC->serv_info->serv_humannode, 0);
+	StrBufAppendTemplate(Target, TP, WC->serv_info->serv_humannode, 0);
 }
 
 void tmplput_serv_fqdn(StrBuf *Target, WCTemplputParams *TP) {
-	wcsession *WCC = WC;
-	if (WCC->serv_info == NULL)
+	if (WC->serv_info == NULL)
 		return;
-	StrBufAppendTemplate(Target, TP, WCC->serv_info->serv_fqdn, 0);
+	StrBufAppendTemplate(Target, TP, WC->serv_info->serv_fqdn, 0);
 }
 
 void tmplput_serv_software(StrBuf *Target, WCTemplputParams *TP) {
-	wcsession *WCC = WC;
-	if (WCC->serv_info == NULL)
+	if (WC->serv_info == NULL)
 		return;
-	StrBufAppendTemplate(Target, TP, WCC->serv_info->serv_software, 0);
+	StrBufAppendTemplate(Target, TP, WC->serv_info->serv_software, 0);
 }
 
 void tmplput_serv_rev_level(StrBuf *Target, WCTemplputParams *TP) {
@@ -498,43 +493,37 @@ void tmplput_serv_rev_level(StrBuf *Target, WCTemplputParams *TP) {
 	StrBufAppendPrintf(Target, "%d", WC->serv_info->serv_rev_level);
 }
 int conditional_serv_newuser_disabled(StrBuf *Target, WCTemplputParams *TP) {
-	wcsession *WCC = WC;
-	if (WCC->serv_info == NULL)
+	if (WC->serv_info == NULL)
 		return 0;
-	return WCC->serv_info->serv_newuser_disabled != 0;
+	return WC->serv_info->serv_newuser_disabled != 0;
 }
 
 int conditional_serv_supports_guest(StrBuf *Target, WCTemplputParams *TP) {
-	wcsession *WCC = WC;
-        if (WCC->serv_info == NULL)
+        if (WC->serv_info == NULL)
 		return 0;
-        return WCC->serv_info->serv_supports_guest != 0;
+        return WC->serv_info->serv_supports_guest != 0;
 }
 
 int conditional_serv_supports_openid(StrBuf *Target, WCTemplputParams *TP) {
-	wcsession *WCC = WC;
-	if (WCC->serv_info == NULL)
+	if (WC->serv_info == NULL)
 		return 0;
-	return WCC->serv_info->serv_supports_openid != 0;
+	return WC->serv_info->serv_supports_openid != 0;
 }
 
 int conditional_serv_fulltext_enabled(StrBuf *Target, WCTemplputParams *TP) {
-	wcsession *WCC = WC;
-	if (WCC->serv_info == NULL)
+	if (WC->serv_info == NULL)
 		return 0;
-	return WCC->serv_info->serv_fulltext_enabled != 0;
+	return WC->serv_info->serv_fulltext_enabled != 0;
 }
 
 int conditional_serv_ldap_enabled(StrBuf *Target, WCTemplputParams *TP) {
-	wcsession *WCC = WC;
-	if (WCC->serv_info == NULL)
+	if (WC->serv_info == NULL)
 		return 0;
-	return WCC->serv_info->serv_supports_ldap != 0;
+	return WC->serv_info->serv_supports_ldap != 0;
 }
 
 void tmplput_serv_bbs_city(StrBuf *Target, WCTemplputParams *TP) {
-	wcsession *WCC = WC;
-	if (WCC->serv_info == NULL)
+	if (WC->serv_info == NULL)
 		return;
 	StrBufAppendTemplate(Target, TP, WC->serv_info->serv_bbs_city, 0);
 }
@@ -573,9 +562,8 @@ void tmplput_mesg(StrBuf *Target, WCTemplputParams *TP) {
 }
 
 void tmplput_site_prefix(StrBuf *Target, WCTemplputParams *TP) {
-	wcsession *WCC = WC;
-	if ((WCC != NULL) && (WCC->Hdr->HostHeader != NULL)) {
-		StrBufAppendTemplate(Target, TP, WCC->Hdr->HostHeader, 0);
+	if ((WC != NULL) && (WC->Hdr->HostHeader != NULL)) {
+		StrBufAppendTemplate(Target, TP, WC->Hdr->HostHeader, 0);
 	}
 }
 
@@ -624,10 +612,6 @@ void
 InitModule_SERVFUNC
 (void)
 {
-	is_uds = strcasecmp(ctdlhost, "uds") == 0;
-	if (is_uds)
-		snprintf(serv_sock_name, PATH_MAX, "%s/citadel.socket", ctdlport);
-
 	RegisterConditional("COND:SERV:OPENID", 2, conditional_serv_supports_openid, CTX_NONE);
 	RegisterConditional("COND:SERV:NEWU", 2, conditional_serv_newuser_disabled, CTX_NONE);
 	RegisterConditional("COND:SERV:FULLTEXT_ENABLED", 2, conditional_serv_fulltext_enabled, CTX_NONE);

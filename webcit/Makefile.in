@@ -19,7 +19,7 @@ SUBDIRS=$(LIB_SUBDIRS) $(PROG_SUBDIRS)
 LOCALEDIR=@LOCALEDIR@
 WWWDIR=@WWWDIR@
 ETCDIR=@ETCDIR@
-HEADERS=calendar.h  dav.h  messages.h  modules_init.h  paramhandling.h  preferences.h  roomops.h  subst.h  sysdep.h  tcp_sockets.h  utils.h  webcit.h  webserver.h
+HEADERS=calendar.h  dav.h  messages.h  modules_init.h  paramhandling.h  preferences.h  roomops.h  subst.h  sysdep.h  sockets.h  utils.h  webcit.h  webserver.h
 
 # End of configuration section
 
@@ -51,7 +51,7 @@ distclean: clean
 
 webcit: webserver.o context_loop.o ical_dezonify.o \
 	cookie_conversion.o locate_host.o summary.o \
-	webcit.o auth.o tcp_sockets.o mainmenu.o serv_func.o who.o marchlist.o \
+	webcit.o auth.o sockets.o mainmenu.o serv_func.o who.o marchlist.o \
 	roomops.o roomlist.o roomtokens.o roomviews.o \
 	blogview_renderer.o msg_renderers.o jsonview_renderer.o mailview_renderer.o bbsview_renderer.o \
 	messages.o paging.o sysmsgs.o \
@@ -69,7 +69,7 @@ webcit: webserver.o context_loop.o ical_dezonify.o \
 	echo LD: webcit
 	$(CC) $(LDFLAGS) -o webcit $(LIBOBJS) \
 	webserver.o context_loop.o cookie_conversion.o marchlist.o \
-	webcit.o auth.o tcp_sockets.o mainmenu.o serv_func.o who.o listsub.o \
+	webcit.o auth.o sockets.o mainmenu.o serv_func.o who.o listsub.o \
 	roomops.o roomlist.o roomtokens.o roomviews.o \
 	messages.o msg_renderers.o paging.o sysmsgs.o \
 	blogview_renderer.o jsonview_renderer.o mailview_renderer.o bbsview_renderer.o \

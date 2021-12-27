@@ -64,10 +64,6 @@ extern void *context_loop(ParsedHttpHdrs *Hdr);
 extern void *housekeeping_loop(void);
 extern void do_housekeeping(void);
 
-char ctdl_key_dir[PATH_MAX]=SSL_DIR;
-char file_crpt_file_key[PATH_MAX]="";
-char file_crpt_file_csr[PATH_MAX]="";
-char file_crpt_file_cer[PATH_MAX]="";
 char file_etc_mimelist[PATH_MAX]="";
 
 char etc_dir[PATH_MAX];
@@ -519,20 +515,6 @@ webcit_calc_dirs_n_files(int relh, const char *basedir, int home, char *webcitdi
 	StripSlashes(static_dir, 1);
 	StripSlashes(static_icon_dir, 1);
 	StripSlashes(static_local_dir, 1);
-
-	snprintf(file_crpt_file_key,
-		 sizeof file_crpt_file_key, 
-		 "%s/citadel.key",
-		 ctdl_key_dir);
-	snprintf(file_crpt_file_csr,
-		 sizeof file_crpt_file_csr, 
-		 "%s/citadel.csr",
-		 ctdl_key_dir);
-	snprintf(file_crpt_file_cer,
-		 sizeof file_crpt_file_cer, 
-		 "%s/citadel.cer",
-		 ctdl_key_dir);
-
 
 	basedir=ETCDIR;
 	COMPUTE_DIRECTORY(etc_dir);

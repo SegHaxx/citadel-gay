@@ -1,4 +1,4 @@
-// Copyright (c) 1996-2021 by the citadel.org team
+// Copyright (c) 1996-2022 by the citadel.org team
 //
 // This program is open source software.  You can redistribute it and/or
 // modify it under the terms of the GNU General Public License version 3.
@@ -30,12 +30,11 @@ extern void webcit_calc_dirs_n_files(int relh, const char *basedir, int home, ch
 extern void worker_entry(void);
 extern void drop_root(uid_t UID);
 
-char socket_dir[PATH_MAX];	/* where to talk to our citadel server */
-char *server_cookie = NULL;	/* our Cookie connection to the client */
-int http_port = PORT_NUM;	/* Port to listen on */
-char *ctdlhost = DEFAULT_HOST;	/* Host name or IP address of Citadel server */
-char *ctdlport = DEFAULT_PORT;	/* Port number of Citadel server */
-int running_as_daemon = 0;	/* should we deamonize on startup? */
+char socket_dir[PATH_MAX];		/* where to talk to our citadel server */
+char *server_cookie = NULL;		/* our Cookie connection to the client */
+int http_port = PORT_NUM;		/* Port to listen on */
+int running_as_daemon = 0;		/* should we deamonize on startup? */
+char *ctdl_dir = DEFAULT_CTDLDIR;	/* Directory where Citadel Server is running */
 
 /* #define DBG_PRINNT_HOOKS_AT_START */
 #ifdef DBG_PRINNT_HOOKS_AT_START
@@ -109,7 +108,6 @@ int main(int argc, char **argv) {
 			else {
 				safestrncpy(relhome, relhome, sizeof relhome);
 			}
-			/* free(hdir); TODO: SHOULD WE DO THIS? */
 			home=1;
 			break;
 		case 'd':
@@ -189,7 +187,7 @@ int main(int argc, char **argv) {
 #ifdef HAVE_OPENSSL
 				"[-s] [-S cipher_suites]"
 #endif
-				"[remotehost [remoteport]]\n");
+				"[citadel_server_directory]\n");
 			return 1;
 		}
 
@@ -200,10 +198,9 @@ int main(int argc, char **argv) {
 		LOG_DAEMON
 	);
 
-	if (optind < argc) {
-		ctdlhost = argv[optind];
-		if (++optind < argc)
-			ctdlport = argv[optind];
+	while (optind < argc) {
+		ctdl_dir = strdup(argv[optind]);
+		++optind;
 	}
 
 	/* daemonize, if we were asked to */
@@ -221,7 +218,7 @@ int main(int argc, char **argv) {
 
 	/* Tell 'em who's in da house */
 	syslog(LOG_NOTICE, "%s", PACKAGE_STRING);
-	syslog(LOG_NOTICE, "Copyright (C) 1996-2020 by the citadel.org team");
+	syslog(LOG_NOTICE, "Copyright (C) 1996-2022 by the citadel.org team");
 	syslog(LOG_NOTICE, " ");
 	syslog(LOG_NOTICE, "This program is open source software: you can redistribute it and/or");
 	syslog(LOG_NOTICE, "modify it under the terms of the GNU General Public License, version 3.");
@@ -321,16 +318,12 @@ int main(int argc, char **argv) {
 
 	pthread_mutex_init(&SessionListMutex, NULL);
 
-	/*
-	 * Start up the housekeeping thread
-	 */
+	// Start up the housekeeping thread
 	pthread_attr_init(&attr);
 	pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
 	pthread_create(&SessThread, &attr, (void *(*)(void *)) housekeeping_loop, NULL);
 
-	/*
-	 * If this is an HTTPS server, fire up SSL
-	 */
+	// If this is an HTTPS server, fire up SSL
 #ifdef HAVE_OPENSSL
 	if (is_https) {
 		init_ssl();
@@ -338,7 +331,7 @@ int main(int argc, char **argv) {
 #endif
 	drop_root(UID);
 
-	/* Become a worker thread.  More worker threads will be spawned as they are needed. */
+	// Become a worker thread.  More worker threads will be spawned as they are needed.
 	worker_entry();
 	ShutDownLibCitadel();
 	return 0;

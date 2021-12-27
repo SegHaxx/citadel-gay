@@ -10,8 +10,8 @@
  * GNU General Public License for more details.
  */
 
-int uds_connectsock(char *);
-int tcp_connectsock(char *, char *);
+int connect_to_citadel(char *);
+int connectsock(char *, char *);
 int serv_getln(char *strbuf, int bufsize);
 int StrBuf_ServGetln(StrBuf *buf);
 

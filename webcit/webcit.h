@@ -87,7 +87,7 @@ typedef struct wcsession wcsession;
 #include "roomops.h"
 #include "preferences.h"
 
-#include "tcp_sockets.h"
+#include "sockets.h"
 #include "utils.h"
 #ifdef HAVE_OPENSSL
 /* Work around RedHat's b0rken OpenSSL includes */
@@ -122,20 +122,19 @@ extern char *ssl_cipher_list;
 #undef memcpy
 #endif
 
-#define SLEEPING		180		/* TCP connection timeout */
-#define WEBCIT_TIMEOUT		900		/* WebCit session timeout */
-#define PORT_NUM		80		/* port number to listen on */
+#define SLEEPING		180			/* TCP connection timeout */
+#define WEBCIT_TIMEOUT		900			/* WebCit session timeout */
+#define PORT_NUM		80			/* port number to listen on */
 #define DEVELOPER_ID		0
 #define CLIENT_ID		4
 #define CLIENT_VERSION 941		/* This version of WebCit */
-#define MINIMUM_CIT_VERSION	931		/* Minimum required version of Citadel server */
-#define	LIBCITADEL_MIN		931		/* Minimum required version of libcitadel */
-#define DEFAULT_HOST		"localhost"	/* Default Citadel server */
-#define DEFAULT_PORT		"504"
-#define TARGET			"webcit01"	/* Window target for inline URL's */
-#define HOUSEKEEPING		15		/* Housekeeping frequency */
+#define MINIMUM_CIT_VERSION	931			/* Minimum required version of Citadel server */
+#define	LIBCITADEL_MIN		931			/* Minimum required version of libcitadel */
+#define DEFAULT_CTDLDIR		"/usr/local/citadel"	/* Default Citadel server directory */
+#define TARGET			"webcit01"		/* Window target for inline URL's */
+#define HOUSEKEEPING		15			/* Housekeeping frequency */
 #define MAX_WORKER_THREADS	250
-#define LISTEN_QUEUE_LENGTH	100		/* listen() backlog queue */
+#define LISTEN_QUEUE_LENGTH	100			/* listen() backlog queue */
 
 #define USERCONFIGROOM		"My Citadel Config"
 #define DEFAULT_MAXMSGS		20
@@ -528,10 +527,6 @@ extern pthread_key_t MyConKey;
 #ifdef HAVE_OPENSSL
 #define THREADSSL ((SSL *)pthread_getspecific(ThreadSSL))
 extern pthread_key_t ThreadSSL;
-extern char ctdl_key_dir[PATH_MAX];
-extern char file_crpt_file_key[PATH_MAX];
-extern char file_crpt_file_csr[PATH_MAX];
-extern char file_crpt_file_cer[PATH_MAX];
 
 void init_ssl(void);
 void endtls(void);
@@ -544,7 +539,6 @@ int client_write_ssl(const StrBuf *Buf);
 extern int is_https;
 extern int follow_xff;
 extern char *server_cookie;
-extern char *ctdlhost, *ctdlport;
 extern char *axdefs[];
 extern int num_threads_existing;
 extern int num_threads_executing;
@@ -655,3 +649,4 @@ void display_summary_page(void);
 HashList *GetValidDomainNames(StrBuf *Target, WCTemplputParams *TP);
 void output_error_pic(const char *ErrMsg1, const char *ErrMsg2);
 void jsonMessageListHdr(void);
+extern char *ctdl_dir;				/* Directory where Citadel Server is running */

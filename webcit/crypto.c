@@ -14,12 +14,6 @@
 #include "webcit.h"
 #include "webserver.h"
 
-/* where to find the keys */
-#define	CTDL_CRYPTO_DIR		ctdl_key_dir
-#define CTDL_KEY_PATH		file_crpt_file_key
-#define CTDL_CSR_PATH		file_crpt_file_csr
-#define CTDL_CER_PATH		file_crpt_file_cer
-#define SIGN_DAYS		3650			// how long our self-signed certificate should live
 
 SSL_CTX *ssl_ctx;		// Global SSL context
 char *ssl_cipher_list = DEFAULT_SSL_CIPHER_LIST;
@@ -31,70 +25,9 @@ void shutdown_ssl(void) {
 }
 
 
-void generate_key(char *keyfilename) {
-	int ret = 0;
-	RSA *rsa = NULL;
-	BIGNUM *bne = NULL;
-	int bits = 2048;
-	unsigned long e = RSA_F4;
-	FILE *fp;
-
-	if (access(keyfilename, R_OK) == 0) {		// We already have a key -- don't generate a new one.
-		return;
-	}
-
-	syslog(LOG_INFO, "crypto: generating RSA key pair");
- 
-	// generate rsa key
-	bne = BN_new();
-	ret = BN_set_word(bne,e);
-	if (ret != 1) {
-		goto free_all;
-	}
- 
-	rsa = RSA_new();
-	ret = RSA_generate_key_ex(rsa, bits, bne, NULL);
-	if (ret != 1) {
-		goto free_all;
-	}
-
-	// write the key file
-	fp = fopen(keyfilename, "w");
-	if (fp != NULL) {
-		chmod(file_crpt_file_key, 0600);
-		if (PEM_write_RSAPrivateKey(fp,	// the file
-					rsa,	// the key
-					NULL,	// no enc
-					NULL,	// no passphrase
-					0,	// no passphrase
-					NULL,	// no callback
-					NULL	// no callback
-		) != 1) {
-			syslog(LOG_ERR, "crypto: cannot write key: %s", ERR_reason_error_string(ERR_get_error()));
-			unlink(keyfilename);
-		}
-		fclose(fp);
-	}
-
-	// Free the memory we used
-free_all:
-	RSA_free(rsa);
-	BN_free(bne);
-}
-
-
 // initialize ssl engine, load certs and initialize openssl internals
 void init_ssl(void) {
 	const SSL_METHOD *ssl_method;
-	RSA *rsa=NULL;
-	X509_REQ *req = NULL;
-	X509 *cer = NULL;
-	EVP_PKEY *pk = NULL;
-	EVP_PKEY *req_pkey = NULL;
-	X509_NAME *name = NULL;
-	FILE *fp;
-	char buf[SIZ];
-	int rv = 0;
 
 #ifndef OPENSSL_NO_EGD
 	if (!access("/var/run/egd-pool", F_OK)) {
@@ -122,205 +55,20 @@ void init_ssl(void) {
 		return;
 	}
 
-	CRYPTO_set_locking_callback(ssl_lock);
-	CRYPTO_set_id_callback(id_callback);
-
-	// Get our certificates in order.
-	// First, create the key/cert directory if it's not there already...
-	mkdir(CTDL_CRYPTO_DIR, 0700);
-
-	// Before attempting to generate keys/certificates, first try
-	// link to them from the Citadel server if it's on the same host.
-	// We ignore any error return because it either meant that there
-	// was nothing in Citadel to link from (in which case we just
-	// generate new files) or the target files already exist (which
-	// is not fatal either).
-	if (!strcasecmp(ctdlhost, "uds")) {
-		sprintf(buf, "%s/keys/citadel.key", ctdlport);
-		rv = symlink(buf, CTDL_KEY_PATH);
-		if (!rv) {
-			syslog(LOG_DEBUG, "%s", strerror(errno));
-		}
-		sprintf(buf, "%s/keys/citadel.csr", ctdlport);
-		rv = symlink(buf, CTDL_CSR_PATH);
-		if (!rv) {
-			syslog(LOG_DEBUG, "%s", strerror(errno));
-		}
-		sprintf(buf, "%s/keys/citadel.cer", ctdlport);
-		rv = symlink(buf, CTDL_CER_PATH);
-		if (!rv) {
-			syslog(LOG_DEBUG, "%s", strerror(errno));
-		}
-	}
-
-	// If we still don't have a private key, generate one.
-	generate_key(CTDL_KEY_PATH);
-
-	// If there is no certificate file on disk, we will be generating a self-signed certificate
-	// in the next step.  Therefore, if we have neither a CSR nor a certificate, generate
-	// the CSR in this step so that the next step may commence.
-	if ( (access(CTDL_CER_PATH, R_OK) != 0) && (access(CTDL_CSR_PATH, R_OK) != 0) ) {
-		syslog(LOG_INFO, "Generating a certificate signing request.");
-
-		// Read our key from the file.  No, we don't just keep this
-		// in memory from the above key-generation function, because
-		// there is the possibility that the key was already on disk
-		// and we didn't just generate it now.
-		fp = fopen(CTDL_KEY_PATH, "r");
-		if (fp) {
-			rsa = PEM_read_RSAPrivateKey(fp, NULL, NULL, NULL);
-			fclose(fp);
-		}
-
-		if (rsa) {
-			// Create a public key from the private key
-			if (pk=EVP_PKEY_new(), pk != NULL) {
-				EVP_PKEY_assign_RSA(pk, rsa);
-				if (req = X509_REQ_new(), req != NULL) {
-					const char *env;
-					// Set the public key
-					X509_REQ_set_pubkey(req, pk);
-					X509_REQ_set_version(req, 0L);
-
-					name = X509_REQ_get_subject_name(req);
-
-					// Tell it who we are
-					env = getenv("O");
-					if (env == NULL) {
-						env = "Organization name";
-					}
-
-					X509_NAME_add_entry_by_txt(
-						name, "O",
-						MBSTRING_ASC, 
-						(unsigned char*)env, 
-						-1, -1, 0
-					);
-
-					env = getenv("OU");
-					if (env == NULL) {
-						env = "Citadel server";
-					}
-
-					X509_NAME_add_entry_by_txt(
-						name, "OU",
-						MBSTRING_ASC, 
-						(unsigned char*)env, 
-						-1, -1, 0
-					);
-
-					env = getenv("CN");
-					if (env == NULL)
-						env = "*";
-
-					X509_NAME_add_entry_by_txt(
-						name, "CN",
-						MBSTRING_ASC, 
-						(unsigned char*)env,
-						-1, -1, 0
-					);
-				
-					X509_REQ_set_subject_name(req, name);
-
-					// Sign the CSR
-					if (!X509_REQ_sign(req, pk, EVP_md5())) {
-						syslog(LOG_WARNING, "X509_REQ_sign(): error");
-					}
-					else {
-						// Write it to disk.
-						fp = fopen(CTDL_CSR_PATH, "w");
-						if (fp != NULL) {
-							chmod(CTDL_CSR_PATH, 0600);
-							PEM_write_X509_REQ(fp, req);
-							fclose(fp);
-						}
-						else {
-							syslog(LOG_WARNING, "Cannot write key: %s", CTDL_CSR_PATH);
-							ShutDownWebcit();
-							exit(0);
-						}
-					}
-
-					X509_REQ_free(req);
-				}
-			}
-			RSA_free(rsa);
-		}
-		else {
-			syslog(LOG_WARNING, "Unable to read private key.");
-		}
-	}
-
-	// Generate a self-signed certificate if we don't have one.
-	if (access(CTDL_CER_PATH, R_OK) != 0) {
-		syslog(LOG_INFO, "Generating a self-signed certificate.\n");
-
-		// Same deal as before: always read the key from disk because
-		// it may or may not have just been generated.
-		fp = fopen(CTDL_KEY_PATH, "r");
-		if (fp) {
-			rsa = PEM_read_RSAPrivateKey(fp, NULL, NULL, NULL);
-			fclose(fp);
-		}
-
-		// This also holds true for the CSR.
-		req = NULL;
-		cer = NULL;
-		pk = NULL;
-		if (rsa) {
-			if (pk=EVP_PKEY_new(), pk != NULL) {
-				EVP_PKEY_assign_RSA(pk, rsa);
-			}
-
-			fp = fopen(CTDL_CSR_PATH, "r");
-			if (fp) {
-				req = PEM_read_X509_REQ(fp, NULL, NULL, NULL);
-				fclose(fp);
-			}
-
-			if (req) {
-				if (cer = X509_new(), cer != NULL) {
-
-					ASN1_INTEGER_set(X509_get_serialNumber(cer), 0);
-					X509_set_issuer_name(cer, X509_REQ_get_subject_name(req));
-					X509_set_subject_name(cer, X509_REQ_get_subject_name(req));
-					X509_gmtime_adj(X509_get_notBefore(cer), 0);
-					X509_gmtime_adj(X509_get_notAfter(cer),(long)60*60*24*SIGN_DAYS);
-
-					req_pkey = X509_REQ_get_pubkey(req);
-					X509_set_pubkey(cer, req_pkey);
-					EVP_PKEY_free(req_pkey);
-					
-					// Sign the cert
-					if (!X509_sign(cer, pk, EVP_md5())) {
-						syslog(LOG_WARNING, "X509_sign(): error");
-					}
-					else {
-						// Write it to disk.
-						fp = fopen(CTDL_CER_PATH, "w");
-						if (fp != NULL) {
-							chmod(CTDL_CER_PATH, 0600);
-							PEM_write_X509(fp, cer);
-							fclose(fp);
-						}
-						else {
-							syslog(LOG_WARNING, "Cannot write key: %s", CTDL_CER_PATH);
-							ShutDownWebcit();
-							exit(0);
-						}
-					}
-					X509_free(cer);
-				}
-			}
-			RSA_free(rsa);
-		}
-	}
 
 	// Now try to bind to the key and certificate.
 	// Note that we use SSL_CTX_use_certificate_chain_file() which allows
 	// the certificate file to contain intermediate certificates.
-	SSL_CTX_use_certificate_chain_file(ssl_ctx, CTDL_CER_PATH);
-	SSL_CTX_use_PrivateKey_file(ssl_ctx, CTDL_KEY_PATH, SSL_FILETYPE_PEM);
+
+
+	char *key_file[PATH_MAX];
+	char *cert_file[PATH_MAX];
+	snprintf(key_file, sizeof key_file, "%s/keys/citadel.key", ctdl_dir);
+	snprintf(cert_file, sizeof key_file, "%s/keys/citadel.cer", ctdl_dir);
+
+	SSL_CTX_use_certificate_chain_file(ssl_ctx, cert_file);
+	SSL_CTX_use_PrivateKey_file(ssl_ctx, key_file, SSL_FILETYPE_PEM);
+
 	if ( !SSL_CTX_check_private_key(ssl_ctx) ) {
 		syslog(LOG_WARNING, "crypto: cannot install certificate: %s", ERR_reason_error_string(ERR_get_error()));
 	}
@@ -357,10 +105,10 @@ int starttls(int sock) {
 		errval = SSL_get_error(newssl, retval);
 		ssl_error_reason = ERR_reason_error_string(ERR_get_error());
 		if (ssl_error_reason == NULL) {
-			syslog(LOG_WARNING, "SSL_accept failed: errval=%ld, retval=%d %s", errval, retval, strerror(errval));
+			syslog(LOG_WARNING, "first SSL_accept failed: errval=%ld, retval=%d %s", errval, retval, strerror(errval));
 		}
 		else {
-			syslog(LOG_WARNING, "SSL_accept failed: %s", ssl_error_reason);
+			syslog(LOG_WARNING, "first SSL_accept failed: %s", ssl_error_reason);
 		}
 		sleeeeeeeeeep(1);
 		retval = SSL_accept(newssl);
@@ -372,10 +120,10 @@ int starttls(int sock) {
 		errval = SSL_get_error(newssl, retval);
 		ssl_error_reason = ERR_reason_error_string(ERR_get_error());
 		if (ssl_error_reason == NULL) {
-			syslog(LOG_WARNING, "SSL_accept failed: errval=%ld, retval=%d (%s)", errval, retval, strerror(errval));
+			syslog(LOG_WARNING, "second SSL_accept failed: errval=%ld, retval=%d (%s)", errval, retval, strerror(errval));
 		}
 		else {
-			syslog(LOG_WARNING, "SSL_accept failed: %s", ssl_error_reason);
+			syslog(LOG_WARNING, "second SSL_accept failed: %s", ssl_error_reason);
 		}
 		SSL_free(newssl);
 		newssl = NULL;

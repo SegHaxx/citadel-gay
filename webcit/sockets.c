@@ -23,8 +23,7 @@ long MaxRead = -1; /* should we do READ scattered or all at once? */
 /*
  * register the timeout
  */
-RETSIGTYPE timeout(int signum)
-{
+RETSIGTYPE timeout(int signum) {
 	syslog(LOG_WARNING, "Connection timed out; unable to reach citserver\n");
 	/* no exit here, since we need to server the connection unreachable thing. exit(3); */
 }
@@ -33,8 +32,7 @@ RETSIGTYPE timeout(int signum)
 /*
  * Client side - connect to a unix domain socket
  */
-int uds_connectsock(char *sockpath)
-{
+int connect_to_citadel(char *sockpath) {
 	struct sockaddr_un addr;
 	int s;
 
@@ -58,109 +56,9 @@ int uds_connectsock(char *sockpath)
 
 
 /*
- * TCP client - connect to a host/port 
- */
-int tcp_connectsock(char *host, char *service)
-{
-	struct in6_addr serveraddr;
-	struct addrinfo hints;
-	struct addrinfo *res = NULL;
-	struct addrinfo *ai = NULL;
-	int rc = (-1);
-	int s = (-1);
-
-	if ((host == NULL) || IsEmptyStr(host))
-		return (-1);
-	if ((service == NULL) || IsEmptyStr(service))
-		return (-1);
-
-	syslog(LOG_DEBUG, "tcp_connectsock(%s,%s)\n", host, service);
-
-	memset(&hints, 0x00, sizeof(hints));
-	hints.ai_flags = AI_NUMERICSERV;
-	hints.ai_family = AF_UNSPEC;
-	hints.ai_socktype = SOCK_STREAM;
-
-	/*
-	 * Handle numeric IPv4 and IPv6 addresses
-	 */
-	rc = inet_pton(AF_INET, host, &serveraddr);
-	if (rc == 1) {						/* dotted quad */
-		hints.ai_family = AF_INET;
-		hints.ai_flags |= AI_NUMERICHOST;
-	} else {
-		rc = inet_pton(AF_INET6, host, &serveraddr);
-		if (rc == 1) {					/* IPv6 address */
-			hints.ai_family = AF_INET6;
-			hints.ai_flags |= AI_NUMERICHOST;
-		}
-	}
-
-	/* Begin the connection process */
-
-	rc = getaddrinfo(host, service, &hints, &res);
-	if (rc != 0) {
-		syslog(LOG_DEBUG, "%s: %s\n", host, gai_strerror(rc));
-		freeaddrinfo(res);
-		return(-1);
-	}
-
-	/*
-	 * Try all available addresses until we connect to one or until we run out.
-	 */
-	for (ai = res; ai != NULL; ai = ai->ai_next) {
-
-		if (ai->ai_family == AF_INET) syslog(LOG_DEBUG, "Trying IPv4\n");
-		else if (ai->ai_family == AF_INET6) syslog(LOG_DEBUG, "Trying IPv6\n");
-		else syslog(LOG_WARNING, "This is going to fail.\n");
-
-		s = socket(ai->ai_family, ai->ai_socktype, ai->ai_protocol);
-		if (s < 0) {
-			syslog(LOG_WARNING, "socket() failed: %s\n", strerror(errno));
-			freeaddrinfo(res);
-			return(-1);
-		}
-		rc = connect(s, ai->ai_addr, ai->ai_addrlen);
-		if (rc >= 0) {
-			int fdflags;
-			freeaddrinfo(res);
-
-			fdflags = fcntl(rc, F_GETFL);
-			if (fdflags < 0) {
-				syslog(LOG_ERR,
-				       "unable to get socket %d flags! %s \n",
-				       rc,
-				       strerror(errno));
-				close(rc);
-				return -1;
-			}
-			fdflags = fdflags | O_NONBLOCK;
-			if (fcntl(rc, F_SETFL, fdflags) < 0) {
-				syslog(LOG_ERR,
-				       "unable to set socket %d nonblocking flags! %s \n",
-				       rc,
-				       strerror(errno));
-				close(s);
-				return -1;
-			}
-
-			return(s);
-		}
-		else {
-			syslog(LOG_WARNING, "connect() failed: %s\n", strerror(errno));
-			close(s);
-		}
-	}
-        freeaddrinfo(res);
-	return(-1);
-}
-
-
-/*
  *  input string from pipe
  */
-int serv_getln(char *strbuf, int bufsize)
-{
+int serv_getln(char *strbuf, int bufsize) {
 	int len;
 
 	*strbuf = '\0';
@@ -178,8 +76,7 @@ int serv_getln(char *strbuf, int bufsize)
 }
 
 
-int StrBuf_ServGetln(StrBuf *buf)
-{
+int StrBuf_ServGetln(StrBuf *buf) {
 	const char *ErrStr = NULL;
 	int rc;
 	
@@ -215,8 +112,7 @@ int StrBuf_ServGetln(StrBuf *buf)
 	return rc;
 }
 
-int StrBuf_ServGetBLOBBuffered(StrBuf *buf, long BlobSize)
-{
+int StrBuf_ServGetBLOBBuffered(StrBuf *buf, long BlobSize) {
 	const char *ErrStr;
 	int rc;
 	
@@ -228,8 +124,7 @@ int StrBuf_ServGetBLOBBuffered(StrBuf *buf, long BlobSize)
 				    BlobSize, 
 				    NNN_TERM,
 				    &ErrStr);
-	if (rc < 0)
-	{
+	if (rc < 0) {
 		syslog(LOG_INFO, "StrBuf_ServGetBLOBBuffered(): Server connection broken: %s\n",
 			(ErrStr)?ErrStr:"");
 		wc_backtrace(LOG_INFO);
@@ -246,15 +141,13 @@ int StrBuf_ServGetBLOBBuffered(StrBuf *buf, long BlobSize)
 	return rc;
 }
 
-int StrBuf_ServGetBLOB(StrBuf *buf, long BlobSize)
-{
+int StrBuf_ServGetBLOB(StrBuf *buf, long BlobSize) {
 	const char *ErrStr;
 	int rc;
 	
 	WC->ReadPos = NULL;
 	rc = StrBufReadBLOB(buf, &WC->serv_sock, 1, BlobSize, &ErrStr);
-	if (rc < 0)
-	{
+	if (rc < 0) {
 		syslog(LOG_INFO, "StrBuf_ServGetBLOB(): Server connection broken: %s\n",
 			(ErrStr)?ErrStr:"");
 		wc_backtrace(LOG_INFO);
@@ -272,22 +165,16 @@ int StrBuf_ServGetBLOB(StrBuf *buf, long BlobSize)
 }
 
 
-void FlushReadBuf (void)
-{
+void FlushReadBuf (void) {
 	long len;
 	const char *pch;
 	const char *pche;
 
 	len = StrLength(WC->ReadBuf);
-	if ((len > 0) &&
-	    (WC->ReadPos != NULL) && 
-	    (WC->ReadPos != StrBufNOTNULL))
-		
-	{
+	if ((len > 0) && (WC->ReadPos != NULL) && (WC->ReadPos != StrBufNOTNULL)) {
 		pch = ChrPtr(WC->ReadBuf);
 		pche = pch + len;
-		if (WC->ReadPos != pche)
-		{
+		if (WC->ReadPos != pche) {
 			syslog(LOG_ERR,
 				"ERROR: somebody didn't eat his soup! Remaing Chars: %ld [%s]\n", 
 				(long)(pche - WC->ReadPos),
@@ -314,19 +201,16 @@ void FlushReadBuf (void)
  *  buf the buffer to write to citadel server
  *  nbytes how many bytes to send to citadel server
  */
-int serv_write(const char *buf, int nbytes)
-{
+int serv_write(const char *buf, int nbytes) {
 	int bytes_written = 0;
 	int retval;
 
 	FlushReadBuf();
 	while (bytes_written < nbytes) {
-		retval = write(WC->serv_sock, &buf[bytes_written],
-			       nbytes - bytes_written);
+		retval = write(WC->serv_sock, &buf[bytes_written], nbytes - bytes_written);
 		if (retval < 1) {
 			const char *ErrStr = strerror(errno);
-			syslog(LOG_INFO, "serv_write(): Server connection broken: %s\n",
-				(ErrStr)?ErrStr:"");
+			syslog(LOG_INFO, "serv_write(): Server connection broken: %s\n", (ErrStr)?ErrStr:"");
 			if (WC->serv_sock > 0) close(WC->serv_sock);
 			WC->serv_sock = (-1);
 			WC->connected = 0;
@@ -343,8 +227,7 @@ int serv_write(const char *buf, int nbytes)
  *  send line to server
  *  string the line to send to the citadel server
  */
-int serv_puts(const char *string)
-{
+int serv_puts(const char *string) {
 #ifdef SERV_TRACE
 	syslog(LOG_DEBUG, "%3d>>>%s\n", WC->serv_sock, string);
 #endif
@@ -359,8 +242,7 @@ int serv_puts(const char *string)
  *  send line to server
  *  string the line to send to the citadel server
  */
-int serv_putbuf(const StrBuf *string)
-{
+int serv_putbuf(const StrBuf *string) {
 #ifdef SERV_TRACE
 	syslog(LOG_DEBUG, "%3d>>>%s\n", WC->serv_sock, ChrPtr(string));
 #endif
@@ -377,8 +259,7 @@ int serv_putbuf(const StrBuf *string)
  *  format the formatstring
  *  ... the entities to insert into format 
  */
-int serv_printf(const char *format,...)
-{
+int serv_printf(const char *format,...) {
 	va_list arg_ptr;
 	char buf[SIZ];
 	size_t len;
@@ -405,8 +286,7 @@ int serv_printf(const char *format,...)
  * Read binary data from server into memory using a series of server READ commands.
  * returns the read content as StrBuf
  */
-int serv_read_binary(StrBuf *Ret, size_t total_len, StrBuf *Buf) 
-{
+int serv_read_binary(StrBuf *Ret, size_t total_len, StrBuf *Buf) {
 	size_t bytes_read = 0;
 	size_t this_block = 0;
 	int rc = 6;
@@ -424,9 +304,7 @@ int serv_read_binary(StrBuf *Ret, size_t total_len, StrBuf *Buf)
 		}
 
 		serv_printf("READ "SIZE_T_FMT"|"SIZE_T_FMT, bytes_read, total_len-bytes_read);
-		if ( (rc = StrBuf_ServGetln(Buf) > 0) &&
-		     (ServerRc = GetServerStatus(Buf, NULL), ServerRc == 6) ) 
-		{
+		if ( (rc = StrBuf_ServGetln(Buf) > 0) && (ServerRc = GetServerStatus(Buf, NULL), ServerRc == 6) ) {
 			if (rc < 0)
 				return rc;
 			StrBufCutLeft(Buf, 4);
@@ -449,8 +327,7 @@ int serv_read_binary(StrBuf *Ret, size_t total_len, StrBuf *Buf)
 }
 
 
-int client_write(StrBuf *ThisBuf)
-{
+int client_write(StrBuf *ThisBuf) {
         const char *ptr, *eptr;
         long count;
 	ssize_t res = 0;
@@ -473,10 +350,7 @@ int client_write(StrBuf *ThisBuf)
                         }
                 }
 
-                if ((WC->Hdr->http_sock == -1) || 
-		    ((res = write(WC->Hdr->http_sock, ptr, count)),
-		     (res == -1)))
-		{
+                if ((WC->Hdr->http_sock == -1) || ((res = write(WC->Hdr->http_sock, ptr, count)), (res == -1))) {
                         syslog(LOG_INFO, "client_write: Socket write failed (%s)\n", strerror(errno));
 			wc_backtrace(LOG_INFO);
                         return -1;
@@ -488,21 +362,12 @@ int client_write(StrBuf *ThisBuf)
 }
 
 
-int
-read_serv_chunk(
-
-	StrBuf *Buf,
-	size_t total_len,
-	size_t *bytes_read
-	)
-{
+int read_serv_chunk( StrBuf *Buf, size_t total_len, size_t *bytes_read) {
 	int rc;
 	int ServerRc;
 
 	serv_printf("READ "SIZE_T_FMT"|"SIZE_T_FMT, *bytes_read, total_len-(*bytes_read));
-	if ( (rc = StrBuf_ServGetln(Buf) > 0) &&
-	     (ServerRc = GetServerStatus(Buf, NULL), ServerRc == 6) ) 
-	{
+	if ( (rc = StrBuf_ServGetln(Buf) > 0) && (ServerRc = GetServerStatus(Buf, NULL), ServerRc == 6) ) {
 		size_t this_block = 0;
 
 		if (rc < 0)
@@ -525,8 +390,7 @@ read_serv_chunk(
 	return 6;
 }
 
-static inline int send_http(StrBuf *Buf)
-{
+static inline int send_http(StrBuf *Buf) {
 #ifdef HAVE_OPENSSL
 	if (is_https)
 		return client_write_ssl(Buf);
@@ -538,8 +402,7 @@ static inline int send_http(StrBuf *Buf)
  * Read binary data from server into memory using a series of server READ commands.
  * returns the read content as StrBuf
  */
-void serv_read_binary_to_http(StrBuf *MimeType, size_t total_len, int is_static, int detect_mime)
-{
+void serv_read_binary_to_http(StrBuf *MimeType, size_t total_len, int is_static, int detect_mime) {
 	int ServerRc = 6;
 	size_t bytes_read = 0;
 	int first = 1;
@@ -557,8 +420,7 @@ void serv_read_binary_to_http(StrBuf *MimeType, size_t total_len, int is_static,
 
 	Buf = NewStrBuf();
 
-	if (WC->Hdr->HaveRange)
-	{
+	if (WC->Hdr->HaveRange) {
 		WC->Hdr->HaveRange++;
 		WC->Hdr->TotalBytes = total_len;
 		/* open range? or beyound file border? correct the numbers. */
@@ -570,13 +432,11 @@ void serv_read_binary_to_http(StrBuf *MimeType, size_t total_len, int is_static,
 	else
 		chunked = total_len > SIZ * 10; /* TODO: disallow for HTTP / 1.0 */
 
-	if (chunked)
-	{
+	if (chunked) {
 		BufHeader = NewStrBuf();
 	}
 
-	if ((detect_mime != 0) && (bytes_read != 0))
-	{
+	if ((detect_mime != 0) && (bytes_read != 0)) {
 		/* need to read first chunk to detect mime, though the client doesn't care */
 		size_t bytes_read = 0;
 		const char *CT;
@@ -601,8 +461,7 @@ void serv_read_binary_to_http(StrBuf *MimeType, size_t total_len, int is_static,
 	}
 
 	memset(&WriteBuffer, 0, sizeof(IOBuffer));
-	if (chunked && !DisableGzip && WC->Hdr->HR.gzip_ok)
-	{
+	if (chunked && !DisableGzip && WC->Hdr->HR.gzip_ok) {
 		is_gzip = 1;
 		SC = StrBufNewStreamContext (eZLibEncode, &Err);
 		if (SC == NULL) {
@@ -617,17 +476,14 @@ void serv_read_binary_to_http(StrBuf *MimeType, size_t total_len, int is_static,
 		WriteBuffer.Buf = NewStrBufPlain(NULL, SIZ*2);;
 		pBuf = WriteBuffer.Buf;
 	}
-	else
-	{
+	else {
 		pBuf = WC->WBuf;
 	}
 
-	if (!detect_mime)
-	{
+	if (!detect_mime) {
 		http_transmit_headers(ChrPtr(MimeType), is_static, chunked, is_gzip);
 		
-		if (send_http(WC->HBuf) < 0)
-		{
+		if (send_http(WC->HBuf) < 0) {
 			FreeStrBuf(&Buf);
 			FreeStrBuf(&WriteBuffer.Buf);
 			FreeStrBuf(&BufHeader);
@@ -638,10 +494,7 @@ void serv_read_binary_to_http(StrBuf *MimeType, size_t total_len, int is_static,
 		}
 	}
 
-	while ((bytes_read < total_len) &&
-	       (ServerRc == 6) &&
-	       (client_con_state == 0))
-	{
+	while ((bytes_read < total_len) && (ServerRc == 6) && (client_con_state == 0)) {
 
 		if (WC->serv_sock==-1) {
 			FlushStrBuf(WC->WBuf); 
@@ -662,8 +515,7 @@ void serv_read_binary_to_http(StrBuf *MimeType, size_t total_len, int is_static,
 		if (ServerRc != 6)
 			break;
 
-		if (detect_mime)
-		{
+		if (detect_mime) {
 			const char *CT;
 			detect_mime = 0;
 			
@@ -678,8 +530,7 @@ void serv_read_binary_to_http(StrBuf *MimeType, size_t total_len, int is_static,
 			client_con_state = send_http(WC->HBuf);
 		}
 
-		if (is_gzip)
-		{
+		if (is_gzip) {
 			int done = (bytes_read == total_len);
 			while ((IOBufferStrLength(&ReadBuffer) > 0) && (client_con_state == 0)) {
 				int rc;
@@ -703,8 +554,7 @@ void serv_read_binary_to_http(StrBuf *MimeType, size_t total_len, int is_static,
 			FlushStrBuf(WC->WBuf);
 		}
 		else {
-			if ((chunked) && (client_con_state == 0))
-			{
+			if ((chunked) && (client_con_state == 0)) {
 				StrBufPrintf(BufHeader, "%s%x\r\n", 
 					     (first)?"":"\r\n",
 					     StrLength (pBuf));
@@ -723,11 +573,9 @@ void serv_read_binary_to_http(StrBuf *MimeType, size_t total_len, int is_static,
 		syslog(LOG_ERR, "Error while destroying stream context: %s", Err);
 	}
 	FreeStrBuf(&WriteBuffer.Buf);
-	if ((chunked) && (client_con_state == 0))
-	{
+	if ((chunked) && (client_con_state == 0)) {
 		StrBufPlain(BufHeader, HKEY("\r\n0\r\n\r\n"));
-		if (send_http(BufHeader) < 0)
-		{
+		if (send_http(BufHeader) < 0) {
 			FreeStrBuf(&Buf);
 		        FreeStrBuf(&BufHeader);
 			return;
@@ -737,8 +585,7 @@ void serv_read_binary_to_http(StrBuf *MimeType, size_t total_len, int is_static,
 	FreeStrBuf(&Buf);
 }
 
-int ClientGetLine(ParsedHttpHdrs *Hdr, StrBuf *Target)
-{
+int ClientGetLine(ParsedHttpHdrs *Hdr, StrBuf *Target) {
 	const char *Error;
 #ifdef HAVE_OPENSSL
 	const char *pch, *pchs;
@@ -746,8 +593,7 @@ int ClientGetLine(ParsedHttpHdrs *Hdr, StrBuf *Target)
 
 	if (is_https) {
 		int ntries = 0;
-		if (StrLength(Hdr->ReadBuf) > 0)
-		{
+		if (StrLength(Hdr->ReadBuf) > 0) {
 			pchs = ChrPtr(Hdr->ReadBuf);
 			pch = strchr(pchs, '\n');
 			if (pch != NULL) {
@@ -762,23 +608,23 @@ int ClientGetLine(ParsedHttpHdrs *Hdr, StrBuf *Target)
 		}
 
 		while (retval == 0) { 
-				pch = NULL;
+			pch = NULL;
+			pchs = ChrPtr(Hdr->ReadBuf);
+			if (*pchs != '\0')
+				pch = strchr(pchs, '\n');
+			if (pch == NULL) {
+				retval = client_read_sslbuffer(Hdr->ReadBuf, SLEEPING);
 				pchs = ChrPtr(Hdr->ReadBuf);
-				if (*pchs != '\0')
-					pch = strchr(pchs, '\n');
-				if (pch == NULL) {
-					retval = client_read_sslbuffer(Hdr->ReadBuf, SLEEPING);
-					pchs = ChrPtr(Hdr->ReadBuf);
-					pch = strchr(pchs, '\n');
-					if (pch == NULL)
-						retval = 0;
-				}
-				if (retval == 0) {
-					sleeeeeeeeeep(1);
-					ntries ++;
-				}
-				if (ntries > 10)
-					return 0;
+				pch = strchr(pchs, '\n');
+				if (pch == NULL)
+					retval = 0;
+			}
+			if (retval == 0) {
+				sleeeeeeeeeep(1);
+				ntries ++;
+			}
+			if (ntries > 10)
+				return 0;
 		}
 		if ((retval > 0) && (pch != NULL)) {
 			rlen = 0;
@@ -813,8 +659,7 @@ int ClientGetLine(ParsedHttpHdrs *Hdr, StrBuf *Target)
  * port_number	port number to bind
  * queue_len	number of incoming connections to allow in the queue
  */
-int webcit_tcp_server(const char *ip_addr, int port_number, int queue_len)
-{
+int webcit_tcp_server(const char *ip_addr, int port_number, int queue_len) {
 	const char *ipv4broadcast = "0.0.0.0";
 	int IsDefault = 0;
 	struct protoent *p;
