@@ -110,25 +110,25 @@ int starttls(int sock) {
 		else {
 			syslog(LOG_WARNING, "first SSL_accept failed: %s", ssl_error_reason);
 		}
-		sleeeeeeeeeep(1);
-		retval = SSL_accept(newssl);
+		// sleeeeeeeeeep(1);
+		// retval = SSL_accept(newssl);
 	}
-	if (retval < 1) {
-		long errval;
-		const char *ssl_error_reason = NULL;
-
-		errval = SSL_get_error(newssl, retval);
-		ssl_error_reason = ERR_reason_error_string(ERR_get_error());
-		if (ssl_error_reason == NULL) {
-			syslog(LOG_WARNING, "second SSL_accept failed: errval=%ld, retval=%d (%s)", errval, retval, strerror(errval));
-		}
-		else {
-			syslog(LOG_WARNING, "second SSL_accept failed: %s", ssl_error_reason);
-		}
-		SSL_free(newssl);
-		newssl = NULL;
-		return(4);
-	}
+	// if (retval < 1) {
+		// long errval;
+		// const char *ssl_error_reason = NULL;
+// 
+		// errval = SSL_get_error(newssl, retval);
+		// ssl_error_reason = ERR_reason_error_string(ERR_get_error());
+		// if (ssl_error_reason == NULL) {
+			// syslog(LOG_WARNING, "second SSL_accept failed: errval=%ld, retval=%d (%s)", errval, retval, strerror(errval));
+		// }
+		// else {
+			// syslog(LOG_WARNING, "second SSL_accept failed: %s", ssl_error_reason);
+		// }
+		// SSL_free(newssl);
+		// newssl = NULL;
+		// return(4);
+	// }
 	else {
 		syslog(LOG_INFO, "SSL_accept success");
 	}
