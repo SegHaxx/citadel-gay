@@ -161,9 +161,6 @@ ServInfo *get_serv_info(StrBuf *browser_host, StrBuf *user_agent) {
 int GetConnected (void) {
 	StrBuf *Buf;
 
-	TRACE;
-	syslog(LOG_DEBUG, "GetConnected() has been called, and ctdl_dir is \"%s\"", ctdl_dir);
-
 	if (WC->ReadBuf == NULL) {
 		WC->ReadBuf = NewStrBufPlain(NULL, SIZ * 4);
 	}

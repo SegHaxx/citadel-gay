@@ -16,12 +16,35 @@
 
 
 SSL_CTX *ssl_ctx;		// Global SSL context
+char key_file[PATH_MAX] = "";
+char cert_file[PATH_MAX] = "";
 char *ssl_cipher_list = DEFAULT_SSL_CIPHER_LIST;
 
 pthread_key_t ThreadSSL;	// Per-thread SSL context
 
 void shutdown_ssl(void) {
 	ERR_free_strings();
+}
+
+
+// Set the private key and certificate chain for the global SSL Context.
+// This is called during initialization, and can be called again later if the certificate changes.
+void bind_to_key_and_certificate(void) {
+	if (IsEmptyStr(key_file)) {
+		snprintf(key_file, sizeof key_file, "%s/keys/citadel.key", ctdl_dir);
+	}
+	if (IsEmptyStr(cert_file)) {
+		snprintf(cert_file, sizeof key_file, "%s/keys/citadel.cer", ctdl_dir);
+	}
+
+	syslog(LOG_DEBUG, "crypto: [re]installing key \"%s\" and certificate \"%s\"", key_file, cert_file);
+
+	SSL_CTX_use_certificate_chain_file(ssl_ctx, cert_file);
+	SSL_CTX_use_PrivateKey_file(ssl_ctx, key_file, SSL_FILETYPE_PEM);
+
+	if ( !SSL_CTX_check_private_key(ssl_ctx) ) {
+		syslog(LOG_WARNING, "crypto: cannot install certificate: %s", ERR_reason_error_string(ERR_get_error()));
+	}
 }
 
 
@@ -57,29 +80,41 @@ void init_ssl(void) {
 
 
 	// Now try to bind to the key and certificate.
-	// Note that we use SSL_CTX_use_certificate_chain_file() which allows
-	// the certificate file to contain intermediate certificates.
+	bind_to_key_and_certificate();
+}
 
 
-	char *key_file[PATH_MAX];
-	char *cert_file[PATH_MAX];
-	snprintf(key_file, sizeof key_file, "%s/keys/citadel.key", ctdl_dir);
-	snprintf(cert_file, sizeof key_file, "%s/keys/citadel.cer", ctdl_dir);
+// Check the modification time of the key and certificate -- reload if they changed
+void update_key_and_cert_if_needed(void) {
+	static time_t cert_mtime = 0;
+	struct stat keystat;
+	struct stat certstat;
 
-	SSL_CTX_use_certificate_chain_file(ssl_ctx, cert_file);
-	SSL_CTX_use_PrivateKey_file(ssl_ctx, key_file, SSL_FILETYPE_PEM);
+	if (stat(key_file, &keystat) != 0) {
+		syslog(LOG_ERR, "%s: %s", key_file, strerror(errno));
+		return;
+	}
+	if (stat(cert_file, &certstat) != 0) {
+		syslog(LOG_ERR, "%s: %s", cert_file, strerror(errno));
+		return;
+	}
 
-	if ( !SSL_CTX_check_private_key(ssl_ctx) ) {
-		syslog(LOG_WARNING, "crypto: cannot install certificate: %s", ERR_reason_error_string(ERR_get_error()));
+	if ((keystat.st_mtime > cert_mtime) || (certstat.st_mtime > cert_mtime)) {
+		bind_to_key_and_certificate();
+		cert_mtime = certstat.st_mtime;
 	}
 }
 
 
 // starts SSL/TLS encryption for the current session.
 int starttls(int sock) {
-	int retval, bits, alg_bits;
 	SSL *newssl;
+	int retval, bits, alg_bits;
 
+	// Check the modification time of the key and certificate -- reload if they changed
+	update_key_and_cert_if_needed();
+	
+	// SSL is a thread-specific thing, I think.
 	pthread_setspecific(ThreadSSL, NULL);
 
 	if (!ssl_ctx) {
@@ -191,7 +226,7 @@ int client_write_ssl(const StrBuf *Buf) {
 				sleeeeeeeeeep(1);
 				continue;
 			}
-			syslog(LOG_WARNING, "SSL_write got error %ld, ret %d", errval, retval);
+			syslog(LOG_WARNING, "SSL_write: %s", ERR_reason_error_string(ERR_get_error()));
 			if (retval == -1) {
 				syslog(LOG_WARNING, "errno is %d\n", errno);
 			}
@@ -228,7 +263,7 @@ int client_read_sslbuffer(StrBuf *buf, int timeout) {
 				sleeeeeeeeeep(1);
 				continue;
 			}
-			syslog(LOG_WARNING, "SSL_read got error %ld", errval);
+			syslog(LOG_WARNING, "SSL_read in client_read: %s", ERR_reason_error_string(ERR_get_error()));
 			endtls();
 			return (-1);
 		}

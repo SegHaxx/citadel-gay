@@ -110,6 +110,28 @@ void bind_to_key_and_certificate(void) {
 }
 
 
+// Check the modification time of the key and certificate -- reload if they changed
+void update_key_and_cert_if_needed(void) {
+	static time_t cert_mtime = 0;
+	struct stat keystat;
+	struct stat certstat;
+
+	if (stat(file_crpt_file_key, &keystat) != 0) {
+		syslog(LOG_ERR, "%s: %s", file_crpt_file_key, strerror(errno));
+		return;
+	}
+	if (stat(file_crpt_file_cer, &certstat) != 0) {
+		syslog(LOG_ERR, "%s: %s", file_crpt_file_cer, strerror(errno));
+		return;
+	}
+
+	if ((keystat.st_mtime > cert_mtime) || (certstat.st_mtime > cert_mtime)) {
+		bind_to_key_and_certificate();
+		cert_mtime = certstat.st_mtime;
+	}
+}
+
+
 void init_ssl(void) {
 	const SSL_METHOD *ssl_method;
 	RSA *rsa = NULL;
@@ -499,6 +521,9 @@ void CtdlStartTLS(char *ok_response, char *nosup_response, char *error_response)
 		}
 		return;
 	}
+
+	update_key_and_cert_if_needed();		// did someone update the key or cert?  if so, re-bind them
+
 	if (!(CC->ssl = SSL_new(ssl_ctx))) {
 		syslog(LOG_ERR, "crypto: SSL_new failed: %s", ERR_reason_error_string(ERR_get_error()));
 		if (error_response != NULL) {
