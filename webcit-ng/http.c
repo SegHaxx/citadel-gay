@@ -159,7 +159,7 @@ void perform_one_http_transaction(struct client_handle *ch) {
 	}
 
 	// If the URL had any query parameters in it, parse them out now.
-	char *p = strchr(h.url, '?');
+	char *p = (h.url ? strchr(h.url, '?') : NULL);
 	if (p) {
 		*p++ = 0;						// insert a null to remove parameters from the URL
 		char *tok, *saveptr = NULL;

@@ -92,8 +92,7 @@ struct ctdlsession {
 
 extern char *ssl_cipher_list;
 extern int is_https;				// nonzero if we are an HTTPS server today
-extern char *ctdlhost;
-extern char *ctdlport;
+extern char *ctdl_dir;				// directory where Citadel Server is running
 void init_ssl(void);
 void starttls(struct client_handle *);
 void endtls(struct client_handle *);
@@ -109,19 +108,13 @@ enum {
 #define TRACE syslog(LOG_DEBUG, "\033[3%dmCHECKPOINT: %s:%d\033[0m", ((__LINE__%6)+1), __FILE__, __LINE__)
 #define SLEEPING		180		// TCP connection timeout
 #define MAX_WORKER_THREADS	32		// Maximum number of worker threads permitted to exist
-#define	CTDL_CRYPTO_DIR		"keys"
-#define CTDL_KEY_PATH		CTDL_CRYPTO_DIR "/webcit.key"
-#define CTDL_CSR_PATH		CTDL_CRYPTO_DIR "/webcit.csr"
-#define CTDL_CER_PATH		CTDL_CRYPTO_DIR "/webcit.cer"
-#define SIGN_DAYS		3650		// how long our certificate should live
 #define DEFAULT_SSL_CIPHER_LIST "DEFAULT"       // See http://openssl.org/docs/apps/ciphers.html
 #define WEBSERVER_PORT		80
 #define WEBSERVER_INTERFACE	"*"
-#define CTDLHOST		"dev.citadel.org"
-#define CTDLPORT		"504"
+#define CTDL_DIR		"/usr/local/citadel"
 #define DEVELOPER_ID		0
 #define CLIENT_ID		4
-#define TARGET			"webcit01"	/* Window target for inline URL's */
+#define TARGET			"webcit02"	/* Window target for inline URL's */
 
 void worker_entry(int *pointer_to_master_socket);
 void perform_one_http_transaction(struct client_handle *ch);
@@ -130,7 +123,6 @@ void perform_request(struct http_transaction *);
 void do_404(struct http_transaction *);
 void output_static(struct http_transaction *);
 int uds_connectsock(char *sockpath);
-int tcp_connectsock(char *host, char *service);
 void ctdl_a(struct http_transaction *, struct ctdlsession *);
 void ctdl_r(struct http_transaction *, struct ctdlsession *);
 void ctdl_u(struct http_transaction *, struct ctdlsession *);

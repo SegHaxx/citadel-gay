@@ -14,8 +14,7 @@
 
 #include "webcit.h"		// All other headers are included from this header.
 
-char *ctdlhost = CTDLHOST;
-char *ctdlport = CTDLPORT;
+char *ctdl_dir = CTDL_DIR;
 
 // Main entry point for the web server.
 int main(int argc, char **argv) {
@@ -86,14 +85,15 @@ int main(int argc, char **argv) {
 				"[-d] [-Z] [-G i18ndumpfile] "
 				"[-u uid] [-h homedirectory] "
 				"[-D daemonizepid] [-v] "
-				"[-g defaultlandingpage] [-B basesize] " "[-s] [-S cipher_suites]" "[remotehost [remoteport]]\n");
+				"[-g defaultlandingpage] [-B basesize] "
+				"[-s] [-S cipher_suites]"
+				"[citadel_directory]\n"
+			);
 			return 1;
 		}
 
-	if (optind < argc) {
-		ctdlhost = argv[optind];
-		if (++optind < argc)
-			ctdlport = argv[optind];
+	while (optind < argc) {
+		ctdl_dir = strdup(argv[optind++]);
 	}
 
 	// Start the logger

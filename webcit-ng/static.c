@@ -15,12 +15,21 @@
 #include "webcit.h"
 
 
-// Called from perform_request() to handle the /ctdl/s/ prefix -- always static content.
+// Called from perform_request() to handle static content.
 void output_static(struct http_transaction *h) {
 	char filename[PATH_MAX];
 	struct stat statbuf;
 
-	snprintf(filename, sizeof filename, "static/%s", &h->url[8]);
+	if (!strncasecmp(h->url, "/ctdl/s/", 8)) {
+		snprintf(filename, sizeof filename, "static/%s", &h->url[8]);
+	}
+	else if (!strncasecmp(h->url, "/.well-known/", 13)) {
+		snprintf(filename, sizeof filename, "static/.well-known/%s", &h->url[13]);
+	}
+	else {
+		do_404(h);
+		return;
+	}
 
 	if (strstr(filename, "../")) {		// 100% guaranteed attacker.
 		do_404(h);			// Die in a car fire.
@@ -29,6 +38,7 @@ void output_static(struct http_transaction *h) {
 
 	FILE *fp = fopen(filename, "r");	// Try to open the requested file.
 	if (fp == NULL) {
+		syslog(LOG_DEBUG, "%s: %s", filename, strerror(errno));
 		do_404(h);
 		return;
 	}

@@ -4,7 +4,7 @@
 // and pass control back down to the HTTP layer to output the response back to
 // the client.
 //
-// Copyright (c) 1996-2021 by the citadel.org team
+// Copyright (c) 1996-2022 by the citadel.org team
 //
 // This program is open source software.  It runs great on the
 // Linux operating system (and probably elsewhere).  You can use,
@@ -91,14 +91,20 @@ void perform_request(struct http_transaction *h) {
 	// Legacy URL patterns (/readnew?gotoroom=xxx&start_reading_at=yyy) ...
 	// Direct room name (/my%20blog) ...
 
+	// HTTP-01 challenge [RFC5785 section 3, RFC8555 section 9.2]
+	if (!strncasecmp(h->url, HKEY("/.well-known"))) {	// Static content
+		output_static(h);
+		return;
+	}
+
 	// Everything below this line is strictly REST URL patterns.
 
-	if (strncasecmp(h->url, HKEY("/ctdl/"))) {	// Reject non-REST
+	if (strncasecmp(h->url, HKEY("/ctdl/"))) {		// Reject non-REST
 		do_404(h);
 		return;
 	}
 
-	if (!strncasecmp(h->url, HKEY("/ctdl/s/"))) {	// Static content
+	if (!strncasecmp(h->url, HKEY("/ctdl/s/"))) {		// Static content
 		output_static(h);
 		return;
 	}

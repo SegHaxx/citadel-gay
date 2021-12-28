@@ -132,96 +132,6 @@ int uds_connectsock(char *sockpath) {
 }
 
 
-// TCP client - connect to a host/port 
-int tcp_connectsock(char *host, char *service) {
-	struct in6_addr serveraddr;
-	struct addrinfo hints;
-	struct addrinfo *res = NULL;
-	struct addrinfo *ai = NULL;
-	int rc = (-1);
-	int s = (-1);
-
-	if ((host == NULL) || IsEmptyStr(host))
-		return (-1);
-	if ((service == NULL) || IsEmptyStr(service))
-		return (-1);
-
-	syslog(LOG_DEBUG, "tcp_connectsock(%s,%s)", host, service);
-
-	memset(&hints, 0x00, sizeof(hints));
-	hints.ai_flags = AI_NUMERICSERV;
-	hints.ai_family = AF_UNSPEC;
-	hints.ai_socktype = SOCK_STREAM;
-
-	// Handle numeric IPv4 and IPv6 addresses
-	rc = inet_pton(AF_INET, host, &serveraddr);
-	if (rc == 1) {		// dotted quad
-		hints.ai_family = AF_INET;
-		hints.ai_flags |= AI_NUMERICHOST;
-	}
-	else {
-		rc = inet_pton(AF_INET6, host, &serveraddr);
-		if (rc == 1) {	// IPv6 address
-			hints.ai_family = AF_INET6;
-			hints.ai_flags |= AI_NUMERICHOST;
-		}
-	}
-
-	// Begin the connection process
-
-	rc = getaddrinfo(host, service, &hints, &res);
-	if (rc != 0) {
-		syslog(LOG_DEBUG, "%s: %s", host, gai_strerror(rc));
-		freeaddrinfo(res);
-		return (-1);
-	}
-
-	// Try all available addresses until we connect to one or until we run out.
-	for (ai = res; ai != NULL; ai = ai->ai_next) {
-
-		if (ai->ai_family == AF_INET)
-			syslog(LOG_DEBUG, "Trying IPv4");
-		else if (ai->ai_family == AF_INET6)
-			syslog(LOG_DEBUG, "Trying IPv6");
-		else
-			syslog(LOG_WARNING, "This is going to fail.");
-
-		s = socket(ai->ai_family, ai->ai_socktype, ai->ai_protocol);
-		if (s < 0) {
-			syslog(LOG_WARNING, "socket() failed: %s", strerror(errno));
-			freeaddrinfo(res);
-			return (-1);
-		}
-		rc = connect(s, ai->ai_addr, ai->ai_addrlen);
-		if (rc >= 0) {
-			int fdflags;
-			freeaddrinfo(res);
-
-			fdflags = fcntl(rc, F_GETFL);
-			if (fdflags < 0) {
-				syslog(LOG_ERR, "unable to get socket %d flags! %s", rc, strerror(errno));
-				close(rc);
-				return -1;
-			}
-			fdflags = fdflags | O_NONBLOCK;
-			if (fcntl(rc, F_SETFL, fdflags) < 0) {
-				syslog(LOG_ERR, "unable to set socket %d nonblocking flags! %s", rc, strerror(errno));
-				close(s);
-				return -1;
-			}
-
-			return (s);
-		}
-		else {
-			syslog(LOG_WARNING, "connect() failed: %s", strerror(errno));
-			close(s);
-		}
-	}
-	freeaddrinfo(res);
-	return (-1);
-}
-
-
 // Extract from the headers, the username and password the client is attempting to use.
 // This could be HTTP AUTH or it could be in the cookies.
 void extract_auth(struct http_transaction *h, char *authbuf, int authbuflen) {
@@ -366,7 +276,12 @@ struct ctdlsession *connect_to_citadel(struct http_transaction *h) {
 
 	if (is_new_session) {
 		strcpy(my_session->room, "");
-		my_session->sock = tcp_connectsock(ctdlhost, ctdlport);
+		static char *ctdl_sock_path = NULL;
+		if (!ctdl_sock_path) {
+			ctdl_sock_path = malloc(PATH_MAX);
+			snprintf(ctdl_sock_path, PATH_MAX, "%s/citadel.socket", ctdl_dir);
+		}
+		my_session->sock = uds_connectsock(ctdl_sock_path);
 		ctdl_readline(my_session, buf, sizeof(buf));		// skip past the server greeting banner
 
 		if (!IsEmptyStr(auth)) {				// do we need to log in to Citadel?
