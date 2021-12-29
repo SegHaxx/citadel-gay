@@ -1,20 +1,18 @@
-/*
- * Transmit outbound SMTP mail to the big wide world of the Internet
- *
- * This is the new, exciting, clever version that makes libcurl do all the work  :)
- *
- * Copyright (c) 1997-2021 by the citadel.org team
- *
- * This program is open source software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License as published
- * by the Free Software Foundation; either version 3 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- */
+// Transmit outbound SMTP mail to the big wide world of the Internet
+//
+// This is the new, exciting, clever version that makes libcurl do all the work  :)
+//
+// Copyright (c) 1997-2022 by the citadel.org team
+//
+// This program is open source software; you can redistribute it and/or
+// modify it under the terms of the GNU General Public License as published
+// by the Free Software Foundation; either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
 
 #include <stdlib.h>
 #include <unistd.h>
@@ -53,22 +51,16 @@ int smtpq_count = 0;		// number of queue messages in smtpq
 int smtpq_alloc = 0;		// current allocation size for smtpq
 
 
-/*
- * Initialize the SMTP outbound queue
- */
+// Initialize the SMTP outbound queue
 void smtp_init_spoolout(void) {
 	struct ctdlroom qrbuf;
 
-	/*
-	 * Create the room.  This will silently fail if the room already
-	 * exists, and that's perfectly ok, because we want it to exist.
-	 */
+	// Create the room.  This will silently fail if the room already
+	// exists, and that's perfectly ok, because we want it to exist.
 	CtdlCreateRoom(SMTP_SPOOLOUT_ROOM, 3, "", 0, 1, 0, VIEW_QUEUE);
 
-	/*
-	 * Make sure it's set to be a "system room" so it doesn't show up
-	 * in the <K>nown rooms list for administrators.
-	 */
+	// Make sure it's set to be a "system room" so it doesn't show up
+	// in the <K>nown rooms list for administrators.
 	if (CtdlGetRoomLock(&qrbuf, SMTP_SPOOLOUT_ROOM) == 0) {
 		qrbuf.QRflags2 |= QR2_SYSTEM;
 		CtdlPutRoomLock(&qrbuf);
@@ -76,11 +68,10 @@ void smtp_init_spoolout(void) {
 }
 
 
-/* For internet mail, generate delivery instructions.
- * Yes, this is recursive.  Deal with it.  Infinite recursion does
- * not happen because the delivery instructions message does not
- * contain a recipient.
- */
+// For internet mail, generate delivery instructions.
+// Yes, this is recursive.  Deal with it.  Infinite recursion does
+// not happen because the delivery instructions message does not
+// contain a recipient.
 int smtp_aftersave(struct CtdlMessage *msg, struct recptypes *recps) {
 	if ((recps != NULL) && (recps->num_internet > 0)) {
 		struct CtdlMessage *imsg = NULL;
@@ -135,9 +126,7 @@ int smtp_aftersave(struct CtdlMessage *msg, struct recptypes *recps) {
 }
 
 
-/*
- * Callback for smtp_attempt_delivery() to supply libcurl with upload data.
- */
+// Callback for smtp_attempt_delivery() to supply libcurl with upload data.
 static size_t upload_source(void *ptr, size_t size, size_t nmemb, void *userp) {
 	struct smtpmsgsrc *s = (struct smtpmsgsrc *) userp;
 	int sendbytes = 0;
@@ -146,7 +135,7 @@ static size_t upload_source(void *ptr, size_t size, size_t nmemb, void *userp) {
 	sendbytes = (size * nmemb);
 
 	if (s->bytes_sent >= s->bytes_total) {
-		return (0);	// no data remaining; we are done
+		return (0);					// no data remaining; we are done
 	}
 
 	if (sendbytes > (s->bytes_total - s->bytes_sent)) {
@@ -154,19 +143,17 @@ static size_t upload_source(void *ptr, size_t size, size_t nmemb, void *userp) {
 	}
 
 	send_this = ChrPtr(s->TheMessage);
-	send_this += s->bytes_sent;	// start where we last left off
+	send_this += s->bytes_sent;				// start where we last left off
 
 	memcpy(ptr, send_this, sendbytes);
 	s->bytes_sent += sendbytes;
-	return (sendbytes);	// return the number of bytes _actually_ copied
+	return(sendbytes);					// return the number of bytes _actually_ copied
 }
 
 
-/*
- * The libcurl API doesn't provide a way to capture the actual SMTP result message returned
- * by the remote server.  This is an ugly way to extract it, by capturing debug data from
- * the library and filtering on the lines we want.
- */
+// The libcurl API doesn't provide a way to capture the actual SMTP result message returned
+// by the remote server.  This is an ugly way to extract it, by capturing debug data from
+// the library and filtering on the lines we want.
 int ctdl_libcurl_smtp_debug_callback(CURL *handle, curl_infotype type, char *data, size_t size, void *userptr) {
 	if (type != CURLINFO_HEADER_IN)
 		return 0;
@@ -184,9 +171,7 @@ int ctdl_libcurl_smtp_debug_callback(CURL *handle, curl_infotype type, char *dat
 }
 
 
-/*
- * Go through the debug output of an SMTP transaction, and boil it down to just the final success or error response message.
- */
+// Go through the debug output of an SMTP transaction, and boil it down to just the final success or error response message.
 void trim_response(long response_code, char *response) {
 	if ((response_code < 100) || (response_code > 999) || (IsEmptyStr(response))) {
 		return;
@@ -221,11 +206,9 @@ void trim_response(long response_code, char *response) {
 }
 
 
-/*
- * Attempt a delivery to one recipient.
- * Returns a three-digit SMTP status code.
- */
-int smtp_attempt_delivery(long msgid, char *recp, char *envelope_from, char *response) {
+// Attempt a delivery to one recipient.
+// Returns a three-digit SMTP status code.
+int smtp_attempt_delivery(long msgid, char *recp, char *envelope_from, char *source_room, char *response) {
 	struct smtpmsgsrc s;
 	char *fromaddr = NULL;
 	CURL *curl;
@@ -250,14 +233,18 @@ int smtp_attempt_delivery(long msgid, char *recp, char *envelope_from, char *res
 	}
 
 	CC->redirect_buffer = NewStrBufPlain(NULL, SIZ);
+	if (!IsEmptyStr(source_room)) {
+		// FIXME this is a useless header; we really want to generate a List-Unsubscribe header here.
+		cprintf("X-Citadel-Source-Room: %s\r\n", source_room);
+	}
 	CtdlOutputMsg(msgid, MT_RFC822, HEADERS_ALL, 0, 1, NULL, 0, NULL, &fromaddr, NULL);
 	s.TheMessage = CC->redirect_buffer;
 	s.bytes_total = StrLength(CC->redirect_buffer);
 	s.bytes_sent = 0;
 	CC->redirect_buffer = NULL;
 	response_code = 421;
-
-	for (i = 0; ((i < num_mx) && ((response_code / 100) == 4)); ++i) {	// keep trying MXes until one works or we run out
+					// keep trying MXes until one works or we run out
+	for (i = 0; ((i < num_mx) && ((response_code / 100) == 4)); ++i) {
 		response_code = 421;	// default 421 makes non-protocol errors transient
 		s.bytes_sent = 0;	// rewind our buffer in case we try multiple MXes
 
@@ -267,7 +254,8 @@ int smtp_attempt_delivery(long msgid, char *recp, char *envelope_from, char *res
 
 			if (!IsEmptyStr(envelope_from)) {
 				curl_easy_setopt(curl, CURLOPT_MAIL_FROM, envelope_from);
-			} else {
+			}
+			else {
 				curl_easy_setopt(curl, CURLOPT_MAIL_FROM, fromaddr);
 			}
 
@@ -275,8 +263,8 @@ int smtp_attempt_delivery(long msgid, char *recp, char *envelope_from, char *res
 			curl_easy_setopt(curl, CURLOPT_MAIL_RCPT, recipients);
 			curl_easy_setopt(curl, CURLOPT_READFUNCTION, upload_source);
 			curl_easy_setopt(curl, CURLOPT_READDATA, &s);
-			curl_easy_setopt(curl, CURLOPT_UPLOAD, 1);	// tell libcurl we are uploading
-			curl_easy_setopt(curl, CURLOPT_TIMEOUT, 20L);	// Time out after 20 seconds
+			curl_easy_setopt(curl, CURLOPT_UPLOAD, 1);				// tell libcurl we are uploading
+			curl_easy_setopt(curl, CURLOPT_TIMEOUT, 20L);				// Time out after 20 seconds
 			if (CtdlGetConfigInt("c_smtpclient_disable_starttls") == 0) {
 				curl_easy_setopt(curl, CURLOPT_USE_SSL, CURLUSESSL_TRY);	// Attempt STARTTLS if offered
 			}
@@ -292,31 +280,31 @@ int smtp_attempt_delivery(long msgid, char *recp, char *envelope_from, char *res
 			// We check for "smtp://" and "smtps://" because the admin may have put those prefixes in a smart-host entry.
 			// If there is no prefix we add "smtp://"
 			extract_token(try_this_mx, mxes, i, '|', (sizeof try_this_mx - 7));
-			snprintf(smtp_url, sizeof smtp_url, "%s%s/%s", (((!strncasecmp(try_this_mx, HKEY("smtp://")))
-									 ||
-									 (!strncasecmp
-									  (try_this_mx,
-									   HKEY("smtps://")))) ? "" : "smtp://"),
-				 try_this_mx, CtdlGetConfigStr("c_fqdn")
-			    );
+			snprintf(smtp_url, sizeof smtp_url,
+				"%s%s/%s",
+				(((!strncasecmp(try_this_mx, HKEY("smtp://")))
+				|| (!strncasecmp(try_this_mx, HKEY("smtps://")))) ? "" : "smtp://"),
+				try_this_mx, CtdlGetConfigStr("c_fqdn")
+			);
 			curl_easy_setopt(curl, CURLOPT_URL, smtp_url);
 			syslog(LOG_DEBUG, "smtpclient: trying MX %d of %d <%s>", i+1, num_mx, smtp_url);	// send the message
 			res = curl_easy_perform(curl);
 			curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &response_code);
 			syslog(LOG_DEBUG,
 			       "smtpclient: libcurl returned %d (%s) , SMTP response %ld",
-			       res, curl_easy_strerror(res), response_code);
+			       res, curl_easy_strerror(res), response_code
+			);
 
 			if ((res != CURLE_OK) && (response_code == 0)) {	// check for errors
 				response_code = 421;
 			}
 
 			curl_slist_free_all(recipients);
-			recipients = NULL;	// this gets reused; avoid double-free
+			recipients = NULL;					// this gets reused; avoid double-free
 			curl_easy_cleanup(curl);
-			curl = NULL;	// this gets reused; avoid double-free
+			curl = NULL;						// this gets reused; avoid double-free
 
-			/* Trim the error message buffer down to just the actual message */
+			// Trim the error message buffer down to just the actual message
 			trim_response(response_code, response);
 		}
 	}
@@ -329,9 +317,7 @@ int smtp_attempt_delivery(long msgid, char *recp, char *envelope_from, char *res
 }
 
 
-/*
- * Process one outbound message.
- */
+// Process one outbound message.
 void smtp_process_one_msg(long qmsgnum) {
 	struct CtdlMessage *msg = NULL;
 	char *instr = NULL;
@@ -370,6 +356,7 @@ void smtp_process_one_msg(long qmsgnum) {
 	time_t attempted = 0;
 	char *bounceto = NULL;
 	char *envelope_from = NULL;
+	char *source_room = NULL;
 
 	char cfgline[SIZ];
 	for (i = 0; i < num_tokens(instr, '\n'); ++i) {
@@ -384,10 +371,12 @@ void smtp_process_one_msg(long qmsgnum) {
 			bounceto = strdup(&cfgline[9]);
 		if (!strncasecmp(cfgline, HKEY("envelope_from|")))
 			envelope_from = strdup(&cfgline[14]);
+		if (!strncasecmp(cfgline, HKEY("source_room|")))
+			source_room = strdup(&cfgline[12]);
 	}
 
 	int should_try_now = 0;
-	if (attempted < submitted) {	// If no attempts have been made yet, try now
+	if (attempted < submitted) {			// If no attempts have been made yet, try now
 		should_try_now = 1;
 	}
 	else if ((attempted - submitted) <= 14400) {
@@ -403,6 +392,9 @@ void smtp_process_one_msg(long qmsgnum) {
 
 	if (should_try_now) {
 		syslog(LOG_DEBUG, "smtpclient: attempting delivery of message <%ld> now", qmsgnum);
+		if (source_room) {
+			syslog(LOG_DEBUG, "smtpclient: this message originated in <%s>", source_room);
+		}
 		StrBuf *NewInstr = NewStrBuf();
 		StrBufAppendPrintf(NewInstr, "Content-type: " SPOOLMIME "\n\n");
 		StrBufAppendPrintf(NewInstr, "msgid|%ld\n", msgid);
@@ -422,9 +414,8 @@ void smtp_process_one_msg(long qmsgnum) {
 				    || (previous_result == 4)) {
 					int new_result = 421;
 					extract_token(recp, cfgline, 1, '|', sizeof recp);
-					new_result = smtp_attempt_delivery(msgid, recp, envelope_from, server_response);
-					syslog(LOG_DEBUG,
-					       "smtpclient: recp: <%s> , result: %d (%s)", recp, new_result, server_response);
+					new_result = smtp_attempt_delivery(msgid, recp, envelope_from, source_room, server_response);
+					syslog(LOG_DEBUG, "smtpclient: recp: <%s> , result: %d (%s)", recp, new_result, server_response);
 					if ((new_result / 100) == 2) {
 						++num_success;
 					}
@@ -460,18 +451,15 @@ void smtp_process_one_msg(long qmsgnum) {
 			smtp_do_bounce(ChrPtr(NewInstr), SDB_BOUNCE_FATALS);
 		}
 		// If all deliveries have either succeeded or failed, we are finished with this queue entry.
-		//
 		if (num_delayed == 0) {
 			delete_this_queue = 1;
 		}
 		// If it's been more than five days, give up and tell the sender that delivery failed
-		//
 		else if ((time(NULL) - submitted) > SMTP_DELIVER_FAIL) {
 			smtp_do_bounce(ChrPtr(NewInstr), SDB_BOUNCE_ALL);
 			delete_this_queue = 1;
 		}
 		// If it's been more than four hours but less than five days, warn the sender that delivery is delayed
-		//
 		else if (((attempted - submitted) < SMTP_DELIVER_WARN)
 			 && ((time(NULL) - submitted) >= SMTP_DELIVER_WARN)) {
 			smtp_do_bounce(ChrPtr(NewInstr), SDB_WARN);
@@ -503,13 +491,14 @@ void smtp_process_one_msg(long qmsgnum) {
 	if (envelope_from != NULL) {
 		free(envelope_from);
 	}
+	if (source_room != NULL) {
+		free(source_room);
+	}
 	free(instr);
 }
 
 
-/*
- * Callback for smtp_do_queue()
- */
+// Callback for smtp_do_queue()
 void smtp_add_msg(long msgnum, void *userdata) {
 
 	if (smtpq == NULL) {
@@ -527,18 +516,14 @@ void smtp_add_msg(long msgnum, void *userdata) {
 }
 
 
-/*
- * Run through the queue sending out messages.
- */
+// Run through the queue sending out messages.
 void smtp_do_queue(void) {
 	int i = 0;
 
-	/*
-	 * This is a simple concurrency check to make sure only one smtpclient
-	 * run is done at a time.  We could do this with a mutex, but since we
-	 * don't really require extremely fine granularity here, we'll do it
-	 * with a static variable instead.
-	 */
+	// This is a simple concurrency check to make sure only one smtpclient
+	// run is done at a time.  We could do this with a mutex, but since we
+	// don't really require extremely fine granularity here, we'll do it
+	// with a static variable instead.
 	if (doing_smtpclient) {
 		return;
 	}
@@ -565,9 +550,7 @@ void smtp_do_queue(void) {
 }
 
 
-/*
- * Module entry point
- */
+// Module entry point
 CTDL_MODULE_INIT(smtpclient)
 {
 	if (!threading) {
@@ -576,6 +559,6 @@ CTDL_MODULE_INIT(smtpclient)
 		smtp_init_spoolout();
 	}
 
-	/* return our module id for the log */
+	// return our module id for the log
 	return "smtpclient";
 }
