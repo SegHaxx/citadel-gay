@@ -1,16 +1,14 @@
-/*
- * This module delivers messages to mailing lists.
- *
- * Copyright (c) 2002-2021 by the citadel.org team
- *
- * This program is open source software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 3.
- *  
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- */
+// This module delivers messages to mailing lists.
+//
+// Copyright (c) 2002-2022 by the citadel.org team
+//
+// This program is open source software; you can redistribute it and/or modify
+// it under the terms of the GNU General Public License version 3.
+//  
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
 
 #include "sysdep.h"
 #include <stdlib.h>
@@ -110,6 +108,7 @@ void listdeliver_do_msg(long msgnum, void *userdata) {
 		if (valid) {
 			valid->bounce_to = strdup(bounce_to);
 			valid->envelope_from = strdup(bounce_to);
+			valid->sending_room = strdup(CC->room.QRname);
 			CtdlSubmitMsg(TheMessage, valid, "");
 			free_recipients(valid);
 		}
@@ -118,9 +117,7 @@ void listdeliver_do_msg(long msgnum, void *userdata) {
 }
 
 
-/*
- * Sweep through one room looking for mailing list deliveries to do
- */
+// Sweep through one room looking for mailing list deliveries to do
 void listdeliver_sweep_room(char *roomname) {
 	char *netconfig = NULL;
 	char *newnetconfig = NULL;
@@ -193,27 +190,21 @@ void listdeliver_sweep_room(char *roomname) {
 }
 
 
-/*
- * Callback for listdeliver_sweep()
- * Adds one room to the queue
- */
+// Callback for listdeliver_sweep()
+// Adds one room to the queue
 void listdeliver_queue_room(struct ctdlroom *qrbuf, void *data) {
 	Array *roomlistarr = (Array *)data;
 	array_append(roomlistarr, qrbuf->QRname);
 }
 
 
-/*
- * Queue up the list of rooms so we can sweep them for mailing list delivery instructions
- */
+// Queue up the list of rooms so we can sweep them for mailing list delivery instructions
 void listdeliver_sweep(void) {
 	static time_t last_run = 0L;
 	int i = 0;
 	time_t now = time(NULL);
 
-	/*
-	 * Run mailing list delivery no more frequently than once every 15 minutes (we should make this configurable)
-	 */
+	// Run mailing list delivery no more frequently than once every 15 minutes (we should make this configurable)
 	if ( (now - last_run) < 900 ) {
 		syslog(LOG_DEBUG,
 			"listdeliver: delivery interval not yet reached; last run was %ldm%lds ago",
@@ -223,18 +214,14 @@ void listdeliver_sweep(void) {
 		return;
 	}
 
-	/*
-	 * This is a simple concurrency check to make sure only one listdeliver
-	 * run is done at a time.  We could do this with a mutex, but since we
-	 * don't really require extremely fine granularity here, we'll do it
-	 * with a static variable instead.
-	 */
+	// This is a simple concurrency check to make sure only one listdeliver
+	// run is done at a time.  We could do this with a mutex, but since we
+	// don't really require extremely fine granularity here, we'll do it
+	// with a static variable instead.
 	if (doing_listdeliver) return;
 	doing_listdeliver = 1;
 
-	/*
-	 * Go through each room looking for mailing lists to process
-	 */
+	// Go through each room looking for mailing lists to process
 	syslog(LOG_DEBUG, "listdeliver: sweep started");
 
 	Array *roomlistarr = array_new(ROOMNAMELEN);			// we have to queue them
@@ -251,15 +238,13 @@ void listdeliver_sweep(void) {
 }
 
 
-/*
- * Module entry point
- */
+// Module entry point
 CTDL_MODULE_INIT(listdeliver)
 {
 	if (!threading) {
 		CtdlRegisterSessionHook(listdeliver_sweep, EVT_TIMER, PRIO_AGGR + 50);
 	}
 	
-	/* return our module name for the log */
+	// return our module name for the log
 	return "listsub";
 }
