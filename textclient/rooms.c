@@ -1,6 +1,6 @@
 // Client-side functions which perform room operations
 //
-// Copyright (c) 1987-2018 by the citadel.org team
+// Copyright (c) 1987-2022 by the citadel.org team
 //
 // This program is open source software.  Use, duplication, and/or
 // disclosure are subject to the GNU General Purpose License version 3.
@@ -524,8 +524,7 @@ void editthisroom(CtdlIPC * ipc)
 	attr->QRflags = set_room_attr(ipc, attr->QRflags, "Read-only room", QR_READONLY);
 	attr->QRflags2 = set_room_attr(ipc, attr->QRflags2, "Allow message deletion by anyone who can post", QR2_COLLABDEL);
 	attr->QRflags = set_room_attr(ipc, attr->QRflags, "Permanent room", QR_PERMANENT);
-	attr->QRflags2 = set_room_attr(ipc, attr->QRflags2,
-				       "Subject Required (Force " "users to specify a message " "subject)", QR2_SUBJECTREQ);
+	attr->QRflags2 = set_room_attr(ipc, attr->QRflags2, "Subject Required (Force users to specify a message subject)", QR2_SUBJECTREQ);
 	attr->QRflags = set_room_attr(ipc, attr->QRflags, "Directory room", QR_DIRECTORY);
 	if (attr->QRflags & QR_DIRECTORY) {
 		strprompt("Directory name", attr->QRdirname, 14);
@@ -534,9 +533,8 @@ void editthisroom(CtdlIPC * ipc)
 		attr->QRflags = set_room_attr(ipc, attr->QRflags, "Visible directory", QR_VISDIR);
 	}
 	attr->QRflags2 = set_room_attr(ipc, attr->QRflags2, "Self-service list subscribe/unsubscribe", QR2_SELFLIST);
-	attr->QRflags2 = set_room_attr(ipc, attr->QRflags2,
-				       "public posting to this room via room_roomname@yourcitadel.org", QR2_SMTP_PUBLIC);
-	attr->QRflags2 = set_room_attr(ipc, attr->QRflags2, "moderated mailinglist", QR2_MODERATED);
+	attr->QRflags2 = set_room_attr(ipc, attr->QRflags2, "Allow non-subscribers to mail to this room", QR2_SMTP_PUBLIC);
+	attr->QRflags2 = set_room_attr(ipc, attr->QRflags2, "Moderated mailing list", QR2_MODERATED);
 	attr->QRflags = set_room_attr(ipc, attr->QRflags, "Automatically make all messages anonymous", QR_ANONONLY);
 	if ((attr->QRflags & QR_ANONONLY) == 0) {
 		attr->QRflags = set_room_attr(ipc, attr->QRflags, "Ask users whether to make messages anonymous", QR_ANONOPT);
@@ -549,10 +547,12 @@ void editthisroom(CtdlIPC * ipc)
 		if (!strcasecmp(room_admin_name, "none")) {
 			strcpy(room_admin_name, "");
 			break;
-		} else {
+		}
+		else {
 			r = CtdlIPCQueryUsername(ipc, room_admin_name, buf);
-			if (r / 100 != 2)
+			if (r / 100 != 2) {
 				scr_printf("%s\n", buf);
+			}
 		}
 	} while (r / 100 != 2);
 
@@ -600,26 +600,28 @@ void editthisroom(CtdlIPC * ipc)
 		scr_printf("%s\n", buf);
 		strncpy(buf, attr->QRname, ROOMNAMELEN);
 		free(attr);
-		if (r / 100 == 2)
+		if (r / 100 == 2) {
 			dotgoto(ipc, buf, 2, 0);
-	} else
+		}
+	}
+	else {
 		free(attr);
+	}
 }
 
 
 /*
  * un-goto the previous room, or a specified room
  */
-void dotungoto(CtdlIPC * ipc, char *towhere)
-{
-	/* Find this 'towhere' room in the list ungoto from this room to
-	   that at the messagepointer position in that room in our ungoto list.
-	   I suppose I could be a real dick and just ungoto that many places
-	   in our list. */
+void dotungoto(CtdlIPC * ipc, char *towhere) {
+	// Find this 'towhere' room in the list ungoto from this room to
+	// that at the messagepointer position in that room in our ungoto list.
+	// I suppose I could be a real dick and just ungoto that many places
+	// in our list.
 	int found = -1;
 	int lp;
 	char buf[SIZ];
-	struct ctdlipcroom *rret = NULL;	/* ignored */
+	struct ctdlipcroom *rret = NULL;	// ignored
 	int r;
 
 	if (uglistsize == 0) {
@@ -647,7 +649,7 @@ void dotungoto(CtdlIPC * ipc, char *towhere)
 
 	r = CtdlIPCGotoRoom(ipc, uglist[found], "", &rret, buf);
 	if (rret)
-		free(rret);	/* ignored */
+		free(rret);	// ignored
 	if (r / 100 != 2) {
 		scr_printf("%s\n", buf);
 		return;
@@ -657,24 +659,26 @@ void dotungoto(CtdlIPC * ipc, char *towhere)
 		scr_printf("%s\n", buf);
 	}
 	strncpy(buf, uglist[found], sizeof(buf));
-	/* we queue ungoto information here, because we're not really
-	   ungotoing, we're really going to a random spot in some arbitrary
-	   room list. */
+	// we queue ungoto information here, because we're not really
+	// ungotoing, we're really going to a random spot in some arbitrary
+	// room list.
 	dotgoto(ipc, buf, 0, 0);
 }
 
-void ungoto(CtdlIPC * ipc)
-{
+
+void ungoto(CtdlIPC * ipc) {
 	char buf[SIZ];
-	struct ctdlipcroom *rret = NULL;	/* ignored */
+	struct ctdlipcroom *rret = NULL;	// ignored
 	int r;
 
-	if (uglistsize == 0)
+	if (uglistsize == 0) {
 		return;
+	}
 
 	r = CtdlIPCGotoRoom(ipc, uglist[uglistsize - 1], "", &rret, buf);
-	if (rret)
-		free(rret);	/* ignored */
+	if (rret) {
+		free(rret);	// ignored
+	}
 	if (r / 100 != 2) {
 		scr_printf("%s\n", buf);
 		return;
@@ -686,7 +690,7 @@ void ungoto(CtdlIPC * ipc)
 	strncpy(buf, uglist[uglistsize - 1], sizeof(buf));
 	uglistsize--;
 	free(uglist[uglistsize]);
-	/* Don't queue ungoto info or we end up in a loop */
+	// Don't queue ungoto info or we end up in a loop
 	dotgoto(ipc, buf, 0, 1);
 }
 
@@ -694,8 +698,7 @@ void ungoto(CtdlIPC * ipc)
 /*
  * saves filelen bytes from file at pathname
  */
-int save_buffer(void *file, size_t filelen, const char *pathname)
-{
+int save_buffer(void *file, size_t filelen, const char *pathname) {
 	size_t block = 0;
 	size_t bytes_written = 0;
 	FILE *fp;
@@ -722,8 +725,7 @@ int save_buffer(void *file, size_t filelen, const char *pathname)
 /*
  * Save supplied_filename in dest directory; gets the name only
  */
-void destination_directory(char *dest, const char *supplied_filename)
-{
+void destination_directory(char *dest, const char *supplied_filename) {
 	static char save_dir[SIZ] = { 0 };
 
 	if (IsEmptyStr(save_dir)) {
@@ -758,8 +760,7 @@ void destination_directory(char *dest, const char *supplied_filename)
  *                function determines which protocol to use.
  *  proto - 0 = paginate, 1 = xmodem, 2 = raw, 3 = ymodem, 4 = zmodem, 5 = save
  */
-void download(CtdlIPC * ipc, int proto)
-{
+void download(CtdlIPC * ipc, int proto) {
 	char buf[SIZ];
 	char filename[PATH_MAX];
 	char tempname[PATH_MAX];

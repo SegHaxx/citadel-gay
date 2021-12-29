@@ -1,7 +1,7 @@
 // This file contains functions which handle the mapping of Internet addresses
 // to users on the Citadel system.
 //
-// Copyright (c) 1987-2021 by the citadel.org team
+// Copyright (c) 1987-2022 by the citadel.org team
 //
 // This program is open source software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License version 3.
@@ -325,8 +325,7 @@ int CtdlIsMe(char *addr, int addr_buf_len) {
 
 // If the last item in a list of recipients was truncated to a partial address,
 // remove it completely in order to avoid choking library functions.
-void sanitize_truncated_recipient(char *str)
-{
+void sanitize_truncated_recipient(char *str) {
 	if (!str) return;
 	if (num_tokens(str, ',') < 2) return;
 
@@ -1699,6 +1698,12 @@ int is_email_subscribed_to_list(char *email, char *room_name) {
 	if (CtdlGetRoom(&room, room_name)) {
 		return(0);					// room not found, so definitely not subscribed
 	}
+
+	// If this room has the QR2_SMTP_PUBLIC flag set, anyone may email a post to this room, even non-subscribers.
+	if (room.QRflags2 & QR2_SMTP_PUBLIC) {
+		return(1);
+	}
+
 	roomnum = room.QRnumber;
 	roomnetconfig = LoadRoomNetConfigFile(roomnum);
 	if (roomnetconfig == NULL) {
