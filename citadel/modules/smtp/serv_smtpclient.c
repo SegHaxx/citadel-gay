@@ -234,8 +234,16 @@ int smtp_attempt_delivery(long msgid, char *recp, char *envelope_from, char *sou
 
 	CC->redirect_buffer = NewStrBufPlain(NULL, SIZ);
 	if (!IsEmptyStr(source_room)) {
-		// FIXME this is a useless header; we really want to generate a List-Unsubscribe header here.
-		cprintf("X-Citadel-Source-Room: %s\r\n", source_room);
+		// If we have a source room, it's probably a mailing list message; generate an unsubscribe header
+		char esc_room[ROOMNAMELEN*2];
+		char esc_email[1024];
+		urlesc(esc_room, sizeof esc_room, source_room);
+		urlesc(esc_email, sizeof esc_email, recp);
+		cprintf("List-Unsubscribe: <http://%s/listsub?cmd=unsubscribe&room=%s&email=%s>\r\n",
+			CtdlGetConfigStr("c_fqdn"),
+			esc_room,
+			esc_email
+		);
 	}
 	CtdlOutputMsg(msgid, MT_RFC822, HEADERS_ALL, 0, 1, NULL, 0, NULL, &fromaddr, NULL);
 	s.TheMessage = CC->redirect_buffer;
