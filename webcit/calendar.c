@@ -1,29 +1,25 @@
-/*
- * Functions which handle calendar objects and their processing/display.
- *
- * Copyright (c) 1996-2012 by the citadel.org team
- *
- * This program is open source software.  You can redistribute it and/or
- * modify it under the terms of the GNU General Public License, version 3.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- */
+// Functions which handle calendar objects and their processing/display.
+//
+// Copyright (c) 1996-2022 by the citadel.org team
+//
+// This program is open source software.  You can redistribute it and/or
+// modify it under the terms of the GNU General Public License, version 3.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
 
 #include "webcit.h"
 #include "webserver.h"
 #include "calendar.h"
 
-/*
- * Process a calendar object.  At this point it's already been deserialized by cal_process_attachment()
- *
- * cal:			the calendar object
- * recursion_level:	Number of times we've recursed into this function
- * msgnum:		Message number on the Citadel server
- * cal_partnum:		MIME part number within that message containing the calendar object
- */
+// Process a calendar object.  At this point it's already been deserialized by cal_process_attachment()
+//
+// cal:			the calendar object
+// recursion_level:	Number of times we've recursed into this function
+// msgnum:		Message number on the Citadel server
+// cal_partnum:		MIME part number within that message containing the calendar object
 void cal_process_object(StrBuf *Target,
 			icalcomponent *cal,
 			int recursion_level,
@@ -46,24 +42,23 @@ void cal_process_object(StrBuf *Target,
 
 	sprintf(divname, "rsvp%04x", ++divcount);
 
-	/* Convert timezones to something easy to display.
-	 * It's safe to do this in memory because we're only changing it on the
-	 * display side -- when we tell the server to do something with the object,
-	 * the server will be working with its original copy in the database.
-	 */
+	// Convert timezones to something easy to display.
+	// It's safe to do this in memory because we're only changing it on the
+	// display side -- when we tell the server to do something with the object,
+	// the server will be working with its original copy in the database.
 	if ((cal) && (recursion_level == 0)) {
 		ical_dezonify(cal);
 	}
 
-	/* Leading HTML for the display of this object */
+	// Leading HTML for the display of this object
 	if (recursion_level == 0) {
 		StrBufAppendPrintf(Target, "<div class=\"mimepart\">\n");
 	}
 
-	/* Look for a method */
+	// Look for a method
 	method = icalcomponent_get_first_property(cal, ICAL_METHOD_PROPERTY);
 
-	/* See what we need to do with this */
+	// See what we need to do with this
 	if (method != NULL) {
 		char *title;
 		the_method = icalproperty_get_method(method);
@@ -110,10 +105,8 @@ void cal_process_object(StrBuf *Target,
 		StrBufAppendPrintf(Target, "</dd>\n");
 	}
 
-	/*
-	 * Only show start/end times if we're actually looking at the VEVENT
-	 * component.  Otherwise it shows bogus dates for things like timezone.
-	 */
+	// Only show start/end times if we're actually looking at the VEVENT
+	// component.  Otherwise it shows bogus dates for things like timezone.
 	if (icalcomponent_isa(cal) == ICAL_VEVENT_COMPONENT) {
 
       		p = icalcomponent_get_first_property(cal, ICAL_DTSTART_PROPERTY);
@@ -163,14 +156,14 @@ void cal_process_object(StrBuf *Target,
 	}
 
 	if (icalcomponent_get_first_property(cal, ICAL_RRULE_PROPERTY)) {
-		/* Unusual string syntax used here in order to re-use existing translations */
+		// Unusual string syntax used here in order to re-use existing translations
 		StrBufAppendPrintf(Target, "<dt>%s:</dt><dd>%s.</dd>\n",
 			_("Recurrence"),
 			_("This is a recurring event")
 		);
 	}
 
-	/* If the component has attendees, iterate through them. */
+	// If the component has attendees, iterate through them.
 	for (p = icalcomponent_get_first_property(cal, ICAL_ATTENDEE_PROPERTY); 
 	     (p != NULL); 
 	     p = icalcomponent_get_next_property(cal, ICAL_ATTENDEE_PROPERTY)) {
@@ -180,32 +173,33 @@ void cal_process_object(StrBuf *Target,
 		ch = icalproperty_get_attendee(p);
 		if ((ch != NULL) && !strncasecmp(ch, "MAILTO:", 7)) {
 
-			/** screen name or email address */
+			// screen name or email address
 			safestrncpy(buf, ch + 7, sizeof(buf));
 			striplt(buf);
 			StrEscAppend(Target, NULL, buf, 0, 0);
 			StrBufAppendPrintf(Target, " ");
 
-			/** participant status */
+			// participant status
 			partstat_as_string(buf, p);
 			StrEscAppend(Target, NULL, buf, 0, 0);
 		}
 		StrBufAppendPrintf(Target, "</dd>\n");
 	}
 
-	/* If the component has subcomponents, recurse through them. */
+	// If the component has subcomponents, recurse through them.
 	for (c = icalcomponent_get_first_component(cal, ICAL_ANY_COMPONENT);
-	     (c != 0);
-	     c = icalcomponent_get_next_component(cal, ICAL_ANY_COMPONENT)) {
-		/* Recursively process subcomponent */
+		(c != 0);
+		c = icalcomponent_get_next_component(cal, ICAL_ANY_COMPONENT)
+	) {
+		// Recursively process subcomponent
 		cal_process_object(Target, c, recursion_level+1, msgnum, cal_partnum);
 	}
 
-	/* If this is a REQUEST, display conflicts and buttons */
+	// If this is a REQUEST, display conflicts and buttons
 	if (the_method == ICAL_METHOD_REQUEST) {
 
-		/* Check for conflicts */
-		syslog(LOG_DEBUG, "Checking server calendar for conflicts...\n");
+		// Check for conflicts
+		syslog(LOG_DEBUG, "Checking server calendar for conflicts...");
 		serv_printf("ICAL conflicts|%ld|%s|", msgnum, cal_partnum);
 		serv_getln(buf, sizeof buf);
 		if (buf[0] == '1') {
@@ -237,7 +231,7 @@ void cal_process_object(StrBuf *Target,
 
 		StrBufAppendPrintf(Target, "</dl>");
 
-		/* Display the Accept/Decline buttons */
+		// Display the Accept/Decline buttons
 		StrBufAppendPrintf(Target, "<p id=\"%s_question\">"
 			"%s "
 			"&nbsp;&nbsp;&nbsp;<span class=\"button_link\"> "
@@ -256,10 +250,10 @@ void cal_process_object(StrBuf *Target,
 
 	}
 
-	/* If this is a REPLY, display update button */
+	// If this is a REPLY, display update button
 	if (the_method == ICAL_METHOD_REPLY) {
 
-		/* Display the update buttons */
+		// Display the update buttons
 		StrBufAppendPrintf(Target, "<p id=\"%s_question\" >"
 			"%s "
 			"&nbsp;&nbsp;&nbsp;<span class=\"button_link\"> "
@@ -275,18 +269,15 @@ void cal_process_object(StrBuf *Target,
 	
 	}
 	
-	/* Trailing HTML for the display of this object */
+	// Trailing HTML for the display of this object
 	if (recursion_level == 0) {
 		StrBufAppendPrintf(Target, "<p>&nbsp;</p></div>\n");
 	}
 }
 
 
-/*
- * Deserialize a calendar object in a message so it can be displayed.
- */
-void cal_process_attachment(wc_mime_attachment *Mime) 
-{
+// Deserialize a calendar object in a message so it can be displayed.
+void cal_process_attachment(wc_mime_attachment *Mime) {
 	icalcomponent *cal;
 
 	cal = icalcomponent_new_from_string(ChrPtr(Mime->Data));
@@ -299,18 +290,13 @@ void cal_process_attachment(wc_mime_attachment *Mime)
 
 	cal_process_object(Mime->Data, cal, 0, Mime->msgnum, ChrPtr(Mime->PartNum));
 
-	/* Free the memory we obtained from libical's constructor */
+	// Free the memory we obtained from libical's constructor
 	icalcomponent_free(cal);
 }
 
 
-
-
-/*
- * Respond to a meeting request - accept/decline meeting
- */
-void respond_to_request(void) 
-{
+// Respond to a meeting request - accept/decline meeting
+void respond_to_request(void) {
 	char buf[1024];
 
 	begin_ajax_response();
@@ -328,11 +314,13 @@ void respond_to_request(void)
 			wc_printf(_("You have accepted this meeting invitation.  "
 				"It has been entered into your calendar.")
 			);
-		} else if (!strcasecmp(bstr("sc"), "tentative")) {
+		}
+		else if (!strcasecmp(bstr("sc"), "tentative")) {
 			wc_printf(_("You have tentatively accepted this meeting invitation.  "
 				"It has been 'pencilled in' to your calendar.")
 			);
-		} else if (!strcasecmp(bstr("sc"), "decline")) {
+		}
+		else if (!strcasecmp(bstr("sc"), "decline")) {
 			wc_printf(_("You have declined this meeting invitation.  "
 				  "It has <b>not</b> been entered into your calendar.")
 				);
@@ -340,22 +328,18 @@ void respond_to_request(void)
 		wc_printf(" ");
 		wc_printf(_("A reply has been sent to the meeting organizer."));
 		wc_printf("</span>");
-	} else {
+	}
+	else {
 		wc_printf("<img align=\"center\" src=\"static/webcit_icons/error.gif\"><span>");
 		wc_printf("%s\n", &buf[4]);
 		wc_printf("</span>");
 	}
-
 	end_ajax_response();
 }
 
 
-
-/*
- * Handle an incoming RSVP
- */
-void handle_rsvp(void) 
-{
+// Handle an incoming RSVP
+void handle_rsvp(void) {
 	char buf[1024];
 
 	begin_ajax_response();
@@ -370,17 +354,19 @@ void handle_rsvp(void)
 	if (buf[0] == '2') {
 		wc_printf("<img src=\"static/webcit_icons/calendar.png\"><span>");
 		if (!strcasecmp(bstr("sc"), "update")) {
-			/// Translators: RSVP aka Répondez s'il-vous-plaît Is the term 
-			/// that the recipient of an ical-invitation should please 
-			/// answer this request.
+			// Translators: RSVP aka Répondez s'il-vous-plaît is the term 
+			// that the recipient of an ical-invitation should please 
+			// answer this request.
 			wc_printf(_("Your calendar has been updated to reflect this RSVP."));
-		} else if (!strcasecmp(bstr("sc"), "ignore")) {
+		}
+		else if (!strcasecmp(bstr("sc"), "ignore")) {
 			wc_printf(_("You have chosen to ignore this RSVP. "
 				  "Your calendar has <b>not</b> been updated.")
-				);
+			);
 		}
 		wc_printf("</span>");
-	} else {
+	}
+	else {
 		wc_printf("<img src=\"static/webcit_icons/error.gif\"><span> %s\n", &buf[4]);
 		wc_printf("</span>");
 	}
@@ -389,27 +375,20 @@ void handle_rsvp(void)
 }
 
 
-
-
-/*
- * free memory allocated using libical
- */
-void delete_cal(void *vCal)
-{
+// free memory allocated using libical
+void delete_cal(void *vCal) {
 	disp_cal *Cal = (disp_cal*) vCal;
 	icalcomponent_free(Cal->cal);
 	free(Cal->from);
 	free(Cal);
 }
 
-/*
- * This is the meat-and-bones of the first part of our two-phase calendar display.
- * As we encounter calendar items in messages being read from the server, we break out
- * any iCalendar objects and store them in a hash table.  Later on, the second phase will
- * use this hash table to render the calendar for display.
- */
-void display_individual_cal(icalcomponent *event, long msgnum, char *from, int unread, calview *calv)
-{
+
+// This is the meat-and-bones of the first part of our two-phase calendar display.
+// As we encounter calendar items in messages being read from the server, we break out
+// any iCalendar objects and store them in a hash table.  Later on, the second phase will
+// use this hash table to render the calendar for display.
+void display_individual_cal(icalcomponent *event, long msgnum, char *from, int unread, calview *calv) {
 	icalproperty *ps = NULL;
 	struct icaltimetype dtstart, dtend;
 	struct icaldurationtype dur;
@@ -419,7 +398,7 @@ void display_individual_cal(icalcomponent *event, long msgnum, char *from, int u
 	time_t final_recurrence = 0;
 	icalcomponent *cptr = NULL;
 
-	/* recur variables */
+	// recur variables
 	icalproperty *rrule = NULL;
 	struct icalrecurrencetype recur;
 	icalrecur_iterator *ritr = NULL;
@@ -427,15 +406,14 @@ void display_individual_cal(icalcomponent *event, long msgnum, char *from, int u
 	int num_recur = 0;
 	int stop_rr = 0;
 
-	/* first and foremost, check for bogosity.  bail if we see no DTSTART property */
-
+	// first and foremost, check for bogosity.  bail if we see no DTSTART property
 	if (icalcomponent_get_first_property(icalcomponent_get_first_component(
-		event, ICAL_VEVENT_COMPONENT), ICAL_DTSTART_PROPERTY) == NULL)
-	{
+		event, ICAL_VEVENT_COMPONENT), ICAL_DTSTART_PROPERTY) == NULL
+	) {
 		return;
 	}
 
-	/* ok, chances are we've got a live one here.  let's try to figure out where it goes. */
+	// ok, chances are we've got a live one here.  let's try to figure out where it goes.
 
 	dtstart = icaltime_null_time();
 	dtend = icaltime_null_time();
@@ -444,12 +422,12 @@ void display_individual_cal(icalcomponent *event, long msgnum, char *from, int u
 		WCC->disp_cal_items = NewHash(0, Flathash);
 	}
 
-	/* Note: anything we do here, we also have to do below for the recurrences. */
+	// Note: anything we do here, we also have to do below for the recurrences.
 	Cal = (disp_cal*) malloc(sizeof(disp_cal));
 	memset(Cal, 0, sizeof(disp_cal));
 	Cal->cal = icalcomponent_new_clone(event);
 
-	/* Dezonify and decapsulate at the very last moment */
+	// Dezonify and decapsulate at the very last moment
 	ical_dezonify(Cal->cal);
 	if (icalcomponent_isa(Cal->cal) != ICAL_VEVENT_COMPONENT) {
 		cptr = icalcomponent_get_first_component(Cal->cal, ICAL_VEVENT_COMPONENT);
@@ -466,32 +444,27 @@ void display_individual_cal(icalcomponent *event, long msgnum, char *from, int u
 	memcpy(Cal->from, from, len + 1);
 	Cal->cal_msgnum = msgnum;
 
-	/* Precalculate the starting date and time of this event, and store it in our top-level
-	 * structure.  Later, when we are rendering the calendar, we can just peek at these values
-	 * without having to break apart every calendar item.
-	 */
+	// Precalculate the starting date and time of this event, and store it in our top-level
+	// structure.  Later, when we are rendering the calendar, we can just peek at these values
+	// without having to break apart every calendar item.
 	ps = icalcomponent_get_first_property(Cal->cal, ICAL_DTSTART_PROPERTY);
 	if (ps != NULL) {
 		dtstart = icalproperty_get_dtstart(ps);
 		Cal->event_start = icaltime_as_timet(dtstart);
 	}
 
-	/* Do the same for the ending date and time.  It makes the day view much easier to render. */
+	// Do the same for the ending date and time.  It makes the day view much easier to render.
 	ps = icalcomponent_get_first_property(Cal->cal, ICAL_DTEND_PROPERTY);
 	if (ps != NULL) {
 		dtend = icalproperty_get_dtend(ps);
 		Cal->event_end = icaltime_as_timet(dtend);
 	}
 
-	/* Store it in the hash list. */
-	/* syslog(LOG_DEBUG, "INITIAL: %s", ctime(&Cal->event_start)); */
-	Put(WCC->disp_cal_items, 
-	    (char*) &Cal->event_start,
-	    sizeof(Cal->event_start), 
-	    Cal, 
-	    delete_cal);
+	// Store it in the hash list.
+	// syslog(LOG_DEBUG, "INITIAL: %s", ctime(&Cal->event_start));
+	Put(WCC->disp_cal_items, (char*) &Cal->event_start, sizeof(Cal->event_start), Cal, delete_cal);
 
-	/****************************** handle recurring events ******************************/
+	//***************************** handle recurring events ******************************
 
 	if (icaltime_is_null_time(dtstart)) return;	/* Can't recur without a start time */
 
@@ -558,9 +531,7 @@ void display_individual_cal(icalcomponent *event, long msgnum, char *from, int u
 				final_recurrence = Cal->event_start;
 
 				/* Remove any existing DTEND properties */
-				while (	ps = icalcomponent_get_first_property(cptr, ICAL_DTEND_PROPERTY),
-					(ps != NULL)
-				) {
+				while (ps = icalcomponent_get_first_property(cptr, ICAL_DTEND_PROPERTY), (ps != NULL)) {
 					icalcomponent_remove_property(cptr, ps);
 				}
 
@@ -605,18 +576,13 @@ void display_individual_cal(icalcomponent *event, long msgnum, char *from, int u
 }
 
 
-
-
-
-
 void process_ical_object(long msgnum, int unread,
 			 char *from, 
 			 char *FlatIcal, 
 			 icalcomponent_kind which_kind,
 			 IcalCallbackFunc CallBack,
 			 calview *calv
-	) 
-{
+) {
 	icalcomponent *cal, *c;
 
 	cal = icalcomponent_new_from_string(FlatIcal);
@@ -648,19 +614,16 @@ void process_ical_object(long msgnum, int unread,
 	}
 }
 
-/*
- * Code common to all icalendar display handlers.  Given a message number and a MIME
- * type, we load the message and hunt for that MIME type.  If found, we load
- * the relevant part, deserialize it into a libical component, filter it for
- * the requested object type, and feed it to the specified handler.
- */
+// Code common to all icalendar display handlers.  Given a message number and a MIME
+// type, we load the message and hunt for that MIME type.  If found, we load
+// the relevant part, deserialize it into a libical component, filter it for
+// the requested object type, and feed it to the specified handler.
 void load_ical_object(long msgnum, int unread,
 		      icalcomponent_kind which_kind,
 		      IcalCallbackFunc CallBack,
 		      calview *calv,
 		      int RenderAsync
-	) 
-{
+) {
 	StrBuf *Buf;
 	StrBuf *Data = NULL;
 	const char *bptr;
@@ -762,9 +725,8 @@ void load_ical_object(long msgnum, int unread,
 	}
 	FreeStrBuf(&Buf);
 
-	/* If MSG4 didn't give us the part we wanted, but we know that we can find it
-	 * as one of the other MIME parts, attempt to load it now.
-	 */
+	// If MSG4 didn't give us the part we wanted, but we know that we can find it
+	// as one of the other MIME parts, attempt to load it now.
 	if ((Data == NULL) && (!IsEmptyStr(relevant_partnum))) {
 		Data = load_mimepart(msgnum, relevant_partnum);
 	}
@@ -783,40 +745,32 @@ void load_ical_object(long msgnum, int unread,
 	icalmemory_free_ring();
 }
 
-/*
- * Display a calendar item
- */
-int calendar_LoadMsgFromServer(SharedMessageStatus *Stat, 
-			       void **ViewSpecific, 
-			       message_summary* Msg, 
-			       int is_new, 
-			       int i)
-{
+
+// Display a calendar item
+int calendar_LoadMsgFromServer(SharedMessageStatus *Stat, void **ViewSpecific, message_summary* Msg, int is_new, int i) {
 	calview *c = (calview*) *ViewSpecific;
 	load_ical_object(Msg->msgnum, is_new, (-1), display_individual_cal, c, 1);
 	return 0;
 }
 
-/*
- * display the editor component for an event
- */
+
+// display the editor component for an event
 void display_edit_event(void) {
 	long msgnum = 0L;
 
 	msgnum = lbstr("msgnum");
 	if (msgnum > 0L) {
-		/* existing event */
+		// existing event
 		load_ical_object(msgnum, 0, ICAL_VEVENT_COMPONENT, display_edit_individual_event, NULL, 0);
 	}
 	else {
-		/* new event */
+		// new event
 		display_edit_individual_event(NULL, 0L, "", 0, NULL);
 	}
 }
 
-/*
- * save an edited event
- */
+
+// save an edited event
 void save_event(void) {
 	long msgnum = 0L;
 
@@ -831,14 +785,8 @@ void save_event(void) {
 }
 
 
-
-
-
-/*
- * Anonymous request of freebusy data for a user
- */
-void do_freebusy(void)
-{
+// Anonymous request of freebusy data for a user
+void do_freebusy(void) {
 	const char *req = ChrPtr(WC->Hdr->HR.ReqLine);
 	char who[SIZ];
 	char buf[SIZ];
@@ -876,9 +824,7 @@ void do_freebusy(void)
 }
 
 
-
-int calendar_Cleanup(void **ViewSpecific)
-{
+int calendar_Cleanup(void **ViewSpecific) {
 	calview *c;
 	
 	c = (calview *) *ViewSpecific;
@@ -890,8 +836,8 @@ int calendar_Cleanup(void **ViewSpecific)
 	return 0;
 }
 
-int __calendar_Cleanup(void **ViewSpecific)
-{
+
+int __calendar_Cleanup(void **ViewSpecific) {
 	calview *c;
 	
 	c = (calview *) *ViewSpecific;
