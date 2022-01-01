@@ -131,25 +131,7 @@ void starttls(struct client_handle *ch) {
 		else {
 			syslog(LOG_WARNING, "SSL_accept failed: %s", ssl_error_reason);
 		}
-		//sleep(1);
-		//retval = SSL_accept(ch->ssl_handle);
 	}
-	//if (retval < 1) {
-		//long errval;
-		//const char *ssl_error_reason = NULL;
-//
-		//errval = SSL_get_error(ch->ssl_handle, retval);
-		//ssl_error_reason = ERR_reason_error_string(ERR_get_error());
-		//if (ssl_error_reason == NULL) {
-			//syslog(LOG_WARNING, "SSL_accept failed: errval=%ld, retval=%d (%s)", errval, retval, strerror(errval));
-		//}
-		//else {
-			//syslog(LOG_WARNING, "SSL_accept failed: %s", ssl_error_reason);
-		//}
-		//SSL_free(ch->ssl_handle);
-		//ch->ssl_handle = NULL;
-		//return;
-	//}
 	else {
 		syslog(LOG_INFO, "SSL_accept success");
 	}
