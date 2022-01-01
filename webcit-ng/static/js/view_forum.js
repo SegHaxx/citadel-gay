@@ -131,7 +131,7 @@ function forum_render_messages(message_numbers, msgs_div_name, scroll_to) {
 		let scroll_to_div = null;
 		for (let i=0; i<num_msgs; ++i) {
 			msg_promises[i].then((one_message) => {
-				let new_msg_div = forum_render_one(one_message);
+				let new_msg_div = forum_render_one(one_message, null);
 				document.getElementById(msgs_div_name).append(new_msg_div);
 				if (message_numbers[i] == scroll_to) {
 					scroll_to_div = new_msg_div;
@@ -148,10 +148,16 @@ function forum_render_messages(message_numbers, msgs_div_name, scroll_to) {
 
 
 // Render a message.  Returns a div object.
-function forum_render_one(msg) {
+function forum_render_one(msg, existing_div) {
+	let div = null;
+	if (existing_div != null) {						// If an existing div was supplied, render into it
+		div = existing_div;
+	}
+	else {									// Otherwise, create a new one
+		div = document.createElement("div");
+	}
 
-	let div = document.createElement("div");
-	mdiv = randomString();							// div name for this message
+	mdiv = randomString();							// Give the div a new name
 	div.id = mdiv;
 
 	try {
@@ -400,8 +406,31 @@ function forum_save_message(editor_div_name) {
 					}
 				}
 
+
+
+
 				// change the name of the editor div to make it look like a regular message...
-				document.getElementById(editor_div_name).innerHTML = "FIXME render message " + new_msg_num;
+				// document.getElementById(editor_div_name).innerHTML = "FIXME render message " + new_msg_num;
+
+				// MAKE WAY, HERE IT IS
+
+				replace_editor_with_final_message = async() => {
+					response = await fetch("/ctdl/r/" + escapeHTMLURI(current_room) + "/" + new_msg_num + "/json");
+					if (response.ok) {
+						newly_posted_message = await(response.json());
+						forum_render_one(newly_posted_message, document.getElementById(editor_div_name));
+					}
+				}
+				replace_editor_with_final_message();
+
+
+
+
+
+
+
+
+
 			}
 			else {
 				error_message = request.responseText;
