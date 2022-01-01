@@ -20,11 +20,16 @@ void output_static(struct http_transaction *h) {
 	char filename[PATH_MAX];
 	struct stat statbuf;
 
+	syslog(LOG_DEBUG, "static: %s", h->url);
+
 	if (!strncasecmp(h->url, "/ctdl/s/", 8)) {
 		snprintf(filename, sizeof filename, "static/%s", &h->url[8]);
 	}
 	else if (!strncasecmp(h->url, "/.well-known/", 13)) {
 		snprintf(filename, sizeof filename, "static/.well-known/%s", &h->url[13]);
+	}
+	else if (!strcasecmp(h->url, "/favicon.ico")) {
+		snprintf(filename, sizeof filename, "static/images/favicon.ico");
 	}
 	else {
 		do_404(h);

@@ -97,6 +97,11 @@ void perform_request(struct http_transaction *h) {
 		return;
 	}
 
+	if (!strcasecmp(h->url, "/favicon.ico")) {
+		output_static(h);
+		return;
+	}
+
 	// Everything below this line is strictly REST URL patterns.
 
 	if (strncasecmp(h->url, HKEY("/ctdl/"))) {		// Reject non-REST

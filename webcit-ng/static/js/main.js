@@ -60,7 +60,7 @@ ctdl_startup = async() => {
 // Display a room list in the main div.
 //
 function display_room_list() {
-	document.getElementById("roomlist").innerHTML = "<img src=\"/ctdl/s/throbber.gif\" />";	// show throbber while loading
+	document.getElementById("roomlist").innerHTML = "<img src=\"/ctdl/s/static/throbber.gif\" />";	// show throbber while loading
 
 	fetch_room_list = async() => {
 		response = await fetch("/ctdl/r/");
