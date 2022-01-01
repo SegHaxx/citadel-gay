@@ -1,4 +1,3 @@
-//
 // User functions
 //
 // Copyright (c) 1996-2022 by the citadel.org team
@@ -114,7 +113,7 @@ void ctdl_u(struct http_transaction *h, struct ctdlsession *c) {
 	extract_token(buf, h->url, 4, '/', sizeof buf);
 	if (num_tokens(h->url, '/') == 5) {
 		if (IsEmptyStr(buf)) {
-			the_user_itself(h, c, requested_username);	//      /ctdl/u/username/       ( same as /ctdl/u/username )
+			the_user_itself(h, c, requested_username);	//      /ctdl/u/username/ (same as /ctdl/u/username)
 		}
 		else {
 			object_in_user(h, c, requested_username);	//      /ctdl/u/username/object
