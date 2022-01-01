@@ -2,7 +2,7 @@
 // This file contains functions which handle all of the CalDAV "REPORT" queries
 // specified in RFC4791 section 7.
 //
-// Copyright (c) 2021 by the citadel.org team
+// Copyright (c) 2022 by the citadel.org team
 //
 // This program is open source software.  It runs great on the
 // Linux operating system (and probably elsewhere).  You can use,

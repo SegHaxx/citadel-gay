@@ -1,7 +1,7 @@
 //
 // Message base functions
 //
-// Copyright (c) 1996-2021 by the citadel.org team
+// Copyright (c) 1996-2022 by the citadel.org team
 //
 // This program is open source software.  It runs great on the
 // Linux operating system (and probably elsewhere).  You can use,
