@@ -46,17 +46,8 @@ function quoted_printable_encode(str) {
 
 // Generate a random string of the specified length
 // Useful for generating one-time-use div names
-function randomString(length) {
-	var chars = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghiklmnopqrstuvwxyz'.split('');
-	var str = '';
-
-	if (!length) {
-		length = Math.floor(Math.random() * chars.length);
-	}
-	for (var i = 0; i < length; i++) {
-		str += chars[Math.floor(Math.random() * chars.length)];
-	}
-	return str;
+function randomString() {
+	return Math.random().toString(36).replace('0.','ctdl_' || '');
 }
 
 

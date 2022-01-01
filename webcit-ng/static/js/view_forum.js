@@ -41,7 +41,7 @@ function forum_readmessages(target_div_name, gt_msg, lt_msg) {
 				if (msgs.length > messages_per_page) {
 					msgs = msgs.slice(msgs.length - messages_per_page);
 				}
-				new_old_div_name = randomString(10);
+				new_old_div_name = randomString();
 				if (msgs.length < 1) {
 					newlt = lt_msg;
 				}
@@ -57,11 +57,11 @@ function forum_readmessages(target_div_name, gt_msg, lt_msg) {
 			}
 
 			// The messages will go here.
-			let msgs_div_name = randomString(10);
+			let msgs_div_name = randomString();
 			target_div.innerHTML += "<div id=\"" + msgs_div_name + "\"> </div>" ;
 
 			if (lt_msg == 9999999999) {
-				new_new_div_name = randomString(10);
+				new_new_div_name = randomString();
 				if (msgs.length <= 0) {
 					newgt = gt_msg;
 				}
@@ -151,7 +151,7 @@ function forum_render_messages(message_numbers, msgs_div_name, scroll_to) {
 function forum_render_one(msg) {
 
 	let div = document.createElement("div");
-	mdiv = randomString(10);					// div name for this message
+	mdiv = randomString();							// div name for this message
 	div.id = mdiv;
 
 	try {
@@ -236,7 +236,7 @@ function compose_references(references, msgid) {
 // Open a reply box directly below a specific message
 function open_reply_box(parent_div, is_quoted, references, msgid) {
 	let new_div = document.createElement("div");
-	let new_div_name = randomString(10);
+	let new_div_name = randomString();
 	new_div.id = new_div_name;
 
 	document.getElementById(parent_div).append(new_div);
@@ -374,7 +374,7 @@ function forum_save_message(editor_div_name) {
 		+ "/dummy_name_for_new_message"
 		+ "?wefw=" + wefw
 		+ "&subj=" + subj
-	boundary = randomString(20);
+	boundary = randomString();
 	body_text =
 		"--" + boundary + "\r\n"
 		+ "Content-type: text/html\r\n"
