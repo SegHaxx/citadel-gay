@@ -260,8 +260,8 @@ function open_reply_box(parent_div, is_quoted, references, msgid) {
 	+ current_user							// user = me !
 	+ "</span>"
 	+ "<span class=\"ctdl-msgdate\">"
-	+ "FIXME now time " + convertTimestamp(1637714172)
-	+ "</span>"							// end msgdate
+	+ convertTimestamp(Date.now() / 1000)				// the current date/time (temporary for display)
+	+ "</span>"
 	+ "</span>"							// end header info on left side
 	+ "<span class=\"ctdl-msg-header-buttons\">"			// begin buttons on right side
 
@@ -305,7 +305,7 @@ function open_reply_box(parent_div, is_quoted, references, msgid) {
 
 	+ "<div class=\"ctdl-msg-header\">"				// begin footer
 	+ "<span class=\"ctdl-msg-header-info\">"			// begin footer info on left side
-	+ "x"
+	+ "&nbsp;"							// (nothing here for now)
 	+ "</span>"							// end footer info on left side
 	+ "<span class=\"ctdl-msg-header-buttons\">"			// begin buttons on right side
 
