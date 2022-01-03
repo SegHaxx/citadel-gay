@@ -203,7 +203,7 @@ function forum_render_one(msg, existing_div) {
 		}
 		outmsg +=
 	  	  "</div><br>"							// end header
-		+ "<div class=\"ctdl-msg-body\">"				// begin body
+		+ "<div class=\"ctdl-msg-body\" id=\"" + mdiv + "_body\">"	// begin body
 		+ msg.text
 		+ "</div>"							// end body
 		+ "</div>"							// end content
@@ -250,7 +250,7 @@ function open_reply_box(parent_div, is_quoted, references, msgid) {
 	replybox =
 	  "<div class=\"ctdl-msg-wrapper ctdl-msg-reply\">"		// begin message wrapper
 	+ "<div class=\"ctdl-avatar\">"					// begin avatar
-	+ "<img src=\"/ctdl/u/" + "FIXME my name" + "/userpic\" width=\"32\" "
+	+ "<img src=\"/ctdl/u/" + current_user + "/userpic\" width=\"32\" "
 	+ "onerror=\"this.parentNode.innerHTML='&lt;i class=&quot;fa fa-user-circle fa-2x&quot;&gt;&lt;/i&gt; '\">"
 	+ "</div>"							// end avatar
 	+ "<div class=\"ctdl-msg-content\">"				// begin content
@@ -300,8 +300,16 @@ function open_reply_box(parent_div, is_quoted, references, msgid) {
 	+ compose_references(references,msgid) + "</span>"
 									// begin body
 	+ "<div class=\"ctdl-msg-body\" id=\"ctdl-editor-body\" style=\"padding:5px;\" contenteditable=\"true\">"
-	+ "\n"								// empty initial content
-	+ "</div>"							// end body
+	+ "\n";								// empty initial content
+
+	if (is_quoted) {
+		replybox += "<br><blockquote>"
+			+ document.getElementById(parent_div+"_body").innerHTML
+			+ "</blockquote>";
+	}
+
+	replybox +=
+	  "</div>"							// end body
 
 	+ "<div class=\"ctdl-msg-header\">"				// begin footer
 	+ "<span class=\"ctdl-msg-header-info\">"			// begin footer info on left side
