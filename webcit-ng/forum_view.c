@@ -58,12 +58,7 @@ void json_render_one_message(struct http_transaction *h, struct ctdlsession *c, 
 			safestrncpy(emailaddr, &buf[5], sizeof emailaddr);
 		}
 		else if (!strncasecmp(buf, "time=", 5)) {
-			time_t tt;
-			struct tm tm;
-			tt = atol(&buf[5]);
-			localtime_r(&tt, &tm);
-			strftime(datetime, sizeof datetime, "%c", &tm);
-			JsonObjectAppend(j, NewJsonPlainString(HKEY("time"), datetime, -1));
+			JsonObjectAppend(j, NewJsonNumber(HKEY("time"), atol(&buf[5])));
 		}
 		else if (!strncasecmp(buf, "locl=", 5)) {
 			message_originated_locally = 1;
