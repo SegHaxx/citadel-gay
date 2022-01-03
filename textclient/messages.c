@@ -1,6 +1,10 @@
 // Text client functions for reading and writing of messages
 //
-// Copyright (c) 1987-2020 by the citadel.org team
+// Beware: this is really old and crappy code, written in the
+// late 1980s when my coding style was absolute garbage.  It
+// works, but we probably should replace most of it.
+//
+// Copyright (c) 1987-2022 by the citadel.org team
 //
 // This program is open source software.  Use, duplication, and/or
 // disclosure are subject to the GNU General Purpose License version 3.
@@ -64,8 +68,7 @@ int has_images = 0;		/* Current msg has images */
 struct parts *last_message_parts = NULL;	/* Parts from last msg */
 
 
-void ka_sigcatch(int signum)
-{
+void ka_sigcatch(int signum) {
 	alarm(S_KEEPALIVE);
 	signal(SIGALRM, ka_sigcatch);
 	CtdlIPCNoop(ipc_for_signal_handlers);
@@ -75,8 +78,7 @@ void ka_sigcatch(int signum)
 /*
  * server keep-alive version of wait() (needed for external editor)
  */
-pid_t ka_wait(int *kstatus)
-{
+pid_t ka_wait(int *kstatus) {
 	pid_t p;
 
 	alarm(S_KEEPALIVE);
@@ -94,8 +96,7 @@ pid_t ka_wait(int *kstatus)
 /*
  * version of system() that uses ka_wait()
  */
-int ka_system(char *shc)
-{
+int ka_system(char *shc) {
 	pid_t childpid;
 	pid_t waitpid;
 	int retcode;
@@ -149,8 +150,7 @@ void add_newline(struct cittext *textlist)
 /*
  * add a word to the buffer...
  */
-void add_word(struct cittext *textlist, char *wordbuf)
-{
+void add_word(struct cittext *textlist, char *wordbuf) {
 	struct cittext *ptr;
 
 	ptr = textlist;
@@ -173,8 +173,7 @@ void add_word(struct cittext *textlist, char *wordbuf)
 /*
  * begin editing of an opened file pointed to by fp
  */
-void citedit(FILE * fp)
-{
+void citedit(FILE * fp) {
 	int a, prev, finished, b, last_space;
 	int appending = 0;
 	struct cittext *textlist = NULL;
@@ -200,7 +199,8 @@ void citedit(FILE * fp)
 				add_newline(textlist);
 				add_word(textlist, "");
 			}
-		} else {
+		}
+		else {
 			wordbuf[strlen(wordbuf) + 1] = 0;
 			wordbuf[strlen(wordbuf)] = a;
 		}
@@ -241,14 +241,16 @@ void citedit(FILE * fp)
 				scr_putc(32);
 				scr_putc(8);
 			}
-		} else if (a == 23) {
+		}
+		else if (a == 23) {
 			do {
 				wordbuf[strlen(wordbuf) - 1] = 0;
 				scr_putc(8);
 				scr_putc(32);
 				scr_putc(8);
 			} while (!IsEmptyStr(wordbuf) && wordbuf[strlen(wordbuf) - 1] != ' ');
-		} else if (a == 13) {
+		}
+		else if (a == 13) {
 			scr_printf("\n");
 			if (IsEmptyStr(wordbuf))
 				finished = 1;
@@ -263,7 +265,8 @@ void citedit(FILE * fp)
 				add_word(textlist, wordbuf);
 				strcpy(wordbuf, "");
 			}
-		} else {
+		}
+		else {
 			scr_putc(a);
 			wordbuf[strlen(wordbuf) + 1] = 0;
 			wordbuf[strlen(wordbuf)] = a;
@@ -287,7 +290,8 @@ void citedit(FILE * fp)
 					scr_putc(8);
 				}
 				scr_printf("\n%s", wordbuf);
-			} else {
+			}
+			else {
 				add_word(textlist, wordbuf);
 				strcpy(wordbuf, "");
 				scr_printf("\n");
@@ -320,8 +324,7 @@ void citedit(FILE * fp)
 /*
  * Free the struct parts
  */
-void free_parts(struct parts *p)
-{
+void free_parts(struct parts *p) {
 	struct parts *a_part = p;
 
 	while (a_part) {
@@ -339,8 +342,7 @@ void free_parts(struct parts *p)
  * It only handles strings encoded from UTF-8 as Quoted-printable.
  * We can do this "in place" because the converted string will always be smaller than the source string.
  */
-void mini_2047_decode(char *s)
-{
+void mini_2047_decode(char *s) {
 	if (!s) {						// no null strings allowed!
 		return;
 	}
@@ -529,7 +531,8 @@ int read_message(CtdlIPC *ipc,
 		if (strcasecmp(message->room, room_name) && (IsEmptyStr(message->email))) {
 			if (dest) {
 				fprintf(dest, "in %s> ", message->room);
-			} else {
+			}
+			else {
 				color(DIM_WHITE);
 				scr_printf("in ");
 				color(BRIGHT_MAGENTA);
@@ -539,7 +542,8 @@ int read_message(CtdlIPC *ipc,
 		if (!IsEmptyStr(message->recipient)) {
 			if (dest) {
 				fprintf(dest, "to %s ", message->recipient);
-			} else {
+			}
+			else {
 				color(DIM_WHITE);
 				scr_printf("to ");
 				color(BRIGHT_CYAN);
@@ -555,8 +559,7 @@ int read_message(CtdlIPC *ipc,
 		scr_printf("\n");
 	}
 
-	/* Set the reply-to address to an Internet e-mail address if possible
-	 */
+	// Set the reply-to address to an Internet e-mail address if possible
 	if ((message->email != NULL) && (!IsEmptyStr(message->email))) {
 		if (!IsEmptyStr(message->author)) {
 			snprintf(reply_to, sizeof reply_to, "%s <%s>", message->author, message->email);
@@ -566,8 +569,7 @@ int read_message(CtdlIPC *ipc,
 		}
 	}
 
-	/* But if we can't do that, set it to a Citadel address.
-	 */
+	// But if we can't do that, set it to a Citadel address.
 	if (!strcmp(reply_to, NO_REPLY_TO)) {
 		strncpy(reply_to, message->author, sizeof(reply_to));
 	}
@@ -587,7 +589,8 @@ int read_message(CtdlIPC *ipc,
 		if (!IsEmptyStr(message->subject)) {
 			if (dest) {
 				fprintf(dest, "Subject: %s\n", message->subject);
-			} else {
+			}
+			else {
 				color(DIM_WHITE);
 				scr_printf("Subject: ");
 				color(BRIGHT_CYAN);
@@ -749,8 +752,7 @@ int read_message(CtdlIPC *ipc,
 /*
  * replace string function for the built-in editor
  */
-void replace_string(char *filename, long int startpos)
-{
+void replace_string(char *filename, long int startpos) {
 	char buf[512];
 	char srch_str[128];
 	char rplc_str[128];
@@ -812,14 +814,16 @@ void replace_string(char *filename, long int startpos)
 }
 
 
-/*
- * Function to begin composing a new message
- */
-int client_make_message(CtdlIPC * ipc, char *filename,	/* temporary file name */
-			char *recipient,	/* NULL if it's not mail */
-			int is_anonymous, int format_type, int mode, char *subject,	/* buffer to store subject line */
-			int subject_required)
-{
+// Function to begin composing a new message
+int client_make_message(CtdlIPC * ipc,
+			char *filename,		// temporary file name
+			char *recipient,	// NULL if it's not mail
+			int is_anonymous,
+			int format_type,
+			int mode,
+			char *subject,		// buffer to store subject line
+			int subject_required
+) {
 	FILE *fp;
 	int a, b, e_ex_code;
 	long beg;
@@ -840,9 +844,9 @@ int client_make_message(CtdlIPC * ipc, char *filename,	/* temporary file name */
 
 	if (room_flags & QR_ANONONLY && !recipient) {
 		snprintf(header, sizeof header, " ****");
-	} else {
-		snprintf(header, sizeof header, " %s from %s", datestr, (is_anonymous ? "[anonymous]" : fullname)
-		    );
+	}
+	 else {
+		snprintf(header, sizeof header, " %s from %s", datestr, (is_anonymous ? "[anonymous]" : fullname));
 		if (!IsEmptyStr(recipient)) {
 			size_t tmp = strlen(header);
 			snprintf(&header[tmp], sizeof header - tmp, " to %s", recipient);
@@ -870,18 +874,18 @@ int client_make_message(CtdlIPC * ipc, char *filename,	/* temporary file name */
 			if (beg < 0)
 				scr_printf("failed to get stream position %s\n", strerror(errno));
 			fclose(fp);
-		} else {
+		}
+		else {
 			fp = fopen(filename, "w");
 			if (fp == NULL) {
-				scr_printf("*** Error opening temp file!\n    %s: %s\n", filename, strerror(errno)
-				    );
+				scr_printf("*** Error opening temp file!\n    %s: %s\n", filename, strerror(errno));
 				return (1);
 			}
 			fclose(fp);
 		}
 	}
 
-      ME1:switch (mode) {
+ME1:	switch (mode) {
 
 	case 0:
 		fp = fopen(filename, "r+");
@@ -941,7 +945,7 @@ int client_make_message(CtdlIPC * ipc, char *filename,	/* temporary file name */
 		break;
 	}
 
-      MECR:if (mode >= 2) {
+MECR:	if (mode >= 2) {
 		if (file_checksum(filename) == cksum) {
 			scr_printf("*** Aborted message.\n");
 			e_ex_code = 1;
@@ -953,8 +957,14 @@ int client_make_message(CtdlIPC * ipc, char *filename,	/* temporary file name */
 	}
 
 	b = keymenu("Entry command (? for options)",
-		    "<A>bort|"
-		    "<C>ontinue|" "<S>ave message|" "<P>rint formatted|" "add s<U>bject|" "<R>eplace string|" "<H>old message");
+		"<A>bort|"
+		"<C>ontinue|"
+		"<S>ave message|"
+		"<P>rint formatted|"
+		"add s<U>bject|"
+		"<R>eplace string|"
+		"<H>old message"
+	);
 
 	if (b == 'a')
 		goto MEABT;
@@ -996,13 +1006,13 @@ int client_make_message(CtdlIPC * ipc, char *filename,	/* temporary file name */
 		goto MECR;
 	}
 
-      MEFIN:return (0);
+MEFIN:	return (0);
 
-      MEABT:scr_printf("Are you sure? ");
+MEABT:	scr_printf("Are you sure? ");
 	if (yesno() == 0) {
 		goto ME1;
 	}
-      MEABT2:unlink(filename);
+MEABT2:	unlink(filename);
 	return (2);
 }
 
@@ -1010,8 +1020,7 @@ int client_make_message(CtdlIPC * ipc, char *filename,	/* temporary file name */
 /*
  * Make sure there's room in msg_arr[] for at least one more.
  */
-void check_msg_arr_size(void)
-{
+void check_msg_arr_size(void) {
 	if ((num_msgs + 1) > msg_arr_size) {
 		msg_arr_size += 512;
 		msg_arr = realloc(msg_arr, ((sizeof(long)) * msg_arr_size));
@@ -1023,8 +1032,7 @@ void check_msg_arr_size(void)
  * break_big_lines()  -  break up lines that are >1024 characters
  *                       otherwise the server will truncate
  */
-void break_big_lines(char *msg)
-{
+void break_big_lines(char *msg) {
 	char *ptr;
 	char *break_here;
 
@@ -1051,8 +1059,7 @@ void break_big_lines(char *msg)
 int entmsg(CtdlIPC * ipc, int is_reply,	/* nonzero if this was a <R>eply command */
 	   int c,		/* mode */
 	   int masquerade	/* prompt for a non-default display name? */
-    )
-{
+) {
 	char buf[SIZ];
 	int a, b;
 	int need_recp = 0;
@@ -1114,7 +1121,8 @@ int entmsg(CtdlIPC * ipc, int is_reply,	/* nonzero if this was a <R>eply command
 		if (!IsEmptyStr(reply_subject)) {
 			if (!strncasecmp(reply_subject, "Re: ", 3)) {
 				strcpy(message.subject, reply_subject);
-			} else {
+			}
+			else {
 				snprintf(message.subject, sizeof message.subject, "Re: %s", reply_subject);
 			}
 		}
@@ -1160,14 +1168,17 @@ int entmsg(CtdlIPC * ipc, int is_reply,	/* nonzero if this was a <R>eply command
 		if (axlevel >= AxProbU) {
 			if (is_reply) {
 				strcpy(buf, reply_to);
-			} else {
+			}
+			else {
 				newprompt("Enter recipient: ", buf, SIZ - 100);
 				if (IsEmptyStr(buf)) {
 					return (1);
 				}
 			}
-		} else
+		}
+		else {
 			strcpy(buf, "sysop");
+		}
 	}
 	strcpy(message.recipient, buf);
 
@@ -1193,7 +1204,8 @@ int entmsg(CtdlIPC * ipc, int is_reply,	/* nonzero if this was a <R>eply command
 	r = CtdlIPCGetMessages(ipc, LastMessages, 1, NULL, &msgarr, buf);
 	if (r / 100 != 1) {
 		scr_printf("%s\n", buf);
-	} else {
+	}
+	else {
 		for (num_msgs = 0; msgarr[num_msgs]; num_msgs++);
 	}
 
@@ -1240,7 +1252,8 @@ int entmsg(CtdlIPC * ipc, int is_reply,	/* nonzero if this was a <R>eply command
 	r = CtdlIPCGetMessages(ipc, NewMessages, 0, NULL, &msgarr, buf);
 	if (r / 100 != 1) {
 		scr_printf("%s\n", buf);
-	} else {
+	}
+	else {
 		for (num_msgs = 0; msgarr[num_msgs]; num_msgs++);
 	}
 
@@ -1254,8 +1267,9 @@ int entmsg(CtdlIPC * ipc, int is_reply,	/* nonzero if this was a <R>eply command
 			++b;
 		}
 	}
-	if (msgarr)
+	if (msgarr) {
 		free(msgarr);
+	}
 	msgarr = NULL;
 
 	/* In the Mail> room, this algorithm always counts one message
@@ -1267,7 +1281,8 @@ int entmsg(CtdlIPC * ipc, int is_reply,	/* nonzero if this was a <R>eply command
 
 	if (b == 1) {
 		scr_printf("*** 1 additional message has been entered " "in this room by another user.\n");
-	} else if (b > 1) {
+	}
+	else if (b > 1) {
 		scr_printf("*** %d additional messages have been entered " "in this room by other users.\n", b);
 	}
 	free(message.text);
@@ -1279,15 +1294,13 @@ int entmsg(CtdlIPC * ipc, int is_reply,	/* nonzero if this was a <R>eply command
 /*
  * Do editing on a quoted file
  */
-void process_quote(void)
-{
+void process_quote(void) {
 	FILE *qfile, *tfile;
 	char buf[128];
 	int line, qstart, qend;
 
-	/* Unlink the second temp file as soon as it's opened, so it'll get
-	 * deleted even if the program dies
-	 */
+	// Unlink the second temp file as soon as it's opened, so it'll get
+	// deleted even if the program dies
 	qfile = fopen(temp2, "r");
 	unlink(temp2);
 
@@ -1324,8 +1337,7 @@ void process_quote(void)
 /*
  * List the URLs which were embedded in the previous message
  */
-void list_urls(CtdlIPC * ipc)
-{
+void list_urls(CtdlIPC * ipc) {
 	int i;
 	char cmd[SIZ];
 	int rv;
@@ -1339,8 +1351,9 @@ void list_urls(CtdlIPC * ipc)
 		scr_printf("%3d %s\n", i + 1, urls[i]);
 	}
 
-	if ((i = num_urls) != 1)
+	if ((i = num_urls) != 1) {
 		i = intprompt("Display which one", 1, 1, num_urls);
+	}
 
 	snprintf(cmd, sizeof cmd, rc_url_cmd, urls[i - 1]);
 	rv = system(cmd);
@@ -1351,8 +1364,7 @@ void list_urls(CtdlIPC * ipc)
 /*
  * Run image viewer in background
  */
-int do_image_view(const char *filename)
-{
+int do_image_view(const char *filename) {
 	char cmd[SIZ];
 	pid_t childpid;
 
@@ -1413,8 +1425,7 @@ int do_image_view(const char *filename)
 /*
  * View an image attached to a message
  */
-void image_view(CtdlIPC * ipc, unsigned long msg)
-{
+void image_view(CtdlIPC * ipc, unsigned long msg) {
 	struct parts *ptr = last_message_parts;
 	char part[SIZ];
 	int found = 0;
@@ -1474,11 +1485,11 @@ void image_view(CtdlIPC * ipc, unsigned long msg)
 /*
  * Read the messages in the current room
  */
-void readmsgs(CtdlIPC * ipc, enum MessageList c,	/* see listing in citadel_ipc.h */
-	      enum MessageDirection rdir,	/* 1=Forward (-1)=Reverse */
-	      int q		/* Number of msgs to read (if c==3) */
-    )
-{
+void readmsgs(CtdlIPC *ipc,
+	enum MessageList c,		// see listing in citadel_ipc.h
+	enum MessageDirection rdir,	// 1=Forward (-1)=Reverse
+	int q				// Number of msgs to read (if c==3)
+) {
 	int a, e, f, g, start;
 	int savedpos;
 	int hold_sw = 0;
@@ -1506,7 +1517,8 @@ void readmsgs(CtdlIPC * ipc, enum MessageList c,	/* see listing in citadel_ipc.h
 	r = CtdlIPCGetMessages(ipc, c, q, NULL, &msg_arr, cmd);
 	if (r / 100 != 1) {
 		scr_printf("%s\n", cmd);
-	} else {
+	}
+	else {
 		for (num_msgs = 0; msg_arr[num_msgs]; num_msgs++);
 	}
 
@@ -1559,7 +1571,7 @@ void readmsgs(CtdlIPC * ipc, enum MessageList c,	/* see listing in citadel_ipc.h
 		if ((quotflag) || (arcflag)) {
 			screenwidth = hold_sw;
 		}
-	      RMSGREAD:
+RMSGREAD:
 		highest_msg_read = msg_arr[a];
 		if (quotflag) {
 			fclose(dest);
@@ -1598,7 +1610,8 @@ void readmsgs(CtdlIPC * ipc, enum MessageList c,	/* see listing in citadel_ipc.h
 		    && (((room_flags & QR_MAILBOX) == 0)
 			|| (rc_force_mail_prompts == 0))) {
 			e = 'n';
-		} else {
+		}
+		else {
 			color(DIM_WHITE);
 			scr_printf("(");
 			color(BRIGHT_WHITE);
@@ -1714,10 +1727,7 @@ void readmsgs(CtdlIPC * ipc, enum MessageList c,	/* see listing in citadel_ipc.h
 				   " N  Next (continue with next message)\n"
 				   " Y  My Next (continue with next message you authored)\n"
 				   " B  Back (go back to previous message)\n");
-			if ((is_room_aide)
-			    || (room_flags & QR_MAILBOX)
-			    || (room_flags2 & QR2_COLLABDEL)
-			    ) {
+			if ((is_room_aide) || (room_flags & QR_MAILBOX) || (room_flags2 & QR2_COLLABDEL)) {
 				scr_printf(" D  Delete this message\n" " M  Move message to another room\n");
 			}
 			scr_printf(" C  Copy message to another room\n");
@@ -1766,7 +1776,8 @@ void readmsgs(CtdlIPC * ipc, enum MessageList c,	/* see listing in citadel_ipc.h
 				scr_printf("%s\n", cmd);
 				if (r / 100 == 2)
 					msg_arr[a] = 0L;
-			} else {
+			}
+			else {
 				goto RMSGREAD;
 			}
 			if (r / 100 != 2)	/* r will be init'ed, FIXME */
@@ -1778,7 +1789,8 @@ void readmsgs(CtdlIPC * ipc, enum MessageList c,	/* see listing in citadel_ipc.h
 			r = CtdlIPCAttachmentDownload(ipc, msg_arr[a], filename, &attachment, progress, cmd);
 			if (r / 100 != 2) {
 				scr_printf("%s\n", cmd);
-			} else {
+			}
+			else {
 				extract_token(filename, cmd, 2, '|', sizeof filename);
 				/*
 				 * Part 1 won't have a filename; use the
@@ -1795,7 +1807,8 @@ void readmsgs(CtdlIPC * ipc, enum MessageList c,	/* see listing in citadel_ipc.h
 					rv = system(cmd);
 					if (rv != 0)
 						scr_printf("failed to save %s Reason %d\n", cmd, rv);
-				} else {	/* save attachment to disk */
+				}
+				else {	/* save attachment to disk */
 					destination_directory(save_to, filename);
 					save_buffer(attachment, extract_unsigned_long(cmd, 0), save_to);
 				}
@@ -1812,7 +1825,8 @@ void readmsgs(CtdlIPC * ipc, enum MessageList c,	/* see listing in citadel_ipc.h
 				scr_printf("%s\n", cmd);
 				if (r / 100 == 2)
 					msg_arr[a] = 0L;
-			} else {
+			}
+			else {
 				goto RMSGREAD;
 			}
 			break;
@@ -1864,8 +1878,7 @@ void readmsgs(CtdlIPC * ipc, enum MessageList c,	/* see listing in citadel_ipc.h
 /*
  * View and edit a system message
  */
-void edit_system_message(CtdlIPC * ipc, char *which_message)
-{
+void edit_system_message(CtdlIPC * ipc, char *which_message) {
 	char desc[SIZ];
 	char read_cmd[SIZ];
 	char write_cmd[SIZ];
@@ -1880,8 +1893,7 @@ void edit_system_message(CtdlIPC * ipc, char *which_message)
 /*
  * Loads the contents of a file into memory.  Caller must free the allocated memory.
  */
-char *load_message_from_file(FILE * src)
-{
+char *load_message_from_file(FILE * src) {
 	size_t i;
 	size_t got = 0;
 	char *dest = NULL;
