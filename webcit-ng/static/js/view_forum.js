@@ -406,14 +406,7 @@ function forum_save_message(editor_div_name) {
 					}
 				}
 
-
-
-
-				// change the name of the editor div to make it look like a regular message...
-				// document.getElementById(editor_div_name).innerHTML = "FIXME render message " + new_msg_num;
-
-				// MAKE WAY, HERE IT IS
-
+				// After saving the message, load it back from the server and replace the editor div with it.
 				replace_editor_with_final_message = async() => {
 					response = await fetch("/ctdl/r/" + escapeHTMLURI(current_room) + "/" + new_msg_num + "/json");
 					if (response.ok) {
@@ -422,14 +415,6 @@ function forum_save_message(editor_div_name) {
 					}
 				}
 				replace_editor_with_final_message();
-
-
-
-
-
-
-
-
 
 			}
 			else {
