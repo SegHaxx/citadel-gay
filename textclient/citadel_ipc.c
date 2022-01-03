@@ -1,4 +1,4 @@
-// Copyright (c) 1987-2020 by the citadel.org team
+// Copyright (c) 1987-2022 by the citadel.org team
 //
 // This program is open source software.  Use, duplication, and/or
 // disclosure are subject to the GNU General Purpose License version 3.
@@ -14,7 +14,6 @@
 static SSL_CTX *ssl_ctx;
 char arg_encrypt;
 char rc_encrypt;
-
 #endif				/* HAVE_OPENSSL */
 
 #ifndef INADDR_NONE
@@ -49,26 +48,21 @@ char *axdefs[] = {
 };
 
 
-void CtdlIPC_lock(CtdlIPC * ipc)
-{
+void CtdlIPC_lock(CtdlIPC * ipc) {
 	if (ipc->network_status_cb)
 		ipc->network_status_cb(1);
 }
 
 
-void CtdlIPC_unlock(CtdlIPC * ipc)
-{
+void CtdlIPC_unlock(CtdlIPC * ipc) {
 	if (ipc->network_status_cb)
 		ipc->network_status_cb(0);
 }
 
 
-char *libcitadelclient_version_string(void)
-{
+char *libcitadelclient_version_string(void) {
 	return "libcitadelclient(unnumbered)";
 }
-
-
 
 
 #define COMPUTE_DIRECTORY(SUBDIR) memcpy(dirbuffer,SUBDIR, sizeof dirbuffer);\
@@ -84,8 +78,7 @@ char *libcitadelclient_version_string(void)
 #define DBG_PRINT(A) if (dbg==1) fprintf (stderr,"%s : %s \n", #A, A)
 
 
-void calc_dirs_n_files(int relh, int home, const char *relhome, char *ctdldir, int dbg)
-{
+void calc_dirs_n_files(int relh, int home, const char *relhome, char *ctdldir, int dbg) {
 	const char *basedir = "";
 	char dirbuffer[PATH_MAX] = "";
 
@@ -131,13 +124,11 @@ void calc_dirs_n_files(int relh, int home, const char *relhome, char *ctdldir, i
 	DBG_PRINT(file_citadel_rc);
 }
 
-void setCryptoStatusHook(void (*hook) (char *s))
-{
+void setCryptoStatusHook(void (*hook) (char *s)) {
 	status_hook = hook;
 }
 
-void CtdlIPC_SetNetworkStatusCallback(CtdlIPC * ipc, void (*hook) (int state))
-{
+void CtdlIPC_SetNetworkStatusCallback(CtdlIPC * ipc, void (*hook) (int state)) {
 	ipc->network_status_cb = hook;
 }
 
@@ -199,8 +190,7 @@ int CtdlIPCEcho(CtdlIPC * ipc, const char *arg, char *cret)
  * Asks the server to close the connecction.
  * Should always return 200.
  */
-int CtdlIPCQuit(CtdlIPC * ipc)
-{
+int CtdlIPCQuit(CtdlIPC * ipc) {
 	int ret = 221;		/* Default to successful quit */
 	char aaa[SIZ];
 
@@ -985,32 +975,34 @@ int CtdlIPCGetRoomAttributes(CtdlIPC * ipc, struct ctdlroom **qret, char *cret)
 
 
 /* SETR */
-/* set forget to kick all users out of room */
-int CtdlIPCSetRoomAttributes(CtdlIPC * ipc, int forget, struct ctdlroom *qret, char *cret)
-{
+int CtdlIPCSetRoomAttributes(CtdlIPC *ipc,
+	int forget,				// if nonzero, kick all users out of the room
+	struct ctdlroom *qret,
+	char *cret
+) {
 	int ret;
-	char *aaa;
+	char *cmd;
 
 	if (!cret)
 		return -2;
 	if (!qret)
 		return -2;
 
-	aaa = (char *) malloc(strlen(qret->QRname) + strlen(qret->QRpasswd) + strlen(qret->QRdirname) + 64);
-	if (!aaa)
+	cmd = (char *) malloc(strlen(qret->QRname) + strlen(qret->QRpasswd) + strlen(qret->QRdirname) + 64);
+	if (!cmd)
 		return -1;
 
-	sprintf(aaa, "SETR %s|%s|%s|%d|%d|%d|%d|%d|%d",
+	sprintf(cmd, "SETR %s|%s|%s|%d|%d|%d|%d|%d|%d",
 		qret->QRname, qret->QRpasswd, qret->QRdirname,
 		qret->QRflags, forget, qret->QRfloor, qret->QRorder, qret->QRdefaultview, qret->QRflags2);
-	ret = CtdlIPCGenericCommand(ipc, aaa, NULL, 0, NULL, NULL, cret);
-	free(aaa);
+	ret = CtdlIPCGenericCommand(ipc, cmd, NULL, 0, NULL, NULL, cret);
+	free(cmd);
 	return ret;
 }
 
 
 /* GETA */
-int CtdlIPCGetRoomAide(CtdlIPC * ipc, char *cret)
+int CtdlIPCGetRoomAide(CtdlIPC *ipc, char *cret)
 {
 	if (!cret)
 		return -1;
@@ -1020,8 +1012,7 @@ int CtdlIPCGetRoomAide(CtdlIPC * ipc, char *cret)
 
 
 /* SETA */
-int CtdlIPCSetRoomAide(CtdlIPC * ipc, const char *username, char *cret)
-{
+int CtdlIPCSetRoomAide(CtdlIPC *ipc, const char *username, char *cret) {
 	int ret;
 	char *aaa;
 
@@ -1077,8 +1068,7 @@ int CtdlIPCPostMessage(CtdlIPC * ipc, int flag, int *subject_required, struct ct
 
 
 /* RINF */
-int CtdlIPCRoomInfo(CtdlIPC * ipc, char **iret, char *cret)
-{
+int CtdlIPCRoomInfo(CtdlIPC * ipc, char **iret, char *cret) {
 	size_t bytes;
 
 	if (!cret)
@@ -1093,8 +1083,7 @@ int CtdlIPCRoomInfo(CtdlIPC * ipc, char **iret, char *cret)
 
 
 /* DELE */
-int CtdlIPCDeleteMessage(CtdlIPC * ipc, long msgnum, char *cret)
-{
+int CtdlIPCDeleteMessage(CtdlIPC * ipc, long msgnum, char *cret) {
 	char aaa[64];
 
 	if (!cret)
@@ -1108,8 +1097,7 @@ int CtdlIPCDeleteMessage(CtdlIPC * ipc, long msgnum, char *cret)
 
 
 /* MOVE */
-int CtdlIPCMoveMessage(CtdlIPC * ipc, int copy, long msgnum, const char *destroom, char *cret)
-{
+int CtdlIPCMoveMessage(CtdlIPC * ipc, int copy, long msgnum, const char *destroom, char *cret) {
 	int ret;
 	char *aaa;
 
@@ -1132,8 +1120,7 @@ int CtdlIPCMoveMessage(CtdlIPC * ipc, int copy, long msgnum, const char *destroo
 
 
 /* KILL */
-int CtdlIPCDeleteRoom(CtdlIPC * ipc, int for_real, char *cret)
-{
+int CtdlIPCDeleteRoom(CtdlIPC * ipc, int for_real, char *cret) {
 	char aaa[64];
 
 	if (!cret)
@@ -1160,7 +1147,8 @@ int CtdlIPCCreateRoom(CtdlIPC * ipc, int for_real, const char *roomname, int typ
 		if (!aaa)
 			return -1;
 		sprintf(aaa, "CRE8 %d|%s|%d|%s|%d", for_real, roomname, type, password, floor);
-	} else {
+	}
+	else {
 		aaa = (char *) malloc(strlen(roomname) + 40);
 		if (!aaa)
 			return -1;
@@ -1173,8 +1161,7 @@ int CtdlIPCCreateRoom(CtdlIPC * ipc, int for_real, const char *roomname, int typ
 
 
 /* FORG */
-int CtdlIPCForgetRoom(CtdlIPC * ipc, char *cret)
-{
+int CtdlIPCForgetRoom(CtdlIPC * ipc, char *cret) {
 	if (!cret)
 		return -2;
 
@@ -1183,8 +1170,7 @@ int CtdlIPCForgetRoom(CtdlIPC * ipc, char *cret)
 
 
 /* MESG */
-int CtdlIPCSystemMessage(CtdlIPC * ipc, const char *message, char **mret, char *cret)
-{
+int CtdlIPCSystemMessage(CtdlIPC * ipc, const char *message, char **mret, char *cret) {
 	int ret;
 	char *aaa;
 	size_t bytes;
@@ -1210,8 +1196,7 @@ int CtdlIPCSystemMessage(CtdlIPC * ipc, const char *message, char **mret, char *
 
 
 /* GNUR */
-int CtdlIPCNextUnvalidatedUser(CtdlIPC * ipc, char *cret)
-{
+int CtdlIPCNextUnvalidatedUser(CtdlIPC *ipc, char *cret) {
 	if (!cret)
 		return -2;
 
@@ -1220,8 +1205,7 @@ int CtdlIPCNextUnvalidatedUser(CtdlIPC * ipc, char *cret)
 
 
 /* GREG */
-int CtdlIPCGetUserRegistration(CtdlIPC * ipc, const char *username, char **rret, char *cret)
-{
+int CtdlIPCGetUserRegistration(CtdlIPC * ipc, const char *username, char **rret, char *cret) {
 	int ret;
 	char *aaa;
 	size_t bytes;
@@ -1251,8 +1235,7 @@ int CtdlIPCGetUserRegistration(CtdlIPC * ipc, const char *username, char **rret,
 
 
 /* VALI */
-int CtdlIPCValidateUser(CtdlIPC * ipc, const char *username, int axlevel, char *cret)
-{
+int CtdlIPCValidateUser(CtdlIPC * ipc, const char *username, int axlevel, char *cret) {
 	int ret;
 	char *aaa;
 
@@ -1446,13 +1429,7 @@ int CtdlIPCFileDownload(CtdlIPC * ipc, const char *filename, void **buf, size_t 
 		bytes = extract_long(cret, 0);
 		last_mod = extract_int(cret, 1);
 		extract_token(mimetype, cret, 2, '|', sizeof mimetype);
-
 		ret = CtdlIPCReadDownload(ipc, buf, bytes, resume, progress_gauge_callback, cret);
-		/*
-		   ret = CtdlIPCHighSpeedReadDownload(ipc, buf, bytes, resume,
-		   progress_gauge_callback, cret);
-		 */
-
 		ret = CtdlIPCEndDownload(ipc, cret);
 		if (ret / 100 == 2)
 			sprintf(cret, "%d|%ld|%s|%s", (int) bytes, last_mod, filename, mimetype);
@@ -2678,21 +2655,28 @@ int CtdlIPCWriteUpload(CtdlIPC * ipc, FILE * uploadFP, void (*progress_gauge_cal
  * -1 if an internal error occurred, -2 if caller provided bad values,
  * or 0 - the protocol response number if bad values were found during
  * the protocol exchange.
+ * 
  * It stores the protocol response string (minus the number) in 
  * protocol_response as described above.  Some commands send additional
  * data in this string.
  */
-int CtdlIPCGenericCommand(CtdlIPC * ipc,
-			  const char *command, const char *to_send,
-			  size_t bytes_to_send, char **to_receive, size_t * bytes_to_receive, char *proto_response)
-{
+int CtdlIPCGenericCommand(CtdlIPC *ipc,
+			const char *command,
+			const char *to_send,
+			size_t bytes_to_send,
+			char **to_receive,
+			size_t *bytes_to_receive,
+			char *proto_response
+) {
 	char buf[SIZ];
 	int ret;
 
-	if (!command)
+	if (!command) {
 		return -2;
-	if (!proto_response)
+	}
+	if (!proto_response) {
 		return -2;
+	}
 
 	CtdlIPC_lock(ipc);
 	CtdlIPC_putline(ipc, command);
@@ -2771,18 +2755,21 @@ int CtdlIPCGenericCommand(CtdlIPC * ipc,
 				/* Don't call chatmode with generic! */
 				CtdlIPC_putline(ipc, "/quit");
 				ret = -ret;
-			} else {
+			}
+			else {
 				/* In this mode we send then receive listing */
 				if (to_send) {
 					CtdlIPCSendListing(ipc, to_send);
-				} else {
+				}
+				else {
 					/* No listing given, fake it */
 					CtdlIPC_putline(ipc, "000");
 					ret = -ret;
 				}
 				if (to_receive && !*to_receive && bytes_to_receive) {
 					*to_receive = CtdlIPCReadListing(ipc, NULL);
-				} else {	/* Drain */
+				}
+				else {	/* Drain */
 					while (CtdlIPC_getline(ipc, buf), strcmp(buf, "000"));
 					ret = -ret;
 				}
@@ -2804,8 +2791,7 @@ int CtdlIPCGenericCommand(CtdlIPC * ipc,
 /*
  * Connect to a Citadel on a remote host using a TCP/IP socket
  */
-static int tcp_connectsock(char *host, char *service)
-{
+static int tcp_connectsock(char *host, char *service) {
 	struct in6_addr serveraddr;
 	struct addrinfo hints;
 	struct addrinfo *res = NULL;
@@ -2832,7 +2818,8 @@ static int tcp_connectsock(char *host, char *service)
 	if (rc == 1) {		/* dotted quad */
 		hints.ai_family = AF_INET;
 		hints.ai_flags |= AI_NUMERICHOST;
-	} else {
+	}
+	else {
 		rc = inet_pton(AF_INET6, host, &serveraddr);
 		if (rc == 1) {	/* IPv6 address */
 			hints.ai_family = AF_INET6;
@@ -2858,23 +2845,19 @@ static int tcp_connectsock(char *host, char *service)
 		rc = connect(sock, ai->ai_addr, ai->ai_addrlen);
 		if (rc >= 0) {
 			return (sock);	/* Connected! */
-		} else {
+		}
+		else {
 			close(sock);	/* Failed.  Close the socket to avoid fd leak! */
 		}
 	}
-
 	return (-1);
 }
-
-
-
 
 
 /*
  * Connect to a Citadel on the local host using a unix domain socket
  */
-static int uds_connectsock(int *isLocal, char *sockpath)
-{
+static int uds_connectsock(int *isLocal, char *sockpath) {
 	struct sockaddr_un addr;
 	int s;
 
@@ -2900,8 +2883,7 @@ static int uds_connectsock(int *isLocal, char *sockpath)
 /*
  * input binary data from socket
  */
-static void serv_read(CtdlIPC * ipc, char *buf, unsigned int bytes)
-{
+static void serv_read(CtdlIPC * ipc, char *buf, unsigned int bytes) {
 	unsigned int len, rlen;
 
 #if defined(HAVE_OPENSSL)
@@ -2925,8 +2907,7 @@ static void serv_read(CtdlIPC * ipc, char *buf, unsigned int bytes)
 /*
  * send binary to server
  */
-void serv_write(CtdlIPC * ipc, const char *buf, unsigned int nbytes)
-{
+void serv_write(CtdlIPC * ipc, const char *buf, unsigned int nbytes) {
 	unsigned int bytes_written = 0;
 	int retval;
 
@@ -2951,8 +2932,7 @@ void serv_write(CtdlIPC * ipc, const char *buf, unsigned int nbytes)
 /*
  * input binary data from encrypted connection
  */
-static void serv_read_ssl(CtdlIPC * ipc, char *buf, unsigned int bytes)
-{
+static void serv_read_ssl(CtdlIPC * ipc, char *buf, unsigned int bytes) {
 	int len, rlen;
 	char junk[1];
 
@@ -2973,17 +2953,6 @@ static void serv_read_ssl(CtdlIPC * ipc, char *buf, unsigned int bytes)
 				sleep(1);
 				continue;
 			}
-/***
- Not sure why we'd want to handle these error codes any differently,
- but this definitely isn't the way to handle them.  Someone must have
- naively assumed that we could fall back to unencrypted communications,
- but all it does is just recursively blow the stack.
-			if (errval == SSL_ERROR_ZERO_RETURN ||
-					errval == SSL_ERROR_SSL) {
-				serv_read(ipc, &buf[len], bytes - len);
-				return;
-			}
- ***/
 			error_printf("SSL_read in serv_read: %s\n", ERR_reason_error_string(ERR_peek_error()));
 			connection_died(ipc, 1);
 			return;
@@ -2996,8 +2965,7 @@ static void serv_read_ssl(CtdlIPC * ipc, char *buf, unsigned int bytes)
 /*
  * send binary to server encrypted
  */
-static void serv_write_ssl(CtdlIPC * ipc, const char *buf, unsigned int nbytes)
-{
+static void serv_write_ssl(CtdlIPC * ipc, const char *buf, unsigned int nbytes) {
 	unsigned int bytes_written = 0;
 	int retval;
 	char junk[1];
@@ -3031,10 +2999,7 @@ static void serv_write_ssl(CtdlIPC * ipc, const char *buf, unsigned int nbytes)
 }
 
 
-
-
-static void CtdlIPC_init_OpenSSL(void)
-{
+static void CtdlIPC_init_OpenSSL(void) {
 	int a;
 	const SSL_METHOD *ssl_method;
 	DH *dh;
@@ -3085,8 +3050,7 @@ static void CtdlIPC_init_OpenSSL(void)
 #endif				/* HAVE_OPENSSL */
 
 
-int ReadNetworkChunk(CtdlIPC * ipc)
-{
+int ReadNetworkChunk(CtdlIPC * ipc) {
 	fd_set read_fd;
 	int ret = 0;
 	int err = 0;
@@ -3111,41 +3075,29 @@ int ReadNetworkChunk(CtdlIPC * ipc)
 				ipc->BufPtr[n] = '\0';
 				ipc->BufUsed += n;
 				return n;
-			} else
+			}
+			else {
 				return n;
-		} else if (ret < 0) {
+			}
+		}
+		else if (ret < 0) {
 			if (!(errno == EINTR || errno == EAGAIN))
 				error_printf("\nselect failed: %d %s\n", err, strerror(err));
 			return -1;
-		}		/*
-				   else {
-				   tries ++;
-				   if (tries >= 10)
-				   n = read(ipc->sock, ipc->BufPtr, ipc->BufSize  - (ipc->BufPtr - ipc->Buf) - 1);
-				   if (n > 0) {
-				   ipc->BufPtr[n]='\0';
-				   ipc->BufUsed += n;
-				   return n;
-				   }
-				   else {
-				   connection_died(ipc, 0);
-				   return -1;
-				   }
-				   } */
+		}
 	}
 }
+
 
 /*
  * input string from socket - implemented in terms of serv_read()
  */
 #ifdef CHUNKED_READ
 
-static void CtdlIPC_getline(CtdlIPC * ipc, char *buf)
-{
+static void CtdlIPC_getline(CtdlIPC * ipc, char *buf) {
 	int i, ntries;
 	char *aptr, *bptr, *aeptr, *beptr;
 
-//      error_printf("---\n");
 
 	beptr = buf + SIZ;
 #if defined(HAVE_OPENSSL)
@@ -3179,13 +3131,10 @@ static void CtdlIPC_getline(CtdlIPC * ipc, char *buf)
 		}
 
 		ntries = 0;
-//              while ((ipc->BufUsed == 0)||(ntries++ > 10))
 		if (ipc->BufUsed == 0)
 			ReadNetworkChunk(ipc);
 
-////            if (ipc->BufUsed != 0) while (1)
 		bptr = buf;
-
 		while (1) {
 			aptr = ipc->BufPtr;
 			aeptr = ipc->Buf + ipc->BufSize;
@@ -3198,7 +3147,6 @@ static void CtdlIPC_getline(CtdlIPC * ipc, char *buf)
 				while ((aptr < aeptr) && (*(aptr + 1) == '\0'))
 					aptr++;
 				*(bptr++) = '\0';
-//                              fprintf(stderr, "parsing %d %d %d - %d %d %d %s\n", ipc->BufPtr - ipc->Buf, aptr - ipc->BufPtr, ipc->BufUsed , *aptr, *(aptr-1), *(aptr+1), buf);
 				if ((bptr > buf + 1) && (*(bptr - 1) == '\r'))
 					*(--bptr) = '\0';
 
@@ -3209,10 +3157,10 @@ static void CtdlIPC_getline(CtdlIPC * ipc, char *buf)
 					ipc->BufUsed = 0;
 					ipc->BufPtr = ipc->Buf;
 				}
-//                              error_printf("----bla6\n");
 				return;
 
-			} /* should we move our read stuf to the bufferstart so we have more space at the end? */
+			}
+			// should we move our read stuf to the bufferstart so we have more space at the end?
 			else if ((ipc->BufPtr != ipc->Buf) && (ipc->BufUsed > (ipc->BufSize - (ipc->BufSize / 4)))) {
 				size_t NewBufSize = ipc->BufSize * 2;
 				int delta = (ipc->BufPtr - ipc->Buf);
@@ -3227,19 +3175,15 @@ static void CtdlIPC_getline(CtdlIPC * ipc, char *buf)
 				ipc->BufSize = NewBufSize;
 			}
 			if (ReadNetworkChunk(ipc) < 0) {
-//                              error_printf("----bla\n");
 				return;
 			}
 		}
-///             error_printf("----bl45761%s\nipc->BufUsed");
 	}
-//      error_printf("----bla1\n");
 }
 
 #else				/* CHUNKED_READ */
 
-static void CtdlIPC_getline(CtdlIPC * ipc, char *buf)
-{
+static void CtdlIPC_getline(CtdlIPC * ipc, char *buf) {
 	int i;
 
 	/* Read one character at a time. */
@@ -3265,16 +3209,14 @@ static void CtdlIPC_getline(CtdlIPC * ipc, char *buf)
 #endif				/* CHUNKED_READ */
 
 
-void CtdlIPC_chat_recv(CtdlIPC * ipc, char *buf)
-{
+void CtdlIPC_chat_recv(CtdlIPC * ipc, char *buf) {
 	CtdlIPC_getline(ipc, buf);
 }
 
 /*
  * send line to server - implemented in terms of serv_write()
  */
-static void CtdlIPC_putline(CtdlIPC * ipc, const char *buf)
-{
+static void CtdlIPC_putline(CtdlIPC * ipc, const char *buf) {
 	char *cmd = NULL;
 	int len;
 
@@ -3284,7 +3226,8 @@ static void CtdlIPC_putline(CtdlIPC * ipc, const char *buf)
 		/* This requires no extra memory */
 		serv_write(ipc, buf, len);
 		serv_write(ipc, "\n", 1);
-	} else {
+	}
+	else {
 		/* This is network-optimized */
 		strncpy(cmd, buf, len);
 		strcpy(cmd + len, "\n");
@@ -3295,8 +3238,8 @@ static void CtdlIPC_putline(CtdlIPC * ipc, const char *buf)
 	ipc->last_command_sent = time(NULL);
 }
 
-void CtdlIPC_chat_send(CtdlIPC * ipc, const char *buf)
-{
+
+void CtdlIPC_chat_send(CtdlIPC * ipc, const char *buf) {
 	CtdlIPC_putline(ipc, buf);
 }
 
@@ -3304,8 +3247,7 @@ void CtdlIPC_chat_send(CtdlIPC * ipc, const char *buf)
 /*
  * attach to server
  */
-CtdlIPC *CtdlIPC_new(int argc, char **argv, char *hostbuf, char *portbuf)
-{
+CtdlIPC *CtdlIPC_new(int argc, char **argv, char *hostbuf, char *portbuf) {
 	int a;
 	char cithost[SIZ];
 	char citport[SIZ];
@@ -3345,11 +3287,14 @@ CtdlIPC *CtdlIPC_new(int argc, char **argv, char *hostbuf, char *portbuf)
 	for (a = 0; a < argc; ++a) {
 		if (a == 0) {
 			/* do nothing */
-		} else if (a == 1) {
+		}
+		else if (a == 1) {
 			strcpy(cithost, argv[a]);
-		} else if (a == 2) {
+		}
+		else if (a == 2) {
 			strcpy(citport, argv[a]);
-		} else {
+		}
+		else {
 			error_printf("%s: usage: ", argv[0]);
 			error_printf("%s [host] [port] ", argv[0]);
 			free(ipc);
@@ -3366,7 +3311,8 @@ CtdlIPC *CtdlIPC_new(int argc, char **argv, char *hostbuf, char *portbuf)
 	if (!strcmp(cithost, UDS)) {
 		if (!strcasecmp(citport, DEFAULT_PORT)) {
 			snprintf(sockpath, sizeof sockpath, "%s", file_citadel_socket);
-		} else {
+		}
+		else {
 			snprintf(sockpath, sizeof sockpath, "%s/%s", citport, "citadel.socket");
 		}
 		printf("[%s]\n", sockpath);
@@ -3417,8 +3363,7 @@ CtdlIPC *CtdlIPC_new(int argc, char **argv, char *hostbuf, char *portbuf)
 /*
  * Disconnect and delete the IPC class (destructor)
  */
-void CtdlIPC_delete(CtdlIPC * ipc)
-{
+void CtdlIPC_delete(CtdlIPC *ipc) {
 #ifdef HAVE_OPENSSL
 	if (ipc->ssl) {
 		SSL_shutdown(ipc->ssl);
@@ -3442,38 +3387,7 @@ void CtdlIPC_delete(CtdlIPC * ipc)
  * Disconnect and delete the IPC class (destructor)
  * Also NULLs out the pointer
  */
-void CtdlIPC_delete_ptr(CtdlIPC ** pipc)
-{
+void CtdlIPC_delete_ptr(CtdlIPC **pipc) {
 	CtdlIPC_delete(*pipc);
 	*pipc = NULL;
-}
-
-
-/*
- * return the file descriptor of the server socket so we can select() on it.
- *
- * FIXME: This is only used in chat mode; eliminate it when chat mode gets
- * rewritten...
- */
-int CtdlIPC_getsockfd(CtdlIPC * ipc)
-{
-	return ipc->sock;
-}
-
-
-/*
- * return one character
- *
- * FIXME: This is only used in chat mode; eliminate it when chat mode gets
- * rewritten...
- */
-char CtdlIPC_get(CtdlIPC * ipc)
-{
-	char buf[2];
-	char ch;
-
-	serv_read(ipc, buf, 1);
-	ch = (int) buf[0];
-
-	return (ch);
 }

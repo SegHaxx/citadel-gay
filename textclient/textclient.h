@@ -482,8 +482,6 @@ extern int (*error_printf)(char *s, ...);
 void setIPCDeathHook(void (*hook)(void));
 void setIPCErrorPrintf(int (*func)(char *s, ...));
 void connection_died(CtdlIPC* ipc, int using_ssl);
-int CtdlIPC_getsockfd(CtdlIPC* ipc);
-char CtdlIPC_get(CtdlIPC* ipc);
 void CtdlIPC_lock(CtdlIPC *ipc);
 void CtdlIPC_unlock(CtdlIPC *ipc);
 char *libcitadelclient_version_string(void);
