@@ -1,16 +1,14 @@
-/* 
- * Server functions which perform operations on room objects.
- *
- * Copyright (c) 1987-2021 by the citadel.org team
- *
- * This program is open source software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License, version 3.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- */
+// Server functions which perform operations on room objects.
+//
+// Copyright (c) 1987-2022 by the citadel.org team
+//
+// This program is open source software; you can redistribute it and/or modify
+// it under the terms of the GNU General Public License, version 3.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
 
 #include <stdio.h>
 #include <libcitadel.h>
@@ -24,10 +22,8 @@
 
 struct floor *floorcache[MAXFLOORS];
 
-/* 
- * Determine whether the currently logged in session has permission to read
- * messages in the current room.
- */
+// Determine whether the currently logged in session has permission to read
+// messages in the current room.
 int CtdlDoIHavePermissionToReadMessagesInThisRoom(void) {
 	if (	(!(CC->logged_in))
 		&& (!(CC->internal_pgm))
@@ -39,11 +35,9 @@ int CtdlDoIHavePermissionToReadMessagesInThisRoom(void) {
 }
 
 
-/*
- * Check to see whether we have permission to post a message in the current
- * room.  Returns a *CITADEL ERROR CODE* and puts a message in errmsgbuf, or
- * returns 0 on success.
- */
+// Check to see whether we have permission to post a message in the current
+// room.  Returns a *CITADEL ERROR CODE* and puts a message in errmsgbuf, or
+// returns 0 on success.
 int CtdlDoIHavePermissionToPostInThisRoom(
 	char *errmsgbuf, 
 	size_t n, 
@@ -81,17 +75,15 @@ int CtdlDoIHavePermissionToPostInThisRoom(
 	}
 
 	if ( (ra & UA_REPLYALLOWED) && (is_reply) ) {
-		/*
-		 * To be thorough, we ought to check to see if the message they are
-		 * replying to is actually a valid one in this room, but unless this
-		 * actually becomes a problem we'll go with high performance instead.
-		 */
+		// To be thorough, we ought to check to see if the message they are
+		// replying to is actually a valid one in this room, but unless this
+		// actually becomes a problem we'll go with high performance instead.
 		strcpy(errmsgbuf, "OK to reply here");
 		return(0);
 	}
 
 	if ( (ra & UA_REPLYALLOWED) && (!is_reply) ) {
-		/* Clarify what happened with a better error message */
+		// Clarify what happened with a better error message
 		snprintf(errmsgbuf, n, "You may only reply to existing messages here.");
 		return (ERROR + HIGHER_ACCESS_REQUIRED);
 	}
@@ -212,13 +204,11 @@ void CtdlRoomAccess(struct ctdlroom *roombuf, struct ctdluser *userbuf, int *res
 
 	/* For non-mailbox rooms... */
 	else {
-
-		/* User is allowed to post in the room unless:
-		 * - User is not validated
-		 * - User has no net privileges and it is a shared network room
-		 * - It is a read-only room
-		 * - It is a blog room (in which case we only allow replies to existing messages)
-		 */
+		// User is allowed to post in the room unless:
+		// - User is not validated
+		// - User has no net privileges and it is a shared network room
+		// - It is a read-only room
+		// - It is a blog room (in which case we only allow replies to existing messages)
 		int post_allowed = 1;
 		int reply_allowed = 1;
 		if (userbuf->axlevel < AxProbU) {
@@ -243,9 +233,8 @@ void CtdlRoomAccess(struct ctdlroom *roombuf, struct ctdluser *userbuf, int *res
 			retval = retval | UA_REPLYALLOWED;
 		}
 
-		/* If "collaborative deletion" is active for this room, any user who can post
-		 * is also allowed to delete
-		 */
+		// If "collaborative deletion" is active for this room, any user who can post
+		// is also allowed to delete
 		if (roombuf->QRflags2 & QR2_COLLABDEL) {
 			if (retval & UA_POSTALLOWED) {
 				retval = retval | UA_DELETEALLOWED;
@@ -283,16 +272,14 @@ void CtdlRoomAccess(struct ctdlroom *roombuf, struct ctdluser *userbuf, int *res
 		}
 	}
 
-	/* Aides can gain access to mailboxes as well, but they don't show
-	 * by default.
-	 */
+	// Aides can gain access to mailboxes as well, but they don't show by default.
 	if (	(userbuf->axlevel >= AxAideU)
 		&& (roombuf->QRflags & QR_MAILBOX)
 	) {
 		retval = retval | UA_GOTOALLOWED | UA_POSTALLOWED | UA_REPLYALLOWED;
 	}
 
-	/* Aides and Room Aides have admin privileges */
+	// Aides and Room Aides have admin privileges
 	if (	(userbuf->axlevel >= AxAideU)
 		|| (userbuf->usernum == roombuf->QRroomaide)
 	) {
@@ -600,6 +587,7 @@ void lputfloor(struct floor *flbuf, int floor_num) {
 	CtdlPutFloorLock(flbuf, floor_num);
 }
 
+
 /* 
  * Iterate through the room table, performing a callback for each room.
  */
@@ -691,7 +679,6 @@ int CtdlIsNonEditable(struct ctdlroom *qrbuf) {
 	/* Everything else is editable */
 	return (0);
 }
-
 
 
 /*
@@ -1065,26 +1052,25 @@ void CtdlDeleteRoom(struct ctdlroom *qrbuf) {
 
 	syslog(LOG_NOTICE, "room_ops: deleting room <%s>", qrbuf->QRname);
 
-	/* Delete the room's network configdb entry */
+	// Delete the room's network configdb entry
 	netcfg_keyname(configdbkeyname, qrbuf->QRnumber);
 	CtdlDelConfig(configdbkeyname);
 
-	/* Delete the messages in the room
-	 * (Careful: this opens an S_ROOMS critical section!)
-	 */
+	// Delete the messages in the room
+	// (Careful: this opens an S_ROOMS critical section!)
 	CtdlDeleteMessages(qrbuf->QRname, NULL, 0, "");
 
-	/* Flag the room record as not in use */
+	// Flag the room record as not in use
 	CtdlGetRoomLock(qrbuf, qrbuf->QRname);
 	qrbuf->QRflags = 0;
 	CtdlPutRoomLock(qrbuf);
 
-	/* then decrement the reference count for the floor */
+	// then decrement the reference count for the floor
 	lgetfloor(&flbuf, (int) (qrbuf->QRfloor));
 	flbuf.f_ref_count = flbuf.f_ref_count - 1;
 	lputfloor(&flbuf, (int) (qrbuf->QRfloor));
 
-	/* Delete the room record from the database! */
+	// Delete the room record from the database!
 	b_deleteroom(qrbuf->QRname);
 }
 
