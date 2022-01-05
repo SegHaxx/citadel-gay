@@ -94,10 +94,8 @@ int CtdlDoIHavePermissionToPostInThisRoom(
 }
 
 
-/*
- * Check whether the current user has permission to delete messages from
- * the current room (returns 1 for yes, 0 for no)
- */
+// Check whether the current user has permission to delete messages from
+// the current room (returns 1 for yes, 0 for no)
 int CtdlDoIHavePermissionToDeleteMessagesFromThisRoom(void) {
 	int ra;
 	CtdlRoomAccess(&CC->room, &CC->user, &ra, NULL);
@@ -106,10 +104,8 @@ int CtdlDoIHavePermissionToDeleteMessagesFromThisRoom(void) {
 }
 
 
-/*
- * Retrieve access control information for any user/room pair.
- * Yes, it has a couple of gotos.  If you don't like that, go die in a car fire.
- */
+// Retrieve access control information for any user/room pair.
+// Yes, it has a couple of gotos.  If you don't like that, go die in a car fire.
 void CtdlRoomAccess(struct ctdlroom *roombuf, struct ctdluser *userbuf, int *result, int *view) {
 	int retval = 0;
 	visit vbuf;
@@ -124,21 +120,21 @@ void CtdlRoomAccess(struct ctdlroom *roombuf, struct ctdluser *userbuf, int *res
 		is_guest = 1;
 	}
 
-	/* for internal programs, always do everything */
+	// for internal programs, always do everything
 	if (((CC->internal_pgm)) && (roombuf->QRflags & QR_INUSE)) {
 		retval = (UA_KNOWN | UA_GOTOALLOWED | UA_POSTALLOWED | UA_DELETEALLOWED | UA_REPLYALLOWED);
 		vbuf.v_view = 0;
 		goto SKIP_EVERYTHING;
 	}
 
-	/* If guest mode is enabled, always grant access to the Lobby */
+	// If guest mode is enabled, always grant access to the Lobby
 	if ((is_guest) && (!strcasecmp(roombuf->QRname, BASEROOM))) {
 		retval = (UA_KNOWN | UA_GOTOALLOWED);
 		vbuf.v_view = 0;
 		goto SKIP_EVERYTHING;
 	}
 
-	/* Locate any applicable user/room relationships */
+	// Locate any applicable user/room relationships
 	if (is_guest) {
 		memset(&vbuf, 0, sizeof vbuf);
 	}
@@ -146,7 +142,7 @@ void CtdlRoomAccess(struct ctdlroom *roombuf, struct ctdluser *userbuf, int *res
 		CtdlGetRelationship(&vbuf, userbuf, roombuf);
 	}
 
-	/* Force the properties of the Aide room */
+	// Force the properties of the Aide room
 	if (!strcasecmp(roombuf->QRname, CtdlGetConfigStr("c_aideroom"))) {
 		if (userbuf->axlevel >= AxAideU) {
 			retval = UA_KNOWN | UA_GOTOALLOWED | UA_POSTALLOWED | UA_DELETEALLOWED | UA_REPLYALLOWED;
@@ -156,32 +152,31 @@ void CtdlRoomAccess(struct ctdlroom *roombuf, struct ctdluser *userbuf, int *res
 		goto NEWMSG;
 	}
 
-	/* If this is a public room, it's accessible... */
+	// If this is a public room, it's accessible...
 	if (	((roombuf->QRflags & QR_PRIVATE) == 0) 
 		&& ((roombuf->QRflags & QR_MAILBOX) == 0)
 	) {
 		retval = retval | UA_KNOWN | UA_GOTOALLOWED;
 	}
 
-	/* If this is a preferred users only room, check access level */
+	// If this is a preferred users only room, check access level
 	if (roombuf->QRflags & QR_PREFONLY) {
 		if (userbuf->axlevel < AxPrefU) {
 			retval = retval & ~UA_KNOWN & ~UA_GOTOALLOWED;
 		}
 	}
 
-	/* For private rooms, check the generation number matchups */
+	// For private rooms, check the generation number matchups
 	if (	(roombuf->QRflags & QR_PRIVATE) 
 		&& ((roombuf->QRflags & QR_MAILBOX) == 0)
 	) {
 
-		/* An explicit match means the user belongs in this room */
+		// An explicit match means the user belongs in this room
 		if (vbuf.v_flags & V_ACCESS) {
 			retval = retval | UA_KNOWN | UA_GOTOALLOWED;
 		}
-		/* Otherwise, check if this is a guess-name or passworded
-		 * room.  If it is, a goto may at least be attempted
-		 */
+		// Otherwise, check if this is a guess-name or passworded
+		// room.  If it is, a goto may at least be attempted
 		else if (	(roombuf->QRflags & QR_PRIVATE)
 				|| (roombuf->QRflags & QR_PASSWORDED)
 		) {
@@ -190,19 +185,18 @@ void CtdlRoomAccess(struct ctdlroom *roombuf, struct ctdluser *userbuf, int *res
 		}
 	}
 
-	/* For mailbox rooms, also check the namespace */
-	/* Also, mailbox owners can delete their messages */
+	// For mailbox rooms, also check the namespace.   Also, mailbox owners can delete their messages
 	if ( (roombuf->QRflags & QR_MAILBOX) && (atol(roombuf->QRname) != 0)) {
 		if (userbuf->usernum == atol(roombuf->QRname)) {
 			retval = retval | UA_KNOWN | UA_GOTOALLOWED | UA_POSTALLOWED | UA_DELETEALLOWED | UA_REPLYALLOWED;
 		}
-		/* An explicit match means the user belongs in this room */
+		// An explicit match means the user belongs in this room
 		if (vbuf.v_flags & V_ACCESS) {
 			retval = retval | UA_KNOWN | UA_GOTOALLOWED | UA_POSTALLOWED | UA_DELETEALLOWED | UA_REPLYALLOWED;
 		}
 	}
 
-	/* For non-mailbox rooms... */
+	// For non-mailbox rooms...
 	else {
 		// User is allowed to post in the room unless:
 		// - User is not validated
@@ -243,7 +237,7 @@ void CtdlRoomAccess(struct ctdlroom *roombuf, struct ctdluser *userbuf, int *res
 
 	}
 
-	/* Check to see if the user has forgotten this room */
+	// Check to see if the user has forgotten this room
 	if (vbuf.v_flags & V_FORGET) {
 		retval = retval & ~UA_KNOWN;
 		if (	( ((roombuf->QRflags & QR_PRIVATE) == 0) 
@@ -255,12 +249,12 @@ void CtdlRoomAccess(struct ctdlroom *roombuf, struct ctdluser *userbuf, int *res
 		}
 	}
 
-	/* If user is explicitly locked out of this room, deny everything */
+	// If user is explicitly locked out of this room, deny everything
 	if (vbuf.v_flags & V_LOCKOUT) {
 		retval = retval & ~UA_KNOWN & ~UA_GOTOALLOWED & ~UA_POSTALLOWED & ~UA_REPLYALLOWED;
 	}
 
-	/* Aides get access to all private rooms */
+	// Aides get access to all private rooms
 	if (	(userbuf->axlevel >= AxAideU)
 		&& ((roombuf->QRflags & QR_MAILBOX) == 0)
 	) {
@@ -286,32 +280,30 @@ void CtdlRoomAccess(struct ctdlroom *roombuf, struct ctdluser *userbuf, int *res
 		retval = retval | UA_ADMINALLOWED | UA_DELETEALLOWED | UA_POSTALLOWED | UA_REPLYALLOWED;
 	}
 
-NEWMSG:	/* By the way, we also check for the presence of new messages */
+NEWMSG:	// By the way, we also check for the presence of new messages
 	if (is_msg_in_sequence_set(vbuf.v_seen, roombuf->QRhighest) == 0) {
 		retval = retval | UA_HASNEWMSGS;
 	}
 
-	/* System rooms never show up in the list. */
+	// System rooms never show up in the list.
 	if (roombuf->QRflags2 & QR2_SYSTEM) {
 		retval = retval & ~UA_KNOWN;
 	}
 
 SKIP_EVERYTHING:
-	/* Now give the caller the information it wants. */
+	// Now give the caller the information it wants.
 	if (result != NULL) *result = retval;
 	if (view != NULL) *view = vbuf.v_view;
 }
 
 
-/*
- * Self-checking stuff for a room record read into memory
- */
+// Self-checking stuff for a room record read into memory
 void room_sanity_check(struct ctdlroom *qrbuf) {
-	/* Mailbox rooms are always on the lowest floor */
+	// Mailbox rooms are always on the lowest floor
 	if (qrbuf->QRflags & QR_MAILBOX) {
 		qrbuf->QRfloor = 0;
 	}
-	/* Listing order of 0 is illegal except for base rooms */
+	// Listing order of 0 is illegal except for base rooms
 	if (qrbuf->QRorder == 0) {
 		if (	!(qrbuf->QRflags & QR_MAILBOX)
 			&& strncasecmp(qrbuf->QRname, CtdlGetConfigStr("c_baseroom"), ROOMNAMELEN)
@@ -323,9 +315,7 @@ void room_sanity_check(struct ctdlroom *qrbuf) {
 }
 
 
-/*
- * CtdlGetRoom()  -  retrieve room data from disk
- */
+// CtdlGetRoom()  -  retrieve room data from disk
 int CtdlGetRoom(struct ctdlroom *qrbuf, const char *room_name) {
 	struct cdbdata *cdbqr;
 	char lowercase_name[ROOMNAMELEN];
@@ -348,10 +338,10 @@ int CtdlGetRoom(struct ctdlroom *qrbuf, const char *room_name) {
 		return(1);			// empty room name , not valid
 	}
 
-	/* First, try the public namespace */
+	// First, try the public namespace
 	cdbqr = cdb_fetch(CDB_ROOMS, lowercase_name, strlen(lowercase_name));
 
-	/* If that didn't work, try the user's personal namespace */
+	// If that didn't work, try the user's personal namespace
 	if (cdbqr == NULL) {
 		snprintf(personal_lowercase_name, sizeof personal_lowercase_name, "%010ld.%s", CC->user.usernum, lowercase_name);
 		cdbqr = cdb_fetch(CDB_ROOMS, personal_lowercase_name, strlen(personal_lowercase_name));
@@ -368,9 +358,7 @@ int CtdlGetRoom(struct ctdlroom *qrbuf, const char *room_name) {
 }
 
 
-/*
- * CtdlGetRoomLock()  -  same as getroom() but locks the record (if supported)
- */
+// CtdlGetRoomLock()  -  same as getroom() but locks the record (if supported)
 int CtdlGetRoomLock(struct ctdlroom *qrbuf, const char *room_name) {
 	register int retval;
 	retval = CtdlGetRoom(qrbuf, room_name);
@@ -379,12 +367,9 @@ int CtdlGetRoomLock(struct ctdlroom *qrbuf, const char *room_name) {
 }
 
 
-/*
- * b_putroom()  -  back end to putroom() and b_deleteroom()
- *              (if the supplied buffer is NULL, delete the room record)
- */
-void b_putroom(struct ctdlroom *qrbuf, char *room_name)
-{
+// b_putroom()  -  back end to putroom() and b_deleteroom()
+// (if the supplied buffer is NULL, delete the room record)
+void b_putroom(struct ctdlroom *qrbuf, char *room_name) {
 	char lowercase_name[ROOMNAMELEN];
 	char *aptr, *bptr;
 	long len;
@@ -409,35 +394,27 @@ void b_putroom(struct ctdlroom *qrbuf, char *room_name)
 }
 
 
-/* 
- * CtdlPutRoom()  -  store room data to disk
- */
+// CtdlPutRoom()  -  store room data to disk
 void CtdlPutRoom(struct ctdlroom *qrbuf) {
 	b_putroom(qrbuf, qrbuf->QRname);
 }
 
 
-/*
- * b_deleteroom()  -  delete a room record from disk
- */
+// b_deleteroom()  -  delete a room record from disk
 void b_deleteroom(char *room_name) {
 	b_putroom(NULL, room_name);
 }
 
 
-/*
- * CtdlPutRoomLock()  -  same as CtdlPutRoom() but unlocks the record (if supported)
- */
+// CtdlPutRoomLock()  -  same as CtdlPutRoom() but unlocks the record (if supported)
 void CtdlPutRoomLock(struct ctdlroom *qrbuf) {
 	CtdlPutRoom(qrbuf);
 	end_critical_section(S_ROOMS);
 }
 
 
-/*
- * CtdlGetFloorByName()  -  retrieve the number of the named floor
- * return < 0 if not found else return floor number
- */
+// CtdlGetFloorByName()  -  retrieve the number of the named floor
+// return < 0 if not found else return floor number
 int CtdlGetFloorByName(const char *floor_name) {
 	int a;
 	struct floor *flbuf = NULL;
@@ -445,7 +422,7 @@ int CtdlGetFloorByName(const char *floor_name) {
 	for (a = 0; a < MAXFLOORS; ++a) {
 		flbuf = CtdlGetCachedFloor(a);
 
-		/* check to see if it already exists */
+		// check to see if it already exists
 		if ((!strcasecmp(flbuf->f_name, floor_name)) && (flbuf->f_flags & F_INUSE)) {
 			return a;
 		}
@@ -454,11 +431,8 @@ int CtdlGetFloorByName(const char *floor_name) {
 }
 
 
-/*
- * CtdlGetFloorByNameLock()  -  retrieve floor number for given floor and lock the floor list.
- */
-int CtdlGetFloorByNameLock(const char *floor_name)
-{
+// CtdlGetFloorByNameLock()  -  retrieve floor number for given floor and lock the floor list.
+int CtdlGetFloorByNameLock(const char *floor_name) {
 	begin_critical_section(S_FLOORTAB);
 	return CtdlGetFloorByName(floor_name);
 }

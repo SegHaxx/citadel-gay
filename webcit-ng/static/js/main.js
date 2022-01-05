@@ -58,9 +58,8 @@ ctdl_startup = async() => {
 
 
 // Display a room list in the main div.
-//
 function display_room_list() {
-	document.getElementById("roomlist").innerHTML = "<img src=\"/ctdl/s/static/throbber.gif\" />";	// show throbber while loading
+	document.getElementById("roomlist").innerHTML = "<img src=\"/ctdl/s/images/throbber.gif\" />";	// show throbber while loading
 
 	fetch_room_list = async() => {
 		response = await fetch("/ctdl/r/");
@@ -68,13 +67,15 @@ function display_room_list() {
 		if (response.ok) {
 			display_room_list_renderer(room_list);
 		}
+		else {
+			document.getElementById("roomlist").innerHTML = "<i>error</i>";
+		}
 	}
 	fetch_room_list();
 }
 
 
 // Renderer for display_room_list()
-//
 function display_room_list_renderer(data) {
 	data = data.sort(function(a,b) {
 		if (a.floor != b.floor) {

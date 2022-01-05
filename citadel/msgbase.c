@@ -384,7 +384,7 @@ int CtdlMsgCmp(struct CtdlMessage *msg, struct CtdlMessage *template) {
 		}
 	}
 
-	/* All compares succeeded: we have a match! */
+	// All compares succeeded: we have a match!
 	return 0;
 }
 
@@ -464,7 +464,7 @@ void CtdlSetSeen(long *target_msgnums, int num_target_msgnums,
 	is_set = malloc(num_msgs * sizeof(char));
 	memset(is_set, 0, (num_msgs * sizeof(char)) );
 
-	/* Decide which message set we're manipulating */
+	// Decide which message set we're manipulating
 	switch(which_set) {
 	case ctdlsetseen_seen:
 		vset = NewStrBufPlain(vbuf.v_seen, -1);
@@ -652,7 +652,7 @@ int CtdlForEachMessage(int mode, long ref, char *search_string,
 		need_to_free_re = 1;
 	}
 
-	/* Learn about the user and room in question */
+	// Learn about the user and room in question
 	if (server_shutting_down) {
 		if (need_to_free_re) regfree(&re);
 		return -1;
@@ -670,18 +670,18 @@ int CtdlForEachMessage(int mode, long ref, char *search_string,
 		return -1;
 	}
 
-	/* Load the message list */
+	// Load the message list
 	cdbfr = cdb_fetch(CDB_MSGLISTS, &CC->room.QRnumber, sizeof(long));
 	if (cdbfr == NULL) {
 		if (need_to_free_re) regfree(&re);
-		return 0;	/* No messages at all?  No further action. */
+		return 0;	// No messages at all?  No further action.
 	}
 
 	msglist = (long *) cdbfr->ptr;
 	num_msgs = cdbfr->len / sizeof(long);
 
-	cdbfr->ptr = NULL;	/* clear this so that cdb_free() doesn't free it */
-	cdb_free(cdbfr);	/* we own this memory now */
+	cdbfr->ptr = NULL;	// clear this so that cdb_free() doesn't free it
+	cdb_free(cdbfr);	// we own this memory now
 
 	/*
 	 * Now begin the traversal.
@@ -801,18 +801,17 @@ int CtdlForEachMessage(int mode, long ref, char *search_string,
 				is_seen = 0;
 			}
 			else {
-				is_seen = is_msg_in_sequence_set(
-							vbuf.v_seen, thismsg);
+				is_seen = is_msg_in_sequence_set(vbuf.v_seen, thismsg);
 				if (is_seen) lastold = thismsg;
 			}
-			if ((thismsg > 0L)
-			    && (
-
-				       (mode == MSGS_ALL)
-				       || ((mode == MSGS_OLD) && (is_seen))
-				       || ((mode == MSGS_NEW) && (!is_seen))
-				       || ((mode == MSGS_LAST) && (a >= (num_msgs - ref)))
-				   || ((mode == MSGS_FIRST) && (a < ref))
+			if (
+				(thismsg > 0L)
+			&& (
+				(mode == MSGS_ALL)
+				|| ((mode == MSGS_OLD) && (is_seen))
+				|| ((mode == MSGS_NEW) && (!is_seen))
+				|| ((mode == MSGS_LAST) && (a >= (num_msgs - ref)))
+				|| ((mode == MSGS_FIRST) && (a < ref))
 				|| ((mode == MSGS_GT) && (thismsg > ref))
 				|| ((mode == MSGS_LT) && (thismsg < ref))
 				|| ((mode == MSGS_EQ) && (thismsg == ref))
@@ -1224,7 +1223,6 @@ void fixed_output_post(char *name, char *filename, char *partnum, char *disp,
 
 
 // Inline callback function for mime parser that wants to display text
-//
 void fixed_output(char *name, char *filename, char *partnum, char *disp,
 	  	void *content, char *cbtype, char *cbcharset, size_t length,
 		char *encoding, char *cbid, void *cbuserdata)
@@ -1243,7 +1241,6 @@ void fixed_output(char *name, char *filename, char *partnum, char *disp,
 
 	// If we're in the middle of a multipart/alternative scope and
 	// we've already printed another section, skip this one.
-	//	
    	if ( (ma->is_ma) && (ma->did_print) ) {
 		syslog(LOG_DEBUG, "msgbase: skipping part %s (%s)", partnum, cbtype);
 		return;
@@ -1296,7 +1293,6 @@ void fixed_output(char *name, char *filename, char *partnum, char *disp,
 // and then set ma->chosen_pref to that MIME type's position in our preference
 // list.  If we then hit another match, we only replace the first match if
 // the preference value is lower.
-//
 void choose_preferred(char *name, char *filename, char *partnum, char *disp,
 	  	void *content, char *cbtype, char *cbcharset, size_t length,
 		char *encoding, char *cbid, void *cbuserdata)
@@ -1321,7 +1317,6 @@ void choose_preferred(char *name, char *filename, char *partnum, char *disp,
 
 
 // Now that we've chosen our preferred part, output it.
-//
 void output_preferred(char *name, 
 		      char *filename, 
 		      char *partnum, 

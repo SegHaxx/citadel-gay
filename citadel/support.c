@@ -1,6 +1,4 @@
-/*
- * Server-side utility functions
- */
+// Server-side utility functions
 
 #include "sysdep.h"
 #include <stdio.h>
@@ -11,24 +9,21 @@
 #include "citadel.h"
 #include "support.h"
 
-/*
- * strproc()  -  make a string 'nice'
- */
-void strproc(char *string)
-{
+// strproc()  -  make a string 'nice'
+void strproc(char *string) {
 	int a, b;
 
 	if (string == NULL) return;
 	if (IsEmptyStr(string)) return;
 
-	/* Convert non-printable characters to blanks */
+	// Convert non-printable characters to blanks
 	for (a=0; !IsEmptyStr(&string[a]); ++a) {
 		if (string[a]<32) string[a]=32;
 		if (string[a]>126) string[a]=32;
 	}
 
-	/* a is now the length of our string. */
-	/* Remove leading and trailing blanks */
+	// a is now the length of our string.
+	// Remove leading and trailing blanks
 	while( (string[a-1]<33) && (!IsEmptyStr(string)) )
 		string[--a]=0;
 	b = 0;
@@ -37,7 +32,7 @@ void strproc(char *string)
 	if (b > 0)
 		memmove(string,&string[b], a - b + 1);
 
-	/* Remove double blanks */
+	// Remove double blanks
 	for (a=0; !IsEmptyStr(&string[a]); ++a) {
 		if ((string[a]==32)&&(string[a+1]==32)) {
 			strcpy(&string[a],&string[a+1]);
@@ -45,7 +40,7 @@ void strproc(char *string)
 		}
 	}
 
-	/* remove characters which would interfere with the network */
+	// remove characters which would interfere with the network
 	for (a=0; !IsEmptyStr(&string[a]); ++a) {
 		while (string[a]=='!') strcpy(&string[a],&string[a+1]);
 		while (string[a]=='@') strcpy(&string[a],&string[a+1]);
@@ -58,13 +53,9 @@ void strproc(char *string)
 }
 
 
-
-/*
- * get a line of text from a file
- * ignores lines starting with #
- */
-int getstring(FILE *fp, char *string)
-{
+// get a line of text from a file
+// ignores lines starting with #
+int getstring(FILE *fp, char *string) {
 	int a,c;
 	do {
 		strcpy(string,"");

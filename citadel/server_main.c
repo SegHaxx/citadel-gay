@@ -1,6 +1,6 @@
 // citserver's main() function lives here.
 // 
-// Copyright (c) 1987-2021 by the citadel.org team
+// Copyright (c) 1987-2022 by the citadel.org team
 //
 // This program is open source software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License version 3.
@@ -33,10 +33,8 @@ const char *CitadelServiceTCP="citadel-TCP";
 int sanity_diag_mode = 0;
 
 
-/*
- * Create or remove a lock file, so we only have one Citadel Server running at a time.
- * Set 'op' to nonzero to lock, zero to unlock.
- */
+// Create or remove a lock file, so we only have one Citadel Server running at a time.
+// Set 'op' to nonzero to lock, zero to unlock.
 void ctdl_lockfile(int op) {
 	static char lockfilename[PATH_MAX];
 	static FILE *fp;
@@ -63,9 +61,7 @@ void ctdl_lockfile(int op) {
 }
 
 
-/*
- * Here's where it all begins.
- */
+// Here's where it all begins.
 int main(int argc, char **argv) {
 
 	char facility[32];
@@ -82,12 +78,12 @@ int main(int argc, char **argv) {
 	struct stat filestats;
 #endif
 
-	/* Tell 'em who's in da house */
+	// Tell 'em who's in da house
 	syslog(LOG_INFO, " ");
 	syslog(LOG_INFO, " ");
 	syslog(LOG_INFO, "*** Citadel server engine ***\n");
  	syslog(LOG_INFO, "Version %d (build %s) ***", REV_LEVEL, svn_revision());
-	syslog(LOG_INFO, "Copyright (C) 1987-2021 by the Citadel development team.");
+	syslog(LOG_INFO, "Copyright (C) 1987-2022 by the Citadel development team.");
 	syslog(LOG_INFO, " ");
 	syslog(LOG_INFO, "This program is open source software: you can redistribute it and/or");
 	syslog(LOG_INFO, "modify it under the terms of the GNU General Public License, version 3.");
@@ -99,7 +95,7 @@ int main(int argc, char **argv) {
 	syslog(LOG_INFO, " ");
 	syslog(LOG_INFO, "%s", libcitadel_version_string());
 
-	/* parse command-line arguments */
+	// parse command-line arguments
 	while ((a=getopt(argc, argv, "cl:dh:x:t:B:Dru:s:")) != EOF) switch(a) {
 
 		// test this binary for compatibility and exit
@@ -195,7 +191,7 @@ int main(int argc, char **argv) {
 		exit(CTDLEXIT_UNUSER);
 	}
 
-	/* Last ditch effort to determine the user name ... if there's a user called "citadel" then use that */
+	// Last ditch effort to determine the user name ... if there's a user called "citadel" then use that
 	if (ctdluid == 0) {
 		p = getpwnam("citadel");
 		if (!p) {
@@ -212,7 +208,7 @@ int main(int argc, char **argv) {
 		}
 	}
 
-	/* initialize the master context */
+	// initialize the master context
 	InitializeMasterCC();
 	InitializeMasterTSD();
 
@@ -222,7 +218,7 @@ int main(int argc, char **argv) {
 		syslog_facility
 	);
 
-	/* daemonize, if we were asked to */
+	// daemonize, if we were asked to
 	if (running_as_daemon) {
 		start_daemon(0);
 		drop_root_perms = 1;
@@ -243,19 +239,15 @@ int main(int argc, char **argv) {
 	syslog(LOG_INFO, "main: upgrading modules");		// Run any upgrade entry points
 	upgrade_modules();
 
-	/*
-	 * Load the user for the masterCC or create them if they don't exist
-	 */
+	// Load the user for the masterCC or create them if they don't exist
 	if (CtdlGetUser(&masterCC.user, "SYS_Citadel")) {
-		/* User doesn't exist. We can't use create user here as the user number needs to be 0 */
+		// User doesn't exist. We can't use create user here as the user number needs to be 0
 		strcpy (masterCC.user.fullname, "SYS_Citadel") ;
 		CtdlPutUser(&masterCC.user);
-		CtdlGetUser(&masterCC.user, "SYS_Citadel");	/* Just to be safe */
+		CtdlGetUser(&masterCC.user, "SYS_Citadel");	// Just to be safe
 	}
 	
-	/*
-	 * Bind the server to a Unix-domain socket (user client access)
-	 */
+	// Bind the server to a Unix-domain socket (user client access)
 	CtdlRegisterServiceHook(0,
 				file_citadel_socket,
 				citproto_begin_session,
@@ -263,20 +255,16 @@ int main(int argc, char **argv) {
 				do_async_loop,
 				CitadelServiceUDS);
 
-	/*
-	 * Bind the server to a Unix-domain socket (admin client access)
-	 */
+	// Bind the server to a Unix-domain socket (admin client access)
 	CtdlRegisterServiceHook(0,
 				file_citadel_admin_socket,
 				citproto_begin_admin_session,
 				do_command_loop,
 				do_async_loop,
 				CitadelServiceUDS);
-	chmod(file_citadel_admin_socket, S_IRWXU);	/* for your eyes only */
+	chmod(file_citadel_admin_socket, S_IRWXU);	// for your eyes only
 
-	/*
-	 * Bind the server to our favorite TCP port (usually 504).
-	 */
+	// Bind the server to our favorite TCP port (usually 504).
 	CtdlRegisterServiceHook(CtdlGetConfigInt("c_port_number"),
 				NULL,
 				citproto_begin_session,
@@ -284,30 +272,22 @@ int main(int argc, char **argv) {
 				do_async_loop,
 				CitadelServiceTCP);
 
-	/*
-	 * Load any server-side extensions available here.
-	 */
+	// Load any server-side extensions available here.
 	syslog(LOG_INFO, "main: initializing server extensions");
 	initialise_modules(0);
 
-	/*
-	 * If we need host auth, start our chkpwd daemon.
-	 */
+	// If we need host auth, start our chkpwd daemon.
 	if (CtdlGetConfigInt("c_auth_mode") == AUTHMODE_HOST) {
 		start_chkpwd_daemon();
 	}
 
-	/*
-	 * check, whether we're fired up another time after a crash.
-	 * if, post an aide message, so the admin has a chance to react.
-	 */
+	// check, whether we're fired up another time after a crash.
+	// if, post an aide message, so the admin has a chance to react.
 	checkcrash();
 
-	/*
-	 * Now that we've bound the sockets, change to the Citadel user id and its corresponding group ids
-	 */
+	// Now that we've bound the sockets, change to the Citadel user id and its corresponding group ids
 	if (drop_root_perms) {
-		cdb_chmod_data();	/* make sure we own our data files */
+		cdb_chmod_data();	// make sure we own our data files
 		getpwuid_r(ctdluid, &pw, pwbuf, sizeof(pwbuf), &pwp);
 		if (pwp == NULL)
 			syslog(LOG_ERR, "main: WARNING, getpwuid(%ld): %m Group IDs will be incorrect.", (long)CTDLUID);
@@ -326,13 +306,13 @@ int main(int argc, char **argv) {
 #endif
 	}
 
-	/* We want to check for idle sessions once per minute */
+	// We want to check for idle sessions once per minute
 	CtdlRegisterSessionHook(terminate_idle_sessions, EVT_TIMER, PRIO_CLEANUP + 1);
 
-	/* Go into multithreaded mode.  When this call exits, the server is stopping. */
+	// Go into multithreaded mode.  When this call exits, the server is stopping.
 	go_threading();
 	
-	/* Get ready to shut down the server. */
+	// Get ready to shut down the server.
 	int exit_code = master_cleanup(exit_signal);
 	ctdl_lockfile(0);
 	if (restart_server) {

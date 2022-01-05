@@ -1,4 +1,3 @@
-//
 // Functions in this module handle SSL encryption when WebCit is running
 // as an HTTPS server.
 //
@@ -78,7 +77,7 @@ void init_ssl(void) {
 
 // Check the modification time of the key and certificate -- reload if they changed
 void update_key_and_cert_if_needed(void) {
-	static time_t cert_mtime = 0;
+	static time_t previous_mtime = 0;
 	struct stat keystat;
 	struct stat certstat;
 
@@ -91,9 +90,9 @@ void update_key_and_cert_if_needed(void) {
 		return;
 	}
 
-	if ((keystat.st_mtime > cert_mtime) || (certstat.st_mtime > cert_mtime)) {
+	if ((keystat.st_mtime + certstat.st_mtime) != previous_mtime) {
 		bind_to_key_and_certificate();
-		cert_mtime = certstat.st_mtime;
+		previous_mtime = keystat.st_mtime + certstat.st_mtime;
 	}
 }
 
