@@ -1,16 +1,14 @@
-/* 
- * Server functions which perform operations on user objects.
- *
- * Copyright (c) 1987-2020 by the citadel.org team
- *
- * This program is open source software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License, version 3.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- */
+// Server functions which perform operations on user objects.
+//
+// Copyright (c) 1987-2022 by the citadel.org team
+//
+// This program is open source software; you can redistribute it and/or
+// modify it under the terms of the GNU General Public License, version 3.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
 
 
 #include "support.h"
@@ -22,11 +20,8 @@
 #include "internet_addressing.h"
 
 
-/*
- * USER cmd
- */
-void cmd_user(char *cmdbuf)
-{
+// USER command -- attempt to log in as an existing user
+void cmd_user(char *cmdbuf) {
 	char username[256];
 	int a;
 
@@ -47,8 +42,7 @@ void cmd_user(char *cmdbuf)
 			CtdlGetConfigStr("c_nodename"), CtdlGetConfigInt("c_maxsessions"));
 		return;
 	case login_ok:
-		cprintf("%d Password required for %s\n",
-			MORE_DATA, CC->curr_user);
+		cprintf("%d Password required for %s\n", MORE_DATA, CC->curr_user);
 		return;
 	case login_not_found:
 		cprintf("%d %s not found.\n", ERROR + NO_SUCH_USER, username);
@@ -59,8 +53,8 @@ void cmd_user(char *cmdbuf)
 }
 
 
-void cmd_pass(char *buf)
-{
+// PASS command -- complete logging in as an existing user (used after USER returns MORE_DATA)
+void cmd_pass(char *buf) {
 	char password[SIZ];
 	int a;
 	long len;
@@ -87,11 +81,8 @@ void cmd_pass(char *buf)
 }
 
 
-/*
- * cmd_newu()  -  create a new user account and log in as that user
- */
-void cmd_newu(char *cmdbuf)
-{
+// cmd_newu()  -  create a new user account and log in as that user
+void cmd_newu(char *cmdbuf) {
 	int a;
 	char username[SIZ];
 
@@ -102,8 +93,7 @@ void cmd_newu(char *cmdbuf)
 	}
 
 	if (CtdlGetConfigInt("c_disable_newu")) {
-		cprintf("%d Self-service user account creation "
-			"is disabled on this system.\n", ERROR + NOT_HERE);
+		cprintf("%d Self-service user account creation is disabled on this system.\n", ERROR + NOT_HERE);
 		return;
 	}
 
@@ -127,7 +117,8 @@ void cmd_newu(char *cmdbuf)
 
 	if ((!strcasecmp(username, "bbs")) ||
 	    (!strcasecmp(username, "new")) ||
-	    (!strcasecmp(username, "."))) {
+	    (!strcasecmp(username, "."))
+	) {
 		cprintf("%d '%s' is an invalid login name.\n", ERROR + ILLEGAL_VALUE, username);
 		return;
 	}
@@ -136,25 +127,25 @@ void cmd_newu(char *cmdbuf)
 
 	if (a == 0) {
 		logged_in_response();
-	} else if (a == ERROR + ALREADY_EXISTS) {
+	}
+	else if (a == ERROR + ALREADY_EXISTS) {
 		cprintf("%d '%s' already exists.\n",
 			ERROR + ALREADY_EXISTS, username);
 		return;
-	} else if (a == ERROR + INTERNAL_ERROR) {
+	}
+	else if (a == ERROR + INTERNAL_ERROR) {
 		cprintf("%d Internal error - user record disappeared?\n",
 			ERROR + INTERNAL_ERROR);
 		return;
-	} else {
+	}
+	else {
 		cprintf("%d unknown error\n", ERROR + INTERNAL_ERROR);
 	}
 }
 
 
-/*
- * set password - citadel protocol implementation
- */
-void cmd_setp(char *new_pw)
-{
+// set password - citadel protocol implementation
+void cmd_setp(char *new_pw) {
 	if (CtdlAccessCheck(ac_logged_in)) {
 		return;
 	}
@@ -181,11 +172,8 @@ void cmd_setp(char *new_pw)
 }
 
 
-/*
- * cmd_creu() - administratively create a new user account (do not log in to it)
- */
-void cmd_creu(char *cmdbuf)
-{
+// cmd_creu() - administratively create a new user account (do not log in to it)
+void cmd_creu(char *cmdbuf) {
 	int a;
 	char username[SIZ];
 	char password[SIZ];
@@ -215,38 +203,37 @@ void cmd_creu(char *cmdbuf)
 		}
 		cprintf("%d User '%s' created %s.\n", CIT_OK, username, (!IsEmptyStr(password)) ? "and password set" : "with no password");
 		return;
-	} else if (a == ERROR + ALREADY_EXISTS) {
+	}
+	else if (a == ERROR + ALREADY_EXISTS) {
 		cprintf("%d '%s' already exists.\n", ERROR + ALREADY_EXISTS, username);
 		return;
-	} else if ( (CtdlGetConfigInt("c_auth_mode") != AUTHMODE_NATIVE) && (a == ERROR + NO_SUCH_USER) ) {
+	}
+	else if ( (CtdlGetConfigInt("c_auth_mode") != AUTHMODE_NATIVE) && (a == ERROR + NO_SUCH_USER) ) {
 		cprintf("%d User accounts are not created within Citadel in host authentication mode.\n", ERROR + NO_SUCH_USER);
 		return;
-	} else {
+	}
+	else {
 		cprintf("%d An error occurred creating the user account.\n", ERROR + INTERNAL_ERROR);
 	}
 }
 
 
-/*
- * get user parameters
- */
-void cmd_getu(char *cmdbuf)
-{
-	if (CtdlAccessCheck(ac_logged_in))
+// get user parameters
+void cmd_getu(char *cmdbuf) {
+	if (CtdlAccessCheck(ac_logged_in)) {
 		return;
+	}
 
 	CtdlGetUser(&CC->user, CC->curr_user);
 	cprintf("%d 80|24|%d|\n", CIT_OK, (CC->user.flags & US_USER_SET));
 }
 
 
-/*
- * set user parameters
- */
-void cmd_setu(char *new_parms)
-{
-	if (CtdlAccessCheck(ac_logged_in))
+// set user parameters
+void cmd_setu(char *new_parms) {
+	if (CtdlAccessCheck(ac_logged_in)) {
 		return;
+	}
 
 	if (num_parms(new_parms) < 3) {
 		cprintf("%d Usage error.\n", ERROR + ILLEGAL_VALUE);
@@ -260,11 +247,8 @@ void cmd_setu(char *new_parms)
 }
 
 
-/*
- * set last read pointer
- */
-void cmd_slrp(char *new_ptr)
-{
+// set last read pointer (marks all messages in the current room as read, up to the specified point)
+void cmd_slrp(char *new_ptr) {
 	long newlr;
 	visit vbuf;
 	visit original_vbuf;
@@ -275,7 +259,8 @@ void cmd_slrp(char *new_ptr)
 
 	if (!strncasecmp(new_ptr, "highest", 7)) {
 		newlr = CC->room.QRhighest;
-	} else {
+	}
+	else {
 		newlr = atol(new_ptr);
 	}
 
@@ -286,9 +271,10 @@ void cmd_slrp(char *new_ptr)
 	vbuf.v_lastseen = newlr;
 	snprintf(vbuf.v_seen, sizeof vbuf.v_seen, "*:%ld", newlr);
 
-	/* Only rewrite the record if it changed */
-	if ( (vbuf.v_lastseen != original_vbuf.v_lastseen)
-	   || (strcmp(vbuf.v_seen, original_vbuf.v_seen)) ) {
+	// Only rewrite the record if it changed
+	if (	(vbuf.v_lastseen != original_vbuf.v_lastseen)
+		|| (strcmp(vbuf.v_seen, original_vbuf.v_seen))
+	) {
 		CtdlSetRelationship(&vbuf, &CC->user, &CC->room);
 	}
 
@@ -326,7 +312,7 @@ void cmd_gtsn(char *argbuf) {
 		return;
 	}
 
-	/* Learn about the user and room in question */
+	// Learn about the user and room in question
 	CtdlGetRelationship(&vbuf, &CC->user, &CC->room);
 
 	cprintf("%d ", CIT_OK);
@@ -335,27 +321,24 @@ void cmd_gtsn(char *argbuf) {
 }
 
 
-/*
- * INVT and KICK commands
- */
+// INVT and KICK commands (grant/revoke access to an invitation-only room)
 void cmd_invt_kick(char *iuser, int op) {
 
-	/*
-	 * These commands are only allowed by admins, room admins,
-	 * and room namespace owners
-	 */
+	// These commands are only allowed by admins, room admins,
+	// and room namespace owners
 	if (is_room_aide()) {
-		/* access granted */
-	} else if ( ((atol(CC->room.QRname) == CC->user.usernum) ) && (CC->user.usernum != 0) ) {
-		/* access granted */
-	} else {
-		/* access denied */
+		// access granted
+	}
+	else if ( ((atol(CC->room.QRname) == CC->user.usernum) ) && (CC->user.usernum != 0) ) {
+		// access granted
+	}
+	else {
+		// access denied
 		cprintf("%d Higher access or room ownership required.\n", ERROR + HIGHER_ACCESS_REQUIRED);
 		return;
 	}
 
-	if (!strncasecmp(CC->room.QRname, CtdlGetConfigStr("c_baseroom"),
-			 ROOMNAMELEN)) {
+	if (!strncasecmp(CC->room.QRname, CtdlGetConfigStr("c_baseroom"), ROOMNAMELEN)) {
 		cprintf("%d Can't add/remove users from this room.\n", ERROR + NOT_HERE);
 		return;
 	}
@@ -383,11 +366,8 @@ void cmd_kick(char *iuser) {
 }
 
 
-/*
- * forget (Zap) the current room
- */
-void cmd_forg(char *argbuf)
-{
+// forget (Zap) the current room
+void cmd_forg(char *argbuf) {
 
 	if (CtdlAccessCheck(ac_logged_in)) {
 		return;
@@ -402,11 +382,8 @@ void cmd_forg(char *argbuf)
 }
 
 
-/*
- * Get Next Unregistered User
- */
-void cmd_gnur(char *argbuf)
-{
+// Get Next Unregistered User
+void cmd_gnur(char *argbuf) {
 	struct cdbdata *cdbus;
 	struct ctdluser usbuf;
 
@@ -419,9 +396,7 @@ void cmd_gnur(char *argbuf)
 		return;
 	}
 
-	/* There are unvalidated users.  Traverse the user database,
-	 * and return the first user we find that needs validation.
-	 */
+	// There are unvalidated users.  Traverse the user database, and return the first user we find that needs validation.
 	cdb_rewind(CDB_USERS);
 	while (cdbus = cdb_next_item(CDB_USERS), cdbus != NULL) {
 		memset(&usbuf, 0, sizeof(struct ctdluser));
@@ -434,10 +409,7 @@ void cmd_gnur(char *argbuf)
 		}
 	}
 
-	/* If we get to this point, there are no more unvalidated users.
-	 * Therefore we clear the "users need validation" flag.
-	 */
-
+	// If we get to this point, there are no more unvalidated users.  Therefore we clear the "users need validation" flag.
 	begin_critical_section(S_CONTROL);
 	int flags;
 	flags = CtdlGetConfigInt("MMflags");
@@ -448,11 +420,8 @@ void cmd_gnur(char *argbuf)
 }
 
 
-/*
- * validate a user
- */
-void cmd_vali(char *v_args)
-{
+// validate a user
+void cmd_vali(char *v_args) {
 	char user[128];
 	int newax;
 	struct ctdluser userbuf;
@@ -474,7 +443,7 @@ void cmd_vali(char *v_args)
 
 	CtdlPutUserLock(&userbuf);
 
-	/* If the access level was set to zero, delete the user */
+	// If the access level was set to zero, delete the user
 	if (newax == 0) {
 		if (purge_user(user) == 0) {
 			cprintf("%d %s Deleted.\n", CIT_OK, userbuf.fullname);
@@ -485,11 +454,8 @@ void cmd_vali(char *v_args)
 }
 
 
-/*
- * List one user (this works with cmd_list)
- */
-void ListThisUser(char *username, void *data)
-{
+// List one user (this works with cmd_list)
+void ListThisUser(char *username, void *data) {
 	char *searchstring;
 	struct ctdluser usbuf;
 
@@ -518,11 +484,8 @@ void ListThisUser(char *username, void *data)
 }
 
 
-/* 
- *  List users (searchstring may be empty to list all users)
- */
-void cmd_list(char *cmdbuf)
-{
+//  List users (searchstring may be empty to list all users)
+void cmd_list(char *cmdbuf) {
 	char searchstring[256];
 	extract_token(searchstring, cmdbuf, 0, '|', sizeof searchstring);
 	striplt(searchstring);
@@ -532,11 +495,8 @@ void cmd_list(char *cmdbuf)
 }
 
 
-/*
- * assorted info we need to check at login
- */
-void cmd_chek(char *argbuf)
-{
+// assorted info we need to check at login
+void cmd_chek(char *argbuf) {
 	int mail = 0;
 	int regis = 0;
 	int vali = 0;
@@ -557,31 +517,25 @@ void cmd_chek(char *argbuf)
 	}
 
 	mail = InitialMailCheck();		// check for mail
-
 	cprintf("%d %d|%d|%d|%s|\n", CIT_OK, mail, regis, vali, CC->cs_inet_email);
 }
 
 
-/*
- * check to see if a user exists
- */
-void cmd_qusr(char *who)
-{
+// check to see if a user exists
+void cmd_qusr(char *who) {
 	struct ctdluser usbuf;
 
 	if (CtdlGetUser(&usbuf, who) == 0) {
 		cprintf("%d %s\n", CIT_OK, usbuf.fullname);
-	} else {
+	}
+	else {
 		cprintf("%d No such user.\n", ERROR + NO_SUCH_USER);
 	}
 }
 
 
-/*
- * Administrative Get User Parameters
- */
-void cmd_agup(char *cmdbuf)
-{
+// Administrative Get User Parameters
+void cmd_agup(char *cmdbuf) {
 	struct ctdluser usbuf;
 	char requested_user[128];
 
@@ -608,11 +562,8 @@ void cmd_agup(char *cmdbuf)
 }
 
 
-/*
- * Administrative Set User Parameters
- */
-void cmd_asup(char *cmdbuf)
-{
+// Administrative Set User Parameters
+void cmd_asup(char *cmdbuf) {
 	struct ctdluser usbuf;
 	char requested_user[128];
 	char notify[SIZ];
@@ -672,9 +623,7 @@ void cmd_asup(char *cmdbuf)
 }
 
 
-/*
- * Citadel protocol command to do the same
- */
+// Citadel protocol command to do the same
 void cmd_isme(char *argbuf) {
 	char addr[256];
 
@@ -691,11 +640,8 @@ void cmd_isme(char *argbuf) {
 }
 
 
-/*
- * Administrative Get Email Addresses
- */
-void cmd_agea(char *cmdbuf)
-{
+// Retrieve all Internet email addresses/aliases for the specified user
+void cmd_agea(char *cmdbuf) {
 	struct ctdluser usbuf;
 	char requested_user[128];
 	int i, num_e;
@@ -720,11 +666,8 @@ void cmd_agea(char *cmdbuf)
 }
 
 
-/*
- * Administrative Set Email Addresses
- */
-void cmd_asea(char *cmdbuf)
-{
+// Set the Internet email addresses/aliases for the specified user
+void cmd_asea(char *cmdbuf) {
 	struct ctdluser usbuf;
 	char requested_user[128];
 	char buf[SIZ];
@@ -766,9 +709,7 @@ void cmd_asea(char *cmdbuf)
 }
 
 
-/*
- * Set the preferred view for the current user/room combination
- */
+// Set the preferred view for the current user/room combination
 void cmd_view(char *cmdbuf) {
 	int requested_view;
 	visit vbuf;
@@ -787,11 +728,8 @@ void cmd_view(char *cmdbuf) {
 }
 
 
-/*
- * Rename a user
- */
-void cmd_renu(char *cmdbuf)
-{
+// Rename a user
+void cmd_renu(char *cmdbuf) {
 	int retcode;
 	char oldname[USERNAME_SIZE];
 	char newname[USERNAME_SIZE];
@@ -825,15 +763,13 @@ void cmd_renu(char *cmdbuf)
 }
 
 
-void cmd_quit(char *argbuf)
-{
+void cmd_quit(char *argbuf) {
 	cprintf("%d Goodbye.\n", CIT_OK);
 	CC->kill_me = KILLME_CLIENT_LOGGED_OUT;
 }
 
 
-void cmd_lout(char *argbuf)
-{
+void cmd_lout(char *argbuf) {
 	if (CC->logged_in) 
 		CtdlUserLogout();
 	cprintf("%d logged out.\n", CIT_OK);
