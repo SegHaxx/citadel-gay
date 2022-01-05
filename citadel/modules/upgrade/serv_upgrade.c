@@ -1,19 +1,17 @@
-/*
- * Transparently handle the upgrading of server data formats.  If we see
- * an existing version number of our database, we can make some intelligent
- * guesses about what kind of data format changes need to be applied, and
- * we apply them transparently.
- *
- * Copyright (c) 1987-2020 by the citadel.org team
- *
- * This program is open source software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License version 3.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- */
+// Transparently handle the upgrading of server data formats.  If we see
+// an existing version number of our database, we can make some intelligent
+// guesses about what kind of data format changes need to be applied, and
+// we apply them transparently.
+//
+// Copyright (c) 1987-2022 by the citadel.org team
+//
+// This program is open source software; you can redistribute it and/or
+// modify it under the terms of the GNU General Public License version 3.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
 
 #include "sysdep.h"
 #include <stdlib.h>
@@ -44,34 +42,29 @@
 #include "serv_vcard.h"
 #include "internet_addressing.h"
 
-/*
- * oldver is the version number of Citadel Server which was active on the previous run of the program, learned from the system configuration.
- * If we are running a new Citadel Server for the first time, oldver will be 0.
- * We keep this value around for the entire duration of the program run because we'll need it during several stages of startup.
- */
+// oldver is the version number of Citadel Server which was active on the previous run of the program, learned from the system configuration.
+// If we are running a new Citadel Server for the first time, oldver will be 0.
+// We keep this value around for the entire duration of the program run because we'll need it during several stages of startup.
 int oldver = 0;
 
-/*
- * Try to remove any extra users with number 0
- */
-void fix_sys_user_name(void)
-{
+// Try to remove any extra users with number 0
+void fix_sys_user_name(void) {
 	struct ctdluser usbuf;
 	char usernamekey[USERNAME_SIZE];
 
 	while (CtdlGetUserByNumber(&usbuf, 0) == 0) {
-		/* delete user with number 0 and no name */
+		// delete user with number 0 and no name
 		if (IsEmptyStr(usbuf.fullname)) {
 			cdb_delete(CDB_USERS, "", 0);
 		}
 		else {
-			/* temporarily set this user to -1 */
+			// temporarily set this user to -1
 			usbuf.usernum = -1;
 			CtdlPutUser(&usbuf);
 		}
 	}
 
-	/* Delete any "user 0" accounts */
+	// Delete any "user 0" accounts
 	while (CtdlGetUserByNumber(&usbuf, -1) == 0) {
 		makeuserkey(usernamekey, usbuf.fullname);
 		cdb_delete(CDB_USERS, usernamekey, strlen(usernamekey));
@@ -79,9 +72,7 @@ void fix_sys_user_name(void)
 }
 
 
-/* 
- * Back end processing function for reindex_uids()
- */
+// Back end processing function for reindex_uids()
 void reindex_uids_backend(char *username, void *data) {
 
 	struct ctdluser us;
@@ -102,10 +93,8 @@ void reindex_uids_backend(char *username, void *data) {
 }
 
 
-/*
- * Build extauth index of all users with uid-based join (system auth, LDAP auth)
- * Also changes all users with a uid of CTDLUID to NATIVE_AUTH_UID (-1)
- */
+// Build extauth index of all users with uid-based join (system auth, LDAP auth)
+// Also changes all users with a uid of CTDLUID to NATIVE_AUTH_UID (-1)
 void reindex_uids(void) {
 	syslog(LOG_WARNING, "upgrade: reindexing and applying uid changes");
 	ForEachUser(reindex_uids_backend, NULL);
@@ -113,10 +102,8 @@ void reindex_uids(void) {
 }
 
 
-/*
- * These accounts may have been created by code that ran between mid 2008 and early 2011.
- * If present they are no longer in use and may be deleted.
- */
+// These accounts may have been created by code that ran between mid 2008 and early 2011.
+// If present they are no longer in use and may be deleted.
 void remove_thread_users(void) {
 	char *deleteusers[] = {
 		"SYS_checkpoint",
@@ -147,10 +134,8 @@ void remove_thread_users(void) {
 }
 
 
-/*
- * Attempt to guess the name of the time zone currently in use
- * on the underlying host system.
- */
+// Attempt to guess the name of the time zone currently in use
+// on the underlying host system.
 void guess_time_zone(void) {
 	FILE *fp;
 	char buf[PATH_MAX];
@@ -167,13 +152,9 @@ void guess_time_zone(void) {
 }
 
 
-/*
- * Per-room callback function for ingest_old_roominfo_and_roompic_files()
- *
- * This is the second pass, where we process the list of rooms with info or pic files.
- */
-void iorarf_oneroom(char *roomname, char *infofile, char *picfile)
-{
+// Per-room callback function for ingest_old_roominfo_and_roompic_files()
+// This is the second pass, where we process the list of rooms with info or pic files.
+void iorarf_oneroom(char *roomname, char *infofile, char *picfile) {
 	FILE *fp;
 	long data_length;
 	char *unencoded_data;
@@ -266,13 +247,9 @@ struct iorarf_list {
 };
 
 
-/*
- * Per-room callback function for ingest_old_roominfo_and_roompic_files()
- *
- * This is the first pass, where the list of qualifying rooms is gathered.
- */
-void iorarf_backend(struct ctdlroom *qrbuf, void *data)
-{
+// Per-room callback function for ingest_old_roominfo_and_roompic_files()
+// This is the first pass, where the list of qualifying rooms is gathered.
+void iorarf_backend(struct ctdlroom *qrbuf, void *data) {
 	FILE *fp;
 	struct iorarf_list **iorarf_list = (struct iorarf_list **)data;
 
@@ -311,13 +288,10 @@ void iorarf_backend(struct ctdlroom *qrbuf, void *data)
 }
 
 
-/*
- * Prior to Citadel Server version 902, room info and pictures (which comprise the
- * displayed banner for each room) were stored in the filesystem.  If we are upgrading
- * from version >000 to version >=902, ingest those files into the database.
- */
-void ingest_old_roominfo_and_roompic_files(void)
-{
+// Prior to Citadel Server version 902, room info and pictures (which comprise the
+// displayed banner for each room) were stored in the filesystem.  If we are upgrading
+// from version >000 to version >=902, ingest those files into the database.
+void ingest_old_roominfo_and_roompic_files(void) {
 	struct iorarf_list *il = NULL;
 
 	CtdlForEachRoom(iorarf_backend, &il);
@@ -334,10 +308,8 @@ void ingest_old_roominfo_and_roompic_files(void)
 }
 
 
-/*
- * For upgrades in which a new config setting appears for the first time, set default values.
- * For new installations (oldver == 0) also set default values.
- */
+// For upgrades in which a new config setting appears for the first time, set default values.
+// For new installations (oldver == 0) also set default values.
 void update_config(void) {
 
 	if (oldver < 606) {
@@ -380,14 +352,12 @@ void update_config(void) {
 }
 
 
-/*
- * Helper function for move_inet_addrs_from_vcards_to_user_records()
- *
- * Call this function as a ForEachUser backend in order to queue up
- * user names, or call it with a null user to make it do the processing.
- * This allows us to maintain the list as a static instead of passing
- * pointers around.
- */
+// Helper function for move_inet_addrs_from_vcards_to_user_records()
+//
+// Call this function as a ForEachUser backend in order to queue up
+// user names, or call it with a null user to make it do the processing.
+// This allows us to maintain the list as a static instead of passing
+// pointers around.
 void miafvtur_backend(char *username, void *data) {
 	struct ctdluser usbuf;
 	char primary_inet_email[512] = { 0 };
@@ -417,11 +387,8 @@ void miafvtur_backend(char *username, void *data) {
 }
 
 
-/*
- * If our system still has a "refcount_adjustments.dat" sitting around from an old version, ingest it now.
- */
-int ProcessOldStyleAdjRefCountQueue(void)
-{
+// If our system still has a "refcount_adjustments.dat" sitting around from an old version, ingest it now.
+int ProcessOldStyleAdjRefCountQueue(void) {
 	int r;
 	FILE *fp;
 	struct arcq arcq_rec;
@@ -449,22 +416,15 @@ int ProcessOldStyleAdjRefCountQueue(void)
 }
 
 
-/*
- * Prior to version 912 we kept a user's various Internet email addresses in their vCards.
- * This function moves them over to the user record, which is where we keep them now.
- */
-void move_inet_addrs_from_vcards_to_user_records(void)
-{
+// Prior to version 912 we kept a user's various Internet email addresses in their vCards.
+// This function moves them over to the user record, which is where we keep them now.
+void move_inet_addrs_from_vcards_to_user_records(void) {
 	ForEachUser(miafvtur_backend, NULL);
 	CtdlRebuildDirectoryIndex();
 }
 
 
-
-
-/*
- * We found the legacy sieve config in the user's config room.  Store the message number in the user record.
- */
+// We found the legacy sieve config in the user's config room.  Store the message number in the user record.
 void mifm_found_config(long msgnum, void *userdata) {
 	struct ctdluser *us = (struct ctdluser *)userdata;
 
@@ -473,15 +433,13 @@ void mifm_found_config(long msgnum, void *userdata) {
 }
 
 
-/*
- * Helper function for migrate_inbox_filter_msgnums()
- */
+// Helper function for migrate_inbox_filter_msgnums()
 void mifm_backend(char *username, void *data) {
 	struct ctdluser us;
 	char roomname[ROOMNAMELEN];
 
 	if (CtdlGetUserLock(&us, username) == 0) {
-		/* Take a spin through the user's personal config room */
+		// Take a spin through the user's personal config room
 		syslog(LOG_DEBUG, "Processing <%s> (%ld)", us.fullname, us.usernum);
 		snprintf(roomname, sizeof roomname, "%010ld.%s", us.usernum, USERCONFIGROOM);
 		if (CtdlGetRoom(&CC->room, roomname) == 0) {
@@ -492,19 +450,14 @@ void mifm_backend(char *username, void *data) {
 }
 
 
-/*
- * Prior to version 930 we used a MIME type search to locate the user's inbox filter rules. 
- * This function locates those ruleset messages and simply stores the message number in the user record.
- */
-void migrate_inbox_filter_msgnums(void)
-{
+// Prior to version 930 we used a MIME type search to locate the user's inbox filter rules. 
+// This function locates those ruleset messages and simply stores the message number in the user record.
+void migrate_inbox_filter_msgnums(void) {
 	ForEachUser(mifm_backend, NULL);
 }
 
 
-/*
- * Create a default administrator account so we can log in to a new installation
- */
+// Create a default administrator account so we can log in to a new installation
 void create_default_admin_account(void) {
 	struct ctdluser usbuf;
 
@@ -517,10 +470,8 @@ void create_default_admin_account(void) {
 }
 
 
-/*
- * Based on the server version number reported by the existing database,
- * run in-place data format upgrades until everything is up to date.
- */
+// Based on the server version number reported by the existing database,
+// run in-place data format upgrades until everything is up to date.
 void pre_startup_upgrades(void) {
 
 	oldver = CtdlGetConfigInt("MM_hosted_upgrade_level");
@@ -567,35 +518,28 @@ void pre_startup_upgrades(void) {
 
 	CtdlSetConfigInt("MM_hosted_upgrade_level", REV_LEVEL);
 
-	/*
-	 * Negative values for maxsessions are not allowed.
-	 */
+	// Negative values for maxsessions are not allowed.
 	if (CtdlGetConfigInt("c_maxsessions") < 0) {
 		CtdlSetConfigInt("c_maxsessions", 0);
 	}
 
-	/* We need a system default message expiry policy, because this is
-	 * the top level and there's no 'higher' policy to fall back on.
-	 * By default, do not expire messages at all.
-	 */
+	// We need a system default message expiry policy, because this is
+	// the top level and there's no 'higher' policy to fall back on.
+	// By default, do not expire messages at all.
 	if (CtdlGetConfigInt("c_ep_mode") == 0) {
 		CtdlSetConfigInt("c_ep_mode", EXPIRE_MANUAL);
 		CtdlSetConfigInt("c_ep_value", 0);
 	}
 
-	/*
-	 * If this is the first run on an empty database, create a default administrator
-	 */
+	// If this is the first run on an empty database, create a default administrator
 	if (oldver == 0) {
 		create_default_admin_account();
 	}
 }
 
 
-/*
- * Based on the server version number reported by the existing database,
- * run in-place data format upgrades until everything is up to date.
- */
+// Based on the server version number reported by the existing database,
+// run in-place data format upgrades until everything is up to date.
 void post_startup_upgrades(void) {
 
 	syslog(LOG_INFO, "Existing database version on disk is %d", oldver);

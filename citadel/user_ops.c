@@ -98,18 +98,14 @@ int CtdlGetUser(struct ctdluser *usbuf, char *name)
 }
 
 
-int CtdlLockGetCurrentUser(void)
-{
+int CtdlLockGetCurrentUser(void) {
 	CitContext *CCC = CC;
 	return CtdlGetUser(&CCC->user, CCC->curr_user);
 }
 
 
-/*
- * CtdlGetUserLock()  -  same as getuser() but locks the record
- */
-int CtdlGetUserLock(struct ctdluser *usbuf, char *name)
-{
+// CtdlGetUserLock()  -  same as getuser() but locks the record
+int CtdlGetUserLock(struct ctdluser *usbuf, char *name) {
 	int retcode;
 
 	retcode = CtdlGetUser(usbuf, name);
@@ -120,41 +116,29 @@ int CtdlGetUserLock(struct ctdluser *usbuf, char *name)
 }
 
 
-/*
- * CtdlPutUser()  -  write user buffer into the correct place on disk
- */
-void CtdlPutUser(struct ctdluser *usbuf)
-{
+// CtdlPutUser()  -  write user buffer into the correct place on disk
+void CtdlPutUser(struct ctdluser *usbuf) {
 	char usernamekey[USERNAME_SIZE];
-
 	makeuserkey(usernamekey, usbuf->fullname);
 	usbuf->version = REV_LEVEL;
 	cdb_store(CDB_USERS, usernamekey, strlen(usernamekey), usbuf, sizeof(struct ctdluser));
 }
 
 
-void CtdlPutCurrentUserLock()
-{
+void CtdlPutCurrentUserLock() {
 	CtdlPutUser(&CC->user);
 }
 
 
-/*
- * CtdlPutUserLock()  -  same as putuser() but locks the record
- */
-void CtdlPutUserLock(struct ctdluser *usbuf)
-{
+// CtdlPutUserLock()  -  same as putuser() but locks the record
+void CtdlPutUserLock(struct ctdluser *usbuf) {
 	CtdlPutUser(usbuf);
 	end_critical_section(S_USERS);
 }
 
 
-/*
- * rename_user()  -  this is tricky because the user's display name is the database key
- *
- * Returns 0 on success or nonzero if there was an error...
- *
- */
+// rename_user()  -  this is tricky because the user's display name is the database key
+// Returns 0 on success or nonzero if there was an error...
 int rename_user(char *oldname, char *newname) {
 	int retcode = RENAMEUSER_OK;
 	struct ctdluser usbuf;
@@ -162,14 +146,14 @@ int rename_user(char *oldname, char *newname) {
 	char oldnamekey[USERNAME_SIZE];
 	char newnamekey[USERNAME_SIZE];
 
-	/* Create the database keys... */
+	// Create the database keys...
 	makeuserkey(oldnamekey, oldname);
 	makeuserkey(newnamekey, newname);
 
-	/* Lock up and get going */
+	// Lock up and get going
 	begin_critical_section(S_USERS);
 
-	/* We cannot rename a user who is currently logged in */
+	// We cannot rename a user who is currently logged in
 	if (CtdlIsUserLoggedIn(oldname)) {
 		end_critical_section(S_USERS);
 		return RENAMEUSER_LOGGED_IN;
@@ -183,11 +167,12 @@ int rename_user(char *oldname, char *newname) {
 		if (CtdlGetUser(&usbuf, oldname) != 0) {
 			retcode = RENAMEUSER_NOT_FOUND;
 		}
-		else {		/* Sanity checks succeeded.  Now rename the user. */
+		else {		// Sanity checks succeeded.  Now rename the user.
 			if (usbuf.usernum == 0) {
 				syslog(LOG_DEBUG, "user_ops: can not rename user \"Citadel\".");
 				retcode = RENAMEUSER_NOT_FOUND;
-			} else {
+			}
+			else {
 				syslog(LOG_DEBUG, "user_ops: renaming <%s> to <%s>", oldname, newname);
 				cdb_delete(CDB_USERS, oldnamekey, strlen(oldnamekey));
 				safestrncpy(usbuf.fullname, newname, sizeof usbuf.fullname);
@@ -204,10 +189,8 @@ int rename_user(char *oldname, char *newname) {
 }
 
 
-/*
- * Convert a username into the format used as a database key prior to version 928
- * This only gets called by reindex_user_928()
- */
+// Convert a username into the format used as a database key prior to version 928
+// This only gets called by reindex_user_928()
 void makeuserkey_pre928(char *key, const char *username) {
 	int i;
 
@@ -223,10 +206,8 @@ void makeuserkey_pre928(char *key, const char *username) {
 }
 
 
-/*
- * Read a user record using the pre-v928 index format, and write it back using the v928-and-higher index format.
- * This ONLY gets called during an upgrade from version <928 to version >=928.
- */
+// Read a user record using the pre-v928 index format, and write it back using the v928-and-higher index format.
+// This ONLY gets called during an upgrade from version <928 to version >=928.
 void reindex_user_928(char *username, void *out_data) {
 
 	char oldkey[USERNAME_SIZE];
@@ -256,14 +237,12 @@ void reindex_user_928(char *username, void *out_data) {
 }
 
 
-/*
- * Index-generating function used by Ctdl[Get|Set]Relationship
- */
+// Index-generating function used by Ctdl[Get|Set]Relationship
 int GenerateRelationshipIndex(char *IndexBuf,
 			      long RoomID,
 			      long RoomGen,
-			      long UserID)
-{
+			      long UserID
+) {
 	struct {
 		long iRoomID;
 		long iRoomGen;
@@ -279,32 +258,26 @@ int GenerateRelationshipIndex(char *IndexBuf,
 }
 
 
-/*
- * Back end for CtdlSetRelationship()
- */
-void put_visit(visit *newvisit)
-{
+// Back end for CtdlSetRelationship()
+void put_visit(visit *newvisit) {
 	char IndexBuf[32];
 	int IndexLen = 0;
 
 	memset (IndexBuf, 0, sizeof (IndexBuf));
-	/* Generate an index */
+	// Generate an index
 	IndexLen = GenerateRelationshipIndex(IndexBuf, newvisit->v_roomnum, newvisit->v_roomgen, newvisit->v_usernum);
 
-	/* Store the record */
+	// Store the record
 	cdb_store(CDB_VISIT, IndexBuf, IndexLen,
 		  newvisit, sizeof(visit)
 	);
 }
 
 
-/*
- * Define a relationship between a user and a room
- */
+// Define a relationship between a user and a room
 void CtdlSetRelationship(visit *newvisit, struct ctdluser *rel_user, struct ctdlroom *rel_room) {
-	/* We don't use these in Citadel because they're implicit by the
-	 * index, but they must be present if the database is exported.
-	 */
+	// We don't use these in Citadel because they're implicit by the
+	// index, but they must be present if the database is exported.
 	newvisit->v_roomnum = rel_room->QRnumber;
 	newvisit->v_roomgen = rel_room->QRgen;
 	newvisit->v_usernum = rel_user->usernum;
@@ -424,8 +397,7 @@ int CtdlAccessCheck(int required_level)
 /*
  * Is the user currently logged in an Admin?
  */
-int is_aide(void)
-{
+int is_aide(void) {
 	if (CC->user.axlevel >= AxAideU)
 		return(1);
 	else
@@ -436,8 +408,7 @@ int is_aide(void)
 /*
  * Is the user currently logged in an Admin *or* the room Admin for this room?
  */
-int is_room_aide(void)
-{
+int is_room_aide(void) {
 
 	if (!CC->logged_in) {
 		return(0);
@@ -457,8 +428,7 @@ int is_room_aide(void)
  *
  * Note: fetching a user this way requires one additional database operation.
  */
-int CtdlGetUserByNumber(struct ctdluser *usbuf, long number)
-{
+int CtdlGetUserByNumber(struct ctdluser *usbuf, long number) {
 	struct cdbdata *cdbun;
 	int r;
 
@@ -502,8 +472,7 @@ void rebuild_usersbynumber(void) {
  *			Returns 0 if user was found
  *			This now uses an extauth index.
  */
-int getuserbyuid(struct ctdluser *usbuf, uid_t number)
-{
+int getuserbyuid(struct ctdluser *usbuf, uid_t number) {
 	struct cdbdata *cdbextauth;
 	long usernum = 0;
 	StrBuf *claimed_id;
@@ -530,8 +499,7 @@ int getuserbyuid(struct ctdluser *usbuf, uid_t number)
 /*
  * Back end for cmd_user() and its ilk
  */
-int CtdlLoginExistingUser(const char *trythisname)
-{
+int CtdlLoginExistingUser(const char *trythisname) {
 	char username[SIZ];
 	int found_user;
 
@@ -652,11 +620,8 @@ int CtdlLoginExistingUser(const char *trythisname)
 }
 
 
-/*
- * session startup code which is common to both cmd_pass() and cmd_newu()
- */
-void do_login(void)
-{
+// session startup code which is common to both cmd_pass() and cmd_newu()
+void do_login(void) {
 	CC->logged_in = 1;
 	syslog(LOG_NOTICE, "user_ops: <%s> logged in", CC->curr_user);
 
@@ -665,14 +630,13 @@ void do_login(void)
 	CC->previous_login = CC->user.lastcall;
 	time(&CC->user.lastcall);
 
-	/* If this user's name is the name of the system administrator
-	 * (as specified in setup), automatically assign access level 6.
-	 */
+	// If this user's name is the name of the system administrator
+	// (as specified in setup), automatically assign access level 6.
 	if ( (!IsEmptyStr(CtdlGetConfigStr("c_sysadm"))) && (!strcasecmp(CC->user.fullname, CtdlGetConfigStr("c_sysadm"))) ) {
 		CC->user.axlevel = AxAideU;
 	}
 
-	/* If we're authenticating off the host system, automatically give root the highest level of access. */
+	// If we're authenticating off the host system, automatically give root the highest level of access.
 	if (CtdlGetConfigInt("c_auth_mode") == AUTHMODE_HOST) {
 		if (CC->user.uid == 0) {
 			CC->user.axlevel = AxAideU;
@@ -680,7 +644,7 @@ void do_login(void)
 	}
 	CtdlPutUserLock(&CC->user);
 
-	/* If we are using LDAP authentication, extract the user's email addresses from the directory. */
+	// If we are using LDAP authentication, extract the user's email addresses from the directory.
 	if ((CtdlGetConfigInt("c_auth_mode") == AUTHMODE_LDAP) || (CtdlGetConfigInt("c_auth_mode") == AUTHMODE_LDAP_AD)) {
 		char new_emailaddrs[512];
 		if (CtdlGetConfigInt("c_ldap_sync_email_addrs") > 0) {
@@ -690,20 +654,18 @@ void do_login(void)
 		}
 	}
 
-	/* If the user does not have any email addresses assigned, generate one. */
+	// If the user does not have any email addresses assigned, generate one.
 	if (IsEmptyStr(CC->user.emailaddrs)) {
 		AutoGenerateEmailAddressForUser(&CC->user);
 	}
 
-	/* Populate the user principal identity, which is consistent and never aliased */
+	// Populate the user principal identity, which is consistent and never aliased
 	strcpy(CC->cs_principal_id, "");
 	makeuserkey(CC->cs_principal_id, CC->user.fullname);
 	strcat(CC->cs_principal_id, "@");
 	strcat(CC->cs_principal_id, CtdlGetConfigStr("c_fqdn"));
 
-	/*
-	 * Populate cs_inet_email and cs_inet_other_emails with valid email addresses from the user record
-	 */
+	// Populate cs_inet_email and cs_inet_other_emails with valid email addresses from the user record
 	strcpy(CC->cs_inet_email, CC->user.emailaddrs);
 	char *firstsep = strstr(CC->cs_inet_email, "|");
 	if (firstsep) {
@@ -714,24 +676,22 @@ void do_login(void)
 		CC->cs_inet_other_emails[0] = 0;
 	}
 
-	/* Create any personal rooms required by the system.
-	 * (Technically, MAILROOM should be there already, but just in case...)
-	 */
+	// Create any personal rooms required by the system.
+	// (Technically, MAILROOM should be there already, but just in case...)
 	CtdlCreateRoom(MAILROOM, 4, "", 0, 1, 0, VIEW_MAILBOX);
 	CtdlCreateRoom(SENTITEMS, 4, "", 0, 1, 0, VIEW_MAILBOX);
 	CtdlCreateRoom(USERTRASHROOM, 4, "", 0, 1, 0, VIEW_MAILBOX);
 	CtdlCreateRoom(USERDRAFTROOM, 4, "", 0, 1, 0, VIEW_MAILBOX);
 
-	/* Run any startup routines registered by loadable modules */
+	// Run any startup routines registered by loadable modules
 	PerformSessionHooks(EVT_LOGIN);
 
-	/* Enter the lobby */
+	// Enter the lobby
 	CtdlUserGoto(CtdlGetConfigStr("c_baseroom"), 0, 0, NULL, NULL, NULL, NULL);
 }
 
 
-void logged_in_response(void)
-{
+void logged_in_response(void) {
 	cprintf("%d %s|%d|%ld|%ld|%u|%ld|%ld\n",
 		CIT_OK, CC->user.fullname, CC->user.axlevel,
 		CC->user.timescalled, CC->user.posted,
@@ -741,36 +701,33 @@ void logged_in_response(void)
 }
 
 
-void CtdlUserLogout(void)
-{
+void CtdlUserLogout(void) {
 	CitContext *CCC = MyContext();
 
 	syslog(LOG_DEBUG, "user_ops: CtdlUserLogout() logging out <%s> from session %d", CCC->curr_user, CCC->cs_pid);
 
-	/* Run any hooks registered by modules... */
+	// Run any hooks registered by modules...
 	PerformSessionHooks(EVT_LOGOUT);
 	
-	/*
-	 * Clear out some session data.  Most likely, the CitContext for this
-	 * session is about to get nuked when the session disconnects, but
-	 * since it's possible to log in again without reconnecting, we cannot
-	 * make that assumption.
-	 */
+	// Clear out some session data.  Most likely, the CitContext for this
+	// session is about to get nuked when the session disconnects, but
+	// since it's possible to log in again without reconnecting, we cannot
+	// make that assumption.
 	CCC->logged_in = 0;
 
-	/* Check to see if the user was deleted while logged in and purge them if necessary */
+	// Check to see if the user was deleted while logged in and purge them if necessary
 	if ((CCC->user.axlevel == AxDeleted) && (CCC->user.usernum)) {
 		purge_user(CCC->user.fullname);
 	}
 
-	/* Clear out the user record in memory so we don't behave like a ghost */
+	// Clear out the user record in memory so we don't behave like a ghost
 	memset(&CCC->user, 0, sizeof(struct ctdluser));
 	CCC->curr_user[0] = 0;
 	CCC->cs_inet_email[0] = 0;
 	CCC->cs_inet_other_emails[0] = 0;
 	CCC->cs_inet_fn[0] = 0;
 
-	/* Free any output buffers */
+	// Free any output buffers
 	unbuffer_output();
 }
 
