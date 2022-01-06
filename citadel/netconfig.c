@@ -1,17 +1,14 @@
-/*
- * This module handles loading, saving, and parsing of room network configurations.
- *
- * Copyright (c) 2000-2021 by the citadel.org team
- *
- * This program is open source software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License, version 3.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- */
+// This module handles loading, saving, and parsing of room network configurations.
+//
+// Copyright (c) 2000-2021 by the citadel.org team
+//
+// This program is open source software; you can redistribute it and/or modify
+// it under the terms of the GNU General Public License, version 3.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
 
 #include "sysdep.h"
 #include <stdio.h>
@@ -35,18 +32,14 @@
 #include "config.h"
 
 
-/*
- * Create a config key for a room's netconfig entry
- */
+// Create a config key for a room's netconfig entry
 void netcfg_keyname(char *keybuf, long roomnum) {
 	if (!keybuf) return;
 	sprintf(keybuf, "c_netconfig_%010ld", roomnum);
 }
 
 
-/*
- * Given a room number and a textual netconfig, convert to base64 and write to the configdb
- */
+// Given a room number and a textual netconfig, convert to base64 and write to the configdb
 void SaveRoomNetConfigFile(long roomnum, const char *raw_netconfig) {
 	char keyname[25];
 	char *enc;
@@ -69,11 +62,9 @@ void SaveRoomNetConfigFile(long roomnum, const char *raw_netconfig) {
 }
 
 
-/*
- * Given a room number, attempt to load the netconfig configdb entry for that room.
- * If it returns NULL, there is no netconfig.
- * Otherwise the caller owns the returned memory and is responsible for freeing it.
- */
+// Given a room number, attempt to load the netconfig configdb entry for that room.
+// If it returns NULL, there is no netconfig.
+// Otherwise the caller owns the returned memory and is responsible for freeing it.
 char *LoadRoomNetConfigFile(long roomnum) {
 	char keyname[25];
 	char *encoded_netconfig = NULL;
@@ -89,13 +80,12 @@ char *LoadRoomNetConfigFile(long roomnum) {
 }
 
 
-/*-----------------------------------------------------------------------------*
- *              Per room network configs : exchange with client                *
- *-----------------------------------------------------------------------------*/
-
+//-----------------------------------------------------------------------------
+//              Per room network configs : exchange with client                
+//-----------------------------------------------------------------------------
 void cmd_gnet(char *argbuf) {
 	if ( (CC->room.QRflags & QR_MAILBOX) && (CC->user.usernum == atol(CC->room.QRname)) ) {
-		/* users can edit the netconfigs for their own mailbox rooms */
+		// users can edit the netconfigs for their own mailbox rooms
 	}
 	else if (CtdlAccessCheck(ac_room_aide)) return;
 	
@@ -140,11 +130,8 @@ void cmd_snet(char *argbuf) {
 }
 
 
-/*
- * Convert any legacy configuration files in the "netconfigs" directory
- */
-void convert_legacy_netcfg_files(void)
-{
+// Convert any legacy configuration files in the "netconfigs" directory
+void convert_legacy_netcfg_files(void) {
 	DIR *dh = NULL;
 	struct dirent *dit = NULL;
 	char filename[PATH_MAX];

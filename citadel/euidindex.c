@@ -1,16 +1,14 @@
-/* 
- * Index messages by EUID per room.
- *
- * Copyright (c) 1987-2020 by the citadel.org team
- *
- * This program is open source software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License, version 3.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- */
+// Index messages by EUID per room.
+//
+// Copyright (c) 1987-2022 by the citadel.org team
+//
+// This program is open source software; you can redistribute it and/or modify
+// it under the terms of the GNU General Public License, version 3.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
 
 #include "sysdep.h"
 #include <stdio.h>
@@ -19,24 +17,19 @@
 #include "citserver.h"
 #include "room_ops.h"
 
-/*
- * The structure of an euidindex record *key* is:
- *
- * |----room_number----|----------EUID-------------|
- *    (sizeof long)       (actual length of euid)
- *
- *
- * The structure of an euidindex record *value* is:
- *
- * |-----msg_number----|----room_number----|----------EUID-------------|
- *    (sizeof long)       (sizeof long)       (actual length of euid)
- *
- */
+// The structure of an euidindex record *key* is:
+//
+// |----room_number----|----------EUID-------------|
+//    (sizeof long)       (actual length of euid)
+//
+//
+// The structure of an euidindex record *value* is:
+//
+// |-----msg_number----|----room_number----|----------EUID-------------|
+//    (sizeof long)       (sizeof long)       (actual length of euid)
 
-/*
- * Return nonzero if the supplied room is one which should have
- * an EUID index.
- */
+// Return nonzero if the supplied room is one which should have
+// an EUID index.
 int DoesThisRoomNeedEuidIndexing(struct ctdlroom *qrbuf) {
 
 	switch(qrbuf->QRdefaultview) {
@@ -55,10 +48,8 @@ int DoesThisRoomNeedEuidIndexing(struct ctdlroom *qrbuf) {
 }
 
 
-/*
- * Locate a message in a given room with a given euid, and return
- * its message number.
- */
+// Locate a message in a given room with a given euid, and return
+// its message number.
 long locate_message_by_euid(char *euid, struct ctdlroom *qrbuf) {
 	return CtdlLocateMessageByEuid (euid, qrbuf);
 }
@@ -84,9 +75,7 @@ long CtdlLocateMessageByEuid(char *euid, struct ctdlroom *qrbuf) {
 		msgnum = (-1L);
 	}
 	else {
-		/* The first (sizeof long) of the record is what we're
-		 * looking for.  Throw away the rest.
-		 */
+		// The first (sizeof long) of the record is what we're looking for.  Throw away the rest.
 		memcpy(&msgnum, cdb_euid->ptr, sizeof(long));
 		cdb_free(cdb_euid);
 	}
@@ -95,10 +84,8 @@ long CtdlLocateMessageByEuid(char *euid, struct ctdlroom *qrbuf) {
 }
 
 
-/*
- * Store the euid index for a message, which has presumably just been
- * stored in this room by the caller.
- */
+// Store the euid index for a message, which has presumably just been
+// stored in this room by the caller.
 void index_message_by_euid(char *euid, struct ctdlroom *qrbuf, long msgnum) {
 	char *key;
 	int key_len;
@@ -124,9 +111,7 @@ void index_message_by_euid(char *euid, struct ctdlroom *qrbuf, long msgnum) {
 }
 
 
-/*
- * Called by rebuild_euid_index_for_room() to index one message.
- */
+// Called by rebuild_euid_index_for_room() to index one message.
 void rebuild_euid_index_for_msg(long msgnum, void *userdata) {
 	struct CtdlMessage *msg = NULL;
 
@@ -144,10 +129,9 @@ void rebuild_euid_index_for_room(struct ctdlroom *qrbuf, void *data) {
 	struct RoomProcList *ptr;
 	struct ctdlroom qr;
 
-	/* Lazy programming here.  Call this function as a CtdlForEachRoom backend
-	 * in order to queue up the room names, or call it with a null room
-	 * to make it do the processing.
-	 */
+	// Lazy programming here.  Call this function as a CtdlForEachRoom backend
+	// in order to queue up the room names, or call it with a null room
+	// to make it do the processing.
 	if (qrbuf != NULL) {
 		ptr = (struct RoomProcList *)
 			malloc(sizeof (struct RoomProcList));
@@ -176,19 +160,15 @@ void rebuild_euid_index_for_room(struct ctdlroom *qrbuf, void *data) {
 }
 
 
-/*
- * Globally rebuild the EUID indices in every room.
- */
+// Globally rebuild the EUID indices in every room.
 void rebuild_euid_index(void) {
-	cdb_trunc(CDB_EUIDINDEX);		/* delete the old indices */
-	CtdlForEachRoom(rebuild_euid_index_for_room, NULL);	/* enumerate rm names */
-	rebuild_euid_index_for_room(NULL, NULL);	/* and index them */
+	cdb_trunc(CDB_EUIDINDEX);				// delete the old indices
+	CtdlForEachRoom(rebuild_euid_index_for_room, NULL);	// enumerate room names
+	rebuild_euid_index_for_room(NULL, NULL);		// and index them
 }
 
 
-/*
- * Server command to fetch a message number given an euid.
- */
+// Server command to fetch a message number given an euid.
 void cmd_euid(char *cmdbuf) {
 	char euid[256];
 	long msgnum;

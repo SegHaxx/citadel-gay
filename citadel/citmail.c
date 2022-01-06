@@ -3,7 +3,7 @@
 // listener on a unix domain socket and transmits the message.  Really though,
 // if your MTA supports LMTP then you definitely should be using that instead.
 //
-// Copyright (c) 1987-2021 by the citadel.org team
+// Copyright (c) 1987-2022 by the citadel.org team
 //
 // This program is open source software.  Use, duplication, or disclosure
 // is subject to the terms of the GNU General Public License, version 3.
@@ -69,11 +69,8 @@ int uds_connectsock(char *sockpath) {
 }
 
 
-/*
- * input binary data from socket
- */
-void serv_read(char *buf, int bytes)
-{
+// input binary data from socket
+void serv_read(char *buf, int bytes) {
 	int len, rlen;
 
 	len = 0;
@@ -87,11 +84,8 @@ void serv_read(char *buf, int bytes)
 }
 
 
-/*
- * send binary to server
- */
-void serv_write(char *buf, int nbytes)
-{
+// send binary to server
+void serv_write(char *buf, int nbytes) {
 	int bytes_written = 0;
 	int retval;
 	while (bytes_written < nbytes) {
@@ -105,46 +99,35 @@ void serv_write(char *buf, int nbytes)
 }
 
 
-
-/*
- * input string from socket - implemented in terms of serv_read()
- */
-void serv_gets(char *buf)
-{
+// input string from socket - implemented in terms of serv_read()
+void serv_gets(char *buf) {
 	int i;
 
-	/* Read one character at a time.
-	 */
+	// Read one character at a time.
 	for (i = 0;; i++) {
 		serv_read(&buf[i], 1);
 		if (buf[i] == '\n' || i == (SIZ-1))
 			break;
 	}
 
-	/* If we got a long line, discard characters until the newline.
-	 */
+	// If we got a long line, discard characters until the newline.
 	if (i == (SIZ-1))
 		while (buf[i] != '\n')
 			serv_read(&buf[i], 1);
 
-	/* Strip all trailing nonprintables (crlf)
-	 */
+	// Strip all trailing nonprintables (crlf)
 	buf[i] = 0;
 	strip_trailing_nonprint(buf);
 	if (debug) fprintf(stderr, "> %s\n", buf);
 }
 
 
-/*
- * send line to server - implemented in terms of serv_write()
- */
-void serv_puts(char *buf)
-{
+// send line to server - implemented in terms of serv_write()
+void serv_puts(char *buf) {
 	if (debug) fprintf(stderr, "< %s\n", buf);
 	serv_write(buf, strlen(buf));
 	serv_write("\n", 1);
 }
-
 
 
 void cleanup(int exitcode) {
@@ -158,7 +141,6 @@ void cleanup(int exitcode) {
 	serv_gets(buf);
 	exit(exitcode);
 }
-
 
 
 int main(int argc, char **argv) {
@@ -330,9 +312,8 @@ int main(int argc, char **argv) {
 		cleanup(0);
 	}
 
-	/* We won't actually reach this statement but the compiler will
-	 * display a spurious warning about an invalid return type if
-	 * we don't return an int.
-	 */
+	// We won't actually reach this statement but the compiler will
+	// display a spurious warning about an invalid return type if
+	// we don't return an int.
 	return(0);
 }

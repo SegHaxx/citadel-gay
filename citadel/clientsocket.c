@@ -17,8 +17,7 @@
 #include "ctdl_module.h"
 #include "clientsocket.h"
 
-int sock_connect(char *host, char *service)
-{
+int sock_connect(char *host, char *service) {
 	struct in6_addr serveraddr;
 	struct addrinfo hints;
 	struct addrinfo *res = NULL;
@@ -36,32 +35,28 @@ int sock_connect(char *host, char *service)
 	hints.ai_family = AF_UNSPEC;
 	hints.ai_socktype = SOCK_STREAM;
 
-	/*
-	 * Handle numeric IPv4 and IPv6 addresses
-	 */
+	// Handle numeric IPv4 and IPv6 addresses
 	rc = inet_pton(AF_INET, host, &serveraddr);
-	if (rc == 1) {						/* dotted quad */
+	if (rc == 1) {						// dotted quad
 		hints.ai_family = AF_INET;
 		hints.ai_flags |= AI_NUMERICHOST;
-	} else {
+	}
+	else {
 		rc = inet_pton(AF_INET6, host, &serveraddr);
-		if (rc == 1) {					/* IPv6 address */
+		if (rc == 1) {					// IPv6 address
 			hints.ai_family = AF_INET6;
 			hints.ai_flags |= AI_NUMERICHOST;
 		}
 	}
 
-	/* Begin the connection process */
-
+	// Begin the connection process
 	rc = getaddrinfo(host, service, &hints, &res);
 	if (rc != 0) {
 		syslog(LOG_ERR, "%s: %s", host, gai_strerror(rc));
 		return(-1);
 	}
 
-	/*
-	 * Try all available addresses until we connect to one or until we run out.
-	 */
+	// Try all available addresses until we connect to one or until we run out.
 	for (ai = res; ai != NULL; ai = ai->ai_next) {
 		sock = socket(ai->ai_family, ai->ai_socktype, ai->ai_protocol);
 		if (sock < 0) {
@@ -84,22 +79,18 @@ int sock_connect(char *host, char *service)
 }
 
 
-
-/*
- * Read data from the client socket.
- *
- * sock		socket fd to read from
- * buf		buffer to read into 
- * bytes	number of bytes to read
- * timeout	Number of seconds to wait before timing out
- *
- * Possible return values:
- *      1       Requested number of bytes has been read.
- *      0       Request timed out.
- *	-1   	Connection is broken, or other error.
- */
-int socket_read_blob(int *Socket, StrBuf *Target, int bytes, int timeout)
-{
+// Read data from the client socket.
+//
+// sock		socket fd to read from
+// buf		buffer to read into 
+// bytes	number of bytes to read
+// timeout	Number of seconds to wait before timing out
+//
+// Possible return values:
+//      1       Requested number of bytes has been read.
+//      0       Request timed out.
+//	-1   	Connection is broken, or other error.
+int socket_read_blob(int *Socket, StrBuf *Target, int bytes, int timeout) {
 	const char *Error;
 	int retval = 0;
 
@@ -111,16 +102,14 @@ int socket_read_blob(int *Socket, StrBuf *Target, int bytes, int timeout)
 }
 
 
-int CtdlSockGetLine(int *sock, StrBuf *Target, int nSec)
-{
-	CitContext *CCC = MyContext();
+int CtdlSockGetLine(int *sock, StrBuf *Target, int nSec) {
 	const char *Error;
 	int rc;
 
 	FlushStrBuf(Target);
 	rc = StrBufTCP_read_buffered_line_fast(Target,
-					       CCC->SBuf.Buf,
-					       &CCC->SBuf.ReadWritePointer,
+					       CC->SBuf.Buf,
+					       &CC->SBuf.ReadWritePointer,
 					       sock, nSec, 1, &Error);
 	if ((rc < 0) && (Error != NULL)) {
 		syslog(LOG_ERR, "clientsocket: CtdlSockGetLine() failed: %s", Error);
@@ -129,24 +118,20 @@ int CtdlSockGetLine(int *sock, StrBuf *Target, int nSec)
 }
 
 
-/*
- * client_getln()   ...   Get a LF-terminated line of text from the client.
- */
-int sock_getln(int *sock, char *buf, int bufsize)
-{
+// client_getln()   ...   Get a LF-terminated line of text from the client.
+int sock_getln(int *sock, char *buf, int bufsize) {
 	int i, retval;
-	CitContext *CCC = MyContext();
 	const char *pCh;
 
-	FlushStrBuf(CCC->sMigrateBuf);
-	retval = CtdlSockGetLine(sock, CCC->sMigrateBuf, 5);
+	FlushStrBuf(CC->sMigrateBuf);
+	retval = CtdlSockGetLine(sock, CC->sMigrateBuf, 5);
 
-	i = StrLength(CCC->sMigrateBuf);
-	pCh = ChrPtr(CCC->sMigrateBuf);
+	i = StrLength(CC->sMigrateBuf);
+	pCh = ChrPtr(CC->sMigrateBuf);
 
 	memcpy(buf, pCh, i + 1);
 
-	FlushStrBuf(CCC->sMigrateBuf);
+	FlushStrBuf(CC->sMigrateBuf);
 	if (retval < 0) {
 		safestrncpy(&buf[i], "000", bufsize - i);
 		i += 3;
@@ -155,14 +140,14 @@ int sock_getln(int *sock, char *buf, int bufsize)
 }
 
 
-/*
- * sock_write() - send binary to server.
- * Returns the number of bytes written, or -1 for error.
- */
-int sock_write(int *sock, const char *buf, int nbytes) 
-{ return sock_write_timeout(sock, buf, nbytes, 50); }
-int sock_write_timeout(int *sock, const char *buf, int nbytes, int timeout)
-{
+// sock_write() - send binary to server.
+// Returns the number of bytes written, or -1 for error.
+int sock_write(int *sock, const char *buf, int nbytes) {
+	return sock_write_timeout(sock, buf, nbytes, 50);
+}
+
+
+int sock_write_timeout(int *sock, const char *buf, int nbytes, int timeout) {
 	int nSuccessLess = 0;
 	int bytes_written = 0;
 	int retval;
@@ -175,11 +160,8 @@ int sock_write_timeout(int *sock, const char *buf, int nbytes, int timeout)
 	fdflags = fcntl(*sock, F_GETFL);
 	IsNonBlock = (fdflags & O_NONBLOCK) == O_NONBLOCK;
 
-	while ((nSuccessLess < timeout) && 
-	       (*sock != -1) && 
-	       (bytes_written < nbytes)) 
-	{
-		if (IsNonBlock){
+	while ((nSuccessLess < timeout) && (*sock != -1) && (bytes_written < nbytes)) {
+		if (IsNonBlock) {
 			tv.tv_sec = selectresolution;
 			tv.tv_usec = 0;
 			
@@ -220,24 +202,20 @@ int sock_write_timeout(int *sock, const char *buf, int nbytes, int timeout)
 }
 
 
-/*
- * client_getln()   ...   Get a LF-terminated line of text from the client.
- */
-int sock_getln_err(int *sock, char *buf, int bufsize, int *rc, int nSec)
-{
+// client_getln()   ...   Get a LF-terminated line of text from the client.
+int sock_getln_err(int *sock, char *buf, int bufsize, int *rc, int nSec) {
 	int i, retval;
-	CitContext *CCC = MyContext();
 	const char *pCh;
 
-	FlushStrBuf(CCC->sMigrateBuf);
-	*rc = retval = CtdlSockGetLine(sock, CCC->sMigrateBuf, nSec);
+	FlushStrBuf(CC->sMigrateBuf);
+	*rc = retval = CtdlSockGetLine(sock, CC->sMigrateBuf, nSec);
 
-	i = StrLength(CCC->sMigrateBuf);
-	pCh = ChrPtr(CCC->sMigrateBuf);
+	i = StrLength(CC->sMigrateBuf);
+	pCh = ChrPtr(CC->sMigrateBuf);
 
 	memcpy(buf, pCh, i + 1);
 
-	FlushStrBuf(CCC->sMigrateBuf);
+	FlushStrBuf(CC->sMigrateBuf);
 	if (retval < 0) {
 		safestrncpy(&buf[i], "000", bufsize - i);
 		i += 3;
@@ -246,13 +224,10 @@ int sock_getln_err(int *sock, char *buf, int bufsize, int *rc, int nSec)
 }
 
 
-/*
- * Multiline version of sock_gets() ... this is a convenience function for
- * client side protocol implementations.  It only returns the first line of
- * a multiline response, discarding the rest.
- */
-int ml_sock_gets(int *sock, char *buf, int nSec)
-{
+// Multiline version of sock_gets() ... this is a convenience function for
+// client side protocol implementations.  It only returns the first line of
+// a multiline response, discarding the rest.
+int ml_sock_gets(int *sock, char *buf, int nSec) {
 	int rc = 0;
 	char bigbuf[1024];
 	int g;
@@ -277,12 +252,9 @@ int ml_sock_gets(int *sock, char *buf, int nSec)
 }
 
 
-/*
- * sock_puts() - send line to server - implemented in terms of serv_write()
- * Returns the number of bytes written, or -1 for error.
- */
-int sock_puts(int *sock, char *buf)
-{
+// sock_puts() - send line to server - implemented in terms of serv_write()
+// Returns the number of bytes written, or -1 for error.
+int sock_puts(int *sock, char *buf) {
 	int i, j;
 
 	i = sock_write(sock, buf, strlen(buf));

@@ -29,8 +29,7 @@ static int want_single_user = 0;
 
 /* Try to go single user */
 
-int CtdlTrySingleUser(void)
-{
+int CtdlTrySingleUser(void) {
 	int can_do = 0;
 	
 	begin_critical_section(S_SINGLE_USER);
@@ -46,24 +45,20 @@ int CtdlTrySingleUser(void)
 }
 
 
-void CtdlEndSingleUser(void)
-{
+void CtdlEndSingleUser(void) {
 	begin_critical_section(S_SINGLE_USER);
 	want_single_user = 0;
 	end_critical_section(S_SINGLE_USER);
 }
 
 
-int CtdlWantSingleUser(void)
-{
+int CtdlWantSingleUser(void) {
 	return want_single_user;
 }
 
 
-int CtdlIsSingleUser(void)
-{
-	if (want_single_user)
-	{
+int CtdlIsSingleUser(void) {
+	if (want_single_user) {
 		/* check for only one context here */
 		if (num_sessions == 1)
 			return 1;
@@ -78,23 +73,21 @@ int CtdlIsSingleUser(void)
  * User CAN terminate any other session that has them logged in.
  * Aide CAN terminate any session except the current one.
  */
-int CtdlTerminateOtherSession (int session_num)
-{
-	struct CitContext *CCC = CC;
+int CtdlTerminateOtherSession (int session_num) {
 	int ret = 0;
 	CitContext *ccptr;
 	int aide;
 
-	if (session_num == CCC->cs_pid) return TERM_NOTALLOWED;
+	if (session_num == CC->cs_pid) return TERM_NOTALLOWED;
 
-	aide = ( (CCC->user.axlevel >= AxAideU) || (CCC->internal_pgm) ) ;
+	aide = ( (CC->user.axlevel >= AxAideU) || (CC->internal_pgm) ) ;
 
 	syslog(LOG_DEBUG, "context: locating session to kill");
 	begin_critical_section(S_SESSION_TABLE);
 	for (ccptr = ContextList; ccptr != NULL; ccptr = ccptr->next) {
 		if (session_num == ccptr->cs_pid) {
 			ret |= TERM_FOUND;
-			if ((ccptr->user.usernum == CCC->user.usernum) || aide) {
+			if ((ccptr->user.usernum == CC->user.usernum) || aide) {
 				ret |= TERM_ALLOWED;
 			}
 			break;
@@ -103,7 +96,7 @@ int CtdlTerminateOtherSession (int session_num)
 
 	if (((ret & TERM_FOUND) != 0) && ((ret & TERM_ALLOWED) != 0))
 	{
-		if (ccptr->user.usernum == CCC->user.usernum)
+		if (ccptr->user.usernum == CC->user.usernum)
 			ccptr->kill_me = KILLME_ADMIN_TERMINATE;
 		else
 			ccptr->kill_me = KILLME_IDLE;
@@ -116,19 +109,17 @@ int CtdlTerminateOtherSession (int session_num)
 }
 
 
-
 /*
  * Check to see if the user who we just sent mail to is logged in.  If yes,
  * bump the 'new mail' counter for their session.  That enables them to
  * receive a new mail notification without having to hit the database.
  */
-void BumpNewMailCounter(long which_user) 
-{
+void BumpNewMailCounter(long which_user) {
 	CtdlBumpNewMailCounter(which_user);
 }
 
-void CtdlBumpNewMailCounter(long which_user)
-{
+
+void CtdlBumpNewMailCounter(long which_user) {
 	CitContext *ptr;
 
 	begin_critical_section(S_SESSION_TABLE);
@@ -149,8 +140,7 @@ void CtdlBumpNewMailCounter(long which_user)
  * The user may not have been logged in when this function was called BUT
  * because of threading the user might be logged in before you test the result.
  */
-int CtdlIsUserLoggedIn (char *user_name)
-{
+int CtdlIsUserLoggedIn(char *user_name) {
 	CitContext *cptr;
 	int ret = 0;
 
@@ -166,7 +156,6 @@ int CtdlIsUserLoggedIn (char *user_name)
 }
 
 
-
 /*
  * Check to see if a user is currently logged in.
  * Basically same as CtdlIsUserLoggedIn() but uses the user number instead.
@@ -174,8 +163,7 @@ int CtdlIsUserLoggedIn (char *user_name)
  * The user may not have been logged in when this function was called BUT
  * because of threading the user might be logged in before you test the result.
  */
-int CtdlIsUserLoggedInByNum (long usernum)
-{
+int CtdlIsUserLoggedInByNum (long usernum) {
 	CitContext *cptr;
 	int ret = 0;
 
@@ -188,7 +176,6 @@ int CtdlIsUserLoggedInByNum (long usernum)
 	end_critical_section(S_SESSION_TABLE);
 	return ret;
 }
-
 
 
 /*
@@ -204,16 +191,13 @@ CitContext *MyContext(void) {
 }
 
 
-
-
 /*
  * Terminate idle sessions.  This function pounds through the session table
  * comparing the current time to each session's time-of-last-command.  If an
  * idle session is found it is terminated, then the search restarts at the
  * beginning because the pointer to our place in the list becomes invalid.
  */
-void terminate_idle_sessions(void)
-{
+void terminate_idle_sessions(void) {
 	CitContext *ccptr;
 	time_t now;
 	int killed = 0;
@@ -249,8 +233,7 @@ void terminate_idle_sessions(void)
 /*
  * During shutdown, close the sockets of any sessions still connected.
  */
-void terminate_all_sessions(void)
-{
+void terminate_all_sessions(void) {
 	CitContext *ccptr;
 	int killed = 0;
 
@@ -271,12 +254,10 @@ void terminate_all_sessions(void)
 }
 
 
-
 /*
  * Terminate a session.
  */
-void RemoveContext (CitContext *con)
-{
+void RemoveContext (CitContext *con) {
 	const char *c;
 	if (con == NULL) {
 		syslog(LOG_ERR, "context: RemoveContext() called with NULL, this should not happen");
@@ -304,8 +285,7 @@ void RemoveContext (CitContext *con)
 	 * If the client is still connected, blow 'em away. 
 	 * if the socket is 0 or -1, its already gone or was never there.
 	 */
-	if (con->client_socket > 0)
-	{
+	if (con->client_socket > 0) {
 		syslog(LOG_INFO, "context: closing socket %d", con->client_socket);
 		close(con->client_socket);
 	}
@@ -324,7 +304,6 @@ void RemoveContext (CitContext *con)
 
 	syslog(LOG_DEBUG, "context: done with RemoveContext()");
 }
-
 
 
 /*
@@ -442,8 +421,7 @@ CitContext *CloneContext(CitContext *CloneMe) {
  * This allows worker threads to perform "for each context" operations without
  * having to lock and traverse the live list.
  */
-CitContext *CtdlGetContextArray(int *count)
-{
+CitContext *CtdlGetContextArray(int *count) {
 	int nContexts, i;
 	CitContext *nptr, *cptr;
 	
@@ -464,12 +442,10 @@ CitContext *CtdlGetContextArray(int *count)
 }
 
 
-
 /*
  * Back-end function for starting a session
  */
-void begin_session(CitContext *con)
-{
+void begin_session(CitContext *con) {
 	/* 
 	 * Initialize some variables specific to our context.
 	 */
@@ -553,8 +529,7 @@ void begin_session(CitContext *con)
  * This function fills in a context and its user field correctly
  * Then creates/loads that user
  */
-void CtdlFillSystemContext(CitContext *context, char *name)
-{
+void CtdlFillSystemContext(CitContext *context, char *name) {
 	char sysname[SIZ];
 	long len;
 
@@ -575,8 +550,7 @@ void CtdlFillSystemContext(CitContext *context, char *name)
 	internal_create_user(sysname, &(context->user), -1) ;
 	
 	/* Check to see if the system user needs upgrading */
-	if (context->user.usernum == 0)
-	{	/* old system user with number 0, upgrade it */
+	if (context->user.usernum == 0) {	/* old system user with number 0, upgrade it */
 		context->user.usernum = get_new_user_number();
 		syslog(LOG_INFO, "context: upgrading system user \"%s\" from user number 0 to user number %ld", context->user.fullname, context->user.usernum);
 		/* add user to the database */
@@ -589,8 +563,7 @@ void CtdlFillSystemContext(CitContext *context, char *name)
 /*
  * Cleanup any contexts that are left lying around
  */
-void context_cleanup(void)
-{
+void context_cleanup(void) {
 	CitContext *ptr = NULL;
 	CitContext *rem = NULL;
 
@@ -618,7 +591,6 @@ void context_cleanup(void)
 		ptr = rem;
 	}
 }
-
 
 
 /*
@@ -681,9 +653,6 @@ void dead_session_purge(int force) {
 }
 
 
-
-
-
 /*
  * masterCC is the context we use when not attached to a session.  This
  * function initializes it.
@@ -695,14 +664,10 @@ void InitializeMasterCC(void) {
 }
 
 
-
-
-
 /*
  * Set the "async waiting" flag for a session, if applicable
  */
-void set_async_waiting(struct CitContext *ccptr)
-{
+void set_async_waiting(struct CitContext *ccptr) {
 	syslog(LOG_DEBUG, "context: setting async_waiting flag for session %d", ccptr->cs_pid);
 	if (ccptr->is_async) {
 		ccptr->async_waiting++;

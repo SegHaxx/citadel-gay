@@ -22,8 +22,7 @@ long config_msgnum = 0;
 HashList *ctdlconfig = NULL;	// new configuration
 
 
-void config_warn_if_port_unset(char *key, int default_port)
-{
+void config_warn_if_port_unset(char *key, int default_port) {
 	int p = CtdlGetConfigInt(key);
 	if ((p < -1) ||	(p == 0) || (p > UINT16_MAX))
 	{
@@ -33,10 +32,8 @@ void config_warn_if_port_unset(char *key, int default_port)
 }
 
 
-void config_warn_if_empty(char *key)
-{
-	if (IsEmptyStr(CtdlGetConfigStr(key)))
-	{
+void config_warn_if_empty(char *key) {
+	if (IsEmptyStr(CtdlGetConfigStr(key))) {
 		syslog(LOG_ERR, "config: setting %s is empty, but must not - check your config!", key);
 	}
 }
@@ -139,8 +136,7 @@ void brand_new_installation_set_defaults(void) {
  * Migrate a supplied legacy configuration to the new in-db format.
  * No individual site should ever have to do this more than once.
  */
-void migrate_legacy_config(struct legacy_config *lconfig)
-{
+void migrate_legacy_config(struct legacy_config *lconfig) {
 	CtdlSetConfigStr(	"c_nodename"		,	lconfig->c_nodename		);
 	CtdlSetConfigStr(	"c_fqdn"		,	lconfig->c_fqdn			);
 	CtdlSetConfigStr(	"c_humannode"		,	lconfig->c_humannode		);
@@ -305,8 +301,7 @@ void initialize_config_system(void) {
  * Called when Citadel server is shutting down.
  * Clears out the config hash table.
  */
-void shutdown_config_system(void) 
-{
+void shutdown_config_system(void) {
 	DeleteHash(&ctdlconfig);
 }
 
@@ -314,8 +309,7 @@ void shutdown_config_system(void)
 /*
  * Set a system config value.  Simple key/value here.
  */
-void CtdlSetConfigStr(char *key, char *value)
-{
+void CtdlSetConfigStr(char *key, char *value) {
 	int key_len = strlen(key);
 	int value_len = strlen(value);
 
@@ -336,8 +330,7 @@ void CtdlSetConfigStr(char *key, char *value)
 /*
  * Set a numeric system config value (long integer)
  */
-void CtdlSetConfigLong(char *key, long value)
-{
+void CtdlSetConfigLong(char *key, long value) {
 	char longstr[256];
 	sprintf(longstr, "%ld", value);
 	CtdlSetConfigStr(key, longstr);
@@ -347,8 +340,7 @@ void CtdlSetConfigLong(char *key, long value)
 /*
  * Set a numeric system config value (integer)
  */
-void CtdlSetConfigInt(char *key, int value)
-{
+void CtdlSetConfigInt(char *key, int value) {
 	char intstr[256];
 	sprintf(intstr, "%d", value);
 	CtdlSetConfigStr(key, intstr);
@@ -358,8 +350,7 @@ void CtdlSetConfigInt(char *key, int value)
 /*
  * Delete a system config value.
  */
-void CtdlDelConfig(char *key)
-{
+void CtdlDelConfig(char *key) {
 	int key_len = strlen(key);
 
 	if (IsEmptyStr(key)) return;
@@ -381,8 +372,7 @@ void CtdlDelConfig(char *key)
 /*
  * Fetch a system config value.  Caller does *not* own the returned value and may not alter it.
  */
-char *CtdlGetConfigStr(char *key)
-{
+char *CtdlGetConfigStr(char *key) {
 	char *value = NULL;
 	struct cdbdata *cdb;
 	int key_len = strlen(key);
@@ -414,8 +404,7 @@ char *CtdlGetConfigStr(char *key)
 /*
  * Fetch a system config value - integer
  */
-int CtdlGetConfigInt(char *key)
-{
+int CtdlGetConfigInt(char *key) {
 	char *s = CtdlGetConfigStr(key);
 	if (s) return atoi(s);
 	return 0;

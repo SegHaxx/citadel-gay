@@ -19,9 +19,7 @@
 #include "citadel.h"
 #include "citadel_dirs.h"
 
-/*
- * Generate an associated file name for a room
- */
+// Generate an associated file name for a room
 size_t assoc_file_name(char *buf, size_t n, struct ctdlroom *qrbuf, const char *prefix) {
 	return snprintf(buf, n, "%s%ld", prefix, qrbuf->QRnumber);
 }
@@ -39,18 +37,12 @@ int create_dir(char *which, long ACCESS, long UID, long GID) {
 	}
 	rv = chmod(which, ACCESS);
 	if (rv == -1) {
-		syslog(LOG_ERR,
-		       "failed to set permissions for directory %s: %s",
-		       which,
-		       strerror(errno));
+		syslog(LOG_ERR, "failed to set permissions for directory %s: %s", which, strerror(errno));
 		return rv;
 	}
 	rv = chown(which, UID, GID);
 	if (rv == -1) {
-		syslog(LOG_ERR,
-		       "failed to set owner for directory %s: %s",
-		       which,
-		       strerror(errno));
+		syslog(LOG_ERR, "failed to set owner for directory %s: %s", which, strerror(errno));
 		return rv;
 	}
 	return rv;
