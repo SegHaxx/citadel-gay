@@ -44,15 +44,6 @@ void bind_to_key_and_certificate(void) {
 
 // Initialize ssl engine, load certs and initialize openssl internals
 void init_ssl(void) {
-	RSA *rsa = NULL;
-	X509_REQ *req = NULL;
-	X509 *cer = NULL;
-	EVP_PKEY *pk = NULL;
-	EVP_PKEY *req_pkey = NULL;
-	X509_NAME *name = NULL;
-	FILE *fp;
-	char buf[SIZ];
-	int rv = 0;
 
 	// Initialize SSL transport layer
 	SSL_library_init();

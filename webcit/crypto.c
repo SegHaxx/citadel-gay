@@ -51,17 +51,6 @@ void bind_to_key_and_certificate(void) {
 // initialize ssl engine, load certs and initialize openssl internals
 void init_ssl(void) {
 
-#ifndef OPENSSL_NO_EGD
-	if (!access("/var/run/egd-pool", F_OK)) {
-		RAND_egd("/var/run/egd-pool");
-	}
-#endif
-
-	if (!RAND_status()) {
-		syslog(LOG_WARNING, "PRNG not adequately seeded, won't do SSL/TLS");
-		return;
-	}
-
 	// Initialize SSL transport layer
 	SSL_library_init();
 	SSL_load_error_strings();
