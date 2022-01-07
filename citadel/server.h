@@ -1,7 +1,7 @@
 /* 
  * Main declarations file for the Citadel server
  *
- * Copyright (c) 1987-2020 by the citadel.org team
+ * Copyright (c) 1987-2022 by the citadel.org team
  *
  * This program is open source software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 3.
@@ -155,6 +155,7 @@ enum {
 	S_SINGLE_USER,
 	S_LDAP,
 	S_IM_LOGS,
+	S_OPENSSL,
 	MAX_SEMAPHORES
 };
 

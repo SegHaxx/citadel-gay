@@ -44,7 +44,6 @@ void bind_to_key_and_certificate(void) {
 
 // Initialize ssl engine, load certs and initialize openssl internals
 void init_ssl(void) {
-	const SSL_METHOD *ssl_method;
 	RSA *rsa = NULL;
 	X509_REQ *req = NULL;
 	X509 *cer = NULL;
@@ -58,8 +57,7 @@ void init_ssl(void) {
 	// Initialize SSL transport layer
 	SSL_library_init();
 	SSL_load_error_strings();
-	ssl_method = SSLv23_server_method();
-	if (!(ssl_ctx = SSL_CTX_new(ssl_method))) {
+	if (!(ssl_ctx = SSL_CTX_new(SSLv23_server_method()))) {
 		syslog(LOG_WARNING, "SSL_CTX_new failed: %s", ERR_reason_error_string(ERR_get_error()));
 		return;
 	}
