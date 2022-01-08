@@ -40,7 +40,8 @@
 #include "ctdl_module.h"
 
 #ifdef HAVE_OPENSSL
-SSL_CTX *ssl_ctx;				// SSL context for all sessions
+
+SSL_CTX *ssl_ctx = NULL;		// This SSL context is used for all sessions.
 
 
 // If a private key does not exist, generate one now.
@@ -212,14 +213,34 @@ void generate_certificate(char *keyfilename, char *certfilename) {
 // This is called during initialization, and can be called again later if the certificate changes.
 void bind_to_key_and_certificate(void) {
 
+	SSL_CTX *old_ctx, *new_ctx;
+
+	if (!(new_ctx = SSL_CTX_new(SSLv23_server_method()))) {
+		syslog(LOG_ERR, "crypto: SSL_CTX_new failed: %s", ERR_reason_error_string(ERR_get_error()));
+		return;
+	}
+
+	if (!(SSL_CTX_set_cipher_list(new_ctx, CIT_CIPHERS))) {
+		syslog(LOG_ERR, "crypto: No ciphers available");
+		SSL_CTX_free(new_ctx);
+		new_ctx = NULL;
+		return;
+	}
+
 	syslog(LOG_DEBUG, "crypto: using certificate chain %s", file_crpt_file_cer);
-        SSL_CTX_use_certificate_chain_file(ssl_ctx, file_crpt_file_cer);
+        SSL_CTX_use_certificate_chain_file(new_ctx, file_crpt_file_cer);
 
 	syslog(LOG_DEBUG, "crypto: using private key %s", file_crpt_file_key);
-        SSL_CTX_use_PrivateKey_file(ssl_ctx, file_crpt_file_key, SSL_FILETYPE_PEM);
-        if ( !SSL_CTX_check_private_key(ssl_ctx) ) {
+        SSL_CTX_use_PrivateKey_file(new_ctx, file_crpt_file_key, SSL_FILETYPE_PEM);
+        if ( !SSL_CTX_check_private_key(new_ctx) ) {
 		syslog(LOG_ERR, "crypto: cannot install certificate: %s", ERR_reason_error_string(ERR_get_error()));
         }
+
+	old_ctx = ssl_ctx;
+	ssl_ctx = new_ctx;		// All future binds will use the new certificate
+
+	sleep(1);			// Hopefully wait until all in-progress binds to the old certificate have completed
+	SSL_CTX_free(old_ctx);
 }
 
 
@@ -249,16 +270,6 @@ void update_key_and_cert_if_needed(void) {
 void init_ssl(void) {
 	SSL_library_init();						// Initialize SSL transport layer
 	SSL_load_error_strings();
-	if (!(ssl_ctx = SSL_CTX_new(SSLv23_server_method()))) {
-		syslog(LOG_ERR, "crypto: SSL_CTX_new failed: %s", ERR_reason_error_string(ERR_get_error()));
-		return;
-	}
-	if (!(SSL_CTX_set_cipher_list(ssl_ctx, CIT_CIPHERS))) {
-		syslog(LOG_ERR, "crypto: No ciphers available");
-		SSL_CTX_free(ssl_ctx);
-		ssl_ctx = NULL;
-		return;
-	}
 
 	mkdir(ctdl_key_dir, 0700);					// If the keys directory does not exist, create it
 	generate_key(file_crpt_file_key);				// If a private key does not exist, create it
