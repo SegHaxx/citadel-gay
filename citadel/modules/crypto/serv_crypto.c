@@ -43,6 +43,7 @@
 SSL_CTX *ssl_ctx;				// SSL context for all sessions
 
 
+// If a private key does not exist, generate one now.
 void generate_key(char *keyfilename) {
 	int ret = 0;
 	RSA *rsa = NULL;
@@ -51,7 +52,7 @@ void generate_key(char *keyfilename) {
 	unsigned long e = RSA_F4;
 	FILE *fp;
 
-	if (access(keyfilename, R_OK) == 0) {	// we already have a key, so don't generate a new one
+	if (access(keyfilename, R_OK) == 0) {	// Already have one.
 		return;
 	}
 
@@ -95,6 +96,118 @@ free_all:
 }
 
 
+// If a certificate does not exist, generate a self-signed one now.
+void generate_certificate(char *keyfilename, char *certfilename) {
+	RSA *private_key = NULL;
+	EVP_PKEY *public_key = NULL;
+	X509_REQ *certificate_signing_request = NULL;
+	X509_NAME *name = NULL;
+	X509 *certificate = NULL;
+	FILE *fp;
+
+	if (access(certfilename, R_OK) == 0) {			// already have one.
+		return;
+	}
+
+	syslog(LOG_INFO, "crypto: generating a self-signed certificate");
+
+	// Read in our private key.
+	fp = fopen(keyfilename, "r");
+	if (fp) {
+		private_key = PEM_read_RSAPrivateKey(fp, NULL, NULL, NULL);
+		fclose(fp);
+	}
+
+	if (!private_key) {
+		syslog(LOG_ERR, "crypto: cannot read the private key");
+		return;
+	}
+
+	// Create a public key from the private key
+	public_key = EVP_PKEY_new();
+	if (!public_key) {
+		syslog(LOG_ERR, "crypto: cannot allocate public key");
+		RSA_free(private_key);
+		return;
+	}
+	EVP_PKEY_assign_RSA(public_key, private_key);
+
+	// Create a certificate signing request
+	certificate_signing_request = X509_REQ_new();
+	if (!certificate_signing_request) {
+		syslog(LOG_ERR, "crypto: cannot allocate certificate signing request");
+		RSA_free(private_key);
+		EVP_PKEY_free(public_key);
+		return;
+	}
+
+	// Assign the public key to the certificate signing request
+	X509_REQ_set_pubkey(certificate_signing_request, public_key);
+	X509_REQ_set_version(certificate_signing_request, 0L);
+
+	// Tell it who we are
+	name = X509_REQ_get_subject_name(certificate_signing_request);
+	X509_NAME_add_entry_by_txt(name, "C", MBSTRING_ASC, (unsigned const char *)"ZZ", -1, -1, 0);
+	X509_NAME_add_entry_by_txt(name, "ST", MBSTRING_ASC, (unsigned const char *)"The World", -1, -1, 0);
+	X509_NAME_add_entry_by_txt(name, "L", MBSTRING_ASC, (unsigned const char *)"My Location", -1, -1, 0);
+	X509_NAME_add_entry_by_txt(name, "O", MBSTRING_ASC, (unsigned const char *)"Generic certificate", -1, -1, 0);
+	X509_NAME_add_entry_by_txt(name, "OU", MBSTRING_ASC, (unsigned const char *)"Citadel server", -1, -1, 0);
+	X509_NAME_add_entry_by_txt(name, "CN", MBSTRING_ASC, (unsigned const char *)"*", -1, -1, 0);
+	X509_REQ_set_subject_name(certificate_signing_request, name);
+
+	// Sign the CSR
+	if (!X509_REQ_sign(certificate_signing_request, public_key, EVP_md5())) {
+		syslog(LOG_ERR, "crypto: X509_REQ_sign(): error");
+		X509_REQ_free(certificate_signing_request);
+		RSA_free(private_key);
+		EVP_PKEY_free(public_key);
+		return;
+	}
+
+	// Generate the self-signed certificate
+	certificate = X509_new();
+	if (!certificate) {
+		syslog(LOG_ERR, "crypto: cannot allocate X.509 certificate");
+		X509_REQ_free(certificate_signing_request);
+		RSA_free(private_key);
+		EVP_PKEY_free(public_key);
+		return;
+	}
+
+	ASN1_INTEGER_set(X509_get_serialNumber(certificate), 0);
+	X509_set_issuer_name(certificate, X509_REQ_get_subject_name(certificate_signing_request));
+	X509_set_subject_name(certificate, X509_REQ_get_subject_name(certificate_signing_request));
+	X509_gmtime_adj(X509_get_notBefore(certificate), 0);
+	X509_gmtime_adj(X509_get_notAfter(certificate), (long)60*60*24*SIGN_DAYS);
+	X509_set_pubkey(certificate, public_key);
+	X509_REQ_free(certificate_signing_request);		// We're done with the CSR; free it
+
+	// Finally, sign the certificate with our private key.
+	if (!X509_sign(certificate, public_key, EVP_md5())) {
+		syslog(LOG_ERR, "crypto: X509_sign() error");
+		X509_free(certificate);
+		RSA_free(private_key);
+		EVP_PKEY_free(public_key);
+		return;
+	}
+
+	// Write the certificate to disk
+	fp = fopen(certfilename, "w");
+	if (fp != NULL) {
+		chmod(certfilename, 0600);
+		PEM_write_X509(fp, certificate);
+		fclose(fp);
+	}
+	else {
+		syslog(LOG_ERR, "crypto: %s: %m", certfilename);
+	}
+
+	X509_free(certificate);
+	EVP_PKEY_free(public_key);
+	// RSA_free(private_key);				// private_key is freed by EVP_PKEY_free() above
+}
+
+
 // Set the private key and certificate chain for the global SSL Context.
 // This is called during initialization, and can be called again later if the certificate changes.
 void bind_to_key_and_certificate(void) {
@@ -110,7 +223,7 @@ void bind_to_key_and_certificate(void) {
 }
 
 
-// Check the modification time of the key and certificate -- reload if they changed
+// Check the modification time of the key and certificate files.  Reload if either one changed.
 void update_key_and_cert_if_needed(void) {
 	static time_t previous_mtime = 0;
 	struct stat keystat;
@@ -132,17 +245,9 @@ void update_key_and_cert_if_needed(void) {
 }
 
 
+// Initialize the SSL/TLS subsystem.
 void init_ssl(void) {
-	RSA *rsa = NULL;
-	X509_REQ *req = NULL;
-	X509 *cer = NULL;
-	EVP_PKEY *pk = NULL;
-	EVP_PKEY *req_pkey = NULL;
-	X509_NAME *name = NULL;
-	FILE *fp;
-
-	// Initialize SSL transport layer
-	SSL_library_init();
+	SSL_library_init();						// Initialize SSL transport layer
 	SSL_load_error_strings();
 	if (!(ssl_ctx = SSL_CTX_new(SSLv23_server_method()))) {
 		syslog(LOG_ERR, "crypto: SSL_CTX_new failed: %s", ERR_reason_error_string(ERR_get_error()));
@@ -155,131 +260,10 @@ void init_ssl(void) {
 		return;
 	}
 
-	mkdir(ctdl_key_dir, 0700);		// If the keys directory does not exist, create it
-	generate_key(file_crpt_file_key);	// If a private key does not exist, create it
-
-	// If there is no certificate file on disk, we will be generating a self-signed certificate
-	// in the next step.  Therefore, if we have neither a CSR nor a certificate, generate
-	// the CSR in this step so that the next step may commence.
-	if ( (access(file_crpt_file_cer, R_OK) != 0) && (access(file_crpt_file_csr, R_OK) != 0) ) {
-		syslog(LOG_INFO, "crypto: generating a generic certificate signing request.");
-
-		// Read our key from the file.  No, we don't just keep this
-		// in memory from the above key-generation function, because
-		// there is the possibility that the key was already on disk
-		// and we didn't just generate it now.
-		fp = fopen(file_crpt_file_key, "r");
-		if (fp) {
-			rsa = PEM_read_RSAPrivateKey(fp, NULL, NULL, NULL);
-			fclose(fp);
-		}
-
-		if (rsa) {
-			// Create a public key from the private key
-			if (pk=EVP_PKEY_new(), pk != NULL) {
-				EVP_PKEY_assign_RSA(pk, rsa);
-				if (req = X509_REQ_new(), req != NULL) {
-
-					// Set the public key
-					X509_REQ_set_pubkey(req, pk);
-					X509_REQ_set_version(req, 0L);
-
-					name = X509_REQ_get_subject_name(req);
-
-					// Tell it who we are
-					X509_NAME_add_entry_by_txt(name, "C", MBSTRING_ASC, (unsigned const char *)"ZZ", -1, -1, 0);
-					X509_NAME_add_entry_by_txt(name, "ST", MBSTRING_ASC, (unsigned const char *)"The World", -1, -1, 0);
-					X509_NAME_add_entry_by_txt(name, "L", MBSTRING_ASC, (unsigned const char *)"My Location", -1, -1, 0);
-					X509_NAME_add_entry_by_txt(name, "O", MBSTRING_ASC, (unsigned const char *)"Generic certificate", -1, -1, 0);
-					X509_NAME_add_entry_by_txt(name, "OU", MBSTRING_ASC, (unsigned const char *)"Citadel server", -1, -1, 0);
-					X509_NAME_add_entry_by_txt(name, "CN", MBSTRING_ASC, (unsigned const char *)"*", -1, -1, 0);
-					X509_REQ_set_subject_name(req, name);
-
-					// Sign the CSR
-					if (!X509_REQ_sign(req, pk, EVP_md5())) {
-						syslog(LOG_ERR, "crypto: X509_REQ_sign(): error");
-					}
-					else {
-						// Write it to disk
-						fp = fopen(file_crpt_file_csr, "w");
-						if (fp != NULL) {
-							chmod(file_crpt_file_csr, 0600);
-							PEM_write_X509_REQ(fp, req);
-							fclose(fp);
-						}
-					}
-
-					X509_REQ_free(req);
-				}
-			}
-			RSA_free(rsa);
-		}
-		else {
-			syslog(LOG_ERR, "crypto: unable to read private key.");
-		}
-	}
-
-	// Generate a self-signed certificate if we don't have one.
-	if (access(file_crpt_file_cer, R_OK) != 0) {
-		syslog(LOG_INFO, "crypto: generating a generic self-signed certificate.");
-
-		// Same deal as before: always read the key from disk because
-		// it may or may not have just been generated.
-		fp = fopen(file_crpt_file_key, "r");
-		if (fp) {
-			rsa = PEM_read_RSAPrivateKey(fp, NULL, NULL, NULL);
-			fclose(fp);
-		}
-
-		// This also holds true for the CSR.
-		req = NULL;
-		cer = NULL;
-		pk = NULL;
-		if (rsa) {
-			if (pk=EVP_PKEY_new(), pk != NULL) {
-				EVP_PKEY_assign_RSA(pk, rsa);
-			}
-
-			fp = fopen(file_crpt_file_csr, "r");
-			if (fp) {
-				req = PEM_read_X509_REQ(fp, NULL, NULL, NULL);
-				fclose(fp);
-			}
-
-			if (req) {
-				if (cer = X509_new(), cer != NULL) {
-					ASN1_INTEGER_set(X509_get_serialNumber(cer), 0);
-					X509_set_issuer_name(cer, X509_REQ_get_subject_name(req));
-					X509_set_subject_name(cer, X509_REQ_get_subject_name(req));
-					X509_gmtime_adj(X509_get_notBefore(cer),0);
-					X509_gmtime_adj(X509_get_notAfter(cer),(long)60*60*24*SIGN_DAYS);
-					req_pkey = X509_REQ_get_pubkey(req);
-					X509_set_pubkey(cer, req_pkey);
-					EVP_PKEY_free(req_pkey);
-					
-					// Sign the cert
-					if (!X509_sign(cer, pk, EVP_md5())) {
-						syslog(LOG_ERR, "crypto: X509_sign() error");
-					}
-					else {
-						// Write it to disk.
-						fp = fopen(file_crpt_file_cer, "w");
-						if (fp != NULL) {
-							chmod(file_crpt_file_cer, 0600);
-							PEM_write_X509(fp, cer);
-							fclose(fp);
-						}
-					}
-					X509_free(cer);
-				}
-			}
-
-			RSA_free(rsa);
-		}
-	}
-
-	// Now try to bind to the key and certificate.
-	bind_to_key_and_certificate();
+	mkdir(ctdl_key_dir, 0700);					// If the keys directory does not exist, create it
+	generate_key(file_crpt_file_key);				// If a private key does not exist, create it
+	generate_certificate(file_crpt_file_key, file_crpt_file_cer);	// If a certificate does not exist, create it
+	bind_to_key_and_certificate();					// Load key and cert from disk, and bind to them.
 
 	// Finally let the server know we're here
 	CtdlRegisterProtoHook(cmd_stls, "STLS", "Start SSL/TLS session");

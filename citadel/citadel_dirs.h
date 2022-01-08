@@ -31,7 +31,6 @@
 #define file_pid_file			"/var/run/citserver.pid"
 #define file_pid_paniclog		"panic.log"
 #define file_crpt_file_key		"keys/citadel.key"
-#define file_crpt_file_csr		"keys/citadel.csr"
 #define file_crpt_file_cer		"keys/citadel.cer"
 #define file_chkpwd			"chkpwd"
 #define file_guesstimezone		"guesstimezone.sh"
