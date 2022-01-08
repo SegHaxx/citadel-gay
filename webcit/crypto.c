@@ -1,4 +1,4 @@
-// Copyright (c) 1996-2021 by the citadel.org team
+// Copyright (c) 1996-2022 by the citadel.org team
 //
 // This program is open source software.  You can redistribute it and/or
 // modify it under the terms of the GNU General Public License, version 3.
@@ -30,6 +30,9 @@ void shutdown_ssl(void) {
 // Set the private key and certificate chain for the global SSL Context.
 // This is called during initialization, and can be called again later if the certificate changes.
 void bind_to_key_and_certificate(void) {
+
+	SSL_CTX *old_ctx, *new_ctx;
+
 	if (IsEmptyStr(key_file)) {
 		snprintf(key_file, sizeof key_file, "%s/keys/citadel.key", ctdl_dir);
 	}
@@ -37,14 +40,30 @@ void bind_to_key_and_certificate(void) {
 		snprintf(cert_file, sizeof key_file, "%s/keys/citadel.cer", ctdl_dir);
 	}
 
+	if (!(new_ctx = SSL_CTX_new(SSLv23_server_method()))) {
+		syslog(LOG_WARNING, "SSL_CTX_new failed: %s", ERR_reason_error_string(ERR_get_error()));
+		return;
+	}
+
+	syslog(LOG_INFO, "Requesting cipher list: %s", ssl_cipher_list);
+	if (!(SSL_CTX_set_cipher_list(new_ctx, ssl_cipher_list))) {
+		syslog(LOG_WARNING, "SSL_CTX_set_cipher_list failed: %s", ERR_reason_error_string(ERR_get_error()));
+		return;
+	}
+
 	syslog(LOG_DEBUG, "crypto: [re]installing key \"%s\" and certificate \"%s\"", key_file, cert_file);
 
-	SSL_CTX_use_certificate_chain_file(ssl_ctx, cert_file);
-	SSL_CTX_use_PrivateKey_file(ssl_ctx, key_file, SSL_FILETYPE_PEM);
+	SSL_CTX_use_certificate_chain_file(new_ctx, cert_file);
+	SSL_CTX_use_PrivateKey_file(new_ctx, key_file, SSL_FILETYPE_PEM);
 
-	if ( !SSL_CTX_check_private_key(ssl_ctx) ) {
+	if ( !SSL_CTX_check_private_key(new_ctx) ) {
 		syslog(LOG_WARNING, "crypto: cannot install certificate: %s", ERR_reason_error_string(ERR_get_error()));
 	}
+
+	old_ctx = ssl_ctx;
+	ssl_ctx = new_ctx;
+	sleep(1);
+	SSL_CTX_free(old_ctx);
 }
 
 
@@ -54,17 +73,6 @@ void init_ssl(void) {
 	// Initialize SSL transport layer
 	SSL_library_init();
 	SSL_load_error_strings();
-	if (!(ssl_ctx = SSL_CTX_new(SSLv23_server_method()))) {
-		syslog(LOG_WARNING, "SSL_CTX_new failed: %s", ERR_reason_error_string(ERR_get_error()));
-		return;
-	}
-
-	syslog(LOG_INFO, "Requesting cipher list: %s", ssl_cipher_list);
-	if (!(SSL_CTX_set_cipher_list(ssl_ctx, ssl_cipher_list))) {
-		syslog(LOG_WARNING, "SSL_CTX_set_cipher_list failed: %s", ERR_reason_error_string(ERR_get_error()));
-		return;
-	}
-
 
 	// Now try to bind to the key and certificate.
 	bind_to_key_and_certificate();
@@ -132,29 +140,11 @@ int starttls(int sock) {
 		else {
 			syslog(LOG_WARNING, "first SSL_accept failed: %s", ssl_error_reason);
 		}
-		// sleeeeeeeeeep(1);
-		// retval = SSL_accept(newssl);
 	}
-	// if (retval < 1) {
-		// long errval;
-		// const char *ssl_error_reason = NULL;
-// 
-		// errval = SSL_get_error(newssl, retval);
-		// ssl_error_reason = ERR_reason_error_string(ERR_get_error());
-		// if (ssl_error_reason == NULL) {
-			// syslog(LOG_WARNING, "second SSL_accept failed: errval=%ld, retval=%d (%s)", errval, retval, strerror(errval));
-		// }
-		// else {
-			// syslog(LOG_WARNING, "second SSL_accept failed: %s", ssl_error_reason);
-		// }
-		// SSL_free(newssl);
-		// newssl = NULL;
-		// return(4);
-	// }
 	else {
 		syslog(LOG_INFO, "SSL_accept success");
 	}
-	/*r = */BIO_set_close(SSL_get_rbio(newssl), BIO_NOCLOSE);
+	BIO_set_close(SSL_get_rbio(newssl), BIO_NOCLOSE);
 	bits = SSL_CIPHER_get_bits(SSL_get_current_cipher(newssl), &alg_bits);
 	syslog(LOG_INFO, "SSL/TLS using %s on %s (%d of %d bits)",
 		SSL_CIPHER_get_name(SSL_get_current_cipher(newssl)),
