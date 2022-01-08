@@ -13,6 +13,7 @@ echo -e '\033[0m'
 libcitadel_version=`grep LIBCITADEL_VERSION_NUMBER  libcitadel/lib/libcitadel.h | sed s/"[^0-9.]"/""/g`
 citserver_version=`grep REV_LEVEL citadel/citadel.h | sed s/"[^0-9.]"/""/g`
 webcit_version=`grep CLIENT_VERSION webcit/webcit.h | sed s/"[^0-9.]"/""/g`
+textclient_version=`grep CLIENT_VERSION textclient/textclient.h | sed s/"[^0-9.]"/""/g`
 
 NEW_VERSION=${libcitadel_version}
 if [ ${citserver_version} -gt ${NEW_VERSION} ] ; then
@@ -21,11 +22,15 @@ fi
 if [ ${webcit_version} -gt ${NEW_VERSION} ] ; then
 	NEW_VERSION=${webcit_version}
 fi
+if [ ${textclient_version} -gt ${NEW_VERSION} ] ; then
+	NEW_VERSION=${textclient_version}
+fi
 NEW_VERSION=`expr ${NEW_VERSION} + 1`
 
 echo -e '\033[33m\033[1mlibcitadel \033[32m was version     \033[33m'$libcitadel_version'\033[0m'
 echo -e '\033[33m\033[1mcitserver  \033[32m was version     \033[33m'$citserver_version'\033[0m'
 echo -e '\033[33m\033[1mwebcit     \033[32m was version     \033[33m'$webcit_version'\033[0m'
+echo -e '\033[33m\033[1mtextclient \033[32m was version     \033[33m'$textclient_version'\033[0m'
 echo -e '\033[33m\033[1mnew release\033[32m will be version \033[33m'$NEW_VERSION'\033[0m'
 
 echo -e ''
@@ -47,13 +52,20 @@ sed \
 	-i s/\#define.\*CLIENT_VERSION.\*${webcit_version}/\#define\ CLIENT_VERSION\ ${NEW_VERSION}/g \
 	webcit/webcit.h
 
+# Edit textclient.h to make it the new version
+sed \
+	-i s/\#define.\*CLIENT_VERSION.\*${textclient_version}/\#define\ CLIENT_VERSION\ ${NEW_VERSION}/g \
+	textclient/textclient.h
+
 libcitadel_version=`grep LIBCITADEL_VERSION_NUMBER  libcitadel/lib/libcitadel.h | sed s/"[^0-9.]"/""/g`
 citserver_version=`grep REV_LEVEL citadel/citadel.h | sed s/"[^0-9.]"/""/g`
 webcit_version=`grep CLIENT_VERSION webcit/webcit.h | sed s/"[^0-9.]"/""/g`
+textclient_version=`grep CLIENT_VERSION textclient/textclient.h | sed s/"[^0-9.]"/""/g`
 
 echo -e '\033[33m\033[1mlibcitadel \033[32m is now version  \033[33m'$libcitadel_version'\033[0m'
 echo -e '\033[33m\033[1mcitserver  \033[32m is now version  \033[33m'$citserver_version'\033[0m'
 echo -e '\033[33m\033[1mwebcit     \033[32m is now version  \033[33m'$webcit_version'\033[0m'
+echo -e '\033[33m\033[1mtextclient \033[32m is now version  \033[33m'$textclient_version'\033[0m'
 
 echo $NEW_VERSION >release_version.txt
 git add release_version.txt
