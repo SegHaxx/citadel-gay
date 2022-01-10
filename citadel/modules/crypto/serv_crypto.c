@@ -207,7 +207,7 @@ void generate_certificate(char *keyfilename, char *certfilename) {
 
 	X509_free(certificate);
 	EVP_PKEY_free(public_key);
-	// RSA_free(private_key);				// private_key is freed by EVP_PKEY_free() above
+	// do not RSA_free(private_key); because it was freed by EVP_PKEY_free() above
 }
 
 
