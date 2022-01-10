@@ -213,17 +213,11 @@ void generate_certificate(char *keyfilename, char *certfilename) {
 // This is called during initialization, and can be called again later if the certificate changes.
 void bind_to_key_and_certificate(void) {
 
-	SSL_CTX *old_ctx, *new_ctx;
+	SSL_CTX *old_ctx = NULL;
+	SSL_CTX *new_ctx = NULL;
 
 	if (!(new_ctx = SSL_CTX_new(TLS_server_method()))) {
 		syslog(LOG_ERR, "crypto: SSL_CTX_new failed: %s", ERR_reason_error_string(ERR_get_error()));
-		return;
-	}
-
-	if (!(SSL_CTX_set_cipher_list(new_ctx, CIT_CIPHERS))) {
-		syslog(LOG_ERR, "crypto: No ciphers available");
-		SSL_CTX_free(new_ctx);
-		new_ctx = NULL;
 		return;
 	}
 
@@ -239,8 +233,10 @@ void bind_to_key_and_certificate(void) {
 	old_ctx = ssl_ctx;
 	ssl_ctx = new_ctx;		// All future binds will use the new certificate
 
-	sleep(1);			// Hopefully wait until all in-progress binds to the old certificate have completed
-	SSL_CTX_free(old_ctx);
+	if (old_ctx != NULL) {
+		sleep(1);		// Hopefully wait until all in-progress binds to the old certificate have completed
+		SSL_CTX_free(old_ctx);
+	}
 }
 
 
@@ -260,13 +256,15 @@ void update_key_and_cert_if_needed(void) {
 	}
 
 	if ((keystat.st_mtime + certstat.st_mtime) != previous_mtime) {
+		begin_critical_section(S_OPENSSL);
 		bind_to_key_and_certificate();
+		end_critical_section(S_OPENSSL);
 		previous_mtime = keystat.st_mtime + certstat.st_mtime;
 	}
 }
 
 
-// Initialize the SSL/TLS subsystem.
+// Initialize the TLS subsystem.
 void init_ssl(void) {
 
 	// Initialize the OpenSSL library
@@ -282,8 +280,8 @@ void init_ssl(void) {
 	bind_to_key_and_certificate();					// Load key and cert from disk, and bind to them.
 
 	// Register some Citadel protocol commands for dealing with encrypted sessions
-	CtdlRegisterProtoHook(cmd_stls, "STLS", "Start SSL/TLS session");
-	CtdlRegisterProtoHook(cmd_gtls, "GTLS", "Get SSL/TLS session status");
+	CtdlRegisterProtoHook(cmd_stls, "STLS", "Start TLS session");
+	CtdlRegisterProtoHook(cmd_gtls, "GTLS", "Get TLS session status");
 	CtdlRegisterSessionHook(endtls, EVT_STOP, PRIO_STOP + 10);
 }
 
@@ -308,8 +306,7 @@ void client_write_ssl(const char *buf, int nbytes) {
 			long errval;
 
 			errval = SSL_get_error(CC->ssl, retval);
-			if (errval == SSL_ERROR_WANT_READ ||
-			    errval == SSL_ERROR_WANT_WRITE) {
+			if (errval == SSL_ERROR_WANT_READ || errval == SSL_ERROR_WANT_WRITE) {
 				sleep(1);
 				continue;
 			}
@@ -387,27 +384,24 @@ int client_readline_sslbuffer(StrBuf *Line, StrBuf *IOBuf, const char **Pos, int
 		}
 		else {
 			int n = 0;
-			if ((pch > ChrPtr(IOBuf)) && 
-			    (*(pch - 1) == '\r')) {
+			if ((pch > ChrPtr(IOBuf)) && (*(pch - 1) == '\r')) {
 				n = 1;
 			}
-			StrBufAppendBufPlain(Line, pos, 
-					     (pch - pos - n), 0);
+			StrBufAppendBufPlain(Line, pos, (pch - pos - n), 0);
 
 			if (StrLength(IOBuf) <= (pch - ChrPtr(IOBuf) + 1)) {
 				FlushStrBuf(IOBuf);
 				*Pos = NULL;
 			}
-			else 
+			else {
 				*Pos = pch + 1;
+			}
 			return StrLength(Line);
 		}
 	}
 
 	pLF = NULL;
-	while ((nSuccessLess < timeout) && 
-	       (pLF == NULL) &&
-	       (CC->ssl != NULL)) {
+	while ((nSuccessLess < timeout) && (pLF == NULL) && (CC->ssl != NULL)) {
 
 		rlen = client_read_sslbuffer(IOBuf, timeout);
 		if (rlen < 1) {
@@ -424,12 +418,12 @@ int client_readline_sslbuffer(StrBuf *Line, StrBuf *IOBuf, const char **Pos, int
 		if (len > 0 && (*(pLF - 1) == '\r') )
 			len --;
 		StrBufAppendBufPlain(Line, pos, len, 0);
-		if (pLF + 1 >= ChrPtr(IOBuf) + StrLength(IOBuf))
-		{
+		if (pLF + 1 >= ChrPtr(IOBuf) + StrLength(IOBuf)) {
 			FlushStrBuf(IOBuf);
 		}
-		else 
+		else  {
 			*Pos = pLF + 1;
+		}
 		return StrLength(Line);
 	}
 	return -1;
@@ -485,7 +479,7 @@ int client_read_sslblob(StrBuf *Target, long bytes, int timeout) {
 				CC->RecvBuf.ReadWritePointer = ChrPtr(CC->RecvBuf.Buf) + RemainRead;
 				break;
 			}
-			StrBufAppendBuf(Target, CC->RecvBuf.Buf, 0);	// todo: Buf > bytes?
+			StrBufAppendBuf(Target, CC->RecvBuf.Buf, 0);
 			FlushStrBuf(CC->RecvBuf.Buf);
 		}
 		else {
@@ -498,7 +492,7 @@ int client_read_sslblob(StrBuf *Target, long bytes, int timeout) {
 }
 
 
-// CtdlStartTLS() starts SSL/TLS encryption for the current session.  It
+// CtdlStartTLS() starts TLS encryption for the current session.  It
 // must be supplied with pre-generated strings for responses of "ok," "no
 // support for TLS," and "error" so that we can use this in any protocol.
 void CtdlStartTLS(char *ok_response, char *nosup_response, char *error_response) {
@@ -560,7 +554,7 @@ void CtdlStartTLS(char *ok_response, char *nosup_response, char *error_response)
 		return;
 	}
 	bits = SSL_CIPHER_get_bits(SSL_get_current_cipher(CC->ssl), &alg_bits);
-	syslog(LOG_INFO, "crypto: SSL/TLS using %s on %s (%d of %d bits)",
+	syslog(LOG_INFO, "crypto: TLS using %s on %s (%d of %d bits)",
 		SSL_CIPHER_get_name(SSL_get_current_cipher(CC->ssl)),
 		SSL_CIPHER_get_version(SSL_get_current_cipher(CC->ssl)),
 		bits, alg_bits
@@ -569,7 +563,7 @@ void CtdlStartTLS(char *ok_response, char *nosup_response, char *error_response)
 }
 
 
-// cmd_stls() starts SSL/TLS encryption for the current session
+// cmd_stls() starts TLS encryption for the current session
 void cmd_stls(char *params) {
 	char ok_response[SIZ];
 	char nosup_response[SIZ];
@@ -593,9 +587,7 @@ void cmd_gtls(char *params) {
 		cprintf("%d Session is not encrypted.\n", ERROR);
 		return;
 	}
-	bits =
-	    SSL_CIPHER_get_bits(SSL_get_current_cipher(CC->ssl),
-				&alg_bits);
+	bits = SSL_CIPHER_get_bits(SSL_get_current_cipher(CC->ssl), &alg_bits);
 	cprintf("%d %s|%s|%d|%d\n", CIT_OK,
 		SSL_CIPHER_get_version(SSL_get_current_cipher(CC->ssl)),
 		SSL_CIPHER_get_name(SSL_get_current_cipher(CC->ssl)),
@@ -604,16 +596,13 @@ void cmd_gtls(char *params) {
 
 
 // endtls() shuts down the TLS connection
-//
-// WARNING:  This may make your session vulnerable to a known plaintext
-// attack in the current implmentation.
 void endtls(void) {
 	if (!CC->ssl) {
 		CC->redirect_ssl = 0;
 		return;
 	}
 
-	syslog(LOG_INFO, "crypto: ending SSL/TLS");
+	syslog(LOG_INFO, "crypto: ending TLS on this session");
 	SSL_shutdown(CC->ssl);
 	SSL_free(CC->ssl);
 	CC->ssl = NULL;
