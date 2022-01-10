@@ -5,8 +5,7 @@
 #define SIGN_DAYS	1100	// Just over three years
 
 // Which ciphers will be offered; see https://www.openssl.org/docs/manmaster/man1/ciphers.html
-//#define CIT_CIPHERS	"ALL:RC4+RSA:+SSLv2:+TLSv1:!MD5:@STRENGTH"
-#define CIT_CIPHERS	"DEFAULT"
+#define CIT_CIPHERS	"ALL:RC4+RSA:+SSLv2:+TLSv1:!MD5:@STRENGTH"
 
 #ifdef HAVE_OPENSSL
 #define OPENSSL_NO_KRB5		/* work around redhat b0rken ssl headers */

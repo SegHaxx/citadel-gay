@@ -54,6 +54,7 @@ void generate_key(char *keyfilename) {
 	FILE *fp;
 
 	if (access(keyfilename, R_OK) == 0) {	// Already have one.
+		syslog(LOG_INFO, "crypto: %s exists and is readable", keyfilename);
 		return;
 	}
 
@@ -107,6 +108,7 @@ void generate_certificate(char *keyfilename, char *certfilename) {
 	FILE *fp;
 
 	if (access(certfilename, R_OK) == 0) {			// already have one.
+		syslog(LOG_INFO, "crypto: %s exists and is readable", certfilename);
 		return;
 	}
 
@@ -234,10 +236,16 @@ void bind_to_key_and_certificate(void) {
 	}
 
 	syslog(LOG_DEBUG, "crypto: using certificate chain %s", file_crpt_file_cer);
-        SSL_CTX_use_certificate_chain_file(new_ctx, file_crpt_file_cer);
+        if (!SSL_CTX_use_certificate_chain_file(new_ctx, file_crpt_file_cer)) {
+		syslog(LOG_ERR, "crypto: SSL_CTX_use_certificate_chain_file failed: %s", ERR_reason_error_string(ERR_get_error()));
+		return;
+	}
 
 	syslog(LOG_DEBUG, "crypto: using private key %s", file_crpt_file_key);
-        SSL_CTX_use_PrivateKey_file(new_ctx, file_crpt_file_key, SSL_FILETYPE_PEM);
+        if (!SSL_CTX_use_PrivateKey_file(new_ctx, file_crpt_file_key, SSL_FILETYPE_PEM)) {
+		syslog(LOG_ERR, "crypto: SSL_CTX_use_PrivateKey_file failed: %s", ERR_reason_error_string(ERR_get_error()));
+		return;
+	}
 
 	old_ctx = ssl_ctx;
 	ssl_ctx = new_ctx;		// All future binds will use the new certificate
