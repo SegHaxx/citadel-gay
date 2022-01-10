@@ -216,7 +216,14 @@ void bind_to_key_and_certificate(void) {
 	SSL_CTX *old_ctx = NULL;
 	SSL_CTX *new_ctx = NULL;
 
-	if (!(new_ctx = SSL_CTX_new(TLS_server_method()))) {
+	const SSL_METHOD *method = TLS_server_method();
+	if (!method) {
+		syslog(LOG_ERR, "crypto: TLS_server_method() failed: %s", ERR_reason_error_string(ERR_get_error()));
+		return;
+	}
+
+	new_ctx = SSL_CTX_new(method);
+	if (!new_ctx) {
 		syslog(LOG_ERR, "crypto: SSL_CTX_new failed: %s", ERR_reason_error_string(ERR_get_error()));
 		return;
 	}
@@ -273,6 +280,7 @@ void init_ssl(void) {
 	SSL_load_error_strings();
 	ERR_load_crypto_strings();
 	OpenSSL_add_all_algorithms();
+	OpenSSL_add_all_ciphers();
 	SSL_library_init();
 
 	// Load (or generate) a key and certificate
