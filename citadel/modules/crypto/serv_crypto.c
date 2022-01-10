@@ -42,7 +42,7 @@
 #ifdef HAVE_OPENSSL
 
 SSL_CTX *ssl_ctx = NULL;		// This SSL context is used for all sessions.
-
+char *ssl_cipher_list = CIT_CIPHERS;
 
 // If a private key does not exist, generate one now.
 void generate_key(char *keyfilename) {
@@ -221,14 +221,16 @@ void bind_to_key_and_certificate(void) {
 		return;
 	}
 
+	if (!(SSL_CTX_set_cipher_list(new_ctx, ssl_cipher_list))) {
+		syslog(LOG_ERR, "crypto: SSL_CTX_set_cipher_list failed: %s", ERR_reason_error_string(ERR_get_error()));
+		return;
+	}
+
 	syslog(LOG_DEBUG, "crypto: using certificate chain %s", file_crpt_file_cer);
         SSL_CTX_use_certificate_chain_file(new_ctx, file_crpt_file_cer);
 
 	syslog(LOG_DEBUG, "crypto: using private key %s", file_crpt_file_key);
         SSL_CTX_use_PrivateKey_file(new_ctx, file_crpt_file_key, SSL_FILETYPE_PEM);
-        if ( !SSL_CTX_check_private_key(new_ctx) ) {
-		syslog(LOG_ERR, "crypto: cannot install certificate: %s", ERR_reason_error_string(ERR_get_error()));
-        }
 
 	old_ctx = ssl_ctx;
 	ssl_ctx = new_ctx;		// All future binds will use the new certificate
@@ -540,15 +542,7 @@ void CtdlStartTLS(char *ok_response, char *nosup_response, char *error_response)
 		// Can't notify the client of an error here; they will
 		// discover the problem at the SSL layer and should
 		// revert to unencrypted communications.
-		long errval;
-		char error_string[128];
-
-		errval = SSL_get_error(CC->ssl, retval);
-		syslog(LOG_ERR, "crypto: SSL_accept failed: retval=%d, errval=%ld, err=%s",
-			retval,
-			errval,
-			ERR_error_string(errval, error_string)
-		);
+		syslog(LOG_ERR, "crypto: SSL_accept failed: %s", ERR_reason_error_string(ERR_get_error()));
 		SSL_free(CC->ssl);
 		CC->ssl = NULL;
 		return;
