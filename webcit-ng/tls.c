@@ -26,7 +26,7 @@ char *ssl_cipher_list = DEFAULT_SSL_CIPHER_LIST;
 void bind_to_key_and_certificate(void) {
 	SSL_CTX *old_ctx, *new_ctx;
 
-	if (!(new_ctx = SSL_CTX_new(SSLv23_server_method()))) {
+	if (!(new_ctx = SSL_CTX_new(TLS_server_method()))) {
 		syslog(LOG_WARNING, "SSL_CTX_new failed: %s", ERR_reason_error_string(ERR_get_error()));
 		return;
 	}
