@@ -22,10 +22,6 @@ char *ssl_cipher_list = DEFAULT_SSL_CIPHER_LIST;
 
 pthread_key_t ThreadSSL;	// Per-thread SSL context
 
-void shutdown_ssl(void) {
-	ERR_free_strings();
-}
-
 
 // Set the private key and certificate chain for the global SSL Context.
 // This is called during initialization, and can be called again later if the certificate changes.
@@ -70,9 +66,11 @@ void bind_to_key_and_certificate(void) {
 // initialize ssl engine, load certs and initialize openssl internals
 void init_ssl(void) {
 
-	// Initialize SSL transport layer
-	SSL_library_init();
+	// Initialize the OpenSSL library
 	SSL_load_error_strings();
+	ERR_load_crypto_strings();
+	OpenSSL_add_all_algorithms();
+	SSL_library_init();
 
 	// Now try to bind to the key and certificate.
 	bind_to_key_and_certificate();

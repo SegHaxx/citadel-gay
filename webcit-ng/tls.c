@@ -63,9 +63,11 @@ void bind_to_key_and_certificate(void) {
 // Initialize ssl engine, load certs and initialize openssl internals
 void init_ssl(void) {
 
-	// Initialize SSL transport layer
-	SSL_library_init();
+	// Initialize the OpenSSL library
 	SSL_load_error_strings();
+	ERR_load_crypto_strings();
+	OpenSSL_add_all_algorithms();
+	SSL_library_init();
 
 	// Now try to bind to the key and certificate.
 	bind_to_key_and_certificate();

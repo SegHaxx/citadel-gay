@@ -268,15 +268,20 @@ void update_key_and_cert_if_needed(void) {
 
 // Initialize the SSL/TLS subsystem.
 void init_ssl(void) {
-	SSL_library_init();						// Initialize SSL transport layer
-	SSL_load_error_strings();
 
+	// Initialize the OpenSSL library
+	SSL_load_error_strings();
+	ERR_load_crypto_strings();
+	OpenSSL_add_all_algorithms();
+	SSL_library_init();
+
+	// Load (or generate) a key and certificate
 	mkdir(ctdl_key_dir, 0700);					// If the keys directory does not exist, create it
 	generate_key(file_crpt_file_key);				// If a private key does not exist, create it
 	generate_certificate(file_crpt_file_key, file_crpt_file_cer);	// If a certificate does not exist, create it
 	bind_to_key_and_certificate();					// Load key and cert from disk, and bind to them.
 
-	// Finally let the server know we're here
+	// Register some Citadel protocol commands for dealing with encrypted sessions
 	CtdlRegisterProtoHook(cmd_stls, "STLS", "Start SSL/TLS session");
 	CtdlRegisterProtoHook(cmd_gtls, "GTLS", "Get SSL/TLS session status");
 	CtdlRegisterSessionHook(endtls, EVT_STOP, PRIO_STOP + 10);

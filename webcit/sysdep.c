@@ -179,11 +179,6 @@ void ShutDownWebcit(void)
 	icalmemory_free_ring ();
 	ShutDownLibCitadel ();
 	shutdown_modules ();
-#ifdef HAVE_OPENSSL
-	if (is_https) {
-		shutdown_ssl();
-	}
-#endif
 }
 
 /*
