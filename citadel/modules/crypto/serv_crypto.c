@@ -277,11 +277,8 @@ void update_key_and_cert_if_needed(void) {
 void init_ssl(void) {
 
 	// Initialize the OpenSSL library
-	SSL_load_error_strings();
-	ERR_load_crypto_strings();
-	OpenSSL_add_all_algorithms();
-	OpenSSL_add_all_ciphers();
 	SSL_library_init();
+	SSL_load_error_strings();
 
 	// Load (or generate) a key and certificate
 	mkdir(ctdl_key_dir, 0700);					// If the keys directory does not exist, create it
