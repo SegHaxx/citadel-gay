@@ -1,4 +1,4 @@
-// Copyright (c) 1987-2020 by the citadel.org team
+// Copyright (c) 1987-2022 by the citadel.org team
 //
 // This program is open source software.  Use, duplication, and/or
 // disclosure are subject to the GNU General Purpose License version 3.
@@ -25,7 +25,6 @@
 #define ROOMNAMELEN		128		// The size of a roomname string
 #define USERNAME_SIZE		64      	// The size of a username string
 #define MAX_EDITORS		5      		// number of external editors supported, must be at least 1
-#define NONCE_SIZE		128		// Added by <bc> to allow for APOP auth 
 
 #define S_KEEPALIVE		30		// How often (in seconds) to send keepalives to the server
 

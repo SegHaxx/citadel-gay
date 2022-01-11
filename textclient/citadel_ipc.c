@@ -283,31 +283,6 @@ int CtdlIPCTryPassword(CtdlIPC * ipc, const char *passwd, char *cret)
 
 
 /*
- * Second stage of authentication - provide password.  The server returns
- * 200 and several arguments in cret relating to the user's account.
- */
-int CtdlIPCTryApopPassword(CtdlIPC * ipc, const char *response, char *cret)
-{
-	int ret;
-	char *aaa;
-
-	if (!response)
-		return -2;
-	if (!cret)
-		return -2;
-
-	aaa = (char *) malloc((size_t) (strlen(response) + 6));
-	if (!aaa)
-		return -1;
-
-	sprintf(aaa, "PAS2 %s", response);
-	ret = CtdlIPCGenericCommand(ipc, aaa, NULL, 0, NULL, NULL, cret);
-	free(aaa);
-	return ret;
-}
-
-
-/*
  * Create a new user.  This returns 200 plus the same arguments as TryPassword
  * if selfservice is nonzero, unless there was a problem creating the account.
  * If selfservice is zero, creates a new user but does not log out the existing

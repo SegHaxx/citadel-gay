@@ -1374,7 +1374,6 @@ int main(int argc, char **argv) {
 	int a, b, mcmd;
 	char aaa[100], bbb[100];	/* general purpose variables */
 	char argbuf[64];	/* command line buf */
-	char nonce[NONCE_SIZE];
 	char *telnet_client_host = NULL;
 	char *sptr, *sptr2;	/* USed to extract the nonce */
 	char hexstring[MD5_HEXSTRING_SIZE];
@@ -1473,22 +1472,6 @@ int main(int argc, char **argv) {
 		logoff(ipc, atoi(aaa));
 	}
 
-	/* If there is a [nonce] at the end, put the nonce in <nonce>, else nonce
-	 * is zeroized.
-	 */
-
-	if ((sptr = strchr(aaa, '<')) == NULL) {
-		nonce[0] = '\0';
-	} else {
-		if ((sptr2 = strchr(sptr, '>')) == NULL) {
-			nonce[0] = '\0';
-		} else {
-			sptr2++;
-			*sptr2 = '\0';
-			strncpy(nonce, sptr, (size_t) NONCE_SIZE);
-		}
-	}
-
 #ifdef HAVE_OPENSSL
 	/* Evaluate encryption preferences */
 	if (arg_encrypt != RC_NO && rc_encrypt != RC_NO) {
@@ -1514,19 +1497,13 @@ int main(int argc, char **argv) {
 		if (!IsEmptyStr(fullname)) {
 			r = CtdlIPCTryLogin(ipc, fullname, aaa);
 			if (r / 100 == 3) {
-				if (*nonce) {
-					r = CtdlIPCTryApopPassword(ipc,
-								   make_apop_string(password, nonce, hexstring, sizeof hexstring),
-								   aaa);
-				} else {
-					r = CtdlIPCTryPassword(ipc, password, aaa);
-				}
+				r = CtdlIPCTryPassword(ipc, password, aaa);
 			}
-
 			if (r / 100 == 2) {
 				load_user_info(aaa);
 				goto PWOK;
-			} else {
+			}
+			else {
 				set_stored_password(hostbuf, portbuf, "", "");
 			}
 		}
@@ -1570,18 +1547,10 @@ int main(int argc, char **argv) {
 		newprompt("\rPlease enter your password: ", password, -(SIZ - 1));
 	}
 
-	if (*nonce) {
-		r = CtdlIPCTryApopPassword(ipc, make_apop_string(password, nonce, hexstring, sizeof hexstring), aaa);
-		if (r / 100 != 2) {
-			strproc(password);
-			r = CtdlIPCTryApopPassword(ipc, make_apop_string(password, nonce, hexstring, sizeof hexstring), aaa);
-		}
-	} else {
+	r = CtdlIPCTryPassword(ipc, password, aaa);
+	if (r / 100 != 2) {
+		strproc(password);
 		r = CtdlIPCTryPassword(ipc, password, aaa);
-		if (r / 100 != 2) {
-			strproc(password);
-			r = CtdlIPCTryPassword(ipc, password, aaa);
-		}
 	}
 
 	if (r / 100 == 2) {
