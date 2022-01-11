@@ -19,7 +19,7 @@
 // The VRFY and EXPN commands have been removed from this implementation
 // because nobody uses these commands anymore, except for spammers.
 //
-// Copyright (c) 1998-2021 by the citadel.org team
+// Copyright (c) 1998-2022 by the citadel.org team
 //
 // This program is open source software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License version 3.
@@ -69,7 +69,7 @@
 
 #include "smtp_util.h"
 
-enum {				/* Command states for login authentication */
+enum {				// Command states for login authentication
 	smtp_command,
 	smtp_user,
 	smtp_password,
@@ -83,9 +83,7 @@ enum SMTP_FLAGS {
 };
 
 
-/*
- * Here's where our SMTP session begins its happy day.
- */
+// Here's where our SMTP session begins its happy day.
 void smtp_greeting(int is_msa) {
 	char message_to_spammer[1024];
 
@@ -103,9 +101,8 @@ void smtp_greeting(int is_msa) {
 	SMTP->preferred_sender_email = NULL;
 	SMTP->preferred_sender_name = NULL;
 
-	/* If this config option is set, reject connections from problem
-	 * addresses immediately instead of after they execute a RCPT
-	 */
+	// If this config option is set, reject connections from problem
+	// addresses immediately instead of after they execute a RCPT
 	if ( (CtdlGetConfigInt("c_rbl_at_greeting")) && (SMTP->is_msa == 0) ) {
 		if (rbl_check(CC->cs_addr, message_to_spammer)) {
 			if (server_shutting_down)
@@ -118,45 +115,38 @@ void smtp_greeting(int is_msa) {
 		}
 	}
 
-	/* Otherwise we're either clean or we check later. */
+	// Otherwise we're either clean or we check later.
 
 	if (CC->nologin==1) {
 		cprintf("451 Too many connections are already open; please try again later.\r\n");
 		CC->kill_me = KILLME_MAX_SESSIONS_EXCEEDED;
-		/* no need to free_recipients(valid), it's not allocated yet */
+		// no need to free_recipients(valid), it's not allocated yet
 		return;
 	}
 
-	/* Note: the FQDN *must* appear as the first thing after the 220 code.
-	 * Some clients (including citmail.c) depend on it being there.
-	 */
+	// Note: the FQDN *must* appear as the first thing after the 220 code.
+	// Some clients (including citmail.c) depend on it being there.
 	cprintf("220 %s ESMTP Citadel server ready.\r\n", CtdlGetConfigStr("c_fqdn"));
 }
 
 
-/*
- * SMTPS is just like SMTP, except it goes crypto right away.
- */
+// SMTPS is just like SMTP, except it goes crypto right away.
 void smtps_greeting(void) {
 	CtdlModuleStartCryptoMsgs(NULL, NULL, NULL);
 #ifdef HAVE_OPENSSL
-	if (!CC->redirect_ssl) CC->kill_me = KILLME_NO_CRYPTO;		/* kill session if no crypto */
+	if (!CC->redirect_ssl) CC->kill_me = KILLME_NO_CRYPTO;		// kill session if no crypto
 #endif
 	smtp_greeting(0);
 }
 
 
-/*
- * SMTP MSA port requires authentication.
- */
+// SMTP MSA port requires authentication.
 void smtp_msa_greeting(void) {
 	smtp_greeting(1);
 }
 
 
-/*
- * LMTP is like SMTP but with some extra bonus footage added.
- */
+// LMTP is like SMTP but with some extra bonus footage added.
 void lmtp_greeting(void) {
 
 	smtp_greeting(0);
@@ -164,17 +154,13 @@ void lmtp_greeting(void) {
 }
 
 
-/* 
- * Generic SMTP MTA greeting
- */
+// Generic SMTP MTA greeting
 void smtp_mta_greeting(void) {
 	smtp_greeting(0);
 }
 
 
-/*
- * We also have an unfiltered LMTP socket that bypasses spam filters.
- */
+// We also have an unfiltered LMTP socket that bypasses spam filters.
 void lmtp_unfiltered_greeting(void) {
 	smtp_greeting(0);
 	SMTP->is_lmtp = 1;
@@ -182,9 +168,7 @@ void lmtp_unfiltered_greeting(void) {
 }
 
 
-/*
- * Login greeting common to all auth methods
- */
+// Login greeting common to all auth methods
 void smtp_auth_greeting(void) {
 	cprintf("235 Hello, %s\r\n", CC->user.fullname);
 	syslog(LOG_INFO, "serv_smtp: SMTP authenticated %s", CC->user.fullname);
@@ -193,14 +177,12 @@ void smtp_auth_greeting(void) {
 }
 
 
-/*
- * Implement HELO and EHLO commands.
- *
- * which_command:  0=HELO, 1=EHLO, 2=LHLO
- */
+// Implement HELO and EHLO commands.
+// which_command:  0=HELO, 1=EHLO, 2=LHLO
 void smtp_hello(int which_command) {
 
 	if (StrLength(SMTP->Cmd) >= 6) {
+		FlushStrBuf(SMTP->helo_node);
 		StrBufAppendBuf(SMTP->helo_node, SMTP->Cmd, 5);
 	}
 
@@ -236,16 +218,14 @@ void smtp_hello(int which_command) {
 		cprintf("250-SIZE %ld\r\n", CtdlGetConfigLong("c_maxmsglen"));
 
 #ifdef HAVE_OPENSSL
-		/*
-		 * Offer TLS, but only if TLS is not already active.
-		 * Furthermore, only offer TLS when running on
-		 * the SMTP-MSA port, not on the SMTP-MTA port, due to
-		 * questionable reliability of TLS in certain sending MTA's.
-		 */
+		// Offer TLS, but only if TLS is not already active.
+		// Furthermore, only offer TLS when running on
+		// the SMTP-MSA port, not on the SMTP-MTA port, due to
+		// questionable reliability of TLS in certain sending MTA's.
 		if ( (!CC->redirect_ssl) && (SMTP->is_msa) ) {
 			cprintf("250-STARTTLS\r\n");
 		}
-#endif	/* HAVE_OPENSSL */
+#endif
 
 		cprintf("250-AUTH LOGIN PLAIN\r\n"
 			"250-AUTH=LOGIN PLAIN\r\n"
@@ -255,16 +235,14 @@ void smtp_hello(int which_command) {
 }
 
 
-/*
- * Backend function for smtp_webcit_preferences_hack().
- * Look at a message and determine if it's the preferences file.
- */
+// Backend function for smtp_webcit_preferences_hack().
+// Look at a message and determine if it's the preferences file.
 void smtp_webcit_preferences_hack_backend(long msgnum, void *userdata) {
 	struct CtdlMessage *msg;
 	char **webcit_conf = (char **) userdata;
 
 	if (*webcit_conf) {
-		return;	// already got it
+		return;		// already got it
 	}
 
 	msg = CtdlFetchMessage(msgnum, 1);
@@ -273,7 +251,7 @@ void smtp_webcit_preferences_hack_backend(long msgnum, void *userdata) {
 	}
 
 	if ( !CM_IsEmpty(msg, eMsgSubject) && (!strcasecmp(msg->cm_fields[eMsgSubject], "__ WebCit Preferences __"))) {
-		/* This is it!  Change ownership of the message text so it doesn't get freed. */
+		// This is it!  Change ownership of the message text so it doesn't get freed.
 		*webcit_conf = (char *)msg->cm_fields[eMesageText];
 		msg->cm_fields[eMesageText] = NULL;
 	}
@@ -281,10 +259,8 @@ void smtp_webcit_preferences_hack_backend(long msgnum, void *userdata) {
 }
 
 
-/*
- * The configuration item for the user's preferred display name for outgoing email is, unfortunately,
- * stored in the account's WebCit configuration.  We have to fetch it now.
- */
+// The configuration item for the user's preferred display name for outgoing email is, unfortunately,
+// stored in the account's WebCit configuration.  We have to fetch it now.
 void smtp_webcit_preferences_hack(void) {
 	char config_roomname[ROOMNAMELEN];
 	char *webcit_conf = NULL;
@@ -294,17 +270,14 @@ void smtp_webcit_preferences_hack(void) {
 		return;
 	}
 
-	/*
-	 * Find the WebCit configuration message
-	 */
-
+	// Find the WebCit configuration message
 	CtdlForEachMessage(MSGS_ALL, 1, NULL, NULL, NULL, smtp_webcit_preferences_hack_backend, (void *)&webcit_conf);
 
 	if (!webcit_conf) {
 		return;
 	}
 
-	/* Parse the webcit configuration and attempt to do something useful with it */
+	// Parse the webcit configuration and attempt to do something useful with it
 	char *str = webcit_conf;
 	char *saveptr = str;
 	char *this_line = NULL;
@@ -325,17 +298,12 @@ void smtp_webcit_preferences_hack(void) {
 }
 
 
-/*
- * Implement HELP command.
- */
+// Implement HELP command.
 void smtp_help(void) {
 	cprintf("214 RTFM http://www.ietf.org/rfc/rfc2821.txt\r\n");
 }
 
 
-/*
- *
- */
 void smtp_get_user(int offset) {
 	char buf[SIZ];
 
@@ -360,11 +328,7 @@ void smtp_get_user(int offset) {
 }
 
 
-/*
- *
- */
-void smtp_get_pass(void)
-{
+void smtp_get_pass(void) {
 	char password[SIZ];
 
 	memset(password, 0, sizeof(password));
@@ -380,9 +344,7 @@ void smtp_get_pass(void)
 }
 
 
-/*
- * Back end for PLAIN auth method (either inline or multistate)
- */
+// Back end for PLAIN auth method (either inline or multistate)
 void smtp_try_plain(void) {
 	const char*decoded_authstring;
 	char ident[256] = "";
@@ -440,9 +402,7 @@ void smtp_try_plain(void) {
 }
 
 
-/*
- * Attempt to perform authenticated SMTP
- */
+// Attempt to perform authenticated SMTP
 void smtp_auth(void) {
 	char username_prompt[64];
 	char method[64];
@@ -498,21 +458,13 @@ void smtp_auth(void) {
 }
 
 
-/*
- * Implements the RSET (reset state) command.
- * Currently this just zeroes out the state buffer.  If pointers to data
- * allocated with malloc() are ever placed in the state buffer, we have to
- * be sure to free() them first!
- *
- * Set do_response to nonzero to output the SMTP RSET response code.
- */
+// Implements the RSET (reset state) command.
+// Currently this just zeroes out the state buffer.  If pointers to data
+// allocated with malloc() are ever placed in the state buffer, we have to
+// be sure to free() them first!
+//
+// Set do_response to nonzero to output the SMTP RSET response code.
 void smtp_rset(int do_response) {
-	/*
-	 * Our entire SMTP state is discarded when a RSET command is issued,
-	 * but we need to preserve this one little piece of information, so
-	 * we save it for later.
-	 */
-
 	FlushStrBuf(SMTP->Cmd);
 	FlushStrBuf(SMTP->helo_node);
 	FlushStrBuf(SMTP->from);
@@ -524,20 +476,7 @@ void smtp_rset(int do_response) {
 	SMTP->delivery_mode = 0;
 	SMTP->message_originated_locally = 0;
 	SMTP->is_msa = 0;
-	/*
-	 * we must remember is_lmtp & is_unfiltered.
-	 */
-
-	/*
-	 * It is somewhat ambiguous whether we want to log out when a RSET
-	 * command is issued.  Here's the code to do it.  It is commented out
-	 * because some clients (such as Pine) issue RSET commands before
-	 * each message, but still expect to be logged in.
-	 *
-	 * if (CC->logged_in) {
-	 *	logout(CC);
-	 * }
-	 */
+	// is_lmtp and is_unfiltered should not be cleared. 
 
 	if (do_response) {
 		cprintf("250 Zap!\r\n");
@@ -545,10 +484,8 @@ void smtp_rset(int do_response) {
 }
 
 
-/*
- * Clear out the portions of the state buffer that need to be cleared out
- * after the DATA command finishes.
- */
+// Clear out the portions of the state buffer that need to be cleared out
+// after the DATA command finishes.
 void smtp_data_clear(void) {
 	FlushStrBuf(SMTP->from);
 	FlushStrBuf(SMTP->recipients);
@@ -559,9 +496,7 @@ void smtp_data_clear(void) {
 }
 
 
-/*
- * Implements the "MAIL FROM:" command
- */
+// Implements the "MAIL FROM:" command
 void smtp_mail(void) {
 	char user[SIZ];
 	char node[SIZ];
@@ -588,19 +523,17 @@ void smtp_mail(void) {
 		StrBufStripAllBut(SMTP->from, '<', '>');
 	}
 
-	/* We used to reject empty sender names, until it was brought to our
-	 * attention that RFC1123 5.2.9 requires that this be allowed.  So now
-	 * we allow it, but replace the empty string with a fake
-	 * address so we don't have to contend with the empty string causing
-	 * other code to fail when it's expecting something there.
-	 */
+	// We used to reject empty sender names, until it was brought to our
+	// attention that RFC1123 5.2.9 requires that this be allowed.  So now
+	// we allow it, but replace the empty string with a fake
+	// address so we don't have to contend with the empty string causing
+	// other code to fail when it's expecting something there.
 	if (StrLength(SMTP->from) == 0) {
 		StrBufPlain(SMTP->from, HKEY("someone@example.com"));
 	}
 
-	/* If this SMTP connection is from a logged-in user, force the 'from'
-	 * to be the user's Internet e-mail address as Citadel knows it.
-	 */
+	// If this SMTP connection is from a logged-in user, force the 'from'
+	// to be the user's Internet e-mail address as Citadel knows it.
 	if (CC->logged_in) {
 		StrBufPlain(SMTP->from, CC->cs_inet_email, -1);
 		cprintf("250 Sender ok <%s>\r\n", ChrPtr(SMTP->from));
@@ -609,12 +542,11 @@ void smtp_mail(void) {
 	}
 
 	else if (SMTP->is_lmtp) {
-		/* Bypass forgery checking for LMTP */
+		// Bypass forgery checking for LMTP
 	}
 
-	/* Otherwise, make sure outsiders aren't trying to forge mail from
-	 * this system (unless, of course, c_allow_spoofing is enabled)
-	 */
+	// Otherwise, make sure outsiders aren't trying to forge mail from
+	// this system (unless, of course, c_allow_spoofing is enabled)
 	else if (CtdlGetConfigInt("c_allow_spoofing") == 0) {
 		process_rfc822_addr(ChrPtr(SMTP->from), user, node, name);
 		syslog(LOG_DEBUG, "serv_smtp: claimed envelope sender is '%s' == '%s' @ '%s' ('%s')",
@@ -632,9 +564,7 @@ void smtp_mail(void) {
 }
 
 
-/*
- * Implements the "RCPT To:" command
- */
+// Implements the "RCPT To:" command
 void smtp_rcpt(void) {
 	char message_to_spammer[SIZ];
 	struct recptypes *valid = NULL;
@@ -737,9 +667,7 @@ void smtp_rcpt(void) {
 }
 
 
-/*
- * Implements the DATA command
- */
+// Implements the DATA command
 void smtp_data(void) {
 	StrBuf *body;
 	StrBuf *defbody; 
@@ -798,16 +726,16 @@ void smtp_data(void) {
 	syslog(LOG_DEBUG, "serv_smtp: converting message...");
 	msg = convert_internet_message_buf(&body);
 
-	/* If the user is locally authenticated, FORCE the From: header to
-	 * show up as the real sender.  Yes, this violates the RFC standard,
-	 * but IT MAKES SENSE.  If you prefer strict RFC adherence over
-	 * common sense, you can disable this in the configuration.
-	 *
-	 * We also set the "message room name" ('O' field) to MAILROOM
-	 * (which is Mail> on most systems) to prevent it from getting set
-	 * to something ugly like "0000058008.Sent Items>" when the message
-	 * is read with a Citadel client.
-	 */
+	// If the user is locally authenticated, FORCE the From: header to
+	// show up as the real sender.  Yes, this violates the RFC standard,
+	// but IT MAKES SENSE.  If you prefer strict RFC adherence over
+	// common sense, you can disable this in the configuration.
+	//
+	// We also set the "message room name" ('O' field) to MAILROOM
+	// (which is Mail> on most systems) to prevent it from getting set
+	// to something ugly like "0000058008.Sent Items>" when the message
+	// is read with a Citadel client.
+
 	if ( (CC->logged_in) && (CtdlGetConfigInt("c_rfc822_strict_from") != CFG_SMTP_FROM_NOFILTER) ) {
 		int validemail = 0;
 		
@@ -853,23 +781,22 @@ void smtp_data(void) {
 		}
 	}
 
-	/* Set the "envelope from" address */
+	// Set the "envelope from" address
 	CM_SetField(msg, eMessagePath, SKEY(SMTP->from));
 
-	/* Set the "envelope to" address */
+	// Set the "envelope to" address
 	CM_SetField(msg, eenVelopeTo, SKEY(SMTP->recipients));
 
-	/* Submit the message into the Citadel system. */
+	// Submit the message into the Citadel system.
 	valid = validate_recipients(
 		(char *)ChrPtr(SMTP->recipients),
 		smtp_get_Recipients(),
 		(SMTP->is_lmtp)? POST_LMTP: (CC->logged_in)? POST_LOGGED_IN: POST_EXTERNAL
 	);
 
-	/* If there are modules that want to scan this message before final
-	 * submission (such as virus checkers or spam filters), call them now
-	 * and give them an opportunity to reject the message.
-	 */
+	// If there are modules that want to scan this message before final
+	// submission (such as virus checkers or spam filters), call them now
+	// and give them an opportunity to reject the message.
 	if (SMTP->is_unfiltered) {
 		scan_errors = 0;
 	}
@@ -877,7 +804,7 @@ void smtp_data(void) {
 		scan_errors = PerformMessageHooks(msg, valid, EVT_SMTPSCAN);
 	}
 
-	if (scan_errors > 0) {	/* We don't want this message! */
+	if (scan_errors > 0) {	// We don't want this message!
 
 		if (CM_IsEmpty(msg, eErrorMsg)) {
 			CM_SetField(msg, eErrorMsg, HKEY("Message rejected by filter"));
@@ -886,7 +813,7 @@ void smtp_data(void) {
 		StrBufPrintf(SMTP->OneRcpt, "550 %s\r\n", msg->cm_fields[eErrorMsg]);
 	}
 	
-	else {			/* Ok, we'll accept this message. */
+	else {			// Ok, we'll accept this message.
 		msgnum = CtdlSubmitMsg(msg, valid, "");
 		if (msgnum > 0L) {
 			StrBufPrintf(SMTP->OneRcpt, "250 Message accepted.\r\n");
@@ -896,12 +823,11 @@ void smtp_data(void) {
 		}
 	}
 
-	/* For SMTP and ESMTP, just print the result message.  For LMTP, we
-	 * have to print one result message for each recipient.  Since there
-	 * is nothing in Citadel which would cause different recipients to
-	 * have different results, we can get away with just spitting out the
-	 * same message once for each recipient.
-	 */
+	// For SMTP and ESMTP, just print the result message.  For LMTP, we
+	// have to print one result message for each recipient.  Since there
+	// is nothing in Citadel which would cause different recipients to
+	// have different results, we can get away with just spitting out the
+	// same message once for each recipient.
 	if (SMTP->is_lmtp) {
 		for (i=0; i<SMTP->number_of_recipients; ++i) {
 			cputbuf(SMTP->OneRcpt);
@@ -911,9 +837,8 @@ void smtp_data(void) {
 		cputbuf(SMTP->OneRcpt);
 	}
 
-	/* Write something to the syslog(which may or may not be where the
-	 * rest of the Citadel logs are going; some sysadmins want LOG_MAIL).
-	 */
+	// Write something to the syslog(which may or may not be where the
+	// rest of the Citadel logs are going; some sysadmins want LOG_MAIL).
 	syslog((LOG_MAIL | LOG_INFO),
 		    "%ld: from=<%s>, nrcpts=%d, relay=%s [%s], stat=%s",
 		    msgnum,
@@ -924,16 +849,14 @@ void smtp_data(void) {
 		    ChrPtr(SMTP->OneRcpt)
 	);
 
-	/* Clean up */
+	// Clean up
 	CM_Free(msg);
 	free_recipients(valid);
-	smtp_data_clear();	/* clear out the buffers now */
+	smtp_data_clear();	// clear out the buffers now
 }
 
 
-/*
- * Implements the STARTTLS command
- */
+// Implements the STARTTLS command
 void smtp_starttls(void) {
 	char ok_response[SIZ];
 	char nosup_response[SIZ];
@@ -947,26 +870,20 @@ void smtp_starttls(void) {
 }
 
 
-/*
- * Implements the NOOP (NO OPeration) command
- */
+// Implements the NOOP (NO OPeration) command
 void smtp_noop(void) {
 	cprintf("250 NOOP\r\n");
 }
 
 
-/*
- * Implements the QUIT command
- */
+// Implements the QUIT command
 void smtp_quit(void) {
 	cprintf("221 Goodbye...\r\n");
 	CC->kill_me = KILLME_CLIENT_LOGGED_OUT;
 }
 
 
-/* 
- * Main command loop for SMTP server sessions.
- */
+// Main command loop for SMTP server sessions.
 void smtp_command_loop(void) {
 	static const ConstStr AuthPlainStr = {HKEY("AUTH PLAIN")};
 
