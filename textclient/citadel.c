@@ -1,6 +1,6 @@
 // Main source module for the client program.
 //
-// Copyright (c) 1987-2019 by the citadel.org team
+// Copyright (c) 1987-2022 by the citadel.org team
 //
 // This program is open source software.  Use, duplication, and/or
 // disclosure are subject to the GNU General Purpose License version 3.
@@ -1376,7 +1376,6 @@ int main(int argc, char **argv) {
 	char argbuf[64];	/* command line buf */
 	char *telnet_client_host = NULL;
 	char *sptr, *sptr2;	/* USed to extract the nonce */
-	char hexstring[MD5_HEXSTRING_SIZE];
 	char password[SIZ];
 	struct ctdlipcmisc chek;
 	struct ctdluser *myself = NULL;

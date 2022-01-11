@@ -533,34 +533,6 @@ extern char rc_gotmail_cmd[SIZ];
 extern int lines_printed;
 extern int rc_remember_passwords;
 
-#ifndef MD5_H
-#define MD5_H
-
-struct MD5Context {
-	uint32_t buf[4];
-	uint32_t bits[2];
-	uint32_t in[16];
-};
-
-void MD5Init(struct MD5Context *context);
-void MD5Update(struct MD5Context *context, unsigned char const *buf, unsigned len);
-void MD5Final(unsigned char digest[16], struct MD5Context *context);
-void MD5Transform(uint32_t buf[4], uint32_t const in[16]);
-char *make_apop_string(char *realpass, char *nonce, char *buffer, size_t n);
-
-/*
- * This is needed to make RSAREF happy on some MS-DOS compilers.
- */
-#ifndef HAVE_OPENSSL
-typedef struct MD5Context MD5_CTX;
-#endif
-
-#define MD5_DIGEST_LEN		16
-#define MD5_HEXSTRING_SIZE	33
-
-#endif /* !MD5_H */
-
-
 #define MAXURLS		50			// Max embedded URL's per message (oooh, can we use our elastic array class here?)
 extern int num_urls;
 extern char urls[MAXURLS][SIZ];
