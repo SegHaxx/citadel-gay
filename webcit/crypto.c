@@ -36,7 +36,7 @@ void bind_to_key_and_certificate(void) {
 		snprintf(cert_file, sizeof key_file, "%s/keys/citadel.cer", ctdl_dir);
 	}
 
-	if (!(new_ctx = SSL_CTX_new(TLS_server_method()))) {
+	if (!(new_ctx = SSL_CTX_new(SSLv23_server_method()))) {
 		syslog(LOG_WARNING, "SSL_CTX_new failed: %s", ERR_reason_error_string(ERR_get_error()));
 		return;
 	}

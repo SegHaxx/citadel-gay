@@ -220,7 +220,7 @@ void bind_to_key_and_certificate(void) {
 
 	const SSL_METHOD *method = SSLv23_server_method();
 	if (!method) {
-		syslog(LOG_ERR, "crypto: TLS_server_method() failed: %s", ERR_reason_error_string(ERR_get_error()));
+		syslog(LOG_ERR, "crypto: SSLv23_server_method() failed: %s", ERR_reason_error_string(ERR_get_error()));
 		return;
 	}
 
