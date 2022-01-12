@@ -1,7 +1,6 @@
+// Read and write the system configuration database
 //
-// Read and write the citadel.config file
-//
-// Copyright (c) 1987-2021 by the citadel.org team
+// Copyright (c) 1987-2022 by the citadel.org team
 //
 // This program is open source software.  Use, duplication, or disclosure
 // is subject to the terms of the GNU General Public License, version 3.
@@ -12,6 +11,7 @@
 #include <unistd.h>
 #include <stdio.h>
 #include <netdb.h>
+#include <crypt.h>
 #include <sys/utsname.h>
 #include <libcitadel.h>
 #include <assert.h>
@@ -24,8 +24,7 @@ HashList *ctdlconfig = NULL;	// new configuration
 
 void config_warn_if_port_unset(char *key, int default_port) {
 	int p = CtdlGetConfigInt(key);
-	if ((p < -1) ||	(p == 0) || (p > UINT16_MAX))
-	{
+	if ((p < -1) ||	(p == 0) || (p > UINT16_MAX)) {
 		syslog(LOG_ERR, "config: setting %s is not -1 (disabled) or a valid TCP port - setting to default %d", key, default_port);
 		CtdlSetConfigInt(key, default_port);
 	}
@@ -41,18 +40,14 @@ void config_warn_if_empty(char *key) {
 
 void validate_config(void) {
 
-	/*
-	 * these shouldn't be empty
-	 */
+	// these shouldn't be empty
 	config_warn_if_empty("c_fqdn");
 	config_warn_if_empty("c_baseroom");
 	config_warn_if_empty("c_aideroom");
 	config_warn_if_empty("c_twitroom");
 	config_warn_if_empty("c_nodename");
 
-	/*
-	 * Sanity check for port bindings
-	 */
+	// Sanity check for port bindings
 	config_warn_if_port_unset("c_smtp_port",	25);
 	config_warn_if_port_unset("c_pop3_port",	110);
 	config_warn_if_port_unset("c_imap_port",	143);
@@ -73,19 +68,34 @@ void validate_config(void) {
 }
 
 
-/*
- * Put some sane default values into our configuration.  Some will be overridden when we run setup.
- */
+// The "host key" is a 100-byte random string that is used to do some persistent hashing.
+// It must remain consistent throughout the lifetime of this Citadel installation
+void generate_host_key(void) {
+	syslog(LOG_INFO, "config: generating a host key");
+	int len = 0;
+	char host_key[128];
+
+	while (len < 100) {
+		do {
+			host_key[len] = random() % 0x7F;
+		} while (!isalnum(host_key[len]));
+		host_key[++len] = 0;
+	}
+	CtdlSetConfigStr("host_key", host_key);
+}
+
+
+// Put some sane default values into our configuration.  Some will be overridden when we run setup.
 void brand_new_installation_set_defaults(void) {
 
 	struct utsname my_utsname;
 	struct hostent *he;
 	char detected_hostname[256];
 
-	/* Determine our host name, in case we need to use it as a default */
+	// Determine our host name, in case we need to use it as a default
 	uname(&my_utsname);
 
-	/* set some sample/default values in place of blanks... */
+	// set some sample/default values in place of blanks...
 	extract_token(detected_hostname, my_utsname.nodename, 0, '.', sizeof detected_hostname);
 	CtdlSetConfigStr("c_nodename", detected_hostname);
 
@@ -108,9 +118,7 @@ void brand_new_installation_set_defaults(void) {
 		CtdlSetConfigInt("c_createax", 3);
 	}
 
-	/*
-	 * Default port numbers for various services
-	 */
+	// Default port numbers for various services
 	CtdlSetConfigInt("c_port_number",	504);
 	CtdlSetConfigInt("c_smtp_port",		25);
 	CtdlSetConfigInt("c_pop3_port",		110);
@@ -125,17 +133,13 @@ void brand_new_installation_set_defaults(void) {
 	CtdlSetConfigInt("c_nntp_port",		119);
 	CtdlSetConfigInt("c_nntps_port",	563);
 
-	/*
-	 * Prevent the "new installation, set defaults" behavior from occurring again
-	 */
+	// Prevent the "new installation, set defaults" behavior from occurring again
 	CtdlSetConfigLong("c_config_created_or_migrated", (long)time(NULL));
 }
 
 
-/*
- * Migrate a supplied legacy configuration to the new in-db format.
- * No individual site should ever have to do this more than once.
- */
+// Migrate a supplied legacy configuration to the new in-db format.
+// No individual site should ever have to do this more than once.
 void migrate_legacy_config(struct legacy_config *lconfig) {
 	CtdlSetConfigStr(	"c_nodename"		,	lconfig->c_nodename		);
 	CtdlSetConfigStr(	"c_fqdn"		,	lconfig->c_fqdn			);
@@ -206,17 +210,15 @@ void migrate_legacy_config(struct legacy_config *lconfig) {
 }
 
 
-/*
- * Called during the initialization of Citadel server.
- * It verifies the system's integrity and reads citadel.config into memory.
- */
+// Called during the initialization of Citadel server.
+// It verifies the system's integrity and reads citadel.config into memory.
 void initialize_config_system(void) {
 	FILE *cfp;
 	int rv;
 	struct legacy_config lconfig;	// legacy configuration
 	ctdlconfig = NewHash(1, NULL);	// set up the real config system
 
-	/* Ensure that we are linked to the correct version of libcitadel */
+	// Ensure that we are linked to the correct version of libcitadel
 	if (libcitadel_version_number() < LIBCITADEL_VERSION_NUMBER) {
 		fprintf(stderr, "You are running libcitadel version %d\n", libcitadel_version_number());
 		fprintf(stderr, "citserver was compiled against version %d\n", LIBCITADEL_VERSION_NUMBER);
@@ -232,8 +234,7 @@ void initialize_config_system(void) {
 			exit(CTDLEXIT_CONFIG);
 		}
 		rv = fread((char *) &lconfig, sizeof(struct legacy_config), 1, cfp);
-		if (rv != 1)
-		{
+		if (rv != 1) {
 			fprintf(stderr, 
 				"Warning: Found a legacy config file %s has unexpected size. \n",
 				file_citadel_config
@@ -249,74 +250,70 @@ void initialize_config_system(void) {
 			exit(CTDLEXIT_CONFIG);
 		}
 
-		/*
-		 * Prevent migration/initialization from happening again.
-		 */
+		// Prevent migration/initialization from happening again.
 		CtdlSetConfigLong("c_config_created_or_migrated", (long)time(NULL));
 
 	}
 
-	/* New installation?  Set up configuration */
+	// New installation?  Set up configuration
 	if (CtdlGetConfigLong("c_config_created_or_migrated") <= 0) {
 		brand_new_installation_set_defaults();
 	}
 
-        /* Default maximum message length is 10 megabytes.  This is site
-	 * configurable.  Also check to make sure the limit has not been
-	 * set below 8192 bytes.
-         */
+        // Default maximum message length is 10 megabytes.  This is site
+	// configurable.  Also check to make sure the limit has not been
+	// set below 8192 bytes.
         if (CtdlGetConfigLong("c_maxmsglen") <= 0)	CtdlSetConfigLong("c_maxmsglen", 10485760);
         if (CtdlGetConfigLong("c_maxmsglen") < 8192)	CtdlSetConfigLong("c_maxmsglen", 8192);
 
-        /*
-	 * Default lower and upper limits on number of worker threads
-	 */
+	// Default lower and upper limits on number of worker threads
 	if (CtdlGetConfigInt("c_min_workers") < 5)	CtdlSetConfigInt("c_min_workers", 5);	// min
 	if (CtdlGetConfigInt("c_max_workers") == 0)	CtdlSetConfigInt("c_max_workers", 256);	// default max
 	if (CtdlGetConfigInt("c_max_workers") < CtdlGetConfigInt("c_min_workers")) {
 		CtdlSetConfigInt("c_max_workers", CtdlGetConfigInt("c_min_workers"));		// max >= min
 	}
 
-	/* Networking more than once every five minutes just isn't sane */
+	// Networking more than once every five minutes just isn't sane
 	if (CtdlGetConfigLong("c_net_freq") == 0)	CtdlSetConfigLong("c_net_freq", 3600);	// once per hour default
 	if (CtdlGetConfigLong("c_net_freq") < 300)	CtdlSetConfigLong("c_net_freq", 300);	// minimum 5 minutes
 
-	/* Same goes for POP3 */
+	// Same goes for POP3
 	if (CtdlGetConfigLong("c_pop3_fetch") == 0)	CtdlSetConfigLong("c_pop3_fetch", 3600);	// once per hour default
 	if (CtdlGetConfigLong("c_pop3_fetch") < 300)	CtdlSetConfigLong("c_pop3_fetch", 300);		// 5 minutes min
 	if (CtdlGetConfigLong("c_pop3_fastest") == 0)	CtdlSetConfigLong("c_pop3_fastest", 3600);	// once per hour default
 	if (CtdlGetConfigLong("c_pop3_fastest") < 300)	CtdlSetConfigLong("c_pop3_fastest", 300);	// 5 minutes min
 
-	/* LDAP sync frequency */
+	// LDAP sync frequency
 	if (CtdlGetConfigLong("c_ldap_sync_freq") == 0)	CtdlSetConfigLong("c_ldap_sync_freq", 300);	// every 5 minutes default
 
-	/* "create new user" only works with native authentication mode */
+	// "create new user" only works with native authentication mode
 	if (CtdlGetConfigInt("c_auth_mode") != AUTHMODE_NATIVE) {
 		CtdlSetConfigInt("c_disable_newu", 1);
+	}
+
+	// If we do not have a host key, generate one now, and save it.
+	if (IsEmptyStr(CtdlGetConfigStr("host_key"))) {
+		generate_host_key();
 	}
 }
 
 
-/*
- * Called when Citadel server is shutting down.
- * Clears out the config hash table.
- */
+// Called when Citadel server is shutting down.
+// Clears out the config hash table.
 void shutdown_config_system(void) {
 	DeleteHash(&ctdlconfig);
 }
 
 
-/*
- * Set a system config value.  Simple key/value here.
- */
+// Set a system config value.  Simple key/value here.
 void CtdlSetConfigStr(char *key, char *value) {
 	int key_len = strlen(key);
 	int value_len = strlen(value);
 
-	/* Save it in memory */
+	// Save it in memory
 	Put(ctdlconfig, key, key_len, strdup(value), NULL);
 
-	/* Also write it to the config database */
+	// Also write it to the config database
 
 	int dbv_size = key_len + value_len + 2;
 	char *dbv = malloc(dbv_size);
@@ -327,9 +324,7 @@ void CtdlSetConfigStr(char *key, char *value) {
 }
 
 
-/*
- * Set a numeric system config value (long integer)
- */
+// Set a numeric system config value (long integer)
 void CtdlSetConfigLong(char *key, long value) {
 	char longstr[256];
 	sprintf(longstr, "%ld", value);
@@ -337,9 +332,7 @@ void CtdlSetConfigLong(char *key, long value) {
 }
 
 
-/*
- * Set a numeric system config value (integer)
- */
+// Set a numeric system config value (integer)
 void CtdlSetConfigInt(char *key, int value) {
 	char intstr[256];
 	sprintf(intstr, "%d", value);
@@ -347,18 +340,16 @@ void CtdlSetConfigInt(char *key, int value) {
 }
 
 
-/*
- * Delete a system config value.
- */
+// Delete a system config value.
 void CtdlDelConfig(char *key) {
 	int key_len = strlen(key);
 
 	if (IsEmptyStr(key)) return;
 
-	/* Delete from the database. */
+	// Delete from the database.
 	cdb_delete(CDB_CONFIG, key, key_len);
 
-	/* Delete from the in-memory cache */
+	// Delete from the in-memory cache
 	HashPos *Pos = GetNewHashPos(ctdlconfig, 1);
 	if (GetHashPosFromKey(ctdlconfig, key, key_len, Pos)) {
 		DeleteEntryFromHash(ctdlconfig, Pos);
@@ -369,9 +360,7 @@ void CtdlDelConfig(char *key) {
 }
 
 
-/*
- * Fetch a system config value.  Caller does *not* own the returned value and may not alter it.
- */
+// Fetch a system config value.  Caller does *not* own the returned value and may not alter it.
 char *CtdlGetConfigStr(char *key) {
 	char *value = NULL;
 	struct cdbdata *cdb;
@@ -379,31 +368,26 @@ char *CtdlGetConfigStr(char *key) {
 
 	if (IsEmptyStr(key)) return(NULL);
 
-	/* First look in memory */
-	if (GetHash(ctdlconfig, key, key_len, (void *)&value))
-	{
+	// First look in memory
+	if (GetHash(ctdlconfig, key, key_len, (void *)&value)) {
 		return value;
 	}
 
-	/* Then look in the database. */
-
+	// Then look in the database.
 	cdb = cdb_fetch(CDB_CONFIG, key, key_len);
-
-	if (cdb == NULL) {	/* nope, not there either. */
+	if (cdb == NULL) {	// nope, not there either.
 		return(NULL);
 	}
 
-	/* Got it.  Save it in memory for the next fetch. */
-	value = strdup(cdb->ptr + key_len + 1);		/* The key was stored there too; skip past it */
+	// Got it.  Save it in memory for the next fetch.
+	value = strdup(cdb->ptr + key_len + 1);		// The key was stored there too; skip past it
 	cdb_free(cdb);
 	Put(ctdlconfig, key, key_len, value, NULL);
 	return value;
 }
 
 
-/*
- * Fetch a system config value - integer
- */
+// Fetch a system config value - integer
 int CtdlGetConfigInt(char *key) {
 	char *s = CtdlGetConfigStr(key);
 	if (s) return atoi(s);
@@ -411,9 +395,7 @@ int CtdlGetConfigInt(char *key) {
 }
 
 
-/*
- * Fetch a system config value - long integer
- */
+// Fetch a system config value - long integer
 long CtdlGetConfigLong(char *key) {
 	char *s = CtdlGetConfigStr(key);
 	if (s) return atol(s);
@@ -426,9 +408,7 @@ void CtdlGetSysConfigBackend(long msgnum, void *userdata) {
 }
 
 
-/*
- * This is for fetching longer configuration sets which are stored in the message base.
- */
+// This is for fetching longer configuration sets which are stored in the message base.
 char *CtdlGetSysConfig(char *sysconfname) {
 	char hold_rm[ROOMNAMELEN];
 	long msgnum = -1;
@@ -442,10 +422,10 @@ char *CtdlGetSysConfig(char *sysconfname) {
 		return NULL;
 	}
 
-	/* The new way: hunt for the message number in the config database */
+	// The new way: hunt for the message number in the config database
 	msgnum = CtdlGetConfigLong(sysconfname);
 
-	/* Legacy format: hunt through the local system configuration room for a message with a matching MIME type */
+	// Legacy format: hunt through the local system configuration room for a message with a matching MIME type
 	if (msgnum <= 0) {
 		begin_critical_section(S_CONFIG);
 		config_msgnum = -1;
@@ -484,9 +464,7 @@ char *CtdlGetSysConfig(char *sysconfname) {
 }
 
 
-/*
- * This is for storing longer configuration sets which are stored in the message base.
- */
+// This is for storing longer configuration sets which are stored in the message base.
 void CtdlPutSysConfig(char *sysconfname, char *sysconfdata) {
 	long old_msgnum = -1;
 	long new_msgnum = -1;
