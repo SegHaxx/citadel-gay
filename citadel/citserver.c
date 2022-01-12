@@ -29,13 +29,32 @@ int panic_fd;
 int openid_level_supported = 0;
 
 
-// Various things that need to be initialized at startup
-void master_startup(void) {
+// We need pseudo-random numbers for a few things.  Seed generously.
+void seed_random_number_generator(void) {
+	FILE *urandom;
 	struct timeval tv;
 	unsigned int seed;
-	FILE *urandom;
+
+	syslog(LOG_INFO, "Seeding the pseudo-random number generator...");
+	urandom = fopen("/dev/urandom", "r");
+	if (urandom != NULL) {
+		if (fread(&seed, sizeof seed, 1, urandom) == -1) {
+			syslog(LOG_ERR, "citserver: failed to read random seed: %m");
+		}
+		fclose(urandom);
+	}
+	else {
+		gettimeofday(&tv, NULL);
+		seed = tv.tv_usec;
+	}
+	srand(seed);
+	srandom(seed);
+}
+
+
+// Various things that need to be initialized at startup
+void master_startup(void) {
 	struct ctdlroom qrbuf;
-	int rv;
 	struct passwd *pw;
 	gid_t gid;
 
@@ -58,6 +77,7 @@ void master_startup(void) {
 	open_databases();
 
 	// Load site-specific configuration
+	seed_random_number_generator();					// must be done before config system
 	syslog(LOG_INFO, "Initializing configuration system");
 	initialize_config_system();
 	validate_config();
@@ -90,22 +110,6 @@ void master_startup(void) {
 		qrbuf.QRflags2 |= QR2_SMTP_PUBLIC;
 		CtdlPutRoomLock(&qrbuf);
 	}
-
-	syslog(LOG_INFO, "Seeding the pseudo-random number generator...");
-	urandom = fopen("/dev/urandom", "r");
-	if (urandom != NULL) {
-		rv = fread(&seed, sizeof seed, 1, urandom);
-		if (rv == -1) {
-			syslog(LOG_ERR, "citserver: failed to read random seed: %m");
-		}
-		fclose(urandom);
-	}
-	else {
-		gettimeofday(&tv, NULL);
-		seed = tv.tv_usec;
-	}
-	srand(seed);
-	srandom(seed);
 
 	syslog(LOG_DEBUG, "master_startup() finished");
 }
