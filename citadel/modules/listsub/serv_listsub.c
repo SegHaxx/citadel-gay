@@ -192,8 +192,8 @@ void do_confirm(int cmd, char *roomname, char *emailaddr, char *url, char *gener
 	int config_lines = 0;
 	char *oldnetconfig, *newnetconfig;
 
-	// The server has generated a persistent confirmation token for the user+room combination.
-	// Let's see if the user has supplied the same token.
+	// During opt #1, the server generated a persistent confirmation token for the user+room combination.
+	// Let's see if the user has supplied the same token during opt #2.
 	if (strcmp(generated_token, supplied_token)) {
 		cprintf("%d This request could not be authenticated.\n", ERROR + PASSWORD_REQUIRED);
 		return;
@@ -254,10 +254,6 @@ void cmd_lsub(char *cmdbuf) {
 	extract_token(url, cmdbuf, 3, '|', sizeof url);				// token 3 is the URL at which we subscribed
 	extract_token(supplied_token, cmdbuf, 4, '|', sizeof supplied_token);	// token 4 is the token supplied by the caller
 
-	syslog(LOG_DEBUG, "cmd_lsub(cmd=%s, roomname=%s, emailaddr=%s, url=%s, token=%s",
-		cmd, roomname, emailaddr, url, supplied_token
-	);
-
 	// First confirm that the caller is referencing a room that actually exists.
 	if (CtdlGetRoom(&CC->room, roomname) != 0) {
 		cprintf("%d There is no list called '%s'\n", ERROR + ROOM_NOT_FOUND, roomname);
@@ -269,9 +265,10 @@ void cmd_lsub(char *cmdbuf) {
 		return;
 	}
 
-	// Room confirmed, now parse the command.
+	// Generate a confirmation token -- either to supply to the user for opt #1 or to compare for opt #2
 	generate_confirmation_token(generated_token, sizeof generated_token, roomname, emailaddr);
 
+	// Now parse the command.
 	if (!strcasecmp(cmd, "subscribe")) {
 		send_subscribe_confirmation_email(roomname, emailaddr, url, generated_token);
 	}
