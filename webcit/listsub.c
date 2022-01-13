@@ -83,31 +83,12 @@ int Conditional_LISTSUB_EXECUTE_UNSUBSCRIBE(StrBuf *Target, WCTemplputParams *TP
 }
 
 
-int Conditional_LISTSUB_EXECUTE_CONFIRM_SUBSCRIBE(StrBuf *Target, WCTemplputParams *TP) {
+int confirm_sub_or_unsub(char *cmd, StrBuf *Target, WCTemplputParams *TP) {
 	int rc;
 	StrBuf *Line;
-	const char *ImpMsg;
-	const StrBuf *Room, *Token;
-
-	if (strcmp(bstr("cmd"), "confirm")) {
-		return 0;
-	}
-
-	Room = sbstr("room");
-	if (Room == NULL) {
-		ImpMsg = _("You need to specify the mailinglist to subscribe to.");
-		AppendImportantMessage(ImpMsg, -1);
-		return 0;
-	}
-	Token = sbstr("token");
-	if (Room == NULL) {
-		ImpMsg = _("You need to specify the mailinglist to subscribe to.");
-		AppendImportantMessage(ImpMsg, -1);
-		return 0;
-	}
 
 	Line = NewStrBuf();
-	serv_printf("LSUB confirm|%s|%s", ChrPtr(Room), ChrPtr(Token));
+	serv_printf("LSUB %s|%s|%s|%s/listsub|%s", cmd, bstr("room"), bstr("email"), ChrPtr(site_prefix), bstr("token"));
 	StrBuf_ServGetln(Line);
 	rc = GetServerStatusMsg(Line, NULL, 1, 2);
 	FreeStrBuf(&Line);
@@ -115,6 +96,21 @@ int Conditional_LISTSUB_EXECUTE_CONFIRM_SUBSCRIBE(StrBuf *Target, WCTemplputPara
 		putbstr("__FAIL", NewStrBufPlain(HKEY("1")));
 	}
 	return rc == 2;
+}
+
+int Conditional_LISTSUB_EXECUTE_CONFIRMSUBSCRIBE(StrBuf *Target, WCTemplputParams *TP) {
+	if (strcmp(bstr("cmd"), "confirm_subscribe")) {
+		return 0;
+	}
+	return(confirm_sub_or_unsub("confirm_subscribe", Target, TP));
+}
+
+
+int Conditional_LISTSUB_EXECUTE_CONFIRMUNSUBSCRIBE(StrBuf *Target, WCTemplputParams *TP) {
+	if (strcmp(bstr("cmd"), "confirm_unsubscribe")) {
+		return 0;
+	}
+	return(confirm_sub_or_unsub("confirm_unsubscribe", Target, TP));
 }
 
 
@@ -134,6 +130,7 @@ InitModule_LISTSUB
 {
 	RegisterConditional("COND:LISTSUB:EXECUTE:SUBSCRIBE", 0, Conditional_LISTSUB_EXECUTE_SUBSCRIBE,  CTX_NONE);
 	RegisterConditional("COND:LISTSUB:EXECUTE:UNSUBSCRIBE", 0, Conditional_LISTSUB_EXECUTE_UNSUBSCRIBE,  CTX_NONE);
-	RegisterConditional("COND:LISTSUB:EXECUTE:CONFIRM:SUBSCRIBE", 0, Conditional_LISTSUB_EXECUTE_CONFIRM_SUBSCRIBE,  CTX_NONE);
+	RegisterConditional("COND:LISTSUB:EXECUTE:CONFIRMSUBSCRIBE", 0, Conditional_LISTSUB_EXECUTE_CONFIRMSUBSCRIBE, CTX_NONE);
+	RegisterConditional("COND:LISTSUB:EXECUTE:CONFIRMUNSUBSCRIBE", 0, Conditional_LISTSUB_EXECUTE_CONFIRMUNSUBSCRIBE, CTX_NONE);
 	WebcitAddUrlHandler(HKEY("listsub"), "", 0, do_listsub, ANONYMOUS|COOKIEUNNEEDED|FORCE_SESSIONCLOSE);
 }

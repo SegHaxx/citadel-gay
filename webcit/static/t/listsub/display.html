@@ -52,8 +52,8 @@
 <?!("X", 22)>
 <?!("X", 20)>
 
-<?!("COND:BSTR", 30, "cmd", "confirm")>
-<?!("COND:LISTSUB:EXECUTE:CONFIRM:SUBSCRIBE", 31)>
+<?!("COND:BSTR", 30, "cmd", "confirm_subscribe")>
+<?!("COND:LISTSUB:EXECUTE:CONFIRMSUBSCRIBE", 31)>
 <center><h1><?_("Confirmation successful!")></h1></center>
 <?!("X", 31)><??("COND:BSTR", 32, "__FAIL")>
 <center><h1><?_("Confirmation failed.")></h1></center>
@@ -65,6 +65,20 @@
 <?_("The error returned by the server was: ")><?IMPORTANTMESSAGE("X")>
 <??("X", 32)>
 <??("X", 30)>
+
+<?!("COND:BSTR", 33, "cmd", "confirm_unsubscribe")>
+<?!("COND:LISTSUB:EXECUTE:CONFIRMUNSUBSCRIBE", 34)>
+<center><h1><?_("Confirmation successful!")></h1></center>
+<?!("X", 34)><??("COND:BSTR", 35, "__FAIL")>
+<center><h1><?_("Confirmation failed.")></h1></center>
+<?_("This could mean one of two things:")>
+<ul>
+<li><?_("You waited too long to confirm your subscribe/unsubscribe request (the confirmation link is only valid for three days)")></li>
+<li><?_("You have <i>already</i> successfully confirmed your subscribe/unsubscribe request and are attempting to do it again.")></li>
+</ul>
+<?_("The error returned by the server was: ")><?IMPORTANTMESSAGE("X")>
+<??("X", 35)>
+<??("X", 33)>
 
 <?!("COND:BSTR", 40, "cmd", "choose")>
 

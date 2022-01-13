@@ -181,6 +181,25 @@ AC_CHECK_HEADER(zlib.h,
 )
 CFLAGS="$saved_CFLAGS"
 
+dnl Checks for the crypt_r function
+saved_CFLAGS="$CFLAGS"
+CFLAGS="$CFLAGS $SERVER_LIBS"
+AC_CHECK_HEADER(crypt.h,
+	[AC_CHECK_LIB(crypt, crypt_r,
+		[
+			SERVER_LIBS="-lcrypt $SERVER_LIBS"
+		],
+		[
+			AC_MSG_ERROR(crypt_r was not found or is not usable.)
+		]
+	,
+	)],
+	[
+		AC_MSG_ERROR(crypt.h was not found or is not usable.)
+	]
+)
+CFLAGS="$saved_CFLAGS"
+
 dnl Here is the check for a libc integrated iconv
 AC_ARG_ENABLE(iconv,
 	[  --disable-iconv         do not use iconv charset conversion],
