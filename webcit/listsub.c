@@ -98,6 +98,7 @@ int confirm_sub_or_unsub(char *cmd, StrBuf *Target, WCTemplputParams *TP) {
 	return rc == 2;
 }
 
+
 int Conditional_LISTSUB_EXECUTE_CONFIRMSUBSCRIBE(StrBuf *Target, WCTemplputParams *TP) {
 	if (strcmp(bstr("cmd"), "confirm_subscribe")) {
 		return 0;

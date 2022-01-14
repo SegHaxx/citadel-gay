@@ -229,7 +229,7 @@ void perform_one_http_transaction(struct client_handle *ch) {
 		#endif
 
 		// Output the results back to the client.
-		syslog(LOG_DEBUG, "> %03d %s", h.response_code, h.response_string);
+		syslog(LOG_DEBUG, "\033[33m\033[1m> %03d %s\033[0m", h.response_code, h.response_string);
 		client_printf(ch, "HTTP/1.1 %03d %s\r\n", h.response_code, h.response_string);
 		client_printf(ch, "Connection: close\r\n");
 		client_printf(ch, "Content-Length: %ld\r\n", h.response_body_length);

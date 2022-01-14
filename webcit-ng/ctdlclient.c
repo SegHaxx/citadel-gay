@@ -57,12 +57,12 @@ int ctdl_readline(struct ctdlsession *ctdl, char *buf, int maxbytes) {
 				--len;
 			}
 			buf[len] = 0;
-			// syslog(LOG_DEBUG, "\033[33m[ %s\033[0m", buf);
+			syslog(LOG_DEBUG, "\033[32m[ %s\033[0m", buf);
 			return (len);
 		}
 		++len;
 	}
-	// syslog(LOG_DEBUG, "\033[33m[ %s\033[0m", buf);
+	syslog(LOG_DEBUG, "\033[32m[ %s\033[0m", buf);
 	return (len);
 }
 

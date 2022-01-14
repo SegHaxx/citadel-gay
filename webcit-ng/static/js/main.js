@@ -1,4 +1,3 @@
-//
 // Copyright (c) 2016-2020 by the citadel.org team
 //
 // This program is open source software.  It runs great on the
@@ -44,9 +43,15 @@ ctdl_startup = async() => {
 
 		update_banner();
 
-		// for now, show a room list in the main div
-		gotoroom("_BASEROOM_");
-		display_room_list();
+		// What do we do upon landing?
+
+		if ( (serv_info.serv_supports_guest) || (logged_in) ) {			// If the Lobby is visible,
+			gotoroom("_BASEROOM_");						// go there.
+			display_room_list();
+		}
+		else {									// Otherwise,
+			display_login_screen("logged in users only.  sheeeeeeeeeit.");	// display the login modal.
+		}
 	}
 	else {
 		document.getElementById("ctdl-main").innerHTML =
@@ -131,13 +136,12 @@ function update_banner() {
 
 
 // goto room
-//
 function gotoroom(roomname) {
 
 	fetch_room = async() => {
 		response = await fetch("/ctdl/r/" + escapeHTMLURI(roomname) + "/");
-		data = await(response.json());
 		if (response.ok) {
+			data = await(response.json());
 			current_room = data.name;
 			new_messages = data.new_messages;
 			total_messages = data.total_messages;
@@ -198,9 +202,15 @@ function load_new_march_list() {
 
 // Activate the "Loading..." modal
 function activate_loading_modal() {
-	document.getElementById("ctdl_big_modal_content").innerHTML =
-		"<i class=\"fas fa-spinner fa-spin\"></i>&nbsp;&nbsp;"
-		+ _("Loading messages from server, please wait");
+	document.getElementById("ctdl_big_modal").innerHTML =
+		  "<div class=\"w3-modal-content\">"
+		+ "  <div class=\"w3-container\">"
+
+		+ "<i class=\"fas fa-spinner fa-spin\"></i>&nbsp;&nbsp;"
+		+ _("Loading messages from server, please wait")
+
+		+ "  </div>"
+		+ "</div>";
 	document.getElementById("ctdl_big_modal").style.display = "block";
 }
 
