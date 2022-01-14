@@ -15,16 +15,18 @@ function display_login_screen(any_message) {
 
 	document.getElementById("ctdl_big_modal").innerHTML =
 		  "<div class=\"w3-modal-content\">"
-		+ "  <div class=\"w3-container\">"
+		+ "  <div class=\"w3-panel w3-border w3-border-blue w3-topbar w3-bottombar w3-leftbar w3-rightbar\"><center>"
 
-		+ "Put the login screen here, dummy<br><br>"
-		+ any_message + "<br><br>"
+		+ "<p>Put the login screen here, dummy</p>"
+		+ "<p>" + any_message + "</p>"
 		+ "<table border=0><tr><td>"
 		+ _("User name:") + "</td><td><input type=\"text\" id=\"username\"></td></tr><tr><td>"
 		+ _("Password:") + "</td><td><input type=\"password\" id=\"password\"></td></tr></table><br>"
-		+ "<a href=\"javascript:login_button()\">" + _("Log in") + "</a>"
+		+ "<p>"
+		+ "<button class=\"w3-button w3-blue\" onClick=\"javascript:login_button()\">" + _("Log in") + "</button>"
+		+ "</p>"
 
-		+ "  </div>"
+		+ "  </center></div>"
 		+ "</div>";
 	document.getElementById("ctdl_big_modal").style.display = "block";
 }
