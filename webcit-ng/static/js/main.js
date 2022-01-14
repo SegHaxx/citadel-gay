@@ -50,7 +50,7 @@ ctdl_startup = async() => {
 			display_room_list();
 		}
 		else {									// Otherwise,
-			display_login_screen("logged in users only.  sheeeeeeeeeit.");	// display the login modal.
+			display_login_screen("");					// display the login modal.
 		}
 	}
 	else {
