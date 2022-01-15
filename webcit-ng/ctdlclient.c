@@ -1,4 +1,3 @@
-//
 // Functions that handle communication with a Citadel Server
 //
 // Copyright (c) 1987-2022 by the citadel.org team
@@ -43,8 +42,9 @@ int ctdl_readline(struct ctdlsession *ctdl, char *buf, int maxbytes) {
 	int len = 0;
 	int c = 0;
 
-	if (buf == NULL)
+	if (buf == NULL) {
 		return (-1);
+	}
 
 	while (len < maxbytes) {
 		c = read(ctdl->sock, &buf[len], 1);
@@ -70,7 +70,7 @@ int ctdl_readline(struct ctdlsession *ctdl, char *buf, int maxbytes) {
 // Read lines of text from the Citadel server until a 000 terminator is received.
 // Implemented in terms of ctdl_readline() and is therefore transparent...
 // Returns a newly allocated StrBuf or NULL for error.
-StrBuf *ctdl_readtextmsg(struct ctdlsession * ctdl) {
+StrBuf *ctdl_readtextmsg(struct ctdlsession *ctdl) {
 	char buf[1024];
 	StrBuf *sj = NewStrBuf();
 	if (!sj) {
@@ -87,7 +87,7 @@ StrBuf *ctdl_readtextmsg(struct ctdlsession * ctdl) {
 
 // Write to the Citadel server.  For now we're just wrapping write() in case we
 // need to add anything else later.
-ssize_t ctdl_write(struct ctdlsession * ctdl, const void *buf, size_t count) {
+ssize_t ctdl_write(struct ctdlsession *ctdl, const void *buf, size_t count) {
 	return write(ctdl->sock, buf, count);
 }
 
@@ -135,15 +135,17 @@ int uds_connectsock(char *sockpath) {
 // Extract from the headers, the username and password the client is attempting to use.
 // This could be HTTP AUTH or it could be in the cookies.
 void extract_auth(struct http_transaction *h, char *authbuf, int authbuflen) {
-	if (authbuf == NULL)
+	if (authbuf == NULL) {
 		return;
-	authbuf[0] = 0;
+	}
+
+	memset(authbuf, 0, authbuflen);
 
 	char *authheader = header_val(h, "Authorization");
 	if (authheader) {
 		if (!strncasecmp(authheader, "Basic ", 6)) {
 			safestrncpy(authbuf, &authheader[6], authbuflen);
-			return;	// HTTP-AUTH was found -- stop here
+			return;		// HTTP-AUTH was found -- stop here
 		}
 	}
 
@@ -159,7 +161,7 @@ void extract_auth(struct http_transaction *h, char *authbuf, int authbuflen) {
 			if (strlen(authbuf) < 3) {	// impossibly small
 				authbuf[0] = 0;
 			}
-			return;	// Cookie auth was found -- stop here
+			return;		// Cookie auth was found -- stop here
 		}
 	}
 	// no authorization found in headers ... this is an anonymous session
@@ -228,13 +230,14 @@ struct ctdlsession *connect_to_citadel(struct http_transaction *h) {
 
 	// Lock the connection pool while we claim our connection
 	pthread_mutex_lock(&cpool_mutex);
-	if (cpool != NULL)
+	if (cpool != NULL) {
 		for (cptr = cpool; ((cptr != NULL) && (my_session == NULL)); cptr = cptr->next) {
 			if ((cptr->is_bound == 0) && (!strcmp(cptr->auth, auth))) {
 				my_session = cptr;
 				my_session->is_bound = 1;
 			}
 		}
+	}
 	if (my_session == NULL) {
 		syslog(LOG_DEBUG, "No qualifying sessions , starting a new one");
 		my_session = malloc(sizeof(struct ctdlsession));
@@ -254,7 +257,7 @@ struct ctdlsession *connect_to_citadel(struct http_transaction *h) {
 	if (my_session->sock < 3) {
 		is_new_session = 1;
 	}
-	else {		// make sure our Citadel session is still good
+	else {						// make sure our Citadel session is still good
 		int test_conn;
 		test_conn = ctdl_write(my_session, HKEY("NOOP\n"));
 		if (test_conn < 5) {

@@ -11,13 +11,14 @@
 // GNU General Public License for more details.
 
 
+// This is where the login screen (modal) is displayed.
+// It appears in the "ctdl_big_modal" div which is defined in index.html and is used for several different modals.
+// If you want to change the look of the login dialog, this is where to change it.
 function display_login_screen(any_message) {
-
 	document.getElementById("ctdl_big_modal").innerHTML =
 		  "<div class=\"w3-modal-content\">"
-		+ "  <div class=\"w3-panel w3-border w3-border-blue w3-topbar w3-bottombar w3-leftbar w3-rightbar\"><center>"
-
-		+ "<p>Put the login screen here, dummy</p>"
+		+ "<div class=\"w3-panel w3-border w3-border-blue w3-topbar w3-bottombar w3-leftbar w3-rightbar\"><center>"
+		+ "<p>FIXME put a login banner here, dummy</p>"
 		+ "<p>" + any_message + "</p>"
 		+ "<table border=0><tr><td>"
 		+ _("User name:") + "</td><td><input type=\"text\" id=\"username\"></td></tr><tr><td>"
@@ -25,21 +26,17 @@ function display_login_screen(any_message) {
 		+ "<p>"
 		+ "<button class=\"w3-button w3-blue\" onClick=\"javascript:login_button()\">" + _("Log in") + "</button>"
 		+ "</p>"
-
-		+ "  </center></div>"
+		+ "</center></div>"
 		+ "</div>";
 	document.getElementById("ctdl_big_modal").style.display = "block";
 }
 
 
+// When the user elects to log out, we just call /ctdl/a/logout and let the system flush the session.
+// When we go back to ctdl_startup() it will detect that we are no longer logged in, and do the right thing.
 function logout() {
-	var request = new XMLHttpRequest();
-	request.open("GET", "/ctdl/a/logout", true);
-	request.onreadystatechange = function() {
-		login_result(this.responseText);
-	};
-	request.send();
-	request = null;
+	response = await fetch("/ctdl/a/logout");
+	ctdl_startup();
 }
 
 

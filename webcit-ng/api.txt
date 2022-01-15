@@ -1,14 +1,15 @@
 
 Method		URL				Function
 ------		------------------------------	-------------------------------------
-GET		/ctdl/a/landing.html		Site root redirects to here
+GET		/				Site root will redirect to a landing page
 GET		/ctdl/r/			returns a JSON-encoded list of accessible rooms
 OPTIONS		/ctdl/r/ROOMNAME/		returns just what you'd expect
 PROPFIND	/ctdl/r/ROOMNAME/		Show a bunch of crap
 GET		/ctdl/r/ROOMNAME/		Returns information about the room (name, view, etc.) in JSON format
 GET		/ctdl/r/ROOMNAME/msgs.all	JSON array of message list in room
 GET		/ctdl/r/ROOMNAME/msgs.new	JSON array of message list in room (new messages)
-GET		/ctdl/r/ROOMNAME/MSGNUM		Retrieve the content of an individual message (FIXME: make msg headers HTTP headers)
+GET		/ctdl/r/ROOMNAME/MSGNUM		Retrieve the content of an individual message
+						(Should we output RFC822 fields as HTTP headers?  Decide soon...)
 PUT		/ctdl/r/ROOMNAME/xxx		DAV operation to insert a new message into a room
 						(The returned ETag will be the new message number)
 GET		/ctdl/r/ROOMNAME/MSGNUM/json	Retrieve an individual message in a room, encapsulated in JSON
@@ -16,3 +17,5 @@ GET		/ctdl/c/info			Returns a JSON representation of the output of an INFO serve
 POST		/ctdl/a/login			Send it a your credentials and it will log you in
 GET		/ctdl/a/whoami
 GET		/ctdl/u/USERNAME/userpic	Returns an image containing the photo/avatar of the specified user
+GET		/ctdl/s/			Static content (html, css, js, images...)
+GET		/.well-known/			Static content (RFC5785 compliant paths)
