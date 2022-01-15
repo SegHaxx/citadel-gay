@@ -34,7 +34,9 @@ function display_login_screen(any_message) {
 
 // When the user elects to log out, we just call /ctdl/a/logout and let the system flush the session.
 // When we go back to ctdl_startup() it will detect that we are no longer logged in, and do the right thing.
-function logout() {
+//function logout() {
+logout = async() => {
+
 	response = await fetch("/ctdl/a/logout");
 	ctdl_startup();
 }
