@@ -36,9 +36,8 @@ function display_login_screen(any_message) {
 // When we go back to ctdl_startup() it will detect that we are no longer logged in, and do the right thing.
 //function logout() {
 logout = async() => {
-
 	response = await fetch("/ctdl/a/logout");
-	ctdl_startup();
+	ctdl_startup();					// let the regular startup code take care of everything else
 }
 
 
@@ -62,11 +61,8 @@ function login_button(username) {
 
 function login_result(data) {
 	if (data.substring(0,1) == "2") {
-		logged_in = 1;
-		current_user = data.substring(4).split("|")[0];
-		update_banner();
-		document.getElementById("ctdl-main").innerHTML = "FIXME ok we are logged in as " + current_user + " ... " ;
 		document.getElementById("ctdl_big_modal").style.display = "none";
+		ctdl_startup();				// let the regular startup code take care of everything else
 	}
 	else {
 		display_login_screen(data.substring(4));
