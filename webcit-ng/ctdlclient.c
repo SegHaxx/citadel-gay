@@ -215,7 +215,13 @@ int login_to_citadel(struct ctdlsession *c, char *auth, char *resultbuf) {
 }
 
 
-// Hunt for, or create, a connection to our Citadel Server
+// This is a variant of the "server connection pool" design pattern.  We go through our list
+// of connections to Citadel Server, looking for a connection that is at once:
+// 1. Not currently serving a WebCit transaction (is_bound)
+// 2a. Is logged in to Citadel as the correct user, if the HTTP session is logged in; or
+// 2b. Is NOT logged in to Citadel, if the HTTP session is not logged in.
+// If we find a qualifying connection, we bind to it for the duration of this WebCit HTTP transaction.
+// Otherwise, we create a new connection to Citadel Server and add it to the pool.
 struct ctdlsession *connect_to_citadel(struct http_transaction *h) {
 	struct ctdlsession *cptr = NULL;
 	struct ctdlsession *my_session = NULL;
@@ -226,7 +232,6 @@ struct ctdlsession *connect_to_citadel(struct http_transaction *h) {
 
 	// Does the request carry a username and password?
 	extract_auth(h, auth, sizeof auth);
-	syslog(LOG_DEBUG, "Session auth: %s", auth);	// remove this log when development is done
 
 	// Lock the connection pool while we claim our connection
 	pthread_mutex_lock(&cpool_mutex);
@@ -251,13 +256,13 @@ struct ctdlsession *connect_to_citadel(struct http_transaction *h) {
 	}
 	pthread_mutex_unlock(&cpool_mutex);
 	if (my_session == NULL) {
-		return (NULL);	// oh well
+		return(NULL);						// Could not create a new session (yikes!)
 	}
 
 	if (my_session->sock < 3) {
 		is_new_session = 1;
 	}
-	else {						// make sure our Citadel session is still good
+	else {								// make sure our Citadel session is still working
 		int test_conn;
 		test_conn = ctdl_write(my_session, HKEY("NOOP\n"));
 		if (test_conn < 5) {
