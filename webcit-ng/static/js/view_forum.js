@@ -101,8 +101,8 @@ function forum_readmessages(target_div_name, gt_msg, lt_msg) {
 	fetch_msg_list();
 
 	// make the new message button appear
-	document.getElementById("ctdl-newmsg-button").style.display = "block";
 	document.getElementById("ctdl-newmsg-button").innerHTML = "Post message";
+	document.getElementById("ctdl-newmsg-button").style.display = "block";
 }
 
 
@@ -472,4 +472,10 @@ function forum_close_urlbox(do_save) {
 	}
 	document.getElementById("forum_txtFormatUrl").value = "";				// clear url box for next time
 	document.getElementById("forum_url_entry_box").style.display = "none";
+}
+
+
+// User has clicked the "Post message" button
+function forum_entmsg() {
+	alert("we should finish this");
 }

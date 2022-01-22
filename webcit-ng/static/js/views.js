@@ -33,21 +33,32 @@ var views = {
 
 // This function is the dispatcher that determines the correct view for a room,
 // and calls the correct renderer.  Greater/Less than bounds are accepted.
-//
 function render_room_view(gt_msg, lt_msg) {
 
 	document.getElementById("ctdl-newmsg-button").style.display = "none";		// the view renderer will set this
 
 	switch(current_view) {
-		case views.VIEW_MAILBOX:						// FIXME view mail rooms as forums for now
 		case views.VIEW_BBS:
 			document.getElementById("ctdl-main").innerHTML = "<div id=\"ctdl-mrp\" class=\"ctdl-msg-reading-pane\"></div>";
 			forum_readmessages("ctdl-mrp", gt_msg, lt_msg);
 			break;
 		default:
 			document.getElementById("ctdl-main").innerHTML =
-				"The view for " + current_room + " is " + current_view + " but there is no renderer." ;
+				"<center>The view for " + current_room + " is " + current_view + " but there is no renderer.</center>";
 			break;
 	}
 
+}
+
+
+// This gets called when the user clicks the "enter message" or "post message" or "add item" button etc.
+function entmsg_dispatcher() {
+	switch(current_view) {
+		case views.VIEW_BBS:
+			forum_entmsg();
+			break;
+		default:
+			alert("no handler");
+			break;
+	}
 }
