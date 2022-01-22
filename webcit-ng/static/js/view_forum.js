@@ -70,6 +70,7 @@ function forum_readmessages(target_div_name, gt_msg, lt_msg) {
 				}
 				target_div.innerHTML +=
 					"<div id=\"" + new_new_div_name + "\">" +
+					"<div id=\"ctdl-newmsg-here\"></div>" +
 					"<div class=\"ctdl-forum-nav\">" +
 					"<a href=\"javascript:forum_readmessages('" + new_new_div_name + "', " + newgt + ", 9999999999);\">" +
 					"<i class=\"fa fa-arrow-circle-down\"></i>&nbsp;&nbsp;" +
@@ -475,7 +476,7 @@ function forum_close_urlbox(do_save) {
 }
 
 
-// User has clicked the "Post message" button
+// User has clicked the "Post message" button.  This is roughly the same as "reply" except there is no parent message.
 function forum_entmsg() {
-	alert("we should finish this");
+	open_reply_box("ctdl-newmsg-here", false, "", "");
 }
