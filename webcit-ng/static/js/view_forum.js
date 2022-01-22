@@ -99,6 +99,10 @@ function forum_readmessages(target_div_name, gt_msg, lt_msg) {
 		}
 	}
 	fetch_msg_list();
+
+	// make the new message button appear
+	document.getElementById("ctdl-newmsg-button").style.display = "block";
+	document.getElementById("ctdl-newmsg-button").innerHTML = "Post message";
 }
 
 

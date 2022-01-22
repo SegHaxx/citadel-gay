@@ -35,6 +35,9 @@ var views = {
 // and calls the correct renderer.  Greater/Less than bounds are accepted.
 //
 function render_room_view(gt_msg, lt_msg) {
+
+	document.getElementById("ctdl-newmsg-button").style.display = "none";		// the view renderer will set this
+
 	switch(current_view) {
 		case views.VIEW_MAILBOX:						// FIXME view mail rooms as forums for now
 		case views.VIEW_BBS:

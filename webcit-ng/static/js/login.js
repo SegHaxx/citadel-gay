@@ -16,7 +16,7 @@
 // If you want to change the look of the login dialog, this is where to change it.
 function display_login_screen(any_message) {
 	document.getElementById("ctdl_big_modal").innerHTML =
-		  "<div class=\"w3-modal-content\">"
+		  "<div class=\"w3-modal-content w3-animate-zoom\">"
 		+ "<div class=\"w3-panel w3-border w3-border-blue w3-topbar w3-bottombar w3-leftbar w3-rightbar\"><center>"
 		+ "<p>FIXME put a login banner here, dummy</p>"
 		+ "<p>" + any_message + "</p>"
