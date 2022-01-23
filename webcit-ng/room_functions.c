@@ -458,21 +458,22 @@ void room_list(struct http_transaction *h, struct ctdlsession *c) {
 	JsonValue *j = NewJsonArray(HKEY("lkra"));
 	while (ctdl_readline(c, buf, sizeof(buf)), strcmp(buf, "000")) {
 
+		// 0   |1      |2      |3      |4       |5 |6           |7           |8
 		// name|QRflags|QRfloor|QRorder|QRflags2|ra|current_view|default_view|mtime
 		JsonValue *jr = NewJsonObject(HKEY("room"));
 
 		extract_token(roomname, buf, 0, '|', sizeof roomname);
 		JsonObjectAppend(jr, NewJsonPlainString(HKEY("name"), roomname, -1));
 
+		JsonObjectAppend(jr, NewJsonNumber(HKEY("floor"), extract_int(buf, 2)));
+		JsonObjectAppend(jr, NewJsonNumber(HKEY("rorder"), extract_int(buf, 3)));
+
 		int ra = extract_int(buf, 5);
 		JsonObjectAppend(jr, NewJsonBool(HKEY("known"), (ra & UA_KNOWN)));
 		JsonObjectAppend(jr, NewJsonBool(HKEY("hasnewmsgs"), (ra & UA_HASNEWMSGS)));
 
-		int floor = extract_int(buf, 2);
-		JsonObjectAppend(jr, NewJsonNumber(HKEY("floor"), floor));
-
-		int rorder = extract_int(buf, 3);
-		JsonObjectAppend(jr, NewJsonNumber(HKEY("rorder"), rorder));
+		JsonObjectAppend(jr, NewJsonNumber(HKEY("current_view"), extract_int(buf, 6)));
+		JsonObjectAppend(jr, NewJsonNumber(HKEY("default_view"), extract_int(buf, 7)));
 
 		JsonArrayAppend(j, jr);	// add the room to the array
 	}

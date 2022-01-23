@@ -1,4 +1,3 @@
-//
 // Copyright (c) 2016-2022 by the citadel.org team
 //
 // This program is open source software.  It runs great on the
@@ -53,12 +52,17 @@ function display_room_list_renderer(data) {
 			}
 		}
 		new_roomlist_text = new_roomlist_text +
-			"<li>"
+			  "<li>"
 			+ (data[i].hasnewmsgs ? "<b>" : "")
 			+ "<a href=\"javascript:gotoroom('" + escapeJS(escapeHTML(data[i].name)) + "');\">"
 			+ escapeHTML(data[i].name)
 			+ (data[i].hasnewmsgs ? "</b>" : "")
-			+ "</a></li>"
+			+ "</a>"
+		if (data[i].current_view == views.VIEW_BBS) {
+			new_roomlist_text = new_roomlist_text + "(FORUM)";
+		}
+		new_roomlist_text = new_roomlist_text +
+			  "</li>"
 		;
 	}
 	new_roomlist_text = new_roomlist_text + "</ul>";
