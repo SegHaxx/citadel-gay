@@ -47,7 +47,6 @@ ctdl_startup = async() => {
 
 		if ( (serv_info.serv_supports_guest) || (logged_in) ) {			// If the Lobby is visible,
 			gotoroom("_BASEROOM_");						// go there.
-			display_room_list();
 		}
 		else {									// Otherwise,
 			display_login_screen("");					// display the login modal.
@@ -63,59 +62,8 @@ ctdl_startup = async() => {
 
 
 // Display a room list in the main div.
-function display_room_list() {
-	document.getElementById("roomlist").innerHTML = "<img src=\"/ctdl/s/images/throbber.gif\" />";	// show throbber while loading
-
-	fetch_room_list = async() => {
-		response = await fetch("/ctdl/r/");
-		room_list = await(response.json());
-		if (response.ok) {
-			display_room_list_renderer(room_list);
-		}
-		else {
-			document.getElementById("roomlist").innerHTML = "<i>error</i>";
-		}
-	}
-	fetch_room_list();
-}
-
-
-// Renderer for display_room_list()
-function display_room_list_renderer(data) {
-	data = data.sort(function(a,b) {
-		if (a.floor != b.floor) {
-			return(a.floor - b.floor);
-		}
-		if (a.rorder != b.rorder) {
-			return(a.rorder - b.rorder);
-		}
-		return(a.name < b.name);
-	});
-
-	new_roomlist_text = "<ul>" ;
-
-	for (var i in data) {
-		if (i > 0) {
-			if (data[i].floor != data[i-1].floor) {
-				new_roomlist_text = new_roomlist_text + "<li class=\"divider\"></li>" ;
-			}
-		}
-		new_roomlist_text = new_roomlist_text +
-			"<li>"
-			+ (data[i].hasnewmsgs ? "<b>" : "")
-			+ "<a href=\"javascript:gotoroom('" + escapeJS(escapeHTML(data[i].name)) + "');\">"
-			+ escapeHTML(data[i].name)
-			+ (data[i].hasnewmsgs ? "</b>" : "")
-			+ "</a></li>"
-		;
-	}
-	new_roomlist_text = new_roomlist_text + "</ul>";
-	document.getElementById("roomlist").innerHTML = new_roomlist_text ;
-}
-
 
 // Update the "banner" div with all relevant info.
-//
 function update_banner() {
 	detect_logged_in();
 	if (current_room) {
