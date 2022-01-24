@@ -124,6 +124,7 @@ void do_404(struct http_transaction *);
 void output_static(struct http_transaction *);
 int uds_connectsock(char *sockpath);
 void ctdl_a(struct http_transaction *, struct ctdlsession *);
+void ctdl_f(struct http_transaction *, struct ctdlsession *);
 void ctdl_r(struct http_transaction *, struct ctdlsession *);
 void ctdl_u(struct http_transaction *, struct ctdlsession *);
 struct ctdlsession *connect_to_citadel(struct http_transaction *);

@@ -1,6 +1,7 @@
 OBJS := http.o main.o request.o tls.o static.o tcp_sockets.o webserver.o ctdlclient.o \
 	admin_functions.o room_functions.o util.o caldav_reports.o messages.o \
-	ctdlfunctions.o ctdl_commands.o forum_view.o html2html.o text2html.o user_functions.o
+	ctdlfunctions.o ctdl_commands.o forum_view.o html2html.o text2html.o user_functions.o \
+	floor_functions.o
 CFLAGS := -ggdb -Wno-format-truncation
 LDFLAGS := 
 

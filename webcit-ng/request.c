@@ -151,6 +151,9 @@ void perform_request(struct http_transaction *h) {
 	case 'c':		// /ctdl/c/ == misc Citadel server commands
 		ctdl_c(h, c);
 		break;
+	case 'f':		// /ctdl/f/ == RESTful path to floors
+		ctdl_f(h, c);
+		break;
 	case 'r':		// /ctdl/r/ == RESTful path to rooms
 		ctdl_r(h, c);
 		break;

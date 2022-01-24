@@ -2,6 +2,7 @@
 Method		URL				Function
 ------		------------------------------	-------------------------------------
 GET		/				Site root will redirect to a landing page
+GET		/ctdl/f/			returns a JSON-encoded list of accessible floors
 GET		/ctdl/r/			returns a JSON-encoded list of accessible rooms
 OPTIONS		/ctdl/r/ROOMNAME/		returns just what you'd expect
 PROPFIND	/ctdl/r/ROOMNAME/		Show a bunch of crap
