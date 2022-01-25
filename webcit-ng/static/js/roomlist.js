@@ -13,15 +13,17 @@
 
 function render_room_list() {
 
-
 	document.getElementById("ctdl-newmsg-button").style.display = "none";		// There is no "enter" button on this screen
 	document.getElementById("ctdl-main").innerHTML = "<img src=\"/ctdl/s/images/throbber.gif\" />";	// show throbber while loading
 
 	fetch_room_list = async() => {
-		response = await fetch("/ctdl/r/");
-		room_list = await(response.json());
+
+		floor_response = await fetch("/ctdl/f/");
+		floor_list = await(floor_response.json());
+		room_response = await fetch("/ctdl/r/");
+		room_list = await(room_response.json());
 		if (response.ok) {
-			display_room_list_renderer(room_list);
+			display_room_list_renderer(floor_list, room_list);
 		}
 		else {
 			document.getElementById("ctdl-main").innerHTML = "<i>error</i>";
@@ -32,8 +34,8 @@ function render_room_list() {
 
 
 // Renderer for display_room_list()
-function display_room_list_renderer(data) {
-	data = data.sort(function(a,b) {
+function display_room_list_renderer(floor_list, room_list) {
+	room_list = room_list.sort(function(a,b) {
 		if (a.floor != b.floor) {
 			return(a.floor - b.floor);
 		}
@@ -43,29 +45,29 @@ function display_room_list_renderer(data) {
 		return(a.name < b.name);
 	});
 
-	new_roomlist_text = "<ul>" ;
+	output = [];
 
-	for (var i in data) {
-		if (i > 0) {
-			if (data[i].floor != data[i-1].floor) {
-				new_roomlist_text = new_roomlist_text + "<li class=\"divider\"></li>" ;
-			}
-		}
-		new_roomlist_text = new_roomlist_text +
-			  "<li>"
-			+ (data[i].hasnewmsgs ? "<b>" : "")
-			+ "<a href=\"javascript:gotoroom('" + escapeJS(escapeHTML(data[i].name)) + "');\">"
-			+ escapeHTML(data[i].name)
-			+ (data[i].hasnewmsgs ? "</b>" : "")
-			+ "</a>"
-		if (data[i].current_view == views.VIEW_BBS) {
-			new_roomlist_text = new_roomlist_text + "(FORUM)";
-		}
-		new_roomlist_text = new_roomlist_text +
-			  "</li>"
-		;
+	for (var f in floor_list) {
+		output[floor_list[f].num] = "<div><b>Room list for " + floor_list[f].name + "</b><br>";
 	}
-	new_roomlist_text = new_roomlist_text + "</ul>";
-	document.getElementById("ctdl-main").innerHTML = new_roomlist_text ;
+
+	for (var i in room_list) {
+		output[room_list[i].floor] += (room_list[i].hasnewmsgs ? "<b>" : "");
+		output[room_list[i].floor] += "<a href=\"javascript:gotoroom('" + escapeJS(escapeHTML(room_list[i].name)) + "');\">";
+		output[room_list[i].floor] += escapeHTML(room_list[i].name);
+		output[room_list[i].floor] += (room_list[i].hasnewmsgs ? "</b>" : "");
+		output[room_list[i].floor] += "</a>";
+		if (room_list[i].current_view == views.VIEW_BBS) {
+			output[room_list[i].floor] += "(FORUM)";
+		}
+		output[room_list[i].floor] += "<br>";
+	}
+
+	final_output = "";
+	for (var f in floor_list) {
+		final_output += output[floor_list[f].num];
+		final_output += "<br>";
+	}
+	document.getElementById("ctdl-main").innerHTML = final_output ;
 }
 
