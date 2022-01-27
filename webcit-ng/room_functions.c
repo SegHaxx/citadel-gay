@@ -106,6 +106,30 @@ void json_msglist(struct http_transaction *h, struct ctdlsession *c, char *which
 }
 
 
+// Client is requesting the room info banner
+void read_room_info_banner(struct http_transaction *h, struct ctdlsession *c) {
+	char buf[1024];
+
+	ctdl_printf(c, "RINF");
+	ctdl_readline(c, buf, sizeof(buf));
+	if (buf[0] == '1') {
+		StrBuf *info = NewStrBuf();
+		while (ctdl_readline(c, buf, sizeof(buf)), (strcmp(buf, "000"))){
+			StrBufAppendPrintf(info, "%s\n", buf);
+		}
+		add_response_header(h, strdup("Content-type"), strdup("text/plain"));
+		h->response_code = 200;
+		h->response_string = strdup("OK");
+		h->response_body_length = StrLength(info);
+		h->response_body = SmashStrBuf(&info);
+		return;
+	}
+	else {
+		do_404(h);
+	}
+}
+
+
 // Client requested an object in a room.
 void object_in_room(struct http_transaction *h, struct ctdlsession *c) {
 	char buf[1024];
@@ -114,32 +138,28 @@ void object_in_room(struct http_transaction *h, struct ctdlsession *c) {
 
 	extract_token(buf, h->url, 4, '/', sizeof buf);
 
-	if (!strncasecmp(buf, "msgs.", 5)) {	// Client is requesting a list of message numbers
+	if (!strncasecmp(buf, "msgs.", 5)) {		// Client is requesting a list of message numbers
 		unescape_input(&buf[5]);
 		json_msglist(h, c, &buf[5]);
 		return;
 	}
-#if 0
-	if (!strncasecmp(buf, "threads", 5)) {	// Client is requesting a threaded view (still kind of fuzzy here)
-		threaded_view(h, c, &buf[5]);
+
+	if (!strcasecmp(buf, "info.txt")) {		// Client is requesting the room info banner
+		read_room_info_banner(h, c);
 		return;
 	}
 
-	if (!strncasecmp(buf, "flat", 5)) {	// Client is requesting a flat view (still kind of fuzzy here)
-		flat_view(h, c, &buf[5]);
-		return;
-	}
-#endif
+	// If we get to this point, the client is requesting a specific object *in* the room.
 
 	if ((c->room_default_view == VIEW_CALENDAR)	// room types where objects are referenced by EUID
-	    || (c->room_default_view == VIEW_TASKS)
-	    || (c->room_default_view == VIEW_ADDRESSBOOK)
-	    ) {
+	   || (c->room_default_view == VIEW_TASKS)
+	   || (c->room_default_view == VIEW_ADDRESSBOOK)
+	   ) {
 		safestrncpy(unescaped_euid, buf, sizeof unescaped_euid);
 		unescape_input(unescaped_euid);
 		msgnum = locate_message_by_uid(c, unescaped_euid);
 	}
-	else {
+	else {						// otherwise the object is being referenced by message number
 		msgnum = atol(buf);
 	}
 
@@ -474,6 +494,7 @@ void room_list(struct http_transaction *h, struct ctdlsession *c) {
 
 		JsonObjectAppend(jr, NewJsonNumber(HKEY("current_view"), extract_int(buf, 6)));
 		JsonObjectAppend(jr, NewJsonNumber(HKEY("default_view"), extract_int(buf, 7)));
+		JsonObjectAppend(jr, NewJsonNumber(HKEY("mtime"), extract_int(buf, 8)));
 
 		JsonArrayAppend(j, jr);	// add the room to the array
 	}
@@ -532,8 +553,7 @@ void ctdl_r(struct http_transaction *h, struct ctdlsession *c) {
 	}
 	// At this point our Citadel client session is "in" the specified room.
 
-	if (num_tokens(h->url, '/') == 4)	//      /ctdl/r/roomname
-	{
+	if (num_tokens(h->url, '/') == 4) {	//      /ctdl/r/roomname
 		the_room_itself(h, c);
 		return;
 	}

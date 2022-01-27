@@ -4,8 +4,7 @@ This is WebCit-NG, a complete refactoring of the WebCit server that will
 focus on "REST first" and build around that.  The code will be well
 layered with as little spaghetti as possible.
 
-Please don't mess with this yet.  I'm only pushing it upstream so it gets
-backed up.
+Please don't mess with this yet.  I'm only pushing it upstream so it gets backed up.
 
 
 DESIGN GOALS:
@@ -16,6 +15,7 @@ DESIGN GOALS:
 *	Require NO cleanup.   Killing the process lets the OS reclaim all resources.
 
 *	As much as possible, resources should be freed by just coming back down the stack.
+	Avoid global variables and thread-local variables as much as possible.
 
 *	Readability of the code is more important than shaving off a few CPU cycles.
 

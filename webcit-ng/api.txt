@@ -13,6 +13,7 @@ GET		/ctdl/r/ROOMNAME/MSGNUM		Retrieve the content of an individual message
 						(Should we output RFC822 fields as HTTP headers?  Decide soon...)
 PUT		/ctdl/r/ROOMNAME/xxx		DAV operation to insert a new message into a room
 						(The returned ETag will be the new message number)
+GET		/ctdl/r/ROOMNAME/info.txt	Returns the room info banner for this room
 GET		/ctdl/r/ROOMNAME/MSGNUM/json	Retrieve an individual message in a room, encapsulated in JSON
 GET		/ctdl/c/info			Returns a JSON representation of the output of an INFO server command
 POST		/ctdl/a/login			Send it a your credentials and it will log you in
