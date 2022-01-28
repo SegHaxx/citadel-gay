@@ -133,3 +133,7 @@ blockquote pre {
 	margin-right: 1%;
 }
 
+.ctdl-roomlist-floor {
+	font-weight: bold;
+	font-size: x-large;
+}

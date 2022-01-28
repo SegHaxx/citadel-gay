@@ -48,7 +48,7 @@ function display_room_list_renderer(floor_list, room_list) {
 	output = [];
 
 	for (var f in floor_list) {
-		output[floor_list[f].num] = "<div><b>Room list for " + floor_list[f].name + "</b><br>";
+		output[floor_list[f].num] = "<div><div class=\"ctdl-roomlist-floor\">" + floor_list[f].name + "</div>";
 	}
 
 	for (var i in room_list) {
