@@ -141,10 +141,31 @@ blockquote pre {
 }
 
 .ctdl-roomlist-floor-label {
-	font-weight: bold;
 	font-size: x-large;
+	margin: 1vw;
 }
 
 .ctdl-roomlist-floor-rooms {
 }
 
+.ctdl-roomlist-room {
+	overflow: hidden;
+	border-radius: 10px;
+	background-color: white;
+	padding: 0.5vw;
+	margin-bottom: 0.5vw;
+}
+
+.ctdl-roomlist-roomname {
+	font-size: large;
+}
+
+.ctdl-roomlist-roomname-hasnewmsgs {
+	font-weight: bold;
+}
+
+.ctdl-roomlist-roomicon {
+	font-size: large;
+	margin-left: 1vw;
+	margin-right: 1vw;
+}

@@ -53,12 +53,14 @@ function display_room_list_renderer(floor_list, room_list) {
 
 	for (var i in room_list) {
 		if (room_list[i].current_view == views.VIEW_BBS) {
-			output[room_list[i].floor] += (room_list[i].hasnewmsgs ? "<b>" : "");
-			output[room_list[i].floor] += "<a href=\"javascript:gotoroom('" + escapeJS(escapeHTML(room_list[i].name)) + "');\">";
+			output[room_list[i].floor] += "<div class=\"ctdl-roomlist-room\">";
+			output[room_list[i].floor] += "<i class=\"ctdl-roomlist-roomicon fas fa-comments fa-fw\"></i>";
+			output[room_list[i].floor] += "<a class=\"ctdl-roomlist-roomname";
+			output[room_list[i].floor] += (room_list[i].hasnewmsgs ? " ctdl-roomlist-roomname-hasnewmsgs" : "");
+			output[room_list[i].floor] += "\" href=\"javascript:gotoroom('" + escapeJS(escapeHTML(room_list[i].name)) + "');\">";
 			output[room_list[i].floor] += escapeHTML(room_list[i].name);
 			output[room_list[i].floor] += (room_list[i].hasnewmsgs ? "</b>" : "");
-			output[room_list[i].floor] += "</a>";
-			output[room_list[i].floor] += "<br>";
+			output[room_list[i].floor] += "</a></div>";
 		}
 	}
 
