@@ -154,6 +154,12 @@ blockquote pre {
 	background-color: white;
 	padding: 0.5vw;
 	margin-bottom: 0.5vw;
+	width: 100%;
+	text-align: left;
+	display: flex;
+	flex-direction: row;
+	/* justify-content: center; */
+	align-items: center;
 }
 
 .ctdl-roomlist-roomname {
