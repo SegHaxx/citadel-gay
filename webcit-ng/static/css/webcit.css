@@ -42,7 +42,7 @@ html,body,h1,h2,h3,h4,h5 {
 	margin-left: 2px;
 	border-radius: 5px;
 	background-color: blue;
-	color:black;
+	color: black;
 	padding: 2px;
 	background-color: GhostWhite;
 	border-style: solid;
@@ -165,7 +165,20 @@ blockquote pre {
 }
 
 .ctdl-roomlist-roomicon {
+	overflow: hidden;
 	font-size: large;
 	margin-left: 1vw;
 	margin-right: 1vw;
+	padding-left: 0.75vw;
+	padding-right: 1.75vw;
+	padding-top: 0.75vw;
+	padding-bottom: 0.75vw;
+	border-radius: 50%;
+	background-color: grey;
+	color: black;
+}
+
+.ctdl-roomlist-roomicon-hasnewmsgs {
+	background-color: blue;
+	color: white;
 }
