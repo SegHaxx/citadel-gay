@@ -17,7 +17,6 @@ function render_room_list() {
 	document.getElementById("ctdl-main").innerHTML = "<img src=\"/ctdl/s/images/throbber.gif\" />";	// show throbber while loading
 
 	fetch_room_list = async() => {
-
 		floor_response = await fetch("/ctdl/f/");
 		floor_list = await(floor_response.json());
 		room_response = await fetch("/ctdl/r/");
@@ -35,6 +34,8 @@ function render_room_list() {
 
 // Renderer for display_room_list()
 function display_room_list_renderer(floor_list, room_list) {
+
+	// First sort by the room order indicated by the server
 	room_list = room_list.sort(function(a,b) {
 		if (a.floor != b.floor) {
 			return(a.floor - b.floor);
@@ -45,34 +46,39 @@ function display_room_list_renderer(floor_list, room_list) {
 		return(a.name < b.name);
 	});
 
+	// Then split the sorted list out into floors
 	output = [];
-
 	for (var f in floor_list) {
 		output[floor_list[f].num] = "";
 	}
 
 	for (var i in room_list) {
 		if (room_list[i].current_view == views.VIEW_BBS) {
-			output[room_list[i].floor] += "<div class=\"w3-button ctdl-roomlist-room\" onClick=\"javascript:gotoroom('" + escapeJS(escapeHTML(room_list[i].name)) + "');\">";
-			output[room_list[i].floor] += "<i class=\"ctdl-roomlist-roomicon fas fa-comments";
-			output[room_list[i].floor] += (room_list[i].hasnewmsgs ? " ctdl-roomlist-roomicon-hasnewmsgs" : "");
-			output[room_list[i].floor] += " fa-fw\"></i><span class=\"ctdl-roomlist-roomname\"";
-			output[room_list[i].floor] += (room_list[i].hasnewmsgs ? " ctdl-roomlist-roomname-hasnewmsgs" : "");
-			output[room_list[i].floor] += "\">";
-			output[room_list[i].floor] += escapeHTML(room_list[i].name);
-			output[room_list[i].floor] += "</span></div>";
+			output[room_list[i].floor] +=
+				"<div class=\"w3-button ctdl-roomlist-room\" onClick=\"javascript:gotoroom('"
+				+ escapeJS(escapeHTML(room_list[i].name)) + "');\">"
+				+ "<i class=\"ctdl-roomlist-roomicon w3-left "
+				+ (room_list[i].hasnewmsgs ? " ctdl-roomlist-roomicon-hasnewmsgs" : "")
+				+ " fas fa-comments fa-fw\"></i><span class=\"ctdl-roomlist-roomname"
+				+ (room_list[i].hasnewmsgs ? " ctdl-roomlist-roomname-hasnewmsgs" : "")
+				+ " w3-left\">"
+				+ escapeHTML(room_list[i].name)
+				+ "</span><span class=\"ctdl-roomlist-mtime w3-right\">"
+				+ convertTimestamp(room_list[i].mtime)
+				+ "</span></div>";
 		}
 	}
 
 	final_output = "<div class=\"ctdl-roomlist-top\">";
 	for (var f in floor_list) {
-		final_output += "<div class=\"ctdl-roomlist-floor\">";
-		final_output += "<div class=\"ctdl-roomlist-floor-label\">" + floor_list[f].name + "</div>";
-		final_output += "<div class=\"ctdl-roomlist-floor-rooms\">";
-		final_output += output[floor_list[f].num];
-		final_output += "</div></div>";
+		final_output +=
+			"<div class=\"ctdl-roomlist-floor\">"
+			+ "<div class=\"ctdl-roomlist-floor-label\">" + floor_list[f].name + "</div>"
+			+ "<div class=\"ctdl-roomlist-floor-rooms\">"
+			+ output[floor_list[f].num]
+			+ "</div></div>";
 	}
 	final_output += "</div>";
-	document.getElementById("ctdl-main").innerHTML = final_output ;
+	document.getElementById("ctdl-main").innerHTML = final_output;
 }
 

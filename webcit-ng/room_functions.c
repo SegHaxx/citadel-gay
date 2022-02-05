@@ -1,4 +1,3 @@
-//
 // Room functions
 //
 // Copyright (c) 1996-2022 by the citadel.org team

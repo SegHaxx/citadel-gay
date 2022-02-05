@@ -155,19 +155,6 @@ blockquote pre {
 	padding: 0.5vw;
 	margin-bottom: 0.5vw;
 	width: 100%;
-	text-align: left;
-	display: flex;
-	flex-direction: row;
-	/* justify-content: center; */
-	align-items: center;
-}
-
-.ctdl-roomlist-roomname {
-	font-size: large;
-}
-
-.ctdl-roomlist-roomname-hasnewmsgs {
-	font-weight: bold;
 }
 
 .ctdl-roomlist-roomicon {
@@ -187,4 +174,15 @@ blockquote pre {
 .ctdl-roomlist-roomicon-hasnewmsgs {
 	background-color: blue;
 	color: white;
+}
+
+.ctdl-roomlist-roomname {
+	font-size: large;
+}
+
+.ctdl-roomlist-roomname-hasnewmsgs {
+	font-weight: bold;
+}
+
+.ctdl-roomlist-mtime {
 }
