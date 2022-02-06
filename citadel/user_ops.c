@@ -1,6 +1,6 @@
 // Server functions which perform operations on user objects.
 //
-// Copyright (c) 1987-2021 by the citadel.org team
+// Copyright (c) 1987-2022 by the citadel.org team
 //
 // This program is open source software; you can redistribute it and/or
 // modify it under the terms of the GNU General Public License, version 3.
@@ -25,16 +25,14 @@
 #include "user_ops.h"
 #include "internet_addressing.h"
 
-/* These pipes are used to talk to the chkpwd daemon, which is forked during startup */
+// These pipes are used to talk to the chkpwd daemon, which is forked during startup
 int chkpwd_write_pipe[2];
 int chkpwd_read_pipe[2];
 
 
-/*
- * makeuserkey() - convert a username into the format used as a database key
- *			"key" must be a buffer of at least USERNAME_SIZE
- *			(Key format is the username with all non-alphanumeric characters removed, and converted to lower case.)
- */
+// makeuserkey() - convert a username into the format used as a database key
+//		"key" must be a buffer of at least USERNAME_SIZE
+//		(Key format is the username with all non-alphanumeric characters removed, and converted to lower case.)
 void makeuserkey(char *key, const char *username) {
 	int i;
 	int keylen = 0;
@@ -54,10 +52,8 @@ void makeuserkey(char *key, const char *username) {
 }
 
 
-/*
- * Compare two usernames to see if they are the same user after being keyed for the database
- * Usage is identical to strcmp()
- */
+// Compare two usernames to see if they are the same user after being keyed for the database
+// Usage is identical to strcmp()
 int CtdlUserCmp(char *s1, char *s2) {
 	char k1[USERNAME_SIZE];
 	char k2[USERNAME_SIZE];
@@ -68,12 +64,9 @@ int CtdlUserCmp(char *s1, char *s2) {
 }
 
 
-/*
- * CtdlGetUser()	retrieve named user into supplied buffer.
- *			returns 0 on success
- */
-int CtdlGetUser(struct ctdluser *usbuf, char *name)
-{
+// CtdlGetUser()	retrieve named user into supplied buffer.
+//			returns 0 on success
+int CtdlGetUser(struct ctdluser *usbuf, char *name) {
 	char usernamekey[USERNAME_SIZE];
 	struct cdbdata *cdbus;
 
@@ -99,8 +92,7 @@ int CtdlGetUser(struct ctdluser *usbuf, char *name)
 
 
 int CtdlLockGetCurrentUser(void) {
-	CitContext *CCC = CC;
-	return CtdlGetUser(&CCC->user, CCC->curr_user);
+	return CtdlGetUser(&CC->user, CC->curr_user);
 }
 
 
@@ -286,18 +278,16 @@ void CtdlSetRelationship(visit *newvisit, struct ctdluser *rel_user, struct ctdl
 }
 
 
-/*
- * Locate a relationship between a user and a room
- */
+// Locate a relationship between a user and a room
 void CtdlGetRelationship(visit *vbuf, struct ctdluser *rel_user, struct ctdlroom *rel_room) {
 	char IndexBuf[32];
 	int IndexLen;
 	struct cdbdata *cdbvisit;
 
-	/* Generate an index */
+	// Generate an index
 	IndexLen = GenerateRelationshipIndex(IndexBuf, rel_room->QRnumber, rel_room->QRgen, rel_user->usernum);
 
-	/* Clear out the buffer */
+	// Clear out the buffer
 	memset(vbuf, 0, sizeof(visit));
 
 	cdbvisit = cdb_fetch(CDB_VISIT, IndexBuf, IndexLen);
@@ -306,59 +296,47 @@ void CtdlGetRelationship(visit *vbuf, struct ctdluser *rel_user, struct ctdlroom
 		cdb_free(cdbvisit);
 	}
 	else {
-		/* If this is the first time the user has seen this room,
-		 * set the view to be the default for the room.
-		 */
+		// If this is the first time the user has seen this room, set the view to be the default for the room.
 		vbuf->v_view = rel_room->QRdefaultview;
 	}
 
-	/* Set v_seen if necessary */
+	// Set v_seen if necessary
 	if (vbuf->v_seen[0] == 0) {
 		snprintf(vbuf->v_seen, sizeof vbuf->v_seen, "*:%ld", vbuf->v_lastseen);
 	}
 }
 
 
-void CtdlMailboxName(char *buf, size_t n, const struct ctdluser *who, const char *prefix)
-{
+void CtdlMailboxName(char *buf, size_t n, const struct ctdluser *who, const char *prefix) {
 	snprintf(buf, n, "%010ld.%s", who->usernum, prefix);
 }
 
 
-void MailboxName(char *buf, size_t n, const struct ctdluser *who, const char *prefix)
-{
-	snprintf(buf, n, "%010ld.%s", who->usernum, prefix);
-}
-
-
-/*
- * Check to see if the specified user has Internet mail permission
- * (returns nonzero if permission is granted)
- */
+// Check to see if the specified user has Internet mail permission
+// (returns nonzero if permission is granted)
 int CtdlCheckInternetMailPermission(struct ctdluser *who) {
 
-	/* Do not allow twits to send Internet mail */
+	// Do not allow twits to send Internet mail
 	if (who->axlevel <= AxProbU) return(0);
 
-	/* Globally enabled? */
+	// Globally enabled?
 	if (CtdlGetConfigInt("c_restrict") == 0) return(1);
 
-	/* User flagged ok? */
+	// User flagged ok?
 	if (who->flags & US_INTERNET) return(2);
 
-	/* Admin level access? */
+	// Admin level access?
 	if (who->axlevel >= AxAideU) return(3);
 
-	/* No mail for you! */
+	// No mail for you!
 	return(0);
 }
 
 
-/*
- * Convenience function.
- */
-int CtdlAccessCheck(int required_level)
-{
+// This is a convenience function which follows the Citadel protocol semantics for most commands.
+// If the current user does not have the requested access level, it outputs a protocol-friendly error message
+// and then returns (-1).  This allows calling functions to complete an access level check in one line of code.
+int CtdlAccessCheck(int required_level) {
 	if (CC->internal_pgm) return(0);
 	if (required_level >= ac_internal) {
 		cprintf("%d This is not a user-level command.\n", ERROR + HIGHER_ACCESS_REQUIRED);
@@ -389,45 +367,39 @@ int CtdlAccessCheck(int required_level)
 		return(-1);
 	}
 
-	/* shhh ... succeed quietly */
+	// Do not generate any output if we succeeded -- the calling function will handle that.
 	return(0);
 }
 
 
-/*
- * Is the user currently logged in an Admin?
- */
+// Is the user currently logged in an Admin?
 int is_aide(void) {
-	if (CC->user.axlevel >= AxAideU)
+	if (CC->user.axlevel >= AxAideU) {
 		return(1);
-	else
+	}
+	else {
 		return(0);
+	}
 }
 
 
-/*
- * Is the user currently logged in an Admin *or* the room Admin for this room?
- */
+// Is the user currently logged in an Admin *or* the room Admin for this room?
 int is_room_aide(void) {
-
 	if (!CC->logged_in) {
 		return(0);
 	}
 
 	if ((CC->user.axlevel >= AxAideU) || (CC->room.QRroomaide == CC->user.usernum)) {
 		return(1);
-	} else {
+	}
+	else {
 		return(0);
 	}
 }
 
 
-/*
- * CtdlGetUserByNumber() -	get user by number
- * 			returns 0 if user was found
- *
- * Note: fetching a user this way requires one additional database operation.
- */
+// CtdlGetUserByNumber() - get user by number, returns 0 if user was found
+// Note: fetching a user this way requires one additional database operation.
 int CtdlGetUserByNumber(struct ctdluser *usbuf, long number) {
 	struct cdbdata *cdbun;
 	int r;
@@ -445,9 +417,7 @@ int CtdlGetUserByNumber(struct ctdluser *usbuf, long number) {
 }
 
 
-/*
- * Helper function for rebuild_usersbynumber()
- */
+// Helper function for rebuild_usersbynumber()
 void rebuild_ubn_for_user(char *username, void *data) {
 	struct ctdluser u;
 
@@ -458,20 +428,16 @@ void rebuild_ubn_for_user(char *username, void *data) {
 }
 
 
-/*
- * Rebuild the users-by-number index
- */
+// Rebuild the users-by-number index
 void rebuild_usersbynumber(void) {
-	cdb_trunc(CDB_USERSBYNUMBER);			/* delete the old indices */
-	ForEachUser(rebuild_ubn_for_user, NULL);	/* enumerate the users */
+	cdb_trunc(CDB_USERSBYNUMBER);			// delete the old indices
+	ForEachUser(rebuild_ubn_for_user, NULL);	// enumerate the users
 }
 
 
-/*
- * getuserbyuid()	Get user by system uid (for PAM mode authentication)
- *			Returns 0 if user was found
- *			This now uses an extauth index.
- */
+// getuserbyuid()	Get user by system uid (for PAM mode authentication)
+//			Returns 0 if user was found
+//			This now uses an extauth index.
 int getuserbyuid(struct ctdluser *usbuf, uid_t number) {
 	struct cdbdata *cdbextauth;
 	long usernum = 0;
@@ -496,9 +462,7 @@ int getuserbyuid(struct ctdluser *usbuf, uid_t number) {
 }
 
 
-/*
- * Back end for cmd_user() and its ilk
- */
+// Back end for cmd_user() and its ilk
 int CtdlLoginExistingUser(const char *trythisname) {
 	char username[SIZ];
 	int found_user;
@@ -511,13 +475,12 @@ int CtdlLoginExistingUser(const char *trythisname) {
 
 	if (trythisname == NULL) return login_not_found;
 	
-	if (!strncasecmp(trythisname, "SYS_", 4))
-	{
+	if (!strncasecmp(trythisname, "SYS_", 4)) {
 		syslog(LOG_DEBUG, "user_ops: system user \"%s\" is not allowed to log in.", trythisname);
 		return login_not_found;
 	}
 
-	/* Continue attempting user validation... */
+	// Continue attempting user validation...
 	safestrncpy(username, trythisname, sizeof (username));
 	striplt(username);
 
@@ -525,10 +488,8 @@ int CtdlLoginExistingUser(const char *trythisname) {
 		return login_not_found;
 	}
 
+	// host auth mode...
 	if (CtdlGetConfigInt("c_auth_mode") == AUTHMODE_HOST) {
-
-		/* host auth mode */
-
 		struct passwd pd;
 		struct passwd *tempPwdPtr;
 		char pwdbuffer[256];
@@ -551,7 +512,7 @@ int CtdlLoginExistingUser(const char *trythisname) {
 			return login_not_found;
 		}
 	
-		/* Locate the associated Citadel account.  If not found, make one attempt to create it. */
+		// Locate the associated Citadel account.  If not found, make one attempt to create it.
 		found_user = getuserbyuid(&CC->user, pd.pw_uid);
 		if (found_user != 0) {
 			create_user(username, CREATE_USER_DO_NOT_BECOME_USER, pd.pw_uid);
@@ -561,9 +522,8 @@ int CtdlLoginExistingUser(const char *trythisname) {
 
 	}
 
+	// LDAP auth mode...
 	else if ((CtdlGetConfigInt("c_auth_mode") == AUTHMODE_LDAP) || (CtdlGetConfigInt("c_auth_mode") == AUTHMODE_LDAP_AD)) {
-	
-		/* LDAP auth mode */
 
 		uid_t ldap_uid;
 		char ldap_cn[256];
@@ -587,15 +547,14 @@ int CtdlLoginExistingUser(const char *trythisname) {
 
 	}
 
+	// native auth mode...
 	else {
-		/* native auth mode */
-
 		struct recptypes *valid = NULL;
 	
-		/* First, try to log in as if the supplied name is a display name */
+		// First, try to log in as if the supplied name is a display name
 		found_user = CtdlGetUser(&CC->user, username);
 	
-		/* If that didn't work, try to log in as if the supplied name * is an e-mail address */
+		// If that didn't work, try to log in as if the supplied name * is an e-mail address
 		if (found_user != 0) {
 			valid = validate_recipients(username, NULL, 0);
 			if (valid != NULL) {
@@ -607,11 +566,12 @@ int CtdlLoginExistingUser(const char *trythisname) {
 		}
 	}
 
-	/* Did we find something? */
+	// Did we find something?
 	if (found_user == 0) {
 		if (((CC->nologin)) && (CC->user.axlevel < AxAideU)) {
 			return login_too_many_users;
-		} else {
+		}
+		else {
 			safestrncpy(CC->curr_user, CC->user.fullname, sizeof CC->curr_user);
 			return login_ok;
 		}
@@ -702,9 +662,8 @@ void logged_in_response(void) {
 
 
 void CtdlUserLogout(void) {
-	CitContext *CCC = MyContext();
 
-	syslog(LOG_DEBUG, "user_ops: CtdlUserLogout() logging out <%s> from session %d", CCC->curr_user, CCC->cs_pid);
+	syslog(LOG_DEBUG, "user_ops: CtdlUserLogout() logging out <%s> from session %d", CC->curr_user, CC->cs_pid);
 
 	// Run any hooks registered by modules...
 	PerformSessionHooks(EVT_LOGOUT);
@@ -713,30 +672,27 @@ void CtdlUserLogout(void) {
 	// session is about to get nuked when the session disconnects, but
 	// since it's possible to log in again without reconnecting, we cannot
 	// make that assumption.
-	CCC->logged_in = 0;
+	CC->logged_in = 0;
 
 	// Check to see if the user was deleted while logged in and purge them if necessary
-	if ((CCC->user.axlevel == AxDeleted) && (CCC->user.usernum)) {
-		purge_user(CCC->user.fullname);
+	if ((CC->user.axlevel == AxDeleted) && (CC->user.usernum)) {
+		purge_user(CC->user.fullname);
 	}
 
 	// Clear out the user record in memory so we don't behave like a ghost
-	memset(&CCC->user, 0, sizeof(struct ctdluser));
-	CCC->curr_user[0] = 0;
-	CCC->cs_inet_email[0] = 0;
-	CCC->cs_inet_other_emails[0] = 0;
-	CCC->cs_inet_fn[0] = 0;
+	memset(&CC->user, 0, sizeof(struct ctdluser));
+	CC->curr_user[0] = 0;
+	CC->cs_inet_email[0] = 0;
+	CC->cs_inet_other_emails[0] = 0;
+	CC->cs_inet_fn[0] = 0;
 
 	// Free any output buffers
 	unbuffer_output();
 }
 
 
-/*
- * Validate a password on the host unix system by talking to the chkpwd daemon
- */
-static int validpw(uid_t uid, const char *pass)
-{
+// Validate a password on the host unix system by talking to the chkpwd daemon
+static int validpw(uid_t uid, const char *pass) {
 	char buf[256];
 	int rv = 0;
 
@@ -778,9 +734,7 @@ static int validpw(uid_t uid, const char *pass)
 }
 
 
-/* 
- * Start up the chkpwd daemon so validpw() has something to talk to
- */
+// Start up the chkpwd daemon so validpw() has something to talk to
 void start_chkpwd_daemon(void) {
 	pid_t chkpwd_pid;
 	struct stat filestats;
@@ -818,20 +772,18 @@ void start_chkpwd_daemon(void) {
 }
 
 
-int CtdlTryPassword(const char *password, long len)
-{
+int CtdlTryPassword(const char *password, long len) {
 	int code;
-	CitContext *CCC = CC;
 
-	if ((CCC->logged_in)) {
+	if ((CC->logged_in)) {
 		syslog(LOG_WARNING, "user_ops: CtdlTryPassword: already logged in");
 		return pass_already_logged_in;
 	}
-	if (!strcmp(CCC->curr_user, NLI)) {
+	if (!strcmp(CC->curr_user, NLI)) {
 		syslog(LOG_WARNING, "user_ops: CtdlTryPassword: no user selected");
 		return pass_no_user;
 	}
-	if (CtdlGetUser(&CCC->user, CCC->curr_user)) {
+	if (CtdlGetUser(&CC->user, CC->curr_user)) {
 		syslog(LOG_ERR, "user_ops: CtdlTryPassword: internal error");
 		return pass_internal_error;
 	}
@@ -840,39 +792,32 @@ int CtdlTryPassword(const char *password, long len)
 		return pass_wrong_password;
 	}
 
+	// host auth mode...
 	else if (CtdlGetConfigInt("c_auth_mode") == AUTHMODE_HOST) {
-
-		/* host auth mode */
-
-		if (validpw(CCC->user.uid, password)) {
+		if (validpw(CC->user.uid, password)) {
 			code = 0;
 
-			/*
-			 * sooper-seekrit hack: populate the password field in the
-			 * citadel database with the password that the user typed,
-			 * if it's correct.  This allows most sites to convert from
-			 * host auth to native auth if they want to.  If you think
-			 * this is a security hazard, comment it out.
-			 */
+			// sooper-seekrit hack: populate the password field in the
+			// citadel database with the password that the user typed,
+			// if it's correct.  This allows most sites to convert from
+			// host auth to native auth if they want to.  If you think
+			// this is a security hazard, comment it out.
 
-			CtdlGetUserLock(&CCC->user, CCC->curr_user);
-			safestrncpy(CCC->user.password, password, sizeof CCC->user.password);
-			CtdlPutUserLock(&CCC->user);
+			CtdlGetUserLock(&CC->user, CC->curr_user);
+			safestrncpy(CC->user.password, password, sizeof CC->user.password);
+			CtdlPutUserLock(&CC->user);
 
-			/*
-			 * (sooper-seekrit hack ends here)
-			 */
+			// (sooper-seekrit hack ends here)
 		}
 		else {
 			code = (-1);
 		}
 	}
 
+	// LDAP auth mode...
 	else if ((CtdlGetConfigInt("c_auth_mode") == AUTHMODE_LDAP) || (CtdlGetConfigInt("c_auth_mode") == AUTHMODE_LDAP_AD)) {
 
-		/* LDAP auth mode */
-
-		if ((CCC->ldap_dn) && (!CtdlTryPasswordLDAP(CCC->ldap_dn, password))) {
+		if ((CC->ldap_dn) && (!CtdlTryPasswordLDAP(CC->ldap_dn, password))) {
 			code = 0;
 		}
 		else {
@@ -880,20 +825,19 @@ int CtdlTryPassword(const char *password, long len)
 		}
 	}
 
+	// native auth mode...
 	else {
-
-		/* native auth mode */
 		char *pw;
 
 		pw = (char*) malloc(len + 1);
 		memcpy(pw, password, len + 1);
 		strproc(pw);
-		strproc(CCC->user.password);
-		code = strcasecmp(CCC->user.password, pw);
+		strproc(CC->user.password);
+		code = strcasecmp(CC->user.password, pw);
 		if (code != 0) {
 			strproc(pw);
-			strproc(CCC->user.password);
-			code = strcasecmp(CCC->user.password, pw);
+			strproc(CC->user.password);
+			code = strcasecmp(CC->user.password, pw);
 		}
 		free (pw);
 	}
@@ -904,28 +848,25 @@ int CtdlTryPassword(const char *password, long len)
 	}
 	else {
 		syslog(LOG_WARNING, "user_ops: bad password specified for <%s> Service <%s> Port <%ld> Remote <%s / %s>",
-			CCC->curr_user,
-			CCC->ServiceName,
-			CCC->tcp_port,
-			CCC->cs_host,
-			CCC->cs_addr
+			CC->curr_user,
+			CC->ServiceName,
+			CC->tcp_port,
+			CC->cs_host,
+			CC->cs_addr
 		);
 		return pass_wrong_password;
 	}
 }
 
 
-/*
- * Delete a user record *and* all of its related resources.
- */
-int purge_user(char pname[])
-{
+// Delete a user record *and* all of its related resources.
+int purge_user(char pname[]) {
 	struct ctdluser usbuf;
 	char usernamekey[USERNAME_SIZE];
 
 	makeuserkey(usernamekey, pname);
 
-	/* If the name is empty we can't find them in the DB any way so just return */
+	// If the name is empty we can't find them in the DB any way so just return
 	if (IsEmptyStr(pname)) {
 		return(ERROR + NO_SUCH_USER);
 	}
@@ -935,10 +876,9 @@ int purge_user(char pname[])
 		return(ERROR + NO_SUCH_USER);
 	}
 
-	/* Don't delete a user who is currently logged in.  Instead, just
-	 * set the access level to 0, and let the account get swept up
-	 * during the next purge.
-	 */
+	// Don't delete a user who is currently logged in.  Instead, just
+	// set the access level to 0, and let the account get swept up
+	// during the next purge.
 	if (CtdlIsUserLoggedInByNum(usbuf.usernum)) {
 		syslog(LOG_WARNING, "user_ops: <%s> is logged in; not deleting", pname);
 		usbuf.axlevel = AxDeleted;
@@ -948,35 +888,35 @@ int purge_user(char pname[])
 
 	syslog(LOG_NOTICE, "user_ops: deleting <%s>", pname);
 
-	/* Perform any purge functions registered by server extensions */
+	// Perform any purge functions registered by server extensions
 	PerformUserHooks(&usbuf, EVT_PURGEUSER);
 
-	/* delete any existing user/room relationships */
+	// delete any existing user/room relationships
 	cdb_delete(CDB_VISIT, &usbuf.usernum, sizeof(long));
 
-	/* delete the users-by-number index record */
+	// delete the users-by-number index record
 	cdb_delete(CDB_USERSBYNUMBER, &usbuf.usernum, sizeof(long));
 
-	/* delete the userlog entry */
+	// delete the user entry
 	cdb_delete(CDB_USERS, usernamekey, strlen(usernamekey));
 
 	return(0);
 }
 
 
-int internal_create_user(char *username, struct ctdluser *usbuf, uid_t uid)
-{
+// This is the back end processing that happens when we create a new user account.
+int internal_create_user(char *username, struct ctdluser *usbuf, uid_t uid) {
 	if (!CtdlGetUser(usbuf, username)) {
 		return(ERROR + ALREADY_EXISTS);
 	}
 
-	/* Go ahead and initialize a new user record */
+	// Go ahead and initialize a new user record
 	memset(usbuf, 0, sizeof(struct ctdluser));
 	safestrncpy(usbuf->fullname, username, sizeof usbuf->fullname);
 	strcpy(usbuf->password, "");
 	usbuf->uid = uid;
 
-	/* These are the default flags on new accounts */
+	// These are the default flags on new accounts
 	usbuf->flags = US_LASTOLD | US_DISAPPEAR | US_PAGINATOR | US_FLOORS;
 
 	usbuf->timescalled = 0;
@@ -984,14 +924,14 @@ int internal_create_user(char *username, struct ctdluser *usbuf, uid_t uid)
 	usbuf->axlevel = CtdlGetConfigInt("c_initax");
 	usbuf->lastcall = time(NULL);
 
-	/* fetch a new user number */
+	// fetch a new user number
 	usbuf->usernum = get_new_user_number();
 
-	/* add user to the database */
+	// add user to the database
 	CtdlPutUser(usbuf);
 	cdb_store(CDB_USERSBYNUMBER, &usbuf->usernum, sizeof(long), usbuf->fullname, strlen(usbuf->fullname)+1);
 
-	/* If non-native auth, index by uid */
+	// If non-native auth, index by uid
 	if ((usbuf->uid > 0) && (usbuf->uid != NATIVE_AUTH_UID)) {
 		StrBuf *claimed_id = NewStrBuf();
 		StrBufPrintf(claimed_id, "uid:%d", usbuf->uid);
@@ -1003,16 +943,13 @@ int internal_create_user(char *username, struct ctdluser *usbuf, uid_t uid)
 }
 
 
-/*
- * create_user()  -  back end processing to create a new user
- *
- * Set 'newusername' to the desired account name.
- * Set 'become_user' to CREATE_USER_BECOME_USER if this is self-service account creation and we want to
- *                   actually log in as the user we just created, otherwise set it to CREATE_USER_DO_NOT_BECOME_USER
- * Set 'uid' to some uid_t value to associate the account with an external auth user, or (-1) for native auth
- */
-int create_user(char *username, int become_user, uid_t uid)
-{
+// create_user()  -  back end processing to create a new user
+//
+// Set 'newusername' to the desired account name.
+// Set 'become_user' to CREATE_USER_BECOME_USER if this is self-service account creation and we want to
+//                   actually log in as the user we just created, otherwise set it to CREATE_USER_DO_NOT_BECOME_USER
+// Set 'uid' to some uid_t value to associate the account with an external auth user, or (-1) for native auth
+int create_user(char *username, int become_user, uid_t uid) {
 	struct ctdluser usbuf;
 	struct ctdlroom qrbuf;
 	char mailboxname[ROOMNAMELEN];
@@ -1024,10 +961,8 @@ int create_user(char *username, int become_user, uid_t uid)
 		return retval;
 	}
 
-	/*
-	 * Give the user a private mailbox and a configuration room.
-	 * Make the latter an invisible system room.
-	 */
+	// Give the user a private mailbox and a configuration room.
+	// Make the latter an invisible system room.
 	CtdlMailboxName(mailboxname, sizeof mailboxname, &usbuf, MAILROOM);
 	CtdlCreateRoom(mailboxname, 5, "", 0, 1, 1, VIEW_MAILBOX);
 
@@ -1038,20 +973,19 @@ int create_user(char *username, int become_user, uid_t uid)
 		CtdlPutRoomLock(&qrbuf);
 	}
 
-	/* Perform any create functions registered by server extensions */
+	// Perform any create functions registered by server extensions
 	PerformUserHooks(&usbuf, EVT_NEWUSER);
 
-	/* Everything below this line can be bypassed if administratively
-	 * creating a user, instead of doing self-service account creation
-	 */
+	// Everything below this line can be bypassed if administratively
+	// creating a user, instead of doing self-service account creation
 
 	if (become_user == CREATE_USER_BECOME_USER) {
-		/* Now become the user we just created */
+		// Now become the user we just created
 		memcpy(&CC->user, &usbuf, sizeof(struct ctdluser));
 		safestrncpy(CC->curr_user, username, sizeof CC->curr_user);
 		do_login();
 	
-		/* Check to make sure we're still who we think we are */
+		// Check to make sure we're still who we think we are
 		if (CtdlGetUser(&CC->user, CC->curr_user)) {
 			return(ERROR + INTERNAL_ERROR);
 		}
@@ -1069,11 +1003,8 @@ int create_user(char *username, int become_user, uid_t uid)
 }
 
 
-/*
- * set password - back end api code
- */
-void CtdlSetPassword(char *new_pw)
-{
+// set password - back end api code
+void CtdlSetPassword(char *new_pw) {
 	CtdlGetUserLock(&CC->user, CC->curr_user);
 	safestrncpy(CC->user.password, new_pw, sizeof(CC->user.password));
 	CtdlPutUserLock(&CC->user);
@@ -1082,12 +1013,10 @@ void CtdlSetPassword(char *new_pw)
 }
 
 
-/*
- * API function for cmd_invt_kick() and anything else that needs to
- * invite or kick out a user to/from a room.
- * 
- * Set iuser to the name of the user, and op to 1=invite or 0=kick
- */
+// API function for cmd_invt_kick() and anything else that needs to
+// invite or kick out a user to/from a room.
+// 
+// Set iuser to the name of the user, and op to 1=invite or 0=kick
 int CtdlInvtKick(char *iuser, int op) {
 	struct ctdluser USscratch;
 	visit vbuf;
@@ -1108,7 +1037,7 @@ int CtdlInvtKick(char *iuser, int op) {
 	}
 	CtdlSetRelationship(&vbuf, &USscratch, &CC->room);
 
-	/* post a message in Aide> saying what we just did */
+	// post a message in Aide> saying what we just did
 	snprintf(bbb, sizeof bbb, "%s has been %s \"%s\" by %s.\n",
 		iuser,
 		((op == 1) ? "invited to" : "kicked out of"),
@@ -1120,14 +1049,12 @@ int CtdlInvtKick(char *iuser, int op) {
 }
 
 
-/*
- * Forget (Zap) the current room (API call)
- * Returns 0 on success
- */
+// Forget (Zap) the current room (API call)
+// Returns 0 on success
 int CtdlForgetThisRoom(void) {
 	visit vbuf;
 
-	/* On some systems, Admins are not allowed to forget rooms */
+	// On some systems, Admins are not allowed to forget rooms
 	if (is_aide() && (CtdlGetConfigInt("c_aide_zap") == 0)
 	   && ((CC->room.QRflags & QR_MAILBOX) == 0)  ) {
 		return(1);
@@ -1142,18 +1069,15 @@ int CtdlForgetThisRoom(void) {
 	CtdlSetRelationship(&vbuf, &CC->user, &CC->room);
 	CtdlPutUserLock(&CC->user);
 
-	/* Return to the Lobby, so we don't end up in an undefined room */
+	// Return to the Lobby, so we don't end up in an undefined room
 	CtdlUserGoto(CtdlGetConfigStr("c_baseroom"), 0, 0, NULL, NULL, NULL, NULL);
 	return(0);
 }
 
 
-/* 
- * Traverse the user file and perform a callback for each user record.
- * (New improved version that runs in two phases so that callbacks can perform writes without having a r/o cursor open)
- */
-void ForEachUser(void (*CallBack) (char *, void *out_data), void *in_data)
-{
+// Traverse the user file and perform a callback for each user record.
+// (New improved version that runs in two phases so that callbacks can perform writes without having a r/o cursor open)
+void ForEachUser(void (*CallBack) (char *, void *out_data), void *in_data) {
 	struct cdbdata *cdbus;
 	struct ctdluser *usptr;
 
@@ -1197,11 +1121,8 @@ void ForEachUser(void (*CallBack) (char *, void *out_data), void *in_data)
 }
 
 
-/*
- * Count the number of new mail messages the user has
- */
-int NewMailCount()
-{
+// Count the number of new mail messages the user has
+int NewMailCount() {
 	int num_newmsgs = 0;
 	num_newmsgs = CC->newmail;
 	CC->newmail = 0;
@@ -1209,11 +1130,8 @@ int NewMailCount()
 }
 
 
-/*
- * Count the number of new mail messages the user has
- */
-int InitialMailCheck()
-{
+// Count the number of new mail messages the user has
+int InitialMailCheck() {
 	int num_newmsgs = 0;
 	int a;
 	char mailboxname[ROOMNAMELEN];

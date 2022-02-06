@@ -35,11 +35,10 @@ void cmd_user(char *cmdbuf) {
 		cprintf("%d Already logged in.\n", ERROR + ALREADY_LOGGED_IN);
 		return;
 	case login_too_many_users:
-		cprintf("%d %s: "
-			"Too many users are already online "
-			"(maximum is %d)\n",
+		cprintf("%d %s: Too many users are already online (maximum is %d)\n",
 			ERROR + MAX_SESSIONS_EXCEEDED,
-			CtdlGetConfigStr("c_nodename"), CtdlGetConfigInt("c_maxsessions"));
+			CtdlGetConfigStr("c_nodename"), CtdlGetConfigInt("c_maxsessions")
+		);
 		return;
 	case login_ok:
 		cprintf("%d Password required for %s\n", MORE_DATA, CC->curr_user);
@@ -68,8 +67,7 @@ void cmd_pass(char *buf) {
 		cprintf("%d Already logged in.\n", ERROR + ALREADY_LOGGED_IN);
 		return;
 	case pass_no_user:
-		cprintf("%d You must send a name with USER first.\n",
-			ERROR + USERNAME_REQUIRED);
+		cprintf("%d You must send a name with USER first.\n", ERROR + USERNAME_REQUIRED);
 		return;
 	case pass_wrong_password:
 		cprintf("%d Wrong password.\n", ERROR + PASSWORD_REQUIRED);

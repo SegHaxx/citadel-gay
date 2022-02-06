@@ -191,13 +191,13 @@ int login_to_citadel(struct ctdlsession *c, char *auth, char *resultbuf) {
 	buflen = CtdlDecodeBase64(buf, auth, strlen(auth));
 	extract_token(supplied_username, buf, 0, ':', sizeof supplied_username);
 	extract_token(supplied_password, buf, 1, ':', sizeof supplied_password);
-	syslog(LOG_DEBUG, "Supplied credentials: username=%s, pwlen=%d", supplied_username, (int) strlen(supplied_password));
+	syslog(LOG_DEBUG, "Supplied credentials: username=%s, password=(%d bytes)", supplied_username, (int) strlen(supplied_password));
 
 	ctdl_printf(c, "USER %s", supplied_username);
 	ctdl_readline(c, buf, 1024);
 	if (buf[0] != '3') {
 		syslog(LOG_DEBUG, "No such user: %s", buf);
-		return (1);	// no such user; resultbuf will explain why
+		return(1);	// no such user; resultbuf will explain why
 	}
 
 	ctdl_printf(c, "PASS %s", supplied_password);
@@ -207,11 +207,11 @@ int login_to_citadel(struct ctdlsession *c, char *auth, char *resultbuf) {
 		strcpy(c->auth, auth);
 		extract_token(c->whoami, &buf[4], 0, '|', sizeof c->whoami);
 		syslog(LOG_DEBUG, "Login succeeded: %s", buf);
-		return (0);
+		return(0);
 	}
 
 	syslog(LOG_DEBUG, "Login failed: %s", buf);
-	return (1);		// login failed; resultbuf will explain why
+	return(1);		// login failed; resultbuf will explain why
 }
 
 
@@ -296,12 +296,12 @@ struct ctdlsession *connect_to_citadel(struct http_transaction *h) {
 			r = login_to_citadel(my_session, auth, NULL);	// FIXME figure out what happens if login failed
 		}
 	}
+
 	ctdl_printf(my_session, "NOOP");
 	ctdl_readline(my_session, buf, sizeof(buf));
 	my_session->last_access = time(NULL);
 	++my_session->num_requests_handled;
-
-	return (my_session);
+	return(my_session);
 }
 
 

@@ -1,16 +1,14 @@
-/* 
- * Header file for server functions which perform operations on user objects.
- *
- * Copyright (c) 1987-2020 by the citadel.org team
- *
- * This program is open source software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License, version 3.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- */
+// Header file for server functions which perform operations on user objects.
+//
+// Copyright (c) 1987-2022 by the citadel.org team
+//
+// This program is open source software; you can redistribute it and/or
+// modify it under the terms of the GNU General Public License, version 3.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
 
 #ifndef __USER_OPS_H__
 #define __USER_OPS_H__
@@ -41,17 +39,8 @@ void ForEachUser(void (*CallBack) (char *, void *out_data), void *in_data);
 int NewMailCount(void);
 int InitialMailCheck(void);
 void put_visit(visit *newvisit);
-/* MailboxName is deprecated us CtdlMailboxName instead */
-void MailboxName(char *buf, size_t n, const struct ctdluser *who,
-		 const char *prefix) __attribute__ ((deprecated));
-int GenerateRelationshipIndex(  char *IndexBuf,
-                                long RoomID,
-                                long RoomGen,
-                                long UserID);
+int GenerateRelationshipIndex(char *IndexBuf, long RoomID, long RoomGen, long UserID);
 int CtdlAssociateSystemUser(char *screenname, char *loginname);
-
-
-
 
 void CtdlSetPassword(char *new_pw);
 
@@ -61,10 +50,10 @@ void cmd_newu (char *cmdbuf);
 void start_chkpwd_daemon(void);
 
 
-#define RENAMEUSER_OK			0	/* Operation succeeded */
-#define RENAMEUSER_LOGGED_IN		1	/* Cannot rename a user who is currently logged in */
-#define RENAMEUSER_NOT_FOUND		2	/* The old user name does not exist */
-#define RENAMEUSER_ALREADY_EXISTS	3	/* An account with the desired new name already exists */
+#define RENAMEUSER_OK			0	// Operation succeeded
+#define RENAMEUSER_LOGGED_IN		1	// Cannot rename a user who is currently logged in
+#define RENAMEUSER_NOT_FOUND		2	// The old user name does not exist
+#define RENAMEUSER_ALREADY_EXISTS	3	// An account with the desired new name already exists
 
 int rename_user(char *oldname, char *newname);
 void reindex_user_928(char *username, void *out_data);
