@@ -31,18 +31,36 @@ void try_login(struct http_transaction *h, struct ctdlsession *c) {
 
 	syslog(LOG_DEBUG, "try_login(username='%s',password=(%d bytes))", username, (int) strlen(password));
 
-	ctdl_printf(c, "LOUT");			// log out, in case we were logged in
-	ctdl_readline(c, buf, sizeof(buf));	// ignore the result
-	memset(c->auth, 0, AUTH_MAX);		// if this connection had auth, it doesn't now.
-	memset(c->whoami, 0, 64);		// if this connection had auth, it doesn't now.
+	ctdl_printf(c, "LOUT");							// log out, in case we were logged in
+	ctdl_readline(c, buf, sizeof(buf));					// ignore the result
+	memset(c->auth, 0, AUTH_MAX);						// if this connection had auth, it doesn't now.
+	memset(c->whoami, 0, 64);						// if this connection had auth, it doesn't now.
+	login_success = login_to_citadel(c, auth, buf);				// Now try logging in to Citadel
 
-	login_success = login_to_citadel(c, auth, buf);	// Now try logging in to Citadel
+	JsonValue *j = NewJsonObject(HKEY("login"));				// Compose a JSON object with the results
+	if (buf[0] == '2') {
+		JsonObjectAppend(j, NewJsonBool(HKEY("result"), 1));
+		JsonObjectAppend(j, NewJsonPlainString(HKEY("message"), "logged in", -1));
+		extract_token(username, &buf[4], 0, '|', sizeof username);	// This will have the proper capitalization etc.
+		JsonObjectAppend(j, NewJsonPlainString(HKEY("fullname"), username, -1));
+		JsonObjectAppend(j, NewJsonNumber(HKEY("axlevel"), extract_int(&buf[4], 1) ));
+		JsonObjectAppend(j, NewJsonNumber(HKEY("timescalled"), extract_long(&buf[4], 2) ));
+		JsonObjectAppend(j, NewJsonNumber(HKEY("posted"), extract_long(&buf[4], 3) ));
+		JsonObjectAppend(j, NewJsonNumber(HKEY("usernum"), extract_long(&buf[4], 5) ));
+		JsonObjectAppend(j, NewJsonNumber(HKEY("previous_login"), extract_long(&buf[4], 6) ));
+	}
+	else {
+		JsonObjectAppend(j, NewJsonBool(HKEY("result"), 0));
+		JsonObjectAppend(j, NewJsonPlainString(HKEY("message"), &buf[4], -1));
+	}
+	StrBuf *sj = NewStrBuf();
+	SerializeJson(sj, j, 1);						// '1' == free the source object
 
-	h->response_code = 200;			// 'buf' will contain the relevant response
+	add_response_header(h, strdup("Content-type"), strdup("application/json"));
+	h->response_code = 200;
 	h->response_string = strdup("OK");
-	add_response_header(h, strdup("Content-type"), strdup("text/plain"));
-	h->response_body = strdup(buf);
-	h->response_body_length = strlen(h->response_body);
+	h->response_body_length = StrLength(sj);
+	h->response_body = SmashStrBuf(&sj);
 }
 
 
@@ -57,7 +75,6 @@ void logout(struct http_transaction *h, struct ctdlsession *c) {
 	ctdl_printf(c, "LOUT");	// log out
 	ctdl_readline(c, buf, sizeof(buf));	// ignore the result
 	strcpy(c->auth, "x");
-	//memset(c->auth, 0, AUTH_MAX);		// if this connection had auth, it doesn't now.
 	memset(c->whoami, 0, 64);		// if this connection had auth, it doesn't now.
 
 	http_redirect(h, "/ctdl/s/index.html");	// go back where we started :)

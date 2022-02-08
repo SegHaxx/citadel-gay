@@ -52,20 +52,23 @@ function login_button(username) {
 	var request = new XMLHttpRequest();
 	request.open("POST", "/ctdl/a/login", true);
 	request.onreadystatechange = function() {
-		login_result(this.responseText);
+		if (this.readyState === XMLHttpRequest.DONE) {
+			login_result(JSON.parse(this.responseText));
+		}
 	};
 	request.send(parms);
 	request = null;
 }
 
 
+// Feed this a JSON output from login_button() or a similar function
 function login_result(data) {
-	if (data.substring(0,1) == "2") {
+	if (data.result) {
 		document.getElementById("ctdl_big_modal").style.display = "none";
 		ctdl_startup();				// let the regular startup code take care of everything else
 	}
 	else {
-		display_login_screen(data.substring(4));
+		display_login_screen(data.message);
 	}
 }
 

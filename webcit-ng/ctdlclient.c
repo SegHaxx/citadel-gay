@@ -204,13 +204,18 @@ int login_to_citadel(struct ctdlsession *c, char *auth, char *resultbuf) {
 	ctdl_readline(c, buf, 1024);
 
 	if (buf[0] == '2') {
-		strcpy(c->auth, auth);
 		extract_token(c->whoami, &buf[4], 0, '|', sizeof c->whoami);
-		syslog(LOG_DEBUG, "Login succeeded: %s", buf);
+		syslog(LOG_DEBUG, "Logged in as %s", c->whoami);
+
+		// Re-encode the auth string so it contains the properly formatted username
+		char new_auth_string[1024];
+		snprintf(new_auth_string, sizeof(new_auth_string),  "%s:%s", c->whoami, supplied_password);
+		CtdlEncodeBase64(c->auth, new_auth_string, strlen(new_auth_string), 0);
+
 		return(0);
 	}
 
-	syslog(LOG_DEBUG, "Login failed: %s", buf);
+	syslog(LOG_DEBUG, "Login failed: %s", &buf[4]);
 	return(1);		// login failed; resultbuf will explain why
 }
 
