@@ -1,4 +1,4 @@
-// Copyright (c) 2016-2020 by the citadel.org team
+// Copyright (c) 2016-2022 by the citadel.org team
 //
 // This program is open source software.  It runs great on the
 // Linux operating system (and probably elsewhere).  You can use,
@@ -31,7 +31,6 @@ function _(x) {
 
 
 // This is called at the very beginning of the main page load.
-//
 ctdl_startup = async() => {
 	response = await fetch("/ctdl/c/info");
 
@@ -46,7 +45,7 @@ ctdl_startup = async() => {
 		// What do we do upon landing?
 
 		if ( (serv_info.serv_supports_guest) || (logged_in) ) {			// If the Lobby is visible,
-			gotoroom("_BASEROOM_");						// go there.
+			gotonext(1);							// go there.
 		}
 		else {									// Otherwise,
 			display_login_screen("");					// display the login modal.
@@ -106,24 +105,27 @@ function gotoroom(roomname) {
 
 // Goto next room with unread messages
 // which_oper is 0=ungoto, 1=skip, 2=goto
-//
 function gotonext(which_oper) {
-	if (which_oper != 2) return;		// FIXME implement the other two
-	if (march_list.length == 0) {
-		load_new_march_list();		// we will recurse back here
+	if ((which_oper == 1) || (which_oper == 2)) {
+		if (march_list.length == 0) {
+			console.log("Loading march list");
+			load_new_march_list(which_oper);	// we will recurse back here
+		}
+		else {
+			next_room = march_list[0].name;
+			march_list.splice(0, 1);
+			console.log("going to " + next_room + " , " + march_list.length + " rooms remaining");
+			gotoroom(next_room);
+		}
 	}
-	else {
-		next_room = march_list[0].name;
-		march_list.splice(0, 1);
-		console.log("going to " + next_room + " , " + march_list.length + " rooms remaining in march list");
-		gotoroom(next_room);
-	}
+
+	// FIXME implement mode 0 (ungoto)
+
 }
 
 
 // Called by gotonext() when the march list is empty.
-//
-function load_new_march_list() {
+function load_new_march_list(which_oper) {
 	fetchm = async() => {
 		response = await fetch("/ctdl/r/");
 		march_list = await(response.json());
@@ -141,7 +143,8 @@ function load_new_march_list() {
 				return(a.name < b.name);
 			});
 			march_list.push({name:"_BASEROOM_",known:true,hasnewmsgs:true,floor:0});
-			gotonext();
+			console.log(march_list);
+			gotonext(which_oper);
 		}
 	}
 	fetchm();
