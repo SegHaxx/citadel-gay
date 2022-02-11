@@ -142,7 +142,12 @@ function load_new_march_list(which_oper) {
 				}
 				return(a.name < b.name);
 			});
-			march_list.push({name:"_BASEROOM_",known:true,hasnewmsgs:true,floor:0});
+
+			// If there are still no rooms with new messages, go to the Lobby.
+			if (march_list.length == 0) {
+				march_list.push({name:"_BASEROOM_",known:true,hasnewmsgs:true,floor:0});
+			}
+
 			console.log(march_list);
 			gotonext(which_oper);
 		}
