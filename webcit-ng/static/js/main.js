@@ -109,6 +109,10 @@ function gotonext(which_oper) {
 
 	if (which_oper == 2) {					// Goto needs to mark messages as seen
 		console.log("FIXME set lrp to " + last_seen);
+		set_last_read_pointer = async() => {
+			response = await fetch("/ctdl/r/" + escapeHTMLURI(current_room) + "/slrp?last=" + last_seen);
+		}
+		set_last_read_pointer();
 	}
 
 	if ((which_oper == 1) || (which_oper == 2)) {		// Skip or Goto both take us to the "next" room

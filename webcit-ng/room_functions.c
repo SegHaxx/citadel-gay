@@ -129,6 +129,13 @@ void read_room_info_banner(struct http_transaction *h, struct ctdlsession *c) {
 }
 
 
+// Client is setting the "Last Read Pointer" (marking all messages as "seen" up to this message)
+void set_last_read_pointer(struct http_transaction *h, struct ctdlsession *c) {
+	syslog(LOG_DEBUG, "FIXME: set last read pointer");
+	do_404(h);		// FIXME do this
+}
+
+
 // Client requested an object in a room.
 void object_in_room(struct http_transaction *h, struct ctdlsession *c) {
 	char buf[1024];
@@ -145,6 +152,11 @@ void object_in_room(struct http_transaction *h, struct ctdlsession *c) {
 
 	if (!strcasecmp(buf, "info.txt")) {		// Client is requesting the room info banner
 		read_room_info_banner(h, c);
+		return;
+	}
+
+	if (!strcasecmp(buf, "slrp")) {			// Set the Last Read Pointer
+		set_last_read_pointer(h, c);
 		return;
 	}
 
