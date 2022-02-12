@@ -74,7 +74,7 @@ function update_banner() {
 	}
 	document.getElementById("current_user").innerHTML = current_user ;
 	if (logged_in) {
-		document.getElementById("lilo").innerHTML = "<a href=\"/ctdl/a/logout\">" + _("Log off") + "</a>" ;
+		document.getElementById("lilo").innerHTML = "<a href=\"/ctdl/a/logout\"><i class=\"fa-regular fa-right-from-bracket\"></i>" + _("Log off") + "</a>" ;
 	}
 	else {
 		document.getElementById("lilo").innerHTML = "<a href=\"javascript:display_login_screen('')\">" + _("Log in") + "</a>" ;
@@ -106,7 +106,12 @@ function gotoroom(roomname) {
 // Goto next room with unread messages
 // which_oper is 0=ungoto, 1=skip, 2=goto
 function gotonext(which_oper) {
-	if ((which_oper == 1) || (which_oper == 2)) {
+
+	if (which_oper == 2) {					// Goto needs to mark messages as seen
+		console.log("FIXME set lrp to " + last_seen);
+	}
+
+	if ((which_oper == 1) || (which_oper == 2)) {		// Skip or Goto both take us to the "next" room
 		if (march_list.length == 0) {
 			console.log("Loading march list");
 			load_new_march_list(which_oper);	// we will recurse back here

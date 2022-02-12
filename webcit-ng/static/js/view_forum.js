@@ -101,9 +101,16 @@ function forum_readmessages(target_div_name, gt_msg, lt_msg) {
 	}
 	fetch_msg_list();
 
-	// make the new message button appear
-	document.getElementById("ctdl-newmsg-button").innerHTML = "<i class=\"far fa-edit\"></i>" + _("Post message");
+	// make the nav buttons appear (post a new message, skip this room, goto next room)
+
+	document.getElementById("ctdl-newmsg-button").innerHTML = "<i class=\"fa fa-edit\"></i>" + _("Post message");
 	document.getElementById("ctdl-newmsg-button").style.display = "block";
+
+	document.getElementById("ctdl-skip-button").innerHTML = "<i class=\"fa fa-arrow-alt-circle-right\"></i>" + _("Skip this room");
+	document.getElementById("ctdl-skip-button").style.display = "block";
+
+	document.getElementById("ctdl-goto-button").innerHTML = "<i class=\"fa fa-arrow-circle-right\"></i>" + _("Goto next room");
+	document.getElementById("ctdl-goto-button").style.display = "block";
 }
 
 
@@ -149,6 +156,12 @@ function forum_render_messages(message_numbers, msgs_div_name, scroll_to) {
 	}
 
 	fetch_msg_list();
+
+	// Make a note of the highest message number we saw, so we can mark it when we "Goto next room"
+	// (Compared to the text client, this is actually more like <A>bandon than <G>oto)
+	if ((num_msgs > 0) && (message_numbers[num_msgs-1] > last_seen)) {
+		last_seen = message_numbers[num_msgs-1];
+	}
 }
 
 
