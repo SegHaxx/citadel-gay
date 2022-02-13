@@ -36,6 +36,13 @@ void do_412(struct http_transaction *h) {
 }
 
 
+// Succeed with no output
+void do_204(struct http_transaction *h) {
+	h->response_code = 204;
+	h->response_string = strdup("No content");
+}
+
+
 // We throw an HTTP error "502 bad gateway" when we need to connect to Citadel, but can't.
 void do_502(struct http_transaction *h) {
 	h->response_code = 502;

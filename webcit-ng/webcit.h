@@ -116,13 +116,16 @@ enum {
 #define CLIENT_ID		4
 #define TARGET			"webcit02"	/* Window target for inline URL's */
 
-void worker_entry(int *pointer_to_master_socket);
+void worker_entry(int *);
 void perform_one_http_transaction(struct client_handle *ch);
 void add_response_header(struct http_transaction *h, char *key, char *val);
 void perform_request(struct http_transaction *);
+void do_204(struct http_transaction *);
 void do_404(struct http_transaction *);
+void do_412(struct http_transaction *);
+void do_502(struct http_transaction *);
 void output_static(struct http_transaction *);
-int uds_connectsock(char *sockpath);
+int uds_connectsock(char *);
 void ctdl_a(struct http_transaction *, struct ctdlsession *);
 void ctdl_f(struct http_transaction *, struct ctdlsession *);
 void ctdl_r(struct http_transaction *, struct ctdlsession *);
@@ -154,8 +157,5 @@ void ctdl_c(struct http_transaction *h, struct ctdlsession *c);
 int webserver(char *webserver_interface, int webserver_port, int webserver_protocol);
 void ctdl_printf(struct ctdlsession *ctdl, const char *format,...);
 int webcit_tcp_server(const char *ip_addr, int port_number, int queue_len);
-void do_502(struct http_transaction *h);
-void do_404(struct http_transaction *h);
-void do_412(struct http_transaction *h);
 void UrlizeText(StrBuf* Target, StrBuf *Source, StrBuf *WrkBuf);
 void json_render_one_message(struct http_transaction *h, struct ctdlsession *c, long msgnum);

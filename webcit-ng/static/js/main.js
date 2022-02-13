@@ -106,9 +106,8 @@ function gotoroom(roomname) {
 // Goto next room with unread messages
 // which_oper is 0=ungoto, 1=skip, 2=goto
 function gotonext(which_oper) {
-
 	if (which_oper == 2) {					// Goto needs to mark messages as seen
-		console.log("FIXME set lrp to " + last_seen);
+
 		set_last_read_pointer = async() => {
 			response = await fetch("/ctdl/r/" + escapeHTMLURI(current_room) + "/slrp?last=" + last_seen);
 		}
@@ -157,7 +156,6 @@ function load_new_march_list(which_oper) {
 				march_list.push({name:"_BASEROOM_",known:true,hasnewmsgs:true,floor:0});
 			}
 
-			console.log(march_list);
 			gotonext(which_oper);
 		}
 	}

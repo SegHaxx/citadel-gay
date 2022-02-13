@@ -131,8 +131,15 @@ void read_room_info_banner(struct http_transaction *h, struct ctdlsession *c) {
 
 // Client is setting the "Last Read Pointer" (marking all messages as "seen" up to this message)
 void set_last_read_pointer(struct http_transaction *h, struct ctdlsession *c) {
-	syslog(LOG_DEBUG, "FIXME: set last read pointer");
-	do_404(h);		// FIXME do this
+	char cbuf[1024];
+	ctdl_printf(c, "SLRP %d", atoi(get_url_param(h, "last")));
+	ctdl_readline(c, cbuf, sizeof(cbuf));
+	if (cbuf[0] == '2') {
+		do_204(h);
+	}
+	else {
+		do_404(h);
+	}
 }
 
 
