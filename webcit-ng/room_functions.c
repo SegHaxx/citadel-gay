@@ -555,7 +555,7 @@ void ctdl_r(struct http_transaction *h, struct ctdlsession *c) {
 			//      5       (long)CC->room.QRhighest        The highest message number present in this room
 			c->last_seen = extract_long(&buf[4], 6);	// The highest message number the user has read in this room
 			//      7       (int)rmailflag                  Boolean flag: 1 if this is a Mail> room, 0 otherwise.
-			//      8       (int)raideflag                  Nonzero if user is either Aide or a Room Aide in this room
+			c->is_room_aide = extract_int(&buf[4], 8);
 			//      9       (int)newmailcount               The number of new Mail messages the user has
 			//      10      (int)CC->room.QRfloor           The floor number this room resides on
 			c->room_current_view = extract_int(&buf[4], 11);

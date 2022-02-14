@@ -83,6 +83,7 @@ struct ctdlsession {
 	char room[128];				// What room we are currently in
 	int room_current_view;
 	int room_default_view;
+	int is_room_aide;			// nonzero if the user has aide rights to THIS room
 	long last_seen;
 	int new_messages;
 	int total_messages;

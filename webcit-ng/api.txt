@@ -11,7 +11,7 @@ GET		/ctdl/r/ROOMNAME/info.txt	Returns the room info banner for this room
 GET		/ctdl/r/ROOMNAME/msgs.all	JSON array of message list in room
 GET		/ctdl/r/ROOMNAME/msgs.new	JSON array of message list in room (new messages)
 GET		/ctdl/r/ROOMNAME/MSGNUM		Retrieve the content of an individual message
-						(Should we output RFC822 fields as HTTP headers?  Decide soon...)
+DELETE		/ctdl/r/ROOMNAME/MSGNUM		Deletes a message from a room
 
 PUT		/ctdl/r/ROOMNAME/xxx		DAV operation to insert a new message into a room
 						Accepted parameters:

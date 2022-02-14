@@ -11,19 +11,6 @@
 // GNU General Public License for more details.
 
 
-var current_room = "_BASEROOM_";
-var new_messages = 0;
-var total_messages = 0;
-var default_view = 0;
-var current_view = 0;
-var logged_in = 0;
-var current_user = _("Not logged in.");
-var serv_info;
-var last_seen = 0;
-var messages_per_page = 20;
-var march_list = [] ;
-
-
 // Placeholder for when we add i18n later
 function _(x) {
 	return x;
