@@ -11,12 +11,6 @@
 // GNU General Public License for more details.
 
 
-// Placeholder for when we add i18n later
-function _(x) {
-	return x;
-}
-
-
 // This is called at the very beginning of the main page load.
 ctdl_startup = async() => {
 	response = await fetch("/ctdl/c/info");
@@ -55,6 +49,9 @@ function update_banner() {
 	if (current_room) {
 		document.getElementById("ctdl_banner_title").innerHTML = current_room;
 		document.title = current_room;
+
+
+
 	}
 	else {
 		document.getElementById("ctdl_banner_title").innerHTML = serv_info.serv_humannode;
@@ -103,13 +100,11 @@ function gotonext(which_oper) {
 
 	if ((which_oper == 1) || (which_oper == 2)) {		// Skip or Goto both take us to the "next" room
 		if (march_list.length == 0) {
-			console.log("Loading march list");
 			load_new_march_list(which_oper);	// we will recurse back here
 		}
 		else {
 			next_room = march_list[0].name;
 			march_list.splice(0, 1);
-			console.log("going to " + next_room + " , " + march_list.length + " rooms remaining");
 			gotoroom(next_room);
 		}
 	}
