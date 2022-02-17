@@ -58,10 +58,10 @@ function update_banner() {
 	}
 	document.getElementById("current_user").innerHTML = current_user ;
 	if (logged_in) {
-		document.getElementById("lilo").innerHTML = "<a href=\"/ctdl/a/logout\"><i class=\"fa-regular fa-right-from-bracket\"></i>" + _("Log off") + "</a>" ;
+		document.getElementById("lilo").innerHTML = "<a href=\"/ctdl/a/logout\"><i class=\"fa fa-right-from-bracket\"></i>" + _("Log off") + "</a>" ;
 	}
 	else {
-		document.getElementById("lilo").innerHTML = "<a href=\"javascript:display_login_screen('')\">" + _("Log in") + "</a>" ;
+		document.getElementById("lilo").innerHTML = "<a href=\"javascript:display_login_screen('')\"><i class=\"fa fa-right-to-bracket\"></i>" + _("Log in") + "</a>" ;
 	}
 }
 
