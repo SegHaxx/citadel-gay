@@ -57,8 +57,8 @@ function display_room_list_renderer(floor_list, room_list) {
 			output[room_list[i].floor] +=
 				"<div class=\"w3-button ctdl-roomlist-room\" onClick=\"javascript:gotoroom('"
 				+ escapeJS(escapeHTML(room_list[i].name)) + "');\">"
-				+ "<i class=\"ctdl-roomlist-roomicon w3-left "
-				+ (room_list[i].hasnewmsgs ? " ctdl-roomlist-roomicon-hasnewmsgs" : "")
+				+ "<i class=\"w3-badge ctdl-roomlist-roomicon w3-left "
+				+ (room_list[i].hasnewmsgs ? "w3-blue" : "w3-gray")
 				+ " fas fa-comments fa-fw\"></i><span class=\"ctdl-roomlist-roomname"
 				+ (room_list[i].hasnewmsgs ? " ctdl-roomlist-roomname-hasnewmsgs" : "")
 				+ " w3-left\">"

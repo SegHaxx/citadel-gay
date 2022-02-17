@@ -166,14 +166,6 @@ blockquote pre {
 	padding-right: 1.75vw;
 	padding-top: 0.75vw;
 	padding-bottom: 0.75vw;
-	border-radius: 50%;
-	background-color: grey;
-	color: black;
-}
-
-.ctdl-roomlist-roomicon-hasnewmsgs {
-	background-color: blue;
-	color: white;
 }
 
 .ctdl-roomlist-roomname {
