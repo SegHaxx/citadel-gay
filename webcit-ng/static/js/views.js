@@ -18,8 +18,17 @@ function render_room_view(gt_msg, lt_msg) {
 
 	document.getElementById("ctdl-newmsg-button").style.display = "none";		// the view renderer will set this
 
+	// Clear the highlighting out of all the sidebar buttons
+	var items = document.getElementById("ctdl-sidebar").getElementsByTagName("*");
+	for (var i = items.length; i--;) {
+		if (items[i].id.includes("ctdl-sidebar-button-")) {
+			items[i].classList.remove("w3-blue");
+		}
+	}
+
 	switch(current_view) {
 		case views.VIEW_BBS:
+			document.getElementById("ctdl-sidebar-button-forums").classList.add("w3-blue");
 			document.getElementById("ctdl-main").innerHTML = "<div id=\"ctdl-mrp\" class=\"ctdl-msg-reading-pane\"></div>";
 			forum_readmessages("ctdl-mrp", gt_msg, lt_msg);
 			break;
