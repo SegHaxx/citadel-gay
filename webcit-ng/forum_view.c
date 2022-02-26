@@ -1,4 +1,5 @@
-// Forum view (threaded/flat)
+// The code in here feeds messages out as JSON to the client browser.  It is currently being used
+// for the forum view, but as we implement other views we'll probably reuse a lot of what's here.
 //
 // Copyright (c) 1996-2022 by the citadel.org team
 //
@@ -78,7 +79,7 @@ void json_render_one_message(struct http_transaction *h, struct ctdlsession *c, 
 		JsonObjectAppend(j, NewJsonPlainString(HKEY("from"), author, -1));
 	}
 	else {
-		JsonObjectAppend(j, NewJsonPlainString(HKEY("from"), emailaddr, -1));		// FIXME do the compound address string
+		JsonObjectAppend(j, NewJsonPlainString(HKEY("from"), emailaddr, -1));		// FIXME do compound address string
 	}
 
 	if (!strcmp(buf, "text")) {
