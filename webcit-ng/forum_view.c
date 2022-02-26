@@ -93,7 +93,12 @@ void json_render_one_message(struct http_transaction *h, struct ctdlsession *c, 
 				striplt(content_type);
 			}
 		}
-		raw_msg = ctdl_readtextmsg(c);
+		if (!strcmp(buf, "000")) {		// if we have an empty message, don't try to read further
+			raw_msg = NULL;
+		}
+		else {
+			raw_msg = ctdl_readtextmsg(c);
+		}
 	}
 	else {
 		raw_msg = NULL;

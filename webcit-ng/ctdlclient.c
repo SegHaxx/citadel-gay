@@ -77,7 +77,7 @@ StrBuf *ctdl_readtextmsg(struct ctdlsession *ctdl) {
 		return NULL;
 	}
 
-	while ((ctdl_readline(ctdl, buf, sizeof(buf)) >= 0) && (strcmp(buf, "000"))) {
+	while (ctdl_readline(ctdl, buf, sizeof(buf)), strcmp(buf, "000")) {
 		StrBufAppendPrintf(sj, "%s\n", buf);
 	}
 
