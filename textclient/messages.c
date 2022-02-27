@@ -64,7 +64,7 @@ extern CtdlIPC *ipc_for_signal_handlers;	/* KLUDGE cover your eyes */
 int num_urls = 0;
 char urls[MAXURLS][SIZ];
 char imagecmd[SIZ];
-int has_images = 0;		/* Current msg has images */
+int has_images = 0;				/* Current msg has images */
 struct parts *last_message_parts = NULL;	/* Parts from last msg */
 
 
@@ -128,8 +128,7 @@ int ka_system(char *shc) {
 /*
  * add a newline to the buffer...
  */
-void add_newline(struct cittext *textlist)
-{
+void add_newline(struct cittext *textlist) {
 	struct cittext *ptr;
 
 	ptr = textlist;
@@ -1072,6 +1071,10 @@ int entmsg(CtdlIPC * ipc, int is_reply,	/* nonzero if this was a <R>eply command
 	int r;			/* IPC response code */
 	int subject_required = 0;
 
+	/*
+	 * First, check to see if we have permission to enter a message in
+	 * this room.  The server will return an error code if we can't.
+	 */
 	if (entmsg_ok == ENTMSG_OK_YES) {
 		/* no problem, go right ahead */
 	}
@@ -1100,10 +1103,6 @@ int entmsg(CtdlIPC * ipc, int is_reply,	/* nonzero if this was a <R>eply command
 
 	strcpy(subject, "");
 
-	/*
-	 * First, check to see if we have permission to enter a message in
-	 * this room.  The server will return an error code if we can't.
-	 */
 	strcpy(message.recipient, "");
 	strcpy(message.author, "");
 	strcpy(message.subject, "");
@@ -1280,10 +1279,10 @@ int entmsg(CtdlIPC * ipc, int is_reply,	/* nonzero if this was a <R>eply command
 	}
 
 	if (b == 1) {
-		scr_printf("*** 1 additional message has been entered " "in this room by another user.\n");
+		scr_printf("*** 1 additional message has been entered in this room by another user.\n");
 	}
 	else if (b > 1) {
-		scr_printf("*** %d additional messages have been entered " "in this room by other users.\n", b);
+		scr_printf("*** %d additional messages have been entered in this room by other users.\n", b);
 	}
 	free(message.text);
 

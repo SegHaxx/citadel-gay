@@ -11,6 +11,7 @@ GET		/ctdl/r/ROOMNAME/info.txt	Returns the room info banner for this room
 GET		/ctdl/r/ROOMNAME/msgs.all	JSON array of message list in room
 GET		/ctdl/r/ROOMNAME/msgs.new	JSON array of message list in room (new messages)
 GET		/ctdl/r/ROOMNAME/MSGNUM		Retrieve the content of an individual message
+GET		/ctdl/r/ROOMNAME/MSGNUM/json	Retrieve an individual message in a room, encapsulated in JSON
 DELETE		/ctdl/r/ROOMNAME/MSGNUM		Deletes a message from a room
 
 PUT		/ctdl/r/ROOMNAME/xxx		DAV operation to insert a new message into a room
@@ -23,7 +24,6 @@ GET		/ctdl/r/ROOMNAME/slrp		Set the "Last Read Pointer" for the room
 						Accepted parameters:
 						last	The number of the most recently seen message
 
-GET		/ctdl/r/ROOMNAME/MSGNUM/json	Retrieve an individual message in a room, encapsulated in JSON
 GET		/ctdl/c/info			Returns a JSON representation of the output of an INFO server command
 POST		/ctdl/a/login			Send it a your credentials and it will log you in
 GET		/ctdl/a/whoami
