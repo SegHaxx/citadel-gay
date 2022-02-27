@@ -15,19 +15,35 @@
 // It appears in the "ctdl_big_modal" div which is defined in index.html and is used for several different modals.
 // If you want to change the look of the login dialog, this is where to change it.
 function display_login_screen(any_message) {
-	document.getElementById("ctdl_big_modal").innerHTML =
-		  "<div class=\"w3-modal-content w3-animate-zoom\">"
-		+ "<div class=\"w3-panel w3-border w3-border-blue w3-topbar w3-bottombar w3-leftbar w3-rightbar\"><center>"
-		+ "<p>FIXME put a login banner here, dummy</p>"
-		+ "<p>" + any_message + "</p>"
-		+ "<table border=0><tr><td>"
-		+ _("User name:") + "</td><td><input type=\"text\" id=\"username\"></td></tr><tr><td>"
-		+ _("Password:") + "</td><td><input type=\"password\" id=\"password\"></td></tr></table><br>"
-		+ "<p>"
-		+ "<button class=\"w3-button w3-blue\" onClick=\"javascript:login_button()\">" + _("Log in") + "</button>"
-		+ "</p>"
-		+ "</center></div>"
-		+ "</div>";
+	document.getElementById("ctdl_big_modal").innerHTML = `
+		<div class="w3-modal-content w3-card-4 w3-animate-zoom" style="max-width:600px">
+	
+			<div class="w3-center"><br>
+				<span class="w3-button w3-xlarge w3-transparent w3-display-topright" title="Close Modal">×</span>
+				<span class="w3-circle w3-margin-top"><i class="fa fa-user"></i></span>
+			</div>
+
+			<div class="w3-container">
+				<div class="w3-section">
+					<span class="w3-center w3-red">${any_message}</span>
+				</div>
+				<div class="w3-section">
+					<label><b>${_("User name:")}</b></label>
+					<input class="w3-input w3-border w3-margin-bottom" type="text" id="username" required>
+					<label><b>${_("Password:")}</b></label>
+					<input class="w3-input w3-border" type="password" id="password" required>
+					<button class="w3-button w3-block w3-blue w3-section w3-padding" onClick="javascript:login_button()">${_("Log in")}</button>
+					<input class="w3-check w3-margin-top" type="checkbox" checked="checked"> Remember me
+				</div>
+			</div>
+
+			<div class="w3-container w3-border-top w3-padding-16 w3-light-grey">
+				<button type="button" class="w3-button w3-red">Cancel</button>
+				<span class="w3-right w3-padding w3-hide-small">Forgot <a href="#">password?</a></span>
+			</div>
+		</div>
+	`;
+
 	document.getElementById("ctdl_big_modal").style.display = "block";
 }
 
