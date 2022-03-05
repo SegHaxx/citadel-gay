@@ -181,14 +181,14 @@ function forum_render_one(msg, existing_div) {
 	try {
 		outmsg =
 	  	  "<div class=\"ctdl-msg-wrapper\">"				// begin message wrapper
-		+ "<div class=\"ctdl-avatar\">"					// begin avatar
+		+ "<div class=\"ctdl-avatar\" onClick=\"javascript:user_profile('" + msg.from + "');\">"
 		+ "<img src=\"/ctdl/u/" + msg.from + "/userpic\" width=\"32\" "
 		+ "onerror=\"this.parentNode.innerHTML='&lt;i class=&quot;fa fa-user-circle fa-2x&quot;&gt;&lt;/i&gt; '\">"
 		+ "</div>"							// end avatar
 		+ "<div class=\"ctdl-msg-content\">"				// begin content
 		+ "<div class=\"ctdl-msg-header\">"				// begin header
 		+ "<span class=\"ctdl-msg-header-info\">"			// begin header info on left side
-		+ "<span class=\"ctdl-username\"><a href=\"#\">"		// FIXME link to user profile
+		+ "<span class=\"ctdl-username\" onClick=\"javascript:user_profile('" + msg.from + "');\">"
 		+ msg.from
 		+ "</a></span>"							// end username
 		+ "<span class=\"ctdl-msgdate\">"

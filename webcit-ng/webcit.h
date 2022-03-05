@@ -40,7 +40,7 @@
 #include <openssl/rand.h>
 #include <expat.h>
 #define _(x)	x				// temporary hack until we add i18n back in
-#define DEBUG_HTTP				// uncomment to debug HTTP headers
+//#define DEBUG_HTTP				// uncomment to debug HTTP headers
 
 // XML_StopParser is present in expat 2.x
 #if XML_MAJOR_VERSION > 1
