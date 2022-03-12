@@ -1,7 +1,7 @@
 // These functions implement the portions of AUTHMODE_LDAP and AUTHMODE_LDAP_AD which
 // actually speak to the LDAP server.
 //
-// Copyright (c) 2011-2021 by the citadel.org development team.
+// Copyright (c) 2011-2022 by the citadel.org development team.
 //
 // This program is open source software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License, version 3.
@@ -24,17 +24,14 @@ int ctdl_require_ldap_version = 3;
 #include "config.h"
 #include <ldap.h>
 
-#define LDAP_DEPRECATED 1 	// Suppress libldap's warning that we are using deprecated API calls
 
-
-/*
- * Utility function, supply a search result and get back the fullname (display name, common name, etc) from the first result
- */
-void derive_fullname_from_ldap_result(char *fullname, int fullname_size, LDAP *ldserver, LDAPMessage *search_result)
-{
+// Utility function, supply a search result and get back the fullname (display name, common name, etc) from the first result
+void derive_fullname_from_ldap_result(char *fullname, int fullname_size, LDAP *ldserver, LDAPMessage *search_result) {
 	char **values;
 
 	if (fullname == NULL) return;
+	if (search_result == NULL) return;
+	if (ldserver == NULL) return;
 
 	if (CtdlGetConfigInt("c_auth_mode") == AUTHMODE_LDAP_AD) {
 		values = ldap_get_values(ldserver, search_result, "displayName");
@@ -59,40 +56,36 @@ void derive_fullname_from_ldap_result(char *fullname, int fullname_size, LDAP *l
 }
 
 
-/*
- * Utility function, supply a search result and get back the uid from the first result
- */
-uid_t derive_uid_from_ldap(LDAP *ldserver, LDAPMessage *entry)
-{
-	char **values;
+// Utility function, supply a search result and get back the uid from the first result
+uid_t derive_uid_from_ldap(LDAP *ldserver, LDAPMessage *entry) {
+	struct berval **values;
 	uid_t uid = (-1);
 
 	if (CtdlGetConfigInt("c_auth_mode") == AUTHMODE_LDAP_AD) {
-		values = ldap_get_values(ldserver, entry, "objectGUID");	// AD schema: uid hashed from objectGUID
+		values = ldap_get_values_len(ldserver, entry, "objectGUID");	// AD schema: uid hashed from objectGUID
 		if (values) {
-			if (values[0]) {
-				uid = abs(HashLittle(values[0], strlen(values[0])));
+			if (ldap_count_values_len(values) > 0) {
+				uid = abs(HashLittle(values[0]->bv_val, values[0]->bv_len));
 			}
-			ldap_value_free(values);
+			ldap_value_free(Xvalues);
 		}
 	}
 	else {
-		values = ldap_get_values(ldserver, entry, "uidNumber");		// POSIX schema: uid = uidNumber
+		values = ldap_get_values_len(ldserver, entry, "uidNumber");		// POSIX schema: uid = uidNumber
 		if (values) {
-			if (values[0]) {
-				uid = atoi(values[0]);
+			if (ldap_count_values_len(values) > 0) {
+				uid = atoi(values[0]->bv_val);
 			}
-			ldap_value_free(values);
+			ldap_value_free_len(values);
 		}
 	}
 
+	syslog(LOG_DEBUG, "ldap: uid = %d", uid);
 	return(uid);
 }
 
 
-/*
- * Wrapper function for ldap_initialize() that consistently fills in the correct fields
- */
+// Wrapper function for ldap_initialize() that consistently fills in the correct fields
 int ctdl_ldap_initialize(LDAP **ld) {
 
 	char server_url[256];
@@ -110,9 +103,7 @@ int ctdl_ldap_initialize(LDAP **ld) {
 }
 
 
-/*
- * Bind to the LDAP server and return a working handle
- */
+// Bind to the LDAP server and return a working handle
 LDAP *ctdl_ldap_bind(void) {
 	LDAP *ldserver = NULL;
 	int i;
@@ -139,14 +130,8 @@ LDAP *ctdl_ldap_bind(void) {
 }
 
 
-/*
- * Look up a user in the directory to see if this is an account that can be authenticated
- */
-int CtdlTryUserLDAP(char *username,
-		char *found_dn, int found_dn_size,
-		char *fullname, int fullname_size,
-		uid_t *uid)
-{
+// Look up a user in the directory to see if this is an account that can be authenticated
+int CtdlTryUserLDAP(char *username, char *found_dn, int found_dn_size, char *fullname, int fullname_size, uid_t *uid) {
 	LDAP *ldserver = NULL;
 	LDAPMessage *search_result = NULL;
 	LDAPMessage *entry = NULL;
@@ -170,32 +155,30 @@ int CtdlTryUserLDAP(char *username,
 	}
 
 	syslog(LOG_DEBUG, "ldap: search: %s", searchstring);
-	(void) ldap_search_ext_s(
-		ldserver,					/* ld				*/
-		CtdlGetConfigStr("c_ldap_base_dn"),		/* base				*/
-		LDAP_SCOPE_SUBTREE,				/* scope			*/
-		searchstring,					/* filter			*/
-		NULL,						/* attrs (all attributes)	*/
-		0,						/* attrsonly (attrs + values)	*/
-		NULL,						/* serverctrls (none)		*/
-		NULL,						/* clientctrls (none)		*/
-		&tv,						/* timeout			*/
-		1,						/* sizelimit (1 result max)	*/
-		&search_result					/* res				*/
-	);
+	syslog(LOG_DEBUG, "ldap: search results: %s", ldap_err2string(ldap_search_ext_s(
+		ldserver,					// ld
+		CtdlGetConfigStr("c_ldap_base_dn"),		// base
+		LDAP_SCOPE_SUBTREE,				// scope
+		searchstring,					// filter
+		NULL,						// attrs (all attributes)
+		0,						// attrsonly (attrs + values)
+		NULL,						// serverctrls (none)
+		NULL,						// clientctrls (none)
+		&tv,						// timeout
+		1,						// sizelimit (1 result max)
+		&search_result					// res
+	)));
 
-	/* Ignore the return value of ldap_search_ext_s().  Sometimes it returns an error even when
-	 * the search succeeds.  Instead, we check to see whether search_result is still NULL.
-	 */
+	// Ignore the return value of ldap_search_ext_s().  Sometimes it returns an error even when
+	// the search succeeds.  Instead, we check to see whether search_result is still NULL.
 	if (search_result == NULL) {
 		syslog(LOG_DEBUG, "ldap: zero search results were returned");
 		ldap_unbind(ldserver);
 		return(2);
 	}
 
-	/* At this point we've got at least one result from our query.  If there are multiple
-	 * results, we still only look at the first one.
-	 */
+	// At this point we've got at least one result from our query.  If there are multiple
+	// results, we still only look at the first one.
 	entry = ldap_first_entry(ldserver, search_result);
 	if (entry) {
 
@@ -208,10 +191,10 @@ int CtdlTryUserLDAP(char *username,
 		*uid = derive_uid_from_ldap(ldserver, search_result);
 	}
 
-	/* free the results */
+	// free the results
 	ldap_msgfree(search_result);
 
-	/* unbind so we can go back in as the authenticating user */
+	// unbind so we can go back in as the authenticating user
 	ldap_unbind(ldserver);
 
 	if (!user_dn) {
@@ -225,8 +208,7 @@ int CtdlTryUserLDAP(char *username,
 }
 
 
-int CtdlTryPasswordLDAP(char *user_dn, const char *password)
-{
+int CtdlTryPasswordLDAP(char *user_dn, const char *password) {
 	LDAP *ldserver = NULL;
 	int i = (-1);
 
@@ -293,12 +275,9 @@ int vcard_set_one_prop_iff_different(struct vCard *v,char *propname, char *newfm
 }
 
 
-/*
- * Learn LDAP attributes and stuff them into the vCard.
- * Returns nonzero if we changed anything.
- */
-int Ctdl_LDAP_to_vCard(char *ldap_dn, struct vCard *v)
-{
+// Learn LDAP attributes and stuff them into the vCard.
+// Returns nonzero if we changed anything.
+int Ctdl_LDAP_to_vCard(char *ldap_dn, struct vCard *v) {
 	int changed_something = 0;
 	LDAP *ldserver = NULL;
 	struct timeval tv;
@@ -338,7 +317,7 @@ int Ctdl_LDAP_to_vCard(char *ldap_dn, struct vCard *v)
 	tv.tv_usec = 0;
 
 	syslog(LOG_DEBUG, "ldap: search: %s", ldap_dn);
-	(void) ldap_search_ext_s(
+	syslog(LOG_DEBUG, "ldap: search results: %s", ldap_err2string(ldap_search_ext_s(
 		ldserver,				// ld
 		ldap_dn,				// base
 		LDAP_SCOPE_SUBTREE,			// scope
@@ -350,20 +329,18 @@ int Ctdl_LDAP_to_vCard(char *ldap_dn, struct vCard *v)
 		&tv,					// timeout
 		1,					// sizelimit (1 result max)
 		&search_result				// res
-	);
+	)));
 	
-	/* Ignore the return value of ldap_search_ext_s().  Sometimes it returns an error even when
-	 * the search succeeds.  Instead, we check to see whether search_result is still NULL.
-	 */
+	// Ignore the return value of ldap_search_ext_s().  Sometimes it returns an error even when
+	// the search succeeds.  Instead, we check to see whether search_result is still NULL.
 	if (search_result == NULL) {
 		syslog(LOG_DEBUG, "ldap: zero search results were returned");
 		ldap_unbind(ldserver);
 		return(0);
 	}
 
-	/* At this point we've got at least one result from our query.  If there are multiple
-	 * results, we still only look at the first one.
-	 */
+	// At this point we've got at least one result from our query.  If there are multiple
+	// results, we still only look at the first one.
 	entry = ldap_first_entry(ldserver, search_result);
 	if (entry) {
 		syslog(LOG_DEBUG, "ldap: search got user details for vcard.");
@@ -434,21 +411,18 @@ int Ctdl_LDAP_to_vCard(char *ldap_dn, struct vCard *v)
 		if (title) ldap_value_free(title);
 		if (uuid) ldap_value_free(uuid);
 	}
-	/* free the results */
+	// free the results
 	ldap_msgfree(search_result);
 
-	/* unbind so we can go back in as the authenticating user */
+	// unbind so we can go back in as the authenticating user
 	ldap_unbind(ldserver);
-	return(changed_something);	/* tell the caller whether we made any changes */
+	return(changed_something);	// tell the caller whether we made any changes
 }
 
 
-/*
- * Extract a user's Internet email addresses from LDAP.
- * Returns zero if we got a valid set of addresses; nonzero for error.
- */
-int extract_email_addresses_from_ldap(char *ldap_dn, char *emailaddrs)
-{
+// Extract a user's Internet email addresses from LDAP.
+// Returns zero if we got a valid set of addresses; nonzero for error.
+int extract_email_addresses_from_ldap(char *ldap_dn, char *emailaddrs) {
 	LDAP *ldserver = NULL;
 	struct timeval tv;
 	LDAPMessage *search_result = NULL;
@@ -466,7 +440,7 @@ int extract_email_addresses_from_ldap(char *ldap_dn, char *emailaddrs)
 	tv.tv_usec = 0;
 
 	syslog(LOG_DEBUG, "ldap: search: %s", ldap_dn);
-	(void) ldap_search_ext_s(
+	syslog(LOG_DEBUG, "ldap: search results: %s", ldap_err2string(ldap_search_ext_s(
 		ldserver,				// ld
 		ldap_dn,				// base
 		LDAP_SCOPE_SUBTREE,			// scope
@@ -478,21 +452,19 @@ int extract_email_addresses_from_ldap(char *ldap_dn, char *emailaddrs)
 		&tv,					// timeout
 		1,					// sizelimit (1 result max)
 		&search_result				// res
-	);
+	)));
 	
-	/* Ignore the return value of ldap_search_ext_s().  Sometimes it returns an error even when
-	 * the search succeeds.  Instead, we check to see whether search_result is still NULL.
-	 */
+	// Ignore the return value of ldap_search_ext_s().  Sometimes it returns an error even when
+	// the search succeeds.  Instead, we check to see whether search_result is still NULL.
 	if (search_result == NULL) {
 		syslog(LOG_DEBUG, "ldap: zero search results were returned");
 		ldap_unbind(ldserver);
 		return(4);
 	}
 
-	/* At this point we've got at least one result from our query.  If there are multiple
-	 * results, we still only look at the first one.
-	 */
-	emailaddrs[0] = 0;	/* clear out any previous results */
+	// At this point we've got at least one result from our query.  If there are multiple
+	// results, we still only look at the first one.
+	emailaddrs[0] = 0;				// clear out any previous results
 	entry = ldap_first_entry(ldserver, search_result);
 	if (entry) {
 		syslog(LOG_DEBUG, "ldap: search got user details");
@@ -516,20 +488,17 @@ int extract_email_addresses_from_ldap(char *ldap_dn, char *emailaddrs)
 		}
 	}
 
-	/* free the results */
+	// free the results
 	ldap_msgfree(search_result);
 
-	/* unbind so we can go back in as the authenticating user */
+	// unbind so we can go back in as the authenticating user
 	ldap_unbind(ldserver);
 	return(0);
 }
 
 
-/*
- * Scan LDAP for users and populate Citadel's user database with everyone
- */
-void CtdlSynchronizeUsersFromLDAP(void)
-{
+// Scan LDAP for users and populate Citadel's user database with everyone
+void CtdlSynchronizeUsersFromLDAP(void) {
 	LDAP *ldserver = NULL;
 	LDAPMessage *search_result = NULL;
 	LDAPMessage *entry = NULL;
@@ -538,7 +507,7 @@ void CtdlSynchronizeUsersFromLDAP(void)
 	struct timeval tv;
 
 	if ((CtdlGetConfigInt("c_auth_mode") != AUTHMODE_LDAP) && (CtdlGetConfigInt("c_auth_mode") != AUTHMODE_LDAP_AD)) {
-		return;		// not running LDAP
+		return;						// not running LDAP
 	}
 
 	syslog(LOG_INFO, "ldap: synchronizing Citadel user database from LDAP");
@@ -551,12 +520,13 @@ void CtdlSynchronizeUsersFromLDAP(void)
 
 	if (CtdlGetConfigInt("c_auth_mode") == AUTHMODE_LDAP_AD) {
 			snprintf(searchstring, sizeof(searchstring), "(&(objectClass=user)(objectClass=person)(!(objectClass=computer)))");
-	} else {
+	}
+	else {
 			snprintf(searchstring, sizeof(searchstring), "(objectClass=inetOrgPerson)");
 	}
 
 	syslog(LOG_DEBUG, "ldap: search: %s", searchstring);
-	(void) ldap_search_ext_s(
+	syslog(LOG_DEBUG, "ldap: search results: %s", ldap_err2string(ldap_search_ext_s(
 		ldserver,					// ld
 		CtdlGetConfigStr("c_ldap_base_dn"),		// base
 		LDAP_SCOPE_SUBTREE,				// scope
@@ -568,11 +538,10 @@ void CtdlSynchronizeUsersFromLDAP(void)
 		&tv,						// timeout
 		INT_MAX,					// sizelimit (max)
 		&search_result					// result
-	);
+	)));
 
-	/* Ignore the return value of ldap_search_ext_s().  Sometimes it returns an error even when
-	 * the search succeeds.  Instead, we check to see whether search_result is still NULL.
-	 */
+	// Ignore the return value of ldap_search_ext_s().  Sometimes it returns an error even when
+	// the search succeeds.  Instead, we check to see whether search_result is still NULL.
 	if (search_result == NULL) {
 		syslog(LOG_DEBUG, "ldap: zero search results were returned");
 		ldap_unbind(ldserver);
@@ -580,9 +549,7 @@ void CtdlSynchronizeUsersFromLDAP(void)
 	}
 
 	syslog(LOG_DEBUG, "ldap: %d entries returned", ldap_count_entries(ldserver, search_result));
-	entry = ldap_first_entry(ldserver, search_result);
-	while (entry) {
-
+	for (entry=ldap_first_entry(ldserver, search_result); entry!=NULL; entry=ldap_next_entry(ldserver, entry)) {
 		user_dn = ldap_get_dn(ldserver, entry);
 		if (user_dn) {
 			syslog(LOG_DEBUG, "ldap: found %s", user_dn);
@@ -592,8 +559,8 @@ void CtdlSynchronizeUsersFromLDAP(void)
 			uid_t uid = (-1);
 			char new_emailaddrs[512] = { 0 } ;
 
-			derive_fullname_from_ldap_result(fullname, fullname_size, ldserver, entry);
 			uid = derive_uid_from_ldap(ldserver, entry);
+			derive_fullname_from_ldap_result(fullname, fullname_size, ldserver, entry);
 			syslog(LOG_DEBUG, "ldap: display name: <%s> , uid = <%d>", fullname, uid);
 
 			// now create or update the user
@@ -608,7 +575,7 @@ void CtdlSynchronizeUsersFromLDAP(void)
 			}
 
 			if (found_user == 0) {		// user record exists
-				// now update the account email addresses if necessary
+							// now update the account email addresses if necessary
 				if (CtdlGetConfigInt("c_ldap_sync_email_addrs") > 0) {
 					if (extract_email_addresses_from_ldap(user_dn, new_emailaddrs) == 0) {
 						if (strcmp(usbuf.emailaddrs, new_emailaddrs)) {				// update only if changed
@@ -619,13 +586,11 @@ void CtdlSynchronizeUsersFromLDAP(void)
 			}
 			ldap_memfree(user_dn);
 		}
-
-		entry = ldap_next_entry(ldserver, entry);
 	}
 
-	/* free the results */
+	// free the results
 	ldap_msgfree(search_result);
 
-	/* unbind so we can go back in as the authenticating user */
+	// unbind so we can go back in as the authenticating user
 	ldap_unbind(ldserver);
 }
