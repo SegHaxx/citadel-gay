@@ -27,30 +27,30 @@ int ctdl_require_ldap_version = 3;
 
 // Utility function, supply a search result and get back the fullname (display name, common name, etc) from the first result
 void derive_fullname_from_ldap_result(char *fullname, int fullname_size, LDAP *ldserver, LDAPMessage *search_result) {
-	char **values;
+	struct berval **values;
 
 	if (fullname == NULL) return;
 	if (search_result == NULL) return;
 	if (ldserver == NULL) return;
 
 	if (CtdlGetConfigInt("c_auth_mode") == AUTHMODE_LDAP_AD) {
-		values = ldap_get_values(ldserver, search_result, "displayName");
+		values = ldap_get_values_len(ldserver, search_result, "displayName");
 		if (values) {
-			if (values[0]) {
-				if (fullname) safestrncpy(fullname, values[0], fullname_size);
-				syslog(LOG_DEBUG, "ldap: displayName = %s", values[0]);
+			if (ldap_count_values_len(values) > 0) {
+				safestrncpy(fullname, values[0]->bv_val, fullname_size);
+				syslog(LOG_DEBUG, "ldap: displayName = %s", fullname);
 			}
-			ldap_value_free(values);
+			ldap_value_free_len(values);
 		}
 	}
 	else {
-		values = ldap_get_values(ldserver, search_result, "cn");
+		values = ldap_get_values_len(ldserver, search_result, "cn");
 		if (values) {
-			if (values[0]) {
-				if (fullname) safestrncpy(fullname, values[0], fullname_size);
-				syslog(LOG_DEBUG, "ldap: cn = %s", values[0]);
+			if (ldap_count_values_len(values) > 0) {
+				safestrncpy(fullname, values[0]->bv_val, fullname_size);
+				syslog(LOG_DEBUG, "ldap: cn = %s", fullname);
 			}
-			ldap_value_free(values);
+			ldap_value_free_len(values);
 		}
 	}
 }
@@ -67,7 +67,7 @@ uid_t derive_uid_from_ldap(LDAP *ldserver, LDAPMessage *entry) {
 			if (ldap_count_values_len(values) > 0) {
 				uid = abs(HashLittle(values[0]->bv_val, values[0]->bv_len));
 			}
-			ldap_value_free(Xvalues);
+			ldap_value_free_len(values);
 		}
 	}
 	else {
@@ -240,38 +240,42 @@ int CtdlTryPasswordLDAP(char *user_dn, const char *password) {
 }
 
 
-//return !0 iff property changed.
-int vcard_set_props_iff_different(struct vCard *v,char *propname,int numvals, char **vals) {
+// set multiple properties
+// returns nonzero only if property changed.
+int vcard_set_props_iff_different(struct vCard *v, char *propname, int numvals, char **vals) {
 	int i;
 	char *oldval = "";
-	for(i=0;i<numvals;i++) {
-	  oldval = vcard_get_prop(v,propname,0,i,0);
-	  if (oldval == NULL) break;
-	  if (strcmp(vals[i],oldval)) break;
+	for (i=0; i<numvals; i++) {
+		oldval = vcard_get_prop(v, propname, 0, i, 0);
+		if (oldval == NULL) break;
+		if (strcmp(vals[i],oldval)) break;
 	}
-	if (i!=numvals) {
-		syslog(LOG_DEBUG, "ldap: vcard property %s, element %d of %d changed from %s to %s\n", propname, i, numvals, oldval, vals[i]);
-		for(i=0;i<numvals;i++) vcard_set_prop(v,propname,vals[i],(i==0) ? 0 : 1);
+	if (i != numvals) {
+		syslog(LOG_DEBUG, "ldap: vcard property %s, element %d of %d changed from %s to %s", propname, i, numvals, oldval, vals[i]);
+		for (i=0; i<numvals; i++) {
+			vcard_set_prop(v,propname,vals[i],(i==0) ? 0 : 1);
+		}
 		return 1;
 	}
 	return 0;
 }
 
 
-//return !0 iff property changed.
+// set one property
+// returns nonzero only if property changed.
 int vcard_set_one_prop_iff_different(struct vCard *v,char *propname, char *newfmt, ...) {
 	va_list args;
 	char *newvalue;
-	int changed_something;
+	int did_change = 0;
 	va_start(args,newfmt);
-	if (-1==vasprintf(&newvalue,newfmt,args)) {
-		syslog(LOG_ERR, "ldap: out of memory!");
+	if (vasprintf(&newvalue, newfmt, args) < 0) {
+		syslog(LOG_ERR, "ldap: out of memory");
 		return 0;
 	}
-	changed_something = vcard_set_props_iff_different(v,propname,1,&newvalue);
+	did_change = vcard_set_props_iff_different(v, propname, 1, &newvalue);
 	va_end(args);
 	free(newvalue);
-	return changed_something;
+	return did_change;
 }
 
 
@@ -283,28 +287,28 @@ int Ctdl_LDAP_to_vCard(char *ldap_dn, struct vCard *v) {
 	struct timeval tv;
 	LDAPMessage *search_result = NULL;
 	LDAPMessage *entry = NULL;
-	char **givenName;
-	char **sn;
-	char **cn;
-	char **initials;
-	char **o;
-	char **street;
-	char **l;
-	char **st;
-	char **postalCode;
-	char **telephoneNumber;
-	char **mobile;
-	char **homePhone;
-	char **facsimileTelephoneNumber;
-	char **mail;
-	char **uid;
-	char **homeDirectory;
-	char **uidNumber;
-	char **loginShell;
-	char **gidNumber;
-	char **c;
-	char **title;
-	char **uuid;
+	struct berval **givenName;
+	struct berval **sn;
+	struct berval **cn;
+	struct berval **initials;
+	struct berval **o;
+	struct berval **street;
+	struct berval **l;
+	struct berval **st;
+	struct berval **postalCode;
+	struct berval **telephoneNumber;
+	struct berval **mobile;
+	struct berval **homePhone;
+	struct berval **facsimileTelephoneNumber;
+	struct berval **mail;
+	struct berval **uid;
+	struct berval **homeDirectory;
+	struct berval **uidNumber;
+	struct berval **loginShell;
+	struct berval **gidNumber;
+	struct berval **c;
+	struct berval **title;
+	struct berval **uuid;
 	char *attrs[] = { "*","+",NULL};
 
 	if (!ldap_dn) return(0);
@@ -344,72 +348,75 @@ int Ctdl_LDAP_to_vCard(char *ldap_dn, struct vCard *v) {
 	entry = ldap_first_entry(ldserver, search_result);
 	if (entry) {
 		syslog(LOG_DEBUG, "ldap: search got user details for vcard.");
-		givenName=ldap_get_values(ldserver, search_result, "givenName");
-		sn=ldap_get_values(ldserver, search_result, "sn");
-		cn=ldap_get_values(ldserver, search_result, "cn");
-		initials=ldap_get_values(ldserver, search_result, "initials");
-		title=ldap_get_values(ldserver, search_result, "title");
-		o=ldap_get_values(ldserver, search_result, "o");
-		street=ldap_get_values(ldserver, search_result, "street");
-		l=ldap_get_values(ldserver, search_result, "l");
-		st=ldap_get_values(ldserver, search_result, "st");
-		postalCode=ldap_get_values(ldserver, search_result, "postalCode");
-		telephoneNumber=ldap_get_values(ldserver, search_result, "telephoneNumber");
-		mobile=ldap_get_values(ldserver, search_result, "mobile");
-		homePhone=ldap_get_values(ldserver, search_result, "homePhone");
-		facsimileTelephoneNumber=ldap_get_values(ldserver, search_result, "facsimileTelephoneNumber");
-		mail=ldap_get_values(ldserver, search_result, "mail");
-		uid=ldap_get_values(ldserver, search_result, "uid");
-		homeDirectory=ldap_get_values(ldserver, search_result, "homeDirectory");
-		uidNumber=ldap_get_values(ldserver, search_result, "uidNumber");
-		loginShell=ldap_get_values(ldserver, search_result, "loginShell");
-		gidNumber=ldap_get_values(ldserver, search_result, "gidNumber");
-		c=ldap_get_values(ldserver, search_result, "c");
-		uuid=ldap_get_values(ldserver, search_result, "entryUUID");
+		givenName			= ldap_get_values_len(ldserver, search_result, "givenName");
+		sn				= ldap_get_values_len(ldserver, search_result, "sn");
+		cn				= ldap_get_values_len(ldserver, search_result, "cn");
+		initials			= ldap_get_values_len(ldserver, search_result, "initials");
+		title				= ldap_get_values_len(ldserver, search_result, "title");
+		o				= ldap_get_values_len(ldserver, search_result, "o");
+		street				= ldap_get_values_len(ldserver, search_result, "street");
+		l				= ldap_get_values_len(ldserver, search_result, "l");
+		st				= ldap_get_values_len(ldserver, search_result, "st");
+		postalCode			= ldap_get_values_len(ldserver, search_result, "postalCode");
+		telephoneNumber			= ldap_get_values_len(ldserver, search_result, "telephoneNumber");
+		mobile				= ldap_get_values_len(ldserver, search_result, "mobile");
+		homePhone			= ldap_get_values_len(ldserver, search_result, "homePhone");
+		facsimileTelephoneNumber	= ldap_get_values_len(ldserver, search_result, "facsimileTelephoneNumber");
+		mail				= ldap_get_values_len(ldserver, search_result, "mail");
+		uid				= ldap_get_values_len(ldserver, search_result, "uid");
+		homeDirectory			= ldap_get_values_len(ldserver, search_result, "homeDirectory");
+		uidNumber			= ldap_get_values_len(ldserver, search_result, "uidNumber");
+		loginShell			= ldap_get_values_len(ldserver, search_result, "loginShell");
+		gidNumber			= ldap_get_values_len(ldserver, search_result, "gidNumber");
+		c				= ldap_get_values_len(ldserver, search_result, "c");
+		uuid				= ldap_get_values_len(ldserver, search_result, "entryUUID");
 
-		if (street && l && st && postalCode && c) changed_something |= vcard_set_one_prop_iff_different(v,"adr",";;%s;%s;%s;%s;%s",street[0],l[0],st[0],postalCode[0],c[0]);
-		if (telephoneNumber) changed_something |= vcard_set_one_prop_iff_different(v,"tel;work","%s",telephoneNumber[0]);
-		if (facsimileTelephoneNumber) changed_something |= vcard_set_one_prop_iff_different(v,"tel;fax","%s",facsimileTelephoneNumber[0]);
-		if (mobile) changed_something |= vcard_set_one_prop_iff_different(v,"tel;cell","%s",mobile[0]);
-		if (homePhone) changed_something |= vcard_set_one_prop_iff_different(v,"tel;home","%s",homePhone[0]);
+		if (street && l && st && postalCode && c) changed_something |= vcard_set_one_prop_iff_different(v,"adr",";;%s;%s;%s;%s;%s",street[0]->bv_val,l[0]->bv_val,st[0]->bv_val,postalCode[0]->bv_val,c[0]->bv_val);
+		if (telephoneNumber) changed_something |= vcard_set_one_prop_iff_different(v,"tel;work","%s",telephoneNumber[0]->bv_val);
+		if (facsimileTelephoneNumber) changed_something |= vcard_set_one_prop_iff_different(v,"tel;fax","%s",facsimileTelephoneNumber[0]->bv_val);
+		if (mobile) changed_something |= vcard_set_one_prop_iff_different(v,"tel;cell","%s",mobile[0]->bv_val);
+		if (homePhone) changed_something |= vcard_set_one_prop_iff_different(v,"tel;home","%s",homePhone[0]->bv_val);
 		if (givenName && sn) {
 			if (initials) {
-				changed_something |= vcard_set_one_prop_iff_different(v,"n","%s;%s;%s",sn[0],givenName[0],initials[0]);
+				changed_something |= vcard_set_one_prop_iff_different(v,"n","%s;%s;%s",sn[0]->bv_val,givenName[0]->bv_val,initials[0]->bv_val);
 			}
 			else {
-				changed_something |= vcard_set_one_prop_iff_different(v,"n","%s;%s",sn[0],givenName[0]);
+				changed_something |= vcard_set_one_prop_iff_different(v,"n","%s;%s",sn[0]->bv_val,givenName[0]->bv_val);
 			}
 		}
-		if (mail) {
-			changed_something |= vcard_set_props_iff_different(v,"email;internet",ldap_count_values(mail),mail);
-		}
-		if (uuid) changed_something |= vcard_set_one_prop_iff_different(v,"X-uuid","%s",uuid[0]);
-		if (o) changed_something |= vcard_set_one_prop_iff_different(v,"org","%s",o[0]);
-		if (cn) changed_something |= vcard_set_one_prop_iff_different(v,"fn","%s",cn[0]);
-		if (title) changed_something |= vcard_set_one_prop_iff_different(v,"title","%s",title[0]);
+
+		// FIXME we need a new way to do this.
+		//if (mail) {
+			//changed_something |= vcard_set_props_iff_different(v,"email;internet",ldap_count_values_len(mail),mail);
+		//}
+
+		if (uuid) changed_something |= vcard_set_one_prop_iff_different(v,"X-uuid","%s",uuid[0]->bv_val);
+		if (o) changed_something |= vcard_set_one_prop_iff_different(v,"org","%s",o[0]->bv_val);
+		if (cn) changed_something |= vcard_set_one_prop_iff_different(v,"fn","%s",cn[0]->bv_val);
+		if (title) changed_something |= vcard_set_one_prop_iff_different(v,"title","%s",title[0]->bv_val);
 		
-		if (givenName) ldap_value_free(givenName);
-		if (initials) ldap_value_free(initials);
-		if (sn) ldap_value_free(sn);
-		if (cn) ldap_value_free(cn);
-		if (o) ldap_value_free(o);
-		if (street) ldap_value_free(street);
-		if (l) ldap_value_free(l);
-		if (st) ldap_value_free(st);
-		if (postalCode) ldap_value_free(postalCode);
-		if (telephoneNumber) ldap_value_free(telephoneNumber);
-		if (mobile) ldap_value_free(mobile);
-		if (homePhone) ldap_value_free(homePhone);
-		if (facsimileTelephoneNumber) ldap_value_free(facsimileTelephoneNumber);
-		if (mail) ldap_value_free(mail);
-		if (uid) ldap_value_free(uid);
-		if (homeDirectory) ldap_value_free(homeDirectory);
-		if (uidNumber) ldap_value_free(uidNumber);
-		if (loginShell) ldap_value_free(loginShell);
-		if (gidNumber) ldap_value_free(gidNumber);
-		if (c) ldap_value_free(c);
-		if (title) ldap_value_free(title);
-		if (uuid) ldap_value_free(uuid);
+		if (givenName)			ldap_value_free_len(givenName);
+		if (initials)			ldap_value_free_len(initials);
+		if (sn)				ldap_value_free_len(sn);
+		if (cn)				ldap_value_free_len(cn);
+		if (o)				ldap_value_free_len(o);
+		if (street)			ldap_value_free_len(street);
+		if (l)				ldap_value_free_len(l);
+		if (st)				ldap_value_free_len(st);
+		if (postalCode)			ldap_value_free_len(postalCode);
+		if (telephoneNumber)		ldap_value_free_len(telephoneNumber);
+		if (mobile)			ldap_value_free_len(mobile);
+		if (homePhone)			ldap_value_free_len(homePhone);
+		if (facsimileTelephoneNumber)	ldap_value_free_len(facsimileTelephoneNumber);
+		if (mail)			ldap_value_free_len(mail);
+		if (uid)			ldap_value_free_len(uid);
+		if (homeDirectory)		ldap_value_free_len(homeDirectory);
+		if (uidNumber)			ldap_value_free_len(uidNumber);
+		if (loginShell)			ldap_value_free_len(loginShell);
+		if (gidNumber)			ldap_value_free_len(gidNumber);
+		if (c)				ldap_value_free_len(c);
+		if (title)			ldap_value_free_len(title);
+		if (uuid)			ldap_value_free_len(uuid);
 	}
 	// free the results
 	ldap_msgfree(search_result);
@@ -427,8 +434,8 @@ int extract_email_addresses_from_ldap(char *ldap_dn, char *emailaddrs) {
 	struct timeval tv;
 	LDAPMessage *search_result = NULL;
 	LDAPMessage *entry = NULL;
-	char **mail;
-	char *attrs[] = { "*","+",NULL};
+	struct berval **mail;
+	char *attrs[] = { "*","+",NULL };
 
 	if (!ldap_dn) return(1);
 	if (!emailaddrs) return(1);
@@ -462,26 +469,25 @@ int extract_email_addresses_from_ldap(char *ldap_dn, char *emailaddrs) {
 		return(4);
 	}
 
-	// At this point we've got at least one result from our query.  If there are multiple
-	// results, we still only look at the first one.
-	emailaddrs[0] = 0;				// clear out any previous results
+	// At this point we've got at least one result from our query.
+	// If there are multiple results, we still only look at the first one.
+	emailaddrs[0] = 0;								// clear out any previous results
 	entry = ldap_first_entry(ldserver, search_result);
 	if (entry) {
 		syslog(LOG_DEBUG, "ldap: search got user details");
-		mail = ldap_get_values(ldserver, search_result, "mail");
-
+		mail = ldap_get_values_len(ldserver, search_result, "mail");
 		if (mail) {
 			int q;
-			for (q=0; q<ldap_count_values(mail); ++q) {
-				if (IsDirectory(mail[q], 0)) {
-					if ((strlen(emailaddrs) + strlen(mail[q]) + 2) > 512) {
+			for (q=0; q<ldap_count_values_len(mail); ++q) {
+				if (IsDirectory(mail[q]->bv_val, 0)) {
+					if ((strlen(emailaddrs) + mail[q]->bv_len + 2) > 512) {
 						syslog(LOG_ERR, "ldap: can't fit all email addresses into user record");
 					}
 					else {
 						if (!IsEmptyStr(emailaddrs)) {
 							strcat(emailaddrs, "|");
 						}
-						strcat(emailaddrs, mail[q]);
+						strcat(emailaddrs, mail[q]->bv_val);
 					}
 				}
 			}
@@ -550,6 +556,7 @@ void CtdlSynchronizeUsersFromLDAP(void) {
 
 	syslog(LOG_DEBUG, "ldap: %d entries returned", ldap_count_entries(ldserver, search_result));
 	for (entry=ldap_first_entry(ldserver, search_result); entry!=NULL; entry=ldap_next_entry(ldserver, entry)) {
+		TRACE;
 		user_dn = ldap_get_dn(ldserver, entry);
 		if (user_dn) {
 			syslog(LOG_DEBUG, "ldap: found %s", user_dn);
@@ -586,6 +593,7 @@ void CtdlSynchronizeUsersFromLDAP(void) {
 			}
 			ldap_memfree(user_dn);
 		}
+		TRACE;
 	}
 
 	// free the results

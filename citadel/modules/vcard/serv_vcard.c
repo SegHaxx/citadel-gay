@@ -731,7 +731,7 @@ void vcard_newuser(struct ctdluser *usbuf) {
         	char ldap_cn[512];
         	char ldap_dn[512];
 
-syslog(LOG_DEBUG, "\033[31m FIXME BORK BORK BORK try lookup by uid , or maybe dn?\033[0m");
+		syslog(LOG_DEBUG, "\033[31m FIXME BORK BORK BORK try lookup by uid , or maybe dn?\033[0m");
 
 		found_user = CtdlTryUserLDAP(usbuf->fullname, ldap_dn, sizeof ldap_dn, ldap_cn, sizeof ldap_cn, &usbuf->uid);
         	if (found_user == 0) {
