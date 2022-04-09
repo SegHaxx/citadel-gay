@@ -11,6 +11,8 @@
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
 
+// ldapsearch -D uid=admin,cn=users,cn=compat,dc=demo1,dc=freeipa,dc=org -w Secret123 -h ipa.demo1.freeipa.org
+
 int ctdl_require_ldap_version = 3;
 
 #define _GNU_SOURCE		// Needed to suppress warning about vasprintf() when running on Linux/Linux
@@ -26,6 +28,10 @@ int ctdl_require_ldap_version = 3;
 
 
 // Utility function, supply a search result and get back the fullname (display name, common name, etc) from the first result
+//
+// POSIX schema:	the display name will be found in "cn" (common name)
+// Active Directory:	the display name will be found in "displayName"
+//
 void derive_fullname_from_ldap_result(char *fullname, int fullname_size, LDAP *ldserver, LDAPMessage *search_result) {
 	struct berval **values;
 
@@ -57,12 +63,16 @@ void derive_fullname_from_ldap_result(char *fullname, int fullname_size, LDAP *l
 
 
 // Utility function, supply a search result and get back the uid from the first result
+//
+// POSIX schema:	numeric user id will be in the "uidNumber" attribute
+// Active Directory:	we make a uid hashed from "objectGUID"
+//
 uid_t derive_uid_from_ldap(LDAP *ldserver, LDAPMessage *entry) {
 	struct berval **values;
 	uid_t uid = (-1);
 
 	if (CtdlGetConfigInt("c_auth_mode") == AUTHMODE_LDAP_AD) {
-		values = ldap_get_values_len(ldserver, entry, "objectGUID");	// AD schema: uid hashed from objectGUID
+		values = ldap_get_values_len(ldserver, entry, "objectGUID");
 		if (values) {
 			if (ldap_count_values_len(values) > 0) {
 				uid = abs(HashLittle(values[0]->bv_val, values[0]->bv_len));
@@ -71,7 +81,7 @@ uid_t derive_uid_from_ldap(LDAP *ldserver, LDAPMessage *entry) {
 		}
 	}
 	else {
-		values = ldap_get_values_len(ldserver, entry, "uidNumber");		// POSIX schema: uid = uidNumber
+		values = ldap_get_values_len(ldserver, entry, "uidNumber");
 		if (values) {
 			if (ldap_count_values_len(values) > 0) {
 				uid = atoi(values[0]->bv_val);
@@ -131,6 +141,10 @@ LDAP *ctdl_ldap_bind(void) {
 
 
 // Look up a user in the directory to see if this is an account that can be authenticated
+//
+// POSIX schema:	Search all "inetOrgPerson" objects with "uid" set to the supplied username
+// Active Directory:	Look for an account with "sAMAccountName" set to the supplied username
+//
 int CtdlTryUserLDAP(char *username, char *found_dn, int found_dn_size, char *fullname, int fullname_size, uid_t *uid) {
 	LDAP *ldserver = NULL;
 	LDAPMessage *search_result = NULL;
@@ -150,8 +164,7 @@ int CtdlTryUserLDAP(char *username, char *found_dn, int found_dn_size, char *ful
 		snprintf(searchstring, sizeof(searchstring), "(sAMAccountName=%s)", username);
 	}
 	else {
-		snprintf(searchstring, sizeof(searchstring), "(&(objectclass=posixAccount)(cn=%s))", username);
-		// snprintf(searchstring, sizeof(searchstring), "(&(objectclass=posixAccount)(uid=%s))", username);
+		snprintf(searchstring, sizeof(searchstring), "(&(objectclass=inetOrgPerson)(uid=%s))", username);
 	}
 
 	syslog(LOG_DEBUG, "ldap: search: %s", searchstring);
@@ -504,6 +517,10 @@ int extract_email_addresses_from_ldap(char *ldap_dn, char *emailaddrs) {
 
 
 // Scan LDAP for users and populate Citadel's user database with everyone
+//
+// POSIX schema:	All objects of class "inetOrgPerson"
+// Active Directory:	Objects that are class "user" and class "person" but NOT class "computer"
+//
 void CtdlSynchronizeUsersFromLDAP(void) {
 	LDAP *ldserver = NULL;
 	LDAPMessage *search_result = NULL;
@@ -513,7 +530,7 @@ void CtdlSynchronizeUsersFromLDAP(void) {
 	struct timeval tv;
 
 	if ((CtdlGetConfigInt("c_auth_mode") != AUTHMODE_LDAP) && (CtdlGetConfigInt("c_auth_mode") != AUTHMODE_LDAP_AD)) {
-		return;						// not running LDAP
+		return;						// This site is not running LDAP.  Stop here.
 	}
 
 	syslog(LOG_INFO, "ldap: synchronizing Citadel user database from LDAP");
