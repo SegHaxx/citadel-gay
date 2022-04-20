@@ -4,7 +4,7 @@
 #
 
 ECHO=/usr/bin/printf
-SED=/bin/sed
+SED=/usr/bin/sed
 
 #MINUS_e=X`$ECHO -n -e`
 #if [ $MINUS_e != "X" ] ; then

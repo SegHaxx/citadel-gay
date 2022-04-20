@@ -87,14 +87,14 @@ int main(int argc, char **argv) {
 echo SSL: $SSL
 [ "$SSL" = "yes" ] && {
 	CFLAGS=${CFLAGS}' -DHAVE_OPENSSL'
-	LDFLAGS=${LDFLAGS}' -lssl -lcrypto'
+	LDFLAGS=${LDFLAGS}' -lssl -lcrypto -lz'
 }
 
 # Output the config.mk
 
 (
 	echo "CFLAGS := ${CFLAGS}"
-	echo "LDFLAGS := ${LDFLAGS}"
+	echo "LDFLAGS := ${LDFLAGS} -liconv"
 	echo "PREFIX := ${PREFIX}"
 	echo "BINDIR := ${BINDIR}"
 	echo "CTDLDIR := ${CTDLDIR}"

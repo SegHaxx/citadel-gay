@@ -6,6 +6,8 @@ echo Running $0
 ICAL=/usr/local/ctdlsupport/include/libical/ical.h
 if test -f /usr/include/libical/ical.h; then 
     ICAL=/usr/include/libical/ical.h
+elif test -f /usr/local/include/libical/ical.h; then
+	ICAL=/usr/local/include/libical/ical.h
 fi
 
 if test ! -f ${ICAL}; then 
@@ -64,21 +66,21 @@ ICALTYPES="icalproperty_kind"\
 
     for icaltype in $ICALTYPES; do 
 	cat ./scripts/get_ical_data__template.sed | \
-	    sed -e "s;__ICALTYPE__;$icaltype;g" > \
+	    gsed -e "s;__ICALTYPE__;$icaltype;g" > \
 	    /tmp/get_ical_data.sed
     
 	printf "Ical_${icaltype} ${icaltype}_map[] = {\n"
 	cat ${ICAL} |\
-sed -e 's;/\*.*\*/;;' -e 's;\t;;g' |\
-sed -nf /tmp/get_ical_data.sed |\
-sed -e "s;.*typedef *enum *${icaltype} *{\(.*\)} ${icaltype} *\;.*;\1,;" \
+gsed -e 's;/\*.*\*/;;' -e 's;\t;;g' |\
+gsed -nf /tmp/get_ical_data.sed |\
+gsed -e "s;.*typedef *enum *${icaltype} *{\(.*\)} ${icaltype} *\;.*;\1,;" \
 	    -e 's;/\*.*\*/;;' \
 	    -e 's;/;\n/\n;g' \
 	    -e 's;,;,\n;g' \
 	    -e 's; *;;g' \
 	    -e 's;^t*;;g' \
 	    -e 's;\=[0-9]*;;g'|\
-sed -e 's;\(.*\),;{HKEY("\1"), \1},;'
+gsed -e 's;\(.*\),;{HKEY("\1"), \1},;'
 	printf '{"", 0, 0}\n};\n\n\n' 
 	
     done

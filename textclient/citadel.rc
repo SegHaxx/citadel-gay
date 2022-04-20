@@ -4,8 +4,9 @@
 # The standard client looks for this file in:
 # 1. $HOME/.citadelrc
 # 2. <compiled CTDLDIR>/citadel.rc
-# 3. /etc/citadel.rc
-# 4. <current directory>/citadel.rc
+# 3. /usr/local/etc/citadel.rc
+# 4. /etc/citadel.rc
+# 5. <current directory>/citadel.rc
 
 # Set ENCRYPT to yes to force SSL/TLS encryption when connecting to a
 # Citadel server, even if the server is on the same machine as the

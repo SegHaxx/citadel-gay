@@ -940,6 +940,9 @@ void load_command_set(void)
 		ccfile = fopen(file_citadel_rc, "r");
 	}
 	if (ccfile == NULL) {
+		ccfile = fopen("/usr/local/etc/citadel.rc", "r");
+	}
+	if (ccfile == NULL) {
 		ccfile = fopen("/etc/citadel.rc", "r");
 	}
 	if (ccfile == NULL) {

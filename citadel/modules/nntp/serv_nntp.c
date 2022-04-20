@@ -51,7 +51,9 @@
 #include "ctdl_module.h"
 #include "serv_nntp.h"
 
+#ifndef __FreeBSD__
 extern long timezone;
+#endif
 
 //
 // Tests whether the supplied string is a valid newsgroup name
@@ -428,7 +430,11 @@ void nntp_newgroups(const char *cmd) {
 	thetime = mktime(&tm);
 	if (!strcasecmp(stringy_gmt, "GMT")) {
 		tzset();
+#ifdef __FreeBSD__
+		thetime += &tm.tm_gmtoff;
+#else
 		thetime += timezone;
+#endif
 	}
 
 

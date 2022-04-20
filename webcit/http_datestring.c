@@ -1,5 +1,9 @@
 #include "webcit.h"
 
+#ifdef __FreeBSD__
+/** I like to believe there is a better way to do this. */
+#define HAVE_STRUCT_TM_TM_GMTOFF
+#endif
 /** HTTP Months - do not translate - these are not for human consumption */
 static char *httpdate_months[] = {
 	"Jan", "Feb", "Mar", "Apr", "May", "Jun",

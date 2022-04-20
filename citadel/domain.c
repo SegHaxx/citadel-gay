@@ -20,6 +20,9 @@
 #ifdef HAVE_ARPA_NAMESER_COMPAT_H
 #include <arpa/nameser_compat.h>
 #endif
+#ifdef __FreeBSD__
+#include <netinet/in.h>
+#endif
 #include <resolv.h>
 #endif
 #include <libcitadel.h>

@@ -13,6 +13,9 @@
 #include <unistd.h>
 #include <netdb.h>
 #include <stdio.h>
+#ifdef __FreeBSD__
+#include <sys/socket.h>
+#endif
 #include <libcitadel.h>
 #include "ctdl_module.h"
 #include "clientsocket.h"

@@ -280,7 +280,11 @@ time_t httpdate_to_timestamp(StrBuf *buf)
 	 * some systems.
 	 */
 	tzset();
+#ifdef __FreeBSD__
+	tt.tm_sec = tt.tm_sec - tt.tm_gmtoff;
+#else
 	tt.tm_sec = tt.tm_sec - (int)timezone;
+#endif
 	t = mktime(&tt);
 	return t;
 }
