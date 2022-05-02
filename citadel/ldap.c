@@ -179,7 +179,7 @@ int CtdlTryUserLDAP(char *username, char *found_dn, int found_dn_size, char *ful
 		NULL,						// clientctrls (none)
 		&tv,						// timeout
 		1,						// sizelimit (1 result max)
-		&search_result					// res
+		&search_result					// put the result here
 	)));
 
 	// Ignore the return value of ldap_search_ext_s().  Sometimes it returns an error even when
@@ -221,6 +221,7 @@ int CtdlTryUserLDAP(char *username, char *found_dn, int found_dn_size, char *ful
 }
 
 
+// This is an extension of CtdlTryPassword() which gets called when using LDAP authentication.
 int CtdlTryPasswordLDAP(char *user_dn, const char *password) {
 	LDAP *ldserver = NULL;
 	int i = (-1);
@@ -530,7 +531,7 @@ void CtdlSynchronizeUsersFromLDAP(void) {
 	struct timeval tv;
 
 	if ((CtdlGetConfigInt("c_auth_mode") != AUTHMODE_LDAP) && (CtdlGetConfigInt("c_auth_mode") != AUTHMODE_LDAP_AD)) {
-		return;						// This site is not running LDAP.  Stop here.
+		return;						// If this site is not running LDAP, stop here.
 	}
 
 	syslog(LOG_INFO, "ldap: synchronizing Citadel user database from LDAP");
@@ -560,7 +561,7 @@ void CtdlSynchronizeUsersFromLDAP(void) {
 		NULL,						// clientctrls (none)
 		&tv,						// timeout
 		INT_MAX,					// sizelimit (max)
-		&search_result					// result
+		&search_result					// put the result here
 	)));
 
 	// Ignore the return value of ldap_search_ext_s().  Sometimes it returns an error even when
@@ -573,7 +574,6 @@ void CtdlSynchronizeUsersFromLDAP(void) {
 
 	syslog(LOG_DEBUG, "ldap: %d entries returned", ldap_count_entries(ldserver, search_result));
 	for (entry=ldap_first_entry(ldserver, search_result); entry!=NULL; entry=ldap_next_entry(ldserver, entry)) {
-		TRACE;
 		user_dn = ldap_get_dn(ldserver, entry);
 		if (user_dn) {
 			syslog(LOG_DEBUG, "ldap: found %s", user_dn);
@@ -610,7 +610,6 @@ void CtdlSynchronizeUsersFromLDAP(void) {
 			}
 			ldap_memfree(user_dn);
 		}
-		TRACE;
 	}
 
 	// free the results

@@ -1,20 +1,18 @@
-/*
- * This module handles the expiry of old messages and the purging of old users.
- *
- * You might also see this module affectionately referred to as TDAP (The Dreaded Auto-Purger).
- *
- * Copyright (c) 1988-2020 by citadel.org (Art Cancro, Wilifried Goesgens, and others)
- *
- * This program is open source software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License as published
- * by the Free Software Foundation; either version 3 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- */
+// This module handles the expiry of old messages and the purging of old users.
+//
+// You might also see this module affectionately referred to as TDAP (The Dreaded Auto-Purger).
+//
+// Copyright (c) 1988-2022 by citadel.org (Art Cancro, Wilifried Goesgens, and others)
+//
+// This program is open source software; you can redistribute it and/or
+// modify it under the terms of the GNU General Public License as published
+// by the Free Software Foundation; either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
 
 
 #include "sysdep.h"
@@ -49,7 +47,7 @@
 
 struct PurgeList {
 	struct PurgeList *next;
-	char name[ROOMNAMELEN];	/* use the larger of username or roomname */
+	char name[ROOMNAMELEN];		// use the larger of username or roomname
 };
 
 struct VPurgeList {
@@ -96,13 +94,11 @@ int users_not_purged;
 char *users_corrupt_msg = NULL;
 char *users_zero_msg = NULL;
 struct ctdlroomref *rr = NULL;
-int force_purge_now = 0;			/* set to nonzero to force a run right now */
+int force_purge_now = 0;			// set to nonzero to force a run right now
 
 
-/*
- * First phase of message purge -- gather the locations of messages which
- * qualify for purging and write them to a temp file.
- */
+// First phase of message purge -- gather the locations of messages which
+// qualify for purging and write them to a temp file.
 void GatherPurgeMessages(struct ctdlroom *qrbuf, void *data) {
 	struct ExpirePolicy epbuf;
 	long delnum;
@@ -120,14 +116,14 @@ void GatherPurgeMessages(struct ctdlroom *qrbuf, void *data) {
 	time(&now);
 	GetExpirePolicy(&epbuf, qrbuf);
 
-	/* If the room is set to never expire messages ... do nothing */
+	// If the room is set to never expire messages ... do nothing
 	if (epbuf.expire_mode == EXPIRE_NEXTLEVEL) return;
 	if (epbuf.expire_mode == EXPIRE_MANUAL) return;
 
-	/* Don't purge messages containing system configuration, dumbass. */
+	// Don't purge messages containing system configuration, dumbass.
 	if (!strcasecmp(qrbuf->QRname, SYSCONFIGROOM)) return;
 
-	/* Ok, we got this far ... now let's see what's in the room */
+	// Ok, we got this far ... now let's see what's in the room.
 	cdbfr = cdb_fetch(CDB_MSGLISTS, &qrbuf->QRnumber, sizeof(long));
 
 	if (cdbfr != NULL) {
@@ -137,13 +133,13 @@ void GatherPurgeMessages(struct ctdlroom *qrbuf, void *data) {
 		cdb_free(cdbfr);
 	}
 
-	/* Nothing to do if there aren't any messages */
+	// Nothing to do if there aren't any messages
 	if (num_msgs == 0) {
 		if (msglist != NULL) free(msglist);
 		return;
 	}
 
-	/* If the room is set to expire by count, do that */
+	// If the room is set to expire by count, do that.
 	if (epbuf.expire_mode == EXPIRE_NUMMSGS) {
 		if (num_msgs > epbuf.expire_value) {
 			for (a=0; a<(num_msgs - epbuf.expire_value); ++a) {
@@ -153,21 +149,21 @@ void GatherPurgeMessages(struct ctdlroom *qrbuf, void *data) {
 		}
 	}
 
-	/* If the room is set to expire by age... */
+	// If the room is set to expire by age...
 	if (epbuf.expire_mode == EXPIRE_AGE) {
 		for (a=0; a<num_msgs; ++a) {
 			delnum = msglist[a];
 
-			msg = CtdlFetchMessage(delnum, 0);	/* don't need body */
+			msg = CtdlFetchMessage(delnum, 0);	// don't need the body
 			if (msg != NULL) {
 				xtime = atol(msg->cm_fields[eTimestamp]);
 				CM_Free(msg);
-			} else {
+			}
+			else {
 				xtime = 0L;
 			}
 
-			if ((xtime > 0L)
-			   && (now - xtime > (time_t)(epbuf.expire_value * 86400L))) {
+			if ((xtime > 0L) && (now - xtime > (time_t)(epbuf.expire_value * 86400L))) {
 				fprintf(purgelist, "m=%ld\n", delnum);
 				++messages_purged;
 			}
@@ -178,10 +174,7 @@ void GatherPurgeMessages(struct ctdlroom *qrbuf, void *data) {
 }
 
 
-/*
- * Second phase of message purge -- read list of msgs from temp file and
- * delete them.
- */
+// Second phase of message purge -- read list of msgs from temp file and delete them.
 void DoPurgeMessages(FILE *purgelist) {
 	char roomname[ROOMNAMELEN];
 	long msgnum;
@@ -236,6 +229,7 @@ void AddValidUser(char *username, void *data) {
 	ValidUserList = vuptr;
 }
 
+
 void AddValidRoom(struct ctdlroom *qrbuf, void *data) {
 	struct ValidRoom *vrptr;
 
@@ -246,18 +240,18 @@ void AddValidRoom(struct ctdlroom *qrbuf, void *data) {
 	ValidRoomList = vrptr;
 }
 
+
 void DoPurgeRooms(struct ctdlroom *qrbuf, void *data) {
 	time_t age, purge_secs;
 	struct PurgeList *pptr;
 	struct ValidUser *vuptr;
 	int do_purge = 0;
 
-	/* For mailbox rooms, there's only one purging rule: if the user who
-	 * owns the room still exists, we keep the room; otherwise, we purge
-	 * it.  Bypass any other rules.
-	 */
+	// For mailbox rooms, there's only one purging rule: if the user who
+	// owns the room still exists, we keep the room; otherwise, we purge
+	// it.  Bypass any other rules.
 	if (qrbuf->QRflags & QR_MAILBOX) {
-		/* if user not found, do_purge will be 1 */
+		// if user not found, do_purge will be 1
 		do_purge = 1;
 		for (vuptr=ValidUserList; vuptr!=NULL; vuptr=vuptr->next) {
 			if (vuptr->vu_usernum == atol(qrbuf->QRname)) {
@@ -266,7 +260,7 @@ void DoPurgeRooms(struct ctdlroom *qrbuf, void *data) {
 		}
 	}
 	else {
-		/* Any of these attributes render a room non-purgable */
+		// Any of these attributes render a room non-purgable
 		if (qrbuf->QRflags & QR_PERMANENT) return;
 		if (qrbuf->QRflags & QR_DIRECTORY) return;
 		if (qrbuf->QRflags & QR_NETWORK) return;
@@ -274,19 +268,19 @@ void DoPurgeRooms(struct ctdlroom *qrbuf, void *data) {
 		if (!strcasecmp(qrbuf->QRname, SYSCONFIGROOM)) return;
 		if (CtdlIsNonEditable(qrbuf)) return;
 
-		/* If we don't know the modification date, be safe and don't purge */
+		// If we don't know the modification date, be safe and don't purge
 		if (qrbuf->QRmtime <= (time_t)0) return;
 
-		/* If no room purge time is set, be safe and don't purge */
+		// If no room purge time is set, be safe and don't purge
 		if (CtdlGetConfigLong("c_roompurge") < 0) return;
 
-		/* Otherwise, check the date of last modification */
+		// Otherwise, check the date of last modification
 		age = time(NULL) - (qrbuf->QRmtime);
 		purge_secs = CtdlGetConfigLong("c_roompurge") * 86400;
 		if (purge_secs <= (time_t)0) return;
 		syslog(LOG_DEBUG, "<%s> is <%ld> seconds old", qrbuf->QRname, (long)age);
 		if (age > purge_secs) do_purge = 1;
-	} /* !QR_MAILBOX */
+	} // !QR_MAILBOX
 
 	if (do_purge) {
 		pptr = (struct PurgeList *) malloc(sizeof(struct PurgeList));
@@ -307,14 +301,14 @@ int PurgeRooms(void) {
 
 	syslog(LOG_DEBUG, "PurgeRooms() called");
 
-	/* Load up a table full of valid user numbers so we can delete
-	 * user-owned rooms for users who no longer exist */
+	// Load up a table full of valid user numbers so we can delete
+	// user-owned rooms for users who no longer exist
 	ForEachUser(AddValidUser, NULL);
 
-	/* Then cycle through the room file */
+	// Then cycle through the room file
 	CtdlForEachRoom(DoPurgeRooms, NULL);
 
-	/* Free the valid user list */
+	// Free the valid user list
 	while (ValidUserList != NULL) {
 		vuptr = ValidUserList->next;
 		free(ValidUserList);
@@ -345,9 +339,7 @@ int PurgeRooms(void) {
 }
 
 
-/*
- * Back end function to check user accounts for expiration.
- */
+// Back end function to check user accounts for expiration.
 void do_user_purge(char *username, void *data) {
 	int purge;
 	time_t now;
@@ -359,7 +351,7 @@ void do_user_purge(char *username, void *data) {
 		return;
 	}
 
-	/* Set purge time; if the user overrides the system default, use it */
+	// Set purge time; if the user overrides the system default, use it
 	if (us.USuserpurge > 0) {
 		purge_time = ((time_t)us.USuserpurge) * 86400;
 	}
@@ -367,74 +359,55 @@ void do_user_purge(char *username, void *data) {
 		purge_time = CtdlGetConfigLong("c_userpurge") * 86400;
 	}
 
-	/* The default rule is to not purge. */
+	// The default rule is to not purge.
 	purge = 0;
 	
-	/* If the user hasn't called in two months and expiring of accounts is turned on, his/her account
-	 * has expired, so purge the record.
-	 */
-	if (CtdlGetConfigLong("c_userpurge") > 0)
-	{
+	// If the user has not logged in for the configured amount of time, expire the account.
+	if (CtdlGetConfigLong("c_userpurge") > 0) {
 		now = time(NULL);
 		if ((now - us.lastcall) > purge_time) purge = 1;
 	}
 
-	/* If the record is marked as permanent, don't purge it.
-	 */
+	// If the account is marked as permanent, don't purge it.
 	if (us.flags & US_PERM) purge = 0;
 
-	/* If the user is an Aide, don't purge him/her/it.
-	 */
+	// If the account is an administrator, don't purge it.
 	if (us.axlevel == 6) purge = 0;
 
-	/* If the access level is 0, the record should already have been
-	 * deleted, but maybe the user was logged in at the time or something.
-	 * Delete the record now.
-	 */
+	// If the access level is 0, the record should already have been
+	// deleted, but maybe the user was logged in at the time or something.
+	// Delete the record now.
 	if (us.axlevel == 0) purge = 1;
 
-	/* If the user set his/her password to 'deleteme', he/she
-	 * wishes to be deleted, so purge the record.
-	 * Moved this lower down so that aides and permanent users get purged if they ask to be.
-	 */
+	// If the user set his/her password to 'deleteme', he/she
+	// wishes to be deleted, so purge the record.
+	// Moved this lower down so that aides and permanent users get purged if they ask to be.
 	if (!strcasecmp(us.password, "deleteme")) purge = 1;
 	
-	/* 0 calls is impossible.  If there are 0 calls, it must
-	 * be a corrupted record, so purge it.
-	 * Actually it is possible if an Aide created the user so now we check for less than 0 (DRW)
-	 */
+	// Fewer than zero calls is impossible, indicating a corrupted record.
 	if (us.timescalled < 0) purge = 1;
 
-	/* any negative user number, is
-	 * also impossible.
-	 */
+	// any negative user number, is also impossible.
 	if (us.usernum < 0L) purge = 1;
 	
-	/* Don't purge user 0. That user is there for the system */
-	if (us.usernum == 0L)
-	{
-		/* FIXME: Temporary log message. Until we do unauth access with user 0 we should
-		 * try to get rid of all user 0 occurences. Many will be remnants from old code so
-		 * we will need to try and purge them from users data bases.Some will not have names but
-		 * those with names should be purged.
-		 */
+	// Don't purge user 0. That user is there for the system
+	if (us.usernum == 0L) {
+		// FIXME: Temporary log message. Until we do unauth access with user 0 we should
+		// try to get rid of all user 0 occurences. Many will be remnants from old code so
+		// we will need to try and purge them from users data bases.Some will not have names but
+		// those with names should be purged.
 		syslog(LOG_DEBUG, "Auto purger found a user 0 with name <%s>", us.fullname);
 		// purge = 0;
 	}
 	
-	/* If the user has no full name entry then we can't purge them
-	 * since the actual purge can't find them.
-	 * This shouldn't happen but does somehow.
-	 */
-	if (IsEmptyStr(us.fullname))
-	{
+	// If the user has no full name entry then we can't purge them since the actual purge can't find them.
+	// This shouldn't happen but does somehow.
+	if (IsEmptyStr(us.fullname)) {
 		purge = 0;
 		
-		if (us.usernum > 0L)
-		{
+		if (us.usernum > 0L) {
 			purge=0;
-			if (users_corrupt_msg == NULL)
-			{
+			if (users_corrupt_msg == NULL) {
 				users_corrupt_msg = malloc(SIZ);
 				strcpy(users_corrupt_msg,
 					"The auto-purger found the following user numbers with no name.\n"
@@ -529,18 +502,17 @@ int PurgeUsers(void) {
 }
 
 
-/*
- * Purge visits
- *
- * This is a really cumbersome "garbage collection" function.  We have to
- * delete visits which refer to rooms and/or users which no longer exist.  In
- * order to prevent endless traversals of the room and user files, we first
- * build linked lists of rooms and users which _do_ exist on the system, then
- * traverse the visit file, checking each record against those two lists and
- * purging the ones that do not have a match on _both_ lists.  (Remember, if
- * either the room or user being referred to is no longer on the system, the
- * record is completely useless.)
- */
+// Purge visits
+//
+// This is a really cumbersome "garbage collection" function.  We have to
+// delete visits which refer to rooms and/or users which no longer exist.  In
+// order to prevent endless traversals of the room and user files, we first
+// build linked lists of rooms and users which _do_ exist on the system, then
+// traverse the visit file, checking each record against those two lists and
+// purging the ones that do not have a match on _both_ lists.  (Remember, if
+// either the room or user being referred to is no longer on the system, the
+// record is completely useless.)
+//
 int PurgeVisits(void) {
 	struct cdbdata *cdbvisit;
 	visit vbuf;
@@ -553,13 +525,13 @@ int PurgeVisits(void) {
 	struct ValidUser *vuptr;
 	int RoomIsValid, UserIsValid;
 
-	/* First, load up a table full of valid room/gen combinations */
+	// First, load up a table full of valid room/gen combinations
 	CtdlForEachRoom(AddValidRoom, NULL);
 
-	/* Then load up a table full of valid user numbers */
+	// Then load up a table full of valid user numbers
 	ForEachUser(AddValidUser, NULL);
 
-	/* Now traverse through the visits, purging irrelevant records... */
+	// Now traverse through the visits, purging irrelevant records...
 	cdb_rewind(CDB_VISIT);
 	while(cdbvisit = cdb_next_item(CDB_VISIT), cdbvisit != NULL) {
 		memset(&vbuf, 0, sizeof(visit));
@@ -571,20 +543,20 @@ int PurgeVisits(void) {
 		RoomIsValid = 0;
 		UserIsValid = 0;
 
-		/* Check to see if the room exists */
+		// Check to see if the room exists
 		for (vrptr=ValidRoomList; vrptr!=NULL; vrptr=vrptr->next) {
 			if ( (vrptr->vr_roomnum==vbuf.v_roomnum)
 			     && (vrptr->vr_roomgen==vbuf.v_roomgen))
 				RoomIsValid = 1;
 		}
 
-		/* Check to see if the user exists */
+		// Check to see if the user exists
 		for (vuptr=ValidUserList; vuptr!=NULL; vuptr=vuptr->next) {
 			if (vuptr->vu_usernum == vbuf.v_usernum)
 				UserIsValid = 1;
 		}
 
-		/* Put the record on the purge list if it's dead */
+		// Put the record on the purge list if it's dead
 		if ((RoomIsValid==0) || (UserIsValid==0)) {
 			vptr = (struct VPurgeList *)
 				malloc(sizeof(struct VPurgeList));
@@ -597,21 +569,21 @@ int PurgeVisits(void) {
 
 	}
 
-	/* Free the valid room/gen combination list */
+	// Free the valid room/gen combination list
 	while (ValidRoomList != NULL) {
 		vrptr = ValidRoomList->next;
 		free(ValidRoomList);
 		ValidRoomList = vrptr;
 	}
 
-	/* Free the valid user list */
+	// Free the valid user list
 	while (ValidUserList != NULL) {
 		vuptr = ValidUserList->next;
 		free(ValidUserList);
 		ValidUserList = vuptr;
 	}
 
-	/* Now delete every visit on the purged list */
+	// Now delete every visit on the purged list
 	while (VisitPurgeList != NULL) {
 		IndexLen = GenerateRelationshipIndex(IndexBuf,
 				VisitPurgeList->vp_roomnum,
@@ -628,10 +600,7 @@ int PurgeVisits(void) {
 }
 
 
-/*
- * Purge the use table of old entries.
- *
- */
+// Purge the use table of old entries.
 int PurgeUseTable(StrBuf *ErrMsg) {
 	int purged = 0;
 	struct cdbdata *cdbut;
@@ -639,26 +608,22 @@ int PurgeUseTable(StrBuf *ErrMsg) {
 	struct UPurgeList *ul = NULL;
 	struct UPurgeList *uptr; 
 
-	/* Phase 1: traverse through the table, discovering old records... */
+	// Phase 1: traverse through the table, discovering old records...
 
 	syslog(LOG_DEBUG, "Purge use table: phase 1");
 	cdb_rewind(CDB_USETABLE);
-	while(cdbut = cdb_next_item(CDB_USETABLE), cdbut != NULL)
-	{
+	while(cdbut = cdb_next_item(CDB_USETABLE), cdbut != NULL) {
 		if (cdbut->len > sizeof(struct UseTable))
 			memcpy(&ut, cdbut->ptr, sizeof(struct UseTable));
-		else
-		{
+		else {
 			memset(&ut, 0, sizeof(struct UseTable));
 			memcpy(&ut, cdbut->ptr, cdbut->len);
 		}
 		cdb_free(cdbut);
 
-		if ( (time(NULL) - ut.ut_timestamp) > USETABLE_RETAIN )
-		{
+		if ( (time(NULL) - ut.ut_timestamp) > USETABLE_RETAIN ) {
 			uptr = (struct UPurgeList *) malloc(sizeof(struct UPurgeList));
-			if (uptr != NULL)
-			{
+			if (uptr != NULL) {
 				uptr->next = ul;
 				safestrncpy(uptr->up_key, ut.ut_msgid, sizeof uptr->up_key);
 				ul = uptr;
@@ -668,7 +633,7 @@ int PurgeUseTable(StrBuf *ErrMsg) {
 
 	}
 
-	/* Phase 2: delete the records */
+	// Phase 2: delete the records
 	syslog(LOG_DEBUG, "Purge use table: phase 2");
 	while (ul != NULL) {
 		cdb_delete(CDB_USETABLE, ul->up_key, strlen(ul->up_key));
@@ -682,10 +647,7 @@ int PurgeUseTable(StrBuf *ErrMsg) {
 }
 
 
-/*
- * Purge the EUID Index of old records.
- *
- */
+// Purge the EUID Index of old records.
 int PurgeEuidIndexTable(void) {
 	int purged = 0;
 	struct cdbdata *cdbei;
@@ -694,7 +656,7 @@ int PurgeEuidIndexTable(void) {
 	long msgnum;
 	struct CtdlMessage *msg = NULL;
 
-	/* Phase 1: traverse through the table, discovering old records... */
+	// Phase 1: traverse through the table, discovering old records...
 	syslog(LOG_DEBUG, "Purge EUID index: phase 1");
 	cdb_rewind(CDB_EUIDINDEX);
 	while(cdbei = cdb_next_item(CDB_EUIDINDEX), cdbei != NULL) {
@@ -703,7 +665,7 @@ int PurgeEuidIndexTable(void) {
 
 		msg = CtdlFetchMessage(msgnum, 0);
 		if (msg != NULL) {
-			CM_Free(msg);	/* it still exists, so do nothing */
+			CM_Free(msg);	// it still exists, so do nothing
 		}
 		else {
 			eptr = (struct EPurgeList *) malloc(sizeof(struct EPurgeList));
@@ -721,7 +683,7 @@ int PurgeEuidIndexTable(void) {
 
 	}
 
-	/* Phase 2: delete the records */
+	// Phase 2: delete the records
 	syslog(LOG_DEBUG, "Purge euid index: phase 2");
 	while (el != NULL) {
 		cdb_delete(CDB_EUIDINDEX, el->ep_key, el->ep_keylen);
@@ -736,9 +698,7 @@ int PurgeEuidIndexTable(void) {
 }
 
 
-/*
- * Purge external auth assocations for missing users (theoretically this will never delete anything)
- */
+// Purge external auth assocations for missing users (theoretically this will never delete anything)
 int PurgeStaleExtAuthAssociations(void) {
 	struct cdbdata *cdboi;
 	struct ctdluser usbuf;
@@ -754,7 +714,6 @@ int PurgeStaleExtAuthAssociations(void) {
 	keys = NewHash(1, NULL);
 	if (!keys) return(0);
 
-
 	cdb_rewind(CDB_EXTAUTH);
 	while (cdboi = cdb_next_item(CDB_EXTAUTH), cdboi != NULL) {
 		if (cdboi->len > sizeof(long)) {
@@ -767,14 +726,13 @@ int PurgeStaleExtAuthAssociations(void) {
 		cdb_free(cdboi);
 	}
 
-	/* Go through the hash list, deleting keys we stored in it */
+	// Go through the hash list, deleting keys we stored in it
 
 	HashPos = GetNewHashPos(keys, 0);
-	while (GetNextHashPos(keys, HashPos, &len, &Key, &Value)!=0)
-	{
+	while (GetNextHashPos(keys, HashPos, &len, &Key, &Value)!=0) {
 		syslog(LOG_DEBUG, "Deleting associated external authenticator <%s>",  (char*)Value);
 		cdb_delete(CDB_EXTAUTH, Value, strlen(Value));
-		/* note: don't free(Value) -- deleting the hash list will handle this for us */
+		// note: don't free(Value) -- deleting the hash list will handle this for us
 		++num_deleted;
 	}
 	DeleteHashPos(&HashPos);
@@ -783,17 +741,15 @@ int PurgeStaleExtAuthAssociations(void) {
 }
 
 
-void purge_databases(void)
-{
+void purge_databases(void) {
 	int retval;
 	static time_t last_purge = 0;
 	time_t now;
 	struct tm tm;
 
-	/* Do the auto-purge if the current hour equals the purge hour,
-	 * but not if the operation has already been performed in the
-	 * last twelve hours.  This is usually enough granularity.
-	 */
+	// Do the auto-purge if the current hour equals the purge hour,
+	// but not if the operation has already been performed in the
+	// last twelve hours.  This is usually enough granularity.
 	now = time(NULL);
 	localtime_r(&now, &tm);
 	if (((tm.tm_hour != CtdlGetConfigInt("c_purge_hour")) || ((now - last_purge) < 43200)) && (force_purge_now == 0)) {
@@ -859,9 +815,7 @@ void purge_databases(void)
 }
 
 
-/*
- * Manually initiate a run of The Dreaded Auto-Purger (tm)
- */
+// Manually initiate a run of The Dreaded Auto-Purger (tm)
 void cmd_tdap(char *argbuf) {
 	if (CtdlAccessCheck(ac_aide)) return;
 	force_purge_now = 1;
@@ -879,6 +833,6 @@ CTDL_MODULE_INIT(expire)
 		CtdlRegisterSessionHook(purge_databases, EVT_TIMER, PRIO_CLEANUP + 20);
 	}
 
-	/* return our module name for the log */
+	// return our module name for the log
 	return "expire";
 }
