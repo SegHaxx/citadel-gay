@@ -94,7 +94,7 @@ echo SSL: $SSL
 
 (
 	echo "CFLAGS := ${CFLAGS}"
-	echo "LDFLAGS := ${LDFLAGS} -liconv"
+	echo "LDFLAGS := ${LDFLAGS}"
 	echo "PREFIX := ${PREFIX}"
 	echo "BINDIR := ${BINDIR}"
 	echo "CTDLDIR := ${CTDLDIR}"
