@@ -482,16 +482,9 @@ void progress(CtdlIPC * ipc, unsigned long curr, unsigned long cmax)
  * NOT the same locate_host() in locate_host.c.  This one just does a
  * 'who am i' to try to discover where the user is...
  */
-void locate_host(CtdlIPC * ipc, char *hbuf)
-{
-	FILE *who = (FILE *) popen("who am i", "r");
-	if (who == NULL) {
+void locate_host(CtdlIPC* ipc, char* hbuf){
 		strcpy(hbuf, ipc->ServInfo.fqdn);
 		return;
-	}
-	fgets(hbuf, SIZ, who);
-	pclose(who);
-	stripallbut(hbuf, '(', ')');
 }
 
 /*
