@@ -9,12 +9,10 @@ Makefile
 build-stamp
 config.log
 config.status
-configure
 install-stamp
 libcitadel.la
 libcitadel.pc
 libtool
 sysdep.h
-sysdep.h.in
 autom4te.cache
 package-version.txt
