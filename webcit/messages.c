@@ -1,18 +1,20 @@
-/*
- * Functions which deal with the fetching and displaying of messages.
- *
- * Copyright (c) 1996-2020 by the citadel.org team
- *
- * This program is open source software.  We call it open source, not
- * free software, because Richard Stallman is a communist and an asshole.
- *
- * The program is licensed under the General Public License, version 3.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- */
+// Functions which deal with the fetching and displaying of messages.
+//
+// Copyright (c) 1996-2022 by the citadel.org team
+//
+// This program is open source software.  We call it open source, not
+// free software, because Richard Stallman is a communist and an asshole.
+// No one has done more damage to open source software than Stallman (ok,
+// maybe Nat and Miguel have done more damage, but they were paid by
+// Microsoft to do so).  Richard Stallman is a far-left ultra-communist
+// who hates America, hates freedom, and deserves to be canceled.
+//
+// The program is licensed under the General Public License, version 3.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
 
 #include "webcit.h"
 #include "webserver.h"
@@ -177,10 +179,18 @@ int read_message(StrBuf *Target, const char *tmpl, long tmpllen, long msgnum, co
 	Buf = NewStrBuf();
 	FoundCharset = NewStrBuf();
 	Msg = (message_summary *)malloc(sizeof(message_summary));
+	if (!Msg) {
+		syslog(LOG_DEBUG, "malloc() error");
+		TRACE;
+	}
 	memset(Msg, 0, sizeof(message_summary));
 	Msg->msgnum = msgnum;
 	Msg->PartNum = PartNum;
 	Msg->MsgBody =  (wc_mime_attachment*) malloc(sizeof(wc_mime_attachment));
+	if (!Msg->MsgBody) {
+		syslog(LOG_DEBUG, "malloc() error");
+		TRACE;
+	}
 	memset(Msg->MsgBody, 0, sizeof(wc_mime_attachment));
 	Msg->MsgBody->msgnum = msgnum;
 
@@ -320,34 +330,33 @@ void handle_one_message(void) {
 	void *vLine;
 	const StrBuf *Mime;
 	long msgnum = 0L;
-	wcsession *WCC = WC;
 	const StrBuf *Tmpl;
 	StrBuf *CmdBuf = NULL;
 	const char *pMsg;
 
-	pMsg = strchr(ChrPtr(WCC->Hdr->HR.ReqLine), '/');
+	pMsg = strchr(ChrPtr(WC->Hdr->HR.ReqLine), '/');
 	if (pMsg == NULL) {
 		HttpStatus(CitStatus);
 		return;
 	}
 
 	msgnum = atol(pMsg + 1);
-	StrBufCutAt(WCC->Hdr->HR.ReqLine, 0, pMsg);
-	gotoroom(WCC->Hdr->HR.ReqLine);
-	switch (WCC->Hdr->HR.eReqType)
+	StrBufCutAt(WC->Hdr->HR.ReqLine, 0, pMsg);
+	gotoroom(WC->Hdr->HR.ReqLine);
+	switch (WC->Hdr->HR.eReqType)
 	{
 	case eGET:
 	case ePOST:
 		Tmpl = sbstr("template");
 		if (StrLength(Tmpl) > 0) 
-			read_message(WCC->WBuf, SKEY(Tmpl), msgnum, NULL, &Mime, NULL);
+			read_message(WC->WBuf, SKEY(Tmpl), msgnum, NULL, &Mime, NULL);
 		else 
-			read_message(WCC->WBuf, HKEY("view_message"), msgnum, NULL, &Mime, NULL);
+			read_message(WC->WBuf, HKEY("view_message"), msgnum, NULL, &Mime, NULL);
 		http_transmit_thing(ChrPtr(Mime), 0);
 		break;
 	case eDELETE:
 		CmdBuf = NewStrBuf ();
-		if ((WCC->CurRoom.RAFlags & UA_ISTRASH) != 0) {	/* Delete from Trash is a real delete */
+		if ((WC->CurRoom.RAFlags & UA_ISTRASH) != 0) {	/* Delete from Trash is a real delete */
 			serv_printf("DELE %ld", msgnum);	
 		}
 		else {			/* Otherwise move it to Trash */
@@ -360,7 +369,7 @@ void handle_one_message(void) {
 	case eCOPY:
 		CopyMessage = 1;
 	case eMOVE:
-		if (GetHash(WCC->Hdr->HTTPHeaders, HKEY("DESTINATION"), &vLine) &&
+		if (GetHash(WC->Hdr->HTTPHeaders, HKEY("DESTINATION"), &vLine) &&
 		    (vLine!=NULL)) {
 			Destination = (StrBuf*) vLine;
 			serv_printf("MOVE %ld|%s|%d", msgnum, ChrPtr(Destination), CopyMessage);
@@ -386,27 +395,26 @@ void handle_one_message(void) {
 void embed_message(void) {
 	const StrBuf *Mime;
 	long msgnum = 0L;
-	wcsession *WCC = WC;
 	const StrBuf *Tmpl;
 	StrBuf *CmdBuf = NULL;
 
-	msgnum = StrBufExtract_long(WCC->Hdr->HR.ReqLine, 0, '/');
+	msgnum = StrBufExtract_long(WC->Hdr->HR.ReqLine, 0, '/');
 	if (msgnum <= 0) return;
 
-	switch (WCC->Hdr->HR.eReqType)
+	switch (WC->Hdr->HR.eReqType)
 	{
 	case eGET:
 	case ePOST:
 		Tmpl = sbstr("template");
 		if (StrLength(Tmpl) > 0) 
-			read_message(WCC->WBuf, SKEY(Tmpl), msgnum, NULL, &Mime, NULL);
+			read_message(WC->WBuf, SKEY(Tmpl), msgnum, NULL, &Mime, NULL);
 		else 
-			read_message(WCC->WBuf, HKEY("view_message"), msgnum, NULL, &Mime, NULL);
+			read_message(WC->WBuf, HKEY("view_message"), msgnum, NULL, &Mime, NULL);
 		http_transmit_thing(ChrPtr(Mime), 0);
 		break;
 	case eDELETE:
 		CmdBuf = NewStrBuf ();
-		if ((WCC->CurRoom.RAFlags & UA_ISTRASH) != 0) {	/* Delete from Trash is a real delete */
+		if ((WC->CurRoom.RAFlags & UA_ISTRASH) != 0) {	/* Delete from Trash is a real delete */
 			serv_printf("DELE %ld", msgnum);	
 		}
 		else {			/* Otherwise move it to Trash */
@@ -487,7 +495,6 @@ int load_msg_ptrs(const char *servcmd,
 		  eMessageField *MessageFieldList,
 		  long HeaderCount)
 {
-        wcsession *WCC = WC;
 	message_summary *Msg;
 	StrBuf *Buf, *Buf2;
 	long len;
@@ -499,10 +506,10 @@ int load_msg_ptrs(const char *servcmd,
 	Stat->lowest_found = LONG_MAX;
 	Stat->highest_found = LONG_MIN;
 
-	if (WCC->summ != NULL) {
-		DeleteHash(&WCC->summ);
+	if (WC->summ != NULL) {
+		DeleteHash(&WC->summ);
 	}
-	WCC->summ = NewHash(1, Flathash);
+	WC->summ = NewHash(1, Flathash);
 	
 	Buf = NewStrBuf();
 	serv_puts(servcmd);
@@ -530,15 +537,15 @@ int load_msg_ptrs(const char *servcmd,
 		return (Stat->nummsgs);
 	}
 	Buf2 = NewStrBuf();
-	while (len = StrBuf_ServGetln(Buf), 
-	       ((len >= 0) &&
-		((len != 3) || 
-		 strcmp(ChrPtr(Buf), "000")!= 0)))
-	{
+	while (len = StrBuf_ServGetln(Buf), ((len >= 0) && ((len != 3) || strcmp(ChrPtr(Buf), "000")!= 0))) {
 		if (Stat->nummsgs < Stat->maxload) {
 			skipit = 0;
 			Ptr = NULL;
 			Msg = (message_summary*)malloc(sizeof(message_summary));
+			if (!Msg) {
+				syslog(LOG_DEBUG, "malloc() error");
+				TRACE;
+			}
 			memset(Msg, 0, sizeof(message_summary));
 
 			Msg->msgnum = StrBufExtractNext_long(Buf, &Ptr, '|');
@@ -583,7 +590,7 @@ int load_msg_ptrs(const char *servcmd,
 				}					
 			}
 			n = Msg->msgnum;
-			Put(WCC->summ, (const char *)&n, sizeof(n), Msg, DestroyMessageSummary);
+			Put(WC->summ, (const char *)&n, sizeof(n), Msg, DestroyMessageSummary);
 		}
 		Stat->nummsgs++;
 	}
@@ -628,7 +635,6 @@ long SetFlagsFromMSet(HashList *ScanMe, MSet *MatchMSet, int FlagToSet, int Reve
 long load_seen_flags(void) {
 	long count = 0;
 	StrBuf *OldMsg;
-	wcsession *WCC = WC;
 	MSet *MatchMSet;
 
 	OldMsg = NewStrBuf();
@@ -644,7 +650,7 @@ long load_seen_flags(void) {
 
 	if (ParseMSet(&MatchMSet, OldMsg))
 	{
-		count = SetFlagsFromMSet(WCC->summ, MatchMSet, MSGFLAG_READ, 0);
+		count = SetFlagsFromMSet(WC->summ, MatchMSet, MSGFLAG_READ, 0);
 	}
 	DeleteMSet(&MatchMSet);
 	FreeStrBuf(&OldMsg);
@@ -683,7 +689,6 @@ void readloop(long oper, eCustomRoomRenderer ForceRenderer) {
 	char cmd[256] = "";
 	char filter[256] = "";
 	int i, r;
-	wcsession *WCC = WC;
 	HashPos *at;
 	const char *HashKey;
 	long HKLen;
@@ -692,11 +697,11 @@ void readloop(long oper, eCustomRoomRenderer ForceRenderer) {
 	void *ViewSpecific = NULL;
 
 	if (havebstr("is_summary") && (1 == (ibstr("is_summary")))) {
-		WCC->CurRoom.view = VIEW_MAILBOX;
+		WC->CurRoom.view = VIEW_MAILBOX;
 	}
 
 	if (havebstr("view")) {
-		WCC->CurRoom.view = ibstr("view");
+		WC->CurRoom.view = ibstr("view");
 	}
 
 	memset(&Stat, 0, sizeof(SharedMessageStatus));
@@ -704,12 +709,12 @@ void readloop(long oper, eCustomRoomRenderer ForceRenderer) {
 	Stat.lowest_found = (-1);
 	Stat.highest_found = (-1);
 	if (ForceRenderer == eUseDefault)
-		GetHash(ReadLoopHandler, IKEY(WCC->CurRoom.view), &vViewMsg);
+		GetHash(ReadLoopHandler, IKEY(WC->CurRoom.view), &vViewMsg);
 	else 
 		GetHash(ReadLoopHandler, IKEY(ForceRenderer), &vViewMsg);
 	if (vViewMsg == NULL) {
-		WCC->CurRoom.view = VIEW_BBS;
-		GetHash(ReadLoopHandler, IKEY(WCC->CurRoom.view), &vViewMsg);
+		WC->CurRoom.view = VIEW_BBS;
+		GetHash(ReadLoopHandler, IKEY(WC->CurRoom.view), &vViewMsg);
 	}
 	if (vViewMsg == NULL) {
 		return;			/* TODO: print message */
@@ -775,7 +780,7 @@ void readloop(long oper, eCustomRoomRenderer ForceRenderer) {
 		}
 		UnStackContext(&SubTP);
 		if (SortIt != NULL)
-			SortByPayload(WCC->summ, SortIt);
+			SortByPayload(WC->summ, SortIt);
 	}
 	if (Stat.startmsg < 0) {
 		Stat.startmsg =  0;
@@ -789,9 +794,9 @@ void readloop(long oper, eCustomRoomRenderer ForceRenderer) {
 	if (ViewMsg->PrintViewHeader != NULL)
 		ViewMsg->PrintViewHeader(&Stat, &ViewSpecific);
 
-	WCC->startmsg =  Stat.startmsg;
-	WCC->maxmsgs = Stat.maxmsgs;
-	WCC->num_displayed = 0;
+	WC->startmsg =  Stat.startmsg;
+	WC->maxmsgs = Stat.maxmsgs;
+	WC->num_displayed = 0;
 
 	/* Put some helpful data in vars for mailsummary_json */
 	{
@@ -812,12 +817,10 @@ void readloop(long oper, eCustomRoomRenderer ForceRenderer) {
 	 * iterate over each message. if we need to load an attachment, do it here. 
 	 */
 
-	if ((ViewMsg->LoadMsgFromServer != NULL) && 
-	    (!IsEmptyStr(cmd)))
-	{
-		at = GetNewHashPos(WCC->summ, 0);
+	if ((ViewMsg->LoadMsgFromServer != NULL) && (!IsEmptyStr(cmd))) {
+		at = GetNewHashPos(WC->summ, 0);
 		Stat.num_displayed = i = 0;
-		while (	GetNextHashPos(WCC->summ, at, &HKLen, &HashKey, &vMsg)) {
+		while (	GetNextHashPos(WC->summ, at, &HKLen, &HashKey, &vMsg)) {
 			Msg = (message_summary*) vMsg;		
 			if ((Msg->msgnum >= Stat.startmsg) && (Stat.num_displayed <= Stat.maxmsgs)) {
 				ViewMsg->LoadMsgFromServer(&Stat, 
@@ -840,10 +843,10 @@ void readloop(long oper, eCustomRoomRenderer ForceRenderer) {
 	if (ViewMsg->ViewCleanup != NULL)
 		ViewMsg->ViewCleanup(&ViewSpecific);
 
-	WCC->startmsg = 0;
-	WCC->maxmsgs = 0;
-	if (WCC->summ != NULL) {
-		DeleteHash(&WCC->summ);
+	WC->startmsg = 0;
+	WC->maxmsgs = 0;
+	if (WC->summ != NULL) {
+		DeleteHash(&WC->summ);
 	}
 }
 
@@ -853,7 +856,6 @@ void readloop(long oper, eCustomRoomRenderer ForceRenderer) {
  * ... this is where the actual message gets transmitted to the server.
  */
 void post_mime_to_server(void) {
-	wcsession *WCC = WC;
 	char top_boundary[SIZ];
 	char alt_boundary[SIZ];
 	int is_multipart = 0;
@@ -866,12 +868,12 @@ void post_mime_to_server(void) {
 	int include_text_alt = 0;	/* Set to nonzero to include multipart/alternative text/plain */
 
 	sprintf(top_boundary, "Citadel--Multipart--%s--%04x--%04x",
-		ChrPtr(WCC->serv_info->serv_fqdn),
+		ChrPtr(WC->serv_info->serv_fqdn),
 		getpid(),
 		++seq
 	);
 	sprintf(alt_boundary, "Citadel--Multipart--%s--%04x--%04x",
-		ChrPtr(WCC->serv_info->serv_fqdn),
+		ChrPtr(WC->serv_info->serv_fqdn),
 		getpid(),
 		++seq
 	);
@@ -881,14 +883,13 @@ void post_mime_to_server(void) {
 	serv_puts("X-Mailer: " PACKAGE_STRING);
 
 	/* If there are attachments, we have to do multipart/mixed */
-	if (GetCount(WCC->attachments) > 0) {
+	syslog(LOG_DEBUG, "This message will have %d attachments", GetCount(WC->attachments));
+	if (GetCount(WC->attachments) > 0) {
 		is_multipart = 1;
 	}
 
 	/* Only do multipart/alternative for mailboxes.  BBS and Wiki rooms don't need it. */
-	if ((WCC->CurRoom.view == VIEW_MAILBOX) ||
-	    (WCC->CurRoom.view == VIEW_JSON_LIST))
-	{
+	if ((WC->CurRoom.view == VIEW_MAILBOX) || (WC->CurRoom.view == VIEW_JSON_LIST)) {
 		include_text_alt = 1;
 	}
 
@@ -937,15 +938,21 @@ void post_mime_to_server(void) {
 		HashPos  *it;
 
 		/* Add in the attachments */
-		it = GetNewHashPos(WCC->attachments, 0);
-		while (GetNextHashPos(WCC->attachments, it, &len, &Key, &vAtt)) {
+		it = GetNewHashPos(WC->attachments, 0);
+		while (GetNextHashPos(WC->attachments, it, &len, &Key, &vAtt)) {
 			att = (wc_mime_attachment *)vAtt;
 			if (att->length == 0)
 				continue;
-			encoded_length = ((att->length * 150) / 100);
+
+			encoded_length = att->length + (att->length / 2);	// make it 150% of the original size for encoding
 			encoded = malloc(encoded_length);
-			if (encoded == NULL) break;
+			if (!encoded) {
+				syslog(LOG_ERR, "malloc() error");
+				break;
+			}
+			syslog(LOG_DEBUG, "Attachment: raw len %d", StrLength(att->Data));
 			encoded_strlen = CtdlEncodeBase64(encoded, ChrPtr(att->Data), StrLength(att->Data), 1);
+			syslog(LOG_DEBUG, "Attachment: encoded len %d", encoded_strlen);
 
 			serv_printf("--%s", top_boundary);
 			serv_printf("Content-type: %s", ChrPtr(att->ContentType));
@@ -985,7 +992,6 @@ void post_message(void) {
 	static long dont_post = (-1L);
 	int is_anonymous = 0;
 	const StrBuf *display_name = NULL;
-	wcsession *WCC = WC;
 	StrBuf *Buf;
 	
 	if (havebstr("force_room")) {
@@ -1094,7 +1100,7 @@ void post_message(void) {
 		free(wikipage);
 
 		if ((HeaderLen + StrLength(sbstr("msgtext")) < 10) && 
-		    (GetCount(WCC->attachments) == 0)){
+		    (GetCount(WC->attachments) == 0)){
 			AppendImportantMessage(_("Refusing to post empty message.\n"), -1);
 			FreeStrBuf(&CmdBuf);
 				
@@ -1116,13 +1122,13 @@ void post_message(void) {
 						serv_printf("Cc: %s", ChrPtr(Cc));
 						serv_printf("Bcc: %s", ChrPtr(Bcc));
 					} else {
-						serv_printf("X-Citadel-Room: %s", ChrPtr(WCC->CurRoom.name));
+						serv_printf("X-Citadel-Room: %s", ChrPtr(WC->CurRoom.name));
 					}
 				}
 				post_mime_to_server();
 				if (saving_to_drafts) {
 					AppendImportantMessage(_("Message has been saved to Drafts.\n"), -1);
-					gotoroom(WCC->CurRoom.name);
+					gotoroom(WC->CurRoom.name);
 					fixview();
 					readloop(readnew, eUseDefault);
 					FreeStrBuf(&Buf);
@@ -1141,7 +1147,7 @@ void post_message(void) {
 				syslog(LOG_DEBUG, "%s:%d: server post error: %s", __FILE__, __LINE__, ChrPtr(Buf) + 4);
 				AppendImportantMessage(ChrPtr(Buf) + 4, StrLength(Buf) - 4);
 				display_enter();
-				if (saving_to_drafts) gotoroom(WCC->CurRoom.name);
+				if (saving_to_drafts) gotoroom(WC->CurRoom.name);
 				FreeStrBuf(&Recp);
 				FreeStrBuf(&Buf);
 				FreeStrBuf(&Cc);
@@ -1155,7 +1161,7 @@ void post_message(void) {
 		FreeStrBuf(&Bcc);
 	}
 
-	DeleteHash(&WCC->attachments);
+	DeleteHash(&WC->attachments);
 
 	/*
 	 *  We may have been supplied with instructions regarding the location
@@ -1185,7 +1191,6 @@ void post_message(void) {
  * Client is uploading an attachment
  */
 void upload_attachment(void) {
-	wcsession *WCC = WC;
 	const char *pch;
 	int n;
 	const char *newn;
@@ -1197,47 +1202,62 @@ void upload_attachment(void) {
 	const StrBuf *UID;
 
 	begin_burst();
-	syslog(LOG_DEBUG, "upload_attachment()\n");
-	if (!Tmpl) wc_printf("upload_attachment()<br>\n");
+	syslog(LOG_DEBUG, "upload_attachment()");
+	if (!Tmpl) {
+		wc_printf("upload_attachment()<br>\n");
+	}
 
-	if (WCC->upload_length <= 0) {
+	if (WC->upload_length <= 0) {
 		syslog(LOG_DEBUG, "ERROR no attachment was uploaded\n");
-		if (Tmpl)
-		{
+		if (Tmpl) {
 			putlbstr("UPLOAD_ERROR", 1);
 			MimeType = DoTemplate(SKEY(Tmpl), NULL, &NoCtx);
 		}
-		else      wc_printf("ERROR no attachment was uploaded<br>\n");
+		else {
+			wc_printf("ERROR no attachment was uploaded<br>\n");
+		}
 		http_transmit_thing(ChrPtr(MimeType), 0);
 
 		return;
 	}
 
-	syslog(LOG_DEBUG, "Client is uploading %d bytes\n", WCC->upload_length);
-	if (Tmpl) putlbstr("UPLOAD_LENGTH", WCC->upload_length);
-	else wc_printf("Client is uploading %d bytes<br>\n", WCC->upload_length);
+	syslog(LOG_DEBUG, "Client has uploaded %d bytes", WC->upload_length);
+	if (Tmpl) {
+		putlbstr("UPLOAD_LENGTH", WC->upload_length);
+	}
+	else {
+		wc_printf("Client is uploading %d bytes<br>\n", WC->upload_length);
+	}
 
 	att = (wc_mime_attachment*)malloc(sizeof(wc_mime_attachment));
+	if (!att) {
+		syslog(LOG_DEBUG, "malloc() error");
+		TRACE;
+	}
 	memset(att, 0, sizeof(wc_mime_attachment ));
-	att->length = WCC->upload_length;
-	att->ContentType = NewStrBufPlain(WCC->upload_content_type, -1);
-	att->FileName = NewStrBufDup(WCC->upload_filename);
+	att->length = WC->upload_length;
+	att->ContentType = NewStrBufPlain(WC->upload_content_type, -1);
+	att->FileName = NewStrBufDup(WC->upload_filename);
 	UID = sbstr("qquuid");
-	if (UID)
+	if (UID) {
 		att->PartNum = NewStrBufDup(UID);
+	}
 
-	if (WCC->attachments == NULL) {
-		WCC->attachments = NewHash(1, Flathash);
+	syslog(LOG_DEBUG, "attachment length: %d", att->length);
+	syslog(LOG_DEBUG, "att. content type: %s", ChrPtr(att->ContentType));
+	syslog(LOG_DEBUG, "att upload buffer: %s", ((WC->upload == NULL) ? "null" : "not null"));
+
+
+	if (WC->attachments == NULL) {
+		WC->attachments = NewHash(1, Flathash);
 	}
 
 	/* And add it to the list. */
 	n = 0;
-	if ((GetCount(WCC->attachments) > 0) && 
-	    GetHashAt(WCC->attachments, 
-		      GetCount(WCC->attachments) -1, 
-		      &newnlen, &newn, &v))
-	    n = *((int*) newn) + 1;
-	Put(WCC->attachments, IKEY(n), att, DestroyMime);
+	if ((GetCount(WC->attachments) > 0) && GetHashAt(WC->attachments, GetCount(WC->attachments) -1, &newnlen, &newn, &v)) {
+		n = *((int*) newn) + 1;
+	}
+	Put(WC->attachments, IKEY(n), att, DestroyMime);
 
 	/*
 	 * Mozilla sends a simple filename, which is what we want,
@@ -1257,9 +1277,9 @@ void upload_attachment(void) {
 	 * Transfer control of this memory from the upload struct
 	 * to the attachment struct.
 	 */
-	att->Data = WCC->upload;
-	WCC->upload = NULL;
-	WCC->upload_length = 0;
+	att->Data = WC->upload;
+	WC->upload = NULL;
+	WC->upload_length = 0;
 	
 	if (Tmpl) MimeType = DoTemplate(SKEY(Tmpl), NULL, &NoCtx);
 	http_transmit_thing(ChrPtr(MimeType), 0);
@@ -1273,7 +1293,6 @@ void upload_attachment(void) {
  * There is probably a better way to do this.
  */
 void remove_attachment(void) {
-	wcsession *WCC = WC;
 	wc_mime_attachment *att;
 	void *vAtt;
 	StrBuf *WhichAttachment;
@@ -1286,10 +1305,10 @@ void remove_attachment(void) {
 	if (ChrPtr(WhichAttachment)[0] == '/')
 		StrBufCutLeft(WhichAttachment, 1);
 	StrBufUnescape(WhichAttachment, 0);
-	at = GetNewHashPos(WCC->attachments, 0);
+	at = GetNewHashPos(WC->attachments, 0);
 	do {
 		vAtt = NULL;
-		GetHashPos(WCC->attachments, at, &len, &key, &vAtt);
+		GetHashPos(WC->attachments, at, &len, &key, &vAtt);
 
 		att = (wc_mime_attachment*) vAtt;
 		if ((att != NULL) &&
@@ -1299,12 +1318,12 @@ void remove_attachment(void) {
 		     !strcmp(ChrPtr(WhichAttachment), ChrPtr(att->PartNum)))
 			    ))
 		{
-			DeleteEntryFromHash(WCC->attachments, at);
+			DeleteEntryFromHash(WC->attachments, at);
 			found=1;
 			break;
 		}
 	}
-	while (NextHashPos(WCC->attachments, at));
+	while (NextHashPos(WC->attachments, at));
 
 	FreeStrBuf(&WhichAttachment);
 	wc_printf("remove_attachment(%d) completed\n", found);
@@ -1336,7 +1355,6 @@ void display_enter(void) {
 	int recipient_required = 0;
 	int subject_required = 0;
 	int is_anonymous = 0;
-      	wcsession *WCC = WC;
 	int i = 0;
 	long replying_to;
 
@@ -1378,17 +1396,16 @@ void display_enter(void) {
 	 * Are we perhaps in an address book view?  If so, then an "enter
 	 * message" command really means "add new entry."
 	 */
-	if (WCC->CurRoom.defview == VIEW_ADDRESSBOOK) {
-		do_edit_vcard(-1, "", NULL, NULL, "",  ChrPtr(WCC->CurRoom.name));
+	if (WC->CurRoom.defview == VIEW_ADDRESSBOOK) {
+		do_edit_vcard(-1, "", NULL, NULL, "",  ChrPtr(WC->CurRoom.name));
 		FreeStrBuf(&Line);
 		return;
 	}
 
 	/*
-	 * Are we perhaps in a calendar room?  If so, then an "enter
-	 * message" command really means "add new calendar item."
+	 * Are we perhaps in a calendar room?  If so, then an "enter message" command really means "add new calendar item."
 	 */
-	if (WCC->CurRoom.defview == VIEW_CALENDAR) {
+	if (WC->CurRoom.defview == VIEW_CALENDAR) {
 		display_edit_event();
 		FreeStrBuf(&Line);
 		return;
@@ -1398,7 +1415,7 @@ void display_enter(void) {
 	 * Are we perhaps in a tasks view?  If so, then an "enter
 	 * message" command really means "add new task."
 	 */
-	if (WCC->CurRoom.defview == VIEW_TASKS) {
+	if (WC->CurRoom.defview == VIEW_TASKS) {
 		display_edit_task();
 		FreeStrBuf(&Line);
 		return;
@@ -1604,7 +1621,7 @@ void display_enter(void) {
 			}
 		}
 
-		// FOOFOO
+		// We might not need these logs anymore.
 		syslog(LOG_DEBUG, "wefw = %s", ChrPtr(wefw));
 		syslog(LOG_DEBUG, "msgn = %s", ChrPtr(msgn));
 		syslog(LOG_DEBUG, "from = %s", ChrPtr(from));
