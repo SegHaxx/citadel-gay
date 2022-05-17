@@ -602,7 +602,8 @@ void cmd_ent0(char *entargs) {
 	/* Read in the message from the client. */
 	if (do_confirm) {
 		cprintf("%d send message\n", START_CHAT_MODE);
-	} else {
+	}
+	else {
 		cprintf("%d send message\n", SEND_LISTING);
 	}
 
@@ -612,9 +613,7 @@ void cmd_ent0(char *entargs) {
 			      ((!IsEmptyStr(supplied_euid)) ? supplied_euid : NULL),
 			      NULL, references);
 
-	/* Put together one big recipients struct containing to/cc/bcc all in
-	 * one.  This is for the envelope.
-	 */
+	// Put together one big recipients struct containing to/cc/bcc all in one.  This is for the envelope.
 	char *all_recps = malloc(SIZ * 3);
 	strcpy(all_recps, recp);
 	if (!IsEmptyStr(cc)) {

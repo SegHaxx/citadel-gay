@@ -16,6 +16,7 @@
 #include <stdio.h>
 #include <regex.h>
 #include <sys/stat.h>
+#include <assert.h>
 #include <libcitadel.h>
 #include "ctdl_module.h"
 #include "citserver.h"
@@ -2968,18 +2969,18 @@ long quickie_message(const char *from,
 /*
  * Back end function used by CtdlMakeMessage() and similar functions
  */
-StrBuf *CtdlReadMessageBodyBuf(char *terminator,	/* token signalling EOT */
+StrBuf *CtdlReadMessageBodyBuf(char *terminator,	// token signalling EOT
 			       long tlen,
-			       size_t maxlen,		/* maximum message length */
-			       StrBuf *exist,		/* if non-null, append to it;
-							   exist is ALWAYS freed  */
-			       int crlf			/* CRLF newlines instead of LF */
+			       size_t maxlen,		// maximum message length
+			       StrBuf *exist,		// if non-null, append to it; exist is ALWAYS freed
+			       int crlf			// CRLF newlines instead of LF
 ) {
 	StrBuf *Message;
 	StrBuf *LineBuf;
 	int flushing = 0;
 	int finished = 0;
 	int dotdot = 0;
+	int lines_read = 0;				// FIXME remove this after debugging
 
 	LineBuf = NewStrBufPlain(NULL, SIZ);
 	if (exist == NULL) {
@@ -2999,6 +3000,7 @@ StrBuf *CtdlReadMessageBodyBuf(char *terminator,	/* token signalling EOT */
 		if (CtdlClientGetLine(LineBuf) < 0) {
 			finished = 1;
 		}
+		++lines_read;
 		if ((StrLength(LineBuf) == tlen) && (!strcmp(ChrPtr(LineBuf), terminator))) {
 			finished = 1;
 		}
@@ -3022,6 +3024,14 @@ StrBuf *CtdlReadMessageBodyBuf(char *terminator,	/* token signalling EOT */
 
 	} while (!finished);
 	FreeStrBuf(&LineBuf);
+
+	// DEBUG remove this
+	int lines_in_buffer = num_tokens(ChrPtr(Message), '\n');
+	syslog(LOG_DEBUG, "\033[31mLines from client : %d\033[0m", lines_read);
+	syslog(LOG_DEBUG, "\033[32mLines in buffer   : %d\033[0m", lines_in_buffer);
+	assert(lines_read == lines_in_buffer);
+
+
 	return Message;
 }
 
