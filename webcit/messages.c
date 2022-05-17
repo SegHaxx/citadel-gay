@@ -851,10 +851,8 @@ void readloop(long oper, eCustomRoomRenderer ForceRenderer) {
 }
 
 
-/*
- * Back end for post_message()
- * ... this is where the actual message gets transmitted to the server.
- */
+// Back end for post_message()
+// This is where the actual message gets transmitted to the server.
 void post_mime_to_server(void) {
 	char top_boundary[SIZ];
 	char alt_boundary[SIZ];
@@ -903,8 +901,7 @@ void post_mime_to_server(void) {
 	/* Remember, serv_printf() appends an extra newline */
 	if (include_text_alt) {
 		StrBuf *Buf;
-		serv_printf("Content-type: multipart/alternative; "
-			"boundary=\"%s\"\n", alt_boundary);
+		serv_printf("Content-type: multipart/alternative; boundary=\"%s\"\n", alt_boundary);
 		serv_printf("This is a multipart message in MIME format.\n");
 		serv_printf("--%s", alt_boundary);
 
@@ -964,10 +961,14 @@ void post_mime_to_server(void) {
 			serv_puts("");
 			free(encoded);
 		}
+		syslog(LOG_DEBUG, "\033[33m sending final boundary --%s-- \033[0m", top_boundary);
+		TRACE;
 		serv_printf("--%s--", top_boundary);
 		DeleteHashPos(&it);
 	}
 
+	syslog(LOG_DEBUG, "\033[33m sending terminating 000 \033[0m");
+	TRACE;
 	serv_puts("000");
 }
 

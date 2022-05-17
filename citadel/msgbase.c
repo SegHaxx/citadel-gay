@@ -1,6 +1,6 @@
 // Implements the message store.
 //
-// Copyright (c) 1987-2021 by the citadel.org team
+// Copyright (c) 1987-2022 by the citadel.org team
 //
 // This program is open source software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License version 3.
@@ -2880,7 +2880,7 @@ long CtdlSubmitMsg(struct CtdlMessage *msg,	/* message to save */
 		if (recps == NULL) {
 			qualified_for_journaling = CtdlGetConfigInt("c_journal_pubmsgs");
 		}
-		else if (recps->num_local + recps->num_ignet + recps->num_internet > 0) {
+		else if (recps->num_local + recps->num_internet > 0) {
 			qualified_for_journaling = CtdlGetConfigInt("c_journal_email");
 		}
 		else {

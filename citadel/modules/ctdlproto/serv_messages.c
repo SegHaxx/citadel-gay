@@ -1,6 +1,6 @@
 // Message-related protocol commands for Citadel clients
 //
-// Copyright (c) 1987-2021 by the citadel.org team
+// Copyright (c) 1987-2022 by the citadel.org team
 //
 // This program is open source software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License version 3.
@@ -535,10 +535,8 @@ void cmd_ent0(char *entargs) {
 			}
 		}
 
-		if ( ( (valid_to->num_internet + valid_to->num_ignet + valid_cc->num_internet + valid_cc->num_ignet + valid_bcc->num_internet + valid_bcc->num_ignet) > 0)
-		     && (CC->user.axlevel < AxNetU) ) {
-			cprintf("%d Higher access required for network mail.\n",
-				ERROR + HIGHER_ACCESS_REQUIRED);
+		if ( ( (valid_to->num_internet + valid_cc->num_internet + valid_bcc->num_internet) > 0) && (CC->user.axlevel < AxNetU) ) {
+			cprintf("%d Higher access required for network mail.\n", ERROR + HIGHER_ACCESS_REQUIRED);
 			free_recipients(valid_to);
 			free_recipients(valid_cc);
 			free_recipients(valid_bcc);

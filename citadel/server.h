@@ -48,7 +48,6 @@ struct recptypes {
 	int recptypes_magic;
         int num_local;
         int num_internet;
-        int num_ignet;
 	int num_room;
         int num_error;
 	char *errormsg;
