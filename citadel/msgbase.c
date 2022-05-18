@@ -2980,7 +2980,6 @@ StrBuf *CtdlReadMessageBodyBuf(char *terminator,	// token signalling EOT
 	int flushing = 0;
 	int finished = 0;
 	int dotdot = 0;
-	int lines_read = 0;				// FIXME remove this after debugging
 
 	LineBuf = NewStrBufPlain(NULL, SIZ);
 	if (exist == NULL) {
@@ -3000,7 +2999,6 @@ StrBuf *CtdlReadMessageBodyBuf(char *terminator,	// token signalling EOT
 		if (CtdlClientGetLine(LineBuf) < 0) {
 			finished = 1;
 		}
-		++lines_read;
 		if ((StrLength(LineBuf) == tlen) && (!strcmp(ChrPtr(LineBuf), terminator))) {
 			finished = 1;
 		}
@@ -3020,33 +3018,28 @@ StrBuf *CtdlReadMessageBodyBuf(char *terminator,	// token signalling EOT
 		}
 
 		/* if we've hit the max msg length, flush the rest */
-		if (StrLength(Message) >= maxlen) flushing = 1;
+		if (StrLength(Message) >= maxlen) {
+			flushing = 1;
+		}
 
 	} while (!finished);
 	FreeStrBuf(&LineBuf);
 
-	// DEBUG remove this
-	int lines_in_buffer = num_tokens(ChrPtr(Message), '\n');
-	syslog(LOG_DEBUG, "\033[31mLines from client : %d\033[0m", lines_read);
-	syslog(LOG_DEBUG, "\033[32mLines in buffer   : %d\033[0m", lines_in_buffer);
-	assert(lines_read == lines_in_buffer);
-
+	if (flushing) {
+		syslog(LOG_ERR, "msgbase: exceeded maximum message length of %d - message was truncated", maxlen);
+	}
 
 	return Message;
 }
 
 
-/*
- * Back end function used by CtdlMakeMessage() and similar functions
- */
-char *CtdlReadMessageBody(char *terminator,	/* token signalling EOT */
+// Back end function used by CtdlMakeMessage() and similar functions
+char *CtdlReadMessageBody(char *terminator,	// token signalling EOT
 			  long tlen,
-			  size_t maxlen,		/* maximum message length */
-			  StrBuf *exist,		/* if non-null, append to it;
-						   exist is ALWAYS freed  */
-			  int crlf		/* CRLF newlines instead of LF */
-	) 
-{
+			  size_t maxlen,	// maximum message length
+			  StrBuf *exist,	// if non-null, append to it; exist is ALWAYS freed
+			  int crlf		// CRLF newlines instead of LF
+) {
 	StrBuf *Message;
 
 	Message = CtdlReadMessageBodyBuf(terminator,
@@ -3055,10 +3048,12 @@ char *CtdlReadMessageBody(char *terminator,	/* token signalling EOT */
 					 exist,
 					 crlf
 	);
-	if (Message == NULL)
+	if (Message == NULL) {
 		return NULL;
-	else
+	}
+	else {
 		return SmashStrBuf(&Message);
+	}
 }
 
 

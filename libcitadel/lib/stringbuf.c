@@ -1,20 +1,18 @@
-/*
- * Copyright (c) 1987-2018 by the citadel.org team
- *
- * This program is open source software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 3 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
- */
+// Copyright (c) 1987-2022 by the citadel.org team
+//
+// This program is open source software; you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation; either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program; if not, write to the Free Software
+// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 
 #define _GNU_SOURCE
 #include "sysdep.h"
@@ -300,38 +298,37 @@ inline int StrLength(const StrBuf *Str)
 	return (Str != NULL) ? Str->BufUsed : 0;
 }
 
-/**
- * @ingroup StrBuf_DeConstructors
- * @brief local utility function to resize the buffer
- * @param Buf the buffer whichs storage we should increase
- * @param KeepOriginal should we copy the original buffer or just start over with a new one
- * @param DestSize what should fit in after?
- */
-static int IncreaseBuf(StrBuf *Buf, int KeepOriginal, int DestSize)
-{
+// local utility function to resize the buffer
+// Buf		the buffer whichs storage we should increase
+// KeepOriginal	should we copy the original buffer or just start over with a new one
+// DestSize	what should fit in after?
+static int IncreaseBuf(StrBuf *Buf, int KeepOriginal, int DestSize) {
 	char *NewBuf;
 	size_t NewSize = Buf->BufSize * 2;
 
-	if (Buf->ConstBuf)
+	if (Buf->ConstBuf) {
 		return -1;
+	}
 		
-	if (DestSize > 0)
-		while ((NewSize <= DestSize) && (NewSize != 0))
+	if (DestSize > 0) {
+		while ((NewSize <= DestSize) && (NewSize != 0)) {
 			NewSize *= 2;
+		}
+	}
 
-	if (NewSize == 0)
+	if (NewSize == 0) {
 		return -1;
+	}
 
-	NewBuf= (char*) malloc(NewSize);
-	if (NewBuf == NULL)
+	NewBuf = (char*) malloc(NewSize);
+	if (NewBuf == NULL) {
 		return -1;
+	}
 
-	if (KeepOriginal && (Buf->BufUsed > 0))
-	{
+	if (KeepOriginal && (Buf->BufUsed > 0)) {
 		memcpy(NewBuf, Buf->buf, Buf->BufUsed);
 	}
-	else
-	{
+	else {
 		NewBuf[0] = '\0';
 		Buf->BufUsed = 0;
 	}
@@ -344,24 +341,20 @@ static int IncreaseBuf(StrBuf *Buf, int KeepOriginal, int DestSize)
 	return Buf->BufSize;
 }
 
-/**
- * @ingroup StrBuf_DeConstructors
- * @brief shrink / increase an _EMPTY_ buffer to NewSize. Buffercontent is thoroughly ignored and flushed.
- * @param Buf Buffer to shrink (has to be empty)
- * @param ThreshHold if the buffer is bigger then this, its readjusted
- * @param NewSize if we Shrink it, how big are we going to be afterwards?
- */
-void ReAdjustEmptyBuf(StrBuf *Buf, long ThreshHold, long NewSize)
-{
-	if ((Buf != NULL) && 
-	    (Buf->BufUsed == 0) &&
-	    (Buf->BufSize < ThreshHold)) {
+
+// shrink / increase an _EMPTY_ buffer to NewSize. Buffercontent is thoroughly ignored and flushed.
+// Buf		Buffer to shrink (has to be empty)
+// ThreshHold	if the buffer is bigger then this, its readjusted
+// NewSize	if we Shrink it, how big are we going to be afterwards?
+void ReAdjustEmptyBuf(StrBuf *Buf, long ThreshHold, long NewSize) {
+	if ((Buf != NULL) && (Buf->BufUsed == 0) && (Buf->BufSize < ThreshHold)) {
 		free(Buf->buf);
 		Buf->buf = (char*) malloc(NewSize);
 		Buf->BufUsed = 0;
 		Buf->BufSize = NewSize;
 	}
 }
+
 
 /**
  * @ingroup StrBuf_DeConstructors
@@ -864,42 +857,37 @@ void StrBufAppendBuf(StrBuf *Buf, const StrBuf *AppendBuf, unsigned long Offset)
 		return;
 
 	if (Buf->BufSize - Offset < AppendBuf->BufUsed + Buf->BufUsed + 1)
-		IncreaseBuf(Buf, 
-			    (Buf->BufUsed > 0), 
-			    AppendBuf->BufUsed + Buf->BufUsed);
+		IncreaseBuf(Buf, (Buf->BufUsed > 0), AppendBuf->BufUsed + Buf->BufUsed);
 
-	memcpy(Buf->buf + Buf->BufUsed, 
-	       AppendBuf->buf + Offset, 
-	       AppendBuf->BufUsed - Offset);
+	memcpy(Buf->buf + Buf->BufUsed, AppendBuf->buf + Offset, AppendBuf->BufUsed - Offset);
 	Buf->BufUsed += AppendBuf->BufUsed - Offset;
 	Buf->buf[Buf->BufUsed] = '\0';
 }
 
 
-/**
- * @ingroup StrBuf_Filler
- * @brief Append a C-String to the buffer
- * @param Buf Buffer to modify
- * @param AppendBuf Buffer to copy at the end of our buffer
- * @param AppendSize number of bytes to copy; set to -1 if we should count it in advance
- * @param Offset Should we start copying from an offset?
- */
-void StrBufAppendBufPlain(StrBuf *Buf, const char *AppendBuf, long AppendSize, unsigned long Offset)
-{
+// Append a C-String to the buffer
+// Buf		Buffer to modify
+// AppendBuf	Buffer to copy at the end of our buffer
+// AppendSize	number of bytes to copy; set to -1 if we should count it in advance
+// Offset	Should we start copying from an offset?
+void StrBufAppendBufPlain(StrBuf *Buf, const char *AppendBuf, long AppendSize, unsigned long Offset) {
 	long aps;
 	long BufSizeRequired;
 
 	if ((AppendBuf == NULL) || (Buf == NULL))
 		return;
 
-	if (AppendSize < 0 )
+	if (AppendSize < 0) {
 		aps = strlen(AppendBuf + Offset);
-	else
+	}
+	else {
 		aps = AppendSize - Offset;
+	}
 
 	BufSizeRequired = Buf->BufUsed + aps + 1;
-	if (Buf->BufSize <= BufSizeRequired)
+	if (Buf->BufSize <= BufSizeRequired) {
 		IncreaseBuf(Buf, (Buf->BufUsed > 0), BufSizeRequired);
+	}
 
 	memcpy(Buf->buf + Buf->BufUsed, 
 	       AppendBuf + Offset, 
@@ -908,7 +896,7 @@ void StrBufAppendBufPlain(StrBuf *Buf, const char *AppendBuf, long AppendSize, u
 	Buf->buf[Buf->BufUsed] = '\0';
 }
 
-/**
+/*
  * @ingroup StrBuf_Filler
  * @brief sprintf like function appending the formated string to the buffer
  * vsnprintf version to wrap into own calls

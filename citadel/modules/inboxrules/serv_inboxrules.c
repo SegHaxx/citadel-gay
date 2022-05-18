@@ -1,16 +1,14 @@
-/*
- * Inbox handling rules
- *
- * Copyright (c) 1987-2020 by the citadel.org team
- *
- * This program is open source software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 3.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- */
+// Inbox handling rules
+//
+// Copyright (c) 1987-2022 by the citadel.org team
+//
+// This program is open source software; you can redistribute it and/or modify
+// it under the terms of the GNU General Public License version 3.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
 
 #include "sysdep.h"
 #include <stdlib.h>
@@ -37,9 +35,7 @@
 #include "ctdl_module.h"
 
 
-/*
- * The next sections are enums and keys that drive the serialize/deserialize functions for the inbox rules/state configuration.
- */
+// The next sections are enums and keys that drive the serialize/deserialize functions for the inbox rules/state configuration.
 
 // Fields to be compared
 enum {
@@ -170,7 +166,7 @@ struct inboxrules *deserialize_inbox_rules(char *serialized_rules) {
 		return NULL;
 	}
 
-	/* Make a copy of the supplied buffer because we're going to shit all over it with strtok_r() */
+	// Make a copy of the supplied buffer because we're going to shit all over it with strtok_r()
 	char *sr = strdup(serialized_rules);
 	if (!sr) {
 		return NULL;
@@ -187,8 +183,8 @@ struct inboxrules *deserialize_inbox_rules(char *serialized_rules) {
 	while ((token = strtok_r(rest, "\n", &rest))) {
 
 		// For backwards compatibility, "# WEBCIT_RULE" is an alias for "rule".
-		// Prior to version 930, WebCit converted its rules to Sieve scripts, but saved the rules as comments for later re-editing.
-		// Now, the rules hidden in the comments become the real rules.
+		// Prior to version 930, WebCit converted its rules to Sieve scripts, but saved the rules as comments for
+		// later re-editing.  Now, the rules hidden in the comments become the real rules.
 		if (!strncasecmp(token, "# WEBCIT_RULE|", 14)) {
 			strcpy(token, "rule|");	
 			strcpy(&token[5], &token[14]);
@@ -370,9 +366,7 @@ int inbox_do_redirect(struct irule *rule, long msgnum) {
 }
 
 
-/*
- * Perform the "reject" action (delete the message, and tell the sender we deleted it)
- */
+// Perform the "reject" action (delete the message, and tell the sender we deleted it)
 void inbox_do_reject(struct irule *rule, struct CtdlMessage *msg) {
 	syslog(LOG_DEBUG, "inbox_do_reject: sender: <%s>, reject", msg->cm_fields[erFc822Addr]);
 
@@ -419,9 +413,7 @@ void inbox_do_reject(struct irule *rule, struct CtdlMessage *msg) {
 }
 
 
-/*
- * Perform the "vacation" action (send an automatic response)
- */
+// Perform the "vacation" action (send an automatic response)
 void inbox_do_vacation(struct irule *rule, struct CtdlMessage *msg) {
 	syslog(LOG_DEBUG, "inbox_do_vacation: sender: <%s>, vacation", msg->cm_fields[erFc822Addr]);
 
