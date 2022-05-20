@@ -2950,64 +2950,18 @@ int StrBufDestroyStreamContext(eStreamType type, vStreamT **vStream, const char 
 	return rc;
 }
 
-int StrBufStreamTranscode(eStreamType type, IOBuffer *Target, IOBuffer *In, const char* pIn, long pInLen, vStreamT *vStream, int LastChunk, const char **Err)
-{
+int StrBufStreamTranscode(eStreamType type, IOBuffer *Target, IOBuffer *In, const char* pIn, long pInLen, vStreamT *vStream, int LastChunk, const char **Err) {
 	int rc = 0;
 	switch (type)
 	{
 	case eBase64Encode:
 	{
-		/// TODO
-/*
-		// base64_decodestate *state = (base64_decodestate*)vStream;
-		long ExpectLen;
-		
-		if (In != NULL)
-		{
-			pIn = In->buf;
-			pInLen = In->BufUsed;
-		}
-		if ((In == NULL) || (vStream == NULL))
-			return;
-		
-		ExpectLen = (pInLen / 4) * 3;
-
-		if (Target->BufSize - Target->BufUsed < ExpectLen)
-		{
-			IncreaseBuf(Target, 1, Target->BufUsed + ExpectLen + 1);
-		}
-
-		////	ExpectLen = base64_encode_block(pIn, pInLen, Target->buf + Target->BufUsed, state);
-		Target->BufUsed += ExpectLen;
-		Target->buf[Target->BufUsed] = '\0';
-*/
+		// ???
 	}
 	break;
 	case eBase64Decode:
 	{
-/*
-		base64_decodestate *state = (base64_decodestate *)vStream;
-		long ExpectLen;
-		
-		if (In != NULL)
-		{
-			pIn = In->buf;
-			pInLen = In->BufUsed;
-		}
-		if ((pIn == NULL) || (vStream == NULL))
-			return;
-		
-		ExpectLen = (pInLen / 4) * 3;
-
-		if (Target->BufSize - Target->BufUsed < ExpectLen)
-		{
-			IncreaseBuf(Target, 1, Target->BufUsed + ExpectLen + 1);
-		}
-
-		ExpectLen = base64_decode_block(pIn, pInLen, Target->buf + Target->BufUsed, state);
-		Target->BufUsed += ExpectLen;
-		Target->buf[Target->BufUsed] = '\0';
-*/
+		// ???
 	}
 	break;
 	case eZLibEncode:
@@ -3036,23 +2990,16 @@ int StrBufStreamTranscode(eStreamType type, IOBuffer *Target, IOBuffer *In, cons
 
 		stream->OutBuf.BufUsed += (chunkavail - stream->zstream.avail_out);
 
-		if (Target && 
-		    (LastChunk ||
-		     (stream->OutBuf.BufUsed != org_outbuf_len)
-			    ))
-		{
+		if (Target && (LastChunk || (stream->OutBuf.BufUsed != org_outbuf_len))) {
 			iSwapBuffers(Target->Buf, &stream->OutBuf);
 		}
 
-		if (stream->zstream.avail_in == 0)
-		{
+		if (stream->zstream.avail_in == 0) {
 			FlushStrBuf(In->Buf);
 			In->ReadWritePointer = NULL;
 		}
-		else
-		{
-			if (stream->zstream.avail_in < 64)
-			{
+		else {
+			if (stream->zstream.avail_in < 64) {
 				memmove(In->Buf->buf,
 					In->Buf->buf + In->Buf->BufUsed - stream->zstream.avail_in,
 					stream->zstream.avail_in);
@@ -3060,11 +3007,8 @@ int StrBufStreamTranscode(eStreamType type, IOBuffer *Target, IOBuffer *In, cons
 				In->Buf->BufUsed = stream->zstream.avail_in;
 				In->Buf->buf[In->Buf->BufUsed] = '\0';
 			}
-			else
-			{
-				
-				In->ReadWritePointer = In->Buf->buf + 
-					(In->Buf->BufUsed - stream->zstream.avail_in);
+			else {
+				In->ReadWritePointer = In->Buf->buf + (In->Buf->BufUsed - stream->zstream.avail_in);
 			}
 		}
 		rc = (LastChunk && (err != Z_FINISH));
@@ -3080,14 +3024,11 @@ int StrBufStreamTranscode(eStreamType type, IOBuffer *Target, IOBuffer *In, cons
 		int err;
 
 		if ((stream->zstream.avail_out != 0) && (stream->zstream.next_in != NULL)) {
-			if (In->ReadWritePointer != NULL)
-			{
+			if (In->ReadWritePointer != NULL) {
 				stream->zstream.next_in = (Bytef *) In->ReadWritePointer;
-				stream->zstream.avail_in = (uInt) In->Buf->BufUsed - 
-					(In->ReadWritePointer - In->Buf->buf);
+				stream->zstream.avail_in = (uInt) In->Buf->BufUsed - (In->ReadWritePointer - In->Buf->buf);
 			}
-			else
-			{
+			else {
 				stream->zstream.next_in = (Bytef *) In->Buf->buf;
 				stream->zstream.avail_in = (uInt) In->Buf->BufUsed;
 			}
@@ -3114,15 +3055,12 @@ int StrBufStreamTranscode(eStreamType type, IOBuffer *Target, IOBuffer *In, cons
 
 		if (Target) iSwapBuffers(Target->Buf, &stream->OutBuf);
 
-		if (stream->zstream.avail_in == 0)
-		{
+		if (stream->zstream.avail_in == 0) {
 			FlushStrBuf(In->Buf);
 			In->ReadWritePointer = NULL;
 		}
-		else
-		{
-			if (stream->zstream.avail_in < 64)
-			{
+		else {
+			if (stream->zstream.avail_in < 64) {
 				memmove(In->Buf->buf,
 					In->Buf->buf + In->Buf->BufUsed - stream->zstream.avail_in,
 					stream->zstream.avail_in);
@@ -3130,11 +3068,9 @@ int StrBufStreamTranscode(eStreamType type, IOBuffer *Target, IOBuffer *In, cons
 				In->Buf->BufUsed = stream->zstream.avail_in;
 				In->Buf->buf[In->Buf->BufUsed] = '\0';
 			}
-			else
-			{
+			else {
 				
-				In->ReadWritePointer = In->Buf->buf + 
-					(In->Buf->BufUsed - stream->zstream.avail_in);
+				In->ReadWritePointer = In->Buf->buf + (In->Buf->BufUsed - stream->zstream.avail_in);
 			}
 		}
 	}
@@ -3152,8 +3088,7 @@ int StrBufStreamTranscode(eStreamType type, IOBuffer *Target, IOBuffer *In, cons
  * @brief decode a buffer from base 64 encoding; destroys original
  * @param Buf Buffor to transform
  */
-int StrBufDecodeHex(StrBuf *Buf)
-{
+int StrBufDecodeHex(StrBuf *Buf) {
 	unsigned int ch;
 	char *pch, *pche, *pchi;
 

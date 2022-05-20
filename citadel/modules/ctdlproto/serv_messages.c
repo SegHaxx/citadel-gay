@@ -355,8 +355,7 @@ void cmd_dlat(char *cmdbuf) {
 
 	msgid = extract_long(cmdbuf, 0);
 	extract_token(desired_section, cmdbuf, 1, '|', sizeof desired_section);
-	safestrncpy(CC->download_desired_section, desired_section,
-		sizeof CC->download_desired_section);
+	safestrncpy(CC->download_desired_section, desired_section, sizeof CC->download_desired_section);
 	CtdlOutputMsg(msgid, MT_SPEW_SECTION, 0, 1, 1, NULL, 0, NULL, NULL, NULL);
 }
 
@@ -423,7 +422,7 @@ void cmd_ent0(char *entargs) {
 		sizeof errmsg,
 		NULL,
 		POST_LOGGED_IN,
-		(!IsEmptyStr(references))		/* is this a reply?  or a top-level post? */
+		(!IsEmptyStr(references))		// is this a reply?  or a top-level post?
 	);
 	if (err) {
 		cprintf("%d %s\n", err, errmsg);
@@ -514,7 +513,7 @@ void cmd_ent0(char *entargs) {
 			return;
 		}
 
-		/* Recipient required, but none were specified */
+		// Recipient required, but none were specified
 		if ( (valid_to->num_error < 0) && (valid_cc->num_error < 0) && (valid_bcc->num_error < 0) ) {
 			free_recipients(valid_to);
 			free_recipients(valid_cc);
@@ -557,13 +556,13 @@ void cmd_ent0(char *entargs) {
 
 	}
 
-	/* Is this a room which has anonymous-only or anonymous-option? */
+	// Is this a room which has anonymous-only or anonymous-option?
 	anonymous = MES_NORMAL;
 	if (CC->room.QRflags & QR_ANONONLY) {
 		anonymous = MES_ANONONLY;
 	}
 	if (CC->room.QRflags & QR_ANONOPT) {
-		if (anon_flag == 1) {	/* only if the user requested it */
+		if (anon_flag == 1) {	// only if the user requested it
 			anonymous = MES_ANONOPT;
 		}
 	}
@@ -572,18 +571,16 @@ void cmd_ent0(char *entargs) {
 		recp[0] = 0;
 	}
 
-	/* Recommend to the client that the use of a message subject is
-	 * strongly recommended in this room, if either the SUBJECTREQ flag
-	 * is set, or if there is one or more Internet email recipients.
-	 */
+	// Recommend to the client that the use of a message subject is
+	// strongly recommended in this room, if either the SUBJECTREQ flag
+	// is set, or if there is one or more Internet email recipients.
+
 	if (CC->room.QRflags2 & QR2_SUBJECTREQ) subject_required = 1;
 	if ((valid_to)	&& (valid_to->num_internet > 0))	subject_required = 1;
 	if ((valid_cc)	&& (valid_cc->num_internet > 0))	subject_required = 1;
 	if ((valid_bcc)	&& (valid_bcc->num_internet > 0))	subject_required = 1;
 
-	/* If we're only checking the validity of the request, return
-	 * success without creating the message.
-	 */
+	// If we're only checking the validity of the request, return success without creating the message.
 	if (post == 0) {
 		cprintf("%d %s|%d\n", CIT_OK,
 			((valid_to != NULL) ? valid_to->display_recp : ""), 
@@ -594,12 +591,12 @@ void cmd_ent0(char *entargs) {
 		return;
 	}
 
-	/* We don't need these anymore because we'll do it differently below */
+	// We don't need these anymore because we'll do it differently below
 	free_recipients(valid_to);
 	free_recipients(valid_cc);
 	free_recipients(valid_bcc);
 
-	/* Read in the message from the client. */
+	// Read in the message from the client.
 	if (do_confirm) {
 		cprintf("%d send message\n", START_CHAT_MODE);
 	}
@@ -696,9 +693,7 @@ void cmd_dele(char *args) {
 		return;
 	}
 
-	/*
-	 * Build our message set to be moved/copied
-	 */
+	// Build our message set to be moved/copied
 	msgs = malloc(num_msgs * sizeof(long));
 	for (i=0; i<num_msgs; ++i) {
 		extract_token(msgtok, msgset, i, ',', sizeof msgtok);
@@ -757,34 +752,36 @@ void cmd_move(char *args) {
 	CtdlGetUser(&CC->user, CC->curr_user);
 	CtdlRoomAccess(&qtemp, &CC->user, &ra, NULL);
 
-	/* Check for permission to perform this operation.
-	 * Remember: "CC->room" is source, "qtemp" is target.
-	 */
+	// Check for permission to perform this operation.
+	// Remember: "CC->room" is source, "qtemp" is target.
 	permit = 0;
 
-	/* Admins can move/copy */
+	// Admins can move/copy
 	if (CC->user.axlevel >= AxAideU) permit = 1;
 
-	/* Room aides can move/copy */
+	// Room aides can move/copy
 	if (CC->user.usernum == CC->room.QRroomaide) permit = 1;
 
-	/* Permit move/copy from personal rooms */
+	// Permit move/copy from personal rooms
 	if ((CC->room.QRflags & QR_MAILBOX)
 	    && (qtemp.QRflags & QR_MAILBOX)) permit = 1;
 
-	/* Permit only copy from public to personal room */
-	if ( (is_copy)
-	     && (!(CC->room.QRflags & QR_MAILBOX))
-	     && (qtemp.QRflags & QR_MAILBOX)) permit = 1;
+	// Permit only copy from public to personal room
+	if (	(is_copy)
+		&& (!(CC->room.QRflags & QR_MAILBOX))
+		&& (qtemp.QRflags & QR_MAILBOX)
+	) {
+		permit = 1;
+	}
 
-	/* Permit message removal from collaborative delete rooms */
+	// Permit message removal from collaborative delete rooms
 	if (CC->room.QRflags2 & QR2_COLLABDEL) permit = 1;
 
-	/* Users allowed to post into the target room may move into it too. */
+	// Users allowed to post into the target room may move into it too.
 	if ((CC->room.QRflags & QR_MAILBOX) && 
 	    (qtemp.QRflags & UA_POSTALLOWED))  permit = 1;
 
-	/* User must have access to target room */
+	// User must have access to target room
 	if (!(ra & UA_KNOWN))  permit = 0;
 
 	if (!permit) {
@@ -793,18 +790,14 @@ void cmd_move(char *args) {
 		return;
 	}
 
-	/*
-	 * Build our message set to be moved/copied
-	 */
+	// Build our message set to be moved/copied
 	msgs = malloc(num_msgs * sizeof(long));
 	for (i=0; i<num_msgs; ++i) {
 		extract_token(msgtok, msgset, i, ',', sizeof msgtok);
 		msgs[i] = atol(msgtok);
 	}
 
-	/*
-	 * Do the copy
-	 */
+	// Do the copy
 	err = CtdlSaveMsgPointersInRoom(targ, msgs, num_msgs, 1, NULL, 0);
 	if (err != 0) {
 		cprintf("%d Cannot store message(s) in %s: error %d\n",
@@ -813,9 +806,7 @@ void cmd_move(char *args) {
 		return;
 	}
 
-	/* Now delete the message from the source room,
-	 * if this is a 'move' rather than a 'copy' operation.
-	 */
+	// Now delete the message from the source room, if this is a 'move' rather than a 'copy' operation.
 	if (is_copy == 0) {
 		CtdlDeleteMessages(CC->room.QRname, msgs, num_msgs, "");
 	}

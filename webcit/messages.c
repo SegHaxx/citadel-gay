@@ -1799,14 +1799,13 @@ void postpart(StrBuf *partnum, StrBuf *filename, int force_download) {
 }
 
 
-/*
- * Generic function to output an arbitrary MIME part from an arbitrary
- * message number on the server.
- *
- * msgnum		message number on the citadel server
- * partnum		MIME part number to be output
- * force_download	Nonzero to force set the Content-Type: header to "application/octet-stream"
- */
+// Generic function to output an arbitrary MIME part from an arbitrary
+// message number on the server.
+//
+// msgnum		message number on the citadel server
+// partnum		MIME part number to be output
+// force_download	Nonzero to force set the Content-Type: header to "application/octet-stream"
+
 void view_or_download_mimepart(int force_download) {
 	long msgnum;
 	off_t bytes;
@@ -1839,6 +1838,9 @@ void view_or_download_mimepart(int force_download) {
 
 	StrBufCutLeft(Buf, 4);
 	bytes = StrBufExtract_long(Buf, 0, '|');
+
+	syslog(LOG_DEBUG, "\033[31mview or download %ld bytes\033[0m", bytes);
+
 
 	if (force_download) {
 		ContentType = NewStrBufPlain(HKEY("application/octet-stream"));
