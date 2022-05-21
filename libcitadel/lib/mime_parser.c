@@ -1,22 +1,20 @@
-/*
- * This is the MIME parser for Citadel.
- *
- * Copyright (c) 1998-2010 by the citadel.org development team.
- *
- * This program is open source software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 3 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
- */
+// This is the MIME parser for Citadel.
+//
+// Copyright (c) 1998-2022 by the citadel.org development team.
+//
+// This program is open source software; you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation; either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program; if not, write to the Free Software
+// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 
 #include <stdlib.h>
 #include <unistd.h>
@@ -64,29 +62,23 @@ const unsigned char FromHexTable [256] = {
 };
 
 
-long extract_key(char *target, char *source, long sourcelen, char *key, long keylen, char KeyEnd)
-{
+long extract_key(char *target, char *source, long sourcelen, char *key, long keylen, char KeyEnd) {
 	char *sptr, *ptr = NULL;
 	int double_quotes = 0;
 	long RealKeyLen = keylen;
 
 	sptr = source;
 
-	while (sptr != NULL)
-	{
-		ptr = bmstrcasestr_len(sptr, sourcelen - (sptr - source), 
-				       key, keylen);
-		if(ptr != NULL)
-		{
+	while (sptr != NULL) {
+		ptr = bmstrcasestr_len(sptr, sourcelen - (sptr - source), key, keylen);
+		if (ptr != NULL) {
 			while (isspace(*(ptr + RealKeyLen)))
 				RealKeyLen ++;
-			if (*(ptr + RealKeyLen) == KeyEnd)
-			{
+			if (*(ptr + RealKeyLen) == KeyEnd) {
 				sptr = NULL;
 				RealKeyLen ++;				
 			}
-			else
-			{
+			else {
 				sptr = ptr + RealKeyLen + 1;
 			}
 		}
@@ -133,8 +125,7 @@ char *fixed_partnum(char *supplied_partnum) {
 }
 
 
-static inline unsigned int _decode_hex(const char *Source)
-{
+static inline unsigned int _decode_hex(const char *Source) {
 	unsigned int ret = '?';
 	unsigned char LO_NIBBLE;
 	unsigned char HI_NIBBLE;
@@ -161,30 +152,24 @@ int CtdlDecodeQuotedPrintable(char *decoded, char *encoded, int sourcelen) {
 	int decoded_length = 0;
 	int pos = 0;
 
-	while (pos < sourcelen)
-	{
-		if (*(encoded + pos) == '=')
-		{
+	while (pos < sourcelen) {
+		if (*(encoded + pos) == '=') {
 			pos ++;
-			if (*(encoded + pos) == '\n')
-			{
+			if (*(encoded + pos) == '\n') {
 				pos ++;
 			}
-			else if (*(encoded + pos) == '\r')
-			{
+			else if (*(encoded + pos) == '\r') {
 				pos ++;
 				if (*(encoded + pos) == '\n')
 					pos++;
 			}
-			else
-			{
+			else {
 				ch = _decode_hex(&encoded[pos]);
 				pos += 2;
 				decoded[decoded_length++] = ch;
 			}
 		}
-		else
-		{
+		else {
 			decoded[decoded_length++] = encoded[pos];
 			pos += 1;
 		}
@@ -208,13 +193,12 @@ void mime_decode(char *partnum,
 		 MimeParserCallBackType PreMultiPartCallBack,
 		 MimeParserCallBackType PostMultiPartCallBack,
 		 void *userdata,
-		 int dont_decode)
-{
-
+		 int dont_decode
+) {
 	char *decoded;
 	size_t bytes_decoded = 0;
 
-	/* Some encodings aren't really encodings */
+	// Some encodings aren't really encodings
 	if (!strcasecmp(encoding, "7bit"))
 		*encoding = '\0';
 	if (!strcasecmp(encoding, "8bit"))
@@ -224,7 +208,7 @@ void mime_decode(char *partnum,
 	if (!strcasecmp(encoding, "ISO-8859-1"))
 		*encoding = '\0';
 
-	/* If this part is not encoded, send as-is */
+	// If this part is not encoded, send as-is
 	if ( (strlen(encoding) == 0) || (dont_decode)) {
 		if (CallBack != NULL) {
 			CallBack(name, 
@@ -242,18 +226,16 @@ void mime_decode(char *partnum,
 		return;
 	}
 	
-	/* Fail silently if we hit an unknown encoding. */
-	if ((strcasecmp(encoding, "base64"))
-	    && (strcasecmp(encoding, "quoted-printable"))) {
+	// Fail silently if we hit an unknown encoding.
+	if ((strcasecmp(encoding, "base64")) && (strcasecmp(encoding, "quoted-printable"))) {
 		return;
 	}
+	fprintf(stderr, "\033[33mSource encoded length: %d\033[0m\n", length);
 
-	/*
-	 * Allocate a buffer for the decoded data.  The output buffer is slightly
-	 * larger than the input buffer; this assumes that the decoded data
-	 * will never be significantly larger than the encoded data.  This is a
-	 * safe assumption with base64, uuencode, and quoted-printable.
-	 */
+	// Allocate a buffer for the decoded data.  The output buffer is slightly
+	// larger than the input buffer; this assumes that the decoded data
+	// will never be significantly larger than the encoded data.  This is a
+	// safe assumption with base64, uuencode, and quoted-printable.
 	decoded = malloc(length + 32768);
 	if (decoded == NULL) {
 		return;
@@ -265,6 +247,7 @@ void mime_decode(char *partnum,
 	else if (!strcasecmp(encoding, "quoted-printable")) {
 		bytes_decoded = CtdlDecodeQuotedPrintable(decoded, part_start, length);
 	}
+	fprintf(stderr, "\033[33mTarget decoded length: %d\033[0m\n", bytes_decoded);
 
 	if (bytes_decoded > 0) if (CallBack != NULL) {
 			char encoding_buf[SIZ];
@@ -640,20 +623,15 @@ static void recurseable_mime_parser(char *partnum,
 			optr = ptr;
 			if (parse_MimeHeaders(SubMimeHeaders, &ptr, content_end) != 0)
 				break;
-			if ((ptr - optr > 2) && 
-			    (*(ptr - 2) == '\r'))
+			if ((ptr - optr > 2) && (*(ptr - 2) == '\r')) {
 				crlf_in_use = 1;
+			}
 			
 			part_start = ptr;
 			
-			next_boundary = FindNextContent(ptr,
-							content_end,
-							SubMimeHeaders,
-							m);
-			if ((next_boundary != NULL) && 
-			    (next_boundary - part_start < 3)) {
+			next_boundary = FindNextContent(ptr, content_end, SubMimeHeaders, m);
+			if ((next_boundary != NULL) && (next_boundary - part_start < 3)) {
 				FlushInterestingMimes(SubMimeHeaders);
-
 				continue;
 			}
 
@@ -700,9 +678,7 @@ static void recurseable_mime_parser(char *partnum,
 					/* Determine whether newlines are LF or CRLF */
 					evaluate_crlf_ptr = part_start;
 					--evaluate_crlf_ptr;
-					if ((*evaluate_crlf_ptr == '\r') && 
-					    (*(evaluate_crlf_ptr + 1) == '\n'))
-					{
+					if ((*evaluate_crlf_ptr == '\r') && (*(evaluate_crlf_ptr + 1) == '\n')) {
 						crlf_in_use = 1;
 					}
 					else {
@@ -743,7 +719,6 @@ static void recurseable_mime_parser(char *partnum,
 		length = content_end - part_start;
 		ptr = part_end = content_end;
 
-
 		/* The following code will truncate the MIME part to the size
 		 * specified by the Content-length: header.   We have commented it
 		 * out because these headers have a tendency to be wrong.
@@ -764,8 +739,7 @@ static void recurseable_mime_parser(char *partnum,
 			chosen_name = &m->b[content_type_name];
 		}
 	
-		/* Ok, we've got a non-multipart part here, so do something with it.
-		 */
+		// Ok, we've got a non-multipart part here, so do something with it.
 		mime_decode(partnum,
 			    part_start, 
 			    length,
@@ -880,6 +854,7 @@ void the_mime_parser(char *partnum,
 	}
 	free(m);
 }
+
 
 /*
  * Entry point for the MIME parser.

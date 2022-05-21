@@ -1052,6 +1052,7 @@ void mime_spew_section(char *name, char *filename, char *partnum, char *disp,
 		(!IsEmptyStr(partnum) && (!strcasecmp(CC->download_desired_section, partnum)))
 	||	(!IsEmptyStr(cbid) && (!strcasecmp(CC->download_desired_section, cbid)))
 	) {
+		syslog(LOG_DEBUG, "\033[32mYES part %s len %d\033[0m" , partnum, (int)length);
 		*found_it = 1;
 		cprintf("%d %d|-1|%s|%s|%s\n",
 			BINARY_FOLLOWS,
@@ -1061,6 +1062,9 @@ void mime_spew_section(char *name, char *filename, char *partnum, char *disp,
 			cbcharset
 		);
 		client_write(content, length);
+	}
+	else {
+		syslog(LOG_DEBUG, "\033[31m NO part %s\033[0m", partnum);
 	}
 }
 
@@ -2033,44 +2037,41 @@ int CtdlOutputPreLoadedMsg(
 		return((CC->download_fp != NULL) ? om_ok : om_mime_error);
 	}
 
-	/* MT_SPEW_SECTION is like MT_DOWNLOAD except it outputs the whole MIME part
-	 * in a single server operation instead of opening a download file.
-	 */
+	// MT_SPEW_SECTION is like MT_DOWNLOAD except it outputs the whole MIME part
+	// in a single server operation instead of opening a download file.
 	if (mode == MT_SPEW_SECTION) {
 		if (TheMessage->cm_format_type != FMT_RFC822) {
 			if (do_proto)
 				cprintf("%d This is not a MIME message.\n",
 				ERROR + ILLEGAL_VALUE);
-		} else {
-			/* Parse the message text component */
+		}
+		else {
+			// Locate and parse the component specified by the caller
 			int found_it = 0;
+			mime_parser(CM_RANGE(TheMessage, eMesageText), *mime_spew_section, NULL, NULL, (void *)&found_it, 0);
 
-			mime_parser(CM_RANGE(TheMessage, eMesageText),
-				    *mime_spew_section, NULL, NULL, (void *)&found_it, 0);
-			/* If section wasn't found, print an error
-			 */
+			// If section wasn't found, print an error
 			if (!found_it) {
-				if (do_proto) cprintf(
-					"%d Section %s not found.\n",
-					ERROR + FILE_NOT_FOUND,
-					CC->download_desired_section);
+				if (do_proto) {
+					cprintf( "%d Section %s not found.\n", ERROR + FILE_NOT_FOUND, CC->download_desired_section);
+				}
 			}
 		}
 		return((CC->download_fp != NULL) ? om_ok : om_mime_error);
 	}
 
-	/* now for the user-mode message reading loops */
+	// now for the user-mode message reading loops
 	if (do_proto) cprintf("%d msg:\n", LISTING_FOLLOWS);
 
-	/* Does the caller want to skip the headers? */
+	// Does the caller want to skip the headers?
 	if (headers_only == HEADERS_NONE) goto START_TEXT;
 
-	/* Tell the client which format type we're using. */
+	// Tell the client which format type we're using.
 	if ( (mode == MT_CITADEL) && (do_proto) ) {
 		cprintf("type=%d\n", TheMessage->cm_format_type);	// Tell the client which format type we're using.
 	}
 
-	/* nhdr=yes means that we're only displaying headers, no body */
+	// nhdr=yes means that we're only displaying headers, no body
 	if ( (TheMessage->cm_anon_type == MES_ANONONLY)
 	   && ((mode == MT_CITADEL) || (mode == MT_MIME))
 	   && (do_proto)
@@ -2082,7 +2083,7 @@ int CtdlOutputPreLoadedMsg(
 		OutputCtdlMsgHeaders(TheMessage, do_proto);
 	}
 
-	/* begin header processing loop for RFC822 transfer format */
+	// begin header processing loop for RFC822 transfer format
 	strcpy(suser, "");
 	strcpy(luser, "");
 	strcpy(fuser, "");
@@ -2132,11 +2133,11 @@ int CtdlOutputPreLoadedMsg(
 		}
 	}
 
-	/* end header processing loop ... at this point, we're in the text */
+	// end header processing loop ... at this point, we're in the text
 START_TEXT:
 	if (headers_only == HEADERS_FAST) goto DONE;
 
-	/* Tell the client about the MIME parts in this message */
+	// Tell the client about the MIME parts in this message
 	if (TheMessage->cm_format_type == FMT_RFC822) {
 		if ( (mode == MT_CITADEL) || (mode == MT_MIME) ) {
 			memset(&ma, 0, sizeof(struct ma_info));
@@ -2146,7 +2147,7 @@ START_TEXT:
 				(do_proto ? *list_this_suff : NULL),
 				(void *)&ma, 1);
 		}
-		else if (mode == MT_RFC822) {	/* unparsed RFC822 dump */
+		else if (mode == MT_RFC822) {	// unparsed RFC822 dump
 			Dump_RFC822HeadersBody(
 				TheMessage,
 				headers_only,
@@ -2160,7 +2161,7 @@ START_TEXT:
 		goto DONE;
 	}
 
-	/* signify start of msg text */
+	// signify start of msg text
 	if ( (mode == MT_CITADEL) || (mode == MT_MIME) ) {
 		if (do_proto) cprintf("text\n");
 	}
@@ -2168,16 +2169,16 @@ START_TEXT:
 	if (TheMessage->cm_format_type == FMT_FIXED) 
 		DumpFormatFixed(
 			TheMessage,
-			mode,		/* how would you like that message? */
+			mode,		// how would you like that message?
 			nl, nlen);
 
-	/* If the message on disk is format 0 (Citadel vari-format), we
-	 * output using the formatter at 80 columns.  This is the final output
-	 * form if the transfer format is RFC822, but if the transfer format
-	 * is Citadel proprietary, it'll still work, because the indentation
-	 * for new paragraphs is correct and the client will reformat the
-	 * message to the reader's screen width.
-	 */
+	// If the message on disk is format 0 (Citadel vari-format), we
+	// output using the formatter at 80 columns.  This is the final output
+	// form if the transfer format is RFC822, but if the transfer format
+	// is Citadel proprietary, it'll still work, because the indentation
+	// for new paragraphs is correct and the client will reformat the
+	// message to the reader's screen width.
+	//
 	if (TheMessage->cm_format_type == FMT_CITADEL) {
 		if (mode == MT_MIME) {
 			cprintf("Content-type: text/x-citadel-variformat\n\n");
@@ -2185,11 +2186,11 @@ START_TEXT:
 		memfmout(TheMessage->cm_fields[eMesageText], nl);
 	}
 
-	/* If the message on disk is format 4 (MIME), we've gotta hand it
-	 * off to the MIME parser.  The client has already been told that
-	 * this message is format 1 (fixed format), so the callback function
-	 * we use will display those parts as-is.
-	 */
+	// If the message on disk is format 4 (MIME), we've gotta hand it
+	// off to the MIME parser.  The client has already been told that
+	// this message is format 1 (fixed format), so the callback function
+	// we use will display those parts as-is.
+	//
 	if (TheMessage->cm_format_type == FMT_RFC822) {
 		memset(&ma, 0, sizeof(struct ma_info));
 
@@ -2218,17 +2219,16 @@ DONE:	/* now we're done */
 	return(om_ok);
 }
 
-/*
- * Save one or more message pointers into a specified room
- * (Returns 0 for success, nonzero for failure)
- * roomname may be NULL to use the current room
- *
- * Note that the 'supplied_msg' field may be set to NULL, in which case
- * the message will be fetched from disk, by number, if we need to perform
- * replication checks.  This adds an additional database read, so if the
- * caller already has the message in memory then it should be supplied.  (Obviously
- * this mode of operation only works if we're saving a single message.)
- */
+// Save one or more message pointers into a specified room
+// (Returns 0 for success, nonzero for failure)
+// roomname may be NULL to use the current room
+//
+// Note that the 'supplied_msg' field may be set to NULL, in which case
+// the message will be fetched from disk, by number, if we need to perform
+// replication checks.  This adds an additional database read, so if the
+// caller already has the message in memory then it should be supplied.  (Obviously
+// this mode of operation only works if we're saving a single message.)
+//
 int CtdlSaveMsgPointersInRoom(char *roomname, long newmsgidlist[], int num_newmsgs,
 			int do_repl_check, struct CtdlMessage *supplied_msg, int suppress_refcount_adj
 ) {
