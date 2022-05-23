@@ -311,8 +311,8 @@ void StrBuf_RFC822_2_Utf8(StrBuf *Target,
 void StrBuf_RFC822_to_Utf8(StrBuf *Target, const StrBuf *DecodeMe, const StrBuf* DefaultCharset, StrBuf *FoundCharset);
 
 typedef enum __eStreamType {
-	eBase64Encode,
-	eBase64Decode,
+	//eBase64Encode,
+	//eBase64Decode,
 	eZLibEncode,
 	eZLibDecode,
 	eEmtyCodec
@@ -405,7 +405,7 @@ long extract_long (const char *source, int parmnum);
 unsigned long extract_unsigned_long(const char *source, int parmnum);
 void CtdlInitBase64Table(void);
 size_t CtdlEncodeBase64(char *dest, const char *source, size_t sourcelen, int linebreaks);
-int CtdlDecodeBase64(char *dest, const char *source, size_t length);
+size_t CtdlDecodeBase64(char *dest, const char *source, size_t length);
 unsigned int decode_hex(char *Source);
 int CtdlDecodeQuotedPrintable(char *decoded, char *encoded, int sourcelen);
 void StripSlashes(char *Dir, int TrailingSlash);

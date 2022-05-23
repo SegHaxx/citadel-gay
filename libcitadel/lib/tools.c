@@ -1,23 +1,21 @@
-/*
- * A basic toolset containing miscellaneous functions for string manipluation,
- * encoding/decoding, and a bunch of other stuff.
- *
- * Copyright (c) 1987-2017 by the citadel.org team
- *
- * This program is open source software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 3 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
- */
+// A basic toolset containing miscellaneous functions for string manipluation,
+// encoding/decoding, and a bunch of other stuff.
+//
+// Copyright (c) 1987-2022 by the citadel.org team
+//
+// This program is open source software; you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation; either version 3 of the License, or
+// (at your option) any later version.
+// 
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program; if not, write to the Free Software
+// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 
 
 #include <stdlib.h>
@@ -30,8 +28,6 @@
 #include <sys/stat.h>
 #include <errno.h>
 #include <limits.h>
-#include "b64/cencode.h"
-#include "b64/cdecode.h"
 
 #if TIME_WITH_SYS_TIME
 # include <sys/time.h>
@@ -52,17 +48,14 @@
 
 typedef unsigned char byte;	      /* Byte type */
 
-/*
- * copy a string into a buffer of a known size. abort if we exceed the limits
- *
- * dest	the targetbuffer
- * src	the source string
- * n	the size od dest
- *
- * returns the number of characters copied if dest is big enough, -n if not.
- */
-int safestrncpy(char *dest, const char *src, size_t n)
-{
+// copy a string into a buffer of a known size. abort if we exceed the limits
+//
+// dest	the targetbuffer
+// src	the source string
+// n	the size od dest
+//
+// returns the number of characters copied if dest is big enough, -n if not.
+int safestrncpy(char *dest, const char *src, size_t n) {
 	int i = 0;
 
 	if (dest == NULL || src == NULL)
@@ -81,23 +74,17 @@ int safestrncpy(char *dest, const char *src, size_t n)
 }
 
 
-/*
- * num_tokens()  -  discover number of parameters/tokens in a string
- */
-int num_tokens(const char *source, char tok)
-{
+// num_tokens()  -  discover number of parameters/tokens in a string
+int num_tokens(const char *source, char tok) {
 	int count = 1;
 	const char *ptr = source;
 
-	if (source == NULL)
-	{
+	if (source == NULL) {
 		return (0);
 	}
 
-	while (*ptr != '\0')
-	{
-		if (*ptr++ == tok)
-		{
+	while (*ptr != '\0') {
+		if (*ptr++ == tok) {
 			++count;
 		}
 	}
@@ -106,92 +93,76 @@ int num_tokens(const char *source, char tok)
 }
 
 
-/*
- * extract_token() - a string tokenizer
- * returns -1 if not found, or length of token.
- */
-long extract_token(char *dest, const char *source, int parmnum, char separator, int maxlen)
-{
-	const char *s;			//* source * /
-	int len = 0;			//* running total length of extracted string * /
-	int current_token = 0;		//* token currently being processed * /
+// extract_token() - a string tokenizer
+// returns -1 if not found, or length of token.
+long extract_token(char *dest, const char *source, int parmnum, char separator, int maxlen) {
+	const char *s;			// source
+	int len = 0;			// running total length of extracted string
+	int current_token = 0;		// token currently being processed
 
 	s = source;
 
-	if (dest == NULL)
-	{
+	if (dest == NULL) {
 		return(-1);
 	}
 
 	dest[0] = 0;
 
-	if (s == NULL)
-	{
+	if (s == NULL) {
 		return(-1);
 	}
 	
 	maxlen--;
 
-	while (*s)
-	{
-		if (*s == separator)
-		{
+	while (*s) {
+		if (*s == separator) {
 			++current_token;
 		}
-		if ( (current_token == parmnum) && (*s != separator) && (len < maxlen) )
-		{
+		if ( (current_token == parmnum) && (*s != separator) && (len < maxlen) ) {
 			dest[len] = *s;
 			++len;
 		}
-		else if ((current_token > parmnum) || (len >= maxlen))
-		{
+		else if ((current_token > parmnum) || (len >= maxlen)) {
 			break;
 		}
 		++s;
 	}
 
 	dest[len] = '\0';
-	if (current_token < parmnum)
-	{
+	if (current_token < parmnum) {
 		return(-1);
 	}
 	return(len);
 }
 
 
-/*
- * remove_token() - a tokenizer that kills, maims, and destroys
- */
-void remove_token(char *source, int parmnum, char separator)
-{
-	char *d, *s;		/* dest, source */
+// remove_token() - a tokenizer that kills, maims, and destroys
+void remove_token(char *source, int parmnum, char separator) {
+	char *d, *s;		// dest, source
 	int count = 0;
 
 	/* Find desired parameter */
 	d = source;
-	while (count < parmnum)
-	{
-		/* End of string, bail! */
+	while (count < parmnum) {
+		// End of string, bail!
 		if (!*d) {
 			d = NULL;
 			break;
 		}
-		if (*d == separator)
-		{
+		if (*d == separator) {
 			count++;
 		}
 		d++;
 	}
-	if (!d) return;		/* Parameter not found */
+	if (!d) return;		// Parameter not found
 
-	/* Find next parameter */
+	// Find next parameter
 	s = d;
-	while (*s && *s != separator)
-	{
+	while (*s && *s != separator) {
 		s++;
 	}
 
-	/* Hack and slash */
+	// Hack and slash
 	if (*s)
 		strcpy(d, ++s);
 	else if (d == source)
@@ -201,11 +172,8 @@ void remove_token(char *source, int parmnum, char separator)
 }
 
 
-/*
- * extract_int()  -  extract an int parm w/o supplying a buffer
- */
-int extract_int(const char *source, int parmnum)
-{
+// extract_int()  -  extract an int parm without supplying a buffer
+int extract_int(const char *source, int parmnum) {
 	char buf[32];
 	
 	if (extract_token(buf, source, parmnum, '|', sizeof buf) > 0)
@@ -215,11 +183,8 @@ int extract_int(const char *source, int parmnum)
 }
 
 
-/*
- * extract_long()  -  extract an long parm w/o supplying a buffer
- */
-long extract_long(const char *source, int parmnum)
-{
+// extract_long()  -  extract an long parm without supplying a buffer
+long extract_long(const char *source, int parmnum) {
 	char buf[32];
 	
 	if (extract_token(buf, source, parmnum, '|', sizeof buf) > 0)
@@ -229,11 +194,8 @@ long extract_long(const char *source, int parmnum)
 }
 
 
-/*
- * extract_unsigned_long() - extract an unsigned long parm
- */
-unsigned long extract_unsigned_long(const char *source, int parmnum)
-{
+// extract_unsigned_long() - extract an unsigned long parm
+unsigned long extract_unsigned_long(const char *source, int parmnum) {
 	char buf[32];
 
 	if (extract_token(buf, source, parmnum, '|', sizeof buf) > 0)
@@ -243,70 +205,8 @@ unsigned long extract_unsigned_long(const char *source, int parmnum)
 }
 
 
-size_t CtdlEncodeBase64(char *dest, const char *source, size_t sourcelen, int linebreaks)
-{
-	int breaklength = 68;	// must be a multiple of 4
-	int readlength = 3 * breaklength / 4;
-
-	int destoffset;
-	int sourceoffset;
-	int sourceremaining;
-
-	base64_encodestate _state;
-
-	base64_init_encodestate(&_state);
-
-	if (linebreaks) {
-		sourceremaining = sourcelen;
-		destoffset = 0;
-		sourceoffset = 0;
-
-		while (sourceremaining > 0) {
-			destoffset += base64_encode_block(
-				&(source[sourceoffset]),
-				(readlength > sourceremaining ? sourceremaining : readlength),
-				&(dest[destoffset]),
-				&_state);
-			sourceoffset += readlength;
-			sourceremaining -= readlength;
-			dest[destoffset++] = '\r';
-			dest[destoffset++] = '\n';
-		}
-
-		destoffset += base64_encode_blockend(&(dest[destoffset]), &_state, 0);
-	}
-	else {
-		destoffset = base64_encode_block(source, sourcelen, dest, &_state);
-
-		destoffset += base64_encode_blockend(&(dest[destoffset]), &_state, 0);
-	}
-	dest[destoffset] = 0;
-	return destoffset;
-}
-
-
-/* 
- * Convert base64-encoded to binary.  Returns the length of the decoded data.
- * It will stop after reading 'length' bytes.
- */
-int CtdlDecodeBase64(char *dest, const char *source, size_t length)
-{
-	base64_decodestate _state;
-	int len;
-
-	base64_init_decodestate(&_state);
-
-	len = base64_decode_block(source, length, dest, &_state);
-	dest[len] = '\0';
-	return len;
-}
-
-
-/*
- * if we send out non ascii subjects, we encode it this way.
- */
-char *rfc2047encode(const char *line, long length)
-{
+// if we send out non ascii subjects, we encode it this way.
+char *rfc2047encode(const char *line, long length) {
 	const char *AlreadyEncoded;
 	char *result;
 	long end;
@@ -314,10 +214,7 @@ char *rfc2047encode(const char *line, long length)
 
 	/* check if we're already done */
 	AlreadyEncoded = strstr(line, "=?");
-	if ((AlreadyEncoded != NULL) &&
-	    ((strstr(AlreadyEncoded, "?B?") != NULL)||
-	     (strstr(AlreadyEncoded, "?Q?") != NULL)))
-	{
+	if ((AlreadyEncoded != NULL) && ((strstr(AlreadyEncoded, "?B?") != NULL)|| (strstr(AlreadyEncoded, "?Q?") != NULL))) {
 		return strdup(line);
 	}
 
@@ -331,12 +228,9 @@ char *rfc2047encode(const char *line, long length)
 	return result;
 }
 
-/*
- * removes double slashes from pathnames
- * allows / disallows trailing slashes
- */
-void StripSlashes(char *Dir, int TrailingSlash)
-{
+// removes double slashes from pathnames
+// allows / disallows trailing slashes
+void StripSlashes(char *Dir, int TrailingSlash) {
 	char *a, *b;
 
 	a = b = Dir;
@@ -362,9 +256,7 @@ void StripSlashes(char *Dir, int TrailingSlash)
 }
 
 
-/*
- * Strip leading and trailing spaces from a string
- */
+// Strip leading and trailing spaces from a string
 size_t striplt(char *buf) {
 	char *first_nonspace = NULL;
 	char *last_nonspace = NULL;

@@ -181,7 +181,6 @@ int read_message(StrBuf *Target, const char *tmpl, long tmpllen, long msgnum, co
 	Msg = (message_summary *)malloc(sizeof(message_summary));
 	if (!Msg) {
 		syslog(LOG_DEBUG, "malloc() error");
-		TRACE;
 	}
 	memset(Msg, 0, sizeof(message_summary));
 	Msg->msgnum = msgnum;
@@ -189,7 +188,6 @@ int read_message(StrBuf *Target, const char *tmpl, long tmpllen, long msgnum, co
 	Msg->MsgBody =  (wc_mime_attachment*) malloc(sizeof(wc_mime_attachment));
 	if (!Msg->MsgBody) {
 		syslog(LOG_DEBUG, "malloc() error");
-		TRACE;
 	}
 	memset(Msg->MsgBody, 0, sizeof(wc_mime_attachment));
 	Msg->MsgBody->msgnum = msgnum;
@@ -544,7 +542,6 @@ int load_msg_ptrs(const char *servcmd,
 			Msg = (message_summary*)malloc(sizeof(message_summary));
 			if (!Msg) {
 				syslog(LOG_DEBUG, "malloc() error");
-				TRACE;
 			}
 			memset(Msg, 0, sizeof(message_summary));
 
@@ -961,14 +958,10 @@ void post_mime_to_server(void) {
 			serv_puts("");
 			free(encoded);
 		}
-		syslog(LOG_DEBUG, "\033[33m sending final boundary --%s-- \033[0m", top_boundary);
-		TRACE;
 		serv_printf("--%s--", top_boundary);
 		DeleteHashPos(&it);
 	}
 
-	syslog(LOG_DEBUG, "\033[33m sending terminating 000 \033[0m");
-	TRACE;
 	serv_puts("000");
 }
 
@@ -1233,7 +1226,6 @@ void upload_attachment(void) {
 	att = (wc_mime_attachment*)malloc(sizeof(wc_mime_attachment));
 	if (!att) {
 		syslog(LOG_DEBUG, "malloc() error");
-		TRACE;
 	}
 	memset(att, 0, sizeof(wc_mime_attachment ));
 	att->length = WC->upload_length;
@@ -1838,9 +1830,6 @@ void view_or_download_mimepart(int force_download) {
 
 	StrBufCutLeft(Buf, 4);
 	bytes = StrBufExtract_long(Buf, 0, '|');
-
-	syslog(LOG_DEBUG, "\033[31mview or download %ld bytes\033[0m", bytes);
-
 
 	if (force_download) {
 		ContentType = NewStrBufPlain(HKEY("application/octet-stream"));
