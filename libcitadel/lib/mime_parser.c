@@ -230,7 +230,6 @@ void mime_decode(char *partnum,
 	if ((strcasecmp(encoding, "base64")) && (strcasecmp(encoding, "quoted-printable"))) {
 		return;
 	}
-	fprintf(stderr, "\033[33mSource encoded length: %d\033[0m\n", length);
 
 	// Allocate a buffer for the decoded data.  The output buffer is slightly
 	// larger than the input buffer; this assumes that the decoded data
@@ -247,7 +246,6 @@ void mime_decode(char *partnum,
 	else if (!strcasecmp(encoding, "quoted-printable")) {
 		bytes_decoded = CtdlDecodeQuotedPrintable(decoded, part_start, length);
 	}
-	fprintf(stderr, "\033[33mTarget decoded length: %d\033[0m\n", bytes_decoded);
 
 	if (bytes_decoded > 0) if (CallBack != NULL) {
 			char encoding_buf[SIZ];

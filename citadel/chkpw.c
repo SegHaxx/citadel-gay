@@ -1,5 +1,5 @@
 // 
-// Copyright (c) 1987-2021 by the citadel.org team
+// Copyright (c) 1987-2022 by the citadel.org team
 //
 // This program is open source software.  Use, duplication, or disclosure
 // is subject to the terms of the GNU General Public License, version 3.
@@ -108,7 +108,6 @@ int main(int argc, char **argv) {
 	char buf[256];
 	struct passwd *p;
 	int uid;
-	char ctdldir[PATH_MAX]=CTDLDIR;
 	
 	printf("\n\n ** host auth mode test utility **\n\n");
 	start_chkpwd_daemon();

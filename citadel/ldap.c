@@ -517,6 +517,14 @@ int extract_email_addresses_from_ldap(char *ldap_dn, char *emailaddrs) {
 }
 
 
+// Remember that a particular user exists in the Citadel database.
+// As we scan the LDAP tree we will remove users from this list when we find them.
+// At the end of the scan, any users remaining in this list are stale and should be deleted.
+void ldap_note_user_in_citadel(char *username, void *data) {
+	return;
+}
+
+
 // Scan LDAP for users and populate Citadel's user database with everyone
 //
 // POSIX schema:	All objects of class "inetOrgPerson"
@@ -535,6 +543,9 @@ void CtdlSynchronizeUsersFromLDAP(void) {
 	}
 
 	syslog(LOG_INFO, "ldap: synchronizing Citadel user database from LDAP");
+
+	// first, scan the existing Citadel user list
+	// ForEachUser(ldap_note_user_in_citadel, NULL);	// FIXME finish this
 
 	ldserver = ctdl_ldap_bind();
 	if (!ldserver) return;

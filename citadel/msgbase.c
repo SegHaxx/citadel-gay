@@ -1052,7 +1052,6 @@ void mime_spew_section(char *name, char *filename, char *partnum, char *disp,
 		(!IsEmptyStr(partnum) && (!strcasecmp(CC->download_desired_section, partnum)))
 	||	(!IsEmptyStr(cbid) && (!strcasecmp(CC->download_desired_section, cbid)))
 	) {
-		syslog(LOG_DEBUG, "\033[32mYES part %s len %d\033[0m" , partnum, (int)length);
 		*found_it = 1;
 		cprintf("%d %d|-1|%s|%s|%s\n",
 			BINARY_FOLLOWS,
@@ -1063,14 +1062,10 @@ void mime_spew_section(char *name, char *filename, char *partnum, char *disp,
 		);
 		client_write(content, length);
 	}
-	else {
-		syslog(LOG_DEBUG, "\033[31m NO part %s\033[0m", partnum);
-	}
 }
 
 
-struct CtdlMessage *CtdlDeserializeMessage(long msgnum, int with_body, const char *Buffer, long Length)
-{
+struct CtdlMessage *CtdlDeserializeMessage(long msgnum, int with_body, const char *Buffer, long Length) {
 	struct CtdlMessage *ret = NULL;
 	const char *mptr;
 	const char *upper_bound;
@@ -3026,7 +3021,7 @@ StrBuf *CtdlReadMessageBodyBuf(char *terminator,	// token signalling EOT
 	FreeStrBuf(&LineBuf);
 
 	if (flushing) {
-		syslog(LOG_ERR, "msgbase: exceeded maximum message length of %d - message was truncated", maxlen);
+		syslog(LOG_ERR, "msgbase: exceeded maximum message length of %ld - message was truncated", maxlen);
 	}
 
 	return Message;
