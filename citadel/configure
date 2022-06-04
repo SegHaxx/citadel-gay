@@ -1,0 +1,103 @@
+#!/bin/sh
+
+# CONFIGURE SCRIPT FOR CITADEL SERVER
+# This file is part of "conf-IG-ure"
+# Copyright (C) 2016-2022 by Art Cancro
+#
+# This program is open source software.  Use, duplication, and/or
+# disclosure are subject to the GNU General Purpose License version 3.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+
+echo 
+echo 
+echo Running the configure script to create config.mk
+echo
+
+# Parse the command line arguments
+for x in $*
+do
+	a=$1
+	k=`echo $a | awk -F= ' { print $1 } '`
+	v=`echo $a | awk -F= ' { print $2 } '`
+
+	case $k in
+		--prefix)
+			PREFIX=$v
+		;;
+		--bindir)
+			BINDIR=$v
+		;;
+		--ctdldir)
+			CTDLDIR=$v
+		;;
+		--with-ssl)
+			SSL=yes
+		;;
+		--without-ssl)
+			SSL=no
+		;;
+		*)
+			echo $0 : unknown option $k
+			echo
+			echo Valid options are:
+			echo '	--prefix=PREFIX		Install files in PREFIX [/usr/local]'
+			echo '	--bindir=DIR		Install executables in DIR [PREFIX/bin]'
+			echo '	--ctdldir=DIR		Look for Citadel server in DIR [/usr/local/citadel]'
+			echo '  --with-ssl              Force build with OpenSSL support [normally autodetected]'
+			echo '  --without-ssl           Force build without OpenSSL support [normally autodetected]'
+			exit 1
+		;;
+	esac
+	shift
+done
+
+# Set any missing values (FIXME remove the ultra-fatal -W options when finished converting from autotools)
+
+[ "$PREFIX" = "" ] 	&& PREFIX=/usr/local/citadel
+[ "$BINDIR" = "" ]	&& BINDIR=${PREFIX}
+[ "$CTDLDIR" = "" ]	&& CTDLDIR=${PREFIX}
+[ "$CFLAGS" = "" ]	&& CFLAGS='-ggdb -Werror -Wfatal-errors -Wno-discarded-qualifiers'
+[ "$LDFLAGS" = "" ]	&& LDFLAGS=''
+
+# Test for OpenSSL
+[ "$SSL" != "yes" ] && [ "$SSL" != "no" ] && {
+	echo Testing for OpenSSL...
+	tempfile=`tempfile 2>/dev/null` || tempfile=/tmp/configure.$$
+	tempcc=${tempfile}.c
+	cat >$tempcc <<!
+#include <openssl/ssl.h>
+int main(int argc, char **argv) {
+	SSL_load_error_strings();
+	exit(0);
+}
+!
+	SSL='no';
+	cc $tempcc -lssl -lcrypto -o $tempfile && $tempfile && SSL='yes'
+	rm -f $tempfile 2>/dev/null
+	rm -f $tempcc 2>/dev/null
+}
+echo SSL: $SSL
+[ "$SSL" = "yes" ] && {
+	CFLAGS=${CFLAGS}' -DHAVE_OPENSSL'
+	LDFLAGS=${LDFLAGS}' -lssl -lcrypto -lz'
+}
+
+# FIXME do a real build id here
+CFLAGS=${CFLAGS}' -DBUILD_ID=\"unknown\"'
+
+# Output the config.mk
+
+(
+	echo "CFLAGS := ${CFLAGS}"
+	echo "LDFLAGS := ${LDFLAGS}"
+	echo "PREFIX := ${PREFIX}"
+	echo "BINDIR := ${BINDIR}"
+	echo "CTDLDIR := ${CTDLDIR}"
+) >config.mk
+
+cat config.mk
+echo
