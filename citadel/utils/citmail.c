@@ -1,4 +1,4 @@
-// This program attempts to act like a local MDA if you're using sendmail or
+// This program attempts to act like a local MDA if you're using postfix or
 // some other non-Citadel MTA.  It basically just contacts the Citadel LMTP
 // listener on a unix domain socket and transmits the message.  Really though,
 // if your MTA supports LMTP then you definitely should be using that instead.
@@ -9,7 +9,6 @@
 // is subject to the terms of the GNU General Public License, version 3.
 // The program is distributed without any warranty, expressed or implied.
 
-#include "sysdep.h"
 #include <stdlib.h>
 #include <unistd.h>
 #include <ctype.h>
@@ -25,8 +24,9 @@
 #include <stdarg.h>
 #include <limits.h>
 #include <libcitadel.h>
-#include "citadel.h"
-#include "citadel_dirs.h"
+#include "../server/sysdep.h"
+#include "../server/citadel.h"
+#include "../server/citadel_dirs.h"
 
 int serv_sock;
 int debug = 0;
