@@ -1,16 +1,14 @@
-/*
- * Citadel setup utility
- *
- * Copyright (c) 1987-2021 by the citadel.org team
- *
- * This program is open source software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License version 3.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- */
+// Citadel setup utility
+//
+// Copyright (c) 1987-2022 by the citadel.org team
+//
+// This program is open source software; you can redistribute it and/or
+// modify it under the terms of the GNU General Public License version 3.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
 
 #define SHOW_ME_VAPPEND_PRINTF
 #include <stdlib.h>
@@ -32,10 +30,10 @@
 #include <sys/un.h>
 #include <assert.h>
 #include <libcitadel.h>
-#include "citadel.h"
+#include "../server/citadel.h"
 #include "axdefs.h"
-#include "sysdep.h"
-#include "citadel_dirs.h"
+#include "../server/sysdep.h"
+#include "../server/citadel_dirs.h"
 
 #ifdef ENABLE_NLS
 #ifdef HAVE_XLOCALE_H
@@ -97,8 +95,7 @@ const char *setup_text[eMaxQuestions];
 
 char *program_title;
 
-void SetTitles(void)
-{
+void SetTitles(void) {
 	int have_run_dir;
 #ifndef HAVE_RUN_DIR
 	have_run_dir = 1;
@@ -230,7 +227,7 @@ void SetTitles(void)
 
 
 void title(const char *text) {
-	printf("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n<%s>\n", text);
+	printf("\n\033[1m\033[32m<\033[33m%s\033[32m>\033[0m\n", text);
 }
 
 
@@ -260,8 +257,7 @@ int yesno(const char *question, int default_value) {
 void important_message(const char *title, const char *msgtext) {
 	char buf[SIZ];
 
-	printf("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n");
-	printf("       %s \n\n%s\n\n", title, msgtext);
+	printf("\n%s\n%s\n\n", title, msgtext);
 	printf("%s", _("Press return to continue..."));
 	if (fgets(buf, sizeof buf, stdin)) {
 		;
@@ -289,24 +285,25 @@ void display_error(char *error_message_format, ...) {
 
 
 void progress(char *text, long int curr, long int cmax) {
-	static long dots_printed = 0L;
 	long a = 0;
+	long i = 0;
 
 	if (curr == 0) {
 		printf("%s\n", text);
-		printf("....................................................");
-		printf("..........................\r");
-		dots_printed = 0;
-	} else if (curr == cmax) {
+		printf("\033[1m\033[33m[\033[32m............................................................................\033[33m]\033[0m\r");
+	}
+	else if (curr == cmax) {
 		printf("\r%79s\n", "");
-	} else {
+	}
+	else {
+		printf("\033[1m\033[33m[\033[32m");
 		a = (curr * 100) / cmax;
-		a = a * 78;
+		a = a * 76;
 		a = a / 100;
-		while (dots_printed < a) {
+		for (i=0; i<a; ++i) {
 			printf("*");
-			++dots_printed;
 		}
+		printf("\033[0m\r");
 	}
 	fflush(stdout);
 }
@@ -334,9 +331,7 @@ int uds_connectsock(char *sockpath) {
 }
 
 
-/*
- * input binary data from socket
- */
+// input binary data from socket
 void serv_read(char *buf, int bytes) {
 	int len, rlen;
 
@@ -351,9 +346,7 @@ void serv_read(char *buf, int bytes) {
 }
 
 
-/*
- * send binary to server
- */
+// send binary to server
 void serv_write(char *buf, int nbytes) {
 	int bytes_written = 0;
 	int retval;
@@ -367,46 +360,37 @@ void serv_write(char *buf, int nbytes) {
 }
 
 
-/*
- * input string from socket - implemented in terms of serv_read()
- */
+// input string from socket - implemented in terms of serv_read()
 void serv_gets(char *buf) {
 	int i;
 
-	/* Read one character at a time.
-	 */
+	// Read one character at a time.
 	for (i = 0;; i++) {
 		serv_read(&buf[i], 1);
 		if (buf[i] == '\n' || i == (SIZ-1))
 			break;
 	}
 
-	/* If we got a long line, discard characters until the newline.
-	 */
+	// If we got a long line, discard characters until the newline.
 	if (i == (SIZ-1)) {
 		while (buf[i] != '\n') {
 			serv_read(&buf[i], 1);
 		}
 	}
 
-	/* Strip all trailing nonprintables (crlf)
-	 */
+	// Strip all trailing nonprintables (crlf)
 	buf[i] = 0;
 }
 
 
-/*
- * send line to server - implemented in terms of serv_write()
- */
+// send line to server - implemented in terms of serv_write()
 void serv_puts(char *buf) {
 	serv_write(buf, strlen(buf));
 	serv_write("\n", 1);
 }
 
 
-/*
- * Convenience functions to get/set system configuration entries
- */
+// Convenience functions to get/set system configuration entries
 void getconf_str(char *buf, char *key) {
 	char cmd[SIZ];
 	char ret[SIZ];
@@ -448,12 +432,9 @@ void setconf_int(char *key, int val) {
 }
 
 
-/*
- * On systems which use xinetd, see if we can offer to install Citadel as
- * the default telnet target.
- */
-void check_xinetd_entry(void)
-{
+// On systems which use xinetd, see if we can offer to install Citadel as
+// the default telnet target.
+void check_xinetd_entry(void) {
 	char *filename = "/etc/xinetd.d/telnet";
 	FILE *fp;
 	char buf[SIZ];
@@ -461,7 +442,7 @@ void check_xinetd_entry(void)
 	int rv;
 
 	fp = fopen(filename, "r+");
-	if (fp == NULL) return;		/* Not there.  Oh well... */
+	if (fp == NULL) return;		// Not there.  Oh well...
 
 	while (fgets(buf, sizeof buf, fp) != NULL) {
 		if (strstr(buf, "/citadel") != NULL) {
@@ -469,9 +450,9 @@ void check_xinetd_entry(void)
 		}
 	}
 	fclose(fp);
-	if (already_citadel) return;	/* Already set up this way. */
+	if (already_citadel) return;	// Already set up this way.
 
-	/* Otherwise, prompt the user to create an entry. */
+	// Otherwise, prompt the user to create an entry.
 	if (getenv("CREATE_XINETD_ENTRY") != NULL) {
 		if (strcasecmp(getenv("CREATE_XINETD_ENTRY"), "yes")) {
 			return;
@@ -507,7 +488,7 @@ void check_xinetd_entry(void)
 	);
 	fclose(fp);
 
-	/* Now try to restart the service.  This will not have the intended effect on Solaris, but who uses Solaris anymore? */
+	// Now try to restart the service.  This will not have the intended effect on Solaris, but who uses Solaris anymore?
 	rv = system("systemctl restart xinetd >/dev/null 2>&1");
 	if (rv != 0) {
 		rv = system("service xinetd restart >/dev/null 2>&1");
@@ -518,8 +499,7 @@ void check_xinetd_entry(void)
 }
 
 
-void strprompt(const char *prompt_title, const char *prompt_text, char *Target, char *DefValue)
-{
+void strprompt(const char *prompt_title, const char *prompt_text, char *Target, char *DefValue) {
 	char buf[SIZ] = "";
 	char setupmsg[SIZ];
 
@@ -554,9 +534,8 @@ void set_str_val(int msgpos, char *Target, char *DefValue)
 }
 
 
-/* like set_str_val() but for numeric values */
-void set_int_val(int msgpos, int *target, char *default_value)
-{
+// like set_str_val() but for numeric values
+void set_int_val(int msgpos, int *target, char *default_value) {
 	char buf[32];
 	sprintf(buf, "%d", *target);
 	do {
@@ -566,8 +545,7 @@ void set_int_val(int msgpos, int *target, char *default_value)
 }
 
 
-void edit_value(int curr)
-{
+void edit_value(int curr) {
 	struct passwd *pw = NULL;
 	char ctdluidname[256];
 	char buf[SIZ];
@@ -670,10 +648,8 @@ void edit_value(int curr)
 }
 
 
-/*
- * Messages that are no longer in use.
- * We keep them here so we don't lose the translations if we need them later.
- */
+// Messages that are no longer in use.
+// We keep them here so we don't lose the translations if we need them later.
 #if 0
 important_message(_("Setup finished"),
 _("Setup of the Citadel server is complete.\n"
@@ -688,8 +664,7 @@ _("Setup is finished.  You may now start the server."));
 #endif
 
 
-int main(int argc, char *argv[])
-{
+int main(int argc, char *argv[]) {
 	int a, i;
 	int curr;
 	char buf[1024]; 
@@ -699,13 +674,13 @@ int main(int argc, char *argv[])
 	gid_t gid;
 	char *activity = NULL;
 	
-	/* Keep a mild groove on */
+	// Keep a mild groove on
 	program_title = _("Citadel setup program");
 
-	/* set an invalid setup type */
+	// set an invalid setup type
 	setup_type = (-1);
 
-	/* parse command line args */
+	// parse command line args
 	for (a = 0; a < argc; ++a) {
 		if (!strncmp(argv[a], "-u", 2)) {
 			strcpy(aaa, argv[a]);
@@ -724,11 +699,9 @@ int main(int argc, char *argv[])
 
 	SetTitles();
 
-	/*
-	 * Connect to the running Citadel server.
-	 */
+	// Connect to the running Citadel server.
 	char *connectingmsg = _("Connecting to Citadel server");
-	for (i=0; ((i<30) && (serv_sock < 0)) ; ++i) {		/* wait for server to start up */
+	for (i=0; ((i<30) && (serv_sock < 0)) ; ++i) {		// wait for server to start up
 		progress(connectingmsg, i, 30);
         	serv_sock = uds_connectsock(file_citadel_admin_socket);
 		sleep(1);
@@ -744,18 +717,14 @@ int main(int argc, char *argv[])
 		exit(1);
 	}
 
-	/*
-	 * read the server greeting
-	 */
+	// read the server greeting
 	serv_gets(buf);
 	if (buf[0] != '2') {
 		display_error("%s\n", buf);
 		exit(2);
 	}
 
-	/*
-	 * Are we connected to the correct Citadel server?
-	 */
+	// Are we connected to the correct Citadel server?
 	serv_puts("INFO");
 	serv_gets(buf);
 	if (buf[0] != '1') {
@@ -777,7 +746,7 @@ int main(int argc, char *argv[])
 
 	printf("\n\n\n	       *** %s ***\n\n", program_title);
 
-	/* Go through a series of dialogs prompting for config info */
+	// Go through a series of dialogs prompting for config info
 	for (curr = 1; curr < eMaxQuestions; ++curr) {
 		edit_value(curr);
 
@@ -785,12 +754,11 @@ int main(int argc, char *argv[])
 			&& (getconf_int("c_auth_mode") != AUTHMODE_LDAP)
 			&& (getconf_int("c_auth_mode") != AUTHMODE_LDAP_AD)
 		) {
-			curr += 5;	/* skip LDAP questions if we're not authenticating against LDAP */
+			curr += 5;	// skip LDAP questions if we're not authenticating against LDAP
 		}
 
 		if (curr == eSysAdminName) {
-			if (getconf_int("c_auth_mode") == AUTHMODE_NATIVE) {
-						/* for native auth mode, fetch the admin's existing pw */
+			if (getconf_int("c_auth_mode") == AUTHMODE_NATIVE) { // for native auth mode, fetch the admin's existing pw
 				snprintf(buf, sizeof buf, "AGUP %s", admin_name);
 				serv_puts(buf);
 				serv_gets(buf);
@@ -799,28 +767,28 @@ int main(int argc, char *argv[])
 				}
 			}
 			else {
-				++curr;		/* skip the password question for non-native auth modes */
+				++curr;		// skip the password question for non-native auth modes
 			}
 		}
 	}
 
 	if ((pw = getpwuid( getconf_int("c_ctdluid") )) == NULL) {
 		gid = getgid();
-	} else {
+	}
+	else {
 		gid = pw->pw_gid;
 	}
 
-	if (create_run_directories(getconf_int("c_ctdluid"), gid) != 0) {
-		display_error("%s\n", _("failed to create directories"));
-	}
+	// setup now must be run after Citadel Server is already running, so we don't need this anymore.
+	//if (create_run_directories(getconf_int("c_ctdluid"), gid) != 0) {
+		//display_error("%s\n", _("failed to create directories"));
+	//}
 		
 	activity = _("Reconfiguring Citadel server");
 	progress(activity, 0, 5);
-	sleep(1);					/* Let the message appear briefly */
+	sleep(1);					// Let the message appear briefly
 
-	/*
-	 * Create the administrator account.  It's ok if the command fails if this user already exists.
-	 */
+	// Create the administrator account.  It's ok if the command fails if this user already exists.
 	if (getconf_int("c_auth_mode") == AUTHMODE_NATIVE) {
 		progress(activity, 1, 5);
 		snprintf(buf, sizeof buf, "CREU %s|%s", admin_name, admin_pass);
@@ -830,9 +798,7 @@ int main(int argc, char *argv[])
 	}
 	progress(activity, 3, 5);
 
-	/*
-	 * Assign the desired password and access level to the administrator account.
-	 */
+	// Assign the desired password and access level to the administrator account.
 	if (getconf_int("c_auth_mode") == AUTHMODE_NATIVE) {
 		snprintf(buf, sizeof buf, "AGUP %s", admin_name);
 		serv_puts(buf);
@@ -851,11 +817,9 @@ int main(int argc, char *argv[])
 	}
 	progress(activity, 5, 5);
 
-	check_xinetd_entry();	/* Check /etc/xinetd.d/telnet */
+	check_xinetd_entry();	// Check /etc/xinetd.d/telnet
 
-	/*
-	 * Restart citserver
-	 */
+	// Restart citserver
 	activity = _("Restarting Citadel server to apply changes");
 	progress(activity, 0, 51);
 
@@ -875,12 +839,12 @@ int main(int argc, char *argv[])
 	close(serv_sock);
 	serv_sock = (-1);
 
-	for (i=3; i<=6; ++i) {					/* wait for server to shut down */
+	for (i=3; i<=6; ++i) {					// wait for server to shut down
 		progress(activity, i, 51);
 		sleep(1);
 	}
 
-	for (i=7; ((i<=48) && (serv_sock < 0)) ; ++i) {		/* wait for server to start up */
+	for (i=7; ((i<=48) && (serv_sock < 0)) ; ++i) {		// wait for server to start up
 		progress(activity, i, 51);
         	serv_sock = uds_connectsock(file_citadel_admin_socket);
 		sleep(1);

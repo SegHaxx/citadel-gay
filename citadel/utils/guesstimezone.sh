@@ -3,7 +3,7 @@
 # guesstimezone.sh - an ugly hack of a script to try to guess the time
 # zone currently in use on the host system, and output its name.
 
-# Copyright (c) by Art Cancro
+# Copyright (c) 1987-2022 by Art Cancro and citadel.org
 
 # This program is free software; you can redistribute it and/or modify it
 # under the terms of the GNU General Public License as published by the Free

@@ -1,3 +1,18 @@
+
+
+
+FAIL FAIL FAIL
+
+THIS IS THE OLD CONFIGURE SCRIPT
+
+KEEPING IT HERE FOR REFERENCE AS WE BUILD THE NEW ONE
+
+DONT RUN THIS
+
+
+
+
+
 dnl Process this file with autoconf to produce a configure script.
 AC_PREREQ(2.52)
 
