@@ -1,16 +1,14 @@
-/*
- * Command-line utility to transmit a server command.
- *
- * Copyright (c) 1987-2021 by the citadel.org team
- *
- * This program is open source software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 3.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- */
+// Command-line utility to transmit a server command.
+//
+// Copyright (c) 1987-2022 by the citadel.org team
+//
+// This program is open source software; you can redistribute it and/or modify
+// it under the terms of the GNU General Public License version 3.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -26,8 +24,8 @@
 #include <limits.h>
 #include <sys/socket.h>
 #include <sys/un.h>
-#include "citadel.h"
-#include "citadel_dirs.h"
+#include "../server/citadel.h"
+#include "../server/citadel_dirs.h"
 #include <libcitadel.h>
 
 int serv_sock = (-1);
@@ -56,9 +54,7 @@ int uds_connectsock(char *sockpath) {
 }
 
 
-/*
- * input binary data from socket
- */
+// input binary data from socket
 void serv_read(char *buf, int bytes) {
 	int len, rlen;
 
@@ -73,9 +69,7 @@ void serv_read(char *buf, int bytes) {
 }
 
 
-/*
- * send binary to server
- */
+// send binary to server
 void serv_write(char *buf, int nbytes) {
 	int bytes_written = 0;
 	int retval;
@@ -89,46 +83,37 @@ void serv_write(char *buf, int nbytes) {
 }
 
 
-/*
- * input string from socket - implemented in terms of serv_read()
- */
+// input string from socket - implemented in terms of serv_read()
 void serv_gets(char *buf) {
 	int i;
 
-	/* Read one character at a time.
-	 */
+	// Read one character at a time.
 	for (i = 0;; i++) {
 		serv_read(&buf[i], 1);
 		if (buf[i] == '\n' || i == (SIZ-1))
 			break;
 	}
 
-	/* If we got a long line, discard characters until the newline.
-	 */
+	// If we got a long line, discard characters until the newline.
 	if (i == (SIZ-1)) {
 		while (buf[i] != '\n') {
 			serv_read(&buf[i], 1);
 		}
 	}
 
-	/* Strip all trailing nonprintables (crlf)
-	 */
+	// Strip all trailing nonprintables (crlf)
 	buf[i] = 0;
 }
 
 
-/*
- * send line to server - implemented in terms of serv_write()
- */
+// send line to server - implemented in terms of serv_write()
 void serv_puts(char *buf) {
 	serv_write(buf, strlen(buf));
 	serv_write("\n", 1);
 }
 
 
-/*
- * Main loop.  Do things and have fun.
- */
+// Main loop.  Do things and have fun.
 int main(int argc, char **argv) {
 	int a;
 	int watchdog = 60;
@@ -136,7 +121,7 @@ int main(int argc, char **argv) {
 	int xfermode = 0;
 	char ctdldir[PATH_MAX]=CTDLDIR;
 
-	/* Parse command line */
+	// Parse command line
 	while ((a = getopt(argc, argv, "h:w:")) != EOF) {
 		switch (a) {
 		case 'h':
@@ -182,7 +167,7 @@ int main(int argc, char **argv) {
 
 	xfermode = buf[0];
 
-	if ((xfermode == '4') || (xfermode == '8')) {		/* send text */
+	if ((xfermode == '4') || (xfermode == '8')) {		// send text
 		while (fgets(buf, sizeof buf, stdin) > 0) {
 			if (buf[strlen(buf)-1] == '\n') {
 				buf[strlen(buf)-1] = 0;
@@ -192,13 +177,13 @@ int main(int argc, char **argv) {
 		serv_puts("000");
 	}
 
-	if ((xfermode == '1') || (xfermode == '8')) {		/* receive text */
+	if ((xfermode == '1') || (xfermode == '8')) {		// receive text
 		while(serv_gets(buf), strcmp(buf, "000")) {
 			printf("%s\n", buf);
 		}
 	}
 	
-	if (xfermode == '6') {					/* receive binary */
+	if (xfermode == '6') {					// receive binary
 		size_t len = atoi(&buf[4]);
 		size_t bytes_remaining = len;
 
@@ -212,7 +197,7 @@ int main(int argc, char **argv) {
 	}
 
 	close(serv_sock);
-	alarm(0);						/* cancel the watchdog timer */
+	alarm(0);						// cancel the watchdog timer
 
 	fprintf(stderr, "sendcommand: processing ended.\n");
 	if (xfermode == '5') {

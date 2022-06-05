@@ -1,6 +1,6 @@
 // Across-the-wire migration utility for Citadel
 //
-// Copyright (c) 2009-2021 citadel.org
+// Copyright (c) 2009-2022 citadel.org
 //
 // This program is open source software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License version 3.
@@ -30,11 +30,11 @@
 #include <sys/socket.h>
 #include <sys/un.h>
 #include <libcitadel.h>
-#include "citadel.h"
+#include "../server/citadel.h"
 #include "axdefs.h"
-#include "sysdep.h"
-#include "config.h"
-#include "citadel_dirs.h"
+#include "../server/sysdep.h"
+#include "../server/config.h"
+#include "../server/citadel_dirs.h"
 
 
 // support for getz() -- (globals would not be appropriate in a multithreaded program)
