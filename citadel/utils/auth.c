@@ -1,8 +1,6 @@
 // system-level password checking for host auth mode
-// by Nathan Bryant, March 1999
-// updated by Trey van Riper, June 2005
 //
-// Copyright (c) 1999-2016 by the citadel.org team
+// Copyright (c) 1999-2022 by Nathan Bryant, Trey Van Riper, and the citadel.org team
 //
 // This program is open source software.  Use, duplication, or disclosure
 // is subject to the terms of the GNU General Public License, version 3.
@@ -18,9 +16,10 @@
 #include <string.h>
 #include <unistd.h>
 #include <sys/types.h>
+#include <crypt.h>
 
 #include "auth.h"
-#include "sysdep.h"
+#include "../server/sysdep.h"
 
 #ifdef HAVE_GETSPNAM
 #include <shadow.h>

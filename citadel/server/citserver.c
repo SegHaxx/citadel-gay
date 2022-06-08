@@ -73,6 +73,12 @@ void master_startup(void) {
 		syslog(LOG_ERR, "citserver: failed to access and create directories");
 		exit(1);
 	}
+
+	syslog(LOG_DEBUG, "citserver: ctdl_message_dir is %s", ctdl_message_dir);
+	syslog(LOG_DEBUG, "citserver: ctdl_file_dir is %s", ctdl_file_dir);
+	syslog(LOG_DEBUG, "citserver: ctdl_key_dir is %s", ctdl_key_dir);
+	syslog(LOG_DEBUG, "citserver: ctdl_run_dir is %s", ctdl_run_dir);
+
 	syslog(LOG_INFO, "Opening databases");
 	open_databases();
 

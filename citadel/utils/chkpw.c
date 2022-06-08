@@ -1,4 +1,3 @@
-// 
 // Copyright (c) 1987-2022 by the citadel.org team
 //
 // This program is open source software.  Use, duplication, or disclosure
@@ -20,20 +19,16 @@
 #include <string.h>
 #include <limits.h>
 #include <dirent.h>
+#include "../server/citadel.h"
+#include "../server/sysdep.h"
+#include "../server/citadel_dirs.h"
 
-
-#include "citadel.h"
-#include "sysdep.h"
-#include "citadel_dirs.h"
-/* These pipes are used to talk to the chkpwd daemon, which is forked during startup */
+// These pipes are used to talk to the chkpwd daemon, which is forked during startup
 int chkpwd_write_pipe[2];
 int chkpwd_read_pipe[2];
 
-/*
- * Validate a password on the host unix system by talking to the chkpwd daemon
- */
-static int validpw(uid_t uid, const char *pass)
-{
+// Validate a password on the host unix system by talking to the chkpwd daemon
+static int validpw(uid_t uid, const char *pass) {
 	char buf[256];
 	int rv;
 
@@ -62,9 +57,8 @@ static int validpw(uid_t uid, const char *pass)
 	return 0;
 }
 
-/* 
- * Start up the chkpwd daemon so validpw() has something to talk to
- */
+
+// Start up the chkpwd daemon so validpw() has something to talk to
 void start_chkpwd_daemon(void) {
 	pid_t chkpwd_pid;
 	struct stat filestats;
@@ -72,8 +66,7 @@ void start_chkpwd_daemon(void) {
 
 	printf("Starting chkpwd daemon for host authentication mode\n");
 
-	if ((stat(file_chkpwd, &filestats)==-1) ||
-	    (filestats.st_size==0)){
+	if ((stat(file_chkpwd, &filestats)==-1) || (filestats.st_size==0)){
 		printf("didn't find chkpwd daemon in %s: %s\n", file_chkpwd, strerror(errno));
 		abort();
 	}
@@ -101,7 +94,6 @@ void start_chkpwd_daemon(void) {
 		exit(errno);
 	}
 }
-
 
 
 int main(int argc, char **argv) {
