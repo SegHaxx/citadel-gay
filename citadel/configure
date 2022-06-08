@@ -106,6 +106,7 @@ cc $tempcc -o $tempfile && {
 	}
 }
 
+
 # FIXME do a real build id here
 CFLAGS=${CFLAGS}' -DBUILD_ID=\"unknown\"'
 

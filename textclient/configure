@@ -59,7 +59,10 @@ do
 	shift
 done
 
+
+########################################################################
 # Set any missing values
+########################################################################
 
 [ "$PREFIX" = "" ] 	&& PREFIX=/usr/local
 [ "$BINDIR" = "" ]	&& BINDIR=${PREFIX}/bin
@@ -67,7 +70,10 @@ done
 [ "$CFLAGS" = "" ]	&& CFLAGS='-Wformat-truncation=0 -ggdb'
 [ "$LDFLAGS" = "" ]	&& LDFLAGS=''
 
+
+########################################################################
 # Test for OpenSSL
+########################################################################
 [ "$SSL" != "yes" ] && [ "$SSL" != "no" ] && {
 	echo Testing for OpenSSL...
 	tempfile=`tempfile 2>/dev/null` || tempfile=/tmp/configure.$$
@@ -90,11 +96,46 @@ echo SSL: $SSL
 	LDFLAGS=${LDFLAGS}' -lssl -lcrypto -lz'
 }
 
+
+########################################################################
+# Test for iconv
+########################################################################
+echo Testing for iconv...
+tempfile=`tempfile 2>/dev/null` || tempfile=/tmp/configure.$$
+tempcc=${tempfile}.c
+cat >$tempcc <<!
+#include <stdlib.h>
+#include <unistd.h>
+#include <stdio.h>
+#include <iconv.h>
+int main(int argc, char **argv) {
+	size_t wow = iconv(NULL, NULL, NULL, NULL, NULL);
+	return(0);
+}
+!
+
+cc $tempcc -o $tempfile && {
+	ICONV='yes'
+	echo iconv.h is present and requires no additional libraries
+} || {
+	echo Trying again with -liconv...
+	cc $tempcc -liconv -o $tempfile && {
+		ICONV='yes'
+		LDFLAGS=${LDFLAGS}' -liconv'
+	} || {
+		echo Citadel Server requires iconv character set conversion.
+		exit 1
+	}
+}
+
+
+########################################################################
 # Output the config.mk
+########################################################################
 
 (
 	echo "CFLAGS := ${CFLAGS}"
-	echo "LDFLAGS := ${LDFLAGS} -liconv"
+	echo "LDFLAGS := ${LDFLAGS}"
 	echo "PREFIX := ${PREFIX}"
 	echo "BINDIR := ${BINDIR}"
 	echo "CTDLDIR := ${CTDLDIR}"

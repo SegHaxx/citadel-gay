@@ -1,8 +1,5 @@
-#!/bin/sh
+#!/bin/bash
 #
 # run me after checking Citadel out of the source code repository.
 
-echo ... running mk_svn_revision.sh ...
-./scripts/mk_svn_revision.sh
-
-grep '#define REV_LEVEL' citadel.h | sed 's/[^0-9]*//g' >package-version.txt
+grep '#define REV_LEVEL' server/citadel.h | sed 's/[^0-9]*//g' >package-version.txt
