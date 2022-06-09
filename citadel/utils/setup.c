@@ -2,13 +2,9 @@
 //
 // Copyright (c) 1987-2022 by the citadel.org team
 //
-// This program is open source software; you can redistribute it and/or
-// modify it under the terms of the GNU General Public License version 3.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License for more details.
+// This program is open source software.  Use, duplication, or disclosure
+// is subject to the terms of the GNU General Public License, version 3.
+// The program is distributed without any warranty, expressed or implied.
 
 #define SHOW_ME_VAPPEND_PRINTF
 #include <stdlib.h>
@@ -236,7 +232,7 @@ int yesno(const char *question, int default_value) {
 	char buf[SIZ];
 
 	do {
-		printf("%s\n%s [%s] --> ", question, _("Yes/No"), ( default_value ? _("Yes") : _("No") ));
+		printf("\033[31m\033[32m%s\n%s [\033[33m%s\033[32m]\033[0m --> ", question, _("Yes/No"), ( default_value ? _("Yes") : _("No") ));
 		if (fgets(buf, sizeof buf, stdin)) {
 			answer = tolower(buf[0]);
 			if ((buf[0]==0) || (buf[0]==13) || (buf[0]==10)) {
@@ -524,8 +520,7 @@ void set_bool_val(int msgpos, int *ip, char *DefValue) {
 }
 
 
-void set_str_val(int msgpos, char *Target, char *DefValue) 
-{
+void set_str_val(int msgpos, char *Target, char *DefValue) {
 	strprompt(setup_titles[msgpos], 
 		  setup_text[msgpos], 
 		  Target, 

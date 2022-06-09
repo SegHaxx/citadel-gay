@@ -2,13 +2,9 @@
 //
 // Copyright (c) 2009-2022 citadel.org
 //
-// This program is open source software; you can redistribute it and/or modify
-// it under the terms of the GNU General Public License version 3.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License for more details.
+// This program is open source software.  Use, duplication, or disclosure
+// is subject to the terms of the GNU General Public License, version 3.
+// The program is distributed without any warranty, expressed or implied.
 
 #include <stdlib.h>
 #include <unistd.h>
