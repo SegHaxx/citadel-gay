@@ -2,18 +2,13 @@
 //
 // Copyright (c) 1987-2022 by the citadel.org team
 //
-// This program is open source software; you can redistribute it and/or modify
-// it under the terms of the GNU General Public License, version 3.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License for more details.
+// This program is open source software.  Use, duplication, or disclosure
+// is subject to the terms of the GNU General Public License, version 3.
+// The program is distributed without any warranty, expressed or implied.
 
 #include "sysdep.h"
 #include <stdio.h>
 #include <libcitadel.h>
-
 #include "citserver.h"
 #include "room_ops.h"
 
@@ -208,6 +203,6 @@ char *ctdl_module_init_euidindex(void) {
 	if (!threading) {
 		CtdlRegisterProtoHook(cmd_euid, "EUID", "Perform operations on Extended IDs for messages");
 	}
-	/* return our id for the log */
+	// return our id for the log
 	return "euidindex";
 }

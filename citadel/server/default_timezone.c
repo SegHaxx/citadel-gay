@@ -1,15 +1,9 @@
-/*
- * Copyright (c) 1987-2018 by the citadel.org team
- *
- * This program is open source software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License version 3.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- */
-
+//
+// Copyright (c) 1987-2022 by the citadel.org team
+//
+// This program is open source software.  Use, duplication, or disclosure
+// is subject to the terms of the GNU General Public License, version 3.
+// The program is distributed without any warranty, expressed or implied.
 
 #include "sysdep.h"
 #include <stdlib.h>
@@ -32,10 +26,8 @@
 #include "ctdl_module.h"
 
 
-/*
- * Figure out which time zone needs to be used for timestamps that are
- * not UTC and do not have a time zone specified.
- */
+// Figure out which time zone needs to be used for timestamps that are
+// not UTC and do not have a time zone specified.
 icaltimezone *get_default_icaltimezone(void) {
 
         icaltimezone *zone = NULL;

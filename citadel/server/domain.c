@@ -1,16 +1,10 @@
-/*
- * DNS lookup for SMTP sender
- *
- * Copyright (c) 1987-2021 by the citadel.org team
- *
- * This program is open source software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License, version 3.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- */
+// DNS lookup for SMTP sender
+//
+// Copyright (c) 1987-2022 by the citadel.org team
+//
+// This program is open source software.  Use, duplication, or disclosure
+// is subject to the terms of the GNU General Public License, version 3.
+// The program is distributed without any warranty, expressed or implied.
 
 #include "sysdep.h"
 #include <stdio.h>
@@ -32,13 +26,11 @@
 #include "internet_addressing.h"
 
 
-/*
- * get_hosts() checks the Internet configuration for various types of
- * entries and returns them in the same format as getmx() does -- fill the
- * buffer with a delimited list of hosts and return the number of hosts.
- * 
- * This is used to fetch MX smarthosts, SpamAssassin hosts, etc.
- */
+// get_hosts() checks the Internet configuration for various types of
+// entries and returns them in the same format as getmx() does -- fill the
+// buffer with a delimited list of hosts and return the number of hosts.
+// 
+// This is used to fetch MX smarthosts, SpamAssassin hosts, etc.
 int get_hosts(char *mxbuf, char *rectype) {
 	int config_lines;
 	int i;
@@ -66,11 +58,9 @@ int get_hosts(char *mxbuf, char *rectype) {
 }
 
 
-/*
- * Compare the preference of two MX records.  First check by the actual
- * number listed in the MX record.  If they're identical, randomize the
- * result.
- */
+// Compare the preference of two MX records.  First check by the actual
+// number listed in the MX record.  If they're identical, randomize the
+// result.
 int mx_compare_pref(const void *mx1, const void *mx2) {
 	int pref1;
 	int pref2;
@@ -90,16 +80,13 @@ int mx_compare_pref(const void *mx1, const void *mx2) {
 }
 
 
-/* 
- * getmx()
- *
- * Return one or more MX's for a mail destination.
- *
- * Upon success, it fills 'mxbuf' with one or more MX hosts, separated by
- * vertical bar characters, and returns the number of hosts as its return
- * value.  If no MX's are found, it returns 0.
- *
- */
+// getmx()
+//
+// Return one or more MX's for a mail destination.
+//
+// Upon success, it fills 'mxbuf' with one or more MX hosts, separated by
+// vertical bar characters, and returns the number of hosts as its return
+// value.  If no MX's are found, it returns 0.
 int getmx(char *mxbuf, char *dest) {
 
 #ifdef HAVE_RESOLV_H

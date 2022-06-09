@@ -1,16 +1,11 @@
-/*
- * This file contains miscellaneous housekeeping tasks.
- *
- * Copyright (c) 1987-2021 by the citadel.org team
- *
- * This program is open source software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License, version 3.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- */
+// This file contains miscellaneous housekeeping tasks.
+//
+// Copyright (c) 1987-2021 by the citadel.org team
+//
+// This program is open source software.  Use, duplication, or disclosure
+// is subject to the terms of the GNU General Public License, version 3.
+// The program is distributed without any warranty, expressed or implied.
+
 
 #include <stdio.h>
 #include <libcitadel.h>
@@ -31,10 +26,8 @@ void check_sched_shutdown(void) {
 }
 
 
-/*
- * Check (and fix) floor reference counts.  This doesn't need to be done
- * very often, since the counts should remain correct during normal operation.
- */
+// Check (and fix) floor reference counts.  This doesn't need to be done
+// very often, since the counts should remain correct during normal operation.
 void check_ref_counts_backend(struct ctdlroom *qrbuf, void *data) {
 
 	int *new_refcounts;
@@ -75,9 +68,7 @@ void check_ref_counts(void) {
 }
 
 
-/*
- * Provide hints as to whether we have any memory leaks
- */
+// Provide hints as to whether we have any memory leaks
 void keep_an_eye_on_memory_usage(void) {
 	static void *original_brk = NULL;
 	if (!original_brk) original_brk = sbrk(0);	// Remember the original program break so we can test for leaks
@@ -85,12 +76,10 @@ void keep_an_eye_on_memory_usage(void) {
 }
 
 
-/*
- * This is the housekeeping loop.  Worker threads come through here after
- * processing client requests but before jumping back into the pool.  We
- * only allow housekeeping to execute once per minute, and we only allow one
- * instance to run at a time.
- */
+// This is the housekeeping loop.  Worker threads come through here after
+// processing client requests but before jumping back into the pool.  We
+// only allow housekeeping to execute once per minute, and we only allow one
+// instance to run at a time.
 static int housekeeping_in_progress = 0;
 static int housekeeping_disabled = 0;
 static time_t last_timer = 0L;
@@ -104,11 +93,9 @@ void do_housekeeping(void) {
 		return;
 	}
 
-	/*
-	 * We do it this way instead of wrapping the whole loop in an
-	 * S_HOUSEKEEPING critical section because it eliminates the need to
-	 * potentially have multiple concurrent mutexes in progress.
-	 */
+	// We do it this way instead of wrapping the whole loop in an
+	// S_HOUSEKEEPING critical section because it eliminates the need to
+	// potentially have multiple concurrent mutexes in progress.
 	begin_critical_section(S_HOUSEKEEPING);
 	if (housekeeping_in_progress == 0) {
 		do_housekeeping_now = 1;
@@ -127,21 +114,19 @@ void do_housekeeping(void) {
 		return;
 	}
 
-	/*
-	 * Ok, at this point we've made the decision to run the housekeeping
-	 * loop.  Everything below this point is real work.
-	 */
+	// Ok, at this point we've made the decision to run the housekeeping
+	// loop.  Everything below this point is real work.
 
 	if ( (now - last_timer) > (time_t)60 ) {
 		do_perminute_housekeeping_now = 1;
 		last_timer = time(NULL);
 	}
 
-	/* First, do the "as often as needed" stuff... */
+	// First, do the "as often as needed" stuff...
 	JournalRunQueue();
 	PerformSessionHooks(EVT_HOUSE);
 
-	/* Then, do the "once per minute" stuff... */
+	// Then, do the "once per minute" stuff...
 	if (do_perminute_housekeeping_now) {
 		cdb_check_handles();
 		PerformSessionHooks(EVT_TIMER);		// Run all registered TIMER hooks
@@ -156,9 +141,7 @@ void do_housekeeping(void) {
 	keep_an_eye_on_memory_usage();
 	}
 
-	/*
-	 * All done.
-	 */
+	// All done.
 	begin_critical_section(S_HOUSEKEEPING);
 	housekeeping_in_progress = 0;
 	end_critical_section(S_HOUSEKEEPING);
