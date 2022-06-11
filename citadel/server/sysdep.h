@@ -1,7 +1,8 @@
 
 
-/* define this to the Citadel home directory */
-#define CTDLDIR "/root/citadel/citadel"
+#ifndef CTDLDIR
+#error CTDLDIR is not defined , did we not run configure ?
+#endif
 
 /* define, if the user suplied a data-directory to use. */
 /* #undef DATA_DIR */
