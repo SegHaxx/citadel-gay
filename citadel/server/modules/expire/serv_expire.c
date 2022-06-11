@@ -823,6 +823,7 @@ void cmd_tdap(char *argbuf) {
 }
 
 
+// Initialization function, called from modules_init.c
 char *ctdl_module_init_expire(void) {
 	if (!threading) {
 		CtdlRegisterProtoHook(cmd_tdap, "TDAP", "Manually initiate auto-purger");

@@ -47,6 +47,7 @@ void LoginTest(void) {
 	syslog(LOG_DEBUG, "--- Hello, %s ---\n", CC->curr_user);
 }
 
+// Initialization function, called from modules_init.c
 // To insert this module into the server activate the next block by changing the #if 0 to #if 1
 char *ctdl_module_init_test() {
 #if 0

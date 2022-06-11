@@ -215,7 +215,7 @@ void import_old_bio_files(void)
 }
 
 
-
+// Initialization function, called from modules_init.c
 char *ctdl_module_init_bio(void) {
 	if (!threading) {
 		import_old_bio_files();

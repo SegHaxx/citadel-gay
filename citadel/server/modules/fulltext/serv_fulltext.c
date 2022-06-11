@@ -460,8 +460,7 @@ void ft_delete_remove(char *room, long msgnum)
 }
 
 
-/*****************************************************************************/
-
+// Initialization function, called from modules_init.c
 char *ctdl_module_init_fulltext(void) {
 	if (!threading) {
 		initialize_ft_cache();

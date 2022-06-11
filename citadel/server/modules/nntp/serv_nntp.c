@@ -1142,6 +1142,8 @@ void nntp_cleanup_function(void) {
 const char *CitadelServiceNNTP="NNTP";
 const char *CitadelServiceNNTPS="NNTPS";
 
+
+// Initialization function, called from modules_init.c
 char *ctdl_module_init_nntp(void) {
 	if (!threading) {
 		CtdlRegisterServiceHook(CtdlGetConfigInt("c_nntp_port"),

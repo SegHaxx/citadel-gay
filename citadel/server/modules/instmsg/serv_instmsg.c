@@ -558,15 +558,17 @@ void flush_conversations_to_disk(time_t if_older_than) {
 }
 
 
-
 void instmsg_timer(void) {
 	flush_conversations_to_disk(300);	/* Anything that hasn't peeped in more than 5 minutes */
 }
+
 
 void instmsg_shutdown(void) {
 	flush_conversations_to_disk(0);		/* Get it ALL onto disk NOW. */
 }
 
+
+// Initialization function, called from modules_init.c
 char *ctdl_module_init_instmsg(void) {
 	if (!threading) {
 		CtdlRegisterProtoHook(cmd_gexp, "GEXP", "Get instant messages");

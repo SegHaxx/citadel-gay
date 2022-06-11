@@ -2531,9 +2531,7 @@ void ical_fixed_output(char *ptr, int len) {
 }
 
 
-/*
- * Register this module with the Citadel server.
- */
+// Initialization function, called from modules_init.c
 char *ctdl_module_init_calendar(void) {
 	if (!threading) {
 

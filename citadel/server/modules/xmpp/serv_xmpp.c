@@ -651,6 +651,9 @@ void xmpp_logout_hook(void) {
 
 
 const char *CitadelServiceXMPP="XMPP";
+
+
+// Initialization function, called from modules_init.c
 char *ctdl_module_init_xmpp() {
 	if (!threading) {
 		CtdlRegisterServiceHook(CtdlGetConfigInt("c_xmpp_c2s_port"),

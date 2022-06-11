@@ -1137,14 +1137,7 @@ void cmd_oidf(char *argbuf) {
 }
 
 
-
-/**************************************************************************/
-/*                                                                        */
-/* Functions in this section handle module initialization and shutdown    */
-/*                                                                        */
-/**************************************************************************/
-
-
+// Initialization function, called from modules_init.c
 char *ctdl_module_init_openid_rp(void) {
 	if (!threading) {
 		/* Only enable the OpenID command set when native mode authentication is in use. */

@@ -71,10 +71,7 @@ void cmd_scdn(char *argbuf) {
 }
 
 
-// ****************************************************************************
-// *                     MODULE INITIALIZATION STUFF                          *
-// ****************************************************************************
-
+// Initialization function, called from modules_init.c
 char *ctdl_module_init_syscmd(void) {
 	if (!threading) {
 		CtdlRegisterProtoHook(cmd_down, "DOWN", "perform a server shutdown");

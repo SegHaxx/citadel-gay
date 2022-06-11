@@ -216,6 +216,7 @@ void cmd_auto(char *argbuf) {
 }
 
 
+// Initialization function, called from modules_init.c
 char *ctdl_module_init_autocompletion(void) {
 	if (!threading) {
 		CtdlRegisterProtoHook(cmd_auto, "AUTO", "Do recipient autocompletion");

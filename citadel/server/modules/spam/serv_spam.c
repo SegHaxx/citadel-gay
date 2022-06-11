@@ -170,7 +170,7 @@ bail:	close(sock);
 }
 
 
-
+// Initialization function, called from modules_init.c
 char *ctdl_module_init_spam(void) {
 	if (!threading) {
 		CtdlRegisterMessageHook(spam_assassin, EVT_SMTPSCAN);

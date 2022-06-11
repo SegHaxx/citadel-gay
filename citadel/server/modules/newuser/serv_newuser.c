@@ -81,6 +81,7 @@ void CopyNewUserGreetings(void) {
 }
 
 
+// Initialization function, called from modules_init.c
 char *ctdl_module_init_newuser(void) {
 	if (!threading) {
 		CtdlRegisterSessionHook(CopyNewUserGreetings, EVT_LOGIN, PRIO_LOGIN + 1);

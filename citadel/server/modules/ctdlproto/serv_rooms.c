@@ -1016,10 +1016,7 @@ void cmd_stat(char *gargs) {
 }
 
 
-/*****************************************************************************/
-/*                      MODULE INITIALIZATION STUFF                          */
-/*****************************************************************************/
-
+// Initialization function, called from modules_init.c
 char *ctdl_module_init_rooms(void) {
 	if (!threading) {
 		CtdlRegisterProtoHook(cmd_lrms, "LRMS", "List rooms");

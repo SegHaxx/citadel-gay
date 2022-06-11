@@ -566,6 +566,7 @@ void post_startup_upgrades(void) {
 }
 
 
+// Initialization function, called from modules_init.c
 char *ctdl_module_init_upgrade(void) {
 	if (!threading) {
 		post_startup_upgrades();

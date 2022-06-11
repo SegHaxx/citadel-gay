@@ -250,11 +250,12 @@ void pop3client_scan(void) {
 }
 
 
+// Initialization function, called from modules_init.c
 char *ctdl_module_init_pop3client(void) {
 	if (!threading) {
 		CtdlRegisterSessionHook(pop3client_scan, EVT_TIMER, PRIO_AGGR + 50);
 	}
 
-	/* return our module id for the log */
+	/* return our module name for the log */
  	return "pop3client";
 }

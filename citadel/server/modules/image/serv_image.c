@@ -339,7 +339,7 @@ void import_old_userpic_files(void) {
 }
 
 
-
+// Initialization function, called from modules_init.c
 char *ctdl_module_init_image(void) {
 	if (!threading) {
 		import_old_userpic_files();

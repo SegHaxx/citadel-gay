@@ -659,10 +659,8 @@ void cmd_emsg(char *mname)
 	fclose(mfp);
 }
 
-/*****************************************************************************/
-/*                      MODULE INITIALIZATION STUFF                          */
-/*****************************************************************************/
 
+// Initialization function, called from modules_init.c
 char *ctdl_module_init_file_ops(void) {
 	if (!threading) {
 		CtdlRegisterSessionHook(files_logout_hook, EVT_LOGOUT, PRIO_LOGOUT + 8);
@@ -679,6 +677,6 @@ char *ctdl_module_init_file_ops(void) {
 		CtdlRegisterProtoHook(cmd_mesg, "MESG", "fetch system banners");
 		CtdlRegisterProtoHook(cmd_emsg, "EMSG", "submit system banners");
 	}
-        /* return our Subversion id for the Log */
+        // return a module name for the log
 	return "file_ops";
 }

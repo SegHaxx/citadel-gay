@@ -168,6 +168,7 @@ bail:	close(sock);
 }
 
 
+// Initialization function, called from modules_init.c
 char *ctdl_module_init_virus(void) {
 	if (!threading) {
 		CtdlRegisterMessageHook(clamd, EVT_SMTPSCAN);

@@ -177,6 +177,7 @@ void cmd_stel(char *cmdbuf)
 }
 
 
+// Initialization function, called from modules_init.c
 char *ctdl_module_init_rwho(void) {
 	if (!threading) {
 	        CtdlRegisterProtoHook(cmd_rwho, "RWHO", "Display who is online");

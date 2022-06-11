@@ -1,23 +1,21 @@
-/*
- * IMAP server for the Citadel system
- *
- * Copyright (C) 2000-2022 by Art Cancro and others.
- * This code is released under the terms of the GNU General Public License.
- *
- * WARNING: the IMAP protocol is badly designed.  No implementation of it
- * is perfect.  Indeed, with so much gratuitous complexity, *all* IMAP
- * implementations have bugs.
- *
- * This program is open source software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 3 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- */
+// IMAP server for the Citadel system
+//
+// Copyright (C) 2000-2022 by Art Cancro and others.
+// This code is released under the terms of the GNU General Public License.
+//
+// WARNING: the IMAP protocol is badly designed.  No implementation of it
+// is perfect.  Indeed, with so much gratuitous complexity, *all* IMAP
+// implementations have bugs.
+//
+// This program is open source software; you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation; either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
 
 #include "../../sysdep.h"
 #include <stdlib.h>
@@ -163,8 +161,7 @@ void imap_free_msgids(void)
 /*
  * If there is a transmitted message in memory, free it
  */
-void imap_free_transmitted_message(void)
-{
+void imap_free_transmitted_message(void) {
 	FreeStrBuf(&IMAP->TransmittedMessage);
 }
 
@@ -179,8 +176,7 @@ void imap_free_transmitted_message(void)
  * room, or some other value if we're only interested in an incremental
  * update.
  */
-void imap_set_seen_flags(int first_msg)
-{
+void imap_set_seen_flags(int first_msg) {
 	citimap *Imap = IMAP;
 	visit vbuf;
 	int i;
@@ -263,8 +259,7 @@ void imap_set_seen_flags(int first_msg)
  * allocate space in the list for REALLOC_INCREMENT messages at a time.  This
  * allows the mapping to proceed much faster.
  */
-void imap_add_single_msgid(long msgnum, void *userdata)
-{
+void imap_add_single_msgid(long msgnum, void *userdata) {
 	citimap *Imap = IMAP;
 
 	++Imap->num_msgs;
@@ -282,8 +277,7 @@ void imap_add_single_msgid(long msgnum, void *userdata)
 /*
  * Set up a message ID map for the current room (folder)
  */
-void imap_load_msgids(void)
-{
+void imap_load_msgids(void) {
 	struct CitContext *CCC = CC;
 	struct cdbdata *cdbfr;
 	citimap *Imap = CCCIMAP;
@@ -318,8 +312,7 @@ void imap_load_msgids(void)
 /*
  * Re-scan the selected room (folder) and see if it's been changed at all
  */
-void imap_rescan_msgids(void)
-{
+void imap_rescan_msgids(void) {
 	struct CitContext *CCC = CC;
 	citimap *Imap = CCCIMAP;
 	int original_num_msgs = 0;
@@ -380,41 +373,28 @@ void imap_rescan_msgids(void)
 			if (message_still_exists == 0) {
 				IAPrintf("* %d EXPUNGE\r\n", i + 1);
 
-				/* Here's some nice stupid nonsense.  When a
-				 * message is expunged, we have to slide all
-				 * the existing messages up in the message
-				 * array.
-				 */
+				// When a message is expunged, we have to slide all the existing messages up in the message array.
 				--Imap->num_msgs;
-				memmove(&Imap->msgids[i],
-					&Imap->msgids[i + 1],
-					(sizeof(long) *
-					 (Imap->num_msgs - i)));
-				memmove(&Imap->flags[i],
-					&Imap->flags[i + 1],
-					(sizeof(unsigned int) *
-					 (Imap->num_msgs - i)));
+				memmove(&Imap->msgids[i], &Imap->msgids[i + 1], (sizeof(long) * (Imap->num_msgs - i)));
+				memmove(&Imap->flags[i], &Imap->flags[i + 1], (sizeof(unsigned int) * (Imap->num_msgs - i)));
 				--i;
 			}
 
 		}
 	}
 
-	/*
-	 * Remember how many messages were here before we re-scanned.
-	 */
+	// Remember how many messages were here before we re-scanned.
 	original_num_msgs = Imap->num_msgs;
 	if (Imap->num_msgs > 0) {
 		original_highest = Imap->msgids[Imap->num_msgs - 1];
-	} else {
+	}
+	else {
 		original_highest = 0L;
 	}
 
-	/*
-	 * Now peruse the room for *new* messages only.
-	 * This logic is probably the cause of Bug # 368
-	 * [ http://bugzilla.citadel.org/show_bug.cgi?id=368 ]
-	 */
+	// Now peruse the room for *new* messages only.
+	// This logic is probably the cause of Bug # 368
+	// [ http://bugzilla.citadel.org/show_bug.cgi?id=368 ]
 	if (num_msgs > 0) {
 		for (j = 0; j < num_msgs; ++j) {
 			if (msglist[j] > original_highest) {
@@ -450,8 +430,7 @@ void imap_rescan_msgids(void)
  * This cleanup function blows away the temporary memory and files used by
  * the IMAP server.
  */
-void imap_cleanup_function(void)
-{
+void imap_cleanup_function(void) {
 	struct CitContext *CCC = CC;
 	citimap *Imap = CCCIMAP;
 
@@ -525,8 +504,7 @@ void imap_output_capability_string(void) {
 /*
  * implements the CAPABILITY command
  */
-void imap_capability(int num_parms, ConstStr *Params)
-{
+void imap_capability(int num_parms, ConstStr *Params) {
 	IAPuts("* ");
 	imap_output_capability_string();
 	IAPuts("\r\n");
@@ -543,8 +521,7 @@ void imap_capability(int num_parms, ConstStr *Params)
  * making use of this extension.
  * 
  */
-void imap_id(int num_parms, ConstStr *Params)
-{
+void imap_id(int num_parms, ConstStr *Params) {
 	IAPuts("* ID NIL\r\n");
 	IReply("OK ID completed");
 }
@@ -553,8 +530,7 @@ void imap_id(int num_parms, ConstStr *Params)
 /*
  * Here's where our IMAP session begins its happy day.
  */
-void imap_greeting(void)
-{
+void imap_greeting(void) {
 	citimap *Imap;
 	CitContext *CCC = CC;
 
@@ -567,8 +543,7 @@ void imap_greeting(void)
 	Imap->cached_rfc822_withbody = 0;
 	Imap->Reply = NewStrBufPlain(NULL, SIZ * 10); /* 40k */
 
-	if (CCC->nologin)
-	{
+	if (CCC->nologin) {
 		IAPuts("* BYE; Server busy, try later\r\n");
 		CCC->kill_me = KILLME_NOLOGIN;
 		IUnbuffer();
@@ -597,8 +572,7 @@ void imaps_greeting(void) {
 /*
  * implements the LOGIN command (ordinary username/password login)
  */
-void imap_login(int num_parms, ConstStr *Params)
-{
+void imap_login(int num_parms, ConstStr *Params) {
 
 	switch (num_parms) {
 	case 3:
@@ -641,8 +615,7 @@ void imap_login(int num_parms, ConstStr *Params)
 /*
  * Implements the AUTHENTICATE command
  */
-void imap_authenticate(int num_parms, ConstStr *Params)
-{
+void imap_authenticate(int num_parms, ConstStr *Params) {
 	char UsrBuf[SIZ];
 
 	if (num_parms != 3) {
@@ -686,8 +659,7 @@ void imap_authenticate(int num_parms, ConstStr *Params)
 }
 
 
-void imap_auth_plain(void)
-{
+void imap_auth_plain(void) {
 	citimap *Imap = IMAP;
 	const char *decoded_authstring;
 	char ident[256] = "";
@@ -701,8 +673,7 @@ void imap_auth_plain(void)
 	memset(pass, 0, sizeof(pass));
 	decoded_len = StrBufDecodeBase64(Imap->Cmd.CmdBuf);
 
-	if (decoded_len > 0)
-	{
+	if (decoded_len > 0) {
 		decoded_authstring = ChrPtr(Imap->Cmd.CmdBuf);
 
 		len = safestrncpy(ident, decoded_authstring, sizeof ident);
@@ -710,16 +681,14 @@ void imap_auth_plain(void)
 		decoded_len -= len - 1;
 		decoded_authstring += len + 1;
 
-		if (decoded_len > 0)
-		{
+		if (decoded_len > 0) {
 			len = safestrncpy(user, decoded_authstring, sizeof user);
 
 			decoded_authstring += len + 1;
 			decoded_len -= len - 1;
 		}
 
-		if (decoded_len > 0)
-		{
+		if (decoded_len > 0) {
 			plen = safestrncpy(pass, decoded_authstring, sizeof pass);
 
 			if (plen < 0)
@@ -745,12 +714,11 @@ void imap_auth_plain(void)
 }
 
 
-void imap_auth_login_user(long state)
-{
+void imap_auth_login_user(long state) {
 	char PWBuf[SIZ];
 	citimap *Imap = IMAP;
 
-	switch (state){
+	switch (state) {
 	case imap_as_expecting_username:
 		StrBufDecodeBase64(Imap->Cmd.CmdBuf);
 		CtdlLoginExistingUser(ChrPtr(Imap->Cmd.CmdBuf));
@@ -773,8 +741,7 @@ void imap_auth_login_user(long state)
 }
 
 
-void imap_auth_login_pass(long state)
-{
+void imap_auth_login_pass(long state) {
 	citimap *Imap = IMAP;
 	const char *pass = NULL;
 	long len = 0;
@@ -796,7 +763,8 @@ void imap_auth_login_pass(long state)
 
 	if (CtdlTryPassword(pass, len) == pass_ok) {
 		IAPrintf("%s OK authentication succeeded\r\n", Imap->authseq);
-	} else {
+	}
+	else {
 		IAPrintf("%s NO authentication failed\r\n", Imap->authseq);
 	}
 	Imap->authstate = imap_as_normal;
@@ -807,8 +775,7 @@ void imap_auth_login_pass(long state)
 /*
  * implements the STARTTLS command (Citadel API version)
  */
-void imap_starttls(int num_parms, ConstStr *Params)
-{
+void imap_starttls(int num_parms, ConstStr *Params) {
 	char ok_response[SIZ];
 	char nosup_response[SIZ];
 	char error_response[SIZ];
@@ -823,8 +790,7 @@ void imap_starttls(int num_parms, ConstStr *Params)
 /*
  * implements the SELECT command
  */
-void imap_select(int num_parms, ConstStr *Params)
-{
+void imap_select(int num_parms, ConstStr *Params) {
 	citimap *Imap = IMAP;
 	char towhere[ROOMNAMELEN];
 	char augmented_roomname[ROOMNAMELEN];
@@ -885,7 +851,8 @@ void imap_select(int num_parms, ConstStr *Params)
 
 	if (!strcasecmp(Params[1].Key, "EXAMINE")) {
 		Imap->readonly = 1;
-	} else {
+	}
+	else {
 		Imap->readonly = 0;
 	}
 
@@ -919,8 +886,7 @@ void imap_select(int num_parms, ConstStr *Params)
 /*
  * Does the real work for expunge.
  */
-int imap_do_expunge(void)
-{
+int imap_do_expunge(void) {
 	struct CitContext *CCC = CC;
 	citimap *Imap = CCCIMAP;
 	int i;
@@ -959,8 +925,7 @@ int imap_do_expunge(void)
 /*
  * implements the EXPUNGE command syntax
  */
-void imap_expunge(int num_parms, ConstStr *Params)
-{
+void imap_expunge(int num_parms, ConstStr *Params) {
 	int num_expunged = 0;
 
 	num_expunged = imap_do_expunge();
@@ -971,8 +936,7 @@ void imap_expunge(int num_parms, ConstStr *Params)
 /*
  * implements the CLOSE command
  */
-void imap_close(int num_parms, ConstStr *Params)
-{
+void imap_close(int num_parms, ConstStr *Params) {
 
 	/* Yes, we always expunge on close. */
 	if (IMAP->selected) {
@@ -989,8 +953,7 @@ void imap_close(int num_parms, ConstStr *Params)
 /*
  * Implements the NAMESPACE command.
  */
-void imap_namespace(int num_parms, ConstStr *Params)
-{
+void imap_namespace(int num_parms, ConstStr *Params) {
 	long len;
 	int i;
 	struct floor *fl;
@@ -1002,7 +965,7 @@ void imap_namespace(int num_parms, ConstStr *Params)
 	/* All personal folders are subordinate to INBOX. */
 	IAPuts("((\"INBOX/\" \"/\")) ");
 
-	/* Other users' folders ... coming soon! FIXME */
+	/* Other users' folders ... eventually? FIXME */
 	IAPuts("NIL ");
 
 	/* Show all floors as shared namespaces.  Neato! */
@@ -1030,8 +993,7 @@ void imap_namespace(int num_parms, ConstStr *Params)
  * Implements the CREATE command
  *
  */
-void imap_create(int num_parms, ConstStr *Params)
-{
+void imap_create(int num_parms, ConstStr *Params) {
 	int ret;
 	char roomname[ROOMNAMELEN];
 	int floornum;
@@ -1071,7 +1033,8 @@ void imap_create(int num_parms, ConstStr *Params)
 	if (flags & IR_MAILBOX) {
 		newroomtype = 4;		/* private mailbox */
 		newroomview = VIEW_MAILBOX;
-	} else {
+	}
+	else {
 		newroomtype = 0;		/* public folder */
 		newroomview = VIEW_BBS;
 	}
@@ -1081,11 +1044,11 @@ void imap_create(int num_parms, ConstStr *Params)
 
 	ret = CtdlCreateRoom(roomname, newroomtype, "", floornum, 1, 0, newroomview);
 	if (ret == 0) {
-		/*** DO NOT CHANGE THIS ERROR MESSAGE IN ANY WAY!  BYNARI CONNECTOR DEPENDS ON IT! ***/
 		IReply("NO Mailbox already exists, or create failed");
-	} else {
+	}
+	else {
 		IReply("OK CREATE completed");
-		/* post a message in Aide> describing the new room */
+		// post a message in Aide> describing the new room
 		notification_message = malloc(1024);
 		snprintf(notification_message, 1024,
 			"A new room called \"%s\" has been created by %s%s%s%s\n",
@@ -1106,8 +1069,7 @@ void imap_create(int num_parms, ConstStr *Params)
  * Locate a room by its IMAP folder name, and check access to it.
  * If zapped_ok is nonzero, we can also look for the room in the zapped list.
  */
-int imap_grabroom(char *returned_roomname, const char *foldername, int zapped_ok)
-{
+int imap_grabroom(char *returned_roomname, const char *foldername, int zapped_ok) {
 	int ret;
 	char augmented_roomname[ROOMNAMELEN];
 	char roomname[ROOMNAMELEN];
@@ -1162,8 +1124,7 @@ int imap_grabroom(char *returned_roomname, const char *foldername, int zapped_ok
  * Implements the STATUS command (sort of)
  *
  */
-void imap_status(int num_parms, ConstStr *Params)
-{
+void imap_status(int num_parms, ConstStr *Params) {
 	long len;
 	int ret;
 	char roomname[ROOMNAMELEN];
@@ -1220,8 +1181,7 @@ void imap_status(int num_parms, ConstStr *Params)
  * Implements the SUBSCRIBE command
  *
  */
-void imap_subscribe(int num_parms, ConstStr *Params)
-{
+void imap_subscribe(int num_parms, ConstStr *Params) {
 	int ret;
 	char roomname[ROOMNAMELEN];
 	char savedroom[ROOMNAMELEN];
@@ -1262,8 +1222,7 @@ void imap_subscribe(int num_parms, ConstStr *Params)
  * Implements the UNSUBSCRIBE command
  *
  */
-void imap_unsubscribe(int num_parms, ConstStr *Params)
-{
+void imap_unsubscribe(int num_parms, ConstStr *Params) {
 	int ret;
 	char roomname[ROOMNAMELEN];
 	char savedroom[ROOMNAMELEN];
@@ -1306,8 +1265,7 @@ void imap_unsubscribe(int num_parms, ConstStr *Params)
  * Implements the DELETE command
  *
  */
-void imap_delete(int num_parms, ConstStr *Params)
-{
+void imap_delete(int num_parms, ConstStr *Params) {
 	int ret;
 	char roomname[ROOMNAMELEN];
 	char savedroom[ROOMNAMELEN];
@@ -1352,8 +1310,7 @@ void imap_delete(int num_parms, ConstStr *Params)
 /*
  * Back end function for imap_rename()
  */
-void imap_rename_backend(struct ctdlroom *qrbuf, void *data)
-{
+void imap_rename_backend(struct ctdlroom *qrbuf, void *data) {
 	char foldername[SIZ];
 	char newfoldername[SIZ];
 	char newroomname[ROOMNAMELEN];
@@ -1382,8 +1339,7 @@ void imap_rename_backend(struct ctdlroom *qrbuf, void *data)
  * Implements the RENAME command
  *
  */
-void imap_rename(int num_parms, ConstStr *Params)
-{
+void imap_rename(int num_parms, ConstStr *Params) {
 	char old_room[ROOMNAMELEN];
 	char new_room[ROOMNAMELEN];
 	int newr;
@@ -1476,8 +1432,7 @@ void imap_rename(int num_parms, ConstStr *Params)
 /* 
  * Main command loop for IMAP sessions.
  */
-void imap_command_loop(void)
-{
+void imap_command_loop(void) {
 	struct CitContext *CCC = CC;
 	struct timeval tv1, tv2;
 	suseconds_t total_time = 0;
@@ -1518,10 +1473,7 @@ void imap_command_loop(void)
 	pchs = ChrPtr(Imap->Cmd.CmdBuf);
 	pche = pchs + StrLength(Imap->Cmd.CmdBuf);
 
-	while ((pche > pchs) &&
-	       ((*pche == '\n') ||
-		(*pche == '\r')))
-	{
+	while ((pche > pchs) && ((*pche == '\n') || (*pche == '\r'))) {
 		pche --;
 		StrBufCutRight(Imap->Cmd.CmdBuf, 1);
 	}
@@ -1560,30 +1512,11 @@ void imap_command_loop(void)
 
 	/* Grab the tag, command, and parameters. */
 	imap_parameterize(&Imap->Cmd);
-#if 0 
-/* debug output the parsed vector */
-	{
-		int i;
-		syslog(LOG_DEBUG, "----- %ld params", Imap->Cmd.num_parms);
-
-	for (i=0; i < Imap->Cmd.num_parms; i++) {
-		if (Imap->Cmd.Params[i].len != strlen(Imap->Cmd.Params[i].Key))
-			syslog(LOG_DEBUG, "*********** %ld != %ld : %s",
-				    Imap->Cmd.Params[i].len, 
-				    strlen(Imap->Cmd.Params[i].Key),
-				      Imap->Cmd.Params[i].Key);
-		else
-			syslog(LOG_DEBUG, "%ld : %s",
-				    Imap->Cmd.Params[i].len, 
-				    Imap->Cmd.Params[i].Key);
-	}}
-#endif
 
 	/* Now for the command set. */
 	h = imap_lookup(Imap->Cmd.num_parms, Imap->Cmd.Params);
 
-	if (h == NULL)
-	{
+	if (h == NULL) {
 		IReply("BAD command unrecognized");
 		goto BAIL;
 	}
@@ -1591,14 +1524,12 @@ void imap_command_loop(void)
 	/* RFC3501 says that we cannot output untagged data during these commands */
 	if ((h->Flags & I_FLAG_UNTAGGED) == 0) {
 
-		/* we can put any additional untagged stuff right here in the future */
+		// we can put any additional untagged stuff right here in the future
 
-		/*
-		 * Before processing the command that was just entered... if we happen
-		 * to have a folder selected, we'd like to rescan that folder for new
-		 * messages, and for deletions/changes of existing messages.  This
-		 * could probably be optimized better with some deep thought...
-		 */
+		// Before processing the command that was just entered... if we happen
+		// to have a folder selected, we'd like to rescan that folder for new
+		// messages, and for deletions/changes of existing messages.  This
+		// could probably be optimized better with some deep thought...
 		if (Imap->selected) {
 			imap_rescan_msgids();
 		}
@@ -1632,13 +1563,13 @@ BAIL:
 		);
 }
 
-void imap_noop (int num_parms, ConstStr *Params)
-{
+
+void imap_noop(int num_parms, ConstStr *Params) {
 	IReply("OK No operation");
 }
 
-void imap_logout(int num_parms, ConstStr *Params)
-{
+
+void imap_logout(int num_parms, ConstStr *Params) {
 	if (IMAP->selected) {
 		imap_do_expunge();	/* yes, we auto-expunge at logout */
 	}
@@ -1648,12 +1579,12 @@ void imap_logout(int num_parms, ConstStr *Params)
 	return;
 }
 
+
 const char *CitadelServiceIMAP="IMAP";
 const char *CitadelServiceIMAPS="IMAPS";
 
-/*
- * This function is called to register the IMAP extension with Citadel.
- */
+
+// Initialization function, called from modules_init.c
 char *ctdl_module_init_imap(void) {
 	if (ImapCmds == NULL) {
 		ImapCmds = NewHash(1, NULL);
@@ -1705,15 +1636,13 @@ char *ctdl_module_init_imap(void) {
 	RegisterImapCMD("CLOSE", "", imap_close, I_FLAG_LOGGED_IN | I_FLAG_SELECT);
 
 	if (!threading) {
-		CtdlRegisterServiceHook(CtdlGetConfigInt("c_imap_port"),
-					NULL, imap_greeting, imap_command_loop, NULL, CitadelServiceIMAP);
+		CtdlRegisterServiceHook(CtdlGetConfigInt("c_imap_port"), NULL, imap_greeting, imap_command_loop, NULL, CitadelServiceIMAP);
 #ifdef HAVE_OPENSSL
-		CtdlRegisterServiceHook(CtdlGetConfigInt("c_imaps_port"),
-					NULL, imaps_greeting, imap_command_loop, NULL, CitadelServiceIMAPS);
+		CtdlRegisterServiceHook(CtdlGetConfigInt("c_imaps_port"), NULL, imaps_greeting, imap_command_loop, NULL, CitadelServiceIMAPS);
 #endif
 		CtdlRegisterSessionHook(imap_cleanup_function, EVT_STOP, PRIO_STOP + 30);
 	}
 	
-	/* return our module name for the log */
+	// return our module name for the log
 	return "imap";
 }

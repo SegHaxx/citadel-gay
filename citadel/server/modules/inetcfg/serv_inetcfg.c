@@ -122,11 +122,7 @@ void inetcfg_init(void) {
 }
 
 
-/*****************************************************************************/
-/*                      MODULE INITIALIZATION STUFF                          */
-/*****************************************************************************/
-
-
+// Initialization function, called from modules_init.c
 char *ctdl_module_init_inetcfg(void) {
 	if (!threading) {
 		CtdlRegisterMessageHook(inetcfg_aftersave, EVT_AFTERSAVE);

@@ -69,7 +69,7 @@ int blog_upload_beforesave(struct CtdlMessage *msg, struct recptypes *recp) {
 }
 
 
-// Module initialization
+// Initialization function, called from modules_init.c
 char *ctdl_module_init_blog(void) {
 	if (!threading) {
 		CtdlRegisterMessageHook(blog_upload_beforesave, EVT_BEFORESAVE);

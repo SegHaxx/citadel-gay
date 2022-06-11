@@ -558,7 +558,7 @@ void smtp_do_queue(void) {
 }
 
 
-// Module entry point
+// Initialization function, called from modules_init.c
 char *ctdl_module_init_smtpclient(void) {
 	if (!threading) {
 		CtdlRegisterMessageHook(smtp_aftersave, EVT_AFTERSAVE);

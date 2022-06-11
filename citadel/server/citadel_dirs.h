@@ -1,9 +1,15 @@
+// Copyright (c) 1987-2021 by the citadel.org team
+//
+// This program is open source software.  Use, duplication, or disclosure
+// is subject to the terms of the GNU General Public License, version 3.
+// The program is distributed without any warranty, expressed or implied.
+
 #ifndef __CITADEL_DIRS_H
 #define __CITADEL_DIRS_H
 
 #include <limits.h>
 
-/* Fixed directory names (some of these are obsolete and used only for migration) */
+// Fixed directory names (some of these are obsolete and used only for migration)
 #define ctdl_home_directory	"."
 #define ctdl_db_dir		"data"
 #define ctdl_file_dir		"files"
@@ -21,7 +27,7 @@
 #define ctdl_bin_dir		"."
 #define ctdl_utilbin_dir	"."
 
-/* Fixed file names (some of these are obsolete and used only for migration) */
+// Fixed file names (some of these are obsolete and used only for migration)
 #define file_citadel_config		"citadel.config"
 #define file_lmtp_socket		"lmtp.socket"
 #define file_lmtp_unfiltered_socket	"lmtp-unfiltered.socket"
@@ -36,10 +42,10 @@
 #define file_guesstimezone		"guesstimezone.sh"
 
 
-/* externs */
+// externs
 extern int create_run_directories(long UID, long GUID);
 extern size_t assoc_file_name(char *buf, size_t n, struct ctdlroom *qrbuf, const char *prefix);
 extern FILE *create_digest_file(struct ctdlroom *room, int forceCreate);
 extern void remove_digest_file(struct ctdlroom *room);
 
-#endif /* __CITADEL_DIRS_H */
+#endif // __CITADEL_DIRS_H

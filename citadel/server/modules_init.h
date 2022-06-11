@@ -61,4 +61,4 @@ char *ctdl_module_init_vcard(void);
 char *ctdl_module_init_wiki(void);
 char *ctdl_module_init_xmpp(void);
 char *ctdl_module_init_netconfig(void);
-#endif /* MODULES_INIT_H */
+#endif // MODULES_INIT_H

@@ -451,6 +451,7 @@ void rssclient_scan(void) {
 }
 
 
+// Initialization function, called from modules_init.c
 char *ctdl_module_init_rssclient(void) {
 	if (!threading) {
 		syslog(LOG_INFO, "rssclient: using %s", curl_version());

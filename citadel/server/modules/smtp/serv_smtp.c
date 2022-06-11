@@ -1018,6 +1018,7 @@ const char *CitadelServiceSMTP_LMTP="LMTP";
 const char *CitadelServiceSMTP_LMTP_UNF="LMTP-UnF";
 
 
+// Initialization function, called from modules_init.c
 char *ctdl_module_init_smtp(void) {
 	if (!threading) {
 		CtdlRegisterServiceHook(CtdlGetConfigInt("c_smtp_port"),	/* SMTP MTA */

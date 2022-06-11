@@ -238,6 +238,7 @@ void cmd_rcht(char *argbuf)
 }
 
 
+// Initialization function, called from modules_init.c
 char *ctdl_module_init_roomchat(void) {
 	if (!threading) {
 		CtdlRegisterProtoHook(cmd_rcht, "RCHT", "Participate in real time chat in a room");

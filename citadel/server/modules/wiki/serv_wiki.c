@@ -712,9 +712,7 @@ void cmd_wiki(char *argbuf) {
 
 
 
-/*
- * Module initialization
- */
+// Initialization function, called from modules_init.c
 char *ctdl_module_init_wiki() {
 	if (!threading) {
 		CtdlRegisterMessageHook(wiki_upload_beforesave, EVT_BEFORESAVE);

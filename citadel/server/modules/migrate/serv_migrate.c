@@ -1114,10 +1114,7 @@ void cmd_migr(char *cmdbuf) {
 }
 
 
-// ******************************************************************************
-// *                              Module Hook                                   *
-// ******************************************************************************
-
+// Initialization function, called from modules_init.c
 char *ctdl_module_init_migrate() {
 	if (!threading) {
 		CtdlRegisterProtoHook(cmd_migr, "MIGR", "Across-the-wire migration");

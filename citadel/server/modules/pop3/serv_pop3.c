@@ -573,6 +573,7 @@ const char *CitadelServicePop3="POP3";
 const char *CitadelServicePop3S="POP3S";
 
 
+// Initialization function, called from modules_init.c
 char *ctdl_module_init_pop3(void) {
 	if (!threading) {
 		CtdlRegisterServiceHook(CtdlGetConfigInt("c_pop3_port"),

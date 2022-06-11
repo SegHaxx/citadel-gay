@@ -238,7 +238,7 @@ void listdeliver_sweep(void) {
 }
 
 
-// Module entry point
+// Initialization function, called from modules_init.c
 char *ctdl_module_init_listdeliver(void) {
 	if (!threading) {
 		CtdlRegisterSessionHook(listdeliver_sweep, EVT_TIMER, PRIO_AGGR + 50);

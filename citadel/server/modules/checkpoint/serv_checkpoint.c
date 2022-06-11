@@ -32,6 +32,7 @@
 #include "../../ctdl_module.h"
 #include "../../context.h"
 
+// Initialization function, called from modules_init.c
 char *ctdl_module_init_checkpoint(void) {
 	if (threading) {
 		CtdlRegisterSessionHook(cdb_checkpoint, EVT_TIMER, PRIO_CLEANUP + 10);

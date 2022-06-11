@@ -208,10 +208,7 @@ void cmd_time(char *argbuf)
 }
 
 
-/*****************************************************************************/
-/*                      MODULE INITIALIZATION STUFF                          */
-/*****************************************************************************/
-
+// Initialization function, called from modules_init.c
 char *ctdl_module_init_serv_session(void) {
 	if (!threading) {
 		CtdlRegisterProtoHook(cmd_noop, "NOOP", "no operation");

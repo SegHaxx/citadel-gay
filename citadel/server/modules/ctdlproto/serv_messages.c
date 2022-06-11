@@ -815,9 +815,7 @@ void cmd_move(char *args) {
 }
 
 
-/*****************************************************************************/
-/*                      MODULE INITIALIZATION STUFF                          */
-/*****************************************************************************/
+// Initialization function, called from modules_init.c
 char *ctdl_module_init_ctdl_message(void) {
 	if (!threading) {
 		CtdlRegisterProtoHook(cmd_msgs, "MSGS", "Output a list of messages in the current room");
@@ -832,6 +830,6 @@ char *ctdl_module_init_ctdl_message(void) {
 		CtdlRegisterProtoHook(cmd_move, "MOVE", "Move or copy a message to another room");
 	}
 
-        /* return our Subversion id for the Log */
+	// return a module name for the log
 	return "ctdl_message";
 }

@@ -145,6 +145,7 @@ int serv_notes_beforesave(struct CtdlMessage *msg, struct recptypes *recp)
 }
 
 
+// Initialization function, called from modules_init.c
 char *ctdl_module_init_notes(void) {
 	if (!threading) {
 		CtdlRegisterMessageHook(serv_notes_beforesave, EVT_BEFORESAVE);

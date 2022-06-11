@@ -291,9 +291,7 @@ void cmd_lsub(char *cmdbuf) {
 }
 
 
-/*
- * Module entry point
- */
+// Initialization function, called from modules_init.c
 char *ctdl_module_init_listsub(void) {
 	if (!threading) {
 		CtdlRegisterProtoHook(cmd_lsub, "LSUB", "List subscribe/unsubscribe");

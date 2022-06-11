@@ -1206,9 +1206,10 @@ void vcard_fixed_output(char *ptr, int len) {
 	vcard_free(v);
 }
 
-
 const char *CitadelServiceDICT_TCP="DICT_TCP";
 
+
+// Initialization function, called from modules_init.c
 char *ctdl_module_init_vcard(void) {
 	struct ctdlroom qr;
 
