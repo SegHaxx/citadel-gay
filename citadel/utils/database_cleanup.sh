@@ -1,6 +1,6 @@
 #!/bin/bash
 
-die () {
+die() {
 	echo Exiting.
 	exit 1
 }
@@ -38,51 +38,27 @@ done
 
 DATA_DIR=$DATA_DIR/data
 
-# If we're on a Docker or Easy Install system, use our own db_ tools.
-if [ -x /usr/local/ctdlsupport/bin/db_dump ] ; then
-	export PATH=/usr/local/ctdlsupport/bin:$PATH
-	RECOVER=/usr/local/ctdlsupport/bin/db_recover
-	DUMP=/usr/local/ctdlsupport/bin/db_dump
-	LOAD=/usr/local/ctdlsupport/bin/db_load
-
-# otherwise look in /usr/local
-elif [ -x /usr/local/bin/db_dump ] ; then
-	export PATH=/usr/local/bin:$PATH
-	RECOVER=/usr/local/bin/db_recover
-	DUMP=/usr/local/bin/db_dump
-	LOAD=/usr/local/bin/db_load
-
-# usual install
-else
-	if test -f /usr/bin/db_dump; then 
-		RECOVER=/usr/bin/db_recover
-		DUMP=/usr/bin/db_dump
-		LOAD=/usr/bin/db_load
-	else
-		if test -n "`ls /usr/bin/db?*recover`"; then
-			# seems we have something debian alike thats adding version in the filename
-			if test "`ls /usr/bin/db*recover |wc -l`" -gt "1"; then 
-				echo "Warning: you have more than one version of the Berkeley DB utilities installed." 1>&2
-				echo "Using the latest one." 1>&2
-				RECOVER=`ls /usr/bin/db*recover |sort |tail -n 1`
-				DUMP=`ls /usr/bin/db*dump |sort |tail -n 1`
-				LOAD=`ls /usr/bin/db*load |sort |tail -n 1`
-			else
-				RECOVER=`ls /usr/bin/db*recover`
-				DUMP=`ls /usr/bin/db*dump`
-				LOAD=`ls /usr/bin/db*load`
-			fi
-		else
-			echo "database_cleanup.sh cannot find the Berkeley DB utilities.  Exiting." 1>&2
-			die
-		fi
-
+# Find our Berkeley DB utilities.
+unset TOOLSBIN
+for d in /usr/local/ctdlsupport/bin /usr/local/bin /usr/bin
+do
+	if [ -x ${d}/db_dump ] ; then
+		echo -n "Found Berkeley DB tools in ${d}: "
+		TOOLSBIN=${d}
+		break;
 	fi
-fi
+done
+
+RECOVER=${TOOLSBIN}/db_recover
+DUMP=${TOOLSBIN}/db_dump
+LOAD=${TOOLSBIN}/db_load
+ls ${RECOVER} ${DUMP} ${LOAD} || {
+	echo "database_cleanup.sh cannot find the Berkeley DB utilities.  Exiting." 1>&2
+	exit 1
+}
 
 # Ok, let's begin.
 
-clear
 cat <<!
 
 Citadel Database Cleanup
