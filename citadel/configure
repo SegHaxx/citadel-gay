@@ -55,7 +55,7 @@ done
 [ "$CTDLDIR" = "" ] && CTDLDIR=/usr/local/citadel
 
 # Permit override of CFLAGS and LDFLAGS using environment variables
-[ "$CFLAGS" = "" ]	&& CFLAGS='-ggdb -Wno-discarded-qualifiers'
+[ "$CFLAGS" = "" ]	&& CFLAGS='-ggdb'
 [ "$LDFLAGS" = "" ]	&& LDFLAGS=''
 
 

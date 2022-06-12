@@ -8,9 +8,6 @@
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
 
-/* I fucking hate const and want it to die. */
-#pragma GCC diagnostic ignored "-Wcast-qual"
-
 #include "serv_extensions.h"
 #include "context.h"
 #include "ctdl_module.h"
