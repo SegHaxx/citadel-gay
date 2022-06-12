@@ -54,10 +54,10 @@ clean:
 distclean: clean
 	rm -vf config.mk
 
-install: $(all)
+install: $(all) utils/*.sh
 	#
 	# Installing to ${CTDLDIR}
 	#
-	@for x in $(all) ; do \
-		install -v -D -t ${CTDLDIR} $$x ;\
+	@for x in $(all) utils/*.sh ; do \
+		install -v -C -D -t ${CTDLDIR} $$x ;\
 	done

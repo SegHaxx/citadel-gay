@@ -1,33 +1,23 @@
-/*
- * This module implements server commands related to the display and
- * manipulation of user "bio" files.
- *
- * Copyright (c) 1987-2022 by the citadel.org team
- *
- * This program is open source software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 3 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- */
-
-#include "../../ctdl_module.h"
-#include "../../config.h"
+// This module implements server commands related to the display and
+// manipulation of user profiles (also known as "bio" files).
+//
+// Copyright (c) 1987-2022 by the citadel.org team
+//
+// This program is open source software.  Use, duplication, or disclosure
+// is subject to the terms of the GNU General Public License, version 3.
+// The program is distributed without any warranty, expressed or implied.
 
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <dirent.h>
 
+#include "../../ctdl_module.h"
+#include "../../config.h"
 
-/*
- * Command to enter user bio (profile) in plain text.
- * This is deprecated , or at least it will be when its replacement is written  :)
- * I want commands to get/set bio in full MIME wonderfulness.
- */
+
+// Command to enter user bio (profile) in plain text.
+// This is deprecated , or at least it will be when its replacement is written  :)
+// I want commands to get/set bio in full MIME wonderfulness.
 void cmd_ebio(char *cmdbuf) {
 	char buf[SIZ];
 
@@ -46,7 +36,7 @@ void cmd_ebio(char *cmdbuf) {
 		StrBufAppendBufPlain(NewProfile, HKEY("\n"), 0);
 	}
 
-	/* we have read the new profile from the user , now save it */
+	// we have read the new profile from the user , now save it
 	long old_msgnum = CC->user.msgnum_bio;
 	char userconfigroomname[ROOMNAMELEN];
 	CtdlMailboxName(userconfigroomname, sizeof userconfigroomname, &CC->user, USERCONFIGROOM);
@@ -62,13 +52,10 @@ void cmd_ebio(char *cmdbuf) {
 }
 
 
-/*
- * Command to read user bio (profile) in plain text.
- * This is deprecated , or at least it will be when its replacement is written  :)
- * I want commands to get/set bio in full MIME wonderfulness.
- */
-void cmd_rbio(char *cmdbuf)
-{
+// Command to read user bio (profile) in plain text.
+// This is deprecated , or at least it will be when its replacement is written  :)
+// I want commands to get/set bio in full MIME wonderfulness.
+void cmd_rbio(char *cmdbuf) {
 	struct ctdluser ruser;
 	char buf[SIZ];
 
@@ -91,11 +78,8 @@ void cmd_rbio(char *cmdbuf)
 }
 
 
-/*
- * Import function called by import_old_bio_files() for a single user
- */
-void import_one_bio_file(char *username, long usernum, char *path)
-{
+// Import function called by import_old_bio_files() for a single user
+void import_one_bio_file(char *username, long usernum, char *path) {
 	syslog(LOG_DEBUG, "Import legacy bio for %s, usernum=%ld, filename=%s", username, usernum, path);
 
 	FILE *fp = fopen(path, "r");
@@ -139,11 +123,8 @@ void import_one_bio_file(char *username, long usernum, char *path)
 }
 
 
-/*
- * Look for old-format "bio" files and import them into the message base
- */
-void import_old_bio_files(void)
-{
+// Look for old-format "bio" files and import them into the message base
+void import_old_bio_files(void) {
 	DIR *filedir = NULL;
 	struct dirent *filedir_entry;
 	size_t d_namelen;
@@ -153,14 +134,12 @@ void import_old_bio_files(void)
 	struct stat s;
 	char path[PATH_MAX];
 
-
 	syslog(LOG_DEBUG, "Importing old style bio files into the message base");
 	filedir = opendir("bio");
 	if (filedir == NULL) {
 		return;
 	}
-	while ( (filedir_entry = readdir(filedir)) , (filedir_entry != NULL))
-	{
+	while ( (filedir_entry = readdir(filedir)) , (filedir_entry != NULL)) {
 #ifdef _DIRENT_HAVE_D_NAMLEN
 		d_namelen = filedir_entry->d_namlen;
 
@@ -222,6 +201,6 @@ char *ctdl_module_init_bio(void) {
 	        CtdlRegisterProtoHook(cmd_ebio, "EBIO", "Enter your bio");
         	CtdlRegisterProtoHook(cmd_rbio, "RBIO", "Read a user's bio");
 	}
-	/* return our module name for the log */
+	// return our module name for the log
         return "bio";
 }
