@@ -27,22 +27,22 @@ citserver: server/*.c server/modules/*/*.c config.mk server/*.h
 		-o citserver
 
 setup: utils/setup.c server/citadel_dirs.c utils/*.h server/*.h
-	cc ${CFLAGS} utils/setup.c -lcitadel -o setup
+	cc ${CFLAGS} ${LDFLAGS} utils/setup.c -lcitadel -o setup
 
 ctdlmigrate: utils/ctdlmigrate.c server/citadel_dirs.c utils/*.h server/*.h
-	cc ${CFLAGS} utils/ctdlmigrate.c -lcitadel -lreadline -o ctdlmigrate
+	cc ${CFLAGS} ${LDFLAGS} utils/ctdlmigrate.c -lcitadel -lreadline -o ctdlmigrate
 
 sendcommand: utils/sendcommand.c server/citadel_dirs.c utils/*.h server/*.h
-	cc ${CFLAGS} utils/sendcommand.c -lcitadel -o sendcommand
+	cc ${CFLAGS} ${LDFLAGS} utils/sendcommand.c -lcitadel -o sendcommand
 
 citmail: utils/citmail.c server/citadel_dirs.c utils/*.h server/*.h
-	cc ${CFLAGS} utils/citmail.c -lcitadel -o citmail
+	cc ${CFLAGS} ${LDFLAGS} utils/citmail.c -lcitadel -o citmail
 
 chkpw: utils/chkpw.c utils/*.h server/*.h
-	cc ${CFLAGS} utils/chkpw.c -o chkpw
+	cc ${CFLAGS} ${LDFLAGS} utils/chkpw.c -o chkpw
 
 chkpwd: utils/chkpwd.c utils/auth.c utils/*.h server/*.h
-	cc ${CFLAGS} utils/chkpwd.c utils/auth.c -lcrypt -o chkpwd
+	cc ${CFLAGS} ${LDFLAGS} utils/chkpwd.c utils/auth.c -lcrypt -o chkpwd
 
 config.mk: configure
 	./configure
