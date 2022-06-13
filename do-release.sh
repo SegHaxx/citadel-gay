@@ -58,7 +58,7 @@ sed \
 	textclient/textclient.h
 
 libcitadel_version=`grep LIBCITADEL_VERSION_NUMBER  libcitadel/lib/libcitadel.h | sed s/"[^0-9.]"/""/g`
-citserver_version=`grep REV_LEVEL citadel/citadel.h | sed s/"[^0-9.]"/""/g`
+citserver_version=`grep REV_LEVEL citadel/server/citadel.h | sed s/"[^0-9.]"/""/g`
 webcit_version=`grep CLIENT_VERSION webcit/webcit.h | sed s/"[^0-9.]"/""/g`
 textclient_version=`grep CLIENT_VERSION textclient/textclient.h | sed s/"[^0-9.]"/""/g`
 
