@@ -2,6 +2,18 @@
 
 echo Running $0
 
+# Find our copy of sed , it might be called "gsed" on FreeBSD
+if gsed --version >/dev/null 2>&1 ; then
+	SED=`which gsed`
+elif sed --version >/dev/null 2>&1 ; then
+	SED=`which sed`
+else
+	sed: not found
+	exit 1
+fi
+
+echo sed is ${SED}
+
 
 ICAL=/usr/local/ctdlsupport/include/libical/ical.h
 if test -f /usr/include/libical/ical.h; then 
@@ -66,21 +78,21 @@ ICALTYPES="icalproperty_kind"\
 
     for icaltype in $ICALTYPES; do 
 	cat ./scripts/get_ical_data__template.sed | \
-	    gsed -e "s;__ICALTYPE__;$icaltype;g" > \
+	    ${SED} -e "s;__ICALTYPE__;$icaltype;g" > \
 	    /tmp/get_ical_data.sed
     
 	printf "Ical_${icaltype} ${icaltype}_map[] = {\n"
 	cat ${ICAL} |\
-gsed -e 's;/\*.*\*/;;' -e 's;\t;;g' |\
-gsed -nf /tmp/get_ical_data.sed |\
-gsed -e "s;.*typedef *enum *${icaltype} *{\(.*\)} ${icaltype} *\;.*;\1,;" \
+${SED} -e 's;/\*.*\*/;;' -e 's;\t;;g' |\
+${SED} -nf /tmp/get_ical_data.sed |\
+${SED} -e "s;.*typedef *enum *${icaltype} *{\(.*\)} ${icaltype} *\;.*;\1,;" \
 	    -e 's;/\*.*\*/;;' \
 	    -e 's;/;\n/\n;g' \
 	    -e 's;,;,\n;g' \
 	    -e 's; *;;g' \
 	    -e 's;^t*;;g' \
 	    -e 's;\=[0-9]*;;g'|\
-gsed -e 's;\(.*\),;{HKEY("\1"), \1},;'
+${SED} -e 's;\(.*\),;{HKEY("\1"), \1},;'
 	printf '{"", 0, 0}\n};\n\n\n' 
 	
     done
