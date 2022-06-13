@@ -11,7 +11,7 @@ echo -e '╚══════════════════════�
 echo -e '\033[0m'
 
 libcitadel_version=`grep LIBCITADEL_VERSION_NUMBER  libcitadel/lib/libcitadel.h | sed s/"[^0-9.]"/""/g`
-citserver_version=`grep REV_LEVEL citadel/citadel.h | sed s/"[^0-9.]"/""/g`
+citserver_version=`grep REV_LEVEL citadel/server/citadel.h | sed s/"[^0-9.]"/""/g`
 webcit_version=`grep CLIENT_VERSION webcit/webcit.h | sed s/"[^0-9.]"/""/g`
 textclient_version=`grep CLIENT_VERSION textclient/textclient.h | sed s/"[^0-9.]"/""/g`
 
@@ -45,7 +45,7 @@ sed \
 # Edit citadel.h to make it the new version
 sed \
 	-i s/\#define.\*REV_LEVEL.\*${citserver_version}/\#define\ REV_LEVEL\ ${NEW_VERSION}/g \
-	citadel/citadel.h
+	citadel/server/citadel.h
 
 # Edit webcit.h to make it the new version
 sed \
