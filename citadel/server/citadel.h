@@ -26,9 +26,9 @@ extern "C" {
 
 // Text description of this software
 // (We used to define this ourselves, but why bother when the build tools do it for us?)
-#define CITADEL	PACKAGE_STRING
+#define CITADEL	"Citadel" PACKAGE_VERSION
 
-#define REV_LEVEL 954		// This version
+#define REV_LEVEL 955		// This version
 #define REV_MIN		591		// Oldest compatible database
 #define EXPORT_REV_MIN	931		// Oldest compatible export files
 #define LIBCITADEL_MIN	951		// Minimum required version of libcitadel

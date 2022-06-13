@@ -248,9 +248,6 @@
 /* Define to the full name of this package. */
 #define PACKAGE_NAME "Citadel"
 
-/* Define to the full name and version of this package. */
-#define PACKAGE_STRING "Citadel 951"
-
 /* Define to the one symbol short name of this package. */
 #define PACKAGE_TARNAME "citadel"
 
