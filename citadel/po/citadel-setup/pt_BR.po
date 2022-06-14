@@ -418,7 +418,7 @@ msgstr ""
 "Por favor, pare o serviço manualmente e execute a instalação novamente."
 
 #: ../utils/setup.c:1485
-msgid "Citadel setup program"
+msgid "Citadel Server setup"
 msgstr "Programa de instalação do Citadel"
 
 #: ../utils/setup.c:1513

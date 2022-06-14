@@ -434,7 +434,7 @@ msgstr ""
 "Остановите его и перезапустите программу setup."
 
 #: ../utils/setup.c:1485
-msgid "Citadel setup program"
+msgid "Citadel Server setup"
 msgstr "Программа setup"
 
 #: ../utils/setup.c:1513

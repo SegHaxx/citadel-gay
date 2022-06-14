@@ -437,8 +437,8 @@ msgstr ""
 "Please stop the service manually and run setup again."
 
 #: ../utils/setup.c:1485
-msgid "Citadel setup program"
-msgstr "Citadel setup program"
+msgid "Citadel Server setup"
+msgstr "Citadel Server setup"
 
 #: ../utils/setup.c:1513
 msgid "This Citadel installation is too old to be upgraded."

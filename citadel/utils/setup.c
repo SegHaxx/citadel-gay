@@ -178,7 +178,7 @@ void SetTitles(void) {
 " 2. External LDAP - RFC 2307 POSIX schema\n"
 " 3. External LDAP - MS Active Directory schema\n"
 "\n"
-"For help: http://www.citadel.org/doku.php/faq:installation:authmodes\n"
+"For help: http://www.citadel.org/authmodes.html\n"
 "\n"
 "ANSWER \"0\" UNLESS YOU COMPLETELY UNDERSTAND THIS OPTION.\n");
 
@@ -206,24 +206,20 @@ void SetTitles(void) {
 "If you entered a Bind DN in the previous question, you must now enter\n"
 "the password associated with that account.  Otherwise, you can leave this\n"
 "blank.\n");
+}
 
-#if 0
-// Debug loading of locales... Strace does a better job though.
-	printf("Message catalog directory: %s\n", bindtextdomain("citadel-setup", LOCALEDIR"/locale"));
-	printf("Text domain: %s\n", textdomain("citadel-setup"));
-	printf("Text domain Charset: %s\n", bind_textdomain_codeset("citadel-setup","UTF8"));
-	{
-		int i;
-		for (i = 0; i < eMaxQuestions; i++)
-			printf("%s - %s\n", setup_titles[i], _(setup_titles[i]));
-		exit(0);
-	}
-#endif
+
+void cls(void) {
+	printf("\033[2J\033[H\033[44m\033[1m\033[K\n");
+	printf("  %s  \033[K\n", program_title);
+	printf("\033[K\n");
+	printf("\033[0m\n");
 }
 
 
 void title(const char *text) {
-	printf("\n\033[1m\033[32m<\033[33m%s\033[32m>\033[0m\n", text);
+	cls();
+	printf("\033[1m\033[32m<\033[33m%s\033[32m>\033[0m\n", text);
 }
 
 
@@ -253,7 +249,8 @@ int yesno(const char *question, int default_value) {
 void important_message(const char *title, const char *msgtext) {
 	char buf[SIZ];
 
-	printf("\n%s\n%s\n\n", title, msgtext);
+	cls();
+	printf("%s\n%s\n\n", title, msgtext);
 	printf("%s", _("Press return to continue..."));
 	if (fgets(buf, sizeof buf, stdin)) {
 		;
@@ -285,6 +282,7 @@ void progress(char *text, long int curr, long int cmax) {
 	long i = 0;
 
 	if (curr == 0) {
+		cls();
 		printf("%s\n", text);
 		printf("\033[1m\033[33m[\033[32m............................................................................\033[33m]\033[0m\r");
 	}
@@ -670,7 +668,7 @@ int main(int argc, char *argv[]) {
 	char *activity = NULL;
 	
 	// Keep a mild groove on
-	program_title = _("Citadel setup program");
+	program_title = _("Citadel Server setup");
 
 	// set an invalid setup type
 	setup_type = (-1);
@@ -730,9 +728,7 @@ int main(int argc, char *argv[]) {
 	while (serv_gets(buf), strcmp(buf, "000")) {
 		if (a == 5) {
 			if (atoi(buf) != REV_LEVEL) {
-				display_error("%s\n",
-				_("Your setup program and Citadel server are from different versions.")
-				);
+				display_error("%s\n", _("Your setup program and Citadel server are from different versions."));
 				exit(4);
 			}
 		}

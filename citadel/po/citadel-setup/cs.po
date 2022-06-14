@@ -436,7 +436,7 @@ msgstr ""
 "Zastavte jej prosím ručně a spusťte instalaci znovu."
 
 #: ../utils/setup.c:1485
-msgid "Citadel setup program"
+msgid "Citadel Server setup"
 msgstr "Program pro instalaci Citadely"
 
 #: ../utils/setup.c:1513

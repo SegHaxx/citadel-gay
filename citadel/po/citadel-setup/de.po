@@ -441,7 +441,7 @@ msgstr ""
 "Bitte stoppen Sie in per Hand und starten das Setup erneut."
 
 #: ../utils/setup.c:1485
-msgid "Citadel setup program"
+msgid "Citadel Server setup"
 msgstr "Citadel Setup Programm"
 
 #: ../utils/setup.c:1513
