@@ -27,7 +27,8 @@ do
 
 	case $k in
 		--prefix)
-			PREFIX=$v
+			echo $0 : '--prefix is not supported.  you are probably looking for --ctdldir'
+			exit 1
 		;;
 		--ctdldir)
 			CTDLDIR=$v
