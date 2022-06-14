@@ -96,7 +96,7 @@ void import_one_bio_file(char *username, long usernum, char *path) {
 			char *encoded_data = malloc((data_length * 2) + 100);
 			if (encoded_data) {
 				sprintf(encoded_data, "Content-type: text/plain; charset=UTF-8\nContent-transfer-encoding: base64\n\n");
-				CtdlEncodeBase64(&encoded_data[strlen(encoded_data)], unencoded_data, data_length, 1);
+				CtdlEncodeBase64(&encoded_data[strlen(encoded_data)], unencoded_data, data_length, BASE64_YES_LINEBREAKS);
 
 				char userconfigroomname[ROOMNAMELEN];
 				struct ctdluser usbuf;

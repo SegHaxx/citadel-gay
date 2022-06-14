@@ -113,7 +113,7 @@ void parse_fields_from_rule_editor(void) {
 				redirect, automsg, final
 			);
 	
-			size_t len = CtdlEncodeBase64(encoded_rule, rule, strlen(rule)+1, 0);
+			size_t len = CtdlEncodeBase64(encoded_rule, rule, strlen(rule)+1, BASE64_NO_LINEBREAKS);
 			if (encoded_rule[len - 1] == '\n') {
 				encoded_rule[len - 1] = '\0';
 			}

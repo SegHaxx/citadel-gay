@@ -220,7 +220,7 @@ char *rfc2047encode(const char *line, long length) {
 
 	result = (char*) malloc(sizeof(UTF8_HEADER) + 4 + length * 2);
 	strncpy (result, UTF8_HEADER, strlen (UTF8_HEADER));
-	CtdlEncodeBase64(result + strlen(UTF8_HEADER), line, length, 0);
+	CtdlEncodeBase64(result + strlen(UTF8_HEADER), line, length, BASE64_NO_LINEBREAKS);
 	end = strlen (result);
         result[end]='?';
 	result[end+1]='=';

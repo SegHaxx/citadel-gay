@@ -945,7 +945,7 @@ void post_mime_to_server(void) {
 				break;
 			}
 			syslog(LOG_DEBUG, "Attachment: raw len %d", StrLength(att->Data));
-			encoded_strlen = CtdlEncodeBase64(encoded, ChrPtr(att->Data), StrLength(att->Data), 1);
+			encoded_strlen = CtdlEncodeBase64(encoded, ChrPtr(att->Data), StrLength(att->Data), BASE64_YES_LINEBREAKS);
 			syslog(LOG_DEBUG, "Attachment: encoded len %d", encoded_strlen);
 
 			serv_printf("--%s", top_boundary);

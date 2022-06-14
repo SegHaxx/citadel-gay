@@ -27,7 +27,7 @@ void try_login(struct http_transaction *h, struct ctdlsession *c) {
 	extract_token(password, h->request_body, 1, '|', sizeof password);
 
 	snprintf(buf, sizeof buf, "%s:%s", username, password);
-	CtdlEncodeBase64(auth, buf, strlen(buf), 0);
+	CtdlEncodeBase64(auth, buf, strlen(buf), BASE64_NO_LINEBREAKS);
 
 	syslog(LOG_DEBUG, "try_login(username='%s',password=(%d bytes))", username, (int) strlen(password));
 

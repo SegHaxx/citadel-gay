@@ -307,7 +307,7 @@ int wiki_upload_beforesave(struct CtdlMessage *msg, struct recptypes *recp) {
 					   CC->user.fullname,
 					   CtdlGetConfigStr("c_nodename"));
 
-			memolen = CtdlEncodeBase64(encoded_memo, memo, memolen, 0);
+			memolen = CtdlEncodeBase64(encoded_memo, memo, memolen, BASE64_YES_LINEBREAKS);
 
 			StrBufAppendBufPlain(NewMsgText, HKEY("--"), 0);
 			StrBufAppendBufPlain(NewMsgText, boundary, -1, 0);

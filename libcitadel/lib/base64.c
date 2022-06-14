@@ -88,8 +88,10 @@ size_t CtdlEncodeBase64(char *dest, const char *source, size_t sourcelen, int li
 			bytes_output += 4;
 		}
 		if ( ((bytes_processed % 57) == 0) || (bytes_processed >= sourcelen) ) {
-			sprintf(&dest[bytes_output], "\r\n");
-			bytes_output += 2;
+			if (linebreaks) {
+				sprintf(&dest[bytes_output], "\r\n");
+				bytes_output += 2;
+			}
 		}
 
 	}

@@ -629,7 +629,7 @@ void imap_authenticate(int num_parms, ConstStr *Params) {
 	}
 
 	if (!strcasecmp(Params[2].Key, "LOGIN")) {
-		size_t len = CtdlEncodeBase64(UsrBuf, "Username:", 9, 0);
+		size_t len = CtdlEncodeBase64(UsrBuf, "Username:", 9, BASE64_NO_LINEBREAKS);
 		if (UsrBuf[len - 1] == '\n') {
 			UsrBuf[len - 1] = '\0';
 		}
@@ -641,7 +641,7 @@ void imap_authenticate(int num_parms, ConstStr *Params) {
 	}
 
 	if (!strcasecmp(Params[2].Key, "PLAIN")) {
-		// size_t len = CtdlEncodeBase64(UsrBuf, "Username:", 9, 0);
+		// size_t len = CtdlEncodeBase64(UsrBuf, "Username:", 9, BASE64_NO_LINEBREAKS);
 		// if (UsrBuf[len - 1] == '\n') {
 		//   UsrBuf[len - 1] = '\0';
 		// }
@@ -722,7 +722,7 @@ void imap_auth_login_user(long state) {
 	case imap_as_expecting_username:
 		StrBufDecodeBase64(Imap->Cmd.CmdBuf);
 		CtdlLoginExistingUser(ChrPtr(Imap->Cmd.CmdBuf));
-		size_t len = CtdlEncodeBase64(PWBuf, "Password:", 9, 0);
+		size_t len = CtdlEncodeBase64(PWBuf, "Password:", 9, BASE64_NO_LINEBREAKS);
 		if (PWBuf[len - 1] == '\n') {
 			PWBuf[len - 1] = '\0';
 		}

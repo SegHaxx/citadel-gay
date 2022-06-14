@@ -81,7 +81,7 @@ void cmd_ulri(char *cmdbuf) {
 	char *encoded_data = malloc((data_length * 2) + 100);
 	if (encoded_data) {
 		sprintf(encoded_data, "Content-type: %s\nContent-transfer-encoding: base64\n\n", mimetype);
-		CtdlEncodeBase64(&encoded_data[strlen(encoded_data)], unencoded_data, data_length, 1);
+		CtdlEncodeBase64(&encoded_data[strlen(encoded_data)], unencoded_data, data_length, BASE64_YES_LINEBREAKS);
 		long new_msgnum = quickie_message("Citadel", NULL, NULL, SYSCONFIGROOM, encoded_data, FMT_RFC822, "Image uploaded by admin user");
 
 		if (CtdlGetRoomLock(&CC->room, CC->room.QRname) == 0) {
@@ -196,7 +196,7 @@ void cmd_ului(char *cmdbuf) {
 	char *encoded_data = malloc((data_length * 2) + 100);
 	if (encoded_data) {
 		sprintf(encoded_data, "Content-type: %s\nContent-transfer-encoding: base64\n\n", mimetype);
-		CtdlEncodeBase64(&encoded_data[strlen(encoded_data)], unencoded_data, data_length, 1);
+		CtdlEncodeBase64(&encoded_data[strlen(encoded_data)], unencoded_data, data_length, BASE64_YES_LINEBREAKS);
 		long new_msgnum = quickie_message("Citadel", NULL, NULL, userconfigroomname, encoded_data, FMT_RFC822, "Photo uploaded by user");
 
 		if (CtdlGetUserLock(&usbuf, username) == 0) {	// lock it this time
@@ -237,7 +237,7 @@ void import_one_userpic_file(char *username, long usernum, char *path) {
 			char *encoded_data = malloc((data_length * 2) + 100);
 			if (encoded_data) {
 				sprintf(encoded_data, "Content-type: %s\nContent-transfer-encoding: base64\n\n", GuessMimeByFilename(path, strlen(path)));
-				CtdlEncodeBase64(&encoded_data[strlen(encoded_data)], unencoded_data, data_length, 1);
+				CtdlEncodeBase64(&encoded_data[strlen(encoded_data)], unencoded_data, data_length, BASE64_YES_LINEBREAKS);
 
 				char userconfigroomname[ROOMNAMELEN];
 				struct ctdluser usbuf;

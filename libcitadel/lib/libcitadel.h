@@ -405,6 +405,10 @@ long extract_long (const char *source, int parmnum);
 unsigned long extract_unsigned_long(const char *source, int parmnum);
 void CtdlInitBase64Table(void);
 size_t CtdlEncodeBase64(char *dest, const char *source, size_t sourcelen, int linebreaks);
+enum {
+	BASE64_NO_LINEBREAKS = 0,
+	BASE64_YES_LINEBREAKS = 1
+};
 size_t CtdlDecodeBase64(char *dest, const char *source, size_t length);
 unsigned int decode_hex(char *Source);
 int CtdlDecodeQuotedPrintable(char *decoded, char *encoded, int sourcelen);

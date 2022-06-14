@@ -49,7 +49,7 @@ void SaveRoomNetConfigFile(long roomnum, const char *raw_netconfig) {
 	enc = malloc(len * 2);
 
 	if (enc) {
-		enc_len = CtdlEncodeBase64(enc, raw_netconfig, len, 0);
+		enc_len = CtdlEncodeBase64(enc, raw_netconfig, len, BASE64_NO_LINEBREAKS);
 		if ((enc_len > 1) && (enc[enc_len-2] == 13)) enc[enc_len-2] = 0;
 		if ((enc_len > 0) && (enc[enc_len-1] == 10)) enc[enc_len-1] = 0;
 		enc[enc_len] = 0;

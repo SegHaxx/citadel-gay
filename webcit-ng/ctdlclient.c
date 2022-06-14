@@ -210,7 +210,7 @@ int login_to_citadel(struct ctdlsession *c, char *auth, char *resultbuf) {
 		// Re-encode the auth string so it contains the properly formatted username
 		char new_auth_string[1024];
 		snprintf(new_auth_string, sizeof(new_auth_string),  "%s:%s", c->whoami, supplied_password);
-		CtdlEncodeBase64(c->auth, new_auth_string, strlen(new_auth_string), 0);
+		CtdlEncodeBase64(c->auth, new_auth_string, strlen(new_auth_string), BASE64_NO_LINEBREAKS);
 
 		return(0);
 	}

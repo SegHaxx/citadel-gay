@@ -182,7 +182,7 @@ void iorarf_oneroom(char *roomname, char *infofile, char *picfile) {
 				encoded_data = malloc((data_length * 2) + 100);
 				if (encoded_data) {
 					sprintf(encoded_data, "Content-type: text/plain\nContent-transfer-encoding: base64\n\n");
-					CtdlEncodeBase64(&encoded_data[strlen(encoded_data)], unencoded_data, data_length, 1);
+					CtdlEncodeBase64(&encoded_data[strlen(encoded_data)], unencoded_data, data_length, BASE64_YES_LINEBREAKS);
 					snprintf(subject, sizeof subject, "Imported room banner for %s", roomname);
 					info_msgnum = quickie_message("Citadel", NULL, NULL, SYSCONFIGROOM, encoded_data, FMT_RFC822, subject);
 					free(encoded_data);
@@ -213,7 +213,7 @@ void iorarf_oneroom(char *roomname, char *infofile, char *picfile) {
 				encoded_data = malloc((data_length * 2) + 100);
 				if (encoded_data) {
 					sprintf(encoded_data, "Content-type: image/gif\nContent-transfer-encoding: base64\n\n");
-					CtdlEncodeBase64(&encoded_data[strlen(encoded_data)], unencoded_data, data_length, 1);
+					CtdlEncodeBase64(&encoded_data[strlen(encoded_data)], unencoded_data, data_length, BASE64_YES_LINEBREAKS);
 					snprintf(subject, sizeof subject, "Imported room icon for %s", roomname);
 					pic_msgnum = quickie_message("Citadel", NULL, NULL, SYSCONFIGROOM, encoded_data, FMT_RFC822, subject);
 					free(encoded_data);

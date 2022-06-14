@@ -312,7 +312,7 @@ void smtp_get_user(int offset) {
 	StrBufDecodeBase64(UserName);
 
 	if (CtdlLoginExistingUser(ChrPtr(UserName)) == login_ok) {
-		size_t len = CtdlEncodeBase64(buf, "Password:", 9, 0);
+		size_t len = CtdlEncodeBase64(buf, "Password:", 9, BASE64_NO_LINEBREAKS);
 
 		if (buf[len - 1] == '\n') {
 			buf[len - 1] = '\0';
@@ -426,7 +426,7 @@ void smtp_auth(void) {
 			smtp_get_user(11);
 		}
 		else {
-			size_t len = CtdlEncodeBase64(username_prompt, "Username:", 9, 0);
+			size_t len = CtdlEncodeBase64(username_prompt, "Username:", 9, BASE64_NO_LINEBREAKS);
 			if (username_prompt[len - 1] == '\n') {
 				username_prompt[len - 1] = '\0';
 			}

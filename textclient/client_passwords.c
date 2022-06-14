@@ -100,13 +100,13 @@ void set_stored_password(char *host, char *port, char *username, char *password)
 		if ((strcasecmp(hostbuf, host))
 		    || (strcasecmp(portbuf, port))) {
 			snprintf(buf, sizeof buf, "%s|%s|%s|%s|", hostbuf, portbuf, ubuf, pbuf);
-			CtdlEncodeBase64(buf64, buf, strlen(buf), 0);
+			CtdlEncodeBase64(buf64, buf, strlen(buf), BASE64_NO_LINEBREAKS);
 			fprintf(fp, "%s\n", buf64);
 		}
 	}
 	if (!IsEmptyStr(username)) {
 		snprintf(buf, sizeof buf, "%s|%s|%s|%s|", host, port, username, password);
-		CtdlEncodeBase64(buf64, buf, strlen(buf), 0);
+		CtdlEncodeBase64(buf64, buf, strlen(buf), BASE64_NO_LINEBREAKS);
 		fprintf(fp, "%s\n", buf64);
 	}
 	fclose(oldfp);

@@ -344,7 +344,7 @@ void migr_export_message(long msgnum) {
 	}
 	else {
 		// Once we do the encoding we know the exact size
-		encoded_len = CtdlEncodeBase64(encoded_msg, (char *)smr.ser, smr.len, 1);
+		encoded_len = CtdlEncodeBase64(encoded_msg, (char *)smr.ser, smr.len, BASE64_YES_LINEBREAKS);
 
 		// Careful now.  If the message is gargantuan, trying to write multiple gigamegs in one
 		// big write operation can make our transport unhappy.  So we'll chunk it up 10 KB at a time.
