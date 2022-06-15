@@ -391,14 +391,7 @@ void do_user_purge(char *username, void *data) {
 	if (us.usernum < 0L) purge = 1;
 	
 	// Don't purge user 0. That user is there for the system
-	if (us.usernum == 0L) {
-		// FIXME: Temporary log message. Until we do unauth access with user 0 we should
-		// try to get rid of all user 0 occurences. Many will be remnants from old code so
-		// we will need to try and purge them from users data bases.Some will not have names but
-		// those with names should be purged.
-		syslog(LOG_DEBUG, "Auto purger found a user 0 with name <%s>", us.fullname);
-		// purge = 0;
-	}
+	if (us.usernum == 0L) purge = 0;
 	
 	// If the user has no full name entry then we can't purge them since the actual purge can't find them.
 	// This shouldn't happen but does somehow.

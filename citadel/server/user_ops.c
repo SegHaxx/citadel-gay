@@ -566,6 +566,11 @@ int CtdlLoginExistingUser(const char *trythisname) {
 		}
 	}
 
+	// User 0 is a system account and must not be used by a real user
+	if (&CC->user.usernum <= 0) {
+		return login_not_found;
+	}
+
 	// Did we find something?
 	if (found_user == 0) {
 		if (((CC->nologin)) && (CC->user.axlevel < AxAideU)) {
