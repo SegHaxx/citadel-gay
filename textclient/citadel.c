@@ -1471,7 +1471,7 @@ int main(int argc, char **argv) {
 		logoff(ipc, atoi(aaa));
 	}
 
-#ifdef HAVE_OPENSSL
+#ifdef HAVE_OPENSSLLLLLL
 	/* Evaluate encryption preferences */
 	if (arg_encrypt != RC_NO && rc_encrypt != RC_NO) {
 		if (!ipc->isLocal || arg_encrypt == RC_YES || rc_encrypt == RC_YES) {

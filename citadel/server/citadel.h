@@ -24,15 +24,17 @@
 extern "C" {
 #endif
 
-// Text description of this software
-// (We used to define this ourselves, but why bother when the build tools do it for us?)
-#define CITADEL	"Citadel" PACKAGE_VERSION
 
 #define REV_LEVEL 956		// This version
 #define REV_MIN		591		// Oldest compatible database
 #define EXPORT_REV_MIN	931		// Oldest compatible export files
 #define LIBCITADEL_MIN	951		// Minimum required version of libcitadel
 #define SERVER_TYPE	0		// zero for stock Citadel; other developers please obtain SERVER_TYPE codes for your implementations
+
+// hats off to https://stackoverflow.com/questions/5459868/concatenate-int-to-string-using-c-preprocessor
+#define STR_HELPER(x) #x
+#define STR(x) STR_HELPER(x)
+#define CITADEL	"Citadel Server " STR(REV_LEVEL)
 
 #ifdef LIBCITADEL_VERSION_NUMBER
 #if LIBCITADEL_VERSION_NUMBER < LIBCITADEL_MIN

@@ -475,10 +475,11 @@ int CtdlLoginExistingUser(const char *trythisname) {
 
 	if (trythisname == NULL) return login_not_found;
 	
-	if (!strncasecmp(trythisname, "SYS_", 4)) {
-		syslog(LOG_DEBUG, "user_ops: system user \"%s\" is not allowed to log in.", trythisname);
-		return login_not_found;
-	}
+	// We handle this a different way now (see below)
+	//if (!strncasecmp(trythisname, "SYS_", 4)) {
+		//syslog(LOG_DEBUG, "user_ops: system user \"%s\" is not allowed to log in.", trythisname);
+		//return login_not_found;
+	//}
 
 	// Continue attempting user validation...
 	safestrncpy(username, trythisname, sizeof (username));
@@ -567,7 +568,8 @@ int CtdlLoginExistingUser(const char *trythisname) {
 	}
 
 	// User 0 is a system account and must not be used by a real user
-	if (&CC->user.usernum <= 0) {
+	if (CC->user.usernum <= 0) {
+		syslog(LOG_DEBUG, "user_ops: system account <%s> is not allowed to log in.", trythisname);
 		return login_not_found;
 	}
 

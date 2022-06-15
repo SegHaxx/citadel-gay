@@ -4,9 +4,6 @@
 #error CTDLDIR is not defined , did we not run configure ?
 #endif
 
-/* define, if the user suplied a data-directory to use. */
-/* #undef DATA_DIR */
-
 /* whether we have NLS support */
 #define ENABLE_NLS /**/
 
@@ -68,9 +65,6 @@
 /* Define to 1 if you have the <inttypes.h> header file. */
 #define HAVE_INTTYPES_H 1
 
-/* Define to 1 if you have the `nsl' library (-lnsl). */
-/* #undef HAVE_LIBNSL */
-
 /* Define to 1 if you have the `pthread' library (-lpthread). */
 #define HAVE_LIBPTHREAD 1
 
@@ -95,9 +89,6 @@
 /* Define to 1 if you have the `mktime' function. */
 #define HAVE_MKTIME 1
 
-/* Define to 1 if you have the <ndir.h> header file, and it defines `DIR'. */
-/* #undef HAVE_NDIR_H */
-
 /* Define to 1 if you have the <netinet/in.h> header file. */
 #define HAVE_NETINET_IN_H 1
 
@@ -121,12 +112,6 @@
 
 /* Define to 1 if you have the `socket' function. */
 #define HAVE_SOCKET 1
-
-/* enable alternate spool dir? */
-/* #undef HAVE_SPOOL_DIR */
-
-/* should we activate an alternate static text location? */
-/* #undef HAVE_STATICDATA_DIR */
 
 /* Define to 1 if you have the <stdint.h> header file. */
 #define HAVE_STDINT_H 1
@@ -164,16 +149,8 @@
 /* Define to 1 if you have the <syslog.h> header file. */
 #define HAVE_SYSLOG_H 1
 
-/* Define to 1 if you have the <sys/dir.h> header file, and it defines `DIR'.
-   */
-/* #undef HAVE_SYS_DIR_H */
-
 /* Define to 1 if you have the <sys/ioctl.h> header file. */
 #define HAVE_SYS_IOCTL_H 1
-
-/* Define to 1 if you have the <sys/ndir.h> header file, and it defines `DIR'.
-   */
-/* #undef HAVE_SYS_NDIR_H */
 
 /* Define to 1 if you have the <sys/prctl.h> header file. */
 #define HAVE_SYS_PRCTL_H 1
@@ -199,18 +176,11 @@
 /* Define to 1 if you have the <termios.h> header file. */
 #define HAVE_TERMIOS_H 1
 
-/* Define if you don't have `tm_gmtoff' but do have the external variable
-   `timezone'. */
-/* #undef HAVE_TIMEZONE */
-
 /* Define to 1 if you have the <unistd.h> header file. */
 #define HAVE_UNISTD_H 1
 
 /* Define to 1 if you have the `uselocale' function. */
 #define HAVE_USELOCALE 1
-
-/* should we put our helper binaries to another location? */
-/* #undef HAVE_UTILBIN_DIR */
 
 /* Define to 1 if you have the <utmpx.h> header file. */
 #define HAVE_UTMPX_H 1
@@ -227,41 +197,11 @@
 /* Define to 1 if you have the `vprintf' function. */
 #define HAVE_VPRINTF 1
 
-/* Define to 1 if you have the `vw_printw' function. */
-/* #undef HAVE_VW_PRINTW */
-
-/* Define to 1 if you have the `wcolor_set' function. */
-/* #undef HAVE_WCOLOR_SET */
-
-/* Define to 1 if you have the `wresize' function. */
-/* #undef HAVE_WRESIZE */
-
-/* define, if the user suplied a helpfile-directory to use. */
-/* #undef HELP_DIR */
-
 /* where to find our pot files */
 #define LOCALEDIR "/root/citadel/citadel"
 
-/* Define to the address where bug reports for this package should be sent. */
-#define PACKAGE_BUGREPORT "http://uncensored.citadel.org"
-
-/* Define to the full name of this package. */
-#define PACKAGE_NAME "Citadel"
-
-/* Define to the one symbol short name of this package. */
-#define PACKAGE_TARNAME "citadel"
-
-/* Define to the home page for this package. */
-#define PACKAGE_URL ""
-
-/* Define to the version of this package. */
-#define PACKAGE_VERSION "951"
-
 /* Define as the return type of signal handlers (`int' or `void'). */
 #define RETSIGTYPE void
-
-/* define, where the config should go in unix style */
-/* #undef RUN_DIR */
 
 /* The size of `char', as computed by sizeof. */
 #define SIZEOF_CHAR 1
@@ -281,26 +221,14 @@
 /* The size of `size_t', as computed by sizeof. */
 #define SIZEOF_SIZE_T 8
 
-/* do we need to use solaris call syntax? */
-/* #undef SOLARIS_GETPWUID */
-
-/* where do we place our spool dirs? */
-/* #undef SPOOL_DIR */
-
 /* were should we put our keys? */
 #define SSL_DIR "/root/citadel/citadel/keys"
-
-/* where do we put our static text data? */
-/* #undef STATICDATA_DIR */
 
 /* Define to 1 if you have the ANSI C header files. */
 #define STDC_HEADERS 1
 
 /* Define to 1 if you can safely include both <sys/time.h> and <time.h>. */
 #define TIME_WITH_SYS_TIME 1
-
-/* Define to 1 if your <sys/time.h> declares `struct tm'. */
-/* #undef TM_IN_SYS_TIME */
 
 /* Enable extensions on AIX 3, Interix.  */
 #ifndef _ALL_SOURCE
@@ -322,26 +250,3 @@
 #ifndef __EXTENSIONS__
 # define __EXTENSIONS__ 1
 #endif
-
-
-/* were to put our helper programs */
-/* #undef UTILBIN_DIR */
-
-/* Define to 1 if on MINIX. */
-/* #undef _MINIX */
-
-/* Define to 2 if the system does not provide POSIX.1 features except with
-   this defined. */
-/* #undef _POSIX_1_SOURCE */
-
-/* Define to 1 if you need to in order for `stat' and other things to work. */
-/* #undef _POSIX_SOURCE */
-
-/* Define to empty if `const' does not conform to ANSI C. */
-/* #undef const */
-
-/* Define to `int' if <sys/types.h> does not define. */
-/* #undef pid_t */
-
-/* Define to `unsigned int' if <sys/types.h> does not define. */
-/* #undef size_t */
