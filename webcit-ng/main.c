@@ -32,6 +32,7 @@ int main(int argc, char **argv) {
 			setuid(atoi(optarg));
 			break;
 		case 'h':
+			ctdl_dir = strdup(optarg);
 			break;
 		case 'd':
 			running_as_daemon = 1;
@@ -87,7 +88,7 @@ int main(int argc, char **argv) {
 				"[-D daemonizepid] [-v] "
 				"[-g defaultlandingpage] [-B basesize] "
 				"[-s] [-S cipher_suites]"
-				"[citadel_directory]\n"
+				"[-h citadel_server_directory]\n"
 			);
 			return 1;
 		}
