@@ -58,6 +58,8 @@ void worker_entry(int *pointer_to_master_socket) {
 
 	while (1) {
 		// Each worker thread blocks on accept() while waiting for something to do.
+		// We don't have to worry about the "thundering herd" problem on modern kernels; for an explanation see
+		// https://stackoverflow.com/questions/2213779/does-the-thundering-herd-problem-exist-on-linux-anymore
 		memset(&ch, 0, sizeof ch);
 		ch.sock = -1;
 		errno = EAGAIN;

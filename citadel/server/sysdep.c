@@ -3,7 +3,7 @@
 // Here's where we (hopefully) have most parts of the Citadel server that
 // might need tweaking when run on different operating system variants.
 //
-// Copyright (c) 1987-2021 by the citadel.org team
+// Copyright (c) 1987-2022 by the citadel.org team
 //
 // This program is open source software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License, version 3.
@@ -128,21 +128,18 @@ int ctdl_tcp_server(char *ip_addr, int port_number, int queue_len) {
 		ip_version = 6;
 		sin6.sin6_addr = in6addr_any;
 	}
-	else if (!strcmp(ip_addr, "0.0.0.0"))						// any IPv4
-	{
+	else if (!strcmp(ip_addr, "0.0.0.0")) {						// any IPv4
 		ip_version = 4;
 		sin4.sin_addr.s_addr = INADDR_ANY;
 	}
-	else if ((strchr(ip_addr, '.')) && (!strchr(ip_addr, ':')))			// specific IPv4
-	{
+	else if ((strchr(ip_addr, '.')) && (!strchr(ip_addr, ':'))) {			// specific IPv4
 		ip_version = 4;
 		if (inet_pton(AF_INET, ip_addr, &sin4.sin_addr) <= 0) {
 			syslog(LOG_ALERT, "tcpserver: inet_pton: %m");
 			return (-1);
 		}
 	}
-	else										// specific IPv6
-	{
+	else {										// specific IPv6
 		ip_version = 6;
 		if (inet_pton(AF_INET6, ip_addr, &sin6.sin6_addr) <= 0) {
 			syslog(LOG_ALERT, "tcpserver: inet_pton: %m");
@@ -284,28 +281,24 @@ void unbuffer_output(void) {
 
 void flush_output(void) {
 #ifdef HAVE_TCP_BUFFERING
-	struct CitContext *CCC = CC;
-	setsockopt(CCC->client_socket, IPPROTO_TCP, TCP_CORK, &off, 4);
-	setsockopt(CCC->client_socket, IPPROTO_TCP, TCP_CORK, &on, 4);
+	setsockopt(CC->client_socket, IPPROTO_TCP, TCP_CORK, &off, 4);
+	setsockopt(CC->client_socket, IPPROTO_TCP, TCP_CORK, &on, 4);
 #endif
 }
 
 
 // close the client socket
 void client_close(void) {
-	CitContext *CCC = CC;
-
-	if (!CCC) return;
-	if (CCC->client_socket <= 0) return;
-	syslog(LOG_DEBUG, "sysdep: closing socket %d", CCC->client_socket);
-	close(CCC->client_socket);
-	CCC->client_socket = -1 ;
+	if (!CC) return;
+	if (CC->client_socket <= 0) return;
+	syslog(LOG_DEBUG, "sysdep: closing socket %d", CC->client_socket);
+	close(CC->client_socket);
+	CC->client_socket = -1 ;
 }
 
 
 // Send binary data to the client.
-int client_write(const char *buf, int nbytes)
-{
+int client_write(const char *buf, int nbytes) {
 	int bytes_written = 0;
 	int retval;
 #ifndef HAVE_TCP_BUFFERING
@@ -318,10 +311,8 @@ int client_write(const char *buf, int nbytes)
 	if (nbytes < 1) return(0);
 
 	Ctx = CC;
-
 	if (Ctx->redirect_buffer != NULL) {
-		StrBufAppendBufPlain(Ctx->redirect_buffer,
-				     buf, nbytes, 0);
+		StrBufAppendBufPlain(Ctx->redirect_buffer, buf, nbytes, 0);
 		return 0;
 	}
 
@@ -340,17 +331,18 @@ int client_write(const char *buf, int nbytes)
 			FD_ZERO(&wset);
 			FD_SET(Ctx->client_socket, &wset);
 			if (select(1, NULL, &wset, NULL, NULL) == -1) {
-				if (errno == EINTR)
-				{
+				if (errno == EINTR) {
 					syslog(LOG_DEBUG, "sysdep: client_write(%d bytes) select() interrupted.", nbytes-bytes_written);
 					if (server_shutting_down) {
 						CC->kill_me = KILLME_SELECT_INTERRUPTED;
 						return (-1);
-					} else {
+					}
+					else {
 						// can't trust fd's and stuff so we need to re-create them
 						continue;
 					}
-				} else {
+				}
+				else {
 					syslog(LOG_ERR, "sysdep: client_write(%d bytes) select failed: %m", nbytes - bytes_written);
 					client_close();
 					Ctx->kill_me = KILLME_SELECT_FAILED;
@@ -370,6 +362,7 @@ int client_write(const char *buf, int nbytes)
 	}
 	return 0;
 }
+
 
 void cputbuf(const StrBuf *Buf) {   
 	client_write(ChrPtr(Buf), StrLength(Buf)); 
@@ -402,12 +395,11 @@ void cprintf(const char *format, ...) {
 //      0       Request timed out.
 //	-1   	Connection is broken, or other error.
 int client_read_blob(StrBuf *Target, int bytes, int timeout) {
-	CitContext *CCC=CC;
 	const char *Error;
 	int retval = 0;
 
 #ifdef HAVE_OPENSSL
-	if (CCC->redirect_ssl) {
+	if (CC->redirect_ssl) {
 		retval = client_read_sslblob(Target, bytes, timeout);
 		if (retval < 0) {
 			syslog(LOG_ERR, "sysdep: client_read_blob() failed");
@@ -417,9 +409,9 @@ int client_read_blob(StrBuf *Target, int bytes, int timeout) {
 #endif
 	{
 		retval = StrBufReadBLOBBuffered(Target, 
-						CCC->RecvBuf.Buf,
-						&CCC->RecvBuf.ReadWritePointer,
-						&CCC->client_socket,
+						CC->RecvBuf.Buf,
+						&CC->RecvBuf.ReadWritePointer,
+						&CC->client_socket,
 						1, 
 						bytes,
 						O_TERM,
@@ -437,36 +429,31 @@ int client_read_blob(StrBuf *Target, int bytes, int timeout) {
 
 // to make client_read_random_blob() more efficient, increase buffer size.
 // just use in greeting function, else your buffer may be flushed
-void client_set_inbound_buf(long N)
-{
-	CitContext *CCC=CC;
-	FlushStrBuf(CCC->RecvBuf.Buf);
-	ReAdjustEmptyBuf(CCC->RecvBuf.Buf, N * SIZ, N * SIZ);
+void client_set_inbound_buf(long N) {
+	FlushStrBuf(CC->RecvBuf.Buf);
+	ReAdjustEmptyBuf(CC->RecvBuf.Buf, N * SIZ, N * SIZ);
 }
 
-int client_read_random_blob(StrBuf *Target, int timeout)
-{
-	CitContext *CCC=CC;
+
+int client_read_random_blob(StrBuf *Target, int timeout) {
 	int rc;
 
 	rc =  client_read_blob(Target, 1, timeout);
-	if (rc > 0)
-	{
+	if (rc > 0) {
 		long len;
 		const char *pch;
 		
-		len = StrLength(CCC->RecvBuf.Buf);
-		pch = ChrPtr(CCC->RecvBuf.Buf);
+		len = StrLength(CC->RecvBuf.Buf);
+		pch = ChrPtr(CC->RecvBuf.Buf);
 
-		if (len > 0)
-		{
-			if (CCC->RecvBuf.ReadWritePointer != NULL) {
-				len -= CCC->RecvBuf.ReadWritePointer - pch;
-				pch = CCC->RecvBuf.ReadWritePointer;
+		if (len > 0) {
+			if (CC->RecvBuf.ReadWritePointer != NULL) {
+				len -= CC->RecvBuf.ReadWritePointer - pch;
+				pch = CC->RecvBuf.ReadWritePointer;
 			}
 			StrBufAppendBufPlain(Target, pch, len, 0);
-			FlushStrBuf(CCC->RecvBuf.Buf);
-			CCC->RecvBuf.ReadWritePointer = NULL;
+			FlushStrBuf(CC->RecvBuf.Buf);
+			CC->RecvBuf.ReadWritePointer = NULL;
 			return StrLength(Target);
 		}
 		return rc;
@@ -475,33 +462,31 @@ int client_read_random_blob(StrBuf *Target, int timeout)
 		return rc;
 }
 
-int client_read_to(char *buf, int bytes, int timeout)
-{
-	CitContext *CCC=CC;
+
+int client_read_to(char *buf, int bytes, int timeout) {
 	int rc;
 
-	rc = client_read_blob(CCC->MigrateBuf, bytes, timeout);
-	if (rc < 0)
-	{
+	rc = client_read_blob(CC->MigrateBuf, bytes, timeout);
+	if (rc < 0) {
 		*buf = '\0';
 		return rc;
 	}
-	else
-	{
+	else {
 		memcpy(buf, 
-		       ChrPtr(CCC->MigrateBuf),
-		       StrLength(CCC->MigrateBuf) + 1);
-		FlushStrBuf(CCC->MigrateBuf);
+		       ChrPtr(CC->MigrateBuf),
+		       StrLength(CC->MigrateBuf) + 1);
+		FlushStrBuf(CC->MigrateBuf);
 		return rc;
 	}
 }
 
 
-int HaveMoreLinesWaiting(CitContext *CCC) {
-	if ((CCC->kill_me != 0) ||
-	    ( (CCC->RecvBuf.ReadWritePointer == NULL) && 
-	      (StrLength(CCC->RecvBuf.Buf) == 0) && 
-	      (CCC->client_socket != -1)) )
+int HaveMoreLinesWaiting(CitContext *ctx) {
+	if (	(ctx->kill_me != 0)
+		|| ( (ctx->RecvBuf.ReadWritePointer == NULL)
+		&& (StrLength(ctx->RecvBuf.Buf) == 0)
+		&& (ctx->client_socket != -1))
+	)
 		return 0;
 	else
 		return 1;
@@ -515,24 +500,24 @@ INLINE int client_read(char *buf, int bytes) {
 	return(client_read_to(buf, bytes, CtdlGetConfigInt("c_sleeping")));
 }
 
+
 int CtdlClientGetLine(StrBuf *Target) {
-	CitContext *CCC=CC;
 	const char *Error;
 	int rc;
 
 	FlushStrBuf(Target);
 #ifdef HAVE_OPENSSL
-	if (CCC->redirect_ssl) {
-		rc = client_readline_sslbuffer(Target, CCC->RecvBuf.Buf, &CCC->RecvBuf.ReadWritePointer, 1);
+	if (CC->redirect_ssl) {
+		rc = client_readline_sslbuffer(Target, CC->RecvBuf.Buf, &CC->RecvBuf.ReadWritePointer, 1);
 		return rc;
 	}
 	else 
 #endif
 	{
 		rc = StrBufTCP_read_buffered_line_fast(Target, 
-						       CCC->RecvBuf.Buf,
-						       &CCC->RecvBuf.ReadWritePointer,
-						       &CCC->client_socket,
+						       CC->RecvBuf.Buf,
+						       &CC->RecvBuf.ReadWritePointer,
+						       &CC->client_socket,
 						       5,
 						       1,
 						       &Error
@@ -547,16 +532,15 @@ int CtdlClientGetLine(StrBuf *Target) {
 // justifiably moved out of sysdep.c)
 int client_getln(char *buf, int bufsize) {
 	int i, retval;
-	CitContext *CCC=CC;
 	const char *pCh;
 
-	retval = CtdlClientGetLine(CCC->MigrateBuf);
+	retval = CtdlClientGetLine(CC->MigrateBuf);
 	if (retval < 0)
 	  return(retval >= 0);
 
 
-	i = StrLength(CCC->MigrateBuf);
-	pCh = ChrPtr(CCC->MigrateBuf);
+	i = StrLength(CC->MigrateBuf);
+	pCh = ChrPtr(CC->MigrateBuf);
 	// Strip the trailing LF, and the trailing CR if present.
 	if (bufsize <= i)
 		i = bufsize - 1;
@@ -568,7 +552,7 @@ int client_getln(char *buf, int bufsize) {
 	memcpy(buf, pCh, i);
 	buf[i] = 0;
 
-	FlushStrBuf(CCC->MigrateBuf);
+	FlushStrBuf(CC->MigrateBuf);
 	if (retval < 0) {
 		safestrncpy(&buf[i], "000", bufsize - i);
 	}
@@ -792,8 +776,7 @@ void HuntBadSession(void) {
 			if (ptr->client_socket > highest)
 				highest = ptr->client_socket;
 			
-			if ((select(highest + 1, &readfds, NULL, NULL, &tv) < 0) && (errno == EBADF))
-			{
+			if ((select(highest + 1, &readfds, NULL, NULL, &tv) < 0) && (errno == EBADF)) {
 				// Gotcha!
 				syslog(LOG_ERR,
 				       "sysdep: killing session CC[%d] bad FD: [%d] User[%s] Host[%s:%s]",
@@ -823,9 +806,7 @@ void HuntBadSession(void) {
 		if (serviceptr->msock > highest) {
 			highest = serviceptr->msock;
 		}
-		if ((select(highest + 1, &readfds, NULL, NULL, &tv) < 0) &&
-		    (errno == EBADF))
-		{
+		if ((select(highest + 1, &readfds, NULL, NULL, &tv) < 0) && (errno == EBADF)) {
 			// Gotcha! server socket dead? commit suicide!
 			syslog(LOG_ERR, "sysdep: found bad FD: %d and its a server socket! Shutting Down!", serviceptr->msock);
 			server_shutting_down = 1;
@@ -836,6 +817,15 @@ void HuntBadSession(void) {
 
 
 // This loop just keeps going and going and going...
+//
+// TECHNICAL NOTE -- AJC 2022-JUN-20
+// This loop was designed in the 20th Century when accept() was susceptible to the "thundering herd" problem.
+// Today we can simplify it by having all worker threads block on accept() and the OS will do the right thing when a
+// connection arrives and only unblock one thread.   This will require a separate execution path for non-client activity
+// such as housekeeping but maybe we can move those to a "supervisor thread".
+//
+// This implementation works and is not broken in any way, but if we can simplify it we should.
+//
 void *worker_thread(void *blah) {
 	int highest;
 	CitContext *ptr;

@@ -159,7 +159,8 @@ void generate_certificate(char *keyfilename, char *certfilename) {
 	X509_REQ_set_subject_name(certificate_signing_request, name);
 
 	// Sign the CSR
-	if (!X509_REQ_sign(certificate_signing_request, public_key, EVP_md5())) {
+	//if (!X509_REQ_sign(certificate_signing_request, public_key, EVP_md5())) {
+	if (!X509_REQ_sign(certificate_signing_request, public_key, EVP_md5()) , 0) {
 		syslog(LOG_ERR, "crypto: X509_REQ_sign(): error");
 		X509_REQ_free(certificate_signing_request);
 		RSA_free(private_key);
