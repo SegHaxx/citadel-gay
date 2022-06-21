@@ -706,14 +706,9 @@ void vcard_newuser(struct ctdluser *usbuf) {
 	if (CtdlGetConfigInt("c_auth_mode") == AUTHMODE_HOST) {
 		struct passwd pwd;
 		char pwd_buffer[SIZ];
-		
-#ifdef SOLARIS_GETPWUID
-		if (getpwuid_r(usbuf->uid, &pwd, pwd_buffer, sizeof pwd_buffer) != NULL) {
-#else // SOLARIS_GETPWUID
 		struct passwd *result = NULL;
 		syslog(LOG_DEBUG, "vcard: searching for uid %d", usbuf->uid);
 		if (getpwuid_r(usbuf->uid, &pwd, pwd_buffer, sizeof pwd_buffer, &result) == 0) {
-#endif // HAVE_GETPWUID_R
 			snprintf(buf, sizeof buf, "%s@%s", pwd.pw_name, CtdlGetConfigStr("c_fqdn"));
 			vcard_add_prop(v, "email;internet", buf);
 			need_default_vcard = 0;

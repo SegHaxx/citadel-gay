@@ -497,13 +497,8 @@ int CtdlLoginExistingUser(const char *trythisname) {
 	
 		syslog(LOG_DEBUG, "user_ops: asking host about <%s>", username);
 #ifdef HAVE_GETPWNAM_R
-#ifdef SOLARIS_GETPWUID
-		syslog(LOG_DEBUG, "user_ops: calling getpwnam_r()");
-		tempPwdPtr = getpwnam_r(username, &pd, pwdbuffer, sizeof pwdbuffer);
-#else // SOLARIS_GETPWUID
 		syslog(LOG_DEBUG, "user_ops: calling getpwnam_r()");
 		getpwnam_r(username, &pd, pwdbuffer, sizeof pwdbuffer, &tempPwdPtr);
-#endif // SOLARIS_GETPWUID
 #else // HAVE_GETPWNAM_R
 		syslog(LOG_DEBUG, "user_ops: SHOULD NEVER GET HERE!!!");
 		tempPwdPtr = NULL;

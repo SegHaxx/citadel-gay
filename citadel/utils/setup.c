@@ -482,7 +482,7 @@ void check_xinetd_entry(void) {
 	);
 	fclose(fp);
 
-	// Now try to restart the service.  This will not have the intended effect on Solaris, but who uses Solaris anymore?
+	// Now try to restart the service.  (This only works on systemd; others will need to restart it manually.)
 	rv = system("systemctl restart xinetd >/dev/null 2>&1");
 	if (rv != 0) {
 		rv = system("service xinetd restart >/dev/null 2>&1");
