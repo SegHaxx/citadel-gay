@@ -643,18 +643,21 @@ void edit_value(int curr) {
 
 // Messages that are no longer in use.
 // We keep them here so we don't lose the translations if we need them later.
-#if 0
-important_message(_("Setup finished"),
-_("Setup of the Citadel server is complete.\n"
-"If you will be using WebCit, please run its\n"
-"setup program now; otherwise, run './citadel'\n"
-"to log in.\n"));
-important_message(_("Setup failed"),
-_("Setup is finished, but the Citadel server failed to start.\n"
-"Go back and check your configuration.\n");
-important_message(_("Setup finished"),
-_("Setup is finished.  You may now start the server."));
-#endif
+void unused_messages(void) {
+	important_message(_("Setup finished"),
+		_("Setup of the Citadel server is complete.\n"
+		"If you will be using WebCit, please run its\n"
+		"setup program now; otherwise, run './citadel'\n"
+		"to log in.\n")
+	);
+	important_message(_("Setup failed"),
+		_("Setup is finished, but the Citadel server failed to start.\n"
+		"Go back and check your configuration.\n")
+	);
+	important_message(_("Setup finished"),
+		_("Setup is finished.  You may now start the server.")
+	);
+}
 
 
 int main(int argc, char *argv[]) {
