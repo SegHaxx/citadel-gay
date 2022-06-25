@@ -263,7 +263,6 @@ void DoPurgeRooms(struct ctdlroom *qrbuf, void *data) {
 		// Any of these attributes render a room non-purgable
 		if (qrbuf->QRflags & QR_PERMANENT) return;
 		if (qrbuf->QRflags & QR_DIRECTORY) return;
-		if (qrbuf->QRflags & QR_NETWORK) return;
 		if (qrbuf->QRflags2 & QR2_SYSTEM) return;
 		if (!strcasecmp(qrbuf->QRname, SYSCONFIGROOM)) return;
 		if (CtdlIsNonEditable(qrbuf)) return;

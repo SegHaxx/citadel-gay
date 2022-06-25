@@ -47,7 +47,7 @@ void ctdl_lockfile(int op) {
 			exit(CTDLEXIT_DB);
 		}
 		if (flock(fileno(fp), (LOCK_EX|LOCK_NB)) != 0) {
-			syslog(LOG_ERR, "main: cannot lock %s , is another citserver running?", lockfilename);
+			syslog(LOG_ERR, "main: cannot lock %s (is another citserver running?)", lockfilename);
 			exit(CTDLEXIT_DB);
 		}
 		return;
@@ -64,7 +64,6 @@ void ctdl_lockfile(int op) {
 int main(int argc, char **argv) {
 
 	char facility[32];
-	int a;			// General-purpose variables
 	struct passwd pw, *pwp = NULL;
 	char pwbuf[SIZ];
 	int drop_root_perms = 1;
@@ -84,18 +83,14 @@ int main(int argc, char **argv) {
  	syslog(LOG_INFO, "Version %d (build %s) ***", REV_LEVEL, BUILD_ID);
 	syslog(LOG_INFO, "Copyright (C) 1987-2022 by the Citadel development team.");
 	syslog(LOG_INFO, " ");
-	syslog(LOG_INFO, "This program is open source software: you can redistribute it and/or");
-	syslog(LOG_INFO, "modify it under the terms of the GNU General Public License, version 3.");
-	syslog(LOG_INFO, " ");
-	syslog(LOG_INFO, "This program is distributed in the hope that it will be useful,");
-	syslog(LOG_INFO, "but WITHOUT ANY WARRANTY; without even the implied warranty of");
-	syslog(LOG_INFO, "MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the");
-	syslog(LOG_INFO, "GNU General Public License for more details.");
+	syslog(LOG_INFO, "This program is open source software.  Use, duplication, or disclosure");
+	syslog(LOG_INFO, "is subject to the terms of the GNU General Public License, version 3.");
 	syslog(LOG_INFO, " ");
 	syslog(LOG_INFO, "%s", libcitadel_version_string());
 
 	// parse command-line arguments
-	while ((a=getopt(argc, argv, "cl:dh:x:t:B:Dru:s:")) != EOF) switch(a) {
+	int g;
+	while ((g=getopt(argc, argv, "cl:dh:x:t:B:Dru:s:")) != EOF) switch(g) {
 
 		// test this binary for compatibility and exit
 		case 'c':
@@ -124,15 +119,9 @@ int main(int argc, char **argv) {
 			max_log_level = atoi(optarg);
 			break;
 
-		// deprecated
+		// deprecated flags from old versions -- ignore silently to prevent breaking scripts
 		case 't':
-			break;
-
-		// deprecated
                 case 'B':
-                        break;
-
-		// deprecated
 		case 'D':
 			break;
 
@@ -241,7 +230,7 @@ int main(int argc, char **argv) {
 	// Load the user for the masterCC or create them if they don't exist
 	if (CtdlGetUser(&masterCC.user, "SYS_Citadel")) {
 		// User doesn't exist. We can't use create user here as the user number needs to be 0
-		strcpy (masterCC.user.fullname, "SYS_Citadel") ;
+		strcpy(masterCC.user.fullname, "SYS_Citadel") ;
 		CtdlPutUser(&masterCC.user);
 		CtdlGetUser(&masterCC.user, "SYS_Citadel");	// Just to be safe
 	}
@@ -261,7 +250,7 @@ int main(int argc, char **argv) {
 				do_command_loop,
 				do_async_loop,
 				CitadelServiceUDS);
-	chmod(file_citadel_admin_socket, S_IRWXU);	// for your eyes only
+	chmod(file_citadel_admin_socket, S_IRWXU);		// protect the admin socket - it offers high privilege
 
 	// Bind the server to our favorite TCP port (usually 504).
 	CtdlRegisterServiceHook(CtdlGetConfigInt("c_port_number"),
@@ -288,8 +277,9 @@ int main(int argc, char **argv) {
 	if (drop_root_perms) {
 		cdb_chmod_data();	// make sure we own our data files
 		getpwuid_r(ctdluid, &pw, pwbuf, sizeof(pwbuf), &pwp);
-		if (pwp == NULL)
+		if (pwp == NULL) {
 			syslog(LOG_ERR, "main: WARNING, getpwuid(%ld): %m Group IDs will be incorrect.", (long)CTDLUID);
+		}
 		else {
 			initgroups(pw.pw_name, pw.pw_gid);
 			if (setgid(pw.pw_gid)) {

@@ -47,7 +47,7 @@ extern "C" {
 #define QR_VISDIR	256		/* Visible directory                */
 #define QR_ANONONLY	512		/* Anonymous-Only room              */
 #define QR_ANONOPT	1024		/* Anonymous-Option room            */
-#define QR_NETWORK	2048		/* Shared network room              */
+#define QR_NETWORK	2048		/* (no longer used)                 */
 #define QR_PREFONLY	4096		/* Preferred status needed to enter */
 #define QR_READONLY	8192		/* Aide status required to post     */
 #define QR_MAILBOX	16384		/* Set if this is a private mailbox */
