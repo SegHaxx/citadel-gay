@@ -816,16 +816,12 @@ void HuntBadSession(void) {
 }
 
 
-// This loop just keeps going and going and going...
-//
-// TECHNICAL NOTE -- AJC 2022-JUN-20
-// This loop was designed in the 20th Century when accept() was susceptible to the "thundering herd" problem.
-// Today we can simplify it by having all worker threads block on accept() and the OS will do the right thing when a
-// connection arrives and only unblock one thread.   This will require a separate execution path for non-client activity
-// such as housekeeping but maybe we can move those to a "supervisor thread".
-//
-// This implementation works and is not broken in any way, but if we can simplify it we should.
-//
+// Main server loop
+// select() can wake up on any of the following conditions:
+// 1. A new client connection on a master socket
+// 2. Received data on a client socket
+// 3. A timer event
+// That's why we are blocking on select() and not accept().
 void *worker_thread(void *blah) {
 	int highest;
 	CitContext *ptr;
