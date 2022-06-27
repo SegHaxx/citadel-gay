@@ -560,61 +560,8 @@ int client_getln(char *buf, int bufsize) {
 }
 
 
-// Cleanup any contexts that are left lying around
-void close_masters(void) {
-	struct ServiceFunctionHook *serviceptr;
-	const char *Text;
-
-	// close all protocol master sockets
-	for (serviceptr = ServiceHookTable; serviceptr != NULL;
-	    serviceptr = serviceptr->next ) {
-
-		if (serviceptr->tcp_port > 0) {
-			if (serviceptr->msock == -1) {
-				Text = "not closing again";
-			}
-			else {
-				Text = "Closing";
-			}
-			syslog(LOG_INFO, "sysdep: %s %d listener on port %d",
-			       Text,
-			       serviceptr->msock,
-			       serviceptr->tcp_port
-			);
-			serviceptr->tcp_port = 0;
-		}
-		
-		if (serviceptr->sockpath != NULL) {
-			if (serviceptr->msock == -1) {
-				Text = "not closing again";
-			}
-			else {
-				Text = "Closing";
-			}
-			syslog(LOG_INFO, "sysdep: %s %d listener on '%s'",
-			       Text,
-			       serviceptr->msock,
-			       serviceptr->sockpath
-			);
-		}
-
-		if (serviceptr->msock != -1) {
-			close(serviceptr->msock);
-			serviceptr->msock = -1;
-		}
-
-		// If it's a Unix domain socket, remove the file.
-		if (serviceptr->sockpath != NULL) {
-			unlink(serviceptr->sockpath);
-			serviceptr->sockpath = NULL;
-		}
-	}
-}
-
-
 // The system-dependent part of master_cleanup() - close the master socket.
 void sysdep_master_cleanup(void) {
-	close_masters();
 	context_cleanup();
 }
 

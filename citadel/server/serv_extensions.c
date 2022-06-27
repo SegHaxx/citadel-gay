@@ -167,8 +167,7 @@ ConstStr ErrPortHint  = { HKEY("If you want Citadel to provide you with that fun
 			       " and disable the program that binds these ports.\n")};
 
 
-void LogPrintMessages(long err)
-{
+void LogPrintMessages(long err) {
 	StrBuf *Message;
 	StrBuf *List, *DetailList;
 	ConstStr *Short, *Where, *Hint; 
@@ -218,8 +217,7 @@ void LogPrintMessages(long err)
 }
 
 
-void AddPortError(char *Port, char *ErrorMessage)
-{
+void AddPortError(char *Port, char *ErrorMessage) {
 	long len;
 
 	DetailErrorFlags |= ERR_PORT;
@@ -237,8 +235,7 @@ void AddPortError(char *Port, char *ErrorMessage)
 }
 
 
-int DLoader_Exec_Cmd(char *cmdbuf)
-{
+int DLoader_Exec_Cmd(char *cmdbuf) {
 	void *vP;
 	ProtoFunctionHook *p;
 
@@ -251,8 +248,7 @@ int DLoader_Exec_Cmd(char *cmdbuf)
 }
 
 
-void CtdlRegisterProtoHook(void (*handler) (char *), char *cmd, char *desc)
-{
+void CtdlRegisterProtoHook(void (*handler) (char *), char *cmd, char *desc) {
 	ProtoFunctionHook *p;
 
 	if (ProtoHookList == NULL)
@@ -701,20 +697,17 @@ void CtdlUnregisterServiceHook(int tcp_port, char *sockpath,
 }
 
 
-void CtdlShutdownServiceHooks(void)
-{
-	/* sort of a duplicate of close_masters() but called earlier */
+// During shutdown we can close all of the listening sockets.
+void CtdlShutdownServiceHooks(void) {
 	ServiceFunctionHook *cur;
 
 	cur = ServiceHookTable;
-	while (cur != NULL) 
-	{
-		if (cur->msock != -1)
-		{
+	while (cur != NULL) {
+		if (cur->msock != -1) {
 			close(cur->msock);
 			cur->msock = -1;
 			if (cur->sockpath != NULL){
-				syslog(LOG_INFO, "extensions: [%s] Closed UNIX domain socket %s", cur->ServiceName, cur->sockpath);
+				syslog(LOG_INFO, "extensions: [%s] closed unix domain socket %s", cur->ServiceName, cur->sockpath);
 				unlink(cur->sockpath);
 			} else {
 				syslog(LOG_INFO, "extensions: [%s] closing service", cur->ServiceName);
@@ -725,8 +718,7 @@ void CtdlShutdownServiceHooks(void)
 }
 
 
-void CtdlRegisterSearchFuncHook(void (*fcn_ptr)(int *, long **, const char *), char *name)
-{
+void CtdlRegisterSearchFuncHook(void (*fcn_ptr)(int *, long **, const char *), char *name) {
 	SearchFunctionHook *newfcn;
 
 	if (!name || !fcn_ptr) {
@@ -743,8 +735,8 @@ void CtdlRegisterSearchFuncHook(void (*fcn_ptr)(int *, long **, const char *), c
 	syslog(LOG_DEBUG, "extensions: registered a new search function (%s)", name);
 }
 
-void CtdlUnregisterSearchFuncHook(void (*fcn_ptr)(int *, long **, const char *), char *name)
-{
+
+void CtdlUnregisterSearchFuncHook(void (*fcn_ptr)(int *, long **, const char *), char *name) {
 	SearchFunctionHook *cur, *p, *last;
 	
 	last = NULL;
@@ -771,8 +763,7 @@ void CtdlUnregisterSearchFuncHook(void (*fcn_ptr)(int *, long **, const char *),
 }
 
 
-void CtdlModuleDoSearch(int *num_msgs, long **search_msgs, const char *search_string, const char *func_name)
-{
+void CtdlModuleDoSearch(int *num_msgs, long **search_msgs, const char *search_string, const char *func_name) {
 	SearchFunctionHook *fcn = NULL;
 
 	for (fcn = SearchFunctionHookTable; fcn != NULL; fcn = fcn->next) {
@@ -785,8 +776,7 @@ void CtdlModuleDoSearch(int *num_msgs, long **search_msgs, const char *search_st
 }
 
 
-void PerformSessionHooks(int EventType)
-{
+void PerformSessionHooks(int EventType) {
 	SessionFunctionHook *fcn = NULL;
 
 	for (fcn = SessionHookTable; fcn != NULL; fcn = fcn->next) {
@@ -799,8 +789,8 @@ void PerformSessionHooks(int EventType)
 	}
 }
 
-void PerformUserHooks(ctdluser *usbuf, int EventType)
-{
+
+void PerformUserHooks(ctdluser *usbuf, int EventType) {
 	UserFunctionHook *fcn = NULL;
 
 	for (fcn = UserHookTable; fcn != NULL; fcn = fcn->next) {
@@ -810,8 +800,8 @@ void PerformUserHooks(ctdluser *usbuf, int EventType)
 	}
 }
 
-int PerformMessageHooks(struct CtdlMessage *msg, struct recptypes *recps, int EventType)
-{
+
+int PerformMessageHooks(struct CtdlMessage *msg, struct recptypes *recps, int EventType) {
 	MessageFunctionHook *fcn = NULL;
 	int total_retval = 0;
 
@@ -838,8 +828,7 @@ int PerformMessageHooks(struct CtdlMessage *msg, struct recptypes *recps, int Ev
 }
 
 
-int PerformRoomHooks(struct ctdlroom *target_room)
-{
+int PerformRoomHooks(struct ctdlroom *target_room) {
 	RoomFunctionHook *fcn;
 	int total_retval = 0;
 
@@ -855,8 +844,7 @@ int PerformRoomHooks(struct ctdlroom *target_room)
 }
 
 
-void PerformDeleteHooks(char *room, long msgnum)
-{
+void PerformDeleteHooks(char *room, long msgnum) {
 	DeleteFunctionHook *fcn;
 
 	for (fcn = DeleteHookTable; fcn != NULL; fcn = fcn->next) {
@@ -865,8 +853,7 @@ void PerformDeleteHooks(char *room, long msgnum)
 }
 
 
-int PerformXmsgHooks(char *sender, char *sender_email, char *recp, char *msg)
-{
+int PerformXmsgHooks(char *sender, char *sender_email, char *recp, char *msg) {
 	XmsgFunctionHook *fcn;
 	int total_sent = 0;
 	int p;
@@ -891,19 +878,15 @@ int PerformXmsgHooks(char *sender, char *sender_email, char *recp, char *msg)
 
 
 /*
- * Dirty hack until we impliment a hook mechanism for this
+ * "Start TLS" function that is (hopefully) adaptable for any protocol
  */
-void CtdlModuleStartCryptoMsgs(char *ok_response, char *nosup_response, char *error_response)
-{
+void CtdlModuleStartCryptoMsgs(char *ok_response, char *nosup_response, char *error_response) {
 #ifdef HAVE_OPENSSL
 	CtdlStartTLS (ok_response, nosup_response, error_response);
 #endif
 }
 
 
-CTDL_MODULE_INIT(modules)
-{
-	if (!threading) {
-	}
+CTDL_MODULE_INIT(modules) {
 	return "modules";
 }
