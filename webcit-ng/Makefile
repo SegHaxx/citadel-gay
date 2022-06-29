@@ -15,7 +15,6 @@ webcit: $(OBJS)
 # compile and generate dependency info
 %.o: %.c
 	gcc -c $(CFLAGS) $*.c -o $*.o
-	gcc -MM $(CFLAGS) $*.c > $*.d
 
 # remove compilation products
 clean:
