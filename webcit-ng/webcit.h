@@ -84,6 +84,7 @@ struct ctdlsession {
 	int room_current_view;
 	int room_default_view;
 	int is_room_aide;			// nonzero if the user has aide rights to THIS room
+	int can_delete_messages;		// nonzeri if the user is permitted to delete messages in THIS room
 	long last_seen;
 	int new_messages;
 	int total_messages;

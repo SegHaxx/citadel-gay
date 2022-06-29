@@ -41,10 +41,10 @@ function update_banner() {
 	detect_logged_in();
 	if (current_room) {
 		document.getElementById("ctdl_banner_title").innerHTML = current_room;
+		if (is_room_aide) {
+			document.getElementById("ctdl_banner_title").innerHTML += "<i class=\"fa fa-user-cog\"></i>";
+		}
 		document.title = current_room;
-
-
-
 	}
 	else {
 		document.getElementById("ctdl_banner_title").innerHTML = serv_info.serv_humannode;
@@ -72,6 +72,8 @@ function gotoroom(roomname) {
 			current_view = data.current_view;
 			default_view = data.default_view;
 			last_seen = data.last_seen;
+			is_room_aide = data.is_room_aide;
+			can_delete_messages = data.can_delete_messages;
 			update_banner();
 			render_room_view(0, 9999999999);
 		}

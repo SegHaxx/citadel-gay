@@ -200,14 +200,18 @@ function forum_render_one(msg, existing_div) {
 		+ "<a href=\"javascript:open_reply_box('"+mdiv+"',true,'"+msg.wefw+"','"+msg.msgn+"');\">"
 		+ "<i class=\"fa fa-comment\"></i> " 
 		+ _("ReplyQuoted")
-		+ "</a></span>"
+		+ "</a></span>";
 	
-		+ "<span class=\"ctdl-msg-button\"><a href=\"#\">"		// Delete , show only with permission FIXME
-		+ "<i class=\"fa fa-trash\"></i> " 
-		+ _("Delete")
-		+ "</a></span>"
+		if (can_delete_messages) {
+			outmsg +=
+		  	"<span class=\"ctdl-msg-button\"><a href=\"#\">"	// Delete (shown only with permission)
+			+ "<i class=\"fa fa-trash\"></i> " 
+			+ _("Delete")
+			+ "</a></span>";
+		}
 	
-		+ "</span>";							// end buttons on right side
+		outmsg +=
+		  "</span>";							// end buttons on right side
 		if (msg.subj) {
 			outmsg +=
 	  		"<br><span class=\"ctdl-msgsubject\">" + msg.subj + "</span>";

@@ -425,6 +425,8 @@ void get_the_room_itself(struct http_transaction *h, struct ctdlsession *c) {
 	JsonObjectAppend(j, NewJsonPlainString(HKEY("name"), c->room, -1));
 	JsonObjectAppend(j, NewJsonNumber(HKEY("current_view"), c->room_current_view));
 	JsonObjectAppend(j, NewJsonNumber(HKEY("default_view"), c->room_default_view));
+	JsonObjectAppend(j, NewJsonNumber(HKEY("is_room_aide"), c->is_room_aide));
+	JsonObjectAppend(j, NewJsonNumber(HKEY("can_delete_messages"), c->can_delete_messages));
 	JsonObjectAppend(j, NewJsonNumber(HKEY("new_messages"), c->new_messages));
 	JsonObjectAppend(j, NewJsonNumber(HKEY("total_messages"), c->total_messages));
 	JsonObjectAppend(j, NewJsonNumber(HKEY("last_seen"), c->last_seen));
@@ -525,6 +527,8 @@ void room_list(struct http_transaction *h, struct ctdlsession *c) {
 void ctdl_r(struct http_transaction *h, struct ctdlsession *c) {
 	char requested_roomname[128];
 	char buf[1024];
+	long room_flags = 0;
+	long room_flags2 = 0;
 
 	// All room-related functions require being "in" the room specified.  Are we in that room already?
 	extract_token(requested_roomname, h->url, 3, '/', sizeof requested_roomname);
@@ -544,7 +548,7 @@ void ctdl_r(struct http_transaction *h, struct ctdlsession *c) {
 			c->new_messages = extract_int(&buf[4], 1);
 			c->total_messages = extract_int(&buf[4], 2);
 			//      3       (int)info                       Info flag: set to nonzero if the user needs to read this room's info file
-			//      4       (int)CC->room.QRflags           Various flags associated with this room.
+			room_flags = extract_long(&buf[4], 3);		// Various flags associated with this room.
 			//      5       (long)CC->room.QRhighest        The highest message number present in this room
 			c->last_seen = extract_long(&buf[4], 6);	// The highest message number the user has read in this room
 			//      7       (int)rmailflag                  Boolean flag: 1 if this is a Mail> room, 0 otherwise.
@@ -554,8 +558,16 @@ void ctdl_r(struct http_transaction *h, struct ctdlsession *c) {
 			c->room_current_view = extract_int(&buf[4], 11);
 			c->room_default_view = extract_int(&buf[4], 12);
 			//      13      (int)is_trash                   Boolean flag: 1 if this is the user's Trash folder, 0 otherwise.
-			//      14      (int)CC->room.QRflags2          More flags associated with this room
+			room_flags2 = extract_long(&buf[4], 14);	// More flags associated with this room.
 			//      15      (long)CC->room.QRmtime          Timestamp of the last write activity in this room
+
+			// If any of these three conditions are met, let the client know it has permission to delete messages.
+			if ((c->is_room_aide) || (room_flags & QR_MAILBOX) || (room_flags2 & QR2_COLLABDEL)) {
+				c->can_delete_messages = 1;
+			}
+			else {
+				c->can_delete_messages = 0;
+			}
 		}
 		else {
 			do_404(h);
