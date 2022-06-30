@@ -41,6 +41,7 @@ void json_render_one_message(struct http_transaction *h, struct ctdlsession *c, 
 	}
 
 	JsonValue *j = NewJsonObject(HKEY("message"));
+	JsonObjectAppend(j, NewJsonNumber(HKEY("msgnum"), msgnum));
 
 	while ((ctdl_readline(c, buf, sizeof(buf)) >= 0) && (strcmp(buf, "text")) && (strcmp(buf, "000"))) {
 

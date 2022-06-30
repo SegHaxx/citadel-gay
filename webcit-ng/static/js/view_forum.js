@@ -204,7 +204,8 @@ function forum_render_one(msg, existing_div) {
 	
 		if (can_delete_messages) {
 			outmsg +=
-		  	"<span class=\"ctdl-msg-button\"><a href=\"#\">"	// Delete (shown only with permission)
+		  	"<span class=\"ctdl-msg-button\">"
+			+ "<a href=\"javascript:forum_delete_message('"+mdiv+"','"+msg.msgnum+"');\">"
 			+ "<i class=\"fa fa-trash\"></i> " 
 			+ _("Delete")
 			+ "</a></span>";
@@ -251,6 +252,24 @@ function compose_references(references, msgid) {
 		refs = r.join("|");
 	}
 	return refs;
+}
+
+// Delete a message.
+// We don't bother checking for permission because the button only appears if we have permission,
+// and even if someone hacks the client, the server will deny any unauthorized deletes.
+function forum_delete_message(message_div, message_number) {
+	if (confirm(_("Delete this message?")) == true) {
+		async_forum_delete_message = async() => {
+			response = await fetch(
+				"/ctdl/r/" + escapeHTMLURI(current_room) + "/" + message_number,
+				{ method: "DELETE" }
+			);
+			if (response.ok) {		// If the server accepted the delete, blank out the message div.
+				document.getElementById(message_div).outerHTML = "";
+			}
+		}
+		async_forum_delete_message();
+	}
 }
 
 
