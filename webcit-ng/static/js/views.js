@@ -1,4 +1,3 @@
-//
 // Copyright (c) 2016-2022 by the citadel.org team
 //
 // This program is open source software.  Use, duplication, or
@@ -20,11 +19,20 @@ function render_room_view(gt_msg, lt_msg) {
 	}
 
 	switch(current_view) {
+
+		// The "forum" module displays rooms with the "VIEW_BBS" view as classic style web forums.
 		case views.VIEW_BBS:
 			document.getElementById("ctdl-sidebar-button-forums").classList.add("w3-blue");
 			document.getElementById("ctdl-main").innerHTML = "<div id=\"ctdl-mrp\" class=\"ctdl-msg-reading-pane\"></div>";
 			forum_readmessages("ctdl-mrp", gt_msg, lt_msg);
 			break;
+
+		// The "mail" module displays rooms with the VIEW_MAILBOX view as a webmail program.
+		case views.VIEW_MAILBOX:
+			document.getElementById("ctdl-sidebar-button-mail").classList.add("w3-blue");
+			document.getElementById("ctdl-main").innerHTML = "mailbox view";
+			break;
+
 		default:
 			document.getElementById("ctdl-main").innerHTML =
 				"<center>The view for " + current_room + " is " + current_view + " but there is no renderer.</center>";
