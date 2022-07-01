@@ -30,7 +30,8 @@ function render_room_view(gt_msg, lt_msg) {
 		// The "mail" module displays rooms with the VIEW_MAILBOX view as a webmail program.
 		case views.VIEW_MAILBOX:
 			document.getElementById("ctdl-sidebar-button-mail").classList.add("w3-blue");
-			document.getElementById("ctdl-main").innerHTML = "mailbox view";
+			document.getElementById("ctdl-main").innerHTML = "";
+			mail_display();
 			break;
 
 		default:

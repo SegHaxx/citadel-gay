@@ -23,7 +23,7 @@ LOADING
 
 <!-- Top container -->
 <div id="navbar" class="w3-bar w3-top w3-black w3-large" style="z-index:4">
-	<button class="w3-bar-item w3-button w3-hide-large w3-hover-none w3-hover-text-light-grey" onclick="w3_open();"><i class="fa fa-bars"></i>  Menu</button>
+	<button class="w3-bar-item w3-button w3-hide-large w3-hover-none w3-hover-text-light-grey" onClick="w3_open();"><i class="fa fa-bars"></i>  Menu</button>
 	<span class="w3-left">
 		<span class="w3-bar-item" id="ctdl-logo">CITADEL</span>
 	</span>
@@ -31,10 +31,10 @@ LOADING
 		<span id="ctdl_banner_title" class="w3-bar-item">---</span>
 	</span>
 	<span class="w3-right">
-		<button id="ctdl-newmsg-button" style="display:none" class="w3-bar-item w3-button" onclick="entmsg_dispatcher();">enter</button>
-		<button id="ctdl-ungoto-button" style="display:none" class="w3-bar-item w3-button" onclick="gotonext(0);">ungoto</button>
-		<button id="ctdl-skip-button" style="display:none" class="w3-bar-item w3-button" onclick="gotonext(1);">skip</button>
-		<button id="ctdl-goto-button" style="display:none" class="w3-bar-item w3-button" onclick="gotonext(2);">goto</button>
+		<button id="ctdl-newmsg-button" style="display:none" class="w3-bar-item w3-button" onClick="entmsg_dispatcher();">enter</button>
+		<button id="ctdl-ungoto-button" style="display:none" class="w3-bar-item w3-button" onClick="gotonext(0);">ungoto</button>
+		<button id="ctdl-skip-button" style="display:none" class="w3-bar-item w3-button" onClick="gotonext(1);">skip</button>
+		<button id="ctdl-goto-button" style="display:none" class="w3-bar-item w3-button" onClick="gotonext(2);">goto</button>
 		<button id="lilo" class="w3-bar-item w3-button">Login</button>
 	</span>
 </div>
@@ -47,14 +47,14 @@ LOADING
 		</div>
 		<div class="w3-col s8 w3-bar">
 			<span id="current_user">Not logged in.</span><br>
-			<a href="#" class="w3-bar-item w3-button"><i class="fa fa-envelope" onclick="javascript:gotoroom('_MAIL_');"></i></a>
+			<a href="#" class="w3-bar-item w3-button"><i class="fa fa-envelope" onClick="gotoroom('_MAIL_');"></i></a>
 			<a href="#" class="w3-bar-item w3-button"><i class="fa fa-user"></i></a>
-			<a href="#" class="w3-bar-item w3-button"><i class="fa fa-cog" onclick="javascript:user_profile(current_user);"></i></a>
+			<a href="#" class="w3-bar-item w3-button"><i class="fa fa-cog" onClick="user_profile(current_user);"></i></a>
 		</div>
 	</div>
 	<hr>
 	<div id="ctdl-sidebar" class="w3-bar-block">
-		<a href="#" class="w3-bar-item w3-button w3-padding-16 w3-hide-large w3-dark-grey w3-hover-black" onclick="w3_close()" title="close menu"><i class="fa fa-remove fa-fw"></i>  Close Menu</a>
+		<a href="#" class="w3-bar-item w3-button w3-padding-16 w3-hide-large w3-dark-grey w3-hover-black" onClick="w3_close()" title="close menu"><i class="fa fa-remove fa-fw"></i>  Close Menu</a>
 		<a href="#" id="ctdl-sidebar-button-mail" class="w3-bar-item w3-button w3-padding" onClick="gotoroom('_MAIL_');"><i class="fa fa-envelope fa-fw"></i>  Mail</a>
 		<div id="ctdl_mail_folder_list" style="display:none"></div>
 		<a href="#" id="ctdl-sidebar-button-forums" class="w3-bar-item w3-button w3-padding" onClick="render_room_list();"><i class="fas fa-comments fa-fw"></i>  Forums</a>
@@ -67,7 +67,7 @@ LOADING
 </nav>
 
 <!-- Overlay effect when opening sidebar on small screens -->
-<div class="w3-overlay w3-hide-large w3-animate-opacity" onclick="w3_close()" style="cursor:pointer" title="close side menu" id="myOverlay"></div>
+<div class="w3-overlay w3-hide-large w3-animate-opacity" onClick="w3_close()" style="cursor:pointer" title="close side menu" id="myOverlay"></div>
 
 <!-- MAIN PAGE CONTENT DIV -->
 <div id="ctdl-main" class="w3-main" style="margin-left:300px;margin-top:43px;">
@@ -81,6 +81,7 @@ Loading...
 <script type="text/javascript" src="js/main.js"></script>
 <script type="text/javascript" src="js/views.js"></script>
 <script type="text/javascript" src="js/view_forum.js"></script>
+<script type="text/javascript" src="js/view_mail.js"></script>
 <script type="text/javascript" src="js/roomlist.js"></script>
 <script type="text/javascript" src="js/user_profile.js"></script>
 <script>
