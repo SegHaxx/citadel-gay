@@ -4,7 +4,6 @@
 //
 // This program is open source software.  Use, duplication, or disclosure
 // is subject to the terms of the GNU General Public License, version 3.
-// The program is distributed without any warranty, expressed or implied.
 
 #include <stdlib.h>
 #include <unistd.h>
@@ -101,7 +100,8 @@ static int tcp_connectsock(char *host, char *service) {
 	if (rc == 1) {					// dotted quad
 		hints.ai_family = AF_INET;
 		hints.ai_flags |= AI_NUMERICHOST;
-	} else {
+	}
+	else {
 		rc = inet_pton(AF_INET6, host, &serveraddr);
 		if (rc == 1) {				// IPv6 address
 			hints.ai_family = AF_INET6;
