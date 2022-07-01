@@ -73,6 +73,45 @@ int match_etags(char *taglist, long msgnum) {
 }
 
 
+// Client is requesting a mailbox summary of the current room
+void json_mailbox(struct http_transaction *h, struct ctdlsession *c) {
+	char buf[1024];
+	char field[1024];
+	JsonValue *j = NewJsonArray(HKEY("msgs"));
+
+	ctdl_printf(c, "MSGS ALL|||9");				// "9" as the fourth parameter delivers a mailbox summary
+	ctdl_readline(c, buf, sizeof(buf));
+	if (buf[0] == '1') {
+		while (ctdl_readline(c, buf, sizeof(buf)), (strcmp(buf, "000"))) {
+			syslog(LOG_DEBUG, "msg: %s", buf);
+			JsonValue *jmsg = NewJsonObject(HKEY("message"));
+			JsonObjectAppend(jmsg, NewJsonNumber(HKEY("msgnum"), extract_long(buf, 0)));
+			JsonObjectAppend(jmsg, NewJsonNumber(HKEY("time"), extract_long(buf, 1)));
+			extract_token(field, buf, 2, '|', sizeof field);
+			JsonObjectAppend(jmsg, NewJsonPlainString(HKEY("author"), field, -1));
+			extract_token(field, buf, 4, '|', sizeof field);
+			JsonObjectAppend(jmsg, NewJsonPlainString(HKEY("addr"), field, -1));
+			extract_token(field, buf, 5, '|', sizeof field);
+			JsonObjectAppend(jmsg, NewJsonPlainString(HKEY("subject"), field, -1));
+			JsonObjectAppend(jmsg, NewJsonNumber(HKEY("msgidhash"), extract_long(buf, 6)));
+			extract_token(field, buf, 7, '|', sizeof field);
+			JsonObjectAppend(jmsg, NewJsonPlainString(HKEY("references"), field, -1));
+			JsonArrayAppend(j, jmsg);		// add the message to the array
+		}
+	}
+
+	StrBuf *sj = NewStrBuf();
+	SerializeJson(sj, j, 1);				// '1' == free the source array
+
+	add_response_header(h, strdup("Content-type"), strdup("application/json"));
+	h->response_code = 200;
+	h->response_string = strdup("OK");
+	h->response_body_length = StrLength(sj);
+	h->response_body = SmashStrBuf(&sj);
+	return;
+}
+
+
 // Client is requesting a message list
 void json_msglist(struct http_transaction *h, struct ctdlsession *c, char *which) {
 	int i = 0;
@@ -87,7 +126,7 @@ void json_msglist(struct http_transaction *h, struct ctdlsession *c, char *which
 	}
 
 	StrBuf *sj = NewStrBuf();
-	SerializeJson(sj, j, 1);	// '1' == free the source array
+	SerializeJson(sj, j, 1);				// '1' == free the source array
 
 	add_response_header(h, strdup("Content-type"), strdup("application/json"));
 	h->response_code = 200;
@@ -143,6 +182,11 @@ void object_in_room(struct http_transaction *h, struct ctdlsession *c) {
 	char unescaped_euid[1024];
 
 	extract_token(buf, h->url, 4, '/', sizeof buf);
+
+	if (!strcasecmp(buf, "mailbox")) {		// Client is requesting a mailbox summary
+		json_mailbox(h, c);
+		return;
+	}
 
 	if (!strncasecmp(buf, "msgs.", 5)) {		// Client is requesting a list of message numbers
 		unescape_input(&buf[5]);
