@@ -83,7 +83,6 @@ void json_mailbox(struct http_transaction *h, struct ctdlsession *c) {
 	ctdl_readline(c, buf, sizeof(buf));
 	if (buf[0] == '1') {
 		while (ctdl_readline(c, buf, sizeof(buf)), (strcmp(buf, "000"))) {
-			syslog(LOG_DEBUG, "msg: %s", buf);
 			JsonValue *jmsg = NewJsonObject(HKEY("message"));
 			JsonObjectAppend(jmsg, NewJsonNumber(HKEY("msgnum"), extract_long(buf, 0)));
 			JsonObjectAppend(jmsg, NewJsonNumber(HKEY("time"), extract_long(buf, 1)));
@@ -356,7 +355,7 @@ void propfind_the_room_itself(struct http_transaction *h, struct ctdlsession *c)
 	case VIEW_ADDRESSBOOK:		// FIXME put some sort of CardDAV crapola here when we implement it
 		enumerate_by_euid = 1;
 		break;
-	case VIEW_WIKI:			// FIXME invent "WikiDAV" ?
+	case VIEW_WIKI:			// FIXME invent "WikiDAV" ?  The versioning stuff in DAV could be useful.
 		enumerate_by_euid = 1;
 		break;
 	}
