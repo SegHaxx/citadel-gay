@@ -1,4 +1,3 @@
-//
 // Copyright (c) 2016-2022 by the citadel.org team
 //
 // This program is open source software.  Use, duplication, or
@@ -26,7 +25,6 @@ var march_list = [] ;
 
 
 // List of defined views shamelessly swiped from libcitadel headers
-//
 var views = {
 	VIEW_BBS		: 0,	// Bulletin board view
 	VIEW_MAILBOX		: 1,	// Mailbox summary

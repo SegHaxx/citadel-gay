@@ -10,6 +10,21 @@ function select_message(msgnum) {
 }
 
 
+// render one row in the mailbox table (this could be called from one of several places)
+function mail_render_row(msg) {
+	row	= "<tr "
+		+ "id=\"ctdl-msgsum-" + msg["msgnum"] + "\""
+		+ "onClick=\"select_message(" + msg["msgnum"] + ")\""
+		+ ">"
+		+ "<td>" + msg["subject"] + "</td>"
+		+ "<td>" + msg["author"] + " &lt;" + msg["addr"] + "&gt;</td>"
+		+ "<td>" + convertTimestamp(msg["time"]) + "</td>"
+		+ "<td>" + msg["msgnum"] + "</td>"
+		+ "</tr>";
+	return(row);
+}
+
+
 // Set up the mailbox view
 function mail_display() {
 	target_div = document.getElementById("ctdl-main");
@@ -33,15 +48,7 @@ function mail_display() {
 				+ "</tr>";
 
 			for (var i=0; i<msgs.length; ++i) {
-				box +=	"<tr "
-					+ "id=\"ctdl-msgsum-" + msgs[i]["msgnum"] + "\""
-					+ "onClick=\"select_message(" + msgs[i]["msgnum"] + ")\""
-					+ ">"
-					+ "<td>" + msgs[i]["subject"] + "</td>"
-					+ "<td>" + msgs[i]["author"] + " &lt;" + msgs[i]["addr"] + "&gt;</td>"
-					+ "<td>" + convertTimestamp(msgs[i]["time"]) + "</td>"
-					+ "<td>" + msgs[i]["msgnum"] + "</td>"
-					+ "</tr>";
+				box += mail_render_row(msgs[i]);
 			}
 
 			box +=	"</table>";

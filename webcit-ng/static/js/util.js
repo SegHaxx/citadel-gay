@@ -1,4 +1,3 @@
-//
 // Copyright (c) 2016-2022 by the citadel.org team
 //
 // This program is open source software.  Use, duplication, or
