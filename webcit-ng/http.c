@@ -131,7 +131,7 @@ void perform_one_http_transaction(struct client_handle *ch) {
 				h.url = strdup(d);
 			}
 		}
-		else {			// Subsequent lines are headers.
+		else {				// Subsequent lines are headers.
 			c = strchr(buf, ':');	// Header line folding is obsolete so we don't support it.
 			if (c != NULL) {
 
@@ -192,9 +192,9 @@ void perform_one_http_transaction(struct client_handle *ch) {
 		syslog(LOG_DEBUG, "Client disconnected");
 	}
 	else {
-#ifdef DEBUG_HTTP
+//#ifdef DEBUG_HTTP
 		syslog(LOG_DEBUG, "\033[33m\033[1m< %s %s\033[0m", h.method, h.url);
-#endif
+//#endif
 
 		// If there is a request body, read it now.
 		char *ccl = header_val(&h, "Content-Length");

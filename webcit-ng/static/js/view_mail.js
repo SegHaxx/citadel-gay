@@ -100,12 +100,14 @@ function select_message(msgnum) {
 	}
 
 	// highlight the newly selected message
-	selected_message = msgnum;
-	document.getElementById("ctdl-msgsum-" + selected_message).classList.add("w3-blue");
-	document.getElementById("ctdl-msgsum-" + selected_message).scrollIntoView();
+	document.getElementById("ctdl-msgsum-" + msgnum).classList.add("w3-blue");
+	document.getElementById("ctdl-msgsum-" + msgnum).scrollIntoView();
 
-	// display the message
-	mail_display_message(msgnum, document.getElementById("ctdl-reading-pane"));
+	// display the message if it isn't already displayed
+	if (selected_message != msgnum) {
+		selected_message = msgnum;
+		mail_display_message(msgnum, document.getElementById("ctdl-reading-pane"));
+	}
 }
 
 

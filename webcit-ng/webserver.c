@@ -1,4 +1,3 @@
-//
 // webserver.c
 //
 // This module handles the task of setting up a listening socket, accepting
