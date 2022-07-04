@@ -1,7 +1,7 @@
 /*
-Copyright (c) 1996-2022 by Art Cancro and the citadel.org team.
-This program is open source software.  You can redistribute it and/or
-modify it under the terms of the GNU General Public License, version 3.
+** Copyright (c) 1996-2022 by Art Cancro and the citadel.org team.
+** This program is open source software.  Use, duplication, or disclosure
+** are subject to the terms of the GNU General Public License, version 3.
 */
 
 html,body,h1,h2,h3,h4,h5 {
@@ -22,10 +22,10 @@ html,body,h1,h2,h3,h4,h5 {
 
 .ctdl-mmsg-wrapper {		/* message wrapper for mailbox view */
 	overflow: hidden;
-	/* border-radius: 10px; */
 	background-color: white;
-	/* margin: 1vw; */
 	padding: 5px;		/* inside the box */
+	border-style: solid;	/* could also be: dotted, dashed, solid, double, groove, ridge, inset, outset, none, hidden */
+	border-width: 1px;
 }
 
 .ctdl-msg-reply {
@@ -91,8 +91,12 @@ html,body,h1,h2,h3,h4,h5 {
 	font-weight: bold;
 }
 
-.ctdl-msg-content {
+.ctdl-fmsg-content {			/* message text, when in forum view */
 	margin-left: 32px;
+}
+
+.ctdl-mmsg-content {			/* message text, when in mailbox view */
+	margin-left: 0;
 }
 
 .ctdl-avatar {
@@ -185,4 +189,10 @@ blockquote pre {
 }
 
 .ctdl-roomlist-mtime {
+}
+
+.ctdl-mailbox-pane {		/* list of messages when in mailbox view */
+}
+
+.ctdl-reading-pane {		/* message reading/composing pane when in mailbox view */
 }

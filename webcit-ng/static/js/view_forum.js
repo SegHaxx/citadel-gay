@@ -180,7 +180,7 @@ function forum_render_one(msg, existing_div) {
 		+ "<img src=\"/ctdl/u/" + msg.from + "/userpic\" width=\"32\" "
 		+ "onerror=\"this.parentNode.innerHTML='&lt;i class=&quot;fa fa-user-circle fa-2x&quot;&gt;&lt;/i&gt; '\">"
 		+ "</div>"							// end avatar
-		+ "<div class=\"ctdl-msg-content\">"				// begin content
+		+ "<div class=\"ctdl-fmsg-content\">"				// begin content
 		+ "<div class=\"ctdl-msg-header\">"				// begin header
 		+ "<span class=\"ctdl-msg-header-info\">"			// begin header info on left side
 		+ "<span class=\"ctdl-username\" onClick=\"javascript:user_profile('" + msg.from + "');\">"
@@ -289,7 +289,7 @@ function open_reply_box(parent_div, is_quoted, references, msgid) {
 	+ "<img src=\"/ctdl/u/" + current_user + "/userpic\" width=\"32\" "
 	+ "onerror=\"this.parentNode.innerHTML='&lt;i class=&quot;fa fa-user-circle fa-2x&quot;&gt;&lt;/i&gt; '\">"
 	+ "</div>"							// end avatar
-	+ "<div class=\"ctdl-msg-content\">"				// begin content
+	+ "<div class=\"ctdl-fmsg-content\">"				// begin content
 	+ "<div class=\"ctdl-msg-header\">"				// begin header
 	+ "<span class=\"ctdl-msg-header-info\">"			// begin header info on left side
 	+ "<span class=\"ctdl-username\">"
