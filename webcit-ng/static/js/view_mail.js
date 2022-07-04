@@ -6,6 +6,86 @@
 // disclosure are subject to the GNU General Public License v3.
 
 
+// Render a message into the mailbox view (FIXME make this different from the forum view)
+function mail_render_one(msg, target_div) {
+	let div = "FIXME";
+	try {
+		outmsg =
+	  	  "<div class=\"ctdl-msg-wrapper\">"				// begin message wrapper
+		+ "<div class=\"ctdl-avatar\" onClick=\"javascript:user_profile('" + msg.from + "');\">"
+		+ "<img src=\"/ctdl/u/" + msg.from + "/userpic\" width=\"32\" "
+		+ "onerror=\"this.parentNode.innerHTML='&lt;i class=&quot;fa fa-user-circle fa-2x&quot;&gt;&lt;/i&gt; '\">"
+		+ "</div>"							// end avatar
+		+ "<div class=\"ctdl-msg-content\">"				// begin content
+		+ "<div class=\"ctdl-msg-header\">"				// begin header
+		+ "<span class=\"ctdl-msg-header-info\">"			// begin header info on left side
+		+ "<span class=\"ctdl-username\" onClick=\"javascript:user_profile('" + msg.from + "');\">"
+		+ msg.from
+		+ "</a></span>"							// end username
+		+ "<span class=\"ctdl-msgdate\">"
+		+ convertTimestamp(msg.time)
+		+ "</span>"							// end msgdate
+		+ "</span>"							// end header info on left side
+		+ "<span class=\"ctdl-msg-header-buttons\">"			// begin buttons on right side
+	
+		+ "<span class=\"ctdl-msg-button\">"				// Reply
+		+ "<a href=\"javascript:open_reply_box('"+div+"',false,'"+msg.wefw+"','"+msg.msgn+"');\">"
+		+ "<i class=\"fa fa-reply\"></i> " 
+		+ _("Reply")
+		+ "</a></span>"
+	
+		+ "<span class=\"ctdl-msg-button\">"				// ReplyQuoted
+		+ "<a href=\"javascript:open_reply_box('"+div+"',true,'"+msg.wefw+"','"+msg.msgn+"');\">"
+		+ "<i class=\"fa fa-comment\"></i> " 
+		+ _("ReplyQuoted")
+		+ "</a></span>";
+	
+		if (can_delete_messages) {
+			outmsg +=
+		  	"<span class=\"ctdl-msg-button\">"
+			+ "<a href=\"javascript:forum_delete_message('"+div+"','"+msg.msgnum+"');\">"
+			+ "<i class=\"fa fa-trash\"></i> " 
+			+ _("Delete")
+			+ "</a></span>";
+		}
+	
+		outmsg +=
+		  "</span>";							// end buttons on right side
+		if (msg.subj) {
+			outmsg +=
+	  		"<br><span class=\"ctdl-msgsubject\">" + msg.subj + "</span>";
+		}
+		outmsg +=
+	  	  "</div><br>"							// end header
+		+ "<div class=\"ctdl-msg-body\" id=\"" + div + "_body\">"	// begin body
+		+ msg.text
+		+ "</div>"							// end body
+		+ "</div>"							// end content
+		+ "</div>"							// end wrapper
+		;
+	}
+	catch(err) {
+		outmsg = "<div class=\"ctdl-msg-wrapper\">" + err.message + "</div>";
+	}
+
+	target_div.innerHTML = outmsg;
+}
+
+
+// display an individual message
+function mail_display_message(msgnum, target_div) {
+	url = "/ctdl/r/" + escapeHTMLURI(current_room) + "/" + msgnum + "/json";
+	mail_fetch_msg = async() => {
+		response = await fetch(url);
+		msg = await(response.json());
+		if (response.ok) {
+			mail_render_one(msg, target_div);
+		}
+	}
+	mail_fetch_msg();
+}
+
+
 // Remember the last message that was selected
 var selected_message = 0;
 var RefreshMailboxInterval;
@@ -26,7 +106,7 @@ function select_message(msgnum) {
 	document.getElementById("ctdl-msgsum-" + selected_message).scrollIntoView();
 
 	// display the message
-	reading_pane = document.getElementById("ctdl-reading-pane").innerHTML = "message selected " + msgnum ;
+	mail_display_message(msgnum, document.getElementById("ctdl-reading-pane"));
 }
 
 
