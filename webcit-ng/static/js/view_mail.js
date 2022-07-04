@@ -6,12 +6,16 @@
 // disclosure are subject to the GNU General Public License v3.
 
 
+var selected_message = 0;							// Remember the last message that was selected
+var RefreshMailboxInterval;							// We store our refresh timer here
+
+
 // Render a message into the mailbox view (FIXME make this different from the forum view)
 function mail_render_one(msg, target_div) {
 	let div = "FIXME";
 	try {
 		outmsg =
-	  	  "<div class=\"ctdl-msg-wrapper\">"				// begin message wrapper
+	  	  "<div class=\"ctdl-mmsg-wrapper\">"				// begin message wrapper
 		+ "<div class=\"ctdl-avatar\" onClick=\"javascript:user_profile('" + msg.from + "');\">"
 		+ "<img src=\"/ctdl/u/" + msg.from + "/userpic\" width=\"32\" "
 		+ "onerror=\"this.parentNode.innerHTML='&lt;i class=&quot;fa fa-user-circle fa-2x&quot;&gt;&lt;/i&gt; '\">"
@@ -65,7 +69,7 @@ function mail_render_one(msg, target_div) {
 		;
 	}
 	catch(err) {
-		outmsg = "<div class=\"ctdl-msg-wrapper\">" + err.message + "</div>";
+		outmsg = "<div class=\"ctdl-fmsg-wrapper\">" + err.message + "</div>";
 	}
 
 	target_div.innerHTML = outmsg;
@@ -84,11 +88,6 @@ function mail_display_message(msgnum, target_div) {
 	}
 	mail_fetch_msg();
 }
-
-
-// Remember the last message that was selected
-var selected_message = 0;
-var RefreshMailboxInterval;
 
 
 // A message has been selected...
@@ -131,6 +130,11 @@ function mail_render_row(msg) {
 function mail_display() {
 	document.getElementById("ctdl-main").innerHTML = "<div id=\"ctdl-mailbox-pane\">mailbox pane</div><div id=\"ctdl-reading-pane\">reading pane</div>";
 	refresh_mail_display();
+	try {							// if this was already set up, clear it so there aren't multiple
+		clearInterval(RefreshMailboxInterval);
+	}
+	catch {
+	}
 	RefreshMailboxInterval = setInterval(refresh_mail_display, 10000);
 }
 

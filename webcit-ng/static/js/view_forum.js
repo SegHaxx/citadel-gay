@@ -175,7 +175,7 @@ function forum_render_one(msg, existing_div) {
 
 	try {
 		outmsg =
-	  	  "<div class=\"ctdl-msg-wrapper\">"				// begin message wrapper
+	  	  "<div class=\"ctdl-fmsg-wrapper\">"				// begin message wrapper
 		+ "<div class=\"ctdl-avatar\" onClick=\"javascript:user_profile('" + msg.from + "');\">"
 		+ "<img src=\"/ctdl/u/" + msg.from + "/userpic\" width=\"32\" "
 		+ "onerror=\"this.parentNode.innerHTML='&lt;i class=&quot;fa fa-user-circle fa-2x&quot;&gt;&lt;/i&gt; '\">"
@@ -229,7 +229,7 @@ function forum_render_one(msg, existing_div) {
 		;
 	}
 	catch(err) {
-		outmsg = "<div class=\"ctdl-msg-wrapper\">" + err.message + "</div>";
+		outmsg = "<div class=\"ctdl-fmsg-wrapper\">" + err.message + "</div>";
 	}
 
 	div.innerHTML = outmsg;
@@ -284,7 +284,7 @@ function open_reply_box(parent_div, is_quoted, references, msgid) {
 	document.getElementById(parent_div).append(new_div);
 
 	replybox =
-	  "<div class=\"ctdl-msg-wrapper ctdl-msg-reply\">"		// begin message wrapper
+	  "<div class=\"ctdl-fmsg-wrapper ctdl-msg-reply\">"		// begin message wrapper
 	+ "<div class=\"ctdl-avatar\">"					// begin avatar
 	+ "<img src=\"/ctdl/u/" + current_user + "/userpic\" width=\"32\" "
 	+ "onerror=\"this.parentNode.innerHTML='&lt;i class=&quot;fa fa-user-circle fa-2x&quot;&gt;&lt;/i&gt; '\">"

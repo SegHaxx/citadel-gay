@@ -12,11 +12,19 @@ html,body,h1,h2,h3,h4,h5 {
 	background-color: #456789;
 }
 
-.ctdl-msg-wrapper {
+.ctdl-fmsg-wrapper {		/* message wrapper for forum view */
 	overflow: hidden;
 	border-radius: 10px;
 	background-color: white;
 	margin: 1vw;
+	padding: 5px;		/* inside the box */
+}
+
+.ctdl-mmsg-wrapper {		/* message wrapper for mailbox view */
+	overflow: hidden;
+	/* border-radius: 10px; */
+	background-color: white;
+	/* margin: 1vw; */
 	padding: 5px;		/* inside the box */
 }
 
