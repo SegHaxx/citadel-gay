@@ -1,11 +1,8 @@
 // This program is open source software.  Use, duplication, or disclosure
 // is subject to the terms of the GNU General Public License, version 3.
-// The program is distributed without any warranty, expressed or implied.
 
 
-/*
- * Function to generate RFC822-compliant textual time/date stamp
- */
+// Function to generate RFC822-compliant textual time/date stamp
 
 #include "sysdep.h"
 #include <stdio.h>
@@ -24,10 +21,8 @@ static char *weekdays[] = {
 	"Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"
 };
 
-/*
- * Supplied with a unix timestamp, generate an RFC822-compliant textual
- * time and date stamp.
- */
+// Supplied with a unix timestamp, generate an RFC822-compliant textual
+// time and date stamp.
 long datestring(char *buf, size_t n, time_t xtime, int which_format) {
 	struct tm t;
 
@@ -36,7 +31,7 @@ long datestring(char *buf, size_t n, time_t xtime, int which_format) {
 
 	localtime_r(&xtime, &t);
 
-	/* Convert "seconds west of GMT" to "hours/minutes offset" */
+	// Convert "seconds west of GMT" to "hours/minutes offset"
 #ifdef HAVE_STRUCT_TM_TM_GMTOFF
 	offset = t.tm_gmtoff;
 #else

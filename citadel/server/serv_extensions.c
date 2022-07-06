@@ -1,17 +1,11 @@
-/*
- * Citadel Extension Loader
- * Originally written by Brian Costello <btx@calyx.net>
- *
- * Copyright (c) 1987-2021 by the citadel.org team
- *
- * This program is open source software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License, version 3.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- */
+// This began as a framework written by Brian Costello (btx) that loaded server extensions as dynamic modules.
+// We don't do it that way anymore but the concept lives on as a high degree of modularity in the server.
+// The functions in this file handle registration and execution of the server hooks used by static linked modules.
+//
+// Copyright (c) 1987-2021 by the citadel.org team
+//
+// This program is open source software; you can redistribute it and/or modify
+// it under the terms of the GNU General Public License, version 3.
 
 #include <stdlib.h>
 #include <unistd.h>

@@ -1,4 +1,7 @@
 // Server-side utility functions
+// Copyright (c) 1987-2022 by the citadel.org team
+// This program is open source software; you can redistribute it and/or modify
+// it under the terms of the GNU General Public License, version 3.
 
 #include "sysdep.h"
 #include <stdio.h>

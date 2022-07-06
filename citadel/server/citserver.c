@@ -4,7 +4,6 @@
 //
 // This program is open source software.  Use, duplication, or disclosure
 // is subject to the terms of the GNU General Public License, version 3.
-// The program is distributed without any warranty, expressed or implied.
 
 #include <stdlib.h>
 #include <unistd.h>

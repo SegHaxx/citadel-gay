@@ -6,11 +6,6 @@
 #
 # This program is open source software.  Use, duplication, and/or
 # disclosure are subject to the GNU General Purpose License version 3.
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
 
 echo 
 echo Running the configure script to create config.mk
@@ -117,7 +112,7 @@ cc $tempcc -o $tempfile && {
 ########################################################################
 # FIXME do a real build id here
 ########################################################################
-CFLAGS=${CFLAGS}' -DBUILD_ID=\"unknown\"'
+CFLAGS=${CFLAGS}' -DBUILD_ID=\"'$( date +%y%03j)'\"'
 CFLAGS=${CFLAGS}' -DCTDLDIR=\"'${CTDLDIR}'\"'
 
 

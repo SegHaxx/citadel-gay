@@ -4,7 +4,6 @@
 //
 // This program is open source software.  Use, duplication, or disclosure
 // is subject to the terms of the GNU General Public License, version 3.
-// The program is distributed without any warranty, expressed or implied.
 
 #include <stdio.h>
 #include <libcitadel.h>
@@ -12,11 +11,11 @@
 #include "citserver.h"
 #include "config.h"
 #include "user_ops.h"
-#include "serv_vcard.h"			/* Needed for vcard_getuser and extract_inet_email_addrs */
+#include "serv_vcard.h"			// Needed for vcard_getuser and extract_inet_email_addrs
 #include "internet_addressing.h"
 #include "journaling.h"
 
-struct jnlq *jnlq = NULL;	/* journal queue */
+struct jnlq *jnlq = NULL;	// journal queue
 
 /*
  * Hand off a copy of a message to be journalized.
