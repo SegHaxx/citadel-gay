@@ -130,9 +130,10 @@ function mail_render_row(msg) {
 
 // Set up the mailbox view
 function mail_display() {
-	document.getElementById("ctdl-main").innerHTML =
-		"<div id=\"ctdl-mailbox-pane\" class=\"ctdl-mailbox-pane\"></div>"
+	document.getElementById("ctdl-main").innerHTML
+		= "<div id=\"ctdl-mailbox-pane\" class=\"ctdl-mailbox-pane\"></div>"
 		+ "<div id=\"ctdl-reading-pane\" class=\"ctdl-reading-pane\"></div>";
+	;
 	refresh_mail_display();
 	try {							// if this was already set up, clear it so there aren't multiple
 		clearInterval(RefreshMailboxInterval);
@@ -166,7 +167,7 @@ function refresh_mail_display() {
 		if (response.ok) {
 
 			box =	"<table class=\"w3-table-all w3-hoverable\" width=100%>"
-				+ "<tr class=\"w3-blue\">"
+				+ "<tr class=\"ctdl-mailbox-heading w3-blue\">"
 				+ "<th>" + _("Subject") + "</th>"
 				+ "<th>" + _("Sender") + "</th>"
 				+ "<th>" + _("Date") + "</th>"

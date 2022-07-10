@@ -320,14 +320,13 @@ int PurgeRooms(void) {
 	while (RoomPurgeList != NULL) {
 		if (CtdlGetRoom(&qrbuf, RoomPurgeList->name) == 0) {
 			transcript=realloc(transcript, strlen(transcript)+SIZ);
-			snprintf(&transcript[strlen(transcript)], SIZ, " %s\n",
-				qrbuf.QRname);
+			snprintf(&transcript[strlen(transcript)], SIZ, " %s\n", qrbuf.QRname);
 			CtdlDeleteRoom(&qrbuf);
+			++num_rooms_purged;
 		}
 		pptr = RoomPurgeList->next;
 		free(RoomPurgeList);
 		RoomPurgeList = pptr;
-		++num_rooms_purged;
 	}
 
 	if (num_rooms_purged > 0) CtdlAideMessage(transcript, "Room Autopurger Message");
@@ -464,8 +463,7 @@ int PurgeUsers(void) {
 		strcpy(transcript, "The following users have been auto-purged:\n");
 		while (UserPurgeList != NULL) {
 			transcript=realloc(transcript, strlen(transcript)+SIZ);
-			snprintf(&transcript[strlen(transcript)], SIZ, " %s\n",
-				UserPurgeList->name);
+			snprintf(&transcript[strlen(transcript)], SIZ, " %s\n", UserPurgeList->name);
 			purge_user(UserPurgeList->name);
 			pptr = UserPurgeList->next;
 			free(UserPurgeList);
@@ -503,7 +501,7 @@ int PurgeUsers(void) {
 // traverse the visit file, checking each record against those two lists and
 // purging the ones that do not have a match on _both_ lists.  (Remember, if
 // either the room or user being referred to is no longer on the system, the
-// record is completely useless.)
+// record is useless and should be removed.)
 //
 int PurgeVisits(void) {
 	struct cdbdata *cdbvisit;

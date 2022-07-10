@@ -191,8 +191,25 @@ blockquote pre {
 .ctdl-roomlist-mtime {
 }
 
+.ctdl-mailbox-heading {
+	position: sticky;
+	top: 0;
+	z-index: 6;
+}
+
 .ctdl-mailbox-pane {		/* list of messages when in mailbox view */
+	position: absolute;
+	height: 25%;
+	width: inherit;
+	overflow-x: hidden;
+	overflow-y: scroll;
 }
 
 .ctdl-reading-pane {		/* message reading/composing pane when in mailbox view */
+	position: absolute;
+	top: 31%;
+	height: 70%;
+	left: inherit;
+	right: inherit;
+	overflow: scroll;
 }

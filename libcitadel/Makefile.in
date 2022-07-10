@@ -115,6 +115,7 @@ LINK_CXX_EXE = $(LIBTOOL) $(LTFLAGS) --mode=link $(CXXCOMPILE) $(LDFLAGS) -o $@
 LIB_OBJS = lib/libcitadel.lo \
 	lib/mime_parser.lo \
 	lib/tools.lo \
+	lib/decode.lo \
 	lib/base64.lo \
 	lib/vcard.lo \
 	lib/vnote.lo \
@@ -140,6 +141,7 @@ $(LIBRARY): $(LIB_OBJS)
 lib/libcitadel.lo: lib/libcitadel.c lib/libcitadel.h
 lib/mime_parser.lo: lib/mime_parser.c lib/libcitadel.h
 lib/tools.lo: lib/tools.c lib/libcitadel.h
+lib/decode.lo: lib/decode.c lib/libcitadel.h
 lib/base64.lo: lib/base64.c lib/libcitadel.h
 lib/vcard.lo: lib/vcard.c lib/libcitadel.h
 lib/vnote.lo: lib/vnote.c lib/libcitadel.h
@@ -156,6 +158,7 @@ lib/xdgmime/xdgmimeparent.lo:  lib/xdgmime/xdgmimeparent.c
 lib/xdgmime/xdgmimecache.lo: lib/xdgmime/xdgmimecache.c
 lib/html_to_ascii.lo: lib/html_to_ascii.c
 lib/tools.lo: lib/tools.c
+lib/decode.lo: lib/decode.c
 lib/base64.lo: lib/base64.c
 
 .SUFFIXES: .c .cpp .lo .o

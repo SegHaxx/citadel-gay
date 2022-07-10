@@ -7,19 +7,9 @@
 //
 // Copyright (c) 1987-2022 by the citadel.org team
 //
-// This program is open source software; you can redistribute it and/or modify
-// it under the terms of the GNU General Public License as published by
-// the Free Software Foundation; either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License for more details.
-//
-// You should have received a copy of the GNU General Public License
-// along with this program; if not, write to the Free Software
-// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+// This program is open source software.  Use, duplication, or disclosure
+// is subject to the terms of the GNU General Public License, version 3.
+
 
 #define _GNU_SOURCE
 #include "sysdep.h"
@@ -101,7 +91,7 @@ size_t CtdlEncodeBase64(char *dest, const char *source, size_t sourcelen, int li
 
 
 // convert base64 alphabet characters to 6-bit decimal values
-char unalphabet(char ch) {
+char b64unalphabet(char ch) {
 	if (isupper(ch)) {
 		return(ch - 'A');
 	}
@@ -139,7 +129,7 @@ size_t CtdlDecodeBase64(char *dest, const char *source, size_t source_len) {
 
 	while (bytes_read < source_len) {
 
-		char ch = unalphabet(source[bytes_read++]);
+		char ch = b64unalphabet(source[bytes_read++]);
 		if (ch < 65) {
 			decodebuf[decodepos++] = ch;
 		}

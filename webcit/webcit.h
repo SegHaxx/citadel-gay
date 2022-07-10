@@ -621,7 +621,7 @@ void TmplGettext(StrBuf *Target, WCTemplputParams *TP); /* actual supported loca
 void set_selected_language(const char *);
 void go_selected_language(void);
 const char *get_selected_language(void);
-void utf8ify_rfc822_string(char **buf);
+// void utf8ify_rfc822_string(char **buf); this is in libcitadel now
 void begin_burst(void);
 long end_burst(void);
 void AppendImportantMessage(const char *pch, long len);
