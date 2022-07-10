@@ -44,6 +44,7 @@ void json_render_one_message(struct http_transaction *h, struct ctdlsession *c, 
 	JsonObjectAppend(j, NewJsonNumber(HKEY("msgnum"), msgnum));
 
 	while ((ctdl_readline(c, buf, sizeof(buf)) >= 0) && (strcmp(buf, "text")) && (strcmp(buf, "000"))) {
+		utf8ify_rfc822_string(&buf[5]);
 
 		// citadel header parsing here
 		if (!strncasecmp(buf, "from=", 5)) {

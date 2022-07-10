@@ -83,6 +83,7 @@ void json_mailbox(struct http_transaction *h, struct ctdlsession *c) {
 	ctdl_readline(c, buf, sizeof(buf));
 	if (buf[0] == '1') {
 		while (ctdl_readline(c, buf, sizeof(buf)), (strcmp(buf, "000"))) {
+			utf8ify_rfc822_string(buf);
 			JsonValue *jmsg = NewJsonObject(HKEY("message"));
 			JsonObjectAppend(jmsg, NewJsonNumber(HKEY("msgnum"), extract_long(buf, 0)));
 			JsonObjectAppend(jmsg, NewJsonNumber(HKEY("time"), extract_long(buf, 1)));
