@@ -197,19 +197,35 @@ blockquote pre {
 	z-index: 6;
 }
 
-.ctdl-mailbox-pane {		/* list of messages when in mailbox view */
+.ctdl-mailbox-outer {
 	position: absolute;
-	height: 25%;
-	width: inherit;
+	top: 0%;
+	height: 50%;
+	width: 100%;
 	overflow-x: hidden;
 	overflow-y: scroll;
+	background-color: #FF8888;
+}
+
+.ctdl-reading-outer {
+	position: absolute;
+	top: 50%;
+	height: 50%;
+	width: 100%;
+	overflow: scroll;
+	background-color: #88FF88;
+}
+
+.ctdl-mailbox-pane {		/* list of messages when in mailbox view */
+	display: none;
+	position: relative;
+	width: 100%;
+	height: 100%;
 }
 
 .ctdl-reading-pane {		/* message reading/composing pane when in mailbox view */
-	position: absolute;
-	top: 31%;
-	height: 70%;
-	left: inherit;
-	right: inherit;
-	overflow: scroll;
+	display: none;
+	position: relative;
+	width: 100%;
+	height: 100%;
 }

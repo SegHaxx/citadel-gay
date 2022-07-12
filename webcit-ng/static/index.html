@@ -21,24 +21,6 @@
 LOADING
 </div>
 
-<!-- Top container -->
-<div id="navbar" class="w3-bar w3-top w3-black w3-large" style="z-index:4">
-	<button class="w3-bar-item w3-button w3-hide-large w3-hover-none w3-hover-text-light-grey" onClick="w3_open();"><i class="fa fa-bars"></i>  Menu</button>
-	<span class="w3-left">
-		<span class="w3-bar-item" id="ctdl-logo">CITADEL</span>
-	</span>
-	<span class="w3-center">
-		<span id="ctdl_banner_title" class="w3-bar-item">---</span>
-	</span>
-	<span class="w3-right">
-		<button id="ctdl-newmsg-button" style="display:none" class="w3-bar-item w3-button" onClick="entmsg_dispatcher();">enter</button>
-		<button id="ctdl-ungoto-button" style="display:none" class="w3-bar-item w3-button" onClick="gotonext(0);">ungoto</button>
-		<button id="ctdl-skip-button" style="display:none" class="w3-bar-item w3-button" onClick="gotonext(1);">skip</button>
-		<button id="ctdl-goto-button" style="display:none" class="w3-bar-item w3-button" onClick="gotonext(2);">goto</button>
-		<button id="lilo" class="w3-bar-item w3-button">Login</button>
-	</span>
-</div>
-
 <!-- Sidebar/menu -->
 <nav class="w3-sidebar w3-collapse w3-white w3-animate-left" style="z-index:3;width:300px;" id="sidebar"><br>
 	<div class="w3-container w3-row">
@@ -69,10 +51,34 @@ LOADING
 <!-- Overlay effect when opening sidebar on small screens -->
 <div class="w3-overlay w3-hide-large w3-animate-opacity" onClick="w3_close()" style="cursor:pointer" title="close side menu" id="myOverlay"></div>
 
-<!-- MAIN PAGE CONTENT DIV -->
-<div id="ctdl-main" class="w3-main" style="margin-left:300px;margin-top:43px;">
+<!-- This div contains both the top bar and the main pane -->
+<div id="ctdl-bar-and-main" class="w3-main" style="margin-left:300px; position:absolute; height:100%; width:inherit; overflow-y:scroll; border: 3px solid green">
+
+<!-- Top container -->
+<div id="navbar" class="w3-bar w3-black w3-large" style="z-index:4; position:sticky; top:0">
+	<button class="w3-bar-item w3-button w3-hide-large w3-hover-none w3-hover-text-light-grey" onClick="w3_open();"><i class="fa fa-bars"></i>  Menu</button>
+	<span class="w3-left">
+		<span class="w3-bar-item" id="ctdl-logo">CITADEL</span>
+	</span>
+	<span class="w3-center">
+		<span id="ctdl_banner_title" class="w3-bar-item">---</span>
+	</span>
+	<span class="w3-right">
+		<button id="ctdl-newmsg-button" style="display:none" class="w3-bar-item w3-button" onClick="entmsg_dispatcher();">enter</button>
+		<button id="ctdl-ungoto-button" style="display:none" class="w3-bar-item w3-button" onClick="gotonext(0);">ungoto</button>
+		<button id="ctdl-skip-button" style="display:none" class="w3-bar-item w3-button" onClick="gotonext(1);">skip</button>
+		<button id="ctdl-goto-button" style="display:none" class="w3-bar-item w3-button" onClick="gotonext(2);">goto</button>
+		<button id="lilo" class="w3-bar-item w3-button">Login</button>
+	</span>
+</div>
+
+<!-- MAIN PANE CONTENT DIV -->
+<div id="ctdl-main">
 Loading...
 <!-- End page content -->
+</div>
+
+<!-- end ctdl-bar-and-main -->
 </div>
 
 <script type="text/javascript" src="js/defs.js"></script>

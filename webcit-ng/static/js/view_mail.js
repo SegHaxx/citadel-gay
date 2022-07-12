@@ -101,7 +101,7 @@ function select_message(msgnum) {
 
 	// highlight the newly selected message
 	document.getElementById("ctdl-msgsum-" + msgnum).classList.add("w3-blue");
-	document.getElementById("ctdl-msgsum-" + msgnum).scrollIntoView();
+	//document.getElementById("ctdl-msgsum-" + msgnum).scrollIntoView();
 
 	// display the message if it isn't already displayed
 	if (selected_message != msgnum) {
@@ -131,9 +131,15 @@ function mail_render_row(msg) {
 // Set up the mailbox view
 function mail_display() {
 	document.getElementById("ctdl-main").innerHTML
-		= "<div id=\"ctdl-mailbox-pane\" class=\"ctdl-mailbox-pane\"></div>"
-		+ "<div id=\"ctdl-reading-pane\" class=\"ctdl-reading-pane\"></div>";
+		= "<div id=\"ctdl-mailbox-outer\" class=\"ctdl-mailbox-outer\">mailbox-outer</div>"
+		+ "<div id=\"ctdl-reading-outer\" class=\"ctdl-reading-outer\">reading-outer</div>"
 	;
+
+	document.getElementById("ctdl-main").innerHTML
+		+= "<div id=\"ctdl-mailbox-pane\" class=\"ctdl-mailbox-pane\"></div>"
+		+ "<div id=\"ctdl-reading-pane\" class=\"ctdl-reading-pane\"></div>"
+	;
+
 	refresh_mail_display();
 	try {							// if this was already set up, clear it so there aren't multiple
 		clearInterval(RefreshMailboxInterval);
@@ -146,6 +152,7 @@ function mail_display() {
 
 // Display or refresh the mailbox
 function refresh_mail_display() {
+
 	console.log("refresh_mail_display()");
 
 	// If the "ctdl-mailbox-pane" no longer exists, the user has navigated to a different part of the site,
