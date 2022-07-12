@@ -52,10 +52,10 @@ LOADING
 <div class="w3-overlay w3-hide-large w3-animate-opacity" onClick="w3_close()" style="cursor:pointer" title="close side menu" id="myOverlay"></div>
 
 <!-- This div contains both the top bar and the main pane -->
-<div id="ctdl-bar-and-main" class="w3-main" style="margin-left:300px; position:absolute; height:100%; width:inherit; overflow-y:scroll; border: 3px solid green">
+<div id="ctdl-bar-and-main" class="w3-main" style="margin-left:300px; position:absolute; height:100%; left:0; right:0; overflow-y:scroll; border:3px solid orange">
 
 <!-- Top container -->
-<div id="navbar" class="w3-bar w3-black w3-large" style="z-index:4; position:sticky; top:0">
+<div id="navbar" class="w3-bar w3-black w3-large w3-main" style="z-index:4; position:sticky; top:0;">
 	<button class="w3-bar-item w3-button w3-hide-large w3-hover-none w3-hover-text-light-grey" onClick="w3_open();"><i class="fa fa-bars"></i>  Menu</button>
 	<span class="w3-left">
 		<span class="w3-bar-item" id="ctdl-logo">CITADEL</span>
@@ -73,7 +73,7 @@ LOADING
 </div>
 
 <!-- MAIN PANE CONTENT DIV -->
-<div id="ctdl-main">
+<div id="ctdl-main" class="w3-main">
 Loading...
 <!-- End page content -->
 </div>
