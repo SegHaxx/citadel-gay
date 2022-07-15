@@ -19,6 +19,7 @@ var current_user = _("Not logged in.");
 var serv_info;
 var last_seen = 0;
 var is_room_aide = 0;
+var room_mtime = 0;
 var can_delete_messages = 0;
 var messages_per_page = 20;
 var march_list = [] ;

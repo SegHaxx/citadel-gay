@@ -73,7 +73,9 @@ function gotoroom(roomname) {
 			default_view = data.default_view;
 			last_seen = data.last_seen;
 			is_room_aide = data.is_room_aide;
+			room_mtime = data.room_mtime;
 			can_delete_messages = data.can_delete_messages;
+			console.log("new mail: " + data.new_mail);
 			update_banner();
 			render_room_view(0, 9999999999);
 		}

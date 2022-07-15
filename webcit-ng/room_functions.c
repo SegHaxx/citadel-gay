@@ -73,6 +73,35 @@ int match_etags(char *taglist, long msgnum) {
 }
 
 
+// Client is requesting a STAT (name and modification time) of the current room
+void json_stat(struct http_transaction *h, struct ctdlsession *c) {
+	char buf[1024];
+	char field[1024];
+
+	ctdl_printf(c, "STAT");
+	ctdl_readline(c, buf, sizeof(buf));
+	syslog(LOG_DEBUG, "%s", buf);
+	if (buf[0] == '2') {
+		JsonValue *j = NewJsonObject(HKEY("stat"));
+		extract_token(field, &buf[4], 0, '|', sizeof field);
+		JsonObjectAppend(j, NewJsonPlainString(HKEY("name"), field, -1));
+		JsonObjectAppend(j, NewJsonNumber(HKEY("room_mtime"), extract_long(&buf[4], 1)));
+
+		StrBuf *sj = NewStrBuf();
+		SerializeJson(sj, j, 1);				// '1' == free the source array
+		add_response_header(h, strdup("Content-type"), strdup("application/json"));
+		h->response_code = 200;
+		h->response_string = strdup("OK");
+		h->response_body_length = StrLength(sj);
+		h->response_body = SmashStrBuf(&sj);
+	}
+	else {
+		do_404(h);
+	}
+	return;
+}
+
+
 // Client is requesting a mailbox summary of the current room
 void json_mailbox(struct http_transaction *h, struct ctdlsession *c) {
 	char buf[1024];
@@ -185,6 +214,11 @@ void object_in_room(struct http_transaction *h, struct ctdlsession *c) {
 
 	if (!strcasecmp(buf, "mailbox")) {		// Client is requesting a mailbox summary
 		json_mailbox(h, c);
+		return;
+	}
+
+	if (!strcasecmp(buf, "stat")) {			// Client is requesting a stat command (name and modification time)
+		json_stat(h, c);
 		return;
 	}
 
@@ -474,6 +508,8 @@ void get_the_room_itself(struct http_transaction *h, struct ctdlsession *c) {
 	JsonObjectAppend(j, NewJsonNumber(HKEY("new_messages"), c->new_messages));
 	JsonObjectAppend(j, NewJsonNumber(HKEY("total_messages"), c->total_messages));
 	JsonObjectAppend(j, NewJsonNumber(HKEY("last_seen"), c->last_seen));
+	JsonObjectAppend(j, NewJsonNumber(HKEY("room_mtime"), c->room_mtime));
+	JsonObjectAppend(j, NewJsonNumber(HKEY("new_mail"), c->new_mail));
 
 	StrBuf *sj = NewStrBuf();
 	SerializeJson(sj, j, 1);	// '1' == free the source array
@@ -597,13 +633,13 @@ void ctdl_r(struct http_transaction *h, struct ctdlsession *c) {
 			c->last_seen = extract_long(&buf[4], 6);	// The highest message number the user has read in this room
 			//      7       (int)rmailflag                  Boolean flag: 1 if this is a Mail> room, 0 otherwise.
 			c->is_room_aide = extract_int(&buf[4], 8);
-			//      9       (int)newmailcount               The number of new Mail messages the user has
+			c->new_mail = extract_int(&buf[4], 9);		// the number of new messages in the user's INBOX
 			//      10      (int)CC->room.QRfloor           The floor number this room resides on
 			c->room_current_view = extract_int(&buf[4], 11);
 			c->room_default_view = extract_int(&buf[4], 12);
 			//      13      (int)is_trash                   Boolean flag: 1 if this is the user's Trash folder, 0 otherwise.
 			room_flags2 = extract_long(&buf[4], 14);	// More flags associated with this room.
-			//      15      (long)CC->room.QRmtime          Timestamp of the last write activity in this room
+			c->room_mtime = extract_long(&buf[4], 15);	// Timestamp of the last write activity in this room
 
 			// If any of these three conditions are met, let the client know it has permission to delete messages.
 			if ((c->is_room_aide) || (room_flags & QR_MAILBOX) || (room_flags2 & QR2_COLLABDEL)) {

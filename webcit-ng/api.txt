@@ -11,6 +11,7 @@ GET		/ctdl/r/ROOMNAME/info.txt	Returns the room info banner for this room
 GET		/ctdl/r/ROOMNAME/msgs.all	JSON array of message list in room
 GET		/ctdl/r/ROOMNAME/msgs.new	JSON array of message list in room (new messages)
 GET		/ctdl/r/ROOMNAME/mailbox	JSON dictionary of a mailbox summary in this room
+GET		/ctdl/r/ROOMNAME/stat		JSON dictionary of the server STAT command (room name and modification time)
 GET		/ctdl/r/ROOMNAME/MSGNUM		Retrieve the content of an individual message
 GET		/ctdl/r/ROOMNAME/MSGNUM/json	Retrieve an individual message in a room, encapsulated in JSON
 DELETE		/ctdl/r/ROOMNAME/MSGNUM		Deletes a message from a room

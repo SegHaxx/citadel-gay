@@ -8,6 +8,7 @@
 
 var selected_message = 0;							// Remember the last message that was selected
 var RefreshMailboxInterval;							// We store our refresh timer here
+var last_mtime;									// Watch this mailbox using the room's mtime
 
 
 // Render a message into the mailbox view
@@ -139,6 +140,7 @@ function mail_display() {
 		= "<div id=\"ctdl-reading-pane\" class=\"ctdl-reading-pane\"></div>"
 	;
 
+	last_mtime = 0;						// Keep track of room's mod time so we know when to refresh
 	refresh_mail_display();
 	try {							// if this was already set up, clear it so there aren't multiple
 		clearInterval(RefreshMailboxInterval);
@@ -152,8 +154,6 @@ function mail_display() {
 // Display or refresh the mailbox
 function refresh_mail_display() {
 
-	console.log("refresh_mail_display()");
-
 	// If the "ctdl-mailbox-pane" no longer exists, the user has navigated to a different part of the site,
 	// so cancel the refresh.
 	try {
@@ -165,6 +165,11 @@ function refresh_mail_display() {
 		document.getElementById("ctdl-stuffbar").style.display = "none";
 		return;
 	}
+
+	if (last_mtime == 0) {
+		last_mtime = room_mtime;
+	}
+	console.log("refresh_mail_display() last_mtime is " + last_mtime + " FIXME");
 
 	// Now go to the server.
 	url = "/ctdl/r/" + escapeHTMLURI(current_room) + "/mailbox";
