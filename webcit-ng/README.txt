@@ -7,8 +7,8 @@ layered with as little spaghetti as possible.
 Please don't mess with this yet.  I'm only pushing it upstream so it gets backed up.
 
 
-DESIGN GOALS:
--------------
+DESIGN GOALS
+------------
 
 *	Hold as little state as possible
 
@@ -29,7 +29,8 @@ REST format URLs will generally take the form of:
 
 	/ctdl/objectClass/[container/]object[/operation]
 
-We are using:
+We are using
+------------
 
 *	libcitadel for information about the Citadel server, some string handling, and the JSON encoder
 *	Expat for DAV handling

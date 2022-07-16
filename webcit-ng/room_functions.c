@@ -80,7 +80,6 @@ void json_stat(struct http_transaction *h, struct ctdlsession *c) {
 
 	ctdl_printf(c, "STAT");
 	ctdl_readline(c, buf, sizeof(buf));
-	syslog(LOG_DEBUG, "%s", buf);
 	if (buf[0] == '2') {
 		JsonValue *j = NewJsonObject(HKEY("stat"));
 		extract_token(field, &buf[4], 0, '|', sizeof field);

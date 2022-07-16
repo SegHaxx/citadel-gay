@@ -8,7 +8,6 @@
 
 var selected_message = 0;							// Remember the last message that was selected
 var RefreshMailboxInterval;							// We store our refresh timer here
-var last_mtime;									// Watch this mailbox using the room's mtime
 
 
 // Render a message into the mailbox view
@@ -140,8 +139,7 @@ function mail_display() {
 		= "<div id=\"ctdl-reading-pane\" class=\"ctdl-reading-pane\"></div>"
 	;
 
-	last_mtime = 0;						// Keep track of room's mod time so we know when to refresh
-	refresh_mail_display();
+	render_mailbox_display();
 	try {							// if this was already set up, clear it so there aren't multiple
 		clearInterval(RefreshMailboxInterval);
 	}
@@ -151,7 +149,7 @@ function mail_display() {
 }
 
 
-// Display or refresh the mailbox
+// Refresh the mailbox, either for the first time or whenever needed
 function refresh_mail_display() {
 
 	// If the "ctdl-mailbox-pane" no longer exists, the user has navigated to a different part of the site,
@@ -166,12 +164,23 @@ function refresh_mail_display() {
 		return;
 	}
 
-	if (last_mtime == 0) {
-		last_mtime = room_mtime;
+	// Ask the server if the room has been written to since our last look at it.
+	url = "/ctdl/r/" + escapeHTMLURI(current_room) + "/stat";
+	fetch_stat = async() => {
+		response = await fetch(url);
+		stat = await(response.json());
+		if (stat.room_mtime > room_mtime) {
+			room_mtime = stat.room_mtime;
+			render_mailbox_display();
+		}
 	}
-	console.log("refresh_mail_display() last_mtime is " + last_mtime + " FIXME");
+	fetch_stat();
+}
 
-	// Now go to the server.
+
+// This is where the rendering of the message list in the mailbox view is performed.
+function render_mailbox_display() {
+
 	url = "/ctdl/r/" + escapeHTMLURI(current_room) + "/mailbox";
 	fetch_mailbox = async() => {
 		response = await fetch(url);
