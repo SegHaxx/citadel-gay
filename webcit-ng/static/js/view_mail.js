@@ -60,7 +60,7 @@ function mail_render_one(msg, target_div) {
 	  		"<br><span class=\"ctdl-msgsubject\">" + msg.subj + "</span>";
 		}
 		outmsg +=
-	  	  "</div><br>"							// end header
+	  	  "</div>"							// end header
 		+ "<div class=\"ctdl-msg-body\" id=\"" + div + "_body\">"	// begin body
 		+ msg.text
 		+ "</div>"							// end body
@@ -122,7 +122,7 @@ function mail_render_row(msg) {
 		+ "<td>" + msg["subject"] + "</td>"
 		+ "<td>" + msg["author"] + " &lt;" + msg["addr"] + "&gt;</td>"
 		+ "<td>" + convertTimestamp(msg["time"]) + "</td>"
-		+ "<td>" + msg["msgnum"] + "</td>"
+		+ "<td class=\"w3-right-align\">" + msg["msgnum"] + "</td>"
 		+ "</tr>";
 	return(row);
 }
@@ -192,7 +192,7 @@ function render_mailbox_display() {
 				+ "<th>" + _("Subject") + "</th>"
 				+ "<th>" + _("Sender") + "</th>"
 				+ "<th>" + _("Date") + "</th>"
-				+ "<th>#</th>"
+				+ "<th class=\"w3-right-align\">#</th>"
 				+ "</tr>";
 
 			for (var i=0; i<msgs.length; ++i) {

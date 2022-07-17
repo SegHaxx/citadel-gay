@@ -220,7 +220,7 @@ function forum_render_one(msg, existing_div) {
 	  		"<br><span class=\"ctdl-msgsubject\">" + msg.subj + "</span>";
 		}
 		outmsg +=
-	  	  "</div><br>"							// end header
+	  	  "</div>"							// end header
 		+ "<div class=\"ctdl-msg-body\" id=\"" + mdiv + "_body\">"	// begin body
 		+ msg.text
 		+ "</div>"							// end body
