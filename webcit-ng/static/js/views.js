@@ -53,7 +53,7 @@ function entmsg_dispatcher() {
 			forum_entmsg();
 			break;
 		default:
-			alert("no handler");
+			mail_entmsg();
 			break;
 	}
 }
