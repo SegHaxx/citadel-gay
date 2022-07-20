@@ -36,7 +36,7 @@ LOADING
 	</div>
 	<hr>
 	<div id="ctdl-sidebar" class="w3-bar-block">
-		<a href="#" class="w3-bar-item w3-button w3-padding-16 w3-hide-large w3-dark-grey w3-hover-black" onClick="w3_close()" title="close menu"><i class="fa fa-remove fa-fw"></i>  Close Menu</a>
+		<a href="#" class="w3-bar-item w3-button w3-padding-16 w3-hide-large w3-dark-grey w3-hover-black" onClick="sidebar_close()" title="close menu"><i class="fa fa-remove fa-fw"></i>  Close Menu</a>
 		<a href="#" id="ctdl-sidebar-button-mail" class="w3-bar-item w3-button w3-padding" onClick="gotoroom('_MAIL_');"><i class="fa fa-envelope fa-fw"></i>  Mail</a>
 		<div id="ctdl_mail_folder_list" style="display:none"></div>
 		<a href="#" id="ctdl-sidebar-button-forums" class="w3-bar-item w3-button w3-padding" onClick="render_room_list();"><i class="fas fa-comments fa-fw"></i>  Forums</a>
@@ -49,7 +49,7 @@ LOADING
 </nav>
 
 <!-- Overlay effect when opening sidebar on small screens -->
-<div class="w3-overlay w3-hide-large w3-animate-opacity" onClick="w3_close()" style="cursor:pointer" title="close side menu" id="myOverlay"></div>
+<div class="w3-overlay w3-hide-large w3-animate-opacity" onClick="sidebar_close()" style="cursor:pointer" title="close side menu" id="myOverlay"></div>
 
 <!-- This div contains both the top bar and the main pane -->
 <div id="ctdl-bar-and-main" class="w3-main" style="margin-left:300px; position:absolute; height:100%; left:0; right:0; overflow-y:scroll">
@@ -57,7 +57,7 @@ LOADING
 <!-- Top container -->
 <div style="z-index:4; position:sticky; top:0;">
 <div id="navbar" class="w3-bar w3-black w3-large w3-main">
-	<button class="w3-bar-item w3-button w3-hide-large w3-hover-none w3-hover-text-light-grey" onClick="w3_open();"><i class="fa fa-bars"></i>  Menu</button>
+	<button class="w3-bar-item w3-button w3-hide-large w3-hover-none w3-hover-text-light-grey" onClick="sidebar_open();"><i class="fa fa-bars"></i>  Menu</button>
 	<span class="w3-left">
 		<span class="w3-bar-item" id="ctdl-logo">CITADEL</span>
 	</span>
@@ -107,7 +107,7 @@ var overlayBg = document.getElementById("myOverlay");
 
 
 // Toggle between showing and hiding the sidebar, and add overlay effect
-function w3_open() {
+function sidebar_open() {
 	if (sidebar.style.display === 'block') {
 		sidebar.style.display = 'none';
 		overlayBg.style.display = "none";
@@ -120,7 +120,7 @@ function w3_open() {
 
 
 // Close the sidebar with the close button
-function w3_close() {
+function sidebar_close() {
 	sidebar.style.display = "none";
 	overlayBg.style.display = "none";
 }
