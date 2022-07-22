@@ -53,7 +53,7 @@ function entmsg_dispatcher() {
 			forum_entmsg();
 			break;
 		default:
-			mail_entmsg();
+			mail_compose(false, "", "");
 			break;
 	}
 }

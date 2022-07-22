@@ -58,7 +58,7 @@ function display_room_list_renderer(floor_list, room_list) {
 				+ " w3-left\">"
 				+ escapeHTML(room_list[i].name)
 				+ "</span><span class=\"ctdl-roomlist-mtime w3-right\">"
-				+ convertTimestamp(room_list[i].mtime)
+				+ string_timestamp(room_list[i].mtime)
 				+ "</span></div>";
 		}
 	}

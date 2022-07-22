@@ -187,7 +187,7 @@ function forum_render_one(msg, existing_div) {
 		+ msg.from
 		+ "</a></span>"							// end username
 		+ "<span class=\"ctdl-msgdate\">"
-		+ convertTimestamp(msg.time)
+		+ string_timestamp(msg.time,0)
 		+ "</span>"							// end msgdate
 		+ "</span>"							// end header info on left side
 		+ "<span class=\"ctdl-msg-header-buttons\">"			// begin buttons on right side
@@ -296,7 +296,7 @@ function open_reply_box(parent_div, is_quoted, references, msgid) {
 	+ current_user							// user = me !
 	+ "</span>"
 	+ "<span class=\"ctdl-msgdate\">"
-	+ convertTimestamp(Date.now() / 1000)				// the current date/time (temporary for display)
+	+ string_timestamp((Date.now() / 1000),0)			// the current date/time (temporary for display)
 	+ "</span>"
 	+ "</span>"							// end header info on left side
 	+ "<span class=\"ctdl-msg-header-buttons\">"			// begin buttons on right side

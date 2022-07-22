@@ -78,14 +78,25 @@ function escapeJS(text) {
 
 // Convert a UNIX timestamp to the browser's local time
 // See also: https://timestamp.online/article/how-to-convert-timestamp-to-datetime-in-javascript
-// In the future we could let the user select from several available formats.
-function convertTimestamp(timestamp) {
+// format should be: 0=full (date+time), 1=brief (date if not today, time if today)
+function string_timestamp(timestamp, format) {
 	var ts = new Date(timestamp * 1000);
-	return(ts.toLocaleString());
+	if (format == 1) {
+		var now_ts = new Date(Date.now());
+		if (ts.toLocaleDateString() == now_ts.toLocaleDateString()) {
+			return(ts.toLocaleTimeString());
+		}
+		else {
+			return(ts.toLocaleDateString());
+		}
+	}
+	else {
+		return(ts.toLocaleString());
+	}
 }
 
 
-// An old version of convertTimestamp() did it the hard way.
+// An old version of string_timestamp() did it the hard way.
 // It used https://gist.github.com/kmaida/6045266 as a reference.
 // check git history prior to 2022-jul-03 if you want to see it.
 

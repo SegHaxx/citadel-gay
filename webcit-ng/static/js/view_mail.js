@@ -27,22 +27,16 @@ function mail_render_one(msg, target_div) {
 		+ msg.from
 		+ "</a></span>"							// end username
 		+ "<span class=\"ctdl-msgdate\">"
-		+ convertTimestamp(msg.time)
+		+ string_timestamp(msg.time,0)
 		+ "</span>"							// end msgdate
 		+ "</span>"							// end header info on left side
 		+ "<span class=\"ctdl-msg-header-buttons\">"			// begin buttons on right side
 	
-		+ "<span class=\"ctdl-msg-button\">"				// Reply
-		+ "<a href=\"javascript:open_reply_box('"+div+"',false,'"+msg.wefw+"','"+msg.msgn+"');\">"
+		+ "<span class=\"ctdl-msg-button\">"				// Reply (mail is always Quoted)
+		+ "<a href=\"javascript:mail_compose(true,'"+msg.wefw+"','"+msg.msgn+"');\">"
 		+ "<i class=\"fa fa-reply\"></i> " 
 		+ _("Reply")
 		+ "</a></span>"
-	
-		+ "<span class=\"ctdl-msg-button\">"				// ReplyQuoted
-		+ "<a href=\"javascript:open_reply_box('"+div+"',true,'"+msg.wefw+"','"+msg.msgn+"');\">"
-		+ "<i class=\"fa fa-comment\"></i> " 
-		+ _("ReplyQuoted")
-		+ "</a></span>";
 	
 		if (can_delete_messages) {
 			outmsg +=
@@ -121,7 +115,7 @@ function mail_render_row(msg) {
 		+ ">"
 		+ "<td>" + msg["subject"] + "</td>"
 		+ "<td>" + msg["author"] + " &lt;" + msg["addr"] + "&gt;</td>"
-		+ "<td>" + convertTimestamp(msg["time"]) + "</td>"
+		+ "<td>" + string_timestamp(msg["time"],1) + "</td>"
 		+ "<td class=\"w3-right-align\">" + msg["msgnum"] + "</td>"
 		+ "</tr>";
 	return(row);
@@ -217,7 +211,10 @@ function render_mailbox_display() {
 }
 
 
-// Enter a new mail message (called by the dispatcher in views.js)
-function mail_entmsg() {
-	alert("no handler for entering new mail yet");
+// Compose a new mail message (called by the Reply button here, or by the dispatcher in views.js)
+function mail_compose(is_quoted, references, msgid) {
+	console.log("mail_compose() called");
+	console.log("is_quoted: " + is_quoted);
+	console.log("references: " + references);
+	console.log("msgid: " + msgid);
 }
