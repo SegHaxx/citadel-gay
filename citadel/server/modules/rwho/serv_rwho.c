@@ -1,18 +1,10 @@
-/*
- * This module implements server commands related to the display and
- * manipulation of the "Who's online" list.
- *
- * Copyright (c) 1987-2022 by the citadel.org team
- *
- * This program is open source software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 3.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- */
+// This module implements server commands related to the display and
+// manipulation of the "Who's online" list.
+//
+// Copyright (c) 1987-2022 by the citadel.org team
+//
+// This program is open source software.  Use, duplication, or disclosure
+// is subject to the terms of the GNU General Public License, version 3.
 
 #include "../../sysdep.h"
 #include <stdlib.h>
@@ -39,19 +31,17 @@
 #include "../../msgbase.h"
 #include "../../ctdl_module.h"
 
-/* Don't show the names of private rooms unless the viewing
- * user also knows the rooms.
- */
-void GenerateRoomDisplay(char *real_room,
-			CitContext *viewed,
-			CitContext *viewer) {
-
+// Don't show the names of private rooms unless the viewing
+// user also knows the rooms.
+void GenerateRoomDisplay(char *real_room, CitContext *viewed, CitContext *viewer) {
 	int ra;
 
 	strcpy(real_room, viewed->room.QRname);
+
 	if (viewed->room.QRflags & QR_MAILBOX) {
 		strcpy(real_room, &real_room[11]);
 	}
+
 	if (viewed->room.QRflags & QR_PRIVATE) {
 		CtdlRoomAccess(&viewed->room, &viewer->user, &ra, NULL);
 		if ( (ra & UA_KNOWN) == 0) {
@@ -69,10 +59,7 @@ void GenerateRoomDisplay(char *real_room,
 }
 
 
-
-/*
- * display who's online
- */
+// display who's online
 void cmd_rwho(char *argbuf) {
 	struct CitContext *nptr;
 	int nContexts, i;
@@ -81,13 +68,11 @@ void cmd_rwho(char *argbuf) {
 	char room[ROOMNAMELEN];
 	char flags[5];
 	
-	/* So that we don't keep the context list locked for a long time
-	 * we create a copy of it first
-	 */
+	// So that we don't keep the context list locked for a long time
+	// we create a copy of it first
 	nptr = CtdlGetContextArray(&nContexts) ;
-	if (!nptr)
-	{
-		/* Couldn't malloc so we have to bail but stick to the protocol */
+	if (!nptr) {
+		// Couldn't malloc so we have to bail but stick to the protocol
 		cprintf("%d%c \n", LISTING_FOLLOWS, CtdlCheckExpress() );
 		cprintf("000\n");
 		return;
@@ -126,10 +111,14 @@ void cmd_rwho(char *argbuf) {
 		if (((nptr[i].cs_flags&CS_STEALTH)==0) || (aide)) {
 
 			cprintf("%d|%s|%s|%s|%s|%ld|%s|%s|",
-				nptr[i].cs_pid, nptr[i].curr_user, room,
-				nptr[i].cs_host, nptr[i].cs_clientname,
+				nptr[i].cs_pid,
+				(nptr[i].logged_in ? nptr[i].curr_user : NLI),
+				room,
+				nptr[i].cs_host,
+				nptr[i].cs_clientname,
 				(long)(nptr[i].lastidle),
-				nptr[i].lastcmdname, flags
+				nptr[i].lastcmdname,
+				flags
 			);
 
 			cprintf("|");	// no spoofed user names anymore
@@ -140,23 +129,19 @@ void cmd_rwho(char *argbuf) {
 		}
 	}
 	
-	/* release our copy of the context list */
+	// release our copy of the context list
 	free(nptr);
 
-	/* Now it's magic time.  Before we finish, call any EVT_RWHO hooks
-	 * so that external paging modules such as serv_icq can add more
-	 * content to the Wholist.
-	 */
+	// Now it's magic time.  Before we finish, call any EVT_RWHO hooks
+	// so that external paging modules such as serv_icq can add more
+	// content to the Wholist.
 	PerformSessionHooks(EVT_RWHO);
 	cprintf("000\n");
 }
 
 
-/*
- * enter or exit "stealth mode"
- */
-void cmd_stel(char *cmdbuf)
-{
+// enter or exit "stealth mode"
+void cmd_stel(char *cmdbuf) {
 	int requested_mode;
 
 	requested_mode = extract_int(cmdbuf,0);
@@ -182,10 +167,9 @@ char *ctdl_module_init_rwho(void) {
 	if (!threading) {
 	        CtdlRegisterProtoHook(cmd_rwho, "RWHO", "Display who is online");
 	        CtdlRegisterProtoHook(cmd_stel, "STEL", "Enter/exit stealth mode");
-		//CtdlRegisterSessionHook(dead_io_check, EVT_TIMER, PRIO_QUEUE + 50);
 
 	}
 	
-	/* return our module name for the log */
+	// return our module name for the log
         return "rwho";
 }

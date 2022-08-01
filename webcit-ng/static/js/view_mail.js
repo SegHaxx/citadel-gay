@@ -213,8 +213,19 @@ function render_mailbox_display() {
 
 // Compose a new mail message (called by the Reply button here, or by the dispatcher in views.js)
 function mail_compose(is_quoted, references, msgid) {
-	console.log("mail_compose() called");
-	console.log("is_quoted: " + is_quoted);
-	console.log("references: " + references);
-	console.log("msgid: " + msgid);
+
+	document.getElementById("ctdl-main").innerHTML
+		= "<div id=\"ctdl-compose-mail\" class=\"ctdl-compose-mail\">"
+
+		+ "<table border=\"1\" width=\"100%\">"
+		+ "<tr><td>is_quoted</td><td>" + is_quoted + "</td></tr>"
+		+ "<tr><td>references</td><td>" + references + "</td></tr>"
+		+ "<tr><td>msgid</td><td>" + msgid + "</td></tr>"
+		+ "<tr><td>from</td><td>" + current_user + "</td></tr>"
+		+ "<tr><td>to</td><td></td></tr>"
+		+ "<tr><td>subject</td><td></td></tr></table>"
+		+ "<div class=\"ctdl-msg-body\" id=\"ctdl-editor-body\" style=\"padding:5px;\" contenteditable=\"true\">"
+		+ "</div>"
+	;
+
 }
