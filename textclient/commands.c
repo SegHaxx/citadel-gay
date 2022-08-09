@@ -1346,15 +1346,15 @@ void stty_ctdl(int cmd) {
 
 	if ((cmd == 0) || (cmd == 1)) {
 		tcgetattr(0, &live);
+
+		// Character-by-character input instead of line mode
 		live.c_iflag = ISTRIP | IXON | IXANY;
 		live.c_oflag = OPOST | ONLCR;
 		live.c_lflag = ISIG | NOFLSH;
 
+		// Key bindings
 		live.c_cc[VINTR] = 0;
 		live.c_cc[VQUIT] = 0;
-
-		// do we even need this stuff anymore?
-		// live.c_line=0;
 		live.c_cc[VERASE] = 8;
 		live.c_cc[VKILL] = 24;
 		live.c_cc[VEOF] = 1;
@@ -1363,9 +1363,11 @@ void stty_ctdl(int cmd) {
 		live.c_cc[VSTART] = 0;
 		tcsetattr(0, TCSADRAIN, &live);
 	}
+
 	if (cmd == 2) {
 		tcgetattr(0, &saved_settings);
 	}
+
 	if (cmd == 3) {
 		tcsetattr(0, TCSADRAIN, &saved_settings);
 	}

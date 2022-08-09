@@ -160,7 +160,7 @@ void formout(CtdlIPC * ipc, char *name)
 
 void userlist(CtdlIPC * ipc, char *patn) {
 	char buf[SIZ];
-	char fl[SIZ];
+	char fl[26];		// a buffer this small will prevent it overrunning the column
 	struct tm tmbuf;
 	time_t lc;
 	int r;			// IPC response code
