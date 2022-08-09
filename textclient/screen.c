@@ -230,16 +230,16 @@ void scr_wait_indicator(int state) {
 	if (screenwidth > 0) {
 		switch (state) {
 		default:
-		case 0:	/* Idle */
+		case 0:	// Idle
 			status_line[sp] = ' ';
 			break;
-		case 1:	/* Waiting */
+		case 1:	// Waiting
 			status_line[sp] = 'X';
 			break;
-		case 2:	/* Receiving */
+		case 2:	// Receiving
 			status_line[sp] = '<';
 			break;
-		case 3:	/* Sending */
+		case 3:	// Sending
 			status_line[sp] = '>';
 			break;
 		}

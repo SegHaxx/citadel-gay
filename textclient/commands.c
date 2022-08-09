@@ -1,7 +1,7 @@
 // This file contains functions which implement parts of the
 // text-mode user interface.
 //
-// Copyright (c) 1987-2021 by the citadel.org team
+// Copyright (c) 1987-2022 by the citadel.org team
 //
 // This program is open source software.  Use, duplication, and/or
 // disclosure are subject to the GNU General Purpose License version 3.
@@ -730,18 +730,15 @@ int yesno_d(int d) {
 }
 
 
-/*
- * Function to read a line of text from the terminal.
- *
- * string		Pointer to string buffer
- * lim			Maximum length
- * noshow		Echo asterisks instead of keystrokes?
- * bs			Allow backspacing out of the prompt? (returns -1 if this happens)
- *
- * returns: string length
- */
-int ctdl_getline(char *string, int lim, int noshow, int bs)
-{
+// Function to read a line of text from the terminal.
+//
+// string		Pointer to string buffer
+// lim			Maximum length
+// noshow		Echo asterisks instead of keystrokes?
+// bs			Allow backspacing out of the prompt? (returns -1 if this happens)
+//
+// returns: string length
+int ctdl_getline(char *string, int lim, int noshow, int bs) {
 	int pos = strlen(string);
 	int ch;
 
@@ -757,18 +754,18 @@ int ctdl_getline(char *string, int lim, int noshow, int bs)
 	while (1) {
 		ch = inkey();
 
-		if ((ch == 8) && (pos > 0)) {	/* backspace */
+		if ((ch == 8) && (pos > 0)) {			// backspace
 			--pos;
 			scr_putc(8);
 			scr_putc(32);
 			scr_putc(8);
 		}
 
-		else if ((ch == 8) && (pos == 0) && (bs)) {	/* backspace out of the prompt */
+		else if ((ch == 8) && (pos == 0) && (bs)) {	// backspace out of the prompt
 			return (-1);
 		}
 
-		else if ((ch == 23) && (pos > 0)) {	/* Ctrl-W deletes a word */
+		else if ((ch == 23) && (pos > 0)) {		// Ctrl-W deletes a word
 			while ((pos > 0) && !isspace(string[pos])) {
 				--pos;
 				scr_putc(8);
@@ -783,13 +780,13 @@ int ctdl_getline(char *string, int lim, int noshow, int bs)
 			}
 		}
 
-		else if (ch == 10) {	/* return */
+		else if (ch == 10) {				// return
 			string[pos] = 0;
 			scr_printf("\n");
 			return (pos);
 		}
 
-		else if (isprint(ch)) {	/* payload characters */
+		else if (isprint(ch)) {				// payload characters
 			scr_putc((noshow ? '*' : ch));
 			string[pos] = ch;
 			++pos;
@@ -798,13 +795,9 @@ int ctdl_getline(char *string, int lim, int noshow, int bs)
 }
 
 
-/* 
- * newprompt()		prompt for a string, print the existing value, and
- *			allow the user to press return to keep it...
- *			If len is negative, pass the "noshow" flag to ctdl_getline()
- */
-void strprompt(char *prompt, char *str, int len)
-{
+// prompt for a string, print the existing value, and allow the user to press return to keep it...
+// If len is negative, pass the "noshow" flag to ctdl_getline()
+void strprompt(char *prompt, char *str, int len) {
 	display_instant_messages();
 	color(DIM_WHITE);
 	scr_printf("%s", prompt);
@@ -815,12 +808,9 @@ void strprompt(char *prompt, char *str, int len)
 	color(DIM_WHITE);
 }
 
-/*
- * boolprompt()  -  prompt for a yes/no, print the existing value and
- *                  allow the user to press return to keep it...
- */
-int boolprompt(char *prompt, int prev_val)
-{
+
+// prompt for a yes/no, print the existing value and allow the user to press return to keep it...
+int boolprompt(char *prompt, int prev_val) {
 	int r;
 
 	color(DIM_WHITE);
@@ -837,12 +827,9 @@ int boolprompt(char *prompt, int prev_val)
 	return r;
 }
 
-/* 
- * intprompt()  -  like strprompt(), except for an integer
- *                 (note that it RETURNS the new value!)
- */
-int intprompt(char *prompt, int ival, int imin, int imax)
-{
+
+// like strprompt(), except for an integer (note that it RETURNS the new value!)
+int intprompt(char *prompt, int ival, int imin, int imax) {
 	char buf[16];
 	int i;
 	int p;
@@ -865,13 +852,10 @@ int intprompt(char *prompt, int ival, int imin, int imax)
 	return (i);
 }
 
-/* 
- * newprompt()		prompt for a string with no existing value
- *			(clears out string buffer first)
- *			If len is negative, pass the "noshow" flag to ctdl_getline()
- */
-void newprompt(char *prompt, char *str, int len)
-{
+
+// prompt for a string with no existing value (clears out string buffer first)
+// If len is negative, pass the "noshow" flag to ctdl_getline()
+void newprompt(char *prompt, char *str, int len) {
 	str[0] = 0;
 	color(BRIGHT_MAGENTA);
 	scr_printf("%s", prompt);
@@ -881,8 +865,8 @@ void newprompt(char *prompt, char *str, int len)
 }
 
 
-int lkey(void)
-{				/* returns a lower case value */
+// returns a lower case value
+int lkey(void) {
 	int a;
 	a = inkey();
 	if (isupper(a))
@@ -890,11 +874,9 @@ int lkey(void)
 	return (a);
 }
 
-/*
- * parse the citadel.rc file
- */
-void load_command_set(void)
-{
+
+// parse the citadel.rc file
+void load_command_set(void) {
 	FILE *ccfile;
 	char buf[1024];
 	struct citcmd *cptr;
@@ -902,8 +884,7 @@ void load_command_set(void)
 	int a, d;
 	int b = 0;
 
-	/* first, set up some defaults for non-required variables */
-
+	// first, set up some defaults for non-required variables
 	strcpy(editor_path, "");
 	strcpy(printcmd, "");
 	strcpy(imagecmd, "");
@@ -925,8 +906,7 @@ void load_command_set(void)
 	rc_encrypt = RC_DEFAULT;
 #endif
 
-	/* now try to open the citadel.rc file */
-
+	// now try to open the citadel.rc file
 	ccfile = NULL;
 	if (getenv("HOME") != NULL) {
 		snprintf(buf, sizeof buf, "%s/.citadelrc", getenv("HOME"));
@@ -1017,9 +997,9 @@ void load_command_set(void)
 			if (!strncasecmp(&buf[11], "on", 2))
 				rc_ansi_color = 1;
 			if (!strncasecmp(&buf[11], "auto", 4))
-				rc_ansi_color = 2;	/* autodetect */
+				rc_ansi_color = 2;		// autodetect
 			if (!strncasecmp(&buf[11], "user", 4))
-				rc_ansi_color = 3;	/* user config */
+				rc_ansi_color = 3;		// user config
 		}
 		if (!strncasecmp(buf, "status_line=", 12)) {
 			if (!strncasecmp(&buf[12], "on", 2))
@@ -1033,7 +1013,7 @@ void load_command_set(void)
 			if (!strncasecmp(&buf[15], "on", 2))
 				rc_prompt_control = 1;
 			if (!strncasecmp(&buf[15], "user", 4))
-				rc_prompt_control = 3;	/* user config */
+				rc_prompt_control = 3;		// user config
 		}
 		if (!strncasecmp(buf, "username=", 9))
 			strcpy(rc_username, &buf[9]);
@@ -1099,12 +1079,8 @@ void load_command_set(void)
 }
 
 
-
-/*
- * return the key associated with a command
- */
-char keycmd(char *cmdstr)
-{
+// return the key associated with a command
+char keycmd(char *cmdstr) {
 	int a;
 
 	for (a = 0; !IsEmptyStr(&cmdstr[a]); ++a)
@@ -1114,12 +1090,9 @@ char keycmd(char *cmdstr)
 }
 
 
-/*
- * Output the string from a key command without the ampersand
- * "mode" should be set to 0 for normal or 1 for <C>ommand key highlighting
- */
-char *cmd_expand(char *strbuf, int mode)
-{
+// Output the string from a key command without the ampersand
+// "mode" should be set to 0 for normal or 1 for <C>ommand key highlighting
+char *cmd_expand(char *strbuf, int mode) {
 	int a;
 	static char exp[64];
 	char buf[1024];
@@ -1129,7 +1102,7 @@ char *cmd_expand(char *strbuf, int mode)
 	for (a = 0; exp[a]; ++a) {
 		if (strbuf[a] == '&') {
 
-			/* dont echo these non mnemonic command keys */
+			// don't echo these non-mnemonic command keys
 			int noecho = strbuf[a + 1] == '<' || strbuf[a + 1] == '>' || strbuf[a + 1] == '+' || strbuf[a + 1] == '-';
 
 			if (mode == 0) {
@@ -1158,13 +1131,8 @@ char *cmd_expand(char *strbuf, int mode)
 }
 
 
-
-/*
- * Comparison function to determine if entered commands match a
- * command loaded from the config file.
- */
-int cmdmatch(char *cmdbuf, struct citcmd *cptr, int ncomp)
-{
+// Comparison function to determine if entered commands match a command loaded from the config file.
+int cmdmatch(char *cmdbuf, struct citcmd *cptr, int ncomp) {
 	int a;
 	int cmdax;
 
@@ -1183,11 +1151,8 @@ int cmdmatch(char *cmdbuf, struct citcmd *cptr, int ncomp)
 }
 
 
-/*
- * This function returns 1 if a given command requires a string input
- */
-int requires_string(struct citcmd *cptr, int ncomp)
-{
+// This function returns 1 if a given command requires a string input
+int requires_string(struct citcmd *cptr, int ncomp) {
 	int a;
 	char buf[64];
 
@@ -1200,13 +1165,10 @@ int requires_string(struct citcmd *cptr, int ncomp)
 }
 
 
-/*
- * Input a command at the main prompt.
- * This function returns an integer command number.  If the command prompts
- * for a string then it is placed in the supplied buffer.
- */
-int getcmd(CtdlIPC * ipc, char *argbuf)
-{
+// Input a command at the main prompt.
+// This function returns an integer command number.  If the command prompts
+// for a string then it is placed in the supplied buffer.
+int getcmd(CtdlIPC * ipc, char *argbuf) {
 	char cmdbuf[5];
 	int cmdspaces[5];
 	int cmdpos;
@@ -1216,22 +1178,20 @@ int getcmd(CtdlIPC * ipc, char *argbuf)
 	int this_lazy_cmd;
 	struct citcmd *cptr;
 
-	/*
-	 * Starting a new command now, so set sigcaught to 0.  This variable
-	 * is set to nonzero (usually NEXT_KEY or STOP_KEY) if a command has
-	 * been interrupted by a keypress.
-	 */
+	// Starting a new command now, so set sigcaught to 0.  This variable
+	// is set to nonzero (usually NEXT_KEY or STOP_KEY) if a command has
+	// been interrupted by a keypress.
 	sigcaught = 0;
 
-	/* Switch color support on or off if we're in user mode */
+	// Switch color support on or off if we're in user mode
 	if (rc_ansi_color == 3) {
 		if (userflags & US_COLOR)
 			enable_color = 1;
 		else
 			enable_color = 0;
 	}
-	/* if we're running in idiot mode, display a cute little menu */
 
+	// if we're running in idiot mode, display a cute little menu
 	IFNEXPERT {
 		scr_printf("-----------------------------------------------------------------------\n");
 		scr_printf("Room cmds:    <K>nown rooms, <G>oto next room, <.G>oto a specific room,\n");
@@ -1249,9 +1209,11 @@ int getcmd(CtdlIPC * ipc, char *argbuf)
 	display_instant_messages();
 	strcpy(argbuf, "");
 	cmdpos = 0;
-	for (a = 0; a < 5; ++a)
+	for (a = 0; a < 5; ++a) {
 		cmdbuf[a] = 0;
-	/* now the room prompt... */
+	}
+
+	// now the room prompt...
 	ok_to_interrupt = 1;
 	color(BRIGHT_WHITE);
 	scr_printf("\n%s", room_name);
@@ -1262,15 +1224,14 @@ int getcmd(CtdlIPC * ipc, char *argbuf)
 		ch = inkey();
 		ok_to_interrupt = 0;
 
-		/* Handle the backspace key, but only if there's something
-		 * to backspace over...
-		 */
+		// Handle the backspace key, but only if there's something to backspace over...
 		if ((ch == 8) && (cmdpos > 0)) {
 			back(cmdspaces[cmdpos - 1] + 1);
 			cmdbuf[cmdpos] = 0;
 			--cmdpos;
 		}
-		/* Spacebar invokes "lazy traversal" commands */
+
+		// Spacebar invokes "lazy traversal" commands
 		if ((ch == 32) && (cmdpos == 0)) {
 			this_lazy_cmd = next_lazy_cmd;
 			if (this_lazy_cmd == 13)
@@ -1289,7 +1250,8 @@ int getcmd(CtdlIPC * ipc, char *argbuf)
 			scr_printf("\n");
 			return (this_lazy_cmd);
 		}
-		/* Otherwise, process the command */
+
+		// Otherwise, process the command
 		cmdbuf[cmdpos] = tolower(ch);
 
 		for (cptr = cmdlist; cptr != NULL; cptr = cptr->next) {
@@ -1306,32 +1268,30 @@ int getcmd(CtdlIPC * ipc, char *argbuf)
 
 		for (cptr = cmdlist; cptr != NULL; cptr = cptr->next) {
 			if (cmdmatch(cmdbuf, cptr, 5)) {
-				/* We've found our command. */
-				if (requires_string(cptr, cmdpos)) {
+				if (requires_string(cptr, cmdpos)) {	// We found our command.
 					argbuf[0] = 0;
 					ctdl_getline(argbuf, 64, 0, 0);
-				} else {
+				}
+				else {
 					scr_printf("\n");
 				}
 
-				/* If this command is one that changes rooms,
-				 * then the next lazy-command (space bar)
-				 * should be "read new" instead of "goto"
-				 */
-				if ((cptr->c_cmdnum == 5)
-				    || (cptr->c_cmdnum == 6)
-				    || (cptr->c_cmdnum == 47)
-				    || (cptr->c_cmdnum == 52)
-				    || (cptr->c_cmdnum == 16)
-				    || (cptr->c_cmdnum == 20))
+				// If this command is one that changes rooms, then the next lazy-command
+				// (space bar) should be "read new" instead of "goto"
+				if (	(cptr->c_cmdnum == 5)
+					|| (cptr->c_cmdnum == 6)
+					|| (cptr->c_cmdnum == 47)
+					|| (cptr->c_cmdnum == 52)
+					|| (cptr->c_cmdnum == 16)
+					|| (cptr->c_cmdnum == 20)
+				) {
 					next_lazy_cmd = 13;
+				}
 
-				/* If this command is "read new"
-				 * then the next lazy-command (space bar)
-				 * should be "goto"
-				 */
-				if (cptr->c_cmdnum == 13)
+				// If this command is "read new" then the next lazy-command (space bar) should be "goto"
+				if (cptr->c_cmdnum == 13) {
 					next_lazy_cmd = 5;
+				}
 
 				return (cptr->c_cmdnum);
 
@@ -1367,22 +1327,22 @@ int getcmd(CtdlIPC * ipc, char *argbuf)
 }
 
 
-/*
- * set tty modes.  commands are:
- * 
- * 01- set to Citadel mode
- * 2 - save current settings for later restoral
- * 3 - restore saved settings
- */
-void stty_ctdl(int cmd) {				/* SysV version of stty_ctdl() */
+// set tty modes.  commands are:
+// 
+// 01- set to Citadel mode
+// 2 - save current settings for later restoral
+// 3 - restore saved settings
+void stty_ctdl(int cmd) {
 	struct termios live;
 	static struct termios saved_settings;
 	static int last_cmd = 0;
 
-	if (cmd == SB_LAST)
+	if (cmd == SB_LAST) {
 		cmd = last_cmd;
-	else
+	}
+	else {
 		last_cmd = cmd;
+	}
 
 	if ((cmd == 0) || (cmd == 1)) {
 		tcgetattr(0, &live);
@@ -1393,8 +1353,8 @@ void stty_ctdl(int cmd) {				/* SysV version of stty_ctdl() */
 		live.c_cc[VINTR] = 0;
 		live.c_cc[VQUIT] = 0;
 
-		/* do we even need this stuff anymore? */
-		/* live.c_line=0; */
+		// do we even need this stuff anymore?
+		// live.c_line=0;
 		live.c_cc[VERASE] = 8;
 		live.c_cc[VKILL] = 24;
 		live.c_cc[VEOF] = 1;
@@ -1413,9 +1373,7 @@ void stty_ctdl(int cmd) {				/* SysV version of stty_ctdl() */
 }
 
 
-/*
- * display_help()  -  help text viewer
- */
+// display_help()  -  help text viewer
 void display_help(CtdlIPC * ipc, char *name) {
 	int i;
 	int num_helps = sizeof(helpnames) / sizeof(char *);
@@ -1434,61 +1392,61 @@ void display_help(CtdlIPC * ipc, char *name) {
 }
 
 
-/*
- * fmout() - Citadel text formatter and paginator
- */
-int fmout(int width,		/* screen width to use */
-	FILE * fpin,		/* file to read from, or NULL to format given text */
-	char *text,		/* text to be formatted (when fpin is NULL */
-	FILE * fpout,		/* file to write to, or NULL to write to screen */
-	int subst) {		/* nonzero if we should use hypertext mode */
-	char *buffer = NULL;	/* The current message */
-	char *word = NULL;	/* What we are about to actually print */
-	char *e;		/* Pointer to position in text */
-	char old = 0;		/* The previous character */
-	int column = 0;		/* Current column */
-	size_t i;		/* Generic counter */
+// fmout() - Citadel text formatter and paginator
+int fmout(int width,		// screen width to use
+	FILE * fpin,		// file to read from, or NULL to format given text
+	char *text,		// text to be formatted (when fpin is NULL
+	FILE * fpout,		// file to write to, or NULL to write to screen
+	int subst) {		// nonzero if we should use hypertext mode
+	char *buffer = NULL;	// The current message
+	char *word = NULL;	// What we are about to actually print
+	char *e;		// Pointer to position in text
+	char old = 0;		// The previous character
+	int column = 0;		// Current column
+	size_t i;		// Generic counter
 
-	/* Space for a single word, which can be at most screenwidth */
+	// Space for a single word, which can be at most screenwidth
 	word = (char *) calloc(1, width);
 	if (!word) {
 		scr_printf("Can't alloc memory to print message: %s!\n", strerror(errno));
 		logoff(NULL, 3);
 	}
 
-	/* Read the entire message body into memory */
+	// Read the entire message body into memory
 	if (fpin) {
 		buffer = load_message_from_file(fpin);
 		if (!buffer) {
 			scr_printf("Can't print message: %s!\n", strerror(errno));
 			logoff(NULL, 3);
 		}
-	} else {
+	}
+	else {
 		buffer = text;
 	}
 	e = buffer;
 
-	/* Run the message body */
+	// Run the message body
 	while (*e) {
-		/* Catch characters that shouldn't be there at all */
+		// Catch characters that shouldn't be there at all
 		if (*e == '\r') {
 			e++;
 			continue;
 		}
-		/* First, are we looking at a newline? */
-		if (*e == '\n') {
+		if (*e == '\n') {			// newline?
 			e++;
-			if (*e == ' ') {	/* Paragraph */
+			if (*e == ' ') {		// paragraph?
 				if (fpout) {
 					fprintf(fpout, "\n");
 				} else {
 					scr_printf("\n");
 				}
 				column = 0;
-			} else if (old != ' ') {	/* Don't print two spaces */
+			}
+			else if (old != ' ') {		// Don't print two spaces
 				if (fpout) {
 					fprintf(fpout, " ");
-				} else {
+				}
+				else {
 					scr_printf(" ");
 				}
 				column++;
@@ -1497,41 +1455,36 @@ int fmout(int width,		/* screen width to use */
 			continue;
 		}
 
-		/* Are we looking at a nonprintable?
-		 * (This section is now commented out because we could be displaying
-		 * a character set like UTF-8 or ISO-8859-1.)
-		 if ( (*e < 32) || (*e > 126) ) {
-		 e++;
-		 continue;
-		 } */
-
-		/* Or are we looking at a space? */
+		// Or are we looking at a space?
 		if (*e == ' ') {
 			e++;
 			if (column >= width - 1) {
-				/* Are we in the rightmost column? */
+				// Are we in the rightmost column?
 				if (fpout) {
 					fprintf(fpout, "\n");
-				} else {
+				}
+				else {
 					scr_printf("\n");
 				}
 				column = 0;
-			} else if (!(column == 0 && old == ' ')) {
-				/* Eat only the first space on a line */
+			}
+			else if (!(column == 0 && old == ' ')) {
+				// Eat only the first space on a line
 				if (fpout) {
 					fprintf(fpout, " ");
-				} else {
+				}
+				else {
 					scr_printf(" ");
 				}
 				column++;
 			}
-			/* ONLY eat the FIRST space on a line */
+			// ONLY eat the FIRST space on a line
 			old = ' ';
 			continue;
 		}
 		old = *e;
 
-		/* Read a word, slightly messy */
+		// Read a word, slightly messy
 		i = 0;
 		while (e[i]) {
 			if (!isprint(e[i]) && !isspace(e[i]))
@@ -1541,46 +1494,49 @@ int fmout(int width,		/* screen width to use */
 			i++;
 		}
 
-		/* We should never see these, but... slightly messy */
+		// We should never see these, but... slightly messy
 		if (e[i] == '\t' || e[i] == '\f' || e[i] == '\v')
 			e[i] = ' ';
 
-		/* Break up really long words */
+		// Break up really long words
 		if (i >= width) {
 			i = width - 1;
 		}
 		strncpy(word, e, i);
 		word[i] = 0;
 
-		/* Decide where to print the word */
+		// Decide where to print the word
 		if (column + i >= width) {
-			/* Wrap to the next line */
+			// Wrap to the next line
 			if (fpout) {
 				fprintf(fpout, "\n");
-			} else {
+			}
+			else {
 				scr_printf("\n");
 			}
 			column = 0;
 		}
 
-		/* Print the word */
+		// Print the word
 		if (fpout) {
 			fprintf(fpout, "%s", word);
-		} else {
+		}
+		else {
 			scr_printf("%s", word);
 		}
 		column += i;
-		e += i;		/* Start over with the whitepsace! */
+		e += i;		// Start over with the whitepsace!
 	}
 
 	free(word);
 	if (fpin)		/* We allocated this, remember? */
 		free(buffer);
 
-	/* Is this necessary?  It makes the output kind of spacey. */
+	// Is this necessary?  It makes the output kind of spacey.
 	if (fpout) {
 		fprintf(fpout, "\n");
-	} else {
+	}
+	else {
 		scr_printf("\n");
 	}
 
@@ -1588,9 +1544,7 @@ int fmout(int width,		/* screen width to use */
 }
 
 
-/*
- * support ANSI color if defined
- */
+// support ANSI color if defined
 void color(int colornum) {
 	static int hold_color;
 	static int current_color;
@@ -1607,12 +1561,11 @@ void color(int colornum) {
 
 	current_color = colornum;
 	if (enable_color) {
-		/* When switching to dim white, actually output an 'original
-		 * pair' sequence -- this looks better on black-on-white
-		 * terminals. - Changed to ORIGINAL_PAIR as this actually
-		 * wound up looking horrible on black-on-white terminals, not
-		 * to mention transparent terminals.
-		 */
+		// When switching to dim white, actually output an 'original
+		// pair' sequence -- this looks better on black-on-white
+		// terminals. - Changed to ORIGINAL_PAIR as this actually
+		// wound up looking horrible on black-on-white terminals, not
+		// to mention transparent terminals.
 		if (colornum == ORIGINAL_PAIR)
 			printf("\033[0;39;49m");
 		else
@@ -1621,6 +1574,8 @@ void color(int colornum) {
 	}
 }
 
+
+// Clear the screen
 void cls(int colornum) {
 	if (enable_color) {
 		printf("\033[4%dm\033[2J\033[H\033[0m", colornum ? colornum : rc_color_use_bg);
@@ -1628,9 +1583,7 @@ void cls(int colornum) {
 }
 
 
-/*
- * Detect whether ANSI color is available (answerback)
- */
+// Detect whether ANSI color is available (answerback)
 void send_ansi_detect(void) {
 	if (rc_ansi_color == 2) {
 		printf("\033[c");
@@ -1649,9 +1602,11 @@ void look_for_ansi(void) {
 
 	if (rc_ansi_color == 0) {
 		enable_color = 0;
-	} else if (rc_ansi_color == 1) {
+	}
+	else if (rc_ansi_color == 1) {
 		enable_color = 1;
-	} else if (rc_ansi_color == 2) {
+	}
+	else if (rc_ansi_color == 2) {
 
 		/* otherwise, do the auto-detect */
 
@@ -1688,9 +1643,7 @@ void look_for_ansi(void) {
 }
 
 
-/*
- * Display key options (highlight hotkeys inside angle brackets)
- */
+// Display key options (highlight hotkeys inside angle brackets)
 void keyopt(char *buf) {
 	int i;
 
@@ -1710,9 +1663,7 @@ void keyopt(char *buf) {
 }
 
 
-/*
- * Present a key-menu line choice type of thing
- */
+// Present a key-menu line choice type of thing
 char keymenu(char *menuprompt, char *menustring) {
 	int i, c, a;
 	int choices;
@@ -1732,7 +1683,8 @@ char keymenu(char *menuprompt, char *menustring) {
 		if (display_prompt) {
 			if (do_prompt) {
 				scr_printf("%s ", menuprompt);
-			} else {
+			}
+			else {
 				for (i = 0; i < choices; ++i) {
 					extract_token(buf, menustring, i, '|', sizeof buf);
 					keyopt(buf);
