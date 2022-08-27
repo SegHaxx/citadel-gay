@@ -17,17 +17,17 @@ typedef struct {
 } COMMAND;
 
 COMMAND commands[] = {
-	{"?", cmd_help, "Display this message"},
-	{"help", cmd_help, "Display this message"},
-	{"date", cmd_datetime, "Print the server's date and time"},
-	{"config", cmd_config, "Configure the Citadel server"},
-	{"export", cmd_export, "Export all Citadel databases"},
-	{"shutdown", cmd_shutdown, "Shut down the Citadel server"},
-	{"time", cmd_datetime, "Print the server's date and time"},
-	{"passwd", cmd_passwd, "Set or change an account password"},
-	{"who", cmd_who, "Display a list of online users"},
-	{"mailq", cmd_mailq, "Show the outbound email queue"},
-	{NULL, NULL, NULL}
+	{ "?", cmd_help, "Display this message" },
+	{ "help", cmd_help, "Display this message" },
+	{ "date", cmd_datetime, "Print the server's date and time" },
+	{ "config", cmd_config, "Configure the Citadel server" },
+	{ "export", cmd_export, "Export all Citadel databases" },
+	{ "shutdown", cmd_shutdown, "Shut down the Citadel server" },
+	{ "time", cmd_datetime, "Print the server's date and time" },
+	{ "passwd", cmd_passwd, "Set or change an account password" },
+	{ "who", cmd_who, "Display a list of online users" },
+	{ "mailq", cmd_mailq, "Show the outbound email queue" },
+	{ NULL, NULL, NULL }
 };
 
 
@@ -97,7 +97,8 @@ void do_main_loop(int server_socket)
 	sock_getln(server_socket, buf, sizeof buf);
 	if (buf[0] == '1') {
 		i = 0;
-		while (sock_getln(server_socket, buf, sizeof buf), strcmp(buf, "000")) {
+		while (sock_getln(server_socket, buf, sizeof buf),
+		       strcmp(buf, "000")) {
 			if (i == 1) {
 				sprintf(prompt, "\n%s> ", buf);
 			}
@@ -107,7 +108,7 @@ void do_main_loop(int server_socket)
 
 	/* Here we go ... main command loop */
 	rl_attempted_completion_function = command_name_completion;
-	while ( (cmd = readline(prompt)) , cmd ) {
+	while ((cmd = readline(prompt)), cmd) {
 		if (*cmd) {
 			add_history(cmd);
 			ret = do_one_command(server_socket, cmd);
@@ -143,9 +144,10 @@ int main(int argc, char **argv)
 	int is_interactive = ((strlen(cmd) == 0) ? 1 : 0);
 
 	if (is_interactive) {
-		printf("\nCitadel administration shell (c) 2009-2020 by citadel.org\n"
-		       "This is open source software made available to you under the terms\n"
-		       "of the GNU General Public License v3.  All other rights reserved.\n");
+		printf
+		    ("\nCitadel administration shell (c) 2009-2020 by citadel.org\n"
+		     "This is open source software made available to you under the terms\n"
+		     "of the GNU General Public License v3.  All other rights reserved.\n");
 		printf("Connecting to Citadel server in %s...\n", ctdldir);
 	}
 

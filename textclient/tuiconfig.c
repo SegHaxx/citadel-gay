@@ -1,6 +1,6 @@
 // Configuration screens that are part of the text mode client.
 //
-// Copyright (c) 1987-2018 by the citadel.org team
+// Copyright (c) 1987-2022 by the citadel.org team
 //
 // This program is open source software.  Use, duplication, and/or
 // disclosure are subject to the GNU General Purpose License version 3.
@@ -22,9 +22,7 @@ extern int screenwidth;
 char editor_path[PATH_MAX];
 
 
-/* 
- * General system configuration command
- */
+// General system configuration command
 void do_system_configuration(CtdlIPC * ipc) {
 	char buf[256];
 	char sc[NUM_CONFIGS][256];
@@ -33,13 +31,13 @@ void do_system_configuration(CtdlIPC * ipc) {
 	struct ExpirePolicy *mbx_expirepolicy = NULL;
 	int a;
 	int logpages = 0;
-	int r;			/* IPC response code */
+	int r;			// IPC response code
 	int server_configs = 0;
 
-	/* Clear out the config buffers */
+	// Clear out the config buffers
 	memset(&sc[0][0], 0, sizeof(sc));
 
-	/* Fetch the current config */
+	// Fetch the current config
 	r = CtdlIPCGetSystemConfig(ipc, &resp, buf);
 	if (r / 100 == 1) {
 		server_configs = num_tokens(resp, '\n');
@@ -53,14 +51,12 @@ void do_system_configuration(CtdlIPC * ipc) {
 		free(resp);
 	}
 	resp = NULL;
-	/* Fetch the expire policy (this will silently fail on old servers,
-	 * resulting in "default" policy)
-	 */
+
+	// Fetch the expire policy (this will silently fail on old servers, resulting in "default" policy)
 	r = CtdlIPCGetMessageExpirationPolicy(ipc, 2, &site_expirepolicy, buf);
 	r = CtdlIPCGetMessageExpirationPolicy(ipc, 3, &mbx_expirepolicy, buf);
 
-	/* Identification parameters */
-
+	// Identification parameters
 	strprompt("Node name", &sc[0][0], 15);
 	strprompt("Fully qualified domain name", &sc[1][0], 63);
 	strprompt("Human readable node name", &sc[2][0], 20);
@@ -69,21 +65,16 @@ void do_system_configuration(CtdlIPC * ipc) {
 	strprompt("Name of system administrator", &sc[13][0], 25);
 	strprompt("Paginator prompt", &sc[10][0], 79);
 
-	/* Security parameters */
-
+	// Security parameters
 	snprintf(sc[7], sizeof sc[7], "%d", (boolprompt("Require registration for new users", atoi(&sc[7][0]))));
 	snprintf(sc[29], sizeof sc[29], "%d", (boolprompt("Disable self-service user account creation", atoi(&sc[29][0]))));
 	strprompt("Initial access level for new users", &sc[6][0], 1);
 	strprompt("Access level required to create rooms", &sc[19][0], 1);
 	snprintf(sc[67], sizeof sc[67], "%d", (boolprompt("Allow anonymous guest logins", atoi(&sc[67][0]))));
-	snprintf(sc[4], sizeof sc[4], "%d", (boolprompt("Automatically give room admin privs to a user who creates a private room",
-							atoi(&sc[4][0]))));
-
+	snprintf(sc[4], sizeof sc[4], "%d", (boolprompt("Automatically give room admin privs to a user who creates a private room", atoi(&sc[4][0]))));
 	snprintf(sc[8], sizeof sc[8], "%d", (boolprompt("Automatically move problem user messages to twit room", atoi(&sc[8][0]))));
-
 	strprompt("Name of twit room", &sc[9][0], ROOMNAMELEN);
-	snprintf(sc[11], sizeof sc[11], "%d", (boolprompt("Restrict Internet mail to only those with that privilege",
-							  atoi(&sc[11][0]))));
+	snprintf(sc[11], sizeof sc[11], "%d", (boolprompt("Restrict Internet mail to only those with that privilege", atoi(&sc[11][0]))));
 	snprintf(sc[26], sizeof sc[26], "%d", (boolprompt("Allow admins to Zap (forget) rooms", atoi(&sc[26][0]))));
 
 	if (!IsEmptyStr(&sc[18][0])) {
@@ -100,16 +91,7 @@ void do_system_configuration(CtdlIPC * ipc) {
 		sc[18][0] = 0;
 	}
 
-	/* Commented out because this setting isn't really appropriate to
-	 * change while the server is running.
-	 *
-	 * snprintf(sc[52], sizeof sc[52], "%d", (boolprompt(
-	 *      "Use system authentication",
-	 *      atoi(&sc[52][0]))));
-	 */
-
-	/* Server tuning */
-
+	// Server tuning
 	strprompt("Server connection idle timeout (in seconds)", &sc[5][0], 4);
 	strprompt("Maximum concurrent sessions", &sc[14][0], 4);
 	strprompt("Maximum message length", &sc[20][0], 20);
@@ -131,9 +113,7 @@ void do_system_configuration(CtdlIPC * ipc) {
 	strprompt("XMPP (Jabber) client to server port (-1 to disable)", &sc[62][0], 5);
 	// strprompt("XMPP (Jabber) server to server port (-1 to disable)", &sc[63][0], 5);   This is just a placeholder.
 
-	/* This logic flips the question around, because it's one of those
-	 * situations where 0=yes and 1=no
-	 */
+	// This logic flips the question around, because it's one of those situations where 0=yes and 1=no
 	a = atoi(sc[25]);
 	a = (a ? 0 : 1);
 	a = boolprompt("Correct forged From: lines during authenticated SMTP", a);
@@ -142,24 +122,20 @@ void do_system_configuration(CtdlIPC * ipc) {
 
 	snprintf(sc[66], sizeof sc[66], "%d", (boolprompt("Flag messages as spam instead of rejecting", atoi(&sc[66][0]))));
 
-	/* This logic flips the question around, because it's one of those
-	 * situations where 0=yes and 1=no
-	 */
+	// This logic flips the question around, because it's one of those situations where 0=yes and 1=no
 	a = atoi(sc[61]);
 	a = (a ? 0 : 1);
 	a = boolprompt("Force IMAP posts in public rooms to be from the user who submitted them", a);
 	a = (a ? 0 : 1);
 	snprintf(sc[61], sizeof sc[61], "%d", a);
 
-	snprintf(sc[45], sizeof sc[45], "%d", (boolprompt("Allow unauthenticated SMTP clients to spoof my domains",
-							  atoi(&sc[45][0]))));
-	snprintf(sc[57], sizeof sc[57], "%d", (boolprompt("Perform RBL checks at greeting instead of after RCPT",
-							  atoi(&sc[57][0]))));
+	snprintf(sc[45], sizeof sc[45], "%d", (boolprompt("Allow unauthenticated SMTP clients to spoof my domains", atoi(&sc[45][0]))));
+	snprintf(sc[57], sizeof sc[57], "%d", (boolprompt("Perform RBL checks at greeting instead of after RCPT", atoi(&sc[57][0]))));
 
-	/* LDAP settings */
+	// LDAP settings
 	if (ipc->ServInfo.supports_ldap) {
 		a = strlen(&sc[32][0]);
-		a = (a ? 1 : 0);	/* Set only to 1 or 0 */
+		a = (a ? 1 : 0);	// Set only to 1 or 0
 		a = boolprompt("Do you want to configure LDAP authentication?", a);
 		if (a) {
 			strprompt("Host name of LDAP server", &sc[32][0], 127);
@@ -167,16 +143,17 @@ void do_system_configuration(CtdlIPC * ipc) {
 			strprompt("Base DN", &sc[34][0], 255);
 			strprompt("Bind DN (or blank for anonymous bind)", &sc[35][0], 255);
 			strprompt("Password for bind DN (or blank for anonymous bind)", &sc[36][0], 255);
-		} else {
+		}
+		else {
 			strcpy(&sc[32][0], "");
 		}
 	}
 
-	/* Expiry settings */
+	// Expiry settings
 	strprompt("Default user purge time (days)", &sc[16][0], 5);
 	strprompt("Default room purge time (days)", &sc[17][0], 5);
 
-	/* Angels and demons dancing in my head... */
+	// Angels and demons dancing in my head...
 	do {
 		snprintf(buf, sizeof buf, "%d", site_expirepolicy->expire_mode);
 		strprompt("System default message expire policy (? for list)", buf, 1);
@@ -188,7 +165,7 @@ void do_system_configuration(CtdlIPC * ipc) {
 	} while ((buf[0] < '1') || (buf[0] > '3'));
 	site_expirepolicy->expire_mode = buf[0] - '0';
 
-	/* ...lunatics and monsters underneath my bed */
+	// ...lunatics and monsters underneath my bed
 	if (site_expirepolicy->expire_mode == 2) {
 		snprintf(buf, sizeof buf, "%d", site_expirepolicy->expire_value);
 		strprompt("Keep how many messages online?", buf, 10);
@@ -200,7 +177,7 @@ void do_system_configuration(CtdlIPC * ipc) {
 		site_expirepolicy->expire_value = atol(buf);
 	}
 
-	/* Media messiahs preying on my fears... */
+	// Media messiahs preying on my fears...
 	do {
 		snprintf(buf, sizeof buf, "%d", mbx_expirepolicy->expire_mode);
 		strprompt("Mailbox default message expire policy (? for list)", buf, 1);
@@ -213,7 +190,7 @@ void do_system_configuration(CtdlIPC * ipc) {
 	} while ((buf[0] < '0') || (buf[0] > '3'));
 	mbx_expirepolicy->expire_mode = buf[0] - '0';
 
-	/* ...Pop culture prophets playing in my ears */
+	// ...Pop culture prophets playing in my ears
 	if (mbx_expirepolicy->expire_mode == 2) {
 		snprintf(buf, sizeof buf, "%d", mbx_expirepolicy->expire_value);
 		strprompt("Keep how many messages online?", buf, 10);
@@ -236,13 +213,13 @@ void do_system_configuration(CtdlIPC * ipc) {
 		strprompt("Email destination of journalized messages", &sc[48][0], 127);
 	}
 
-	/* No more Funambol */
+	// No more Funambol
 	sc[53][0] = 0;
 	sc[54][0] = 0;
 	sc[55][0] = 0;
 	sc[56][0] = 0;
 
-	/* External pager stuff */
+	// External pager stuff
 	int yes_pager = 0;
 	if (strlen(sc[60]) > 0) {
 		yes_pager = 1;
@@ -250,11 +227,12 @@ void do_system_configuration(CtdlIPC * ipc) {
 	yes_pager = boolprompt("Configure an external pager tool", yes_pager);
 	if (yes_pager) {
 		strprompt("External pager tool", &sc[60][0], 255);
-	} else {
+	}
+	else {
 		sc[60][0] = 0;
 	}
 
-	/* Save it */
+	// Save it
 	scr_printf("Save this configuration? ");
 	if (yesno()) {
 		r = 1;
@@ -294,11 +272,8 @@ void do_system_configuration(CtdlIPC * ipc) {
 }
 
 
-/*
- * support function for do_internet_configuration()
- */
-void get_inet_rec_type(CtdlIPC * ipc, char *buf)
-{
+// support function for do_internet_configuration()
+void get_inet_rec_type(CtdlIPC * ipc, char *buf) {
 	int sel;
 
 	keyopt(" <1> localhost      (Alias for this computer)\n");
@@ -335,11 +310,8 @@ void get_inet_rec_type(CtdlIPC * ipc, char *buf)
 }
 
 
-/*
- * Internet mail configuration
- */
-void do_internet_configuration(CtdlIPC * ipc)
-{
+// Internet mail configuration
+void do_internet_configuration(CtdlIPC * ipc) {
 	char buf[256];
 	char *resp = NULL;
 	int num_recs = 0;
@@ -356,7 +328,7 @@ void do_internet_configuration(CtdlIPC * ipc)
 			extract_token(buf, resp, 0, '\n', sizeof buf);
 			remove_token(resp, 0, '\n');
 
-			// VILE SLEAZY HACK: replace obsolete "directory" domains with "localhost"
+			// "directory" is no longer used.  replace it with "localhost"
 			char *d = strstr(buf, "|directory");
 			if (d != NULL) {
 				strcpy(d, "|localhost");
@@ -371,8 +343,9 @@ void do_internet_configuration(CtdlIPC * ipc)
 			strcpy(recs[num_recs - 1], buf);
 		}
 	}
-	if (resp)
+	if (resp) {
 		free(resp);
+	}
 
 	do {
 		scr_printf("\n");
@@ -401,7 +374,8 @@ void do_internet_configuration(CtdlIPC * ipc)
 				++num_recs;
 				if (num_recs == 1) {
 					recs = malloc(sizeof(char *));
-				} else {
+				}
+				else {
 					recs = realloc(recs, (sizeof(char *)) * num_recs);
 				}
 				strcat(buf, "|");
@@ -421,8 +395,9 @@ void do_internet_configuration(CtdlIPC * ipc)
 			break;
 		case 's':
 			r = 1;
-			for (i = 0; i < num_recs; i++)
+			for (i = 0; i < num_recs; i++) {
 				r += 1 + strlen(recs[i]);
+			}
 			resp = (char *) calloc(1, r);
 			if (!resp) {
 				scr_printf("Can't save config - out of memory!\n");
@@ -436,7 +411,8 @@ void do_internet_configuration(CtdlIPC * ipc)
 			r = CtdlIPCSetSystemConfigByType(ipc, INTERNETCFG, resp, buf);
 			if (r / 100 != 4) {
 				scr_printf("%s\n", buf);
-			} else {
+			}
+			else {
 				scr_printf("Wrote %d records.\n", num_recs);
 				modified = 0;
 			}
@@ -458,12 +434,8 @@ void do_internet_configuration(CtdlIPC * ipc)
 }
 
 
-
-/*
- * Edit network configuration for room sharing, mailing lists, etc.
- */
-void network_config_management(CtdlIPC * ipc, char *entrytype, char *comment)
-{
+// Edit network configuration for room sharing, mailing lists, etc.
+void network_config_management(CtdlIPC * ipc, char *entrytype, char *comment) {
 	char filename[PATH_MAX];
 	char changefile[PATH_MAX];
 	int e_ex_code;
@@ -521,7 +493,7 @@ void network_config_management(CtdlIPC * ipc, char *entrytype, char *comment)
 	}
 	fclose(tempfp);
 
-	e_ex_code = 1;		/* start with a failed exit code */
+	e_ex_code = 1;		// start with a failed exit code
 	stty_ctdl(SB_RESTORE);
 	editor_pid = fork();
 	cksum = file_checksum(filename);
@@ -545,10 +517,10 @@ void network_config_management(CtdlIPC * ipc, char *entrytype, char *comment)
 		e_ex_code = 1;
 	}
 
-	if (e_ex_code == 0) {	/* Save changes */
+	if (e_ex_code == 0) {	// Save changes
 		changefp = fopen(changefile, "w");
 
-		/* Load all netconfig entries that are *not* of the type we are editing */
+		// Load all netconfig entries that are *not* of the type we are editing
 		r = CtdlIPCGetRoomNetworkConfig(ipc, &listing, buf);
 		if (r / 100 == 1) {
 			while (listing && !IsEmptyStr(listing)) {
@@ -565,7 +537,7 @@ void network_config_management(CtdlIPC * ipc, char *entrytype, char *comment)
 			listing = NULL;
 		}
 
-		/* ...and merge that with the data we just edited */
+		// ...and merge that with the data we just edited
 		tempfp = fopen(filename, "r");
 		while (fgets(buf, sizeof buf, tempfp) != NULL) {
 			for (i = 0; i < strlen(buf); ++i) {
@@ -580,7 +552,7 @@ void network_config_management(CtdlIPC * ipc, char *entrytype, char *comment)
 		fclose(tempfp);
 		fclose(changefp);
 
-		/* now write it to the server... */
+		// now write it to the server...
 		changefp = fopen(changefile, "r");
 		if (changefp != NULL) {
 			listing = load_message_from_file(changefp);
@@ -593,16 +565,13 @@ void network_config_management(CtdlIPC * ipc, char *entrytype, char *comment)
 		}
 	}
 
-	unlink(filename);	/* Delete the temporary files */
+	unlink(filename);	// Delete the temporary files
 	unlink(changefile);
 }
 
 
-/*
- * POP3 aggregation client configuration
- */
-void do_pop3client_configuration(CtdlIPC * ipc)
-{
+// POP3 aggregation client configuration
+void do_pop3client_configuration(CtdlIPC * ipc) {
 	char buf[SIZ];
 	int num_recs = 0;
 	char **recs = NULL;
@@ -708,7 +677,7 @@ void do_pop3client_configuration(CtdlIPC * ipc)
 					strcat(listing, "\n");
 				}
 
-			/* Retrieve all the *other* records for merging */
+			// Retrieve all the *other* records for merging
 			r = CtdlIPCGetRoomNetworkConfig(ipc, &other_listing, buf);
 			if (r / 100 == 1) {
 				for (i = 0; i < num_tokens(other_listing, '\n'); ++i) {
@@ -727,7 +696,8 @@ void do_pop3client_configuration(CtdlIPC * ipc)
 
 			if (r / 100 != 4) {
 				scr_printf("%s\n", buf);
-			} else {
+			}
+			else {
 				scr_printf("Wrote %d records.\n", num_recs);
 				modified = 0;
 			}
@@ -742,18 +712,16 @@ void do_pop3client_configuration(CtdlIPC * ipc)
 	} while (!quitting);
 
 	if (recs != NULL) {
-		for (i = 0; i < num_recs; ++i)
+		for (i = 0; i < num_recs; ++i) {
 			free(recs[i]);
+		}
 		free(recs);
 	}
 }
 
 
-/*
- * RSS feed retrieval client configuration
- */
-void do_rssclient_configuration(CtdlIPC * ipc)
-{
+// RSS feed retrieval client configuration
+void do_rssclient_configuration(CtdlIPC * ipc) {
 	char buf[SIZ];
 	int num_recs = 0;
 	char **recs = NULL;
@@ -814,7 +782,8 @@ void do_rssclient_configuration(CtdlIPC * ipc)
 			++num_recs;
 			if (num_recs == 1) {
 				recs = malloc(sizeof(char *));
-			} else {
+			}
+			else {
 				recs = realloc(recs, (sizeof(char *)) * num_recs);
 			}
 			strcpy(buf, "rssclient|");
@@ -847,7 +816,7 @@ void do_rssclient_configuration(CtdlIPC * ipc)
 					strcat(listing, "\n");
 				}
 
-			/* Retrieve all the *other* records for merging */
+			// Retrieve all the *other* records for merging
 			r = CtdlIPCGetRoomNetworkConfig(ipc, &other_listing, buf);
 			if (r / 100 == 1) {
 				for (i = 0; i < num_tokens(other_listing, '\n'); ++i) {
@@ -866,7 +835,8 @@ void do_rssclient_configuration(CtdlIPC * ipc)
 
 			if (r / 100 != 4) {
 				scr_printf("%s\n", buf);
-			} else {
+			}
+			else {
 				scr_printf("Wrote %d records.\n", num_recs);
 				modified = 0;
 			}

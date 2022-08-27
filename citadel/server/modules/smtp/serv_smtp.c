@@ -48,6 +48,7 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#include <assert.h>
 #include <libcitadel.h>
 #include "../../citadel.h"
 #include "../../server.h"
@@ -110,7 +111,7 @@ void smtp_greeting(int is_msa) {
 			else
 				cprintf("550 %s\r\n", message_to_spammer);
 			CC->kill_me = KILLME_SPAMMER;
-			/* no need to free_recipients(valid), it's not allocated yet */
+			// no need to free_recipients(valid), it's not allocated yet
 			return;
 		}
 	}
@@ -205,11 +206,7 @@ void smtp_hello(int which_command) {
 	}
 	else {
 		if (which_command == EHLO) {
-			cprintf("250-Hello %s (%s [%s])\r\n",
-				ChrPtr(SMTP->helo_node),
-				CC->cs_host,
-				CC->cs_addr
-			);
+			cprintf("250-Hello %s (%s [%s])\r\n", ChrPtr(SMTP->helo_node), CC->cs_host, CC->cs_addr);
 		}
 		else {
 			cprintf("250-Greetings and joyous salutations.\r\n");
@@ -219,9 +216,8 @@ void smtp_hello(int which_command) {
 
 #ifdef HAVE_OPENSSL
 		// Offer TLS, but only if TLS is not already active.
-		// Furthermore, only offer TLS when running on
-		// the SMTP-MSA port, not on the SMTP-MTA port, due to
-		// questionable reliability of TLS in certain sending MTA's.
+		// Furthermore, only offer TLS when running on the SMTP-MSA port, not on the SMTP-MTA port,
+		// because if our server doesn't have a trusted certificate, some mailers will refuse to talk to it.
 		if ( (!CC->redirect_ssl) && (SMTP->is_msa) ) {
 			cprintf("250-STARTTLS\r\n");
 		}
@@ -444,10 +440,7 @@ void smtp_auth(void) {
 			return;
 		}
 
-		len = extract_token(encoded_authstring, 
-				    ChrPtr(SMTP->Cmd) + 5,
-				    1, ' ',
-				    sizeof encoded_authstring);
+		len = extract_token(encoded_authstring, ChrPtr(SMTP->Cmd) + 5, 1, ' ', sizeof encoded_authstring);
 		StrBufPlain(SMTP->Cmd, encoded_authstring, len);
 		smtp_try_plain();
 		return;
@@ -743,11 +736,10 @@ void smtp_data(void) {
 		    ((CtdlGetConfigInt("c_rfc822_strict_from") == CFG_SMTP_FROM_CORRECT) || 
 		     (CtdlGetConfigInt("c_rfc822_strict_from") == CFG_SMTP_FROM_REJECT)    )  )
 		{
-			if (!IsEmptyStr(CC->cs_inet_email))
+			if (!IsEmptyStr(CC->cs_inet_email)) {
 				validemail = strcmp(CC->cs_inet_email, msg->cm_fields[erFc822Addr]) == 0;
-			if ((!validemail) && 
-			    (!IsEmptyStr(CC->cs_inet_other_emails)))
-			{
+			}
+			if ((!validemail) && (!IsEmptyStr(CC->cs_inet_other_emails))) {
 				int num_secondary_emails = 0;
 				int i;
 				num_secondary_emails = num_tokens(CC->cs_inet_other_emails, '|');
@@ -887,10 +879,7 @@ void smtp_quit(void) {
 void smtp_command_loop(void) {
 	static const ConstStr AuthPlainStr = {HKEY("AUTH PLAIN")};
 
-	if (SMTP == NULL) {
-		syslog(LOG_ERR, "serv_smtp: Session SMTP data is null.  WTF?  We will crash now.");
-		abort();
-	}
+	assert(SMTP != NULL);
 
 	time(&CC->lastcmd);
 	if (CtdlClientGetLine(SMTP->Cmd) < 1) {
@@ -986,16 +975,14 @@ void smtp_command_loop(void) {
 }
 
 
-/*****************************************************************************/
-/*                      MODULE INITIALIZATION STUFF                          */
-/*****************************************************************************/
-/*
- * This cleanup function blows away the temporary memory used by
- * the SMTP server.
- */
-void smtp_cleanup_function(void)
-{
-	/* Don't do this stuff if this is not an SMTP session! */
+// *****************************************************************************
+// *                      MODULE INITIALIZATION STUFF                          *
+// *****************************************************************************
+
+// This cleanup function blows away the temporary memory used by
+// the SMTP server.
+void smtp_cleanup_function(void) {
+	// Don't do this stuff if this is not an SMTP session!
 	if (CC->h_command_function != smtp_command_loop) return;
 
 	syslog(LOG_DEBUG, "Performing SMTP cleanup hook");
@@ -1021,7 +1008,7 @@ const char *CitadelServiceSMTP_LMTP_UNF="LMTP-UnF";
 // Initialization function, called from modules_init.c
 char *ctdl_module_init_smtp(void) {
 	if (!threading) {
-		CtdlRegisterServiceHook(CtdlGetConfigInt("c_smtp_port"),	/* SMTP MTA */
+		CtdlRegisterServiceHook(CtdlGetConfigInt("c_smtp_port"),	// SMTP MTA
 					NULL,
 					smtp_mta_greeting,
 					smtp_command_loop,
@@ -1029,7 +1016,7 @@ char *ctdl_module_init_smtp(void) {
 					CitadelServiceSMTP_MTA);
 
 #ifdef HAVE_OPENSSL
-		CtdlRegisterServiceHook(CtdlGetConfigInt("c_smtps_port"),	/* SMTPS MTA */
+		CtdlRegisterServiceHook(CtdlGetConfigInt("c_smtps_port"),	// SMTPS MTA
 					NULL,
 					smtps_greeting,
 					smtp_command_loop,
@@ -1037,21 +1024,21 @@ char *ctdl_module_init_smtp(void) {
 					CitadelServiceSMTPS_MTA);
 #endif
 
-		CtdlRegisterServiceHook(CtdlGetConfigInt("c_msa_port"),		/* SMTP MSA */
+		CtdlRegisterServiceHook(CtdlGetConfigInt("c_msa_port"),		// SMTP MSA
 					NULL,
 					smtp_msa_greeting,
 					smtp_command_loop,
 					NULL,
 					CitadelServiceSMTP_MSA);
 
-		CtdlRegisterServiceHook(0,			/* local LMTP */
+		CtdlRegisterServiceHook(0,					// local LMTP
 					file_lmtp_socket,
 					lmtp_greeting,
 					smtp_command_loop,
 					NULL,
 					CitadelServiceSMTP_LMTP);
 
-		CtdlRegisterServiceHook(0,			/* local LMTP */
+		CtdlRegisterServiceHook(0,					// local LMTP
 					file_lmtp_unfiltered_socket,
 					lmtp_unfiltered_greeting,
 					smtp_command_loop,
@@ -1061,6 +1048,6 @@ char *ctdl_module_init_smtp(void) {
 		CtdlRegisterSessionHook(smtp_cleanup_function, EVT_STOP, PRIO_STOP + 250);
 	}
 	
-	/* return our module name for the log */
+	// return our module name for the log
 	return "smtp";
 }
