@@ -5,6 +5,5 @@
 
 
 function user_profile(who) {
-	stuffbar("none");
 	document.getElementById("ctdl-main").innerHTML = `user_profile(${who})`;
 }

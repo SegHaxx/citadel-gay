@@ -129,14 +129,9 @@ function mail_display() {
 	document.getElementById("ctdl-newmsg-button").innerHTML = "<i class=\"fa fa-edit\"></i>" + _("Write mail");
 	document.getElementById("ctdl-newmsg-button").style.display = "block";
 
-	// Put the mailbox message list into the stuffbar
-	document.getElementById("ctdl-stuffbar").style.display = "block";
-
-	document.getElementById("ctdl-stuffbar").innerHTML
-		= "<div id=\"ctdl-mailbox-pane\" class=\"ctdl-mailbox-pane\"></div>"
-
 	document.getElementById("ctdl-main").innerHTML
-		= "<div id=\"ctdl-reading-pane\" class=\"ctdl-reading-pane\"></div>"
+		= "<div id=\"ctdl-mailbox-pane\" class=\"ctdl-mailbox-pane\"></div>"
+		+ "<div id=\"ctdl-reading-pane\" class=\"ctdl-reading-pane\"></div>"
 	;
 
 	render_mailbox_display();
@@ -160,7 +155,6 @@ function refresh_mail_display() {
 	catch {
 		console.log("ending refresh_mail_display()");
 		clearInterval(RefreshMailboxInterval);
-		document.getElementById("ctdl-stuffbar").style.display = "none";
 		return;
 	}
 

@@ -22,7 +22,6 @@ function render_room_view(gt_msg, lt_msg) {
 
 		// The "forum" module displays rooms with the "VIEW_BBS" view as classic style web forums.
 		case views.VIEW_BBS:
-			stuffbar("none");
 			document.getElementById("ctdl-sidebar-button-forums").classList.add("w3-blue");
 			document.getElementById("ctdl-main").innerHTML = "<div id=\"ctdl-mrp\" class=\"ctdl-msg-reading-pane\"></div>";
 			forum_readmessages("ctdl-mrp", gt_msg, lt_msg);
@@ -30,14 +29,12 @@ function render_room_view(gt_msg, lt_msg) {
 
 		// The "mail" module displays rooms with the VIEW_MAILBOX view as a webmail program.
 		case views.VIEW_MAILBOX:
-			stuffbar("block");
 			document.getElementById("ctdl-sidebar-button-mail").classList.add("w3-blue");
 			document.getElementById("ctdl-main").innerHTML = "";
 			mail_display();
 			break;
 
 		default:
-			stuffbar("none");
 			document.getElementById("ctdl-main").innerHTML =
 				"<center>The view for " + current_room + " is " + current_view + " but there is no renderer.</center>";
 			break;
@@ -52,16 +49,11 @@ function entmsg_dispatcher() {
 		case views.VIEW_BBS:
 			forum_entmsg();
 			break;
-		default:
+		case views.VIEW_MAILBOX:
 			mail_compose(false, "", "");
+			break;
+		default:
 			break;
 	}
 }
 
-
-// The "stuffbar" is an extension of the top navigation bar that can be used for elements such as
-// a mailbox view, etc.  Many of our operations require activating or deactivating the stuffbar. 
-// This is a convenience function to make the stuffbar appear or disappear.
-function stuffbar(state) {
-	document.getElementById("ctdl-stuffbar").style.display = state;
-}

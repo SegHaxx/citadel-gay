@@ -6,7 +6,6 @@
 
 function render_room_list() {
 
-	stuffbar("none");								// No stuffbar on this screen
 	document.getElementById("ctdl-newmsg-button").style.display = "none";		// There is no "enter" button on this screen
 	document.getElementById("ctdl-main").innerHTML = "<img src=\"/ctdl/s/images/throbber.gif\" />";	// show throbber while loading
 

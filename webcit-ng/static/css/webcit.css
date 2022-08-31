@@ -1,11 +1,79 @@
 /*
-** Copyright (c) 1996-2022 by Art Cancro and the citadel.org team.
-** This program is open source software.  Use, duplication, or disclosure
-** are subject to the terms of the GNU General Public License, version 3.
-*/
+ * Copyright (c) 1996-2022 by Art Cancro and the citadel.org team.
+ * This program is open source software.  Use, duplication, or disclosure
+ * are subject to the terms of the GNU General Public License, version 3.
+ */
+
+
+* {				/* This makes the grid take up exactly 100% of the screen */
+	box-sizing: border-box;
+	padding: 0;
+	margin: 0;
+} 
+
+.ctdl-grid-item-1 {		/* These grid items will be referenced in the grid container */
+	grid-area: header;
+}
+
+.ctdl-grid-item-2 {
+	grid-area: menu;
+}
+
+.ctdl-grid-item-3 {
+	grid-area: main;
+	overflow-x: hidden;
+	overflow-y: auto;
+}
+
+.ctdl-grid-container {			/* This is so mind-bogglingly simple I can't believe it works */
+	display: grid;
+	grid-template-areas:
+		'header header header header header header'
+		'menu main main main main main'
+		'menu main main main main main'
+		'menu main main main main main'
+		'menu main main main main main'
+		'menu main main main main main'
+		'menu main main main main main'
+		'menu main main main main main';
+	gap: 3px;
+	background-color: #456789;	/* This is the color of the lines between the boxes */
+	padding: 0;			/* This is the border around the edges of the screen */
+	width: 100vw;
+	height: 100vh;
+}
+
+.ctdl-grid-container > div {
+	background-color: #DDEEFF;
+	text-align: left;
+	padding: 10px 0;
+}
 
 html,body,h1,h2,h3,h4,h5 {
 	font-family: verdana, sans-serif
+}
+
+.ctdl-modal {
+	display: none;			/* set to "block" to make the modal appear */
+	z-index: 9;
+	position: fixed;
+	top: 50%;
+	left: 50%;
+	transform: translate(-50%, -50%);
+	border-style: outset;
+	border-width: 3px;
+	justify-content: center;
+	align-items: center;
+	padding: 10px;
+	background-color: #DDDDDD;
+}
+
+.ctdl-sidebar-class button {
+	width: 100%;
+	background-color: blue;
+	text-align: left;
+	background-color: #888888;
+	color: #FFFFFF;
 }
 
 .ctdl-msg-reading-pane {
