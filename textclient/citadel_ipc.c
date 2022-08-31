@@ -153,8 +153,7 @@ const char *svn_revision(void);
 /*
  * Does nothing.  The server should always return 200.
  */
-int CtdlIPCNoop(CtdlIPC * ipc)
-{
+int CtdlIPCNoop(CtdlIPC * ipc) {
 	char aaa[128];
 
 	return CtdlIPCGenericCommand(ipc, "NOOP", NULL, 0, NULL, NULL, aaa);
@@ -165,8 +164,7 @@ int CtdlIPCNoop(CtdlIPC * ipc)
  * Does nothing interesting.  The server should always return 200
  * along with your string.
  */
-int CtdlIPCEcho(CtdlIPC * ipc, const char *arg, char *cret)
-{
+int CtdlIPCEcho(CtdlIPC * ipc, const char *arg, char *cret) {
 	int ret;
 	char *aaa;
 
@@ -217,8 +215,7 @@ int CtdlIPCQuit(CtdlIPC * ipc) {
  * Asks the server to log out.  Should always return 200, even if no user
  * was logged in.  The user will not be logged in after this!
  */
-int CtdlIPCLogout(CtdlIPC * ipc)
-{
+int CtdlIPCLogout(CtdlIPC * ipc) {
 	int ret;
 	char aaa[SIZ];
 
@@ -236,8 +233,7 @@ int CtdlIPCLogout(CtdlIPC * ipc)
  * username is able to log in, with the username correctly spelled in cret.
  * Returns various 500 error codes if the user doesn't exist, etc.
  */
-int CtdlIPCTryLogin(CtdlIPC * ipc, const char *username, char *cret)
-{
+int CtdlIPCTryLogin(CtdlIPC * ipc, const char *username, char *cret) {
 	int ret;
 	char *aaa;
 
@@ -261,8 +257,7 @@ int CtdlIPCTryLogin(CtdlIPC * ipc, const char *username, char *cret)
  * Second stage of authentication - provide password.  The server returns
  * 200 and several arguments in cret relating to the user's account.
  */
-int CtdlIPCTryPassword(CtdlIPC * ipc, const char *passwd, char *cret)
-{
+int CtdlIPCTryPassword(CtdlIPC * ipc, const char *passwd, char *cret) {
 	int ret;
 	char *aaa;
 
@@ -289,8 +284,7 @@ int CtdlIPCTryPassword(CtdlIPC * ipc, const char *passwd, char *cret)
  * user - intended for use by system administrators to create accounts on
  * behalf of other users.
  */
-int CtdlIPCCreateUser(CtdlIPC * ipc, const char *username, int selfservice, char *cret)
-{
+int CtdlIPCCreateUser(CtdlIPC * ipc, const char *username, int selfservice, char *cret) {
 	int ret;
 	char *aaa;
 
@@ -313,8 +307,7 @@ int CtdlIPCCreateUser(CtdlIPC * ipc, const char *username, int selfservice, char
 /*
  * Changes the user's password.  Returns 200 if changed, errors otherwise.
  */
-int CtdlIPCChangePassword(CtdlIPC * ipc, const char *passwd, char *cret)
-{
+int CtdlIPCChangePassword(CtdlIPC * ipc, const char *passwd, char *cret) {
 	int ret;
 	char *aaa;
 
@@ -338,8 +331,7 @@ int CtdlIPCChangePassword(CtdlIPC * ipc, const char *passwd, char *cret)
 /* Caller must free the march list */
 /* Room types are defined in enum RoomList; keep these in sync! */
 /* floor is -1 for all, or floornum */
-int CtdlIPCKnownRooms(CtdlIPC * ipc, enum RoomList which, int floor, struct march **listing, char *cret)
-{
+int CtdlIPCKnownRooms(CtdlIPC * ipc, enum RoomList which, int floor, struct march **listing, char *cret) {
 	int ret;
 	struct march *march = NULL;
 	static char *proto[] = { "LKRA", "LKRN", "LKRO", "LZRM", "LRMS", "LPRM" };
@@ -399,8 +391,7 @@ int CtdlIPCKnownRooms(CtdlIPC * ipc, enum RoomList which, int floor, struct marc
 
 /* GETU */
 /* Caller must free the struct ctdluser; caller may pass an existing one */
-int CtdlIPCGetConfig(CtdlIPC * ipc, struct ctdluser **uret, char *cret)
-{
+int CtdlIPCGetConfig(CtdlIPC * ipc, struct ctdluser **uret, char *cret) {
 	int ret;
 
 	if (!cret)
@@ -421,8 +412,7 @@ int CtdlIPCGetConfig(CtdlIPC * ipc, struct ctdluser **uret, char *cret)
 
 
 /* SETU */
-int CtdlIPCSetConfig(CtdlIPC * ipc, struct ctdluser *uret, char *cret)
-{
+int CtdlIPCSetConfig(CtdlIPC * ipc, struct ctdluser *uret, char *cret) {
 	char aaa[48];
 
 	if (!uret)
@@ -436,8 +426,7 @@ int CtdlIPCSetConfig(CtdlIPC * ipc, struct ctdluser *uret, char *cret)
 
 
 /* RENU */
-int CtdlIPCRenameUser(CtdlIPC * ipc, char *oldname, char *newname, char *cret)
-{
+int CtdlIPCRenameUser(CtdlIPC * ipc, char *oldname, char *newname, char *cret) {
 	int ret;
 	char cmd[256];
 
@@ -455,8 +444,7 @@ int CtdlIPCRenameUser(CtdlIPC * ipc, char *oldname, char *newname, char *cret)
 
 
 /* GOTO */
-int CtdlIPCGotoRoom(CtdlIPC * ipc, const char *room, const char *passwd, struct ctdlipcroom **rret, char *cret)
-{
+int CtdlIPCGotoRoom(CtdlIPC * ipc, const char *room, const char *passwd, struct ctdlipcroom **rret, char *cret) {
 	int ret;
 	char *aaa;
 

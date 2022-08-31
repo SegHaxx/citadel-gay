@@ -19,20 +19,20 @@
 MODAL LOADING
 </div>
 
-<div class="ctdl-grid-container">
+<div class="ctdl-main-grid-container">
 
-	<div class="ctdl-grid-item-1" id="banner">
+	<div class="ctdl-grid-banner-item" id="banner">
 		<button onClick="sidebar_open();"><i class="fa fa-bars"></i>Menu</button>
-		<span class="w3-bar-item" id="ctdl-logo">CITADEL</span>
+		<span id="ctdl-logo">CITADEL</span>
 		<span id="ctdl_banner_title" class="w3-bar-item">---</span>
-		<button id="ctdl-newmsg-button" style="display:none" class="w3-bar-item w3-button" onClick="entmsg_dispatcher();">enter</button>
-		<button id="ctdl-ungoto-button" style="display:none" class="w3-bar-item w3-button" onClick="gotonext(0);">ungoto</button>
-		<button id="ctdl-skip-button" style="display:none" class="w3-bar-item w3-button" onClick="gotonext(1);">skip</button>
-		<button id="ctdl-goto-button" style="display:none" class="w3-bar-item w3-button" onClick="gotonext(2);">goto</button>
-		<button id="lilo" class="w3-bar-item w3-button">Login</button>
+		<button id="ctdl-newmsg-button" style="display:none" onClick="entmsg_dispatcher();">enter</button>
+		<button id="ctdl-ungoto-button" style="display:none" onClick="gotonext(0);">ungoto</button>
+		<button id="ctdl-skip-button" style="display:none" onClick="gotonext(1);">skip</button>
+		<button id="ctdl-goto-button" style="display:none" onClick="gotonext(2);">goto</button>
+		<button id="lilo">Login</button>
 	</div>
 
-	<div class="ctdl-grid-item-2" id="navbar">
+	<div class="ctdl-grid-navbar-item" id="navbar">
 		<ul id="ctdl-sidebar" class="ctdl-sidebar-class">
 			<li><i class="fa fa-user-circle fa-3x"></i>
 			<li><span id="current_user">Not logged in.</span><br>
@@ -52,11 +52,11 @@ MODAL LOADING
 		</ul>
 	</div>
 
-	<div class="ctdl-grid-item-3" id="ctdl-main">
+	<div class="ctdl-grid-main-item" id="ctdl-main">
 		Loading...
 	</div>
 
-</div><!--class="ctdl-grid-container"-->
+</div><!--class="ctdl-main-grid-container"-->
 
 <script type="text/javascript" src="js/defs.js"></script>
 <script type="text/javascript" src="js/util.js"></script>

@@ -1,34 +1,33 @@
+Method          URL                             Function
+------          ------------------------------  -------------------------------------
+GET             /                               Site root will redirect to a landing page
+GET             /ctdl/f/                        returns a JSON-encoded list of accessible floors
+GET             /ctdl/r/                        returns a JSON-encoded list of accessible rooms
+OPTIONS         /ctdl/r/ROOMNAME/               returns just what you'd expect
+PROPFIND        /ctdl/r/ROOMNAME/               Show a bunch of crap
+GET             /ctdl/r/ROOMNAME/               Returns information about the room (name, view, etc.) in JSON format
+GET             /ctdl/r/ROOMNAME/info.txt       Returns the room info banner for this room
+GET             /ctdl/r/ROOMNAME/msgs.all       JSON array of message list in room
+GET             /ctdl/r/ROOMNAME/msgs.new       JSON array of message list in room (new messages)
+GET             /ctdl/r/ROOMNAME/mailbox        JSON dictionary of a mailbox summary in this room
+GET             /ctdl/r/ROOMNAME/stat           JSON dictionary of the server STAT command (room name and modification time)
+GET             /ctdl/r/ROOMNAME/MSGNUM         Retrieve the content of an individual message
+GET             /ctdl/r/ROOMNAME/MSGNUM/json    Retrieve an individual message in a room, encapsulated in JSON
+DELETE          /ctdl/r/ROOMNAME/MSGNUM         Deletes a message from a room
 
-Method		URL				Function
-------		------------------------------	-------------------------------------
-GET		/				Site root will redirect to a landing page
-GET		/ctdl/f/			returns a JSON-encoded list of accessible floors
-GET		/ctdl/r/			returns a JSON-encoded list of accessible rooms
-OPTIONS		/ctdl/r/ROOMNAME/		returns just what you'd expect
-PROPFIND	/ctdl/r/ROOMNAME/		Show a bunch of crap
-GET		/ctdl/r/ROOMNAME/		Returns information about the room (name, view, etc.) in JSON format
-GET		/ctdl/r/ROOMNAME/info.txt	Returns the room info banner for this room
-GET		/ctdl/r/ROOMNAME/msgs.all	JSON array of message list in room
-GET		/ctdl/r/ROOMNAME/msgs.new	JSON array of message list in room (new messages)
-GET		/ctdl/r/ROOMNAME/mailbox	JSON dictionary of a mailbox summary in this room
-GET		/ctdl/r/ROOMNAME/stat		JSON dictionary of the server STAT command (room name and modification time)
-GET		/ctdl/r/ROOMNAME/MSGNUM		Retrieve the content of an individual message
-GET		/ctdl/r/ROOMNAME/MSGNUM/json	Retrieve an individual message in a room, encapsulated in JSON
-DELETE		/ctdl/r/ROOMNAME/MSGNUM		Deletes a message from a room
+PUT             /ctdl/r/ROOMNAME/xxx            DAV operation to insert a new message into a room
+                Accepted parameters:
+                wefw List of message references
+                subj Message subject
+                The returned ETag will be the new message number.
 
-PUT		/ctdl/r/ROOMNAME/xxx		DAV operation to insert a new message into a room
-						Accepted parameters:
-						wefw	List of message references
-						subj	Message subject
-						The returned ETag will be the new message number.
+GET             /ctdl/r/ROOMNAME/slrp           Set the "Last Read Pointer" for the room
+                Accepted parameters:
+                last The number of the most recently seen message
 
-GET		/ctdl/r/ROOMNAME/slrp		Set the "Last Read Pointer" for the room
-						Accepted parameters:
-						last	The number of the most recently seen message
-
-GET		/ctdl/c/info			Returns a JSON representation of the output of an INFO server command
-POST		/ctdl/a/login			Send it a your credentials and it will log you in
-GET		/ctdl/a/whoami
-GET		/ctdl/u/USERNAME/userpic	Returns an image containing the photo/avatar of the specified user
-GET		/ctdl/s/			Static content (html, css, js, images...)
-GET		/.well-known/			Static content (RFC5785 compliant paths)
+GET             /ctdl/c/info                    Returns a JSON representation of the output of an INFO server command
+POST            /ctdl/a/login                   Send it a your credentials and it will log you in
+GET             /ctdl/a/whoami
+GET             /ctdl/u/USERNAME/userpic        Returns an image containing the photo/avatar of the specified user
+GET             /ctdl/s/                        Static content (html, css, js, images...)
+GET             /.well-known/                   Static content (RFC5785 compliant paths)

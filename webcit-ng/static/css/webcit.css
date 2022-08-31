@@ -10,21 +10,21 @@
 	margin: 0;
 } 
 
-.ctdl-grid-item-1 {		/* These grid items will be referenced in the grid container */
+.ctdl-grid-banner-item {		/* These grid items will be referenced in the grid container */
 	grid-area: header;
 }
 
-.ctdl-grid-item-2 {
+.ctdl-grid-navbar-item {
 	grid-area: menu;
 }
 
-.ctdl-grid-item-3 {
+.ctdl-grid-main-item {
 	grid-area: main;
 	overflow-x: hidden;
 	overflow-y: auto;
 }
 
-.ctdl-grid-container {			/* This is so mind-bogglingly simple I can't believe it works */
+.ctdl-main-grid-container {			/* This is so mind-bogglingly simple I can't believe it works */
 	display: grid;
 	grid-template-areas:
 		'header header header header header header'
@@ -42,7 +42,7 @@
 	height: 100vh;
 }
 
-.ctdl-grid-container > div {
+.ctdl-main-grid-container > div {
 	background-color: #DDEEFF;
 	text-align: left;
 	padding: 10px 0;
@@ -69,8 +69,12 @@ html,body,h1,h2,h3,h4,h5 {
 
 .ctdl-sidebar-class button {
 	width: 100%;
-	background-color: blue;
 	text-align: left;
+	background-color: #888888;
+	color: #FFFFFF;
+}
+
+.ctdl-grid-banner-item button {
 	background-color: #888888;
 	color: #FFFFFF;
 }
