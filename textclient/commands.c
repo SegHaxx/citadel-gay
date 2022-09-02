@@ -60,9 +60,7 @@ char *helptexts[] = {
 	    " In addition, there are dot commands. You hit the . (dot), then press the\n"
 	    "first letter of each word of the command. As you hit the letters, the words\n"
 	    "pop onto your screen. Exceptions: after you hit .Help or .Goto, the remainder\n"
-	    "of the command is a help file name or room name.\n"
-	    "    \n"
-	    "      *** USE  .<H>elp ?    for additional help *** \n",
+	    "of the command is a help file name or room name.\n" "    \n" "      *** USE  .<H>elp ?    for additional help *** \n",
 
 	// <.H>elp ADMIN
 	"The following commands are available only to Admins.  A subset of these\n"
@@ -449,10 +447,10 @@ struct citcmd *cmdlist = NULL;
 
 
 // these variables are local to this module
-char keepalives_enabled = KA_YES;		// send NOOPs to server when idle
-int ok_to_interrupt = 0;			// print instant msgs asynchronously
-time_t AnsiDetect;				// when did we send the detect code?
-int enable_color = 0;				// nonzero for ANSI color
+char keepalives_enabled = KA_YES;	// send NOOPs to server when idle
+int ok_to_interrupt = 0;	// print instant msgs asynchronously
+time_t AnsiDetect;		// when did we send the detect code?
+int enable_color = 0;		// nonzero for ANSI color
 
 
 // If an interesting key has been pressed, return its value, otherwise 0
@@ -732,10 +730,10 @@ int yesno_d(int d) {
 
 // Function to read a line of text from the terminal.
 //
-// string		Pointer to string buffer
-// lim			Maximum length
-// noshow		Echo asterisks instead of keystrokes?
-// bs			Allow backspacing out of the prompt? (returns -1 if this happens)
+// string               Pointer to string buffer
+// lim                  Maximum length
+// noshow               Echo asterisks instead of keystrokes?
+// bs                   Allow backspacing out of the prompt? (returns -1 if this happens)
 //
 // returns: string length
 int ctdl_getline(char *string, int lim, int noshow, int bs) {
@@ -747,14 +745,15 @@ int ctdl_getline(char *string, int lim, int noshow, int bs) {
 		while (num_stars--) {
 			scr_putc('*');
 		}
-	} else {
+	}
+	else {
 		scr_printf("%s", string);
 	}
 
 	while (1) {
 		ch = inkey();
 
-		if ((ch == 8) && (pos > 0)) {			// backspace
+		if ((ch == 8) && (pos > 0)) {	// backspace
 			--pos;
 			scr_putc(8);
 			scr_putc(32);
@@ -765,7 +764,7 @@ int ctdl_getline(char *string, int lim, int noshow, int bs) {
 			return (-1);
 		}
 
-		else if ((ch == 23) && (pos > 0)) {		// Ctrl-W deletes a word
+		else if ((ch == 23) && (pos > 0)) {	// Ctrl-W deletes a word
 			while ((pos > 0) && !isspace(string[pos])) {
 				--pos;
 				scr_putc(8);
@@ -780,13 +779,13 @@ int ctdl_getline(char *string, int lim, int noshow, int bs) {
 			}
 		}
 
-		else if (ch == 10) {				// return
+		else if (ch == 10) {	// return
 			string[pos] = 0;
 			scr_printf("\n");
 			return (pos);
 		}
 
-		else if (isprint(ch)) {				// payload characters
+		else if (isprint(ch)) {	// payload characters
 			scr_putc((noshow ? '*' : ch));
 			string[pos] = ch;
 			++pos;
@@ -948,7 +947,8 @@ void load_command_set(void) {
 #ifdef HAVE_OPENSSL
 			else if (!strcasecmp(&buf[8], "no")) {
 				rc_encrypt = RC_NO;
-			} else if (!strcasecmp(&buf[8], "default")) {
+			}
+			else if (!strcasecmp(&buf[8], "default")) {
 				rc_encrypt = RC_DEFAULT;
 			}
 #endif
@@ -997,9 +997,9 @@ void load_command_set(void) {
 			if (!strncasecmp(&buf[11], "on", 2))
 				rc_ansi_color = 1;
 			if (!strncasecmp(&buf[11], "auto", 4))
-				rc_ansi_color = 2;		// autodetect
+				rc_ansi_color = 2;	// autodetect
 			if (!strncasecmp(&buf[11], "user", 4))
-				rc_ansi_color = 3;		// user config
+				rc_ansi_color = 3;	// user config
 		}
 		if (!strncasecmp(buf, "status_line=", 12)) {
 			if (!strncasecmp(&buf[12], "on", 2))
@@ -1013,7 +1013,7 @@ void load_command_set(void) {
 			if (!strncasecmp(&buf[15], "on", 2))
 				rc_prompt_control = 1;
 			if (!strncasecmp(&buf[15], "user", 4))
-				rc_prompt_control = 3;		// user config
+				rc_prompt_control = 3;	// user config
 		}
 		if (!strncasecmp(buf, "username=", 9))
 			strcpy(rc_username, &buf[9]);
@@ -1278,13 +1278,13 @@ int getcmd(CtdlIPC * ipc, char *argbuf) {
 
 				// If this command is one that changes rooms, then the next lazy-command
 				// (space bar) should be "read new" instead of "goto"
-				if (	(cptr->c_cmdnum == 5)
-					|| (cptr->c_cmdnum == 6)
-					|| (cptr->c_cmdnum == 47)
-					|| (cptr->c_cmdnum == 52)
-					|| (cptr->c_cmdnum == 16)
-					|| (cptr->c_cmdnum == 20)
-				) {
+				if ((cptr->c_cmdnum == 5)
+				    || (cptr->c_cmdnum == 6)
+				    || (cptr->c_cmdnum == 47)
+				    || (cptr->c_cmdnum == 52)
+				    || (cptr->c_cmdnum == 16)
+				    || (cptr->c_cmdnum == 20)
+				    ) {
 					next_lazy_cmd = 13;
 				}
 
@@ -1396,10 +1396,10 @@ void display_help(CtdlIPC * ipc, char *name) {
 
 // fmout() - Citadel text formatter and paginator
 int fmout(int width,		// screen width to use
-	FILE * fpin,		// file to read from, or NULL to format given text
-	char *text,		// text to be formatted (when fpin is NULL
-	FILE * fpout,		// file to write to, or NULL to write to screen
-	int subst) {		// nonzero if we should use hypertext mode
+	  FILE * fpin,		// file to read from, or NULL to format given text
+	  char *text,		// text to be formatted (when fpin is NULL
+	  FILE * fpout,		// file to write to, or NULL to write to screen
+	  int subst) {		// nonzero if we should use hypertext mode
 	char *buffer = NULL;	// The current message
 	char *word = NULL;	// What we are about to actually print
 	char *e;		// Pointer to position in text
@@ -1434,17 +1434,18 @@ int fmout(int width,		// screen width to use
 			e++;
 			continue;
 		}
-		if (*e == '\n') {			// newline?
+		if (*e == '\n') {	// newline?
 			e++;
-			if (*e == ' ') {		// paragraph?
+			if (*e == ' ') {	// paragraph?
 				if (fpout) {
 					fprintf(fpout, "\n");
-				} else {
+				}
+				else {
 					scr_printf("\n");
 				}
 				column = 0;
 			}
-			else if (old != ' ') {		// Don't print two spaces
+			else if (old != ' ') {	// Don't print two spaces
 				if (fpout) {
 					fprintf(fpout, " ");
 				}
@@ -1654,7 +1655,8 @@ void keyopt(char *buf) {
 		if (buf[i] == '<') {
 			scr_printf("%c", buf[i]);
 			color(BRIGHT_MAGENTA);
-		} else {
+		}
+		else {
 			if (buf[i] == '>' && buf[i + 1] != '>') {
 				color(DIM_WHITE);
 			}

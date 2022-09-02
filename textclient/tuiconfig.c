@@ -71,10 +71,12 @@ void do_system_configuration(CtdlIPC * ipc) {
 	strprompt("Initial access level for new users", &sc[6][0], 1);
 	strprompt("Access level required to create rooms", &sc[19][0], 1);
 	snprintf(sc[67], sizeof sc[67], "%d", (boolprompt("Allow anonymous guest logins", atoi(&sc[67][0]))));
-	snprintf(sc[4], sizeof sc[4], "%d", (boolprompt("Automatically give room admin privs to a user who creates a private room", atoi(&sc[4][0]))));
+	snprintf(sc[4], sizeof sc[4], "%d",
+		 (boolprompt("Automatically give room admin privs to a user who creates a private room", atoi(&sc[4][0]))));
 	snprintf(sc[8], sizeof sc[8], "%d", (boolprompt("Automatically move problem user messages to twit room", atoi(&sc[8][0]))));
 	strprompt("Name of twit room", &sc[9][0], ROOMNAMELEN);
-	snprintf(sc[11], sizeof sc[11], "%d", (boolprompt("Restrict Internet mail to only those with that privilege", atoi(&sc[11][0]))));
+	snprintf(sc[11], sizeof sc[11], "%d",
+		 (boolprompt("Restrict Internet mail to only those with that privilege", atoi(&sc[11][0]))));
 	snprintf(sc[26], sizeof sc[26], "%d", (boolprompt("Allow admins to Zap (forget) rooms", atoi(&sc[26][0]))));
 
 	if (!IsEmptyStr(&sc[18][0])) {
@@ -129,8 +131,10 @@ void do_system_configuration(CtdlIPC * ipc) {
 	a = (a ? 0 : 1);
 	snprintf(sc[61], sizeof sc[61], "%d", a);
 
-	snprintf(sc[45], sizeof sc[45], "%d", (boolprompt("Allow unauthenticated SMTP clients to spoof my domains", atoi(&sc[45][0]))));
-	snprintf(sc[57], sizeof sc[57], "%d", (boolprompt("Perform RBL checks at greeting instead of after RCPT", atoi(&sc[57][0]))));
+	snprintf(sc[45], sizeof sc[45], "%d",
+		 (boolprompt("Allow unauthenticated SMTP clients to spoof my domains", atoi(&sc[45][0]))));
+	snprintf(sc[57], sizeof sc[57], "%d",
+		 (boolprompt("Perform RBL checks at greeting instead of after RCPT", atoi(&sc[57][0]))));
 
 	// LDAP settings
 	if (ipc->ServInfo.supports_ldap) {
@@ -206,7 +210,8 @@ void do_system_configuration(CtdlIPC * ipc) {
 	strprompt("Default frequency to run POP3 collection (in seconds)", &sc[64][0], 5);
 	strprompt("Fastest frequency to run POP3 collection (in seconds)", &sc[65][0], 5);
 	strprompt("Hour to run purges (0-23)", &sc[31][0], 2);
-	snprintf(sc[42], sizeof sc[42], "%d", (boolprompt("Enable full text search index (warning: resource intensive)", atoi(&sc[42][0]))));
+	snprintf(sc[42], sizeof sc[42], "%d",
+		 (boolprompt("Enable full text search index (warning: resource intensive)", atoi(&sc[42][0]))));
 	snprintf(sc[46], sizeof sc[46], "%d", (boolprompt("Perform journaling of email messages", atoi(&sc[46][0]))));
 	snprintf(sc[47], sizeof sc[47], "%d", (boolprompt("Perform journaling of non-email messages", atoi(&sc[47][0]))));
 	if ((atoi(&sc[46][0])) || (atoi(&sc[47][0]))) {
@@ -637,7 +642,8 @@ void do_pop3client_configuration(CtdlIPC * ipc) {
 			++num_recs;
 			if (num_recs == 1) {
 				recs = malloc(sizeof(char *));
-			} else {
+			}
+			else {
 				recs = realloc(recs, (sizeof(char *)) * num_recs);
 			}
 			strcpy(buf, "pop3client|");

@@ -20,7 +20,7 @@ char rc_encrypt;
 #define INADDR_NONE 0xffffffff
 #endif
 
-static void (*status_hook) (char *s) = NULL;
+static void (*status_hook)(char *s) = NULL;
 char ctdl_autoetc_dir[PATH_MAX] = "";
 char file_citadel_rc[PATH_MAX] = "";
 char ctdl_run_dir[PATH_MAX] = "";
@@ -124,11 +124,11 @@ void calc_dirs_n_files(int relh, int home, const char *relhome, char *ctdldir, i
 	DBG_PRINT(file_citadel_rc);
 }
 
-void setCryptoStatusHook(void (*hook) (char *s)) {
+void setCryptoStatusHook(void (*hook)(char *s)) {
 	status_hook = hook;
 }
 
-void CtdlIPC_SetNetworkStatusCallback(CtdlIPC * ipc, void (*hook) (int state)) {
+void CtdlIPC_SetNetworkStatusCallback(CtdlIPC * ipc, void (*hook)(int state)) {
 	ipc->network_status_cb = hook;
 }
 
@@ -328,8 +328,11 @@ int CtdlIPCChangePassword(CtdlIPC * ipc, const char *passwd, char *cret) {
 
 
 /* LKRN */
+
 /* Caller must free the march list */
+
 /* Room types are defined in enum RoomList; keep these in sync! */
+
 /* floor is -1 for all, or floornum */
 int CtdlIPCKnownRooms(CtdlIPC * ipc, enum RoomList which, int floor, struct march **listing, char *cret) {
 	int ret;
@@ -390,6 +393,7 @@ int CtdlIPCKnownRooms(CtdlIPC * ipc, enum RoomList which, int floor, struct marc
 
 
 /* GETU */
+
 /* Caller must free the struct ctdluser; caller may pass an existing one */
 int CtdlIPCGetConfig(CtdlIPC * ipc, struct ctdluser **uret, char *cret) {
 	int ret;
@@ -464,7 +468,8 @@ int CtdlIPCGotoRoom(CtdlIPC * ipc, const char *room, const char *passwd, struct 
 			return -1;
 		}
 		sprintf(aaa, "GOTO %s|%s", room, passwd);
-	} else {
+	}
+	else {
 		aaa = (char *) malloc(strlen(room) + 6);
 		if (!aaa) {
 			free(*rret);
@@ -489,7 +494,8 @@ int CtdlIPCGotoRoom(CtdlIPC * ipc, const char *room, const char *passwd, struct 
 		rret[0]->RRdefaultview = extract_int(cret, 12);
 		/* position 13 is a trash folder flag ... irrelevant in this client */
 		rret[0]->RRflags2 = extract_int(cret, 14);
-	} else {
+	}
+	else {
 		free(*rret);
 		*rret = NULL;
 	}
@@ -499,10 +505,11 @@ int CtdlIPCGotoRoom(CtdlIPC * ipc, const char *room, const char *passwd, struct 
 
 
 /* MSGS */
+
 /* which is 0 = all, 1 = old, 2 = new, 3 = last, 4 = first, 5 = gt, 6 = lt */
+
 /* whicharg is number of messages, applies to last, first, gt, lt */
-int CtdlIPCGetMessages(CtdlIPC * ipc, enum MessageList which, int whicharg, const char *mtemplate, unsigned long **mret, char *cret)
-{
+int CtdlIPCGetMessages(CtdlIPC * ipc, enum MessageList which, int whicharg, const char *mtemplate, unsigned long **mret, char *cret) {
 	int ret;
 	unsigned long count = 0;
 	static char *proto[] = { "ALL", "OLD", "NEW", "LAST", "FIRST", "GT", "LT" };
@@ -539,7 +546,8 @@ int CtdlIPCGetMessages(CtdlIPC * ipc, enum MessageList which, int whicharg, cons
 		if (*mret) {
 			(*mret)[count++] = atol(aaa);
 			(*mret)[count] = 0L;
-		} else {
+		}
+		else {
 			break;
 		}
 	}
@@ -550,8 +558,7 @@ int CtdlIPCGetMessages(CtdlIPC * ipc, enum MessageList which, int whicharg, cons
 
 
 /* MSG0, MSG2 */
-int CtdlIPCGetSingleMessage(CtdlIPC * ipc, long msgnum, int headers, int as_mime, struct ctdlipcmessage **mret, char *cret)
-{
+int CtdlIPCGetSingleMessage(CtdlIPC * ipc, long msgnum, int headers, int as_mime, struct ctdlipcmessage **mret, char *cret) {
 	int ret;
 	char aaa[SIZ];
 	char *bbb = NULL;
@@ -614,7 +621,8 @@ int CtdlIPCGetSingleMessage(CtdlIPC * ipc, long msgnum, int headers, int as_mime
 					if (!strcasecmp(multipart_prefix, "multipart/alternative")) {
 						++multipart_hunting;
 					}
-				} else if (!strncasecmp(aaa, "suff=", 5)) {
+				}
+				else if (!strncasecmp(aaa, "suff=", 5)) {
 					extract_token(multipart_prefix, &aaa[5], 1, '|', sizeof multipart_prefix);
 					if (!strcasecmp(multipart_prefix, "multipart/alternative")) {
 						++multipart_hunting;
@@ -699,7 +707,8 @@ int CtdlIPCGetSingleMessage(CtdlIPC * ipc, long msgnum, int headers, int as_mime
 				ccc = malloc(strlen(bbb) + 32768);
 				if (!strcasecmp(encoding, "base64")) {
 					bytes_decoded = CtdlDecodeBase64(ccc, bbb, strlen(bbb));
-				} else if (!strcasecmp(encoding, "quoted-printable")) {
+				}
+				else if (!strcasecmp(encoding, "quoted-printable")) {
 					bytes_decoded = CtdlDecodeQuotedPrintable(ccc, bbb, strlen(bbb));
 				}
 				ccc[bytes_decoded] = 0;
@@ -710,7 +719,8 @@ int CtdlIPCGetSingleMessage(CtdlIPC * ipc, long msgnum, int headers, int as_mime
 			/* FIXME: Strip trailing whitespace */
 			bbb = (char *) realloc(bbb, (size_t) (strlen(bbb) + 1));
 
-		} else {
+		}
+		else {
 			bbb = (char *) realloc(bbb, 1);
 			*bbb = '\0';
 		}
@@ -721,8 +731,7 @@ int CtdlIPCGetSingleMessage(CtdlIPC * ipc, long msgnum, int headers, int as_mime
 
 
 /* WHOK */
-int CtdlIPCWhoKnowsRoom(CtdlIPC * ipc, char **listing, char *cret)
-{
+int CtdlIPCWhoKnowsRoom(CtdlIPC * ipc, char **listing, char *cret) {
 	int ret;
 	size_t bytes;
 
@@ -739,8 +748,7 @@ int CtdlIPCWhoKnowsRoom(CtdlIPC * ipc, char **listing, char *cret)
 
 
 /* INFO */
-int CtdlIPCServerInfo(CtdlIPC * ipc, char *cret)
-{
+int CtdlIPCServerInfo(CtdlIPC * ipc, char *cret) {
 	int ret;
 	size_t bytes;
 	char *listing = NULL;
@@ -828,8 +836,7 @@ int CtdlIPCServerInfo(CtdlIPC * ipc, char *cret)
 
 
 /* RDIR */
-int CtdlIPCReadDirectory(CtdlIPC * ipc, char **listing, char *cret)
-{
+int CtdlIPCReadDirectory(CtdlIPC * ipc, char **listing, char *cret) {
 	int ret;
 	size_t bytes;
 
@@ -848,8 +855,7 @@ int CtdlIPCReadDirectory(CtdlIPC * ipc, char **listing, char *cret)
 /*
  * Set last-read pointer in this room to msgnum, or 0 for HIGHEST.
  */
-int CtdlIPCSetLastRead(CtdlIPC * ipc, long msgnum, char *cret)
-{
+int CtdlIPCSetLastRead(CtdlIPC * ipc, long msgnum, char *cret) {
 	int ret;
 	char aaa[64];
 
@@ -858,7 +864,8 @@ int CtdlIPCSetLastRead(CtdlIPC * ipc, long msgnum, char *cret)
 
 	if (msgnum) {
 		sprintf(aaa, "SLRP %ld", msgnum);
-	} else {
+	}
+	else {
 		sprintf(aaa, "SLRP HIGHEST");
 	}
 	ret = CtdlIPCGenericCommand(ipc, aaa, NULL, 0, NULL, NULL, cret);
@@ -867,8 +874,7 @@ int CtdlIPCSetLastRead(CtdlIPC * ipc, long msgnum, char *cret)
 
 
 /* INVT */
-int CtdlIPCInviteUserToRoom(CtdlIPC * ipc, const char *username, char *cret)
-{
+int CtdlIPCInviteUserToRoom(CtdlIPC * ipc, const char *username, char *cret) {
 	int ret;
 	char *aaa;
 
@@ -889,8 +895,7 @@ int CtdlIPCInviteUserToRoom(CtdlIPC * ipc, const char *username, char *cret)
 
 
 /* KICK */
-int CtdlIPCKickoutUserFromRoom(CtdlIPC * ipc, const char *username, char *cret)
-{
+int CtdlIPCKickoutUserFromRoom(CtdlIPC * ipc, const char *username, char *cret) {
 	int ret;
 	char *aaa;
 
@@ -909,8 +914,7 @@ int CtdlIPCKickoutUserFromRoom(CtdlIPC * ipc, const char *username, char *cret)
 
 
 /* GETR */
-int CtdlIPCGetRoomAttributes(CtdlIPC * ipc, struct ctdlroom **qret, char *cret)
-{
+int CtdlIPCGetRoomAttributes(CtdlIPC * ipc, struct ctdlroom **qret, char *cret) {
 	int ret;
 
 	if (!cret)
@@ -938,11 +942,8 @@ int CtdlIPCGetRoomAttributes(CtdlIPC * ipc, struct ctdlroom **qret, char *cret)
 
 
 /* SETR */
-int CtdlIPCSetRoomAttributes(CtdlIPC *ipc,
-	int forget,				// if nonzero, kick all users out of the room
-	struct ctdlroom *qret,
-	char *cret
-) {
+int CtdlIPCSetRoomAttributes(CtdlIPC * ipc, int forget,	// if nonzero, kick all users out of the room
+			     struct ctdlroom *qret, char *cret) {
 	int ret;
 	char *cmd;
 
@@ -965,8 +966,7 @@ int CtdlIPCSetRoomAttributes(CtdlIPC *ipc,
 
 
 /* GETA */
-int CtdlIPCGetRoomAide(CtdlIPC *ipc, char *cret)
-{
+int CtdlIPCGetRoomAide(CtdlIPC * ipc, char *cret) {
 	if (!cret)
 		return -1;
 
@@ -975,7 +975,7 @@ int CtdlIPCGetRoomAide(CtdlIPC *ipc, char *cret)
 
 
 /* SETA */
-int CtdlIPCSetRoomAide(CtdlIPC *ipc, const char *username, char *cret) {
+int CtdlIPCSetRoomAide(CtdlIPC * ipc, const char *username, char *cret) {
 	int ret;
 	char *aaa;
 
@@ -996,8 +996,7 @@ int CtdlIPCSetRoomAide(CtdlIPC *ipc, const char *username, char *cret) {
 
 
 /* ENT0 */
-int CtdlIPCPostMessage(CtdlIPC * ipc, int flag, int *subject_required, struct ctdlipcmessage *mr, char *cret)
-{
+int CtdlIPCPostMessage(CtdlIPC * ipc, int flag, int *subject_required, struct ctdlipcmessage *mr, char *cret) {
 	int ret;
 	char cmd[SIZ];
 	char *ptr;
@@ -1095,8 +1094,7 @@ int CtdlIPCDeleteRoom(CtdlIPC * ipc, int for_real, char *cret) {
 
 
 /* CRE8 */
-int CtdlIPCCreateRoom(CtdlIPC * ipc, int for_real, const char *roomname, int type, const char *password, int floor, char *cret)
-{
+int CtdlIPCCreateRoom(CtdlIPC * ipc, int for_real, const char *roomname, int type, const char *password, int floor, char *cret) {
 	int ret;
 	char *aaa;
 
@@ -1159,7 +1157,7 @@ int CtdlIPCSystemMessage(CtdlIPC * ipc, const char *message, char **mret, char *
 
 
 /* GNUR */
-int CtdlIPCNextUnvalidatedUser(CtdlIPC *ipc, char *cret) {
+int CtdlIPCNextUnvalidatedUser(CtdlIPC * ipc, char *cret) {
 	if (!cret)
 		return -2;
 
@@ -1221,8 +1219,7 @@ int CtdlIPCValidateUser(CtdlIPC * ipc, const char *username, int axlevel, char *
 
 
 /* EINF */
-int CtdlIPCSetRoomInfo(CtdlIPC * ipc, int for_real, const char *info, char *cret)
-{
+int CtdlIPCSetRoomInfo(CtdlIPC * ipc, int for_real, const char *info, char *cret) {
 	char aaa[64];
 
 	if (!cret)
@@ -1236,8 +1233,7 @@ int CtdlIPCSetRoomInfo(CtdlIPC * ipc, int for_real, const char *info, char *cret
 
 
 /* LIST */
-int CtdlIPCUserListing(CtdlIPC * ipc, char *searchstring, char **listing, char *cret)
-{
+int CtdlIPCUserListing(CtdlIPC * ipc, char *searchstring, char **listing, char *cret) {
 	size_t bytes;
 	char *cmd;
 	int ret;
@@ -1261,8 +1257,7 @@ int CtdlIPCUserListing(CtdlIPC * ipc, char *searchstring, char **listing, char *
 
 
 /* REGI */
-int CtdlIPCSetRegistration(CtdlIPC * ipc, const char *info, char *cret)
-{
+int CtdlIPCSetRegistration(CtdlIPC * ipc, const char *info, char *cret) {
 	if (!cret)
 		return -1;
 	if (!info)
@@ -1273,8 +1268,7 @@ int CtdlIPCSetRegistration(CtdlIPC * ipc, const char *info, char *cret)
 
 
 /* CHEK */
-int CtdlIPCMiscCheck(CtdlIPC * ipc, struct ctdlipcmisc *chek, char *cret)
-{
+int CtdlIPCMiscCheck(CtdlIPC * ipc, struct ctdlipcmisc *chek, char *cret) {
 	int ret;
 
 	if (!cret)
@@ -1293,8 +1287,7 @@ int CtdlIPCMiscCheck(CtdlIPC * ipc, struct ctdlipcmisc *chek, char *cret)
 
 
 /* DELF */
-int CtdlIPCDeleteFile(CtdlIPC * ipc, const char *filename, char *cret)
-{
+int CtdlIPCDeleteFile(CtdlIPC * ipc, const char *filename, char *cret) {
 	int ret;
 	char *aaa;
 
@@ -1315,8 +1308,7 @@ int CtdlIPCDeleteFile(CtdlIPC * ipc, const char *filename, char *cret)
 
 
 /* MOVF */
-int CtdlIPCMoveFile(CtdlIPC * ipc, const char *filename, const char *destroom, char *cret)
-{
+int CtdlIPCMoveFile(CtdlIPC * ipc, const char *filename, const char *destroom, char *cret) {
 	int ret;
 	char *aaa;
 
@@ -1339,8 +1331,7 @@ int CtdlIPCMoveFile(CtdlIPC * ipc, const char *filename, const char *destroom, c
 
 
 /* RWHO */
-int CtdlIPCOnlineUsers(CtdlIPC * ipc, char **listing, time_t * stamp, char *cret)
-{
+int CtdlIPCOnlineUsers(CtdlIPC * ipc, char **listing, time_t * stamp, char *cret) {
 	int ret;
 	size_t bytes;
 
@@ -1361,8 +1352,7 @@ int CtdlIPCOnlineUsers(CtdlIPC * ipc, char **listing, time_t * stamp, char *cret
 
 /* OPEN */
 int CtdlIPCFileDownload(CtdlIPC * ipc, const char *filename, void **buf, size_t resume, void (*progress_gauge_callback)
-			 (CtdlIPC *, unsigned long, unsigned long), char *cret)
-{
+			 (CtdlIPC *, unsigned long, unsigned long), char *cret) {
 	int ret;
 	size_t bytes;
 	time_t last_mod;
@@ -1403,8 +1393,7 @@ int CtdlIPCFileDownload(CtdlIPC * ipc, const char *filename, void **buf, size_t 
 
 /* OPNA */
 int CtdlIPCAttachmentDownload(CtdlIPC * ipc, long msgnum, const char *part, void **buf, void (*progress_gauge_callback)
-			       (CtdlIPC *, unsigned long, unsigned long), char *cret)
-{
+			       (CtdlIPC *, unsigned long, unsigned long), char *cret) {
 	int ret;
 	size_t bytes;
 	time_t last_mod;
@@ -1445,8 +1434,7 @@ int CtdlIPCAttachmentDownload(CtdlIPC * ipc, long msgnum, const char *part, void
 
 /* OIMG */
 int CtdlIPCImageDownload(CtdlIPC * ipc, const char *filename, void **buf, void (*progress_gauge_callback)
-			  (CtdlIPC *, unsigned long, unsigned long), char *cret)
-{
+			  (CtdlIPC *, unsigned long, unsigned long), char *cret) {
 	int ret;
 	size_t bytes;
 	time_t last_mod;
@@ -1476,6 +1464,7 @@ int CtdlIPCImageDownload(CtdlIPC * ipc, const char *filename, void **buf, void (
 		bytes = extract_long(cret, 0);
 		last_mod = extract_int(cret, 1);
 		extract_token(mimetype, cret, 2, '|', sizeof mimetype);
+
 /*		ret = CtdlIPCReadDownload(ipc, buf, bytes, 0, progress_gauge_callback, cret); */
 		ret = CtdlIPCHighSpeedReadDownload(ipc, buf, bytes, 0, progress_gauge_callback, cret);
 		ret = CtdlIPCEndDownload(ipc, cret);
@@ -1488,8 +1477,7 @@ int CtdlIPCImageDownload(CtdlIPC * ipc, const char *filename, void **buf, void (
 
 /* UOPN */
 int CtdlIPCFileUpload(CtdlIPC * ipc, const char *save_as, const char *comment, const char *path, void (*progress_gauge_callback)
-		       (CtdlIPC *, unsigned long, unsigned long), char *cret)
-{
+		       (CtdlIPC *, unsigned long, unsigned long), char *cret) {
 	int ret;
 	char *aaa;
 	FILE *uploadFP;
@@ -1539,8 +1527,7 @@ int CtdlIPCFileUpload(CtdlIPC * ipc, const char *save_as, const char *comment, c
 
 /* UIMG */
 int CtdlIPCImageUpload(CtdlIPC * ipc, int for_real, const char *path, const char *save_as, void (*progress_gauge_callback)
-		        (CtdlIPC *, unsigned long, unsigned long), char *cret)
-{
+		        (CtdlIPC *, unsigned long, unsigned long), char *cret) {
 	int ret;
 	FILE *uploadFP;
 	char *aaa;
@@ -1587,8 +1574,7 @@ int CtdlIPCImageUpload(CtdlIPC * ipc, int for_real, const char *path, const char
 
 
 /* QUSR */
-int CtdlIPCQueryUsername(CtdlIPC * ipc, const char *username, char *cret)
-{
+int CtdlIPCQueryUsername(CtdlIPC * ipc, const char *username, char *cret) {
 	int ret;
 	char *aaa;
 
@@ -1609,8 +1595,7 @@ int CtdlIPCQueryUsername(CtdlIPC * ipc, const char *username, char *cret)
 
 
 /* LFLR */
-int CtdlIPCFloorListing(CtdlIPC * ipc, char **listing, char *cret)
-{
+int CtdlIPCFloorListing(CtdlIPC * ipc, char **listing, char *cret) {
 	size_t bytes;
 
 	if (!cret)
@@ -1625,8 +1610,7 @@ int CtdlIPCFloorListing(CtdlIPC * ipc, char **listing, char *cret)
 
 
 /* CFLR */
-int CtdlIPCCreateFloor(CtdlIPC * ipc, int for_real, const char *name, char *cret)
-{
+int CtdlIPCCreateFloor(CtdlIPC * ipc, int for_real, const char *name, char *cret) {
 	int ret;
 	char aaa[SIZ];
 
@@ -1642,8 +1626,7 @@ int CtdlIPCCreateFloor(CtdlIPC * ipc, int for_real, const char *name, char *cret
 
 
 /* KFLR */
-int CtdlIPCDeleteFloor(CtdlIPC * ipc, int for_real, int floornum, char *cret)
-{
+int CtdlIPCDeleteFloor(CtdlIPC * ipc, int for_real, int floornum, char *cret) {
 	char aaa[SIZ];
 
 	if (!cret)
@@ -1657,8 +1640,7 @@ int CtdlIPCDeleteFloor(CtdlIPC * ipc, int for_real, int floornum, char *cret)
 
 
 /* EFLR */
-int CtdlIPCEditFloor(CtdlIPC * ipc, int floornum, const char *floorname, char *cret)
-{
+int CtdlIPCEditFloor(CtdlIPC * ipc, int floornum, const char *floorname, char *cret) {
 	int ret;
 	char aaa[SIZ];
 
@@ -1682,8 +1664,7 @@ int CtdlIPCEditFloor(CtdlIPC * ipc, int floornum, const char *floorname, char *c
  * other fields are not set properly.
  */
 int CtdlIPCIdentifySoftware(CtdlIPC * ipc, int developerid, int clientid,
-			    int revision, const char *software_name, const char *hostname, char *cret)
-{
+			    int revision, const char *software_name, const char *hostname, char *cret) {
 	int ret;
 	char *aaa;
 
@@ -1708,8 +1689,7 @@ int CtdlIPCIdentifySoftware(CtdlIPC * ipc, int developerid, int clientid,
 
 
 /* SEXP */
-int CtdlIPCSendInstantMessage(CtdlIPC * ipc, const char *username, const char *text, char *cret)
-{
+int CtdlIPCSendInstantMessage(CtdlIPC * ipc, const char *username, const char *text, char *cret) {
 	int ret;
 	char *aaa;
 
@@ -1725,7 +1705,8 @@ int CtdlIPCSendInstantMessage(CtdlIPC * ipc, const char *username, const char *t
 	if (text) {
 		sprintf(aaa, "SEXP %s|-", username);
 		ret = CtdlIPCGenericCommand(ipc, aaa, text, strlen(text), NULL, NULL, cret);
-	} else {
+	}
+	else {
 		sprintf(aaa, "SEXP %s||", username);
 		ret = CtdlIPCGenericCommand(ipc, aaa, NULL, 0, NULL, NULL, cret);
 	}
@@ -1735,8 +1716,7 @@ int CtdlIPCSendInstantMessage(CtdlIPC * ipc, const char *username, const char *t
 
 
 /* GEXP */
-int CtdlIPCGetInstantMessage(CtdlIPC * ipc, char **listing, char *cret)
-{
+int CtdlIPCGetInstantMessage(CtdlIPC * ipc, char **listing, char *cret) {
 	size_t bytes;
 
 	if (!cret)
@@ -1751,9 +1731,9 @@ int CtdlIPCGetInstantMessage(CtdlIPC * ipc, char **listing, char *cret)
 
 
 /* DEXP */
+
 /* mode is 0 = enable, 1 = disable, 2 = status */
-int CtdlIPCEnableInstantMessageReceipt(CtdlIPC * ipc, int mode, char *cret)
-{
+int CtdlIPCEnableInstantMessageReceipt(CtdlIPC * ipc, int mode, char *cret) {
 	char aaa[64];
 
 	if (!cret)
@@ -1765,8 +1745,7 @@ int CtdlIPCEnableInstantMessageReceipt(CtdlIPC * ipc, int mode, char *cret)
 
 
 /* EBIO */
-int CtdlIPCSetBio(CtdlIPC * ipc, char *bio, char *cret)
-{
+int CtdlIPCSetBio(CtdlIPC * ipc, char *bio, char *cret) {
 	if (!cret)
 		return -2;
 	if (!bio)
@@ -1777,8 +1756,7 @@ int CtdlIPCSetBio(CtdlIPC * ipc, char *bio, char *cret)
 
 
 /* RBIO */
-int CtdlIPCGetBio(CtdlIPC * ipc, const char *username, char **listing, char *cret)
-{
+int CtdlIPCGetBio(CtdlIPC * ipc, const char *username, char **listing, char *cret) {
 	int ret;
 	size_t bytes;
 	char *aaa;
@@ -1804,8 +1782,7 @@ int CtdlIPCGetBio(CtdlIPC * ipc, const char *username, char **listing, char *cre
 
 
 /* LBIO */
-int CtdlIPCListUsersWithBios(CtdlIPC * ipc, char **listing, char *cret)
-{
+int CtdlIPCListUsersWithBios(CtdlIPC * ipc, char **listing, char *cret) {
 	size_t bytes;
 
 	if (!cret)
@@ -1820,8 +1797,7 @@ int CtdlIPCListUsersWithBios(CtdlIPC * ipc, char **listing, char *cret)
 
 
 /* STEL */
-int CtdlIPCStealthMode(CtdlIPC * ipc, int mode, char *cret)
-{
+int CtdlIPCStealthMode(CtdlIPC * ipc, int mode, char *cret) {
 	char aaa[64];
 
 	if (!cret)
@@ -1833,8 +1809,7 @@ int CtdlIPCStealthMode(CtdlIPC * ipc, int mode, char *cret)
 
 
 /* TERM */
-int CtdlIPCTerminateSession(CtdlIPC * ipc, int sid, char *cret)
-{
+int CtdlIPCTerminateSession(CtdlIPC * ipc, int sid, char *cret) {
 	char aaa[64];
 
 	if (!cret)
@@ -1846,8 +1821,7 @@ int CtdlIPCTerminateSession(CtdlIPC * ipc, int sid, char *cret)
 
 
 /* DOWN */
-int CtdlIPCTerminateServerNow(CtdlIPC * ipc, char *cret)
-{
+int CtdlIPCTerminateServerNow(CtdlIPC * ipc, char *cret) {
 	if (!cret)
 		return -1;
 
@@ -1856,8 +1830,7 @@ int CtdlIPCTerminateServerNow(CtdlIPC * ipc, char *cret)
 
 
 /* SCDN */
-int CtdlIPCTerminateServerScheduled(CtdlIPC * ipc, int mode, char *cret)
-{
+int CtdlIPCTerminateServerScheduled(CtdlIPC * ipc, int mode, char *cret) {
 	char aaa[16];
 
 	if (!cret)
@@ -1869,8 +1842,7 @@ int CtdlIPCTerminateServerScheduled(CtdlIPC * ipc, int mode, char *cret)
 
 
 /* EMSG */
-int CtdlIPCEnterSystemMessage(CtdlIPC * ipc, const char *filename, const char *text, char *cret)
-{
+int CtdlIPCEnterSystemMessage(CtdlIPC * ipc, const char *filename, const char *text, char *cret) {
 	int ret;
 	char *aaa;
 
@@ -1893,16 +1865,17 @@ int CtdlIPCEnterSystemMessage(CtdlIPC * ipc, const char *filename, const char *t
 
 
 /* TIME */
+
 /* This function returns the actual server time reported, or 0 if error */
-time_t CtdlIPCServerTime(CtdlIPC * ipc, char *cret)
-{
+time_t CtdlIPCServerTime(CtdlIPC * ipc, char *cret) {
 	time_t tret;
 	int ret;
 
 	ret = CtdlIPCGenericCommand(ipc, "TIME", NULL, 0, NULL, NULL, cret);
 	if (ret / 100 == 2) {
 		tret = extract_long(cret, 0);
-	} else {
+	}
+	else {
 		tret = 0L;
 	}
 	return tret;
@@ -1910,8 +1883,7 @@ time_t CtdlIPCServerTime(CtdlIPC * ipc, char *cret)
 
 
 /* AGUP */
-int CtdlIPCAideGetUserParameters(CtdlIPC * ipc, const char *who, struct ctdluser **uret, char *cret)
-{
+int CtdlIPCAideGetUserParameters(CtdlIPC * ipc, const char *who, struct ctdluser **uret, char *cret) {
 	int ret;
 	char aaa[SIZ];
 
@@ -1943,8 +1915,7 @@ int CtdlIPCAideGetUserParameters(CtdlIPC * ipc, const char *who, struct ctdluser
 
 
 /* ASUP */
-int CtdlIPCAideSetUserParameters(CtdlIPC * ipc, const struct ctdluser *uret, char *cret)
-{
+int CtdlIPCAideSetUserParameters(CtdlIPC * ipc, const struct ctdluser *uret, char *cret) {
 	int ret;
 	char *aaa;
 
@@ -1967,8 +1938,7 @@ int CtdlIPCAideSetUserParameters(CtdlIPC * ipc, const struct ctdluser *uret, cha
 
 
 /* AGEA */
-int CtdlIPCAideGetEmailAddresses(CtdlIPC * ipc, const char *who, char *target_buf, char *cret)
-{
+int CtdlIPCAideGetEmailAddresses(CtdlIPC * ipc, const char *who, char *target_buf, char *cret) {
 	int ret;
 	char aaa[SIZ];
 	char *emailaddrs = NULL;
@@ -1990,8 +1960,7 @@ int CtdlIPCAideGetEmailAddresses(CtdlIPC * ipc, const char *who, char *target_bu
 
 
 /* ASEA */
-int CtdlIPCAideSetEmailAddresses(CtdlIPC * ipc, const char *who, char *emailaddrs, char *cret)
-{
+int CtdlIPCAideSetEmailAddresses(CtdlIPC * ipc, const char *who, char *emailaddrs, char *cret) {
 	char aaa[SIZ];
 	int ret;
 
@@ -2009,10 +1978,11 @@ int CtdlIPCAideSetEmailAddresses(CtdlIPC * ipc, const char *who, char *emailaddr
 
 
 /* GPEX */
+
 /* which is 0 = room, 1 = floor, 2 = site, 3 = default for mailboxes */
+
 /* caller must free the struct ExpirePolicy */
-int CtdlIPCGetMessageExpirationPolicy(CtdlIPC * ipc, GPEXWhichPolicy which, struct ExpirePolicy **policy, char *cret)
-{
+int CtdlIPCGetMessageExpirationPolicy(CtdlIPC * ipc, GPEXWhichPolicy which, struct ExpirePolicy **policy, char *cret) {
 	static char *proto[] = {
 		strof(roompolicy),
 		strof(floorpolicy),
@@ -2044,10 +2014,11 @@ int CtdlIPCGetMessageExpirationPolicy(CtdlIPC * ipc, GPEXWhichPolicy which, stru
 
 
 /* SPEX */
+
 /* which is 0 = room, 1 = floor, 2 = site, 3 = default for mailboxes */
+
 /* policy is 0 = inherit, 1 = no purge, 2 = by count, 3 = by age (days) */
-int CtdlIPCSetMessageExpirationPolicy(CtdlIPC * ipc, int which, struct ExpirePolicy *policy, char *cret)
-{
+int CtdlIPCSetMessageExpirationPolicy(CtdlIPC * ipc, int which, struct ExpirePolicy *policy, char *cret) {
 	char aaa[38];
 	char *whichvals[] = { "room", "floor", "site", "mailboxes" };
 
@@ -2068,8 +2039,7 @@ int CtdlIPCSetMessageExpirationPolicy(CtdlIPC * ipc, int which, struct ExpirePol
 
 
 /* CONF GET */
-int CtdlIPCGetSystemConfig(CtdlIPC * ipc, char **listing, char *cret)
-{
+int CtdlIPCGetSystemConfig(CtdlIPC * ipc, char **listing, char *cret) {
 	size_t bytes;
 
 	if (!cret)
@@ -2084,8 +2054,7 @@ int CtdlIPCGetSystemConfig(CtdlIPC * ipc, char **listing, char *cret)
 
 
 /* CONF SET */
-int CtdlIPCSetSystemConfig(CtdlIPC * ipc, const char *listing, char *cret)
-{
+int CtdlIPCSetSystemConfig(CtdlIPC * ipc, const char *listing, char *cret) {
 	if (!cret)
 		return -2;
 	if (!listing)
@@ -2096,8 +2065,7 @@ int CtdlIPCSetSystemConfig(CtdlIPC * ipc, const char *listing, char *cret)
 
 
 /* CONF GETSYS */
-int CtdlIPCGetSystemConfigByType(CtdlIPC * ipc, const char *mimetype, char **listing, char *cret)
-{
+int CtdlIPCGetSystemConfigByType(CtdlIPC * ipc, const char *mimetype, char **listing, char *cret) {
 	int ret;
 	char *aaa;
 	size_t bytes;
@@ -2122,8 +2090,7 @@ int CtdlIPCGetSystemConfigByType(CtdlIPC * ipc, const char *mimetype, char **lis
 
 
 /* CONF PUTSYS */
-int CtdlIPCSetSystemConfigByType(CtdlIPC * ipc, const char *mimetype, const char *listing, char *cret)
-{
+int CtdlIPCSetSystemConfigByType(CtdlIPC * ipc, const char *mimetype, const char *listing, char *cret) {
 	int ret;
 	char *aaa;
 
@@ -2145,8 +2112,7 @@ int CtdlIPCSetSystemConfigByType(CtdlIPC * ipc, const char *mimetype, const char
 
 
 /* GNET */
-int CtdlIPCGetRoomNetworkConfig(CtdlIPC * ipc, char **listing, char *cret)
-{
+int CtdlIPCGetRoomNetworkConfig(CtdlIPC * ipc, char **listing, char *cret) {
 	size_t bytes;
 
 	if (!cret)
@@ -2161,8 +2127,7 @@ int CtdlIPCGetRoomNetworkConfig(CtdlIPC * ipc, char **listing, char *cret)
 
 
 /* SNET */
-int CtdlIPCSetRoomNetworkConfig(CtdlIPC * ipc, const char *listing, char *cret)
-{
+int CtdlIPCSetRoomNetworkConfig(CtdlIPC * ipc, const char *listing, char *cret) {
 	if (!cret)
 		return -2;
 	if (!listing)
@@ -2173,8 +2138,7 @@ int CtdlIPCSetRoomNetworkConfig(CtdlIPC * ipc, const char *listing, char *cret)
 
 
 /* REQT */
-int CtdlIPCRequestClientLogout(CtdlIPC * ipc, int session, char *cret)
-{
+int CtdlIPCRequestClientLogout(CtdlIPC * ipc, int session, char *cret) {
 	char aaa[64];
 
 	if (!cret)
@@ -2188,8 +2152,7 @@ int CtdlIPCRequestClientLogout(CtdlIPC * ipc, int session, char *cret)
 
 
 /* SEEN */
-int CtdlIPCSetMessageSeen(CtdlIPC * ipc, long msgnum, int seen, char *cret)
-{
+int CtdlIPCSetMessageSeen(CtdlIPC * ipc, long msgnum, int seen, char *cret) {
 	char aaa[27];
 
 	if (!cret)
@@ -2203,8 +2166,7 @@ int CtdlIPCSetMessageSeen(CtdlIPC * ipc, long msgnum, int seen, char *cret)
 
 
 /* STLS */
-int CtdlIPCStartEncryption(CtdlIPC * ipc, char *cret)
-{
+int CtdlIPCStartEncryption(CtdlIPC * ipc, char *cret) {
 	int a;
 	int r;
 	char buf[SIZ];
@@ -2260,8 +2222,7 @@ int CtdlIPCStartEncryption(CtdlIPC * ipc, char *cret)
 
 
 #ifdef HAVE_OPENSSL
-static void endtls(SSL * ssl)
-{
+static void endtls(SSL * ssl) {
 	if (ssl) {
 		SSL_shutdown(ssl);
 		SSL_free(ssl);
@@ -2271,8 +2232,7 @@ static void endtls(SSL * ssl)
 
 
 /* QDIR */
-int CtdlIPCDirectoryLookup(CtdlIPC * ipc, const char *address, char *cret)
-{
+int CtdlIPCDirectoryLookup(CtdlIPC * ipc, const char *address, char *cret) {
 	int ret;
 	char *aaa;
 
@@ -2293,8 +2253,7 @@ int CtdlIPCDirectoryLookup(CtdlIPC * ipc, const char *address, char *cret)
 
 
 /* IPGM */
-int CtdlIPCInternalProgram(CtdlIPC * ipc, int secret, char *cret)
-{
+int CtdlIPCInternalProgram(CtdlIPC * ipc, int secret, char *cret) {
 	char aaa[30];
 
 	if (!cret)
@@ -2307,13 +2266,14 @@ int CtdlIPCInternalProgram(CtdlIPC * ipc, int secret, char *cret)
 
 
 /* ************************************************************************** */
+
 /*	     Stuff below this line is not for public consumption	    */
+
 /* ************************************************************************** */
 
 
 /* Read a listing from the server up to 000.  Append to dest if it exists */
-char *CtdlIPCReadListing(CtdlIPC * ipc, char *dest)
-{
+char *CtdlIPCReadListing(CtdlIPC * ipc, char *dest) {
 	size_t length = 0;
 	size_t linelength;
 	char *ret = NULL;
@@ -2322,7 +2282,8 @@ char *CtdlIPCReadListing(CtdlIPC * ipc, char *dest)
 	ret = dest;
 	if (ret != NULL) {
 		length = strlen(ret);
-	} else {
+	}
+	else {
 		length = 0;
 	}
 
@@ -2341,8 +2302,7 @@ char *CtdlIPCReadListing(CtdlIPC * ipc, char *dest)
 
 
 /* Send a listing to the server; generate the ending 000. */
-int CtdlIPCSendListing(CtdlIPC * ipc, const char *listing)
-{
+int CtdlIPCSendListing(CtdlIPC * ipc, const char *listing) {
 	char *text;
 
 	text = (char *) malloc(strlen(listing) + 6);
@@ -2354,7 +2314,8 @@ int CtdlIPCSendListing(CtdlIPC * ipc, const char *listing)
 		CtdlIPC_putline(ipc, text);
 		free(text);
 		text = NULL;
-	} else {
+	}
+	else {
 		/* Malloc failed but we are committed to send */
 		/* This may result in extra blanks at the bottom */
 		CtdlIPC_putline(ipc, text);
@@ -2365,8 +2326,7 @@ int CtdlIPCSendListing(CtdlIPC * ipc, const char *listing)
 
 
 /* Partial read of file from server */
-size_t CtdlIPCPartialRead(CtdlIPC * ipc, void **buf, size_t offset, size_t bytes, char *cret)
-{
+size_t CtdlIPCPartialRead(CtdlIPC * ipc, void **buf, size_t offset, size_t bytes, char *cret) {
 	size_t len = 0;
 	char aaa[SIZ];
 
@@ -2389,7 +2349,8 @@ size_t CtdlIPCPartialRead(CtdlIPC * ipc, void **buf, size_t offset, size_t bytes
 		if (*buf) {
 			/* I know what I'm doing */
 			serv_read(ipc, ((char *) (*buf) + offset), len);
-		} else {
+		}
+		else {
 			/* We have to read regardless */
 			serv_read(ipc, aaa, len);
 			len = 0;
@@ -2401,8 +2362,7 @@ size_t CtdlIPCPartialRead(CtdlIPC * ipc, void **buf, size_t offset, size_t bytes
 
 
 /* CLOS */
-int CtdlIPCEndDownload(CtdlIPC * ipc, char *cret)
-{
+int CtdlIPCEndDownload(CtdlIPC * ipc, char *cret) {
 	int ret;
 
 	if (!cret)
@@ -2418,8 +2378,7 @@ int CtdlIPCEndDownload(CtdlIPC * ipc, char *cret)
 
 
 /* MSGP */
-int CtdlIPCSpecifyPreferredFormats(CtdlIPC * ipc, char *cret, char *formats)
-{
+int CtdlIPCSpecifyPreferredFormats(CtdlIPC * ipc, char *cret, char *formats) {
 	int ret;
 	char cmd[SIZ];
 
@@ -2432,8 +2391,7 @@ int CtdlIPCSpecifyPreferredFormats(CtdlIPC * ipc, char *cret, char *formats)
 
 /* READ */
 int CtdlIPCReadDownload(CtdlIPC * ipc, void **buf, size_t bytes, size_t resume, void (*progress_gauge_callback)
-			 (CtdlIPC *, unsigned long, unsigned long), char *cret)
-{
+			 (CtdlIPC *, unsigned long, unsigned long), char *cret) {
 	size_t len;
 
 	if (!cret)
@@ -2465,8 +2423,7 @@ int CtdlIPCReadDownload(CtdlIPC * ipc, void **buf, size_t bytes, size_t resume, 
 
 /* READ - pipelined */
 int CtdlIPCHighSpeedReadDownload(CtdlIPC * ipc, void **buf, size_t bytes, size_t resume, void (*progress_gauge_callback)
-				  (CtdlIPC *, unsigned long, unsigned long), char *cret)
-{
+				  (CtdlIPC *, unsigned long, unsigned long), char *cret) {
 	size_t len;
 	int calls;		/* How many calls in the pipeline */
 	int i;			/* iterator */
@@ -2520,8 +2477,7 @@ int CtdlIPCHighSpeedReadDownload(CtdlIPC * ipc, void **buf, size_t bytes, size_t
 
 
 /* UCLS */
-int CtdlIPCEndUpload(CtdlIPC * ipc, int discard, char *cret)
-{
+int CtdlIPCEndUpload(CtdlIPC * ipc, int discard, char *cret) {
 	int ret;
 	char cmd[8];
 
@@ -2539,8 +2495,7 @@ int CtdlIPCEndUpload(CtdlIPC * ipc, int discard, char *cret)
 
 /* WRIT */
 int CtdlIPCWriteUpload(CtdlIPC * ipc, FILE * uploadFP, void (*progress_gauge_callback)
-		        (CtdlIPC *, unsigned long, unsigned long), char *cret)
-{
+		        (CtdlIPC *, unsigned long, unsigned long), char *cret) {
 	int ret = -1;
 	size_t offset = 0;
 	size_t bytes;
@@ -2583,7 +2538,8 @@ int CtdlIPCWriteUpload(CtdlIPC * ipc, FILE * uploadFP, void (*progress_gauge_cal
 			/* Detect short reads and back up if needed */
 			/* offset will never be negative anyway */
 			fseek(fd, (signed) offset, SEEK_SET);
-		} else {
+		}
+		else {
 			break;
 		}
 	}
@@ -2623,14 +2579,10 @@ int CtdlIPCWriteUpload(CtdlIPC * ipc, FILE * uploadFP, void (*progress_gauge_cal
  * protocol_response as described above.  Some commands send additional
  * data in this string.
  */
-int CtdlIPCGenericCommand(CtdlIPC *ipc,
-			const char *command,
-			const char *to_send,
-			size_t bytes_to_send,
-			char **to_receive,
-			size_t *bytes_to_receive,
-			char *proto_response
-) {
+int CtdlIPCGenericCommand(CtdlIPC * ipc,
+			  const char *command,
+			  const char *to_send,
+			  size_t bytes_to_send, char **to_receive, size_t *bytes_to_receive, char *proto_response) {
 	char buf[SIZ];
 	int ret;
 
@@ -2659,7 +2611,8 @@ int CtdlIPCGenericCommand(CtdlIPC *ipc,
 		case 1:	/* LISTING_FOLLOWS */
 			if (to_receive && !*to_receive && bytes_to_receive) {
 				*to_receive = CtdlIPCReadListing(ipc, NULL);
-			} else {	/* Drain */
+			}
+			else {	/* Drain */
 				while (CtdlIPC_getline(ipc, buf), strcmp(buf, "000"));
 				ret = -ret;
 			}
@@ -2667,7 +2620,8 @@ int CtdlIPCGenericCommand(CtdlIPC *ipc,
 		case 4:	/* SEND_LISTING */
 			if (to_send) {
 				CtdlIPCSendListing(ipc, to_send);
-			} else {
+			}
+			else {
 				/* No listing given, fake it */
 				CtdlIPC_putline(ipc, "000");
 				ret = -ret;
@@ -2677,13 +2631,15 @@ int CtdlIPCGenericCommand(CtdlIPC *ipc,
 			if (to_receive && !*to_receive && bytes_to_receive) {
 				*bytes_to_receive = extract_long(proto_response, 0);
 				*to_receive = (char *)
-				    malloc((size_t) * bytes_to_receive);
+				    malloc((size_t) *bytes_to_receive);
 				if (!*to_receive) {
 					ret = -1;
-				} else {
+				}
+				else {
 					serv_read(ipc, *to_receive, *bytes_to_receive);
 				}
-			} else {
+			}
+			else {
 				/* Drain */
 				size_t drain;
 
@@ -2699,7 +2655,8 @@ int CtdlIPCGenericCommand(CtdlIPC *ipc,
 		case 7:	/* SEND_BINARY */
 			if (to_send && bytes_to_send) {
 				serv_write(ipc, to_send, bytes_to_send);
-			} else if (bytes_to_send) {
+			}
+			else if (bytes_to_send) {
 				/* Fake it, send nulls */
 				size_t fake;
 
@@ -2892,6 +2849,7 @@ void serv_write(CtdlIPC * ipc, const char *buf, unsigned int nbytes) {
 
 
 #ifdef HAVE_OPENSSL
+
 /*
  * input binary data from encrypted connection
  */
@@ -3083,7 +3041,8 @@ static void CtdlIPC_getline(CtdlIPC * ipc, char *buf) {
 			buf[i--] = 0;
 		if (i >= 0 && buf[i] == 13)
 			buf[i--] = 0;
-	} else
+	}
+	else
 #endif
 	{
 		if (ipc->Buf == NULL) {
@@ -3116,7 +3075,8 @@ static void CtdlIPC_getline(CtdlIPC * ipc, char *buf) {
 				/* is there more in the buffer we need to read later? */
 				if (ipc->Buf + ipc->BufUsed > aptr) {
 					ipc->BufPtr = aptr;
-				} else {
+				}
+				else {
 					ipc->BufUsed = 0;
 					ipc->BufPtr = ipc->Buf;
 				}
@@ -3326,7 +3286,7 @@ CtdlIPC *CtdlIPC_new(int argc, char **argv, char *hostbuf, char *portbuf) {
 /*
  * Disconnect and delete the IPC class (destructor)
  */
-void CtdlIPC_delete(CtdlIPC *ipc) {
+void CtdlIPC_delete(CtdlIPC * ipc) {
 #ifdef HAVE_OPENSSL
 	if (ipc->ssl) {
 		SSL_shutdown(ipc->ssl);
@@ -3350,7 +3310,7 @@ void CtdlIPC_delete(CtdlIPC *ipc) {
  * Disconnect and delete the IPC class (destructor)
  * Also NULLs out the pointer
  */
-void CtdlIPC_delete_ptr(CtdlIPC **pipc) {
+void CtdlIPC_delete_ptr(CtdlIPC ** pipc) {
 	CtdlIPC_delete(*pipc);
 	*pipc = NULL;
 }

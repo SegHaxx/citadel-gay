@@ -69,8 +69,7 @@ int enable_syslog = 0;
 /*
  * here is our 'clean up gracefully and exit' routine
  */
-void ctdl_logoff(char *file, int line, CtdlIPC * ipc, int code)
-{
+void ctdl_logoff(char *file, int line, CtdlIPC * ipc, int code) {
 	int lp;
 
 	if (editor_pid > 0) {	/* kill the editor if it's running */
@@ -119,8 +118,7 @@ void ctdl_logoff(char *file, int line, CtdlIPC * ipc, int code)
 /*
  * signal catching function for hangups...
  */
-void dropcarr(int signum)
-{
+void dropcarr(int signum) {
 	logoff(NULL, 3);	/* No IPC when server's already gone! */
 }
 
@@ -130,8 +128,7 @@ void dropcarr(int signum)
  * catch SIGCONT to reset terminal modes when were are put back into the
  * foreground.
  */
-void catch_sigcont(int signum)
-{
+void catch_sigcont(int signum) {
 	stty_ctdl(SB_LAST);
 	signal(SIGCONT, catch_sigcont);
 }
@@ -140,8 +137,7 @@ void catch_sigcont(int signum)
 /* general purpose routines */
 
 /* display a file */
-void formout(CtdlIPC * ipc, char *name)
-{
+void formout(CtdlIPC * ipc, char *name) {
 	int r;			/* IPC return code */
 	char buf[SIZ];
 	char *text = NULL;
@@ -251,8 +247,7 @@ void remove_march(char *roomname, int floornum) {
  * Locate the room on the march list which we most want to go to.  Each room
  * is measured given a "weight" of preference based on various factors.
  */
-char *pop_march(int desired_floor, struct march *_march)
-{
+char *pop_march(int desired_floor, struct march *_march) {
 	static char TheRoom[ROOMNAMELEN];
 	int TheWeight = 0;
 	int weight;
@@ -284,8 +279,7 @@ char *pop_march(int desired_floor, struct march *_march)
 /*
  * jump directly to a room
  */
-void dotgoto(CtdlIPC * ipc, char *towhere, int display_name, int fromungoto)
-{
+void dotgoto(CtdlIPC * ipc, char *towhere, int display_name, int fromungoto) {
 	char aaa[SIZ], bbb[SIZ];
 	static long ls = 0L;
 	int newmailcount = 0;
@@ -307,7 +301,8 @@ void dotgoto(CtdlIPC * ipc, char *towhere, int display_name, int fromungoto)
 				uglistlsn[lp] = uglistlsn[lp + 1];
 			}
 			ugpos--;
-		} else {
+		}
+		else {
 			uglistsize++;
 		}
 
@@ -382,16 +377,16 @@ void dotgoto(CtdlIPC * ipc, char *towhere, int display_name, int fromungoto)
 
 	// Determine, based on the room's default view, whether an <E>nter message command will be valid here.
 	switch (room->RRdefaultview) {
-		case VIEW_BBS:
-		case VIEW_MAILBOX:
-			entmsg_ok = ENTMSG_OK_YES;
-			break;
-		case VIEW_BLOG:
-			entmsg_ok = ENTMSG_OK_BLOG;
-			break;
-		default:
-			entmsg_ok = ENTMSG_OK_NO;
-			break;
+	case VIEW_BBS:
+	case VIEW_MAILBOX:
+		entmsg_ok = ENTMSG_OK_YES;
+		break;
+	case VIEW_BLOG:
+		entmsg_ok = ENTMSG_OK_BLOG;
+		break;
+	default:
+		entmsg_ok = ENTMSG_OK_NO;
+		break;
 	}
 
 	remove_march(room_name, 0);
@@ -481,7 +476,8 @@ void gotonext(CtdlIPC * ipc) {
 		strcpy(mptr->march_name, "_BASEROOM_");
 		if (marchptr == NULL) {
 			marchptr = mptr;
-		} else {
+		}
+		else {
 			mptr2 = marchptr;
 			while (mptr2->next != NULL)
 				mptr2 = mptr2->next;
@@ -505,7 +501,7 @@ void gotonext(CtdlIPC * ipc) {
 /*
  * forget all rooms on a given floor
  */
-void forget_all_rooms_on(CtdlIPC *ipc, int ffloor) {
+void forget_all_rooms_on(CtdlIPC * ipc, int ffloor) {
 	char buf[SIZ];
 	struct march *flist = NULL;
 	struct march *fptr = NULL;
@@ -540,8 +536,7 @@ void forget_all_rooms_on(CtdlIPC *ipc, int ffloor) {
 /*
  * routine called by gotofloor() to move to a new room on a new floor
  */
-void gf_toroom(CtdlIPC * ipc, char *towhere, int mode)
-{
+void gf_toroom(CtdlIPC * ipc, char *towhere, int mode) {
 	int floor_being_left;
 
 	floor_being_left = curr_floor;
@@ -549,10 +544,12 @@ void gf_toroom(CtdlIPC * ipc, char *towhere, int mode)
 	if (mode == GF_GOTO) {	/* <;G>oto mode */
 		updatels(ipc);
 		dotgoto(ipc, towhere, 1, 0);
-	} else if (mode == GF_SKIP) {	/* <;S>kip mode */
+	}
+	else if (mode == GF_SKIP) {	/* <;S>kip mode */
 		dotgoto(ipc, towhere, 1, 0);
 		remove_march("_FLOOR_", floor_being_left);
-	} else if (mode == GF_ZAP) {	/* <;Z>ap mode */
+	}
+	else if (mode == GF_ZAP) {	/* <;Z>ap mode */
 		dotgoto(ipc, towhere, 1, 0);
 		remove_march("_FLOOR_", floor_being_left);
 		forget_all_rooms_on(ipc, floor_being_left);
@@ -563,8 +560,7 @@ void gf_toroom(CtdlIPC * ipc, char *towhere, int mode)
 /*
  * go to a new floor
  */
-void gotofloor(CtdlIPC * ipc, char *towhere, int mode)
-{
+void gotofloor(CtdlIPC * ipc, char *towhere, int mode) {
 	int a, tofloor;
 	int r;			/* IPC response code */
 	struct march *mptr;
@@ -641,7 +637,8 @@ void gotofloor(CtdlIPC * ipc, char *towhere, int mode)
 	}
 	if (!IsEmptyStr(targ)) {
 		gf_toroom(ipc, targ, mode);
-	} else {
+	}
+	else {
 		scr_printf("There are no rooms on '%s'.\n", &floorlist[tofloor][0]);
 	}
 }
@@ -650,8 +647,7 @@ void gotofloor(CtdlIPC * ipc, char *towhere, int mode)
 /*
  * Indexing mechanism for a room list, called by gotoroomstep()
  */
-void room_tree_list_query(struct ctdlroomlisting *rp, char *findrmname, int findrmslot, char *rmname, int *rmslot, int *rmtotal)
-{
+void room_tree_list_query(struct ctdlroomlisting *rp, char *findrmname, int findrmslot, char *rmname, int *rmslot, int *rmtotal) {
 	char roomname[ROOMNAMELEN];
 	static int cur_rmslot = 0;
 
@@ -695,8 +691,7 @@ void room_tree_list_query(struct ctdlroomlisting *rp, char *findrmname, int find
 /*
  * step through rooms on current floor
  */
-void gotoroomstep(CtdlIPC * ipc, int direction, int mode)
-{
+void gotoroomstep(CtdlIPC * ipc, int direction, int mode) {
 	struct march *listing = NULL;
 	struct march *mptr;
 	int r;			/* IPC response code */
@@ -735,20 +730,24 @@ void gotoroomstep(CtdlIPC * ipc, int direction, int mode)
 			rs = rl;
 			if (rl == NULL) {
 				rl = rp;
-			} else {
+			}
+			else {
 				while (rp != NULL) {
 					if (rordercmp(rp, rs) < 0) {
 						if (rs->lnext == NULL) {
 							rs->lnext = rp;
 							rp = NULL;
-						} else {
+						}
+						else {
 							rs = rs->lnext;
 						}
-					} else {
+					}
+					else {
 						if (rs->rnext == NULL) {
 							rs->rnext = rp;
 							rp = NULL;
-						} else {
+						}
+						else {
 							rs = rs->rnext;
 						}
 					}
@@ -770,7 +769,7 @@ void gotoroomstep(CtdlIPC * ipc, int direction, int mode)
 			rmslot--;
 		}
 	}
-	else {		/* Next room */
+	else {			/* Next room */
 		/* If we're at the last room, wrap to the first room */
 		if (rmslot == rmtotal - 1) {
 			rmslot = 0;
@@ -821,7 +820,8 @@ void gotofloorstep(CtdlIPC * ipc, int direction, int mode) {
 
 		while (!floorlist[tofloor][0])
 			tofloor--;
-	} else {		/* Next floor */
+	}
+	else {			/* Next floor */
 		if (curr_floor < 127)
 			tofloor = curr_floor + 1;
 		else
@@ -849,8 +849,7 @@ void gotofloorstep(CtdlIPC * ipc, int direction, int mode) {
  * Display user 'preferences'.
  */
 extern int rc_prompt_control;
-void read_config(CtdlIPC * ipc)
-{
+void read_config(CtdlIPC * ipc) {
 	char buf[SIZ];
 	char *resp = NULL;
 	int r;			/* IPC response code */
@@ -949,8 +948,7 @@ void read_config(CtdlIPC * ipc)
 /*
  * Display system statistics.
  */
-void system_info(CtdlIPC * ipc)
-{
+void system_info(CtdlIPC * ipc) {
 	char buf[SIZ];
 	char *resp = NULL;
 	size_t bytes;
@@ -990,8 +988,7 @@ void system_info(CtdlIPC * ipc)
 /*
  * forget all rooms on current floor
  */
-void forget_this_floor(CtdlIPC * ipc)
-{
+void forget_this_floor(CtdlIPC * ipc) {
 	if (curr_floor == 0) {
 		scr_printf("Can't forget this floor.\n");
 		return;
@@ -1011,8 +1008,7 @@ void forget_this_floor(CtdlIPC * ipc)
 /*
  * set floor mode depending on client, server, and user settings
  */
-void set_floor_mode(CtdlIPC * ipc)
-{
+void set_floor_mode(CtdlIPC * ipc) {
 	if (ipc->ServInfo.ok_floors == 0) {
 		floor_mode = 0;	/* Don't use floors if the server */
 	}
@@ -1033,8 +1029,7 @@ void set_floor_mode(CtdlIPC * ipc)
 /*
  * Set or change the user's password
  */
-int set_password(CtdlIPC * ipc)
-{
+int set_password(CtdlIPC * ipc) {
 	char pass1[20];
 	char pass2[20];
 	char buf[SIZ];
@@ -1042,7 +1037,8 @@ int set_password(CtdlIPC * ipc)
 	if (!IsEmptyStr(rc_password)) {
 		strcpy(pass1, rc_password);
 		strcpy(pass2, rc_password);
-	} else {
+	}
+	else {
 		IFNEXPERT formout(ipc, "changepw");
 		newprompt("Enter a new password: ", pass1, -19);
 		newprompt("Enter it again to confirm: ", pass2, -19);
@@ -1054,7 +1050,8 @@ int set_password(CtdlIPC * ipc)
 		scr_printf("%s\n", buf);
 		offer_to_remember_password(ipc, hostbuf, portbuf, fullname, pass1);
 		return (0);
-	} else {
+	}
+	else {
 		scr_printf("*** They don't match... try again.\n");
 		return (1);
 	}
@@ -1064,8 +1061,7 @@ int set_password(CtdlIPC * ipc)
 /*
  * get info about the server we've connected to
  */
-void get_serv_info(CtdlIPC * ipc, char *supplied_hostname)
-{
+void get_serv_info(CtdlIPC * ipc, char *supplied_hostname) {
 	char buf[SIZ];
 
 	CtdlIPCServerInfo(ipc, buf);
@@ -1103,8 +1099,7 @@ void get_serv_info(CtdlIPC * ipc, char *supplied_hostname)
 /*
  * Session username compare function for SortOnlineUsers()
  */
-int rwho_username_cmp(const void *rec1, const void *rec2)
-{
+int rwho_username_cmp(const void *rec1, const void *rec2) {
 	char *u1, *u2;
 
 	u1 = strchr(rec1, '|');
@@ -1117,8 +1112,7 @@ int rwho_username_cmp(const void *rec1, const void *rec2)
 /*
  * Idle time compare function for SortOnlineUsers()
  */
-int idlecmp(const void *rec1, const void *rec2)
-{
+int idlecmp(const void *rec1, const void *rec2) {
 	time_t i1, i2;
 
 	i1 = extract_long(rec1, 5);
@@ -1140,8 +1134,7 @@ int idlecmp(const void *rec1, const void *rec2)
  * If 'condense' is nonzero, multiple sessions for the same user will be
  * combined into one for brevity.
  */
-char *SortOnlineUsers(char *listing, int condense)
-{
+char *SortOnlineUsers(char *listing, int condense) {
 	int rows;
 	char *sortbuf;
 	char *retbuf;
@@ -1206,8 +1199,7 @@ char *SortOnlineUsers(char *listing, int condense)
 /*
  * Display list of users currently logged on to the server
  */
-void who_is_online(CtdlIPC * ipc, int longlist)
-{
+void who_is_online(CtdlIPC * ipc, int longlist) {
 	char buf[SIZ], username[SIZ], roomname[SIZ], fromhost[SIZ];
 	char flags[SIZ];
 	char actual_user[SIZ], actual_room[SIZ], actual_host[SIZ];
@@ -1343,8 +1335,7 @@ void who_is_online(CtdlIPC * ipc, int longlist)
 }
 
 
-void enternew(CtdlIPC * ipc, char *desc, char *buf, int maxlen)
-{
+void enternew(CtdlIPC * ipc, char *desc, char *buf, int maxlen) {
 	char bbb[128];
 	snprintf(bbb, sizeof bbb, "Enter in your new %s: ", desc);
 	newprompt(bbb, buf, maxlen);
@@ -1513,7 +1504,8 @@ int main(int argc, char **argv) {
 	do {
 		if (!IsEmptyStr(rc_username)) {
 			strcpy(fullname, rc_username);
-		} else {
+		}
+		else {
 			newprompt("Enter your name: ", fullname, 29);
 		}
 		strproc(fullname);
@@ -1542,7 +1534,8 @@ int main(int argc, char **argv) {
 	/* password authentication */
 	if (!IsEmptyStr(rc_password)) {
 		strcpy(password, rc_password);
-	} else {
+	}
+	else {
 		newprompt("\rPlease enter your password: ", password, -(SIZ - 1));
 	}
 
@@ -1856,7 +1849,8 @@ int main(int argc, char **argv) {
 						if (atoi(aaa)) {
 							scr_printf
 							    ("The Citadel server will terminate when all users are logged off.\n");
-						} else {
+						}
+						else {
 							scr_printf("The Citadel server will not terminate.\n");
 						}
 					}

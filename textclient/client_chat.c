@@ -17,7 +17,7 @@
 extern char temp[];
 char last_paged[SIZ] = "";
 
-void chatmode(CtdlIPC *ipc) {
+void chatmode(CtdlIPC * ipc) {
 	char wbuf[SIZ];
 	char buf[SIZ];
 	char response[SIZ];
@@ -69,12 +69,14 @@ void chatmode(CtdlIPC *ipc) {
 			ch = scr_getc(SCR_BLOCK);
 			if ((ch == 10) || (ch == 13)) {
 				send_complete_line = 1;
-			} else if ((ch == 8) || (ch == 127)) {
+			}
+			else if ((ch == 8) || (ch == 127)) {
 				if (!IsEmptyStr(wbuf)) {
 					wbuf[strlen(wbuf) - 1] = 0;
 					scr_printf("%c %c", 8, 8);
 				}
-			} else {
+			}
+			else {
 				scr_putc(ch);
 				wbuf[strlen(wbuf) + 1] = 0;
 				wbuf[strlen(wbuf)] = ch;
@@ -119,7 +121,8 @@ void chatmode(CtdlIPC *ipc) {
 				}
 				strcpy(wbuf, "");
 				send_complete_line = 0;
-			} else {
+			}
+			else {
 				wbuf[pos] = 0;
 				CtdlIPC_chat_send(ipc, "RCHT send");
 				CtdlIPC_chat_recv(ipc, response);
@@ -143,14 +146,17 @@ void chatmode(CtdlIPC *ipc) {
 				scr_printf("\r%79s\r", "");
 				if (!strcmp(c_user, fullname)) {
 					color(BRIGHT_YELLOW);
-				} else if (!strcmp(c_user, ":")) {
+				}
+				else if (!strcmp(c_user, ":")) {
 					color(BRIGHT_RED);
-				} else {
+				}
+				else {
 					color(BRIGHT_GREEN);
 				}
 				if (strcmp(c_user, last_user)) {
 					snprintf(buf, sizeof buf, "%s: %s", c_user, c_text);
-				} else {
+				}
+				else {
 					size_t i = MIN(sizeof buf - 1, strlen(c_user) + 2);
 					memset(buf, ' ', i);
 					strncpy(&buf[i], c_text, sizeof buf - i);
@@ -214,8 +220,7 @@ void page_user(CtdlIPC * ipc) {
 }
 
 
-void quiet_mode(CtdlIPC * ipc)
-{
+void quiet_mode(CtdlIPC * ipc) {
 	static int quiet = 0;
 	char cret[SIZ];
 	int r;
@@ -224,14 +229,14 @@ void quiet_mode(CtdlIPC * ipc)
 	if (r / 100 == 2) {
 		quiet = !quiet;
 		scr_printf("Quiet mode %sabled (%sother users may page you)\n", (quiet) ? "en" : "dis", (quiet) ? "no " : "");
-	} else {
+	}
+	else {
 		scr_printf("Unable to change quiet mode: %s\n", cret);
 	}
 }
 
 
-void stealth_mode(CtdlIPC * ipc)
-{
+void stealth_mode(CtdlIPC * ipc) {
 	static int stealth = 0;
 	char cret[SIZ];
 	int r;
@@ -241,7 +246,8 @@ void stealth_mode(CtdlIPC * ipc)
 		stealth = !stealth;
 		scr_printf("Stealth mode %sabled (you are %s)\n",
 			   (stealth) ? "en" : "dis", (stealth) ? "invisible" : "listed as online");
-	} else {
+	}
+	else {
 		scr_printf("Unable to change stealth mode: %s\n", cret);
 	}
 }

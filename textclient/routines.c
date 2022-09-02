@@ -22,8 +22,7 @@ extern int rc_ansi_color;
 extern int rc_prompt_control;
 
 /* Destructive backspace */
-void back(int spaces)
-{
+void back(int spaces) {
 	int a;
 	for (a = 0; a < spaces; ++a) {
 		scr_putc(8);
@@ -35,8 +34,7 @@ void back(int spaces)
 /*
  * Edit a user's Internet email addresses
  */
-void edit_user_internet_email_addresses(CtdlIPC * ipc, char *who)
-{
+void edit_user_internet_email_addresses(CtdlIPC * ipc, char *who) {
 	char buf[SIZ];
 	char *resp = NULL;
 	int num_recs = 0;
@@ -89,7 +87,8 @@ void edit_user_internet_email_addresses(CtdlIPC * ipc, char *who)
 				++num_recs;
 				if (num_recs == 1) {
 					recs = malloc(sizeof(char *));
-				} else {
+				}
+				else {
 					recs = realloc(recs, (sizeof(char *)) * num_recs);
 				}
 				recs[num_recs - 1] = strdup(buf);
@@ -122,7 +121,8 @@ void edit_user_internet_email_addresses(CtdlIPC * ipc, char *who)
 			r = CtdlIPCAideSetEmailAddresses(ipc, who, resp, buf);
 			if (r / 100 != 4) {
 				scr_printf("%s\n", buf);
-			} else {
+			}
+			else {
 				scr_printf("Saved %d addresses.\n", num_recs);
 				modified = 0;
 				quitting = 1;
@@ -148,8 +148,7 @@ void edit_user_internet_email_addresses(CtdlIPC * ipc, char *who)
 /*
  * Edit or delete a user (cmd=25 to edit/create, 96 to delete)
  */
-void edituser(CtdlIPC * ipc, int cmd)
-{
+void edituser(CtdlIPC * ipc, int cmd) {
 	char buf[SIZ];
 	char who[USERNAME_SIZE];
 	char newname[USERNAME_SIZE];
@@ -190,11 +189,13 @@ void edituser(CtdlIPC * ipc, int cmd)
 					r = CtdlIPCRenameUser(ipc, user->fullname, newname, buf);
 					if (r / 100 != 2) {
 						scr_printf("%s\n", buf);
-					} else {
+					}
+					else {
 						strcpy(user->fullname, newname);
 						change_name = 0;
 					}
-				} else {
+				}
+				else {
 					change_name = 0;
 				}
 			}
@@ -207,12 +208,14 @@ void edituser(CtdlIPC * ipc, int cmd)
 		user->axlevel = intprompt("Access level", user->axlevel, 0, 6);
 		if (boolprompt("Permission to send Internet mail", (user->flags & US_INTERNET))) {
 			user->flags |= US_INTERNET;
-		} else {
+		}
+		else {
 			user->flags &= ~US_INTERNET;
 		}
 		if (boolprompt("Ask user to register again", !(user->flags & US_REGIS))) {
 			user->flags &= ~US_REGIS;
-		} else {
+		}
+		else {
 			user->flags |= US_REGIS;
 		}
 		user->timescalled = intprompt("Times called", user->timescalled, 0, INT_MAX);
@@ -247,8 +250,7 @@ void edituser(CtdlIPC * ipc, int cmd)
  * yes or no.  Yes=1 and No=0, unless 'backwards' is set to a nonzero value
  * in which case No=1 and Yes=0.
  */
-int set_attr(CtdlIPC * ipc, unsigned int sval, char *prompt, unsigned int sbit, int backwards)
-{
+int set_attr(CtdlIPC * ipc, unsigned int sval, char *prompt, unsigned int sbit, int backwards) {
 	int a;
 	int temp;
 
@@ -261,7 +263,8 @@ int set_attr(CtdlIPC * ipc, unsigned int sval, char *prompt, unsigned int sbit, 
 
 	if (backwards) {
 		scr_printf("%3s", ((temp & sbit) ? "No" : "Yes"));
-	} else {
+	}
+	else {
 		scr_printf("%3s", ((temp & sbit) ? "Yes" : "No"));
 	}
 
@@ -287,8 +290,7 @@ int set_attr(CtdlIPC * ipc, unsigned int sval, char *prompt, unsigned int sbit, 
  * modes are:  0 - .EC command, 1 - .EC for new user,
  *             2 - toggle Xpert mode  3 - toggle floor mode
  */
-void enter_config(CtdlIPC * ipc, int mode)
-{
+void enter_config(CtdlIPC * ipc, int mode) {
 	char buf[SIZ];
 	struct ctdluser *user = NULL;
 	int r;			/* IPC response code */
@@ -347,7 +349,8 @@ void enter_config(CtdlIPC * ipc, int mode)
 		if (user->flags & US_EXPERT) {
 			user->flags ^= US_EXPERT;
 			scr_printf("Expert mode now OFF\n");
-		} else {
+		}
+		else {
 			user->flags |= US_EXPERT;
 			scr_printf("Expert mode now ON\n");
 		}
@@ -357,7 +360,8 @@ void enter_config(CtdlIPC * ipc, int mode)
 		if (user->flags & US_FLOORS) {
 			user->flags ^= US_FLOORS;
 			scr_printf("Floor mode now OFF\n");
-		} else {
+		}
+		else {
 			user->flags |= US_FLOORS;
 			scr_printf("Floor mode now ON\n");
 		}
@@ -374,8 +378,7 @@ void enter_config(CtdlIPC * ipc, int mode)
  * getstring()  -  get a line of text from a file
  *		   ignores lines beginning with "#"
  */
-int getstring(FILE * fp, char *string)
-{
+int getstring(FILE * fp, char *string) {
 	int a, c;
 	do {
 		strcpy(string, "");
@@ -395,8 +398,7 @@ int getstring(FILE * fp, char *string)
 
 
 /* Searches for patn in search string */
-int pattern(char *search, char *patn)
-{
+int pattern(char *search, char *patn) {
 	int a, b, len;
 
 	len = strlen(patn);
@@ -409,8 +411,7 @@ int pattern(char *search, char *patn)
 }
 
 
-void strproc(char *string)
-{
+void strproc(char *string) {
 	int a;
 
 	if (IsEmptyStr(string))
@@ -457,8 +458,7 @@ void strproc(char *string)
 }
 
 
-void progress(CtdlIPC * ipc, unsigned long curr, unsigned long cmax)
-{
+void progress(CtdlIPC * ipc, unsigned long curr, unsigned long cmax) {
 	static char dots[] = "**************************************************";
 	char dots_printed[51];
 	char fmt[42];
@@ -466,7 +466,8 @@ void progress(CtdlIPC * ipc, unsigned long curr, unsigned long cmax)
 
 	if (curr >= cmax) {
 		scr_printf("\r%79s\r", "");
-	} else {
+	}
+	else {
 		/* a will be range 0-50 rather than 0-100 */
 		a = (curr * 50) / cmax;
 		sprintf(fmt, "[%%s%%%lds] %%3ld%%%% %%10ld/%%10ld\r", 50 - a);
@@ -482,8 +483,7 @@ void progress(CtdlIPC * ipc, unsigned long curr, unsigned long cmax)
  * NOT the same locate_host() in locate_host.c.  This one just does a
  * 'who am i' to try to discover where the user is...
  */
-void locate_host(CtdlIPC * ipc, char *hbuf)
-{
+void locate_host(CtdlIPC * ipc, char *hbuf) {
 	FILE *who = (FILE *) popen("who am i", "r");
 	if (who == NULL) {
 		strcpy(hbuf, ipc->ServInfo.fqdn);
@@ -497,8 +497,7 @@ void locate_host(CtdlIPC * ipc, char *hbuf)
 /*
  * miscellaneous server commands (testing, etc.)
  */
-void misc_server_cmd(CtdlIPC * ipc, char *cmd)
-{
+void misc_server_cmd(CtdlIPC * ipc, char *cmd) {
 	char buf[SIZ];
 
 	CtdlIPC_chat_send(ipc, cmd);
@@ -525,8 +524,7 @@ void misc_server_cmd(CtdlIPC * ipc, char *cmd)
 /*
  * compute the checksum of a file
  */
-int file_checksum(char *filename)
-{
+int file_checksum(char *filename) {
 	int cksum = 0;
 	int ch;
 	FILE *fp;
@@ -549,8 +547,7 @@ int file_checksum(char *filename)
 /*
  * nuke a directory and its contents
  */
-int nukedir(char *dirname)
-{
+int nukedir(char *dirname) {
 	DIR *dp;
 	struct dirent *d;
 	char filename[SIZ];

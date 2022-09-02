@@ -15,8 +15,7 @@
 
 #define PWFILENAME "%s/.citadel.passwords"
 
-void determine_pwfilename(char *pwfile, size_t n)
-{
+void determine_pwfilename(char *pwfile, size_t n) {
 	struct passwd *p;
 
 	p = getpwuid(getuid());
@@ -30,8 +29,7 @@ void determine_pwfilename(char *pwfile, size_t n)
  * Check the password file for a host/port match; if found, stuff the user
  * name and password into the user/pass buffers
  */
-void get_stored_password(char *host, char *port, char *username, char *password)
-{
+void get_stored_password(char *host, char *port, char *username, char *password) {
 
 	char pwfile[PATH_MAX];
 	FILE *fp;
@@ -70,8 +68,7 @@ void get_stored_password(char *host, char *port, char *username, char *password)
 /*
  * Set (or clear) stored passwords.
  */
-void set_stored_password(char *host, char *port, char *username, char *password)
-{
+void set_stored_password(char *host, char *port, char *username, char *password) {
 
 	char pwfile[PATH_MAX];
 	FILE *fp, *oldfp;
@@ -118,13 +115,13 @@ void set_stored_password(char *host, char *port, char *username, char *password)
 /*
  * Set the password if the user wants to, clear it otherwise 
  */
-void offer_to_remember_password(CtdlIPC * ipc, char *host, char *port, char *username, char *password)
-{
+void offer_to_remember_password(CtdlIPC * ipc, char *host, char *port, char *username, char *password) {
 
 	if (rc_remember_passwords) {
 		if (boolprompt("Remember username/password for this site", 0)) {
 			set_stored_password(host, port, username, password);
-		} else {
+		}
+		else {
 			set_stored_password(host, port, "", "");
 		}
 	}

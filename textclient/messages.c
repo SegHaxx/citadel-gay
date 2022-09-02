@@ -64,7 +64,7 @@ extern CtdlIPC *ipc_for_signal_handlers;	/* KLUDGE cover your eyes */
 int num_urls = 0;
 char urls[MAXURLS][SIZ];
 char imagecmd[SIZ];
-int has_images = 0;				/* Current msg has images */
+int has_images = 0;		/* Current msg has images */
 struct parts *last_message_parts = NULL;	/* Parts from last msg */
 
 
@@ -342,34 +342,34 @@ void free_parts(struct parts *p) {
  * We can do this "in place" because the converted string will always be smaller than the source string.
  */
 void mini_2047_decode(char *s) {
-	if (!s) {						// no null strings allowed!
+	if (!s) {		// no null strings allowed!
 		return;
 	}
 
-	char *qstart = strstr(s, "=?UTF-8?Q?");			// Must start with this string
+	char *qstart = strstr(s, "=?UTF-8?Q?");	// Must start with this string
 	if (!qstart) {
 		return;
 	}
 
-	char *qend = strstr(qstart+10, "?=");			// Must end with this string
+	char *qend = strstr(qstart + 10, "?=");	// Must end with this string
 	if (!qend) {
 		return;
 	}
 
-	if (qend <= qstart) {					// And there must be something in between them.
+	if (qend <= qstart) {	// And there must be something in between them.
 		return;
 	}
 
 	// The string has qualified for conversion.
 
-	strcpy(qend, "");					// Strip the trailer
-	strcpy(qstart, &qstart[10]);				// Strip the header
+	strcpy(qend, "");	// Strip the trailer
+	strcpy(qstart, &qstart[10]);	// Strip the header
 
-	char *r = qstart;					// Pointer to where in the string we're reading
-	char *w = s;						// Pointer to where in the string we're writing
+	char *r = qstart;	// Pointer to where in the string we're reading
+	char *w = s;		// Pointer to where in the string we're writing
 
-	while(*r) {						// Loop through the source string
-		if (r[0] == '=') {				// "=" means read a hex character
+	while (*r) {		// Loop through the source string
+		if (r[0] == '=') {	// "=" means read a hex character
 			char ch[3];
 			ch[0] = r[1];
 			ch[1] = r[2];
@@ -380,29 +380,28 @@ void mini_2047_decode(char *s) {
 			r += 3;
 			++w;
 		}
-		else if (r[0] == '_') {				// "_" is a space
+		else if (r[0] == '_') {	// "_" is a space
 			w[0] = ' ';
 			++r;
 			++w;
 		}
-		else {						// anything else pass through literally
+		else {		// anything else pass through literally
 			w[0] = r[0];
 			++r;
 			++w;
 		}
 	}
-	w[0] = 0;						// null terminate
+	w[0] = 0;		// null terminate
 }
 
 
 /*
  * Read a message from the server
  */
-int read_message(CtdlIPC *ipc,
-		long num,	/* message number */
-		int pagin,	/* 0 = normal read, 1 = read with pagination, 2 = header */
-		FILE *dest	/* Destination file, NULL for screen */
-) {
+int read_message(CtdlIPC * ipc, long num,	/* message number */
+		 int pagin,	/* 0 = normal read, 1 = read with pagination, 2 = header */
+		 FILE * dest	/* Destination file, NULL for screen */
+    ) {
 	char buf[SIZ];
 	char now[256];
 	int format_type = 0;
@@ -484,7 +483,8 @@ int read_message(CtdlIPC *ipc,
 	if (rc_display_message_numbers) {
 		if (dest) {
 			fprintf(dest, "[#%s] ", message->msgid);
-		} else {
+		}
+		else {
 			color(DIM_WHITE);
 			scr_printf("[");
 			color(BRIGHT_WHITE);
@@ -683,7 +683,8 @@ int read_message(CtdlIPC *ipc,
 				}
 				if (dest) {
 					fprintf(dest, "%s\n", lineptr);
-				} else {
+				}
+				else {
 					scr_printf("%s\n", lineptr);
 				}
 			}
@@ -698,7 +699,8 @@ int read_message(CtdlIPC *ipc,
 	if (!final_line_is_blank) {
 		if (dest) {
 			fprintf(dest, "\n");
-		} else {
+		}
+		else {
 			scr_printf("\n");
 			fr = sigcaught;
 		}
@@ -814,15 +816,10 @@ void replace_string(char *filename, long int startpos) {
 
 
 // Function to begin composing a new message
-int client_make_message(CtdlIPC * ipc,
-			char *filename,		// temporary file name
+int client_make_message(CtdlIPC * ipc, char *filename,	// temporary file name
 			char *recipient,	// NULL if it's not mail
-			int is_anonymous,
-			int format_type,
-			int mode,
-			char *subject,		// buffer to store subject line
-			int subject_required
-) {
+			int is_anonymous, int format_type, int mode, char *subject,	// buffer to store subject line
+			int subject_required) {
 	FILE *fp;
 	int a, b, e_ex_code;
 	long beg;
@@ -844,7 +841,7 @@ int client_make_message(CtdlIPC * ipc,
 	if (room_flags & QR_ANONONLY && !recipient) {
 		snprintf(header, sizeof header, " ****");
 	}
-	 else {
+	else {
 		snprintf(header, sizeof header, " %s from %s", datestr, (is_anonymous ? "[anonymous]" : fullname));
 		if (!IsEmptyStr(recipient)) {
 			size_t tmp = strlen(header);
@@ -884,7 +881,7 @@ int client_make_message(CtdlIPC * ipc,
 		}
 	}
 
-ME1:	switch (mode) {
+      ME1:switch (mode) {
 
 	case 0:
 		fp = fopen(filename, "r+");
@@ -944,7 +941,7 @@ ME1:	switch (mode) {
 		break;
 	}
 
-MECR:	if (mode >= 2) {
+      MECR:if (mode >= 2) {
 		if (file_checksum(filename) == cksum) {
 			scr_printf("*** Aborted message.\n");
 			e_ex_code = 1;
@@ -956,14 +953,8 @@ MECR:	if (mode >= 2) {
 	}
 
 	b = keymenu("Entry command (? for options)",
-		"<A>bort|"
-		"<C>ontinue|"
-		"<S>ave message|"
-		"<P>rint formatted|"
-		"add s<U>bject|"
-		"<R>eplace string|"
-		"<H>old message"
-	);
+		    "<A>bort|"
+		    "<C>ontinue|" "<S>ave message|" "<P>rint formatted|" "add s<U>bject|" "<R>eplace string|" "<H>old message");
 
 	if (b == 'a')
 		goto MEABT;
@@ -1005,13 +996,13 @@ MECR:	if (mode >= 2) {
 		goto MECR;
 	}
 
-MEFIN:	return (0);
+      MEFIN:return (0);
 
-MEABT:	scr_printf("Are you sure? ");
+      MEABT:scr_printf("Are you sure? ");
 	if (yesno() == 0) {
 		goto ME1;
 	}
-MEABT2:	unlink(filename);
+      MEABT2:unlink(filename);
 	return (2);
 }
 
@@ -1058,7 +1049,7 @@ void break_big_lines(char *msg) {
 int entmsg(CtdlIPC * ipc, int is_reply,	/* nonzero if this was a <R>eply command */
 	   int c,		/* mode */
 	   int masquerade	/* prompt for a non-default display name? */
-) {
+    ) {
 	char buf[SIZ];
 	int a, b;
 	int need_recp = 0;
@@ -1085,7 +1076,7 @@ int entmsg(CtdlIPC * ipc, int is_reply,	/* nonzero if this was a <R>eply command
 			scr_printf("If you want to leave a comment or reply to a comment, use the '<R>eply' command.\n");
 			scr_printf("Do you really want to create a new blog post? ");
 			if (!yesno()) {
-				return(1);
+				return (1);
 			}
 		}
 	}
@@ -1460,7 +1451,8 @@ void image_view(CtdlIPC * ipc, unsigned long msg) {
 				r = CtdlIPCAttachmentDownload(ipc, msg, ptr->number, &file, progress, buf);
 				if (r / 100 != 2) {
 					scr_printf("%s\n", buf);
-				} else {
+				}
+				else {
 					size_t len;
 
 					len = (size_t) extract_long(buf, 0);
@@ -1484,11 +1476,10 @@ void image_view(CtdlIPC * ipc, unsigned long msg) {
 /*
  * Read the messages in the current room
  */
-void readmsgs(CtdlIPC *ipc,
-	enum MessageList c,		// see listing in citadel_ipc.h
-	enum MessageDirection rdir,	// 1=Forward (-1)=Reverse
-	int q				// Number of msgs to read (if c==3)
-) {
+void readmsgs(CtdlIPC * ipc, enum MessageList c,	// see listing in citadel_ipc.h
+	      enum MessageDirection rdir,	// 1=Forward (-1)=Reverse
+	      int q		// Number of msgs to read (if c==3)
+    ) {
 	int a, e, f, g, start;
 	int savedpos;
 	int hold_sw = 0;
@@ -1570,7 +1561,7 @@ void readmsgs(CtdlIPC *ipc,
 		if ((quotflag) || (arcflag)) {
 			screenwidth = hold_sw;
 		}
-RMSGREAD:
+	      RMSGREAD:
 		highest_msg_read = msg_arr[a];
 		if (quotflag) {
 			fclose(dest);
@@ -1628,10 +1619,13 @@ RMSGREAD:
 			do {
 				e = (inkey() & 127);
 				e = tolower(e);
+
 /* return key same as <N> */ if (e == 10)
 					e = 'n';
+
 /* space key same as <N> */ if (e == 32)
 					e = 'n';
+
 /* del/move for aides only */
 				if ((!is_room_aide)
 				    && ((room_flags & QR_MAILBOX) == 0)
@@ -1640,13 +1634,16 @@ RMSGREAD:
 					if ((e == 'd') || (e == 'm'))
 						e = 0;
 				}
+
 /* print only if available */
 				if ((e == 'p') && (IsEmptyStr(printcmd)))
 					e = 0;
+
 /* can't file if not allowed */
 				if ((e == 'f')
 				    && (rc_allow_attachments == 0))
 					e = 0;
+
 /* link only if browser avail*/
 				if ((e == 'u')
 				    && (IsEmptyStr(rc_url_cmd)))

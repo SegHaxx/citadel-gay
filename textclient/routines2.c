@@ -137,8 +137,7 @@ void entregis(CtdlIPC * ipc) {
 /*
  * make all messages old in current room
  */
-void updatels(CtdlIPC * ipc)
-{
+void updatels(CtdlIPC * ipc) {
 	char buf[256];
 	int r;			/* IPC response code */
 
@@ -151,8 +150,7 @@ void updatels(CtdlIPC * ipc)
 /*
  * only make messages old in this room that have been read
  */
-void updatelsa(CtdlIPC * ipc)
-{
+void updatelsa(CtdlIPC * ipc) {
 	char buf[256];
 	int r;			/* IPC response code */
 
@@ -165,8 +163,7 @@ void updatelsa(CtdlIPC * ipc)
 /*
  * client-based uploads (for users with their own clientware)
  */
-void cli_upload(CtdlIPC * ipc)
-{
+void cli_upload(CtdlIPC * ipc) {
 	char flnm[PATH_MAX];
 	char desc[151];
 	char buf[256];
@@ -215,8 +212,7 @@ void cli_upload(CtdlIPC * ipc)
 /*
  * Function used for various image upload commands
  */
-void cli_image_upload(CtdlIPC * ipc, char *keyname)
-{
+void cli_image_upload(CtdlIPC * ipc, char *keyname) {
 	char flnm[PATH_MAX];
 	char buf[256];
 	int r;
@@ -242,8 +238,7 @@ void cli_image_upload(CtdlIPC * ipc, char *keyname)
 /*
  * protocol-based uploads (Xmodem, Ymodem, Zmodem)
  */
-void upload(CtdlIPC * ipc, int c)
-{				/* c = upload mode */
+void upload(CtdlIPC * ipc, int c) {	/* c = upload mode */
 	char flnm[PATH_MAX];
 	char desc[151];
 	char buf[256];
@@ -314,9 +309,10 @@ void upload(CtdlIPC * ipc, int c)
 			exit(1);
 		}
 	}
-	else do {
-		b = ka_wait(&a);
-	} while ((b != xfer_pid) && (b != (-1)));
+	else
+		do {
+			b = ka_wait(&a);
+		} while ((b != xfer_pid) && (b != (-1)));
 	stty_ctdl(0);
 
 	if (a != 0) {
@@ -345,8 +341,7 @@ void upload(CtdlIPC * ipc, int c)
 /* 
  * validate a user (returns 0 for successful validation, nonzero if quitting)
  */
-int val_user(CtdlIPC * ipc, char *user, int do_validate)
-{
+int val_user(CtdlIPC * ipc, char *user, int do_validate) {
 	int a;
 	char cmd[256];
 	char buf[256];
@@ -392,7 +387,8 @@ int val_user(CtdlIPC * ipc, char *user, int do_validate)
  * Webcit limits to 6 as does the code here but there are 7 in axdefs.h
  */
 		scr_printf("Current access level: %d (%s)\n", ax, axdefs[ax]);
-	} else {
+	}
+	else {
 		scr_printf("%s\n%s\n", user, &cmd[4]);
 	}
 	if (resp)
@@ -429,8 +425,7 @@ int val_user(CtdlIPC * ipc, char *user, int do_validate)
 /*
  * Validate new users
  */
-void validate(CtdlIPC * ipc)
-{
+void validate(CtdlIPC * ipc) {
 	char cmd[256];
 	char buf[256];
 	int finished = 0;
@@ -451,8 +446,7 @@ void validate(CtdlIPC * ipc)
 }
 
 
-void subshell(void)
-{
+void subshell(void) {
 	int a, b;
 
 	stty_ctdl(SB_RESTORE);
@@ -473,8 +467,7 @@ void subshell(void)
 /*
  * <.A>ide <F>ile <D>elete command
  */
-void deletefile(CtdlIPC * ipc)
-{
+void deletefile(CtdlIPC * ipc) {
 	char filename[32];
 	char buf[256];
 
@@ -489,8 +482,7 @@ void deletefile(CtdlIPC * ipc)
 /*
  * <.A>ide <F>ile <M>ove command
  */
-void movefile(CtdlIPC * ipc)
-{
+void movefile(CtdlIPC * ipc) {
 	char filename[64];
 	char newroom[ROOMNAMELEN];
 	char buf[256];
@@ -507,8 +499,7 @@ void movefile(CtdlIPC * ipc)
 /* 
  * list of users who have filled out a bio
  */
-void list_bio(CtdlIPC * ipc)
-{
+void list_bio(CtdlIPC * ipc) {
 	char buf[256];
 	char *resp = NULL;
 	int pos = 1;

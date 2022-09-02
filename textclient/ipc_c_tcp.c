@@ -16,21 +16,18 @@
 
 /* Note that some of these functions may not work with multiple instances. */
 
-static void (*deathHook) (void) = NULL;
-int (*error_printf) (char *s, ...) = (int (*)(char *, ...)) printf;
+static void (*deathHook)(void) = NULL;
+int (*error_printf)(char *s, ...) =(int(*)(char *, ...)) printf;
 
-void setIPCDeathHook(void (*hook) (void))
-{
+void setIPCDeathHook(void (*hook)(void)) {
 	deathHook = hook;
 }
 
-void setIPCErrorPrintf(int (*func) (char *s, ...))
-{
+void setIPCErrorPrintf(int (*func)(char *s, ...)) {
 	error_printf = func;
 }
 
-void connection_died(CtdlIPC * ipc, int using_ssl)
-{
+void connection_died(CtdlIPC * ipc, int using_ssl) {
 	if (deathHook != NULL) {
 		deathHook();
 	}
@@ -44,7 +41,8 @@ void connection_died(CtdlIPC * ipc, int using_ssl)
 		fprintf(stderr, "Last error: %s\n", ERR_reason_error_string(ERR_get_error()));
 		SSL_free(ipc->ssl);
 		ipc->ssl = NULL;
-	} else
+	}
+	else
 #endif
 		fprintf(stderr, "Last error: %s\n", strerror(errno));
 
