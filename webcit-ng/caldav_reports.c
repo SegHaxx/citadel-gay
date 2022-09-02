@@ -160,8 +160,9 @@ void caldav_response(struct http_transaction *h, struct ctdlsession *c, StrBuf *
 	}
 
 	char *unescaped_euid = strdup(euid);
-	if (!unescaped_euid)
+	if (!unescaped_euid) {
 		return;
+	}
 	unescape_input(unescaped_euid);
 
 	StrBufAppendPrintf(ReportOut, "<D:response>");
@@ -240,8 +241,13 @@ void caldav_report(struct http_transaction *h, struct ctdlsession *c) {
 	// Now begin the REPORT.
 	syslog(LOG_DEBUG, "CalDAV REPORT type is: %d", crp.report_type);
 	StrBuf *ReportOut = NewStrBuf();
-	StrBufAppendPrintf(ReportOut, "<?xml version=\"1.0\" encoding=\"utf-8\"?>"
-			   "<D:multistatus " "xmlns:D=\"DAV:\" " "xmlns:C=\"urn:ietf:params:xml:ns:caldav\"" ">");
+	StrBufAppendPrintf(ReportOut,
+		"<?xml version=\"1.0\" encoding=\"utf-8\"?>"
+		"<D:multistatus "
+		"xmlns:D=\"DAV:\" "
+		"xmlns:C=\"urn:ietf:params:xml:ns:caldav\""
+		">"
+	);
 
 	if (crp.Hrefs != NULL) {	// Output all qualifying calendar items!
 		StrBuf *ThisHref = NewStrBuf();

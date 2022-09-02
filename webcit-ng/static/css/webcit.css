@@ -12,10 +12,12 @@
 
 .ctdl-grid-banner-item {		/* These grid items will be referenced in the grid container */
 	grid-area: header;
+	background-color: #282a35;
 }
 
 .ctdl-grid-navbar-item {
 	grid-area: menu;
+	background-color: GhostWhite;
 }
 
 .ctdl-grid-main-item {
@@ -26,30 +28,37 @@
 
 .ctdl-main-grid-container {			/* This is so mind-bogglingly simple I can't believe it works */
 	display: grid;
+	grid-template-rows: 100px auto;
+	grid-template-columns: 200px auto;
 	grid-template-areas:
-		'header header header header header header'
-		'menu main main main main main'
-		'menu main main main main main'
-		'menu main main main main main'
-		'menu main main main main main'
-		'menu main main main main main'
-		'menu main main main main main'
-		'menu main main main main main';
+		'header header'
+		'menu main';
 	gap: 3px;
-	background-color: #456789;	/* This is the color of the lines between the boxes */
+	background-color: #456789;	/* This is the color of the lines between the boxes, and also the boxes themselves if not overridden */
 	padding: 0;			/* This is the border around the edges of the screen */
 	width: 100vw;
 	height: 100vh;
 }
 
 .ctdl-main-grid-container > div {
-	background-color: #DDEEFF;
 	text-align: left;
 	padding: 10px 0;
 }
 
+.ctdl-banner-buttons li {		/* Buttons that appear in the top banner are list items that reference this class */
+	float: left;
+	display: block;
+	padding: 8px;
+	background-color: #282a35;
+	color: white;
+}
+
+.ctdl-banner-buttons li:hover {		/* Buttons that appear in the top banner also reference this class when hovered over */
+	background-color: black;
+}
+
 html,body,h1,h2,h3,h4,h5 {
-	font-family: verdana, sans-serif
+	font-family: sans-serif
 }
 
 .ctdl-modal {
@@ -64,7 +73,7 @@ html,body,h1,h2,h3,h4,h5 {
 	justify-content: center;
 	align-items: center;
 	padding: 10px;
-	background-color: #DDDDDD;
+	background-color: #BBBBBB;
 }
 
 .ctdl-sidebar-class button {
