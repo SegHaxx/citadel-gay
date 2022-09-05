@@ -17,7 +17,7 @@
 
 .ctdl-grid-navbar-item {
 	grid-area: menu;
-	background-color: GhostWhite;
+	background-color: #f0f0f0;
 }
 
 .ctdl-grid-main-item {
@@ -79,8 +79,13 @@ html,body,h1,h2,h3,h4,h5 {
 .ctdl-sidebar-class button {
 	width: 100%;
 	text-align: left;
-	background-color: #888888;
-	color: #FFFFFF;
+	border-color: #f0f0f0;
+	background-color: #f0f0f0;
+	color: #000000;
+}
+
+.ctdl-sidebar-class button:hover {
+	background-color: #ffffff;
 }
 
 .ctdl-grid-banner-item button {
