@@ -370,25 +370,22 @@ function open_reply_box(parent_div, is_quoted, references, msgid) {
 	+ "</div>"							// end content
 	+ "</div>"							// end wrapper
 
-	+ "<div id=\"forum_url_entry_box\" class=\"w3-modal\">"		// begin URL entry modal
-	+ "	<div class=\"w3-modal-content w3-animate-top w3-card-4\">"
-	+ "		<header class=\"w3-container w3-blue\"> "
-	+ "			<p><span>URL:</span></p>"
-	+ "		</header>"
-	+ "		<div class=\"w3-container w3-blue\">"
-	+ "			<input id=\"forum_txtFormatUrl\" placeholder=\"http://\" style=\"width:100%\">"
-	+ "		</div>"
-	+ "		<footer class=\"w3-container w3-blue\">"
-	+ "			<p><span class=\"ctdl-msg-button\"><a href=\"javascript:forum_close_urlbox(true);\">"
-	+ "				<i class=\"fa fa-check\" style=\"color:green\"></i> "
-	+ 				_("Save")
-	+ 			"</a></span>"
-	+ "			<span class=\"ctdl-msg-button\"><a href=\"javascript:forum_close_urlbox(false);\">"
-	+ "				<i class=\"fa fa-trash\" style=\"color:red\"></i> "
-	+ 				_("Cancel")
-	+ 			"</a></span></p>"
-	+ "		</footer>"
-	+ "		</div>"
+	+ "<div id=\"forum_url_entry_box\" class=\"ctdl-modal ctdl-forum-urlmodal\">"		// begin URL entry modal
+	+ "	<div class=\"ctdl-modal-header\">" 
+	+ "		<p>URL:</p>"
+	+ "	</div>"
+	+ "	<div class=\"ctdl-modal-main\">"
+	+ "		<input id=\"ctdl-forum-urlbox\" placeholder=\"http://\" style=\"width:100%\">"
+	+ "	</div>"
+	+ "	<div class=\"ctdl-modal-footer\">"
+	+ "		<p><span class=\"ctdl-msg-button\"><a href=\"javascript:forum_close_urlbox(true);\">"
+	+ "			<i class=\"fa fa-check\" style=\"color:green\"></i> "
+	+ 			_("Save")
+	+ 		"</a></span>"
+	+ "		<span class=\"ctdl-msg-button\"><a href=\"javascript:forum_close_urlbox(false);\">"
+	+ "			<i class=\"fa fa-trash\" style=\"color:red\"></i> "
+	+ 			_("Cancel")
+	+ 		"</a></span></p>"
 	+ "	</div>"
 	+ "	<input id=\"forum_selection_start\" style=\"display:none\"></input>"	// hidden fields
 	+ "	<input id=\"forum_selection_end\" style=\"display:none\"></input>"	// to store selection range
@@ -496,13 +493,13 @@ function forum_close_urlbox(do_save) {
 		var start_replace = document.getElementById("forum_selection_start").value;	// use saved selection range
 		var end_replace = document.getElementById("forum_selection_end").value;
 		new_text = tag.innerHTML.substring(0, start_replace)
-			+ "<a href=\"" + document.getElementById("forum_txtFormatUrl").value + "\">"
+			+ "<a href=\"" + document.getElementById("ctdl-forum-urlbox").value + "\">"
 			+ tag.innerHTML.substring(start_replace, end_replace)
 			+ "</a>"
 			+ tag.innerHTML.substring(end_replace);
 		tag.innerHTML = new_text;
 	}
-	document.getElementById("forum_txtFormatUrl").value = "";				// clear url box for next time
+	document.getElementById("ctdl-forum-urlbox").value = "";				// clear url box for next time
 	document.getElementById("forum_url_entry_box").style.display = "none";
 }
 

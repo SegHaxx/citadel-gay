@@ -17,7 +17,7 @@
 
 .ctdl-grid-navbar-item {
 	grid-area: menu;
-	background-color: #f0f0f0;
+	background-color: ghostwhite;
 }
 
 .ctdl-grid-main-item {
@@ -51,10 +51,15 @@
 	padding: 8px;
 	background-color: #282a35;
 	color: white;
+	font-size: 1.25vw;
 }
 
 .ctdl-banner-buttons li:hover {		/* Buttons that appear in the top banner also reference this class when hovered over */
 	background-color: black;
+}
+
+.ctdl-banner-buttons a {
+	color: white;
 }
 
 html,body,h1,h2,h3,h4,h5 {
@@ -70,18 +75,35 @@ html,body,h1,h2,h3,h4,h5 {
 	transform: translate(-50%, -50%);
 	border-style: outset;
 	border-width: 3px;
+	border-color: black;
 	justify-content: center;
 	align-items: center;
 	padding: 10px;
-	background-color: #BBBBBB;
+	background-color: GhostWhite;
+}
+
+.ctdl-modal-header {
+	background-color: GhostWhite;
+	padding: 10px;
+}
+
+.ctdl-modal-main {
+	padding: 10px;
+}
+
+.ctdl-modal-footer {
+	background-color: GhostWhite;
+	padding: 10px;
 }
 
 .ctdl-sidebar-class button {
 	width: 100%;
+	padding: 10px;
 	text-align: left;
-	border-color: #f0f0f0;
-	background-color: #f0f0f0;
+	border-color: GhostWhite;
+	background-color: #GhostWhite;;
 	color: #000000;
+	font-size: 1vw;
 }
 
 .ctdl-sidebar-class button:hover {
@@ -120,7 +142,9 @@ html,body,h1,h2,h3,h4,h5 {
 .ctdl-msg-header {
 	overflow: hidden;
 	padding: 4px;
+	min-height: 35px;
 	background-color: GhostWhite;
+	margin-bottom: 10px;	/* this is the vertical space between the header and the message text */
 }
 
 .ctdl-msg-header-info {
@@ -143,12 +167,21 @@ html,body,h1,h2,h3,h4,h5 {
 	border-color: black;
 }
 
+.ctdl-msg-button a {
+	color: black;
+}
+
 .ctdl-msg-button:hover {
 	background-color: #123456;
 	color: GhostWhite;
 	transition: .3s;
 	border-color: #123456;
 }
+
+.ctdl-msg-button a:hover {
+	color: white;
+}
+
 
 .ctdl-msg-button a {
 	text-decoration: none;
@@ -228,6 +261,10 @@ blockquote blockquote blockquote blockquote blockquote {
 blockquote pre {
 	margin-left: 1%;
 	margin-right: 1%;
+}
+
+.ctdl-forum-urlmodal {
+	width: 75%;
 }
 
 .ctdl-roomlist-top {
