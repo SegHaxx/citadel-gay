@@ -42,7 +42,7 @@
 
 .ctdl-main-grid-container > div {
 	text-align: left;
-	padding: 10px 0;
+	padding: 0;
 }
 
 .ctdl-banner-buttons li {		/* Buttons that appear in the top banner are list items that reference this class */
@@ -115,7 +115,7 @@ html,body,h1,h2,h3,h4,h5 {
 	color: #FFFFFF;
 }
 
-.ctdl-msg-reading-pane {
+.ctdl-forum-reading-pane {
 	background-color: #456789;
 }
 
@@ -313,21 +313,33 @@ blockquote pre {
 .ctdl-roomlist-mtime {
 }
 
+.ctdl-mailbox-grid-container {
+	display: grid;
+	position: relative;
+	overflow: hidden;
+	width: 100%;
+	height: 100%;
+}
+
+.ctdl-mailbox-pane {		/* list of messages when in mailbox view */
+	height: 20vw;
+	overflow-x: hidden;
+	overflow-y: scroll;
+	background-color: #DDDDDD;
+}
+
 .ctdl-mailbox-heading {
 	position: sticky;
 	top: 0;
 	z-index: 6;
 }
 
-.ctdl-mailbox-pane {		/* list of messages when in mailbox view */
-	width: 100%;
-	height: 20em;
+.ctdl-mailbox-reading-pane {		/* message reading pane when in mailbox view */
+	height: 80vw;
 	overflow-x: hidden;
 	overflow-y: scroll;
-}
-
-.ctdl-reading-pane {		/* message reading/composing pane when in mailbox view */
-	overflow: auto;
+	background-color: GhostWhite;
+	padding: 5px;
 }
 
 .ctdl-compose-mail {		/* mail composition window */
@@ -336,4 +348,21 @@ blockquote pre {
 	overflow: auto;
 	border: 5px solid red;
 	background-color: yellow;
+}
+
+.ctdl-login-screen-grid-container {
+	display: grid;
+	grid-template-columns: auto auto;
+}
+
+.ctdl-login-screen-grid-item {
+	padding: 20px;
+	font-size: 1.25em;
+	vertical-align: middle;
+}
+
+.ctdl-login-screen-grid-item input {
+	height: 100%;
+	border: none;
+	font-size: 1.25em;
 }

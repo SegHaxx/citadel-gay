@@ -23,7 +23,7 @@ function render_room_view(gt_msg, lt_msg) {
 		// The "forum" module displays rooms with the "VIEW_BBS" view as classic style web forums.
 		case views.VIEW_BBS:
 			document.getElementById("ctdl-sidebar-button-forums").classList.add("w3-blue");
-			document.getElementById("ctdl-main").innerHTML = "<div id=\"ctdl-mrp\" class=\"ctdl-msg-reading-pane\"></div>";
+			document.getElementById("ctdl-main").innerHTML = "<div id=\"ctdl-mrp\" class=\"ctdl-forum-reading-pane\"></div>";
 			forum_readmessages("ctdl-mrp", gt_msg, lt_msg);
 			break;
 

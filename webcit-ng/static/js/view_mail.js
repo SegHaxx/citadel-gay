@@ -100,7 +100,7 @@ function select_message(msgnum) {
 	// display the message if it isn't already displayed
 	if (selected_message != msgnum) {
 		selected_message = msgnum;
-		mail_display_message(msgnum, document.getElementById("ctdl-reading-pane"));
+		mail_display_message(msgnum, document.getElementById("ctdl-mailbox-reading-pane"));
 	}
 }
 
@@ -130,8 +130,10 @@ function mail_display() {
 	document.getElementById("ctdl-newmsg-button").style.display = "block";
 
 	document.getElementById("ctdl-main").innerHTML
-		= "<div id=\"ctdl-mailbox-pane\" class=\"ctdl-mailbox-pane\"></div>"
-		+ "<div id=\"ctdl-reading-pane\" class=\"ctdl-reading-pane\"></div>"
+		= "<div id=\"ctdl-mailbox-grid-container\" class=\"ctdl-mailbox-grid-container\">"
+		+ "<div id=\"ctdl-mailbox-pane\" class=\"ctdl-mailbox-pane\">Loading...</div>"
+		+ "<div id=\"ctdl-mailbox-reading-pane\" class=\"ctdl-mailbox-reading-pane\">Lorem ipsum etc. etc.</div>"
+		+ "</div>"
 	;
 
 	render_mailbox_display();

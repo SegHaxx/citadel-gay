@@ -15,19 +15,21 @@ function display_login_screen(any_message) {
 				<span>${any_message}</span>
 		</div>
 
-		<div class="ctdl-modal-main">
-			<label><b>${_("User name:")}</b></label>
-			<input type="text" id="username" required>
-			<br>
-			<label><b>${_("Password:")}</b></label>
-			<input type="password" id="password" required>
-			<br>
-			<input type="checkbox" checked="checked"> Remember me
-		</div>
-
-		<div class="ctdl-modal-footer">
-			<button onClick="javascript:login_button()">${_("Log in")}</button>
-			<button type="button">Cancel</button>
+		<div class="ctdl-login-screen-grid-container">
+			<div class="ctdl-login-screen-grid-item"><label><b>${_("User name:")}</b></label></div>
+			<div class="ctdl-login-screen-grid-item"><input type="text" id="username" required></div>
+			<div class="ctdl-login-screen-grid-item"><label><b>${_("Password:")}</b></label></div>
+			<div class="ctdl-login-screen-grid-item"><input type="password" id="password" required></div>
+			<div class="ctdl-login-screen-grid-item"></div>
+			<div class="ctdl-login-screen-grid-item">
+				<input type="checkbox" checked="checked">
+				Remember me
+			</div>
+			<div class="ctdl-login-screen-grid-item"></div>
+			<div class="ctdl-login-screen-grid-item">
+				<button onClick="javascript:login_button()">${_("Log in")}</button>
+				<button type="button">Cancel</button>
+			</div>
 		</div>
 	`;
 
