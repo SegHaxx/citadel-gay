@@ -6,6 +6,9 @@ layered with as little spaghetti as possible.
 
 Please don't mess with this yet.  I'm only pushing it upstream so it gets backed up.
 
+Yes, I know the Makefile is built in a way that forces it to recompile everything
+when you touch even one file.  For the time being this is acceptable.
+
 
 DESIGN GOALS
 ------------
