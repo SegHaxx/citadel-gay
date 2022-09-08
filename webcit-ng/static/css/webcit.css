@@ -12,12 +12,12 @@
 
 .ctdl-grid-banner-item {		/* These grid items will be referenced in the grid container */
 	grid-area: header;
-	background-color: #282a35;
+	background-color: DarkSlateGrey;
 }
 
 .ctdl-grid-navbar-item {
 	grid-area: menu;
-	background-color: ghostwhite;
+	background-color: GhostWhite;
 }
 
 .ctdl-grid-main-item {
@@ -34,8 +34,8 @@
 		'header header'
 		'menu main';
 	gap: 3px;
-	background-color: #456789;	/* This is the color of the lines between the boxes, and also the boxes themselves if not overridden */
-	padding: 0;			/* This is the border around the edges of the screen */
+	background-color: DarkSlateGrey;	/* This is the color of the lines between the boxes, and also the boxes themselves if not overridden */
+	padding: 0;				/* This is the border around the edges of the screen */
 	width: 100vw;
 	height: 100vh;
 }
@@ -49,17 +49,17 @@
 	float: left;
 	display: block;
 	padding: 8px;
-	background-color: #282a35;
-	color: white;
+	background-color: DarkSlateGrey;
+	color: White;
 	font-size: 1.25vw;
 }
 
 .ctdl-banner-buttons li:hover {		/* Buttons that appear in the top banner also reference this class when hovered over */
-	background-color: black;
+	background-color: Black;
 }
 
 .ctdl-banner-buttons a {
-	color: white;
+	color: White;
 }
 
 html,body,h1,h2,h3,h4,h5 {
@@ -75,7 +75,7 @@ html,body,h1,h2,h3,h4,h5 {
 	transform: translate(-50%, -50%);
 	border-style: outset;
 	border-width: 3px;
-	border-color: black;
+	border-color: Black;
 	justify-content: center;
 	align-items: center;
 	padding: 10px;
@@ -101,13 +101,13 @@ html,body,h1,h2,h3,h4,h5 {
 	padding: 10px;
 	text-align: left;
 	border-color: GhostWhite;
-	background-color: #GhostWhite;;
+	background-color: GhostWhite;
 	color: #000000;
 	font-size: 1vw;
 }
 
 .ctdl-sidebar-class button:hover {
-	background-color: #ffffff;
+	background-color: White;
 }
 
 .ctdl-grid-banner-item button {
@@ -122,14 +122,14 @@ html,body,h1,h2,h3,h4,h5 {
 .ctdl-fmsg-wrapper {		/* message wrapper for forum view */
 	overflow: hidden;
 	border-radius: 10px;
-	background-color: white;
+	background-color: White;
 	margin: 1vw;
 	padding: 5px;		/* inside the box */
 }
 
 .ctdl-mmsg-wrapper {		/* message wrapper for mailbox view */
 	overflow: hidden;
-	background-color: white;
+	background-color: White;
 	padding: 5px;		/* inside the box */
 	border-style: solid;	/* could also be: dotted, dashed, solid, double, groove, ridge, inset, outset, none, hidden */
 	border-width: 1px;
@@ -158,17 +158,17 @@ html,body,h1,h2,h3,h4,h5 {
 .ctdl-msg-button {
 	margin-left: 2px;
 	border-radius: 5px;
-	background-color: blue;
-	color: black;
+	background-color: Blue;
+	color: Black;
 	padding: 2px;
 	background-color: GhostWhite;
 	border-style: solid;
 	border-width: thin;
-	border-color: black;
+	border-color: Black;
 }
 
 .ctdl-msg-button a {
-	color: black;
+	color: Black;
 }
 
 .ctdl-msg-button:hover {
@@ -179,7 +179,7 @@ html,body,h1,h2,h3,h4,h5 {
 }
 
 .ctdl-msg-button a:hover {
-	color: white;
+	color: White;
 }
 
 
@@ -233,29 +233,29 @@ html,body,h1,h2,h3,h4,h5 {
 
 blockquote {
 	background-color: #f5f5f5 !important;
-	color: navy !important;
+	color: Navy !important;
 	margin-bottom: 0px;
 	padding-bottom: 0px;
 }
 
 blockquote blockquote {
 	background-color: #ebebeb !important;
-	color: maroon !important;
+	color: Maroon !important;
 }
 
 blockquote blockquote blockquote {
 	background-color: #e1e1e1 !important;
-	color: green !important;
+	color: Green !important;
 }
 
 blockquote blockquote blockquote blockquote {
 	background-color: #d7d7d7 !important;
-	color: purple !important;
+	color: Purple !important;
 }
 
 blockquote blockquote blockquote blockquote blockquote {
 	background-color: #cdcdcd !important;
-	color: teal !important;
+	color: Teal !important;
 }
 
 blockquote pre {
@@ -285,7 +285,7 @@ blockquote pre {
 .ctdl-roomlist-room {
 	overflow: hidden;
 	border-radius: 10px;
-	background-color: white;
+	background-color: White;
 	padding: 0.5vw;
 	margin-bottom: 0.5vw;
 	width: 100%;
@@ -328,12 +328,24 @@ blockquote pre {
 	background-color: #DDDDDD;
 }
 
+.ctdl-mailbox-table {
+	width: 100%;
+	background-color: GhostWhite;
+	border-collapse: collapse;
+}
+
+.ctdl-mailbox-table tr {
+	border-top: 1px solid red;
+	border-bottom: 1px solid red;
+}
+
 .ctdl-mailbox-heading {
 	position: sticky;
 	top: 0;
 	z-index: 6;
 	background-color: #CCCCCC;
 }
+
 
 .ctdl-mailbox-reading-pane {		/* message reading pane when in mailbox view */
 	height: 80vw;

@@ -116,7 +116,7 @@ function mail_render_row(msg) {
 		+ "<td>" + msg["subject"] + "</td>"
 		+ "<td>" + msg["author"] + " &lt;" + msg["addr"] + "&gt;</td>"
 		+ "<td>" + string_timestamp(msg["time"],1) + "</td>"
-		+ "<td class=\"w3-right-align\">" + msg["msgnum"] + "</td>"
+		+ "<td>" + msg["msgnum"] + "</td>"
 		+ "</tr>";
 	return(row);
 }
@@ -183,12 +183,12 @@ function render_mailbox_display() {
 		msgs = await(response.json());
 		if (response.ok) {
 
-			box =	"<table class=\"w3-table-all w3-hoverable\" width=100%>"
-				+ "<tr class=\"ctdl-mailbox-heading w3-blue\">"
+			box =	"<table class=\"ctdl-mailbox-table\" width=100%>"
+				+ "<tr class=\"ctdl-mailbox-heading\">"
 				+ "<th>" + _("Subject") + "</th>"
 				+ "<th>" + _("Sender") + "</th>"
 				+ "<th>" + _("Date") + "</th>"
-				+ "<th class=\"w3-right-align\">#</th>"
+				+ "<th>#</th>"
 				+ "</tr>";
 
 			for (var i=0; i<msgs.length; ++i) {
