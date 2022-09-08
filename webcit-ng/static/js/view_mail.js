@@ -183,8 +183,7 @@ function render_mailbox_display() {
 		msgs = await(response.json());
 		if (response.ok) {
 
-			box =	"<table class=\"ctdl-mailbox-table\" width=100%>"
-				+ "<tr class=\"ctdl-mailbox-heading\">"
+			box =	"<table class=\"ctdl-mailbox-table\" width=100%><tr>"
 				+ "<th>" + _("Subject") + "</th>"
 				+ "<th>" + _("Sender") + "</th>"
 				+ "<th>" + _("Date") + "</th>"

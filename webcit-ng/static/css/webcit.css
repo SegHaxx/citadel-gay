@@ -321,8 +321,8 @@ blockquote pre {
 	height: 100%;
 }
 
-.ctdl-mailbox-pane {		/* list of messages when in mailbox view */
-	height: 20vw;
+.ctdl-mailbox-pane {					/* list of messages when in mailbox view */
+	height: 15vw;
 	overflow-x: hidden;
 	overflow-y: scroll;
 	background-color: #DDDDDD;
@@ -334,28 +334,44 @@ blockquote pre {
 	border-collapse: collapse;
 }
 
-.ctdl-mailbox-table tr {
-	border-top: 1px solid red;
-	border-bottom: 1px solid red;
+.ctdl-mailbox-table td {
+	padding-top: 5px;
+	padding-bottom: 5px;
 }
 
-.ctdl-mailbox-heading {
+.ctdl-mailbox-table tr:nth-child(even) {		/* this gives us the alternating-bar effect */
+	background-color: Gainsboro;
+}
+
+.ctdl-mailbox-table tr:hover {
+	background-color: Blue;
+	color: White;
+}
+
+.ctdl-mailbox-table th {
 	position: sticky;
 	top: 0;
 	z-index: 6;
-	background-color: #CCCCCC;
+	background-color: SlateGrey;
+	color: White;
+	padding-top: 5px;
+	padding-bottom: 5px;
 }
 
+.ctdl-mailbox-table th:hover {				/* Suppress highlighting the header bar */
+	background-color: SlateGrey;
+	color: White;
+}
 
-.ctdl-mailbox-reading-pane {		/* message reading pane when in mailbox view */
+.ctdl-mailbox-reading-pane {				/* message reading pane when in mailbox view */
 	height: 80vw;
 	overflow-x: hidden;
-	overflow-y: scroll;
+	overflow-y: auto;
 	background-color: GhostWhite;
 	padding: 5px;
 }
 
-.ctdl-compose-mail {		/* mail composition window */
+.ctdl-compose-mail {					/* mail composition window */
 	width: 100%;
 	height: 100%;
 	overflow: auto;
