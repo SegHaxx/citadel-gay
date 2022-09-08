@@ -1,3 +1,4 @@
+
 /*
  * Handles GroupDAV GET requests.
  *
@@ -20,7 +21,7 @@
 /*
  * Fetch the entire contents of the room as one big ics file.
  * This is for "webcal://" type access.
- */	
+ */
 void dav_get_big_ics(void) {
 	char buf[1024];
 
@@ -31,9 +32,8 @@ void dav_get_big_ics(void) {
 		dav_common_headers();
 		hprintf("Content-Type: text/plain\r\n");
 		begin_burst();
-		wc_printf("%s\r\n",
-			&buf[4]
-			);
+		wc_printf("%s\r\n", &buf[4]
+		    );
 		end_burst();
 		return;
 	}
@@ -54,14 +54,13 @@ void dav_get_big_ics(void) {
  * Helps identify the relevant section of a multipart message
  */
 void extract_preferred(char *name, char *filename, char *partnum, char *disp,
-			void *content, char *cbtype, char *cbcharset,
-			size_t length, char *encoding, char *cbid, void *userdata)
-{
-	struct epdata *epdata = (struct epdata *)userdata;
+		       void *content, char *cbtype, char *cbcharset, size_t length, char *encoding, char *cbid, void *userdata) {
+	struct epdata *epdata = (struct epdata *) userdata;
 	int hit = 0;
 
 	/* We only want the first one that we found */
-	if (!IsEmptyStr(epdata->found_section)) return;
+	if (!IsEmptyStr(epdata->found_section))
+		return;
 
 	/* Check for a content type match */
 	if (strlen(epdata->desired_content_type_1) > 0) {
@@ -95,8 +94,7 @@ void extract_preferred(char *name, char *filename, char *partnum, char *disp,
  * /groupdav/room_name/euid	(GroupDAV)
  * /groupdav/room_name		(webcal)
  */
-void dav_get(void)
-{
+void dav_get(void) {
 	wcsession *WCC = WC;
 	StrBuf *dav_roomname;
 	StrBuf *dav_uid;
@@ -127,8 +125,7 @@ void dav_get(void)
 	dav_uid = NewStrBuf();;
 	StrBufExtract_token(dav_roomname, WCC->Hdr->HR.ReqLine, 0, '/');
 	StrBufExtract_token(dav_uid, WCC->Hdr->HR.ReqLine, 1, '/');
-	if ((!strcasecmp(ChrPtr(dav_uid), "ics")) || 
-	    (!strcasecmp(ChrPtr(dav_uid), "calendar.ics"))) {
+	if ((!strcasecmp(ChrPtr(dav_uid), "ics")) || (!strcasecmp(ChrPtr(dav_uid), "calendar.ics"))) {
 		FlushStrBuf(dav_uid);
 	}
 
@@ -140,8 +137,7 @@ void dav_get(void)
 		hprintf("HTTP/1.1 404 not found\r\n");
 		dav_common_headers();
 		hprintf("Content-Type: text/plain\r\n");
-		wc_printf("There is no folder called \"%s\" on this server.\r\n",
-			ChrPtr(dav_roomname));
+		wc_printf("There is no folder called \"%s\" on this server.\r\n", ChrPtr(dav_roomname));
 		end_burst();
 		FreeStrBuf(&dav_roomname);
 		FreeStrBuf(&dav_uid);
@@ -164,9 +160,7 @@ void dav_get(void)
 		hprintf("HTTP/1.1 404 not found\r\n");
 		dav_common_headers();
 		hprintf("Content-Type: text/plain\r\n");
-		wc_printf("Object \"%s\" was not found in the \"%s\" folder.\r\n",
-			ChrPtr(dav_uid),
-			ChrPtr(dav_roomname));
+		wc_printf("Object \"%s\" was not found in the \"%s\" folder.\r\n", ChrPtr(dav_uid), ChrPtr(dav_roomname));
 		end_burst();
 		FreeStrBuf(&dav_roomname);
 		FreeStrBuf(&dav_uid);
@@ -186,7 +180,7 @@ void dav_get(void)
 
 		/* Append it to the buffer */
 		if ((msglen + linelen + 3) > msgalloc) {
-			msgalloc = ( (msgalloc > 0) ? (msgalloc * 2) : 1024 );
+			msgalloc = ((msgalloc > 0) ? (msgalloc * 2) : 1024);
 			msgtext = realloc(msgtext, msgalloc);
 		}
 		strcpy(&msgtext[msglen], buf);
@@ -208,13 +202,15 @@ void dav_get(void)
 				striplt(content_type);
 				ptr = bmstrcasestr(&buf[13], "charset=");
 				if (ptr) {
-					safestrncpy(charset, ptr+8, sizeof charset);
+					safestrncpy(charset, ptr + 8, sizeof charset);
 					striplt(charset);
 					endptr = strchr(charset, ';');
-					if (endptr != NULL) strcpy(endptr, "");
+					if (endptr != NULL)
+						strcpy(endptr, "");
 				}
 				endptr = strchr(content_type, ';');
-				if (endptr != NULL) strcpy(endptr, "");
+				if (endptr != NULL)
+					strcpy(endptr, "");
 			}
 		}
 	}
@@ -235,7 +231,7 @@ void dav_get(void)
 	 */
 	if (!strncasecmp(content_type, "multipart/", 10)) {
 
-		if ( (WCC->CurRoom.defview == VIEW_CALENDAR) || (WCC->CurRoom.defview == VIEW_TASKS) ) {
+		if ((WCC->CurRoom.defview == VIEW_CALENDAR) || (WCC->CurRoom.defview == VIEW_TASKS)) {
 			strcpy(epdata.desired_content_type_1, "text/calendar");
 		}
 
@@ -244,7 +240,7 @@ void dav_get(void)
 			strcpy(epdata.desired_content_type_2, "text/x-vcard");
 		}
 
-		mime_parser(msgtext, &msgtext[msglen], extract_preferred, NULL, NULL, (void *)&epdata, 0);
+		mime_parser(msgtext, &msgtext[msglen], extract_preferred, NULL, NULL, (void *) &epdata, 0);
 	}
 
 	/* If epdata.found_section is empty, we haven't output anything yet, so output the whole thing */
@@ -252,13 +248,13 @@ void dav_get(void)
 	if (IsEmptyStr(epdata.found_section)) {
 		ptr = msgtext;
 		endptr = &msgtext[msglen];
-	
+
 		hprintf("Content-type: %s; charset=%s\r\n", content_type, charset);
-	
+
 		in_body = 0;
 		do {
 			ptr = memreadline(ptr, buf, sizeof buf);
-	
+
 			if (in_body) {
 				wc_printf("%s\r\n", buf);
 			}
@@ -267,7 +263,7 @@ void dav_get(void)
 				begin_burst();
 			}
 		} while (ptr < endptr);
-	
+
 		end_burst();
 	}
 

@@ -1,3 +1,4 @@
+
 /*
  * Handles GroupDAV REPORT requests.
  *
@@ -58,8 +59,7 @@ Content-length: 255
 /*
  * The pathname is always going to be /groupdav/room_name/msg_num
  */
-void dav_report(void) 
-{
+void dav_report(void) {
 	char datestring[256];
 	time_t now = time(NULL);
 
@@ -72,49 +72,29 @@ void dav_report(void)
 	dav_common_headers();
 	hprintf("Date: %s\r\n", datestring);
 	hprintf("Content-Type: text/plain\r\n");
-	wc_printf("An internal error has occurred at %s:%d.\r\n", __FILE__ , __LINE__ );
+	wc_printf("An internal error has occurred at %s:%d.\r\n", __FILE__, __LINE__);
 	end_burst();
 	return;
 }
 
 
 
-extern int ParseMessageListHeaders_EUID(StrBuf *Line, 
-					const char **pos, 
-					message_summary *Msg, 
-					StrBuf *ConversionBuffer,
-					void **ViewSpecific);
+extern int ParseMessageListHeaders_EUID(StrBuf * Line,
+					const char **pos, message_summary * Msg, StrBuf * ConversionBuffer, void **ViewSpecific);
 
-extern int DavUIDL_GetParamsGetServerCall(SharedMessageStatus *Stat, 
-					  void **ViewSpecific, 
-					  long oper, 
-					  char *cmd, 
-					  long len,
-					  char *filter,
-					  long flen);
+extern int DavUIDL_GetParamsGetServerCall(SharedMessageStatus * Stat,
+					  void **ViewSpecific, long oper, char *cmd, long len, char *filter, long flen);
 
-extern int DavUIDL_RenderView_or_Tail(SharedMessageStatus *Stat, 
-				void **ViewSpecific, 
-				long oper);
+extern int DavUIDL_RenderView_or_Tail(SharedMessageStatus * Stat, void **ViewSpecific, long oper);
 
 extern int DavUIDL_Cleanup(void **ViewSpecific);
 
 
 
-void 
-InitModule_REPORT
-(void)
-{
-	RegisterReadLoopHandlerset(
-		eReadEUIDS,
-		DavUIDL_GetParamsGetServerCall,
-		NULL,
-		NULL,
-		ParseMessageListHeaders_EUID,
-		NULL,
-		DavUIDL_RenderView_or_Tail,
-		DavUIDL_Cleanup,
-		NULL
-	);
+void InitModule_REPORT(void) {
+	RegisterReadLoopHandlerset(eReadEUIDS,
+				   DavUIDL_GetParamsGetServerCall,
+				   NULL,
+				   NULL, ParseMessageListHeaders_EUID, NULL, DavUIDL_RenderView_or_Tail, DavUIDL_Cleanup, NULL);
 
 }

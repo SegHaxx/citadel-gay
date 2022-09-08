@@ -1,3 +1,4 @@
+
 /*
  * Copyright (c) 1996-2013 by the citadel.org team
  *
@@ -13,7 +14,7 @@
 int connect_to_citadel(char *);
 int connectsock(char *, char *);
 int serv_getln(char *strbuf, int bufsize);
-int StrBuf_ServGetln(StrBuf *buf);
+int StrBuf_ServGetln(StrBuf * buf);
 
 /*
  * parse & check the server reply 
@@ -27,7 +28,7 @@ int StrBuf_ServGetln(StrBuf *buf);
  * returns the most significant digit of the server status
  */
 
-int GetServerStatusMsg(StrBuf *Line, long* FullState, int PutImportantMessage, int MajorOK);
+int GetServerStatusMsg(StrBuf * Line, long *FullState, int PutImportantMessage, int MajorOK);
 
 /*
  * to migrate old calls.... 
@@ -37,15 +38,15 @@ int GetServerStatusMsg(StrBuf *Line, long* FullState, int PutImportantMessage, i
 int serv_puts(const char *string);
 
 int serv_write(const char *buf, int nbytes);
-int serv_putbuf(const StrBuf *string);
-int serv_printf(const char *format,...)__attribute__((__format__(__printf__,1,2)));
-int serv_read_binary(StrBuf *Ret, size_t total_len, StrBuf *Buf);
-void serv_read_binary_to_http(StrBuf *MimeType, size_t total_len, int is_static, int detect_mime);
-int StrBuf_ServGetBLOB(StrBuf *buf, long BlobSize);
-int StrBuf_ServGetBLOBBuffered(StrBuf *buf, long BlobSize);
-int read_server_text(StrBuf *Buf, long *nLines);
+int serv_putbuf(const StrBuf * string);
+int serv_printf(const char *format, ...) __attribute__((__format__(__printf__, 1, 2)));
+int serv_read_binary(StrBuf * Ret, size_t total_len, StrBuf * Buf);
+void serv_read_binary_to_http(StrBuf * MimeType, size_t total_len, int is_static, int detect_mime);
+int StrBuf_ServGetBLOB(StrBuf * buf, long BlobSize);
+int StrBuf_ServGetBLOBBuffered(StrBuf * buf, long BlobSize);
+int read_server_text(StrBuf * Buf, long *nLines);
 
 void text_to_server(char *ptr);
-void text_to_server_qp(const StrBuf *SendMeEncoded);
+void text_to_server_qp(const StrBuf * SendMeEncoded);
 void server_to_text(void);
 int lingering_close(int fd);

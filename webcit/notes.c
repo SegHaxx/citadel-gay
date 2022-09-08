@@ -21,8 +21,7 @@ int pastel_palette[9][3] = {
 /*
  * Fetch a message from the server and extract a vNote from it
  */
-struct vnote *vnote_new_from_msg(long msgnum,int unread) 
-{
+struct vnote *vnote_new_from_msg(long msgnum, int unread) {
 	StrBuf *Buf;
 	StrBuf *Data = NULL;
 	const char *bptr;
@@ -33,24 +32,23 @@ struct vnote *vnote_new_from_msg(long msgnum,int unread)
 	char mime_content_type[256];
 	char mime_disposition[256];
 	char relevant_partnum[256];
-	int phase = 0;				/* 0 = citadel headers, 1 = mime headers, 2 = body */
+	int phase = 0;		/* 0 = citadel headers, 1 = mime headers, 2 = body */
 	char msg4_content_type[256] = "";
 	char msg4_content_encoding[256] = "";
 	int msg4_content_length = 0;
 	struct vnote *vnote_from_body = NULL;
-	int vnote_inline = 0;			/* 1 = MSG4 gave us a text/x-vnote top level */
+	int vnote_inline = 0;	/* 1 = MSG4 gave us a text/x-vnote top level */
 
 	relevant_partnum[0] = '\0';
 	serv_printf("MSG4 %ld", msgnum);	/* we need the mime headers */
 	Buf = NewStrBuf();
 	StrBuf_ServGetln(Buf);
 	if (GetServerStatus(Buf, NULL) != 1) {
-		FreeStrBuf (&Buf);
+		FreeStrBuf(&Buf);
 		return NULL;
 	}
-	while ((StrBuf_ServGetln(Buf)>=0) && !Done) {
-		if ( (StrLength(Buf)==3) && 
-		     !strcmp(ChrPtr(Buf), "000")) {
+	while ((StrBuf_ServGetln(Buf) >= 0) && !Done) {
+		if ((StrLength(Buf) == 3) && !strcmp(ChrPtr(Buf), "000")) {
 			Done = 1;
 			break;
 		}
@@ -73,7 +71,7 @@ struct vnote *vnote_new_from_msg(long msgnum,int unread)
 			else if ((phase == 0) && (!strncasecmp(bptr, "text", 4))) {
 				phase = 1;
 			}
-		break;
+			break;
 		case 1:
 			if (!IsEmptyStr(bptr)) {
 				if (!strncasecmp(bptr, "Content-type: ", 14)) {
@@ -92,9 +90,9 @@ struct vnote *vnote_new_from_msg(long msgnum,int unread)
 			else {
 				phase++;
 				if ((msg4_content_length > 0)
-				    && ( !strcasecmp(msg4_content_encoding, "7bit"))
+				    && (!strcasecmp(msg4_content_encoding, "7bit"))
 				    && (!strcasecmp(msg4_content_type, "text/vnote"))
-				) { 
+				    ) {
 					vnote_inline = 1;
 				}
 			}
@@ -103,7 +101,7 @@ struct vnote *vnote_new_from_msg(long msgnum,int unread)
 				Data = NewStrBufPlain(NULL, msg4_content_length * 2);
 				if (msg4_content_length > 0) {
 					StrBuf_ServGetBLOBBuffered(Data, msg4_content_length);
-					phase ++;
+					phase++;
 				}
 				else {
 					StrBufAppendBuf(Data, Buf, 0);
@@ -141,10 +139,10 @@ struct vnote *vnote_new_from_msg(long msgnum,int unread)
 		}
 		else {
 			char *Buf = SmashStrBuf(&Data);
-			
+
 			struct vnote *v = vnote_new_from_str(Buf);
 			free(Buf);
-			return(v);
+			return (v);
 		}
 	}
 	return NULL;
@@ -155,34 +153,29 @@ struct vnote *vnote_new_from_msg(long msgnum,int unread)
 /*
  * Serialize a vnote and write it to the server
  */
-void write_vnote_to_server(struct vnote *v) 
-{
+void write_vnote_to_server(struct vnote *v) {
 	char buf[1024];
 	char *pch;
 	char boundary[256];
 	static int seq = 0;
 
 	snprintf(boundary, sizeof boundary, "Citadel--Multipart--%s--%04x--%04x",
-		ChrPtr(WC->serv_info->serv_fqdn),
-		getpid(),
-		++seq
-	);
+		 ChrPtr(WC->serv_info->serv_fqdn), getpid(), ++seq);
 
 	serv_puts("ENT0 1|||4");
 	serv_getln(buf, sizeof buf);
 	if (buf[0] == '4') {
 		/* Remember, serv_printf() appends an extra newline */
-		serv_printf("Content-type: multipart/alternative; "
-			"boundary=\"%s\"\n", boundary);
+		serv_printf("Content-type: multipart/alternative; " "boundary=\"%s\"\n", boundary);
 		serv_printf("This is a multipart message in MIME format.\n");
 		serv_printf("--%s", boundary);
-	
+
 		serv_puts("Content-type: text/plain; charset=utf-8");
 		serv_puts("Content-Transfer-Encoding: 7bit");
 		serv_puts("");
 		serv_puts(v->body);
 		serv_puts("");
-	
+
 		serv_printf("--%s", boundary);
 		serv_puts("Content-type: text/vnote");
 		serv_puts("Content-Transfer-Encoding: 7bit");
@@ -207,7 +200,7 @@ void ajax_update_note(void) {
 	int msgnum;
 	struct vnote *v = NULL;
 
-        if (!havebstr("note_uid")) {
+	if (!havebstr("note_uid")) {
 		begin_ajax_response();
 		wc_printf("Received ajax_update_note() request without a note UID.");
 		end_ajax_response();
@@ -223,7 +216,7 @@ void ajax_update_note(void) {
 		return;
 	}
 	msgnum = atol(&buf[4]);
-	
+
 	/* Was this request a delete operation?  If so, nuke it... */
 	if (havebstr("deletenote")) {
 		if (!strcasecmp(bstr("deletenote"), "yes")) {
@@ -246,29 +239,30 @@ void ajax_update_note(void) {
 	}
 
 	/* Make any requested changes */
-        if (havebstr("top")) {
+	if (havebstr("top")) {
 		v->pos_top = atoi(bstr("top"));
 	}
-        if (havebstr("left")) {
+	if (havebstr("left")) {
 		v->pos_left = atoi(bstr("left"));
 	}
-        if (havebstr("height")) {
+	if (havebstr("height")) {
 		v->pos_height = atoi(bstr("height"));
 	}
-        if (havebstr("width")) {
+	if (havebstr("width")) {
 		v->pos_width = atoi(bstr("width"));
 	}
-        if (havebstr("red")) {
+	if (havebstr("red")) {
 		v->color_red = atoi(bstr("red"));
 	}
-        if (havebstr("green")) {
+	if (havebstr("green")) {
 		v->color_green = atoi(bstr("green"));
 	}
-        if (havebstr("blue")) {
+	if (havebstr("blue")) {
 		v->color_blue = atoi(bstr("blue"));
 	}
-        if (havebstr("value")) {	/* I would have preferred 'body' but InPlaceEditor hardcodes 'value' */
-		if (v->body) free(v->body);
+	if (havebstr("value")) {	/* I would have preferred 'body' but InPlaceEditor hardcodes 'value' */
+		if (v->body)
+			free(v->body);
 		v->body = strdup(bstr("value"));
 	}
 
@@ -292,13 +286,9 @@ void ajax_update_note(void) {
  *
  * msgnum = Message number on the local server of the note to be displayed
  */
+
 /*TODO: wrong hook */
-int notes_LoadMsgFromServer(SharedMessageStatus *Stat, 
-			    void **ViewSpecific, 
-			    message_summary* Msg, 
-			    int is_new, 
-			    int i)
-{
+int notes_LoadMsgFromServer(SharedMessageStatus * Stat, void **ViewSpecific, message_summary * Msg, int is_new, int i) {
 	struct vnote *v;
 	WCTemplputParams TP;
 
@@ -307,20 +297,19 @@ int notes_LoadMsgFromServer(SharedMessageStatus *Stat,
 	v = vnote_new_from_msg(Msg->msgnum, is_new);
 	if (v) {
 		TP.Context = v;
-		DoTemplate(HKEY("vnoteitem"),
-			   WC->WBuf, &TP);
-			
+		DoTemplate(HKEY("vnoteitem"), WC->WBuf, &TP);
+
 
 		/* uncomment these lines to see ugly debugging info 
-		StrBufAppendPrintf(WC->trailing_javascript,
-			"document.write('L: ' + $('note-%s').style.left + '; ');", v->uid);
-		StrBufAppendPrintf(WC->trailing_javascript,
-			"document.write('T: ' + $('note-%s').style.top + '; ');", v->uid);
-		StrBufAppendPrintf(WC->trailing_javascript,
-			"document.write('W: ' + $('note-%s').style.width + '; ');", v->uid);
-		StrBufAppendPrintf(WC->trailing_javascript,
-			"document.write('H: ' + $('note-%s').style.height + '<br>');", v->uid);
-		*/
+		   StrBufAppendPrintf(WC->trailing_javascript,
+		   "document.write('L: ' + $('note-%s').style.left + '; ');", v->uid);
+		   StrBufAppendPrintf(WC->trailing_javascript,
+		   "document.write('T: ' + $('note-%s').style.top + '; ');", v->uid);
+		   StrBufAppendPrintf(WC->trailing_javascript,
+		   "document.write('W: ' + $('note-%s').style.width + '; ');", v->uid);
+		   StrBufAppendPrintf(WC->trailing_javascript,
+		   "document.write('H: ' + $('note-%s').style.height + '<br>');", v->uid);
+		 */
 
 		vnote_free(v);
 	}
@@ -346,67 +335,57 @@ void add_new_note(void) {
 		write_vnote_to_server(v);
 		vnote_free(v);
 	}
-	
+
 	readloop(readfwd, eUseDefault);
 }
 
 
-void tmpl_vcard_put_posleft(StrBuf *Target, WCTemplputParams *TP)
-{
+void tmpl_vcard_put_posleft(StrBuf * Target, WCTemplputParams * TP) {
 	struct vnote *v = (struct vnote *) CTX(CTX_VNOTE);
 	StrBufAppendPrintf(Target, "%d", v->pos_left);
 }
 
-void tmpl_vcard_put_postop(StrBuf *Target, WCTemplputParams *TP)
-{
+void tmpl_vcard_put_postop(StrBuf * Target, WCTemplputParams * TP) {
 	struct vnote *v = (struct vnote *) CTX(CTX_VNOTE);
 	StrBufAppendPrintf(Target, "%d", v->pos_top);
 }
 
-void tmpl_vcard_put_poswidth(StrBuf *Target, WCTemplputParams *TP)
-{
+void tmpl_vcard_put_poswidth(StrBuf * Target, WCTemplputParams * TP) {
 	struct vnote *v = (struct vnote *) CTX(CTX_VNOTE);
 	StrBufAppendPrintf(Target, "%d", v->pos_width);
 }
 
-void tmpl_vcard_put_posheight(StrBuf *Target, WCTemplputParams *TP)
-{
+void tmpl_vcard_put_posheight(StrBuf * Target, WCTemplputParams * TP) {
 	struct vnote *v = (struct vnote *) CTX(CTX_VNOTE);
 	StrBufAppendPrintf(Target, "%d", v->pos_height);
 }
 
-void tmpl_vcard_put_posheight2(StrBuf *Target, WCTemplputParams *TP)
-{
+void tmpl_vcard_put_posheight2(StrBuf * Target, WCTemplputParams * TP) {
 	struct vnote *v = (struct vnote *) CTX(CTX_VNOTE);
 	StrBufAppendPrintf(Target, "%d", (v->pos_height / 16) - 5);
 }
 
-void tmpl_vcard_put_width2(StrBuf *Target, WCTemplputParams *TP)
-{
+void tmpl_vcard_put_width2(StrBuf * Target, WCTemplputParams * TP) {
 	struct vnote *v = (struct vnote *) CTX(CTX_VNOTE);
 	StrBufAppendPrintf(Target, "%d", (v->pos_width / 9) - 1);
 }
 
-void tmpl_vcard_put_color(StrBuf *Target, WCTemplputParams *TP)
-{
+void tmpl_vcard_put_color(StrBuf * Target, WCTemplputParams * TP) {
 	struct vnote *v = (struct vnote *) CTX(CTX_VNOTE);
 	StrBufAppendPrintf(Target, "%02X%02X%02X", v->color_red, v->color_green, v->color_blue);
 }
 
-void tmpl_vcard_put_bgcolor(StrBuf *Target, WCTemplputParams *TP)
-{
+void tmpl_vcard_put_bgcolor(StrBuf * Target, WCTemplputParams * TP) {
 	struct vnote *v = (struct vnote *) CTX(CTX_VNOTE);
-	StrBufAppendPrintf(Target, "%02X%02X%02X", v->color_red/2, v->color_green/2, v->color_blue/2);
+	StrBufAppendPrintf(Target, "%02X%02X%02X", v->color_red / 2, v->color_green / 2, v->color_blue / 2);
 }
 
-void tmpl_vcard_put_message(StrBuf *Target, WCTemplputParams *TP)
-{
+void tmpl_vcard_put_message(StrBuf * Target, WCTemplputParams * TP) {
 	struct vnote *v = (struct vnote *) CTX(CTX_VNOTE);
-	StrEscAppend(Target, NULL, v->body, 0, 0); /*TODO?*/
+	StrEscAppend(Target, NULL, v->body, 0, 0);	/*TODO? */
 }
 
-void tmpl_vcard_put_uid(StrBuf *Target, WCTemplputParams *TP)
-{
+void tmpl_vcard_put_uid(StrBuf * Target, WCTemplputParams * TP) {
 	struct vnote *v = (struct vnote *) CTX(CTX_VNOTE);
 	StrBufAppendBufPlain(Target, v->uid, -1, 0);
 }
@@ -414,14 +393,8 @@ void tmpl_vcard_put_uid(StrBuf *Target, WCTemplputParams *TP)
 
 
 
-int notes_GetParamsGetServerCall(SharedMessageStatus *Stat, 
-				 void **ViewSpecific, 
-				 long oper, 
-				 char *cmd, 
-				 long len,
-				 char *filter,
-				 long flen)
-{
+int notes_GetParamsGetServerCall(SharedMessageStatus * Stat,
+				 void **ViewSpecific, long oper, char *cmd, long len, char *filter, long flen) {
 	strcpy(cmd, "MSGS ALL");
 	Stat->maxmsgs = 32767;
 	wc_printf("<div id=\"new_notes_here\"></div>\n");
@@ -429,14 +402,12 @@ int notes_GetParamsGetServerCall(SharedMessageStatus *Stat,
 
 }
 
-int notes_Cleanup(void **ViewSpecific)
-{
+int notes_Cleanup(void **ViewSpecific) {
 	wDumpContent(1);
 	return 0;
 }
 
-void render_MIME_VNote(StrBuf *Target, WCTemplputParams *TP, StrBuf *FoundCharset)
-{
+void render_MIME_VNote(StrBuf * Target, WCTemplputParams * TP, StrBuf * FoundCharset) {
 	wc_mime_attachment *Mime = CTX(CTX_MIME_ATACH);
 
 	if (StrLength(Mime->Data) == 0)
@@ -449,16 +420,15 @@ void render_MIME_VNote(StrBuf *Target, WCTemplputParams *TP, StrBuf *FoundCharse
 		Buf = NewStrBuf();
 		vcard = SmashStrBuf(&Mime->Data);
 		v = vnote_new_from_str(vcard);
-		free (vcard);
+		free(vcard);
 		if (v) {
 			WCTemplputParams TP;
-			
+
 			memset(&TP, 0, sizeof(WCTemplputParams));
 			TP.Filter.ContextType = CTX_VNOTE;
 			TP.Context = v;
-			DoTemplate(HKEY("mail_vnoteitem"),
-				   Buf, &TP);
-			
+			DoTemplate(HKEY("mail_vnoteitem"), Buf, &TP);
+
 			vnote_free(v);
 			Mime->Data = Buf;
 		}
@@ -473,22 +443,12 @@ void render_MIME_VNote(StrBuf *Target, WCTemplputParams *TP, StrBuf *FoundCharse
 
 
 
-void 
-InitModule_NOTES
-(void)
-{
+void InitModule_NOTES(void) {
 	RegisterCTX(CTX_VNOTE);
 
-	RegisterReadLoopHandlerset(
-		VIEW_NOTES,
-		notes_GetParamsGetServerCall,
-		NULL,
-		NULL,
-		NULL,
-		notes_LoadMsgFromServer,
-		NULL,
-		notes_Cleanup,
-		NULL);
+	RegisterReadLoopHandlerset(VIEW_NOTES,
+				   notes_GetParamsGetServerCall,
+				   NULL, NULL, NULL, notes_LoadMsgFromServer, NULL, notes_Cleanup, NULL);
 
 	WebcitAddUrlHandler(HKEY("add_new_note"), "", 0, add_new_note, 0);
 	WebcitAddUrlHandler(HKEY("ajax_update_note"), "", 0, ajax_update_note, 0);
@@ -500,7 +460,7 @@ InitModule_NOTES
 	RegisterNamespace("VNOTE:POS:HEIGHT2", 0, 0, tmpl_vcard_put_posheight2, NULL, CTX_VNOTE);
 	RegisterNamespace("VNOTE:POS:WIDTH2", 0, 0, tmpl_vcard_put_width2, NULL, CTX_VNOTE);
 	RegisterNamespace("VNOTE:COLOR", 0, 0, tmpl_vcard_put_color, NULL, CTX_VNOTE);
-	RegisterNamespace("VNOTE:BGCOLOR", 0, 0,tmpl_vcard_put_bgcolor, NULL, CTX_VNOTE);
+	RegisterNamespace("VNOTE:BGCOLOR", 0, 0, tmpl_vcard_put_bgcolor, NULL, CTX_VNOTE);
 	RegisterNamespace("VNOTE:MSG", 0, 1, tmpl_vcard_put_message, NULL, CTX_VNOTE);
 	RegisterNamespace("VNOTE:UID", 0, 0, tmpl_vcard_put_uid, NULL, CTX_VNOTE);
 

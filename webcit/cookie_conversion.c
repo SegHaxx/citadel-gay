@@ -1,3 +1,4 @@
+
 /*
  * Copyright (c) 1996-2012 by the citadel.org team
  *
@@ -18,22 +19,20 @@
  * the exact minute.  :)
  */
 static char *unset = "; expires=28-May-1971 18:10:00 GMT";
-typedef unsigned char byte;	      /* Byte type used by cookie_to_stuff() */
+typedef unsigned char byte;	/* Byte type used by cookie_to_stuff() */
 extern const char *get_selected_language(void);
 
 /*
  * Pack all session info into one easy-to-digest cookie. Healthy and delicious!
  */
-void stuff_to_cookie(int unset_cookies)
-{
+void stuff_to_cookie(int unset_cookies) {
 	wcsession *WCC = WC;
 	char buf[SIZ];
 
 	if (unset_cookies) {
 		hprintf("Set-cookie: webcit=%s; path=/\r\n", unset);
 	}
-	else
-	{
+	else {
 		StrBufAppendPrintf(WCC->HBuf, "Set-cookie: webcit=");
 		snprintf(buf, sizeof(buf), "%d", WCC->wc_session);
 		StrBufHexescAppend(WCC->HBuf, NULL, buf);
@@ -48,13 +47,10 @@ void stuff_to_cookie(int unset_cookies)
 		StrBufHexescAppend(WCC->HBuf, NULL, "|");
 
 		if (server_cookie != NULL) {
-			StrBufAppendPrintf(WCC->HBuf, 
-					   ";path=/ \r\n%s\r\n", 
-					   server_cookie);
+			StrBufAppendPrintf(WCC->HBuf, ";path=/ \r\n%s\r\n", server_cookie);
 		}
 		else {
-			StrBufAppendBufPlain(WCC->HBuf,
-					     HKEY("; path=/\r\n"), 0);
+			StrBufAppendBufPlain(WCC->HBuf, HKEY("; path=/\r\n"), 0);
 		}
 	}
 }
@@ -62,13 +58,7 @@ void stuff_to_cookie(int unset_cookies)
 /*
  * Extract all that fun stuff out of the cookie.
  */
-void cookie_to_stuff(StrBuf *cookie,
-			int *session,
-			StrBuf *user,
-			StrBuf *pass,
-			StrBuf *room,
-			StrBuf *language)
-{
+void cookie_to_stuff(StrBuf * cookie, int *session, StrBuf * user, StrBuf * pass, StrBuf * room, StrBuf * language) {
 	if (session != NULL) {
 		*session = StrBufExtract_int(cookie, 0, '|');
 	}

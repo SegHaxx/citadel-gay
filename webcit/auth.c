@@ -1,3 +1,4 @@
+
 /*
  * These functions handle authentication of users to a Citadel server.
  *
@@ -16,36 +17,36 @@
 #include "webserver.h"
 #include <ctype.h>
 
-extern uint32_t hashlittle( const void *key, size_t length, uint32_t initval);
+extern uint32_t hashlittle(const void *key, size_t length, uint32_t initval);
 
 /*
  * Access level definitions.  This is initialized from a function rather than a
  * static array so that the strings may be localized.
  */
-char *axdefs[7]; 
+char *axdefs[7];
 
 void initialize_axdefs(void) {
 
 	/* an erased user */
-	axdefs[0] = _("Deleted");       
+	axdefs[0] = _("Deleted");
 
 	/* a new user */
-	axdefs[1] = _("New User");      
+	axdefs[1] = _("New User");
 
 	/* a trouble maker */
-	axdefs[2] = _("Problem User");  
+	axdefs[2] = _("Problem User");
 
 	/* user with normal privileges */
-	axdefs[3] = _("Local User");    
+	axdefs[3] = _("Local User");
 
 	/* a user that may access network resources */
-	axdefs[4] = _("Network User");  
+	axdefs[4] = _("Network User");
 
 	/* a moderator */
 	axdefs[5] = _("Preferred User");
 
 	/* chief */
-	axdefs[6] = _("Admin");          
+	axdefs[6] = _("Admin");
 }
 
 
@@ -54,8 +55,7 @@ void initialize_axdefs(void) {
  * Display the login screen
  * mesg = the error message if last attempt failed.
  */
-void display_login(void)
-{
+void display_login(void) {
 	begin_burst();
 	output_headers(1, 0, 0, 0, 1, 0);
 	do_template("login");
@@ -78,8 +78,7 @@ void display_login(void)
  * pass			his password
  * serv_response	The parameters returned from a Citadel USER or NEWU command
  */
-void become_logged_in(const StrBuf *user, const StrBuf *pass, StrBuf *serv_response)
-{
+void become_logged_in(const StrBuf * user, const StrBuf * pass, StrBuf * serv_response) {
 	wcsession *WCC = WC;
 	StrBuf *Buf;
 	StrBuf *FloorDiv;
@@ -89,8 +88,8 @@ void become_logged_in(const StrBuf *user, const StrBuf *pass, StrBuf *serv_respo
 	if (WCC->wc_fullname == NULL)
 		WCC->wc_fullname = NewStrBufPlain(NULL, StrLength(serv_response));
 	StrBufExtract_token(WCC->wc_fullname, serv_response, 0, '|');
-	StrBufCutLeft(WCC->wc_fullname, 4 );
-	
+	StrBufCutLeft(WCC->wc_fullname, 4);
+
 	if (WCC->wc_username == NULL)
 		WCC->wc_username = NewStrBufDup(user);
 	else {
@@ -119,11 +118,11 @@ void become_logged_in(const StrBuf *user, const StrBuf *pass, StrBuf *serv_respo
 		const char *pch;
 
 		pch = ChrPtr(Buf) + 4;
-		/*WCC->new_mail  =*/ StrBufExtractNext_long(Buf, &pch, '|');
+		/*WCC->new_mail  = */ StrBufExtractNext_long(Buf, &pch, '|');
 		WCC->need_regi = StrBufExtractNext_long(Buf, &pch, '|');
 		WCC->need_vali = StrBufExtractNext_long(Buf, &pch, '|');
 		if (WCC->cs_inet_email == NULL)
-			WCC->cs_inet_email  = NewStrBuf();
+			WCC->cs_inet_email = NewStrBuf();
 		StrBufExtract_NextToken(WCC->cs_inet_email, Buf, &pch, '|');
 	}
 	get_preference("floordiv_expanded", &FloorDiv);
@@ -182,8 +181,7 @@ void ajax_login_newuser(void) {
 /* 
  * Try to create an account manually after an OpenID was verified
  */
-void openid_manual_create(void)
-{
+void openid_manual_create(void) {
 	StrBuf *Buf;
 
 	/* Did the user change his mind?  Pack up and go home. */
@@ -221,7 +219,8 @@ void openid_manual_create(void)
 			do_template("authpopup_finished");
 			end_burst();
 		}
-	} else {
+	}
+	else {
 		/* Still no good!  Go back to teh dialog to select a username */
 		const StrBuf *Buf;
 		putbstr("__claimed_id", NewStrBufDup(sbstr("openid_url")));
@@ -243,16 +242,12 @@ void openid_manual_create(void)
  * Perform authentication using OpenID
  * assemble the checkid_setup request and then redirect to the user's identity provider
  */
-void do_openid_login(void)
-{
+void do_openid_login(void) {
 	char buf[4096];
 
 	snprintf(buf, sizeof buf,
-		"OIDS %s|%s/finalize_openid_login|%s",
-		bstr("openid_url"),
-		ChrPtr(site_prefix),
-		ChrPtr(site_prefix)
-	);
+		 "OIDS %s|%s/finalize_openid_login|%s", bstr("openid_url"), ChrPtr(site_prefix), ChrPtr(site_prefix)
+	    );
 
 	serv_puts(buf);
 	serv_getln(buf, sizeof buf);
@@ -275,8 +270,7 @@ void do_openid_login(void)
  * Complete the authentication using OpenID
  * This function handles the positive or negative assertion from the user's Identity Provider
  */
-void finalize_openid_login(void)
-{
+void finalize_openid_login(void) {
 	StrBuf *Buf;
 	wcsession *WCC = WC;
 	int linecount = 0;
@@ -298,10 +292,10 @@ void finalize_openid_login(void)
 				const char *HKey;
 				HashPos *Cursor;
 				int len;
-				
-				Cursor = GetNewHashPos (WCC->Hdr->urlstrings, 0);
+
+				Cursor = GetNewHashPos(WCC->Hdr->urlstrings, 0);
 				while (GetNextHashPos(WCC->Hdr->urlstrings, Cursor, &HKLen, &HKey, &U)) {
-					u = (urlcontent*) U;
+					u = (urlcontent *) U;
 					if (!strncasecmp(u->url_key, "openid.", 7)) {
 						serv_printf("%s|%s", &u->url_key[7], ChrPtr(u->url_data));
 					}
@@ -310,11 +304,9 @@ void finalize_openid_login(void)
 				serv_puts("000");
 
 				linecount = 0;
-				while (len = StrBuf_ServGetln(Buf), 
-				       ((len >= 0) &&
-					((len != 3) || strcmp(ChrPtr(Buf), "000") )))
-				{
-					if (linecount == 0) result = NewStrBufDup(Buf);
+				while (len = StrBuf_ServGetln(Buf), ((len >= 0) && ((len != 3) || strcmp(ChrPtr(Buf), "000")))) {
+					if (linecount == 0)
+						result = NewStrBufDup(Buf);
 					if (!strcasecmp(ChrPtr(result), "authenticate")) {
 						if (linecount == 1) {
 							username = NewStrBufDup(Buf);
@@ -344,7 +336,7 @@ void finalize_openid_login(void)
 	/*
 	 * Is this an attempt to associate a new OpenID with an account that is already logged in?
 	 */
-	if ( (WCC->logged_in) && (havebstr("attach_existing")) ) {
+	if ((WCC->logged_in) && (havebstr("attach_existing"))) {
 		display_openids();
 	}
 
@@ -360,7 +352,8 @@ void finalize_openid_login(void)
 			output_headers(1, 0, 0, 0, 1, 0);
 			do_template("authpopup_finished");
 			end_burst();
-		} else {
+		}
+		else {
 			begin_burst();
 			output_headers(1, 0, 0, 0, 1, 0);
 			wc_printf("<html><body>");
@@ -416,7 +409,7 @@ void do_welcome(void) {
 	 * Go to the user's preferred start page
 	 */
 	if (!get_preference("startpage", &Buf)) {
-		Buf = NewStrBuf ();
+		Buf = NewStrBuf();
 		StrBufPrintf(Buf, "dotskip?room=_BASEROOM_");
 		set_preference("startpage", Buf, 1);
 	}
@@ -444,8 +437,7 @@ void end_webcit_session(void) {
 /* 
  * Log out the session with the Citadel server
  */
-void do_logout(void)
-{
+void do_logout(void) {
 	wcsession *WCC = WC;
 	char buf[SIZ];
 
@@ -476,19 +468,14 @@ void do_logout(void)
 /* 
  * Special page for monitoring scripts etc
  */
-void monitor(void)
-{
+void monitor(void) {
 	output_headers(0, 0, 0, 0, 0, 0);
 
-	hprintf("Content-type: text/plain\r\n"
-		"Server: " PACKAGE_STRING "\r\n"
-		"Connection: close\r\n"
-	);
+	hprintf("Content-type: text/plain\r\n" "Server: " PACKAGE_STRING "\r\n" "Connection: close\r\n");
 	begin_burst();
 
-	wc_printf("Connection to Citadel server in %s : %s\r\n", ctdl_dir,
-		(WC->connected ? "SUCCESS" : "FAIL")
-	);
+	wc_printf("Connection to Citadel server in %s : %s\r\n", ctdl_dir, (WC->connected ? "SUCCESS" : "FAIL")
+	    );
 
 	wDumpContent(0);
 }
@@ -497,8 +484,7 @@ void monitor(void)
 /*
  * validate new users
  */
-void validate(void)
-{
+void validate(void) {
 	char cmd[SIZ];
 	char user[SIZ];
 	char buf[SIZ];
@@ -506,9 +492,9 @@ void validate(void)
 
 	output_headers(1, 1, 1, 0, 0, 0);
 
-        do_template("box_begin_1");
-        StrBufAppendBufPlain(WC->WBuf, _("Validate new users"), -1, 0);
-        do_template("box_begin_2");
+	do_template("box_begin_1");
+	StrBufAppendBufPlain(WC->WBuf, _("Validate new users"), -1, 0);
+	do_template("box_begin_2");
 
 	/* If the user just submitted a validation, process it... */
 	safestrncpy(buf, bstr("user"), sizeof buf);
@@ -550,8 +536,7 @@ void validate(void)
 			serv_getln(buf, sizeof buf);
 			++a;
 			if (a == 1)
-				wc_printf("#%s<br><H1>%s</H1>",
-					buf, &cmd[4]);
+				wc_printf("#%s<br><H1>%s</H1>", buf, &cmd[4]);
 			if (a == 2) {
 				char *pch;
 				int haveChar = 0;
@@ -559,23 +544,18 @@ void validate(void)
 				int haveOther = 0;
 				int haveLong = 0;
 				pch = buf;
-				while (!IsEmptyStr(pch))
-				{
+				while (!IsEmptyStr(pch)) {
 					if (isdigit(*pch))
 						haveNum = 1;
 					else if (isalpha(*pch))
 						haveChar = 1;
 					else
 						haveOther = 1;
-					pch ++;
+					pch++;
 				}
 				if (pch - buf > 7)
 					haveLong = 1;
-				switch (haveLong + 
-					haveChar + 
-					haveNum + 
-					haveOther)
-				{
+				switch (haveLong + haveChar + haveNum + haveOther) {
 				case 0:
 					pch = _("very weak");
 					break;
@@ -605,10 +585,10 @@ void validate(void)
 			if (a == 8)
 				wc_printf("%s<br>\n", buf);
 			if (a == 9)
-				wc_printf(_("Current access level: %d (%s)\n"),
-					atoi(buf), axdefs[atoi(buf)]);
+				wc_printf(_("Current access level: %d (%s)\n"), atoi(buf), axdefs[atoi(buf)]);
 		} while (strcmp(buf, "000"));
-	} else {
+	}
+	else {
 		wc_printf("<H1>%s</H1>%s<br>\n", user, &cmd[4]);
 	}
 
@@ -618,8 +598,7 @@ void validate(void)
 	for (a = 0; a <= 6; ++a) {
 		wc_printf("<a href=\"validate?nonce=%d?user=", WC->nonce);
 		urlescputs(user);
-		wc_printf("&axlevel=%d\">%s</A>&nbsp;&nbsp;&nbsp;\n",
-			a, axdefs[a]);
+		wc_printf("&axlevel=%d\">%s</A>&nbsp;&nbsp;&nbsp;\n", a, axdefs[a]);
 	}
 	wc_printf("<br>\n");
 
@@ -636,8 +615,7 @@ void validate(void)
  * (Set during_login to 1 if this registration is being performed during
  * new user login and will require chaining to the proper screen.)
  */
-void display_reg(int during_login)
-{
+void display_reg(int during_login) {
 	folder Room;
 	StrBuf *Buf;
 	message_summary *VCMsg = NULL;
@@ -655,7 +633,7 @@ void display_reg(int during_login)
 			display_main_menu();
 		}
 		FreeStrBuf(&Buf);
-		FlushFolder(&Room);		
+		FlushFolder(&Room);
 		return;
 	}
 	FlushFolder(&Room);
@@ -690,8 +668,7 @@ void display_reg(int during_login)
  * change password
  * if passwords match, propagate it to citserver.
  */
-void changepw(void)
-{
+void changepw(void) {
 	StrBuf *Line;
 	char newpass1[32], newpass2[32];
 
@@ -721,14 +698,10 @@ void changepw(void)
 	StrBuf_ServGetln(Line);
 	if (GetServerStatusMsg(Line, NULL, 1, 0) == 2) {
 		if (WC->wc_password == NULL)
-			WC->wc_password = NewStrBufPlain(
-				ChrPtr(Line) + 4, 
-				StrLength(Line) - 4);
+			WC->wc_password = NewStrBufPlain(ChrPtr(Line) + 4, StrLength(Line) - 4);
 		else {
 			FlushStrBuf(WC->wc_password);
-			StrBufAppendBufPlain(WC->wc_password,  
-					     ChrPtr(Line) + 4, 
-					     StrLength(Line) - 4, 0);
+			StrBufAppendBufPlain(WC->wc_password, ChrPtr(Line) + 4, StrLength(Line) - 4, 0);
 		}
 		display_main_menu();
 	}
@@ -739,9 +712,8 @@ void changepw(void)
 }
 
 
-int ConditionalHaveAccessCreateRoom(StrBuf *Target, WCTemplputParams *TP)
-{
-	StrBuf *Buf;	
+int ConditionalHaveAccessCreateRoom(StrBuf * Target, WCTemplputParams * TP) {
+	StrBuf *Buf;
 
 	Buf = NewStrBuf();
 	serv_puts("CRE8 0");
@@ -758,15 +730,13 @@ int ConditionalHaveAccessCreateRoom(StrBuf *Target, WCTemplputParams *TP)
 }
 
 
-int ConditionalAide(StrBuf *Target, WCTemplputParams *TP)
-{
+int ConditionalAide(StrBuf * Target, WCTemplputParams * TP) {
 	wcsession *WCC = WC;
-	return (WCC != NULL) ? ((WCC->logged_in == 0)||(WC->is_aide == 0)) : 0;
+	return (WCC != NULL) ? ((WCC->logged_in == 0) || (WC->is_aide == 0)) : 0;
 }
 
 
-int ConditionalIsLoggedIn(StrBuf *Target, WCTemplputParams *TP) 
-{
+int ConditionalIsLoggedIn(StrBuf * Target, WCTemplputParams * TP) {
 	wcsession *WCC = WC;
 	return (WCC != NULL) ? (WCC->logged_in == 0) : 0;
 
@@ -787,24 +757,22 @@ void _display_reg(void) {
 }
 
 
-void Header_HandleAuth(StrBuf *Line, ParsedHttpHdrs *hdr)
-{
-	if (hdr->HR.got_auth == NO_AUTH) /* don't override cookie auth... */
-	{
+void Header_HandleAuth(StrBuf * Line, ParsedHttpHdrs * hdr) {
+	if (hdr->HR.got_auth == NO_AUTH) {	/* don't override cookie auth... */
 		if (strncasecmp(ChrPtr(Line), "Basic", 5) == 0) {
 			StrBufCutLeft(Line, 6);
 			StrBufDecodeBase64(Line);
 			hdr->HR.plainauth = Line;
 			hdr->HR.got_auth = AUTH_BASIC;
 		}
-		else 
+		else
 			syslog(LOG_WARNING, "Authentication scheme not supported! [%s]\n", ChrPtr(Line));
 	}
 }
 
 
-void CheckAuthBasic(ParsedHttpHdrs *hdr)
-{
+void CheckAuthBasic(ParsedHttpHdrs * hdr) {
+
 /*
   todo: enable this if we can have other sessions than authenticated ones.
 	if (hdr->DontNeedAuth)
@@ -815,8 +783,7 @@ void CheckAuthBasic(ParsedHttpHdrs *hdr)
 }
 
 
-void GetAuthBasic(ParsedHttpHdrs *hdr)
-{
+void GetAuthBasic(ParsedHttpHdrs * hdr) {
 	const char *Pos = NULL;
 	if (hdr->c_username == NULL)
 		hdr->c_username = NewStrBufPlain(HKEY(DEFAULT_HTTPAUTH_USER));
@@ -827,9 +794,9 @@ void GetAuthBasic(ParsedHttpHdrs *hdr)
 }
 
 
-void Header_HandleCookie(StrBuf *Line, ParsedHttpHdrs *hdr)
-{
+void Header_HandleCookie(StrBuf * Line, ParsedHttpHdrs * hdr) {
 	const char *pch;
+
 /*
   todo: enable this if we can have other sessions than authenticated ones.
 	if (hdr->DontNeedAuth)
@@ -844,20 +811,12 @@ void Header_HandleCookie(StrBuf *Line, ParsedHttpHdrs *hdr)
 	StrBufCutLeft(hdr->HR.RawCookie, (pch - ChrPtr(hdr->HR.RawCookie)) + 7);
 	StrBufDecodeHex(hdr->HR.RawCookie);
 
-	cookie_to_stuff(Line, &hdr->HR.desired_session,
-			hdr->c_username,
-			hdr->c_password,
-			hdr->c_roomname,
-			hdr->c_language
-	);
+	cookie_to_stuff(Line, &hdr->HR.desired_session, hdr->c_username, hdr->c_password, hdr->c_roomname, hdr->c_language);
 	hdr->HR.got_auth = AUTH_COOKIE;
 }
 
 
-void 
-HttpNewModule_AUTH
-(ParsedHttpHdrs *httpreq)
-{
+void HttpNewModule_AUTH(ParsedHttpHdrs * httpreq) {
 	httpreq->c_username = NewStrBufPlain(HKEY(DEFAULT_HTTPAUTH_USER));
 	httpreq->c_password = NewStrBufPlain(HKEY(DEFAULT_HTTPAUTH_PASS));
 	httpreq->c_roomname = NewStrBuf();
@@ -865,10 +824,7 @@ HttpNewModule_AUTH
 }
 
 
-void 
-HttpDetachModule_AUTH
-(ParsedHttpHdrs *httpreq)
-{
+void HttpDetachModule_AUTH(ParsedHttpHdrs * httpreq) {
 	FLUSHStrBuf(httpreq->c_username);
 	FLUSHStrBuf(httpreq->c_password);
 	FLUSHStrBuf(httpreq->c_roomname);
@@ -876,10 +832,7 @@ HttpDetachModule_AUTH
 }
 
 
-void 
-HttpDestroyModule_AUTH
-(ParsedHttpHdrs *httpreq)
-{
+void HttpDestroyModule_AUTH(ParsedHttpHdrs * httpreq) {
 	FreeStrBuf(&httpreq->c_username);
 	FreeStrBuf(&httpreq->c_password);
 	FreeStrBuf(&httpreq->c_roomname);
@@ -887,18 +840,15 @@ HttpDestroyModule_AUTH
 }
 
 
-void 
-InitModule_AUTH
-(void)
-{
+void InitModule_AUTH(void) {
 	initialize_axdefs();
 	RegisterHeaderHandler(HKEY("COOKIE"), Header_HandleCookie);
 	RegisterHeaderHandler(HKEY("AUTHORIZATION"), Header_HandleAuth);
 
 	/* no url pattern at all? Show login. */
-	WebcitAddUrlHandler(HKEY(""), "", 0, do_welcome, ANONYMOUS|COOKIEUNNEEDED);
+	WebcitAddUrlHandler(HKEY(""), "", 0, do_welcome, ANONYMOUS | COOKIEUNNEEDED);
 
-	WebcitAddUrlHandler(HKEY("do_welcome"), "", 0, do_welcome, ANONYMOUS|COOKIEUNNEEDED);
+	WebcitAddUrlHandler(HKEY("do_welcome"), "", 0, do_welcome, ANONYMOUS | COOKIEUNNEEDED);
 	WebcitAddUrlHandler(HKEY("openid_login"), "", 0, do_openid_login, ANONYMOUS);
 	WebcitAddUrlHandler(HKEY("finalize_openid_login"), "", 0, finalize_openid_login, ANONYMOUS);
 	WebcitAddUrlHandler(HKEY("openid_manual_create"), "", 0, openid_manual_create, ANONYMOUS);
@@ -907,22 +857,19 @@ InitModule_AUTH
 	WebcitAddUrlHandler(HKEY("display_reg"), "", 0, _display_reg, 0);
 	WebcitAddUrlHandler(HKEY("changepw"), "", 0, changepw, 0);
 	WebcitAddUrlHandler(HKEY("termquit"), "", 0, do_logout, 0);
-	WebcitAddUrlHandler(HKEY("do_logout"), "", 0, do_logout, ANONYMOUS|COOKIEUNNEEDED|FORCE_SESSIONCLOSE);
-	WebcitAddUrlHandler(HKEY("monitor"), "", 0, monitor, ANONYMOUS|COOKIEUNNEEDED|FORCE_SESSIONCLOSE);
-	WebcitAddUrlHandler(HKEY("ajax_login_username_password"), "", 0, ajax_login_username_password, AJAX|ANONYMOUS);
-	WebcitAddUrlHandler(HKEY("ajax_login_newuser"), "", 0, ajax_login_newuser, AJAX|ANONYMOUS);
+	WebcitAddUrlHandler(HKEY("do_logout"), "", 0, do_logout, ANONYMOUS | COOKIEUNNEEDED | FORCE_SESSIONCLOSE);
+	WebcitAddUrlHandler(HKEY("monitor"), "", 0, monitor, ANONYMOUS | COOKIEUNNEEDED | FORCE_SESSIONCLOSE);
+	WebcitAddUrlHandler(HKEY("ajax_login_username_password"), "", 0, ajax_login_username_password, AJAX | ANONYMOUS);
+	WebcitAddUrlHandler(HKEY("ajax_login_newuser"), "", 0, ajax_login_newuser, AJAX | ANONYMOUS);
 	WebcitAddUrlHandler(HKEY("switch_language"), "", 0, switch_language, ANONYMOUS);
 	RegisterConditional("COND:AIDE", 2, ConditionalAide, CTX_NONE);
 	RegisterConditional("COND:LOGGEDIN", 2, ConditionalIsLoggedIn, CTX_NONE);
-	RegisterConditional("COND:MAY_CREATE_ROOM", 2,  ConditionalHaveAccessCreateRoom, CTX_NONE);
+	RegisterConditional("COND:MAY_CREATE_ROOM", 2, ConditionalHaveAccessCreateRoom, CTX_NONE);
 	return;
 }
 
 
-void 
-SessionDestroyModule_AUTH
-(wcsession *sess)
-{
+void SessionDestroyModule_AUTH(wcsession * sess) {
 	FreeStrBuf(&sess->wc_username);
 	FreeStrBuf(&sess->wc_fullname);
 	FreeStrBuf(&sess->wc_password);

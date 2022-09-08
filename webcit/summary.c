@@ -1,3 +1,4 @@
+
 /*
  * Displays the "Summary Page"
  *
@@ -32,8 +33,7 @@ void output_date(void) {
 	wc_printf("%s", buf);
 }
 
-void tmplput_output_date(StrBuf *Target, WCTemplputParams *TP)
-{
+void tmplput_output_date(StrBuf * Target, WCTemplputParams * TP) {
 	struct tm tm;
 	time_t now;
 	char buf[128];
@@ -59,10 +59,11 @@ void new_messages_section(void) {
 
 
 	number_of_rooms_to_check = num_tokens(rooms_to_check, '|');
-	if (number_of_rooms_to_check == 0) return;
+	if (number_of_rooms_to_check == 0)
+		return;
 
 	wc_printf("<table border=\"0\" width=\"100%%\">\n");
-	for (i=0; i<number_of_rooms_to_check; ++i) {
+	for (i = 0; i < number_of_rooms_to_check; ++i) {
 		extract_token(room, rooms_to_check, i, '|', sizeof room);
 
 		serv_printf("GOTO %s", room);
@@ -73,10 +74,8 @@ void new_messages_section(void) {
 			urlescputs(room);
 			wc_printf("\">");
 			escputs(room);
-			wc_printf("</a></td><td>%d/%d</td></tr>\n",
-				extract_int(&buf[4], 1),
-				extract_int(&buf[4], 2)
-			);
+			wc_printf("</a></td><td>%d/%d</td></tr>\n", extract_int(&buf[4], 1), extract_int(&buf[4], 2)
+			    );
 		}
 	}
 	wc_printf("</table>\n");
@@ -116,7 +115,7 @@ void tasks_section(void) {
 	if (num_msgs > 0) {
 		at = GetNewHashPos(WC->summ, 0);
 		while (GetNextHashPos(WC->summ, at, &HKLen, &HashKey, &vMsg)) {
-			Msg = (message_summary*) vMsg;		
+			Msg = (message_summary *) vMsg;
 			tasks_LoadMsgFromServer(NULL, NULL, Msg, 0, 0);
 		}
 		DeleteHashPos(&at);
@@ -150,29 +149,23 @@ void calendar_section(void) {
 	Stat.maxload = 10000;
 	Stat.lowest_found = (-1);
 	Stat.highest_found = (-1);
-	
+
 	Buf = NewStrBufPlain(HKEY("_CALENDAR_"));
 	gotoroom(Buf);
 	FreeStrBuf(&Buf);
-	if ( (WC->CurRoom.view != VIEW_CALENDAR) && (WC->CurRoom.view != VIEW_CALBRIEF) ) {
+	if ((WC->CurRoom.view != VIEW_CALENDAR) && (WC->CurRoom.view != VIEW_CALBRIEF)) {
 		num_msgs = 0;
 	}
 	else {
 		num_msgs = load_msg_ptrs("MSGS ALL", NULL, NULL, &Stat, NULL, NULL, NULL, NULL, 0);
 	}
-	calendar_GetParamsGetServerCall(&Stat, 
-					&v,
-					readnew, 
-					cmd, 
-					sizeof(cmd),
-					filter,
-					sizeof(filter));
+	calendar_GetParamsGetServerCall(&Stat, &v, readnew, cmd, sizeof(cmd), filter, sizeof(filter));
 
 
 	if (num_msgs > 0) {
 		at = GetNewHashPos(WC->summ, 0);
 		while (GetNextHashPos(WC->summ, at, &HKLen, &HashKey, &vMsg)) {
-			Msg = (message_summary*) vMsg;		
+			Msg = (message_summary *) vMsg;
 			calendar_LoadMsgFromServer(NULL, &v, Msg, 0, 0);
 		}
 		DeleteHashPos(&at);
@@ -185,13 +178,13 @@ void calendar_section(void) {
 	__calendar_Cleanup(&v);
 }
 
-void tmplput_new_messages_section(StrBuf *Target, WCTemplputParams *TP) {
+void tmplput_new_messages_section(StrBuf * Target, WCTemplputParams * TP) {
 	new_messages_section();
 }
-void tmplput_tasks_section(StrBuf *Target, WCTemplputParams *TP) {
+void tmplput_tasks_section(StrBuf * Target, WCTemplputParams * TP) {
 	tasks_section();
 }
-void tmplput_calendar_section(StrBuf *Target, WCTemplputParams *TP) {
+void tmplput_calendar_section(StrBuf * Target, WCTemplputParams * TP) {
 	calendar_section();
 }
 
@@ -199,22 +192,17 @@ void tmplput_calendar_section(StrBuf *Target, WCTemplputParams *TP) {
 /*
  * summary page
  */
-void display_summary_page(void)
-{
-	output_headers(1, 1, 1, 0, 0, 0); 
+void display_summary_page(void) {
+	output_headers(1, 1, 1, 0, 0, 0);
 	do_template("summary_page");
 	wDumpContent(1);
 }
 
 
-void 
-InitModule_SUMMARY
-(void)
-{
+void InitModule_SUMMARY(void) {
 	RegisterNamespace("TIME:NOW", 0, 0, tmplput_output_date, NULL, CTX_NONE);
 	WebcitAddUrlHandler(HKEY("summary"), "", 0, display_summary_page, ANONYMOUS);
 	WebcitAddUrlHandler(HKEY("new_messages_html"), "", 0, new_messages_section, AJAX);
 	WebcitAddUrlHandler(HKEY("tasks_inner_html"), "", 0, tasks_section, AJAX);
 	WebcitAddUrlHandler(HKEY("calendar_inner_html"), "", 0, calendar_section, AJAX);
 }
-

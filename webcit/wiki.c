@@ -1,3 +1,4 @@
+
 /*
  * Functions pertaining to rooms with a wiki view
  *
@@ -18,8 +19,7 @@
 /* 
  * Convert a string to something suitable as a wiki index
  */
-void str_wiki_index(StrBuf *s)
-{
+void str_wiki_index(StrBuf * s) {
 	StrBufSanitizeAscii(s, '_');
 	StrBufLowerCase(s);
 }
@@ -30,14 +30,13 @@ void str_wiki_index(StrBuf *s)
  * "rev" may be set to an empty string to display the current version.
  * "do_revert" may be set to nonzero to perform a reversion to the specified version.
  */
-void display_wiki_page_backend(StrBuf *pagename, char *rev, int do_revert)
-{
+void display_wiki_page_backend(StrBuf * pagename, char *rev, int do_revert) {
 	const StrBuf *Mime;
 	long msgnum = (-1L);
 	char buf[256];
 
 	if (WC->CurRoom.view != VIEW_WIKI) {
-		wc_printf(_("'%s' is not a Wiki room."), ChrPtr(WC->CurRoom.name) );
+		wc_printf(_("'%s' is not a Wiki room."), ChrPtr(WC->CurRoom.name));
 		return;
 	}
 
@@ -49,7 +48,7 @@ void display_wiki_page_backend(StrBuf *pagename, char *rev, int do_revert)
 
 	if ((rev != NULL) && (strlen(rev) > 0)) {
 		/* read an older revision */
-		serv_printf("WIKI rev|%s|%s|%s", ChrPtr(pagename), rev, (do_revert ? "revert" : "fetch") );
+		serv_printf("WIKI rev|%s|%s|%s", ChrPtr(pagename), rev, (do_revert ? "revert" : "fetch"));
 		serv_getln(buf, sizeof buf);
 		if (buf[0] == '2') {
 			msgnum = extract_long(&buf[4], 0);
@@ -72,8 +71,7 @@ void display_wiki_page_backend(StrBuf *pagename, char *rev, int do_revert)
 /*
  * Display a specific page from a wiki room
  */
-void display_wiki_page(void)
-{
+void display_wiki_page(void) {
 	StrBuf *pagename;
 	char rev[128];
 	int do_revert = 0;
@@ -91,8 +89,7 @@ void display_wiki_page(void)
 /*
  * Display the revision history for a wiki page (template callback)
  */
-void tmplput_display_wiki_history(StrBuf *Target, WCTemplputParams *TP)
-{
+void tmplput_display_wiki_history(StrBuf * Target, WCTemplputParams * TP) {
 	StrBuf *pagename;
 	StrBuf *Buf;
 	int row = 0;
@@ -116,13 +113,13 @@ void tmplput_display_wiki_history(StrBuf *Target, WCTemplputParams *TP)
 		wc_printf("<th>%s</th>", _("Date"));
 		wc_printf("<th>%s</th>", _("Author"));
 
-		while((StrBuf_ServGetln(Buf) >= 0) &&  strcmp(ChrPtr(Buf), "000")) {
+		while ((StrBuf_ServGetln(Buf) >= 0) && strcmp(ChrPtr(Buf), "000")) {
 
 			rev_date = extract_long(ChrPtr(Buf), 1);
 			webcit_fmt_date(rev_date_displayed, sizeof rev_date_displayed, rev_date, DATEFMT_FULL);
 			StrBufExtract_token(author, Buf, 2, '|');
 
-			wc_printf("<tr bgcolor=\"%s\">", ((row%2) ? "#FFFFFF" : "#DDDDDD"));
+			wc_printf("<tr bgcolor=\"%s\">", ((row % 2) ? "#FFFFFF" : "#DDDDDD"));
 			wc_printf("<td>%s</td><td>", rev_date_displayed);
 			wc_printf("<a href=\"showuser?who=");
 			urlescputs(ChrPtr(author));
@@ -132,23 +129,22 @@ void tmplput_display_wiki_history(StrBuf *Target, WCTemplputParams *TP)
 
 			if (row == 0) {
 				wc_printf("<td><a href=\"wiki?page=%s", bstr("page"));
-				wc_printf("?go="); urlescputs(ChrPtr(WC->CurRoom.name));
+				wc_printf("?go=");
+				urlescputs(ChrPtr(WC->CurRoom.name));
 				wc_printf("\">%s</a></td>", _("(show)"));
 				wc_printf("<td>(%s)</td>", _("Current version"));
 			}
 
 			else {
-				wc_printf("<td><a href=\"wiki?page=%s?rev=%s",
-					bstr("page"),
-					ChrPtr(rev_uuid)
-				);
-				wc_printf("?go="); urlescputs(ChrPtr(WC->CurRoom.name));
+				wc_printf("<td><a href=\"wiki?page=%s?rev=%s", bstr("page"), ChrPtr(rev_uuid)
+				    );
+				wc_printf("?go=");
+				urlescputs(ChrPtr(WC->CurRoom.name));
 				wc_printf("\">%s</a></td>", _("(show)"));
-				wc_printf("<td><a href=\"javascript:GetLoggedInFirst(encodeURIComponent('wiki?page=%s?rev=%s?revert=1'))\">%s</a></td>",
-					bstr("page"),
-					ChrPtr(rev_uuid),
-					_("(revert)")
-				);
+				wc_printf
+				    ("<td><a href=\"javascript:GetLoggedInFirst(encodeURIComponent('wiki?page=%s?rev=%s?revert=1'))\">%s</a></td>",
+				     bstr("page"), ChrPtr(rev_uuid), _("(revert)")
+				    );
 			}
 			wc_printf("</tr>\n");
 
@@ -180,8 +176,7 @@ void tmplput_display_wiki_history(StrBuf *Target, WCTemplputParams *TP)
 /*
  * Display the revision history for a wiki page
  */
-void display_wiki_history(void)
-{
+void display_wiki_history(void) {
 	output_headers(1, 1, 1, 0, 0, 0);
 	do_template("wiki_history");
 	wDumpContent(1);
@@ -191,8 +186,7 @@ void display_wiki_history(void)
 /*
  * Display a list of all pages in a Wiki room (template callback)
  */
-void tmplput_display_wiki_pagelist(StrBuf *Target, WCTemplputParams *TP)
-{
+void tmplput_display_wiki_pagelist(StrBuf * Target, WCTemplputParams * TP) {
 	StrBuf *Buf;
 	int row = 0;
 
@@ -200,7 +194,7 @@ void tmplput_display_wiki_pagelist(StrBuf *Target, WCTemplputParams *TP)
 		serv_printf("MSGS SEARCH|%s||4", bstr("query"));	/* search-reduced list */
 	}
 	else {
-		serv_printf("MSGS ALL|||4");				/* full list */
+		serv_printf("MSGS ALL|||4");	/* full list */
 	}
 
 	Buf = NewStrBuf();
@@ -211,11 +205,11 @@ void tmplput_display_wiki_pagelist(StrBuf *Target, WCTemplputParams *TP)
 		wc_printf("<table class=\"wiki_pagelist_background\">");
 		wc_printf("<th>%s</th>", _("Page title"));
 
-		while((StrBuf_ServGetln(Buf) >= 0) && strcmp(ChrPtr(Buf), "000")) {
+		while ((StrBuf_ServGetln(Buf) >= 0) && strcmp(ChrPtr(Buf), "000")) {
 			StrBufExtract_token(pagetitle, Buf, 1, '|');
 
-			if (!bmstrcasestr((char *)ChrPtr(pagetitle), "_HISTORY_")) {	/* no history pages */
-				wc_printf("<tr bgcolor=\"%s\">", ((row%2) ? "#FFFFFF" : "#DDDDDD"));
+			if (!bmstrcasestr((char *) ChrPtr(pagetitle), "_HISTORY_")) {	/* no history pages */
+				wc_printf("<tr bgcolor=\"%s\">", ((row % 2) ? "#FFFFFF" : "#DDDDDD"));
 				wc_printf("<td><a href=\"wiki?page=");
 				urlescputs(ChrPtr(pagetitle));
 				wc_printf("\">");
@@ -236,16 +230,14 @@ void tmplput_display_wiki_pagelist(StrBuf *Target, WCTemplputParams *TP)
 /*
  * Display a list of all pages in a Wiki room.  Search requests in a Wiki room also go here.
  */
-void display_wiki_pagelist(void)
-{
+void display_wiki_pagelist(void) {
 	output_headers(1, 1, 1, 0, 0, 0);
 	do_template("wiki_pagelist");
 	wDumpContent(1);
 }
 
 
-int wiki_Cleanup(void **ViewSpecific)
-{
+int wiki_Cleanup(void **ViewSpecific) {
 	StrBuf *pagename;
 	pagename = NewStrBufDup(sbstr("page"));
 	display_wiki_page_backend(pagename, "", 0);
@@ -254,8 +246,7 @@ int wiki_Cleanup(void **ViewSpecific)
 }
 
 
-int ConditionalHaveWikiPage(StrBuf *Target, WCTemplputParams *TP)
-{
+int ConditionalHaveWikiPage(StrBuf * Target, WCTemplputParams * TP) {
 	const char *page;
 	const char *pch;
 	long len;
@@ -266,54 +257,34 @@ int ConditionalHaveWikiPage(StrBuf *Target, WCTemplputParams *TP)
 }
 
 
-int ConditionalHavewikiType(StrBuf *Target, WCTemplputParams *TP)
-{
+int ConditionalHavewikiType(StrBuf * Target, WCTemplputParams * TP) {
 	const char *pch;
 	long len;
 
 	GetTemplateTokenString(Target, TP, 2, &pch, &len);
-	return bmstrcasestr((char *)ChrPtr(WC->Hdr->HR.ReqLine), pch) != NULL;
+	return bmstrcasestr((char *) ChrPtr(WC->Hdr->HR.ReqLine), pch) != NULL;
 }
 
 
-int wiki_PrintHeaderPage(SharedMessageStatus *Stat, void **ViewSpecific)
-{
+int wiki_PrintHeaderPage(SharedMessageStatus * Stat, void **ViewSpecific) {
 	/* this function was intentionaly left empty. */
 	return 0;
 }
 
-int wiki_GetParamsGetServerCall(SharedMessageStatus *Stat, 
-				void **ViewSpecific, 
-				long oper, 
-				char *cmd, 
-				long len,
-				char *filter,
-				long flen)
-{
+int wiki_GetParamsGetServerCall(SharedMessageStatus * Stat,
+				void **ViewSpecific, long oper, char *cmd, long len, char *filter, long flen) {
 	if (oper == do_search)
 		display_wiki_pagelist();
-	else 
+	else
 		http_redirect("wiki?page=home");
 
 	return 300;
 }
 
 
-void 
-InitModule_WIKI
-(void)
-{
-	RegisterReadLoopHandlerset(
-		VIEW_WIKI,
-		wiki_GetParamsGetServerCall,
-		wiki_PrintHeaderPage,
-		NULL,
-		NULL,
-		NULL,
-		NULL,
-		wiki_Cleanup,
-		NULL
-	);
+void InitModule_WIKI(void) {
+	RegisterReadLoopHandlerset(VIEW_WIKI,
+				   wiki_GetParamsGetServerCall, wiki_PrintHeaderPage, NULL, NULL, NULL, NULL, wiki_Cleanup, NULL);
 
 	WebcitAddUrlHandler(HKEY("wiki"), "", 0, display_wiki_page, 0);
 	WebcitAddUrlHandler(HKEY("wiki_history"), "", 0, display_wiki_history, 0);

@@ -1,3 +1,4 @@
+
 /*
  * Handles GroupDAV DELETE requests.
  *
@@ -20,24 +21,23 @@
 /*
  * The pathname is always going to be /groupdav/room_name/euid
  */
-void dav_delete(void) 
-{
+void dav_delete(void) {
 	wcsession *WCC = WC;
 	char dav_uid[SIZ];
 	long dav_msgnum = (-1);
 	char buf[SIZ];
 	int n = 0;
 	StrBuf *dav_roomname = NewStrBuf();
-	
+
 	/* Now extract the message euid */
 	n = StrBufNum_tokens(WCC->Hdr->HR.ReqLine, '/');
-	extract_token(dav_uid, ChrPtr(WCC->Hdr->HR.ReqLine), n-1, '/', sizeof dav_uid);
+	extract_token(dav_uid, ChrPtr(WCC->Hdr->HR.ReqLine), n - 1, '/', sizeof dav_uid);
 	StrBufExtract_token(dav_roomname, WCC->Hdr->HR.ReqLine, 0, '/');
 
 	///* What's left is the room name.  Remove trailing slashes. */
 	//len = StrLength(WCC->Hdr->HR.ReqLine);
 	//if ((len > 0) && (ChrPtr(WCC->Hdr->HR.ReqLinee)[len-1] == '/')) {
-	//	StrBufCutRight(WCC->Hdr->HR.ReqLine, 1);
+	//      StrBufCutRight(WCC->Hdr->HR.ReqLine, 1);
 	//}
 	//StrBufCutLeft(WCC->Hdr->HR.ReqLine, 1);
 

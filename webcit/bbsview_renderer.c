@@ -1,3 +1,4 @@
+
 /* 
  * BBS View renderer module for WebCit
  *
@@ -42,8 +43,7 @@ struct bbsview {
  * Attempt to determine the closest thing to the "last seen message number" using the
  * results of the GTSN command
  */
-long bbsview_get_last_seen(void)
-{
+long bbsview_get_last_seen(void) {
 	char buf[SIZ] = "0";
 
 	serv_puts("GTSN");
@@ -63,7 +63,7 @@ long bbsview_get_last_seen(void)
 		}
 	}
 
-	return(atol(buf));
+	return (atol(buf));
 }
 
 
@@ -71,21 +71,15 @@ long bbsview_get_last_seen(void)
 /*
  * Entry point for message read operations.
  */
-int bbsview_GetParamsGetServerCall(SharedMessageStatus *Stat, 
-				   void **ViewSpecific, 
-				   long oper, 
-				   char *cmd, 
-				   long len,
-				   char *filter,
-				   long flen)
-{
+int bbsview_GetParamsGetServerCall(SharedMessageStatus * Stat,
+				   void **ViewSpecific, long oper, char *cmd, long len, char *filter, long flen) {
 	struct bbsview *BBS = malloc(sizeof(struct bbsview));
 	memset(BBS, 0, sizeof(struct bbsview));
 	*ViewSpecific = BBS;
 
-	Stat->startmsg = (-1);					/* not used here */
-	Stat->sortit = 1;					/* not used here */
-	Stat->num_displayed = DEFAULT_MAXMSGS;			/* not used here */
+	Stat->startmsg = (-1);	/* not used here */
+	Stat->sortit = 1;	/* not used here */
+	Stat->num_displayed = DEFAULT_MAXMSGS;	/* not used here */
 	BBS->requested_page = 0;
 	BBS->lastseen = bbsview_get_last_seen();
 	BBS->start_reading_at = 0;
@@ -115,11 +109,12 @@ int bbsview_GetParamsGetServerCall(SharedMessageStatus *Stat,
 	if (havebstr("maxmsgs")) {
 		Stat->maxmsgs = ibstr("maxmsgs");
 	}
-	if (Stat->maxmsgs == 0) Stat->maxmsgs = DEFAULT_MAXMSGS;
-	
+	if (Stat->maxmsgs == 0)
+		Stat->maxmsgs = DEFAULT_MAXMSGS;
+
 	/* perform a "read all" call to fetch the message list -- we'll cut it down later */
 	rlid[2].cmd(cmd, len);
-	
+
 	return 200;
 }
 
@@ -127,25 +122,20 @@ int bbsview_GetParamsGetServerCall(SharedMessageStatus *Stat,
 /*
  * This function is called for every message in the list.
  */
-int bbsview_LoadMsgFromServer(SharedMessageStatus *Stat, 
-			      void **ViewSpecific, 
-			      message_summary* Msg, 
-			      int is_new, 
-			      int i)
-{
+int bbsview_LoadMsgFromServer(SharedMessageStatus * Stat, void **ViewSpecific, message_summary * Msg, int is_new, int i) {
 	struct bbsview *BBS = (struct bbsview *) *ViewSpecific;
 
 	if (BBS->alloc_msgs == 0) {
 		BBS->alloc_msgs = 1000;
 		BBS->msgs = malloc(BBS->alloc_msgs * sizeof(long));
-		memset(BBS->msgs, 0, (BBS->alloc_msgs * sizeof(long)) );
+		memset(BBS->msgs, 0, (BBS->alloc_msgs * sizeof(long)));
 	}
 
 	/* Check our buffer size */
 	if (BBS->num_msgs >= BBS->alloc_msgs) {
 		BBS->alloc_msgs *= 2;
 		BBS->msgs = realloc(BBS->msgs, (BBS->alloc_msgs * sizeof(long)));
-		memset(&BBS->msgs[BBS->num_msgs], 0, ((BBS->alloc_msgs - BBS->num_msgs) * sizeof(long)) );
+		memset(&BBS->msgs[BBS->num_msgs], 0, ((BBS->alloc_msgs - BBS->num_msgs) * sizeof(long)));
 	}
 
 	BBS->msgs[BBS->num_msgs++] = Msg->msgnum;
@@ -158,19 +148,18 @@ int bbsview_sortfunc(const void *s1, const void *s2) {
 	long l1;
 	long l2;
 
-	l1 = *(long *)(s1);
-	l2 = *(long *)(s2);
+	l1 = *(long *) (s1);
+	l2 = *(long *) (s2);
 
-	if (l1 > l2) return(+1);
-	if (l1 < l2) return(-1);
-	return(0);
+	if (l1 > l2)
+		return (+1);
+	if (l1 < l2)
+		return (-1);
+	return (0);
 }
 
 
-int bbsview_RenderView_or_Tail(SharedMessageStatus *Stat, 
-			       void **ViewSpecific, 
-			       long oper)
-{
+int bbsview_RenderView_or_Tail(SharedMessageStatus * Stat, void **ViewSpecific, long oper) {
 	struct bbsview *BBS = (struct bbsview *) *ViewSpecific;
 	int i;
 	int seq;
@@ -181,7 +170,7 @@ int bbsview_RenderView_or_Tail(SharedMessageStatus *Stat,
 
 	if (Stat->nummsgs > 0) {
 		syslog(LOG_DEBUG, "sorting %d messages\n", BBS->num_msgs);
-		qsort(BBS->msgs, (size_t)(BBS->num_msgs), sizeof(long), bbsview_sortfunc);
+		qsort(BBS->msgs, (size_t) (BBS->num_msgs), sizeof(long), bbsview_sortfunc);
 	}
 
 	if ((BBS->num_msgs % Stat->maxmsgs) == 0) {
@@ -200,12 +189,11 @@ int bbsview_RenderView_or_Tail(SharedMessageStatus *Stat,
 			BBS->requested_page = 0;
 		}
 		else {
-			for (i=0; i<BBS->num_msgs; ++i) {
-				if (
-					(BBS->msgs[i] >= BBS->start_reading_at)
-					&& (BBS->requested_page == (-4))
-				) {
-					BBS->requested_page = (i / Stat->maxmsgs) ;
+			for (i = 0; i < BBS->num_msgs; ++i) {
+				if ((BBS->msgs[i] >= BBS->start_reading_at)
+				    && (BBS->requested_page == (-4))
+				    ) {
+					BBS->requested_page = (i / Stat->maxmsgs);
 				}
 			}
 		}
@@ -222,10 +210,9 @@ int bbsview_RenderView_or_Tail(SharedMessageStatus *Stat,
 			 */
 			BBS->requested_page = 0;
 		}
-		else if (
-			(BBS->num_msgs > 0) 
-			&& (BBS->lastseen <= BBS->msgs[0])
-		) {
+		else if ((BBS->num_msgs > 0)
+			 && (BBS->lastseen <= BBS->msgs[0])
+		    ) {
 			/*
 			 * All messages are new; this is probably the user's first visit to the room,
 			 * so start at the last page instead of showing ancient history.
@@ -237,12 +224,11 @@ int bbsview_RenderView_or_Tail(SharedMessageStatus *Stat,
 			/*
 			 * Some messages are old and some are new.  Go to the start of new messages.
 			 */
-			for (i=0; i<BBS->num_msgs; ++i) {
-				if (
-					(BBS->msgs[i] > BBS->lastseen)
-					&& ( (i == 0) || (BBS->msgs[i-1] <= BBS->lastseen) )
-				) {
-					BBS->requested_page = (i / Stat->maxmsgs) ;
+			for (i = 0; i < BBS->num_msgs; ++i) {
+				if ((BBS->msgs[i] > BBS->lastseen)
+				    && ((i == 0) || (BBS->msgs[i - 1] <= BBS->lastseen))
+				    ) {
+					BBS->requested_page = (i / Stat->maxmsgs);
 				}
 			}
 		}
@@ -261,23 +247,25 @@ int bbsview_RenderView_or_Tail(SharedMessageStatus *Stat,
 	}
 
 	/* keep the requested page within bounds */
-	if (BBS->requested_page < 0) BBS->requested_page = 0;
-	if (BBS->requested_page >= BBS->num_pages) BBS->requested_page = BBS->num_pages - 1;
+	if (BBS->requested_page < 0)
+		BBS->requested_page = 0;
+	if (BBS->requested_page >= BBS->num_pages)
+		BBS->requested_page = BBS->num_pages - 1;
 
 	start_index = BBS->requested_page * Stat->maxmsgs;
-	if (start_index < 0) start_index = 0;
+	if (start_index < 0)
+		start_index = 0;
 	end_index = start_index + Stat->maxmsgs - 1;
 
-	for (seq = 0; seq < 3; ++seq) {		/* cheap & sleazy way of rendering the page numbers twice */
+	for (seq = 0; seq < 3; ++seq) {	/* cheap & sleazy way of rendering the page numbers twice */
 
-		if ( (seq == 1) && (Stat->nummsgs > 0)) {
+		if ((seq == 1) && (Stat->nummsgs > 0)) {
 			/* display the selected range of messages */
 
-			for (i=start_index; (i<=end_index && i<BBS->num_msgs); ++i) {
-				if (
-					(BBS->msgs[i] > BBS->lastseen)
-					&& ( (i == 0) || (BBS->msgs[i-1] <= BBS->lastseen) )
-				) {
+			for (i = start_index; (i <= end_index && i < BBS->num_msgs); ++i) {
+				if ((BBS->msgs[i] > BBS->lastseen)
+				    && ((i == 0) || (BBS->msgs[i - 1] <= BBS->lastseen))
+				    ) {
 					/* new messages start here */
 					do_template("start_of_new_msgs");
 					if (!go_to_the_very_end) {
@@ -287,10 +275,9 @@ int bbsview_RenderView_or_Tail(SharedMessageStatus *Stat,
 				if (BBS->msgs[i] > 0L) {
 					read_message(WC->WBuf, HKEY("view_message"), BBS->msgs[i], NULL, &Mime, NULL);
 				}
-				if (
-					(i == (BBS->num_msgs - 1))
-					&& (BBS->msgs[i] <= BBS->lastseen)
-				) {
+				if ((i == (BBS->num_msgs - 1))
+				    && (BBS->msgs[i] <= BBS->lastseen)
+				    ) {
 					/* no new messages */
 					do_template("no_new_msgs");
 					if (!go_to_the_very_end) {
@@ -300,7 +287,7 @@ int bbsview_RenderView_or_Tail(SharedMessageStatus *Stat,
 			}
 		}
 
-		else if ( (seq == 0) || (seq == 2) ) {
+		else if ((seq == 0) || (seq == 2)) {
 			int first;
 			int last;
 			/* Display the selecto-bar with the page numbers */
@@ -317,22 +304,19 @@ int bbsview_RenderView_or_Tail(SharedMessageStatus *Stat,
 			first = 0;
 			last = BBS->num_pages - 1;
 
-			for (i=0; i<=last; ++i) {
+			for (i = 0; i <= last; ++i) {
 
-				if (
-					(i == first)
-					|| (i == last)
-					|| (i == BBS->requested_page)
-					|| (
-						((BBS->requested_page - i) < RANGE)
-						&& ((BBS->requested_page - i) > (0 - RANGE))
-					)
-				) {
+				if ((i == first)
+				    || (i == last)
+				    || (i == BBS->requested_page)
+				    || (((BBS->requested_page - i) < RANGE)
+					&& ((BBS->requested_page - i) > (0 - RANGE))
+				    )
+				    ) {
 
-					if (
-						(i == last) 
-						&& (last - BBS->requested_page > RANGE)
-					) {
+					if ((i == last)
+					    && (last - BBS->requested_page > RANGE)
+					    ) {
 						wc_printf("...&nbsp;");
 					}
 					if (i == BBS->requested_page) {
@@ -341,22 +325,19 @@ int bbsview_RenderView_or_Tail(SharedMessageStatus *Stat,
 					else {
 						wc_printf("<a href=\"readfwd?go=");
 						urlescputs(ChrPtr(WC->CurRoom.name));
-						wc_printf("?start_reading_at=%ld\">",
-							BBS->msgs[i*Stat->maxmsgs]
-						);
+						wc_printf("?start_reading_at=%ld\">", BBS->msgs[i * Stat->maxmsgs]
+						    );
 						/* wc_printf("?page=%d\">", i); */
 						wc_printf("<span class=\"moreprompt_link\">");
 					}
-					if (
-						(i == first)
-						&& (BBS->requested_page > (RANGE + 1))
-					) {
+					if ((i == first)
+					    && (BBS->requested_page > (RANGE + 1))
+					    ) {
 						wc_printf(_("First"));
 					}
-					else if (
-						(i == last)
-						&& (last - BBS->requested_page > RANGE)
-					) {
+					else if ((i == last)
+						 && (last - BBS->requested_page > RANGE)
+					    ) {
 						wc_printf(_("Last"));
 					}
 					else {
@@ -369,10 +350,9 @@ int bbsview_RenderView_or_Tail(SharedMessageStatus *Stat,
 						wc_printf("</span>");
 						wc_printf("</a>");
 					}
-					if (
-						(i == first)
-						&& (BBS->requested_page > (RANGE + 1))
-					) {
+					if ((i == first)
+					    && (BBS->requested_page > (RANGE + 1))
+					    ) {
 						wc_printf("&nbsp;...");
 					}
 					if (i != last) {
@@ -387,12 +367,11 @@ int bbsview_RenderView_or_Tail(SharedMessageStatus *Stat,
 	if (go_to_the_very_end) {
 		StrBufAppendPrintf(WC->trailing_javascript, "location.href=\"#end_of_msgs\";\n");
 	}
-	return(0);
+	return (0);
 }
 
 
-int bbsview_Cleanup(void **ViewSpecific)
-{
+int bbsview_Cleanup(void **ViewSpecific) {
 	struct bbsview *BBS = (struct bbsview *) *ViewSpecific;
 
 	if (BBS->alloc_msgs != 0) {
@@ -405,19 +384,8 @@ int bbsview_Cleanup(void **ViewSpecific)
 }
 
 
-void 
-InitModule_BBSVIEWRENDERERS
-(void)
-{
-	RegisterReadLoopHandlerset(
-		VIEW_BBS,
-		bbsview_GetParamsGetServerCall,
-		NULL,
-		NULL,
-		NULL, 
-		bbsview_LoadMsgFromServer,
-		bbsview_RenderView_or_Tail,
-		bbsview_Cleanup,
-		NULL
-	);
+void InitModule_BBSVIEWRENDERERS(void) {
+	RegisterReadLoopHandlerset(VIEW_BBS,
+				   bbsview_GetParamsGetServerCall,
+				   NULL, NULL, NULL, bbsview_LoadMsgFromServer, bbsview_RenderView_or_Tail, bbsview_Cleanup, NULL);
 }
