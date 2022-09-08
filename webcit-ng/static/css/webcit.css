@@ -332,6 +332,7 @@ blockquote pre {
 	position: sticky;
 	top: 0;
 	z-index: 6;
+	background-color: #CCCCCC;
 }
 
 .ctdl-mailbox-reading-pane {		/* message reading pane when in mailbox view */

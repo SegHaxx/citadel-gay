@@ -131,8 +131,8 @@ function mail_display() {
 
 	document.getElementById("ctdl-main").innerHTML
 		= "<div id=\"ctdl-mailbox-grid-container\" class=\"ctdl-mailbox-grid-container\">"
-		+ "<div id=\"ctdl-mailbox-pane\" class=\"ctdl-mailbox-pane\">Loading...</div>"
-		+ "<div id=\"ctdl-mailbox-reading-pane\" class=\"ctdl-mailbox-reading-pane\">Lorem ipsum etc. etc.</div>"
+		+ "<div id=\"ctdl-mailbox-pane\" class=\"ctdl-mailbox-pane\"></div>"
+		+ "<div id=\"ctdl-mailbox-reading-pane\" class=\"ctdl-mailbox-reading-pane\"></div>"
 		+ "</div>"
 	;
 
