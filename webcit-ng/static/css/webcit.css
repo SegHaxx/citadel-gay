@@ -364,7 +364,6 @@ blockquote pre {
 }
 
 .ctdl-mailbox-reading-pane {				/* message reading pane when in mailbox view */
-	height: 80vw;
 	overflow-x: hidden;
 	overflow-y: auto;
 	background-color: GhostWhite;
