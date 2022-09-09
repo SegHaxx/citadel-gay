@@ -131,8 +131,6 @@ html,body,h1,h2,h3,h4,h5 {
 	overflow: hidden;
 	background-color: White;
 	padding: 5px;		/* inside the box */
-	border-style: solid;	/* could also be: dotted, dashed, solid, double, groove, ridge, inset, outset, none, hidden */
-	border-width: 1px;
 }
 
 .ctdl-msg-reply {
@@ -327,6 +325,7 @@ blockquote pre {
 	overflow-x: hidden;
 	overflow-y: scroll;
 	background-color: #DDDDDD;
+	border-bottom: solid 3px SlateGrey;		/* We can probably turn this into a drag handle */
 }
 
 .ctdl-mailbox-table {
