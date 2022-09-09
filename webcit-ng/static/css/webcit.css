@@ -368,6 +368,20 @@ blockquote pre {
 	cursor: default;
 }
 
+.ctdl-mail-subject {					/* Subject column in mailbox message list */
+}
+
+.ctdl-mail-sender {					/* Sender column in mailbox message list */
+}
+
+.ctdl-mail-date {					/* Date column in mailbox message list */
+	white-space: nowrap;
+}
+
+.ctdl-mail-msgnum {					/* # column in mailbox message list */
+	white-space: nowrap;
+}
+
 .ctdl-mailbox-reading-pane {				/* message reading pane when in mailbox view */
 	overflow-x: hidden;
 	overflow-y: auto;

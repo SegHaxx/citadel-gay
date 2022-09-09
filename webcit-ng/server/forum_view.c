@@ -27,8 +27,6 @@ void json_render_one_message(struct http_transaction *h, struct ctdlsession *c, 
 	char content_transfer_encoding[1024] = { 0 };
 	char content_type[1024] = { 0 };
 	char datetime[128] = { 0 };
-	char author[1024] = { 0 };
-	char emailaddr[1024] = { 0 };
 	int message_originated_locally = 0;
 
 	setup_for_forum_view(c);
@@ -48,10 +46,10 @@ void json_render_one_message(struct http_transaction *h, struct ctdlsession *c, 
 
 		// citadel header parsing here
 		if (!strncasecmp(buf, "from=", 5)) {
-			safestrncpy(author, &buf[5], sizeof author);
+			JsonObjectAppend(j, NewJsonPlainString(HKEY("from"), &buf[5], -1));
 		}
 		else if (!strncasecmp(buf, "rfca=", 5)) {
-			safestrncpy(emailaddr, &buf[5], sizeof emailaddr);
+			JsonObjectAppend(j, NewJsonPlainString(HKEY("rfca"), &buf[5], -1));
 		}
 		else if (!strncasecmp(buf, "time=", 5)) {
 			JsonObjectAppend(j, NewJsonNumber(HKEY("time"), atol(&buf[5])));
@@ -70,12 +68,7 @@ void json_render_one_message(struct http_transaction *h, struct ctdlsession *c, 
 		}
 	}
 
-	if (message_originated_locally) {
-		JsonObjectAppend(j, NewJsonPlainString(HKEY("from"), author, -1));
-	}
-	else {
-		JsonObjectAppend(j, NewJsonPlainString(HKEY("from"), emailaddr, -1));		// FIXME do compound address string
-	}
+	JsonObjectAppend(j, NewJsonNumber(HKEY("locl"), message_originated_locally));
 
 	if (!strcmp(buf, "text")) {
 		while ((ctdl_readline(c, buf, sizeof(buf)) >= 0) && (strcmp(buf, "")) && (strcmp(buf, "000"))) {

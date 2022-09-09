@@ -13,6 +13,7 @@ var RefreshMailboxInterval;							// We store our refresh timer here
 // Render a message into the mailbox view
 function mail_render_one(msg, target_div) {
 	let div = "FIXME";
+	console.log(msg);
 	try {
 		outmsg =
 	  	  "<div class=\"ctdl-mmsg-wrapper\">"				// begin message wrapper
@@ -113,10 +114,10 @@ function mail_render_row(msg) {
 		//+ "onmouseenter=\"console.log('mouse in');\" "
 		//+ "onmouseleave=\"console.log('mouse out');\""
 		+ ">"
-		+ "<td>" + msg["subject"] + "</td>"
-		+ "<td>" + msg["author"] + " &lt;" + msg["addr"] + "&gt;</td>"
-		+ "<td style=\"white-space: nowrap\">" + string_timestamp(msg["time"],1) + "</td>"
-		+ "<td>" + msg["msgnum"] + "</td>"
+		+ "<td class=\"ctdl-mail-subject\">" + msg["subject"] + "</td>"
+		+ "<td class=\"ctdl-mail-sender\">" + msg["author"] + "</td>"
+		+ "<td class=\"ctdl-mail-date\">" + string_timestamp(msg["time"],1) + "</td>"
+		+ "<td class=\"ctdl-mail-msgnum\">" + msg["msgnum"] + "</td>"
 		+ "</tr>";
 	return(row);
 }
