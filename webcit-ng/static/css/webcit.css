@@ -319,6 +319,7 @@ blockquote pre {
 	overflow: hidden;
 	width: 100%;
 	height: 100%;
+	background-color: GhostWhite;
 }
 
 .ctdl-mailbox-pane {					/* list of messages when in mailbox view */
@@ -335,8 +336,11 @@ blockquote pre {
 }
 
 .ctdl-mailbox-table td {
-	padding-top: 5px;
-	padding-bottom: 5px;
+	padding: 5px;
+}
+
+.ctdl-mailbox-table tr {
+	cursor: pointer;
 }
 
 .ctdl-mailbox-table tr:nth-child(even) {		/* this gives us the alternating-bar effect */
@@ -361,6 +365,7 @@ blockquote pre {
 .ctdl-mailbox-table th:hover {				/* Suppress highlighting the header bar */
 	background-color: SlateGrey;
 	color: White;
+	cursor: default;
 }
 
 .ctdl-mailbox-reading-pane {				/* message reading pane when in mailbox view */

@@ -115,7 +115,7 @@ function mail_render_row(msg) {
 		+ ">"
 		+ "<td>" + msg["subject"] + "</td>"
 		+ "<td>" + msg["author"] + " &lt;" + msg["addr"] + "&gt;</td>"
-		+ "<td>" + string_timestamp(msg["time"],1) + "</td>"
+		+ "<td style=\"white-space: nowrap\">" + string_timestamp(msg["time"],1) + "</td>"
 		+ "<td>" + msg["msgnum"] + "</td>"
 		+ "</tr>";
 	return(row);
