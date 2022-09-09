@@ -183,9 +183,7 @@ function forum_render_one(msg, existing_div) {
 		+ "<div class=\"ctdl-fmsg-content\">"				// begin content
 		+ "<div class=\"ctdl-msg-header\">"				// begin header
 		+ "<span class=\"ctdl-msg-header-info\">"			// begin header info on left side
-		+ "<span class=\"ctdl-username\" onClick=\"javascript:user_profile('" + msg.from + "');\">"
-		+ msg.from
-		+ "</a></span>"							// end username
+		+ render_msg_author(msg)					// author
 		+ "<span class=\"ctdl-msgdate\">"
 		+ string_timestamp(msg.time,0)
 		+ "</span>"							// end msgdate
