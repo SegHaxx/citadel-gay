@@ -21,7 +21,7 @@ MODAL LOADING
 
 <div class="ctdl-main-grid-container">
 
-	<!-- The style for these appears in webcit.css and was inspired by https://www.w3schools.com/css/css_navbar_horizontal.asp -->
+	<!-- The style for these appears in webcit.css and was inspired by https://www.w3schools.com/css/css_sidebar_horizontal.asp -->
 	<div class="ctdl-grid-banner-item" id="banner">
 		<!-- These items float to the LEFT side of the banner -->
 		<ul class="ctdl-banner-buttons" style="float:left">
@@ -35,18 +35,18 @@ MODAL LOADING
 			<li id="ctdl-ungoto-button" style="display:none" onClick="gotonext(0);">ungoto</li>
 			<li id="ctdl-skip-button" style="display:none" onClick="gotonext(1);">skip</li>
 			<li id="ctdl-goto-button" style="display:none" onClick="gotonext(2);">goto</li>
-			<li id="lilo">Login</button>
+			<li><span id="current_user">Not logged in.</span><br>
+			<button id="lilo">Login</button>
+			<li><i class="fa fa-user-circle fa-3x"></i></li>
 		</ul>
 	</div>
 
-	<div class="ctdl-grid-navbar-item" id="navbar">
+	<div class="ctdl-grid-sidebar-item" id="sidebar">
 		<ul id="ctdl-sidebar" class="ctdl-sidebar-class">
-			<li><i class="fa fa-user-circle fa-3x"></i>
-			<li><span id="current_user">Not logged in.</span><br>
-			<li><a href="#"><i class="fa fa-envelope" onClick="gotoroom('_MAIL_');"></i></a>
-			<li><a href="#"><i class="fa fa-user" onClick="user_profile(current_user);"></i></a>
-			<li><a href="#"<i class="fa fa-cog"></i></a>
-			<li><hr>
+			<!-- <li><a href="#"><i class="fa fa-envelope" onClick="gotoroom('_MAIL_');"></i></a> -->
+			<!-- <li><a href="#"><i class="fa fa-user" onClick="user_profile(current_user);"></i></a> -->
+			<!-- <li><a href="#"<i class="fa fa-cog"></i></a> -->
+			<!-- <li><hr> -->
 			<!-- <li><button onClick="sidebar_close()" title="close menu"><i class="fa fa-remove fa-fw"></i>  Close Menu</button> -->
 			<li><button id="ctdl-sidebar-button-mail" onClick="gotoroom('_MAIL_');"><i class="fa fa-envelope fa-fw"></i>  Mail</button>
 			<li id="ctdl_mail_folder_list" style="display:none"></li>

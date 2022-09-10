@@ -15,7 +15,7 @@
 	background-color: DarkSlateGrey;
 }
 
-.ctdl-grid-navbar-item {
+.ctdl-grid-sidebar-item {
 	grid-area: menu;
 	background-color: GhostWhite;
 }
@@ -116,7 +116,7 @@ html,body,h1,h2,h3,h4,h5 {
 }
 
 .ctdl-forum-reading-pane {
-	background-color: #456789;
+	background-color: DarkSlateGrey;
 }
 
 .ctdl-fmsg-wrapper {		/* message wrapper for forum view */
