@@ -48,9 +48,9 @@ function display_room_list_renderer(floor_list, room_list) {
 	for (var i in room_list) {
 		if (room_list[i].current_view == views.VIEW_BBS) {
 			output[room_list[i].floor] +=
-				"<div class=\"w3-button ctdl-roomlist-room\" onClick=\"javascript:gotoroom('"
+				"<div class=\"ctdl-roomlist-room\" onClick=\"javascript:gotoroom('"
 				+ escapeJS(escapeHTML(room_list[i].name)) + "');\">"
-				+ "<i class=\"w3-badge ctdl-roomlist-roomicon w3-left "
+				+ "<i class=\"ctdl-roomlist-roomicon "
 				+ (room_list[i].hasnewmsgs ? "w3-blue" : "w3-gray")
 				+ " fas fa-comments fa-fw\"></i><span class=\"ctdl-roomlist-roomname"
 				+ (room_list[i].hasnewmsgs ? " ctdl-roomlist-roomname-hasnewmsgs" : "")

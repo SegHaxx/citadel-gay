@@ -117,7 +117,7 @@ html,body,h1,h2,h3,h4,h5 {
 }
 
 .ctdl-forum-reading-pane {
-	background-color: DarkSlateGrey;
+	background-color: DarkSlateGrey;	/* Background behind the message boxes */
 }
 
 .ctdl-fmsg-wrapper {				/* message wrapper for forum view */
@@ -267,7 +267,8 @@ blockquote pre {
 }
 
 .ctdl-roomlist-top {
-	margin: 1%;
+	margin: 0;
+	background-color: GhostWhite;
 }
 
 .ctdl-roomlist-floor {
@@ -276,6 +277,7 @@ blockquote pre {
 .ctdl-roomlist-floor-label {
 	font-size: x-large;
 	margin: 1vw;
+	margin-bottom: 0;
 }
 
 .ctdl-roomlist-floor-rooms {
@@ -284,10 +286,13 @@ blockquote pre {
 .ctdl-roomlist-room {
 	overflow: hidden;
 	border-radius: 10px;
+	border-style: outset;
 	background-color: White;
 	padding: 0.5vw;
-	margin-bottom: 0.5vw;
-	width: 100%;
+	margin-top: 0;
+	margin-bottom: 0.25vw;
+	margin-left: 1vw;
+	margin-right: 1vw;
 }
 
 .ctdl-roomlist-roomicon {
