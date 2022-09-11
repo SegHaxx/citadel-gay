@@ -1,32 +1,16 @@
 /*
- * Copyright (c) 1996-2022 by Art Cancro and the citadel.org team.
- * This program is open source software.  Use, duplication, or disclosure
- * are subject to the terms of the GNU General Public License, version 3.
- */
+	Copyright (c) 1996-2022 by Art Cancro and the citadel.org team.
+	This program is open source software.  Use, duplication, or disclosure
+	are subject to the terms of the GNU General Public License, version 3.
+*/
 
-* {				/* This makes the grid take up exactly 100% of the screen */
+* {						/* This makes grids consume exactly 100% of their parent containers */
 	box-sizing: border-box;
 	padding: 0;
 	margin: 0;
 } 
 
-.ctdl-grid-banner-item {		/* These grid items will be referenced in the grid container */
-	grid-area: header;
-	background-color: DarkSlateGrey;
-}
-
-.ctdl-grid-sidebar-item {
-	grid-area: menu;
-	background-color: GhostWhite;
-}
-
-.ctdl-grid-main-item {
-	grid-area: main;
-	overflow-x: hidden;
-	overflow-y: auto;
-}
-
-.ctdl-main-grid-container {			/* This is so mind-bogglingly simple I can't believe it works */
+.ctdl-main-grid-container {			/* This grid contains the "holy grail layout" of the screen */
 	display: grid;
 	grid-template-rows: 100px auto;
 	grid-template-columns: 200px auto;
@@ -40,21 +24,38 @@
 	height: 100vh;
 }
 
+.ctdl-grid-banner-item {			/* Top banner, referenced by the grid container */
+	grid-area: header;
+	background-color: DarkSlateGrey;
+}
+
+.ctdl-grid-sidebar-item {			/* Side bar, referenced by the grid container */
+	grid-area: menu;
+	background-color: GhostWhite;
+}
+
+.ctdl-grid-main-item {				/* Main content area of the screen, referenced by the grid container */
+	grid-area: main;
+	overflow-x: hidden;
+	overflow-y: auto;
+}
+
 .ctdl-main-grid-container > div {
 	text-align: left;
 	padding: 0;
 }
 
-.ctdl-banner-buttons li {		/* Buttons that appear in the top banner are list items that reference this class */
+.ctdl-banner-buttons li, .ctdl-banner-buttons li button {
 	float: left;
 	display: block;
 	padding: 8px;
 	background-color: DarkSlateGrey;
 	color: White;
 	font-size: 1.25vw;
+	border: none;
 }
 
-.ctdl-banner-buttons li:hover {		/* Buttons that appear in the top banner also reference this class when hovered over */
+.ctdl-banner-buttons li button:hover {
 	background-color: Black;
 }
 
@@ -67,7 +68,7 @@ html,body,h1,h2,h3,h4,h5 {
 }
 
 .ctdl-modal {
-	display: none;			/* set to "block" to make the modal appear */
+	display: none;				/* set to "block" to make the modal appear */
 	z-index: 9;
 	position: fixed;
 	top: 50%;
@@ -119,18 +120,18 @@ html,body,h1,h2,h3,h4,h5 {
 	background-color: DarkSlateGrey;
 }
 
-.ctdl-fmsg-wrapper {		/* message wrapper for forum view */
+.ctdl-fmsg-wrapper {				/* message wrapper for forum view */
 	overflow: hidden;
 	border-radius: 10px;
 	background-color: White;
 	margin: 1vw;
-	padding: 5px;		/* inside the box */
+	padding: 5px;				/* inside the box */
 }
 
-.ctdl-mmsg-wrapper {		/* message wrapper for mailbox view */
+.ctdl-mmsg-wrapper {				/* message wrapper for mailbox view */
 	overflow: hidden;
 	background-color: White;
-	padding: 5px;		/* inside the box */
+	padding: 5px;				/* inside the box */
 }
 
 .ctdl-msg-reply {
@@ -142,7 +143,7 @@ html,body,h1,h2,h3,h4,h5 {
 	padding: 4px;
 	min-height: 35px;
 	background-color: GhostWhite;
-	margin-bottom: 10px;	/* this is the vertical space between the header and the message text */
+	margin-bottom: 10px;			/* this is the vertical space between the header and the message text */
 }
 
 .ctdl-msg-header-info {
@@ -207,11 +208,11 @@ html,body,h1,h2,h3,h4,h5 {
 	font-weight: bold;
 }
 
-.ctdl-fmsg-content {			/* message text, when in forum view */
+.ctdl-fmsg-content {				/* message text, when in forum view */
 	margin-left: 32px;
 }
 
-.ctdl-mmsg-content {			/* message text, when in mailbox view */
+.ctdl-mmsg-content {				/* message text, when in mailbox view */
 	margin-left: 0;
 }
 
@@ -320,12 +321,12 @@ blockquote pre {
 	background-color: GhostWhite;
 }
 
-.ctdl-mailbox-pane {					/* list of messages when in mailbox view */
+.ctdl-mailbox-pane {				/* list of messages when in mailbox view */
 	height: 15vw;
 	overflow-x: hidden;
 	overflow-y: scroll;
 	background-color: #DDDDDD;
-	border-bottom: solid 3px SlateGrey;		/* We can probably turn this into a drag handle */
+	border-bottom: solid 3px SlateGrey;	/* We can probably turn this into a drag handle */
 }
 
 .ctdl-mailbox-table {
@@ -342,7 +343,7 @@ blockquote pre {
 	cursor: pointer;
 }
 
-.ctdl-mailbox-table tr:nth-child(even) {		/* this gives us the alternating-bar effect */
+.ctdl-mailbox-table tr:nth-child(even) {	/* this gives us the alternating-bar effect */
 	background-color: Gainsboro;
 }
 
@@ -361,39 +362,38 @@ blockquote pre {
 	padding-bottom: 5px;
 }
 
-.ctdl-mailbox-table th:hover {				/* Suppress highlighting the header bar */
+.ctdl-mailbox-table th:hover {			/* Suppress highlighting the header bar */
 	background-color: SlateGrey;
 	color: White;
 	cursor: default;
 }
 
-.ctdl-mail-subject {					/* Subject column in mailbox message list */
+.ctdl-mail-subject {				/* Subject column in mailbox message list */
 }
 
-.ctdl-mail-sender {					/* Sender column in mailbox message list */
+.ctdl-mail-sender {				/* Sender column in mailbox message list */
 }
 
-.ctdl-mail-date {					/* Date column in mailbox message list */
+.ctdl-mail-date {				/* Date column in mailbox message list */
 	white-space: nowrap;
 }
 
-.ctdl-mail-msgnum {					/* # column in mailbox message list */
+.ctdl-mail-msgnum {				/* # column in mailbox message list */
 	white-space: nowrap;
 }
 
-.ctdl-mailbox-reading-pane {				/* message reading pane when in mailbox view */
+.ctdl-mailbox-reading-pane {			/* message reading pane when in mailbox view */
 	overflow-x: hidden;
 	overflow-y: auto;
 	background-color: GhostWhite;
 	padding: 5px;
 }
 
-.ctdl-compose-mail {					/* mail composition window */
+.ctdl-compose-mail {				/* mail composition window */
 	width: 100%;
 	height: 100%;
 	overflow: auto;
-	border: 5px solid red;
-	background-color: yellow;
+	border: 2px dashed red;			/* FIXME this goes away after testing */
 }
 
 .ctdl-login-screen-grid-container {

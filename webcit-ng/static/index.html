@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 
 <!-- 
----- Copyright (c) 1996-2022 by Art Cancro and the citadel.org team.
----- This program is open source software.  Use, duplication, or
----- disclosure are subject to the GNU General Public License v3.
+	Copyright (c) 1996-2022 by Art Cancro and the citadel.org team.
+	This program is open source software.  Use, duplication, or
+	disclosure are subject to the GNU General Public License v3.
 -->
 
 <html>
@@ -14,10 +14,8 @@
 
 <body>
 
-<!-- Modal dialog (when needed) -->
-<div class="ctdl-modal" id="ctdl_big_modal">
-MODAL LOADING
-</div>
+<!-- When we need a modal dialog, we can attach it to this element -->
+<div class="ctdl-modal" id="ctdl_big_modal"></div>
 
 <div class="ctdl-main-grid-container">
 
@@ -31,12 +29,12 @@ MODAL LOADING
 		</ul>
 		<!-- These items float to the RIGHT side of the banner -->
 		<ul class="ctdl-banner-buttons" style="float:right">
-			<li id="ctdl-newmsg-button" style="display:none" onClick="entmsg_dispatcher();">enter</li>
-			<li id="ctdl-ungoto-button" style="display:none" onClick="gotonext(0);">ungoto</li>
-			<li id="ctdl-skip-button" style="display:none" onClick="gotonext(1);">skip</li>
-			<li id="ctdl-goto-button" style="display:none" onClick="gotonext(2);">goto</li>
-			<li><span id="current_user">Not logged in.</span><br>
-			<button id="lilo">Login</button>
+			<li><button id="ctdl-newmsg-button" style="display:none" onClick="entmsg_dispatcher();">enter</button></li>
+			<li><button id="ctdl-ungoto-button" style="display:none" onClick="gotonext(0);">ungoto</button></li>
+			<li><button id="ctdl-skip-button" style="display:none" onClick="gotonext(1);">skip</button></li>
+			<li><button id="ctdl-goto-button" style="display:none" onClick="gotonext(2);">goto</button></li>
+			<li><button id="lilo">Login</button><br>
+			<span id="current_user">Not logged in.</span>
 			<li><i class="fa fa-user-circle fa-3x"></i></li>
 		</ul>
 	</div>
