@@ -267,8 +267,11 @@ blockquote pre {
 }
 
 .ctdl-roomlist-top {
-	margin: 0;
 	background-color: GhostWhite;
+	width: 100%;
+	height: 100%;
+	overflow: auto;
+	border: none;
 }
 
 .ctdl-roomlist-floor {
@@ -388,10 +391,11 @@ blockquote pre {
 }
 
 .ctdl-mailbox-reading-pane {			/* message reading pane when in mailbox view */
-	overflow-x: hidden;
-	overflow-y: auto;
+	overflow: auto;
 	background-color: GhostWhite;
 	padding: 5px;
+	overflow: auto;
+	border: none;
 }
 
 .ctdl-compose-mail {				/* mail composition window */
