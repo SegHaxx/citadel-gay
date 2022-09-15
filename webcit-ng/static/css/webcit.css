@@ -190,6 +190,10 @@ html,body,h1,h2,h3,h4,h5 {
 	width: 32px;
 }
 
+.ctdl-avatar img {
+	clip-path: circle(50%);
+}
+
 .ctdl-username {
 	font-weight: bold;
 	color: #000055;
