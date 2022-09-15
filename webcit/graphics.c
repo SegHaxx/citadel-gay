@@ -185,7 +185,7 @@ void display_editroompic(void) {
 /* the greetingpage hello pic */
 void display_edithello(void) {
 	putbstr("__WHICHPIC", NewStrBufPlain(HKEY("hello")));
-	putbstr("__PICDESC", NewStrBufPlain(_("the Greetingpicture for the login prompt"), -1));
+	putbstr("__PICDESC", NewStrBufPlain(_("graphics to be displayed on the login screen"), -1));
 	putbstr("__UPLURL", NewStrBufPlain(HKEY("edithellopic")));
 	display_graphics_upload("edithellopic");
 }

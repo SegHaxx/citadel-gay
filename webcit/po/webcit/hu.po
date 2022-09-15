@@ -654,7 +654,7 @@ msgid "the icon for this room"
 msgstr "a szoba ikonja"
 
 #: ../../graphics.c:188
-msgid "the Greetingpicture for the login prompt"
+msgid "graphics to be displayed on the login screen"
 msgstr "a belépési oldal üdvözlőképe"
 
 #: ../../graphics.c:196

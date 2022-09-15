@@ -658,7 +658,7 @@ msgid "the icon for this room"
 msgstr "pictograma  acestui spaţiu"
 
 #: ../../graphics.c:188
-msgid "the Greetingpicture for the login prompt"
+msgid "graphics to be displayed on the login screen"
 msgstr "fotografia de salut pentru conectare"
 
 #: ../../graphics.c:196

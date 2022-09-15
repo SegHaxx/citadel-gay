@@ -650,7 +650,7 @@ msgid "the icon for this room"
 msgstr "ikona této místnosti"
 
 #: ../../graphics.c:188
-msgid "the Greetingpicture for the login prompt"
+msgid "graphics to be displayed on the login screen"
 msgstr "Uvítací obrázek pro přihlášení"
 
 #: ../../graphics.c:196

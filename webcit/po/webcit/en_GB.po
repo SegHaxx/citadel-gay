@@ -655,8 +655,8 @@ msgid "the icon for this room"
 msgstr "the icon for this room"
 
 #: ../../graphics.c:188
-msgid "the Greetingpicture for the login prompt"
-msgstr "the Greetingpicture for the login prompt"
+msgid "graphics to be displayed on the login screen"
+msgstr "graphics to be displayed on the login screen"
 
 #: ../../graphics.c:196
 msgid "the Logoff banner picture"
