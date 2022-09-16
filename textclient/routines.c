@@ -490,6 +490,9 @@ void locate_host(CtdlIPC * ipc, char *hbuf) {
 		return;
 	}
 	fgets(hbuf, SIZ, who);
+	if (hbuf[strlen(hbuf) - 1] == '\n') {
+		hbuf[strlen(hbuf) - 1] = 0;
+	}
 	pclose(who);
 	stripallbut(hbuf, '(', ')');
 }

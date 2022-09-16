@@ -1672,7 +1672,7 @@ int CtdlIPCIdentifySoftware(CtdlIPC * ipc, int developerid, int clientid,
 		developerid = 8;
 		clientid = 0;
 		revision = CLIENT_VERSION - 600;
-		software_name = "Citadel (libcitadel)";
+		software_name = "Citadel text client";
 	}
 	if (!hostname)
 		return -2;
