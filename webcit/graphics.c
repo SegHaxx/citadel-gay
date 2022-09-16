@@ -167,7 +167,7 @@ void do_graphics_upload(char *filename)
 
 
 void edithellopic(void)    { do_graphics_upload("hello"); }
-void editgoodbuyepic(void) { do_graphics_upload("UIMG 1|%s|goodbuye"); }
+void editgoodbyepic(void) { do_graphics_upload("UIMG 1|%s|goodbye"); }
 
 /* The users photo display / upload facility */
 void display_editpic(void) {
@@ -192,10 +192,10 @@ void display_edithello(void) {
 
 /* the logoff banner */
 void display_editgoodbyepic(void) {
-	putbstr("__WHICHPIC", NewStrBufPlain(HKEY("UIMG 0|%s|goodbuye")));
+	putbstr("__WHICHPIC", NewStrBufPlain(HKEY("UIMG 0|%s|goodbye")));
 	putbstr("__PICDESC", NewStrBufPlain(_("the Logoff banner picture"), -1));
-	putbstr("__UPLURL", NewStrBufPlain(HKEY("editgoodbuyepic")));
-	display_graphics_upload("editgoodbuyepic");
+	putbstr("__UPLURL", NewStrBufPlain(HKEY("editgoodbyepic")));
+	display_graphics_upload("editgoodbyepic");
 }
 
 
@@ -209,7 +209,7 @@ InitModule_GRAPHICS
 	WebcitAddUrlHandler(HKEY("editroompic"), "", 0, editroompic, 0);
 	WebcitAddUrlHandler(HKEY("display_edithello"), "", 0, display_edithello, 0);
 	WebcitAddUrlHandler(HKEY("edithellopic"), "", 0, edithellopic, 0);
-	WebcitAddUrlHandler(HKEY("display_editgoodbuye"), "", 0, display_editgoodbyepic, 0);
-	WebcitAddUrlHandler(HKEY("editgoodbuyepic"), "", 0, editgoodbuyepic, 0);
+	WebcitAddUrlHandler(HKEY("display_editgoodbye"), "", 0, display_editgoodbyepic, 0);
+	WebcitAddUrlHandler(HKEY("editgoodbyepic"), "", 0, editgoodbyepic, 0);
 	WebcitAddUrlHandler(HKEY("roompic"), "", 0, display_roompic, 0);
 }
