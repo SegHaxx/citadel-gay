@@ -66,9 +66,7 @@ CtdlIPC *ipc_for_signal_handlers;	/* KLUDGE cover your eyes */
 int enable_syslog = 0;
 
 
-/*
- * here is our 'clean up gracefully and exit' routine
- */
+// Here is our 'clean up gracefully and exit' routine
 void ctdl_logoff(char *file, int line, CtdlIPC * ipc, int code) {
 	int lp;
 
@@ -76,41 +74,31 @@ void ctdl_logoff(char *file, int line, CtdlIPC * ipc, int code) {
 		kill(editor_pid, SIGHUP);
 	}
 
-	/* Free the ungoto list */
+	// Free the ungoto list
 	for (lp = 0; lp < uglistsize; lp++) {
 		free(uglist[lp]);
 	}
 
-/* Shut down the server connection ... but not if the logoff code is 3,
- * because that means we're exiting because we already lost the server.
- */
+	// Shut down the server connection ... but not if the logoff code is 3,
+ 	// because that means we're exiting because we already lost the server.
 	if (code != 3) {
 		CtdlIPCQuit(ipc);
 	}
 
-/*
- * now clean up various things
- */
+ 	// now clean up various things
 	unlink(temp);
 	unlink(temp2);
 	nukedir(tempdir);
 
-	/* Violently kill off any child processes if Citadel is
-	 * the login shell. 
-	 */
+	// Violently kill off any child processes if Citadel is the login shell. 
 	if (getppid() == 1) {
 		kill(0 - getpgrp(), SIGTERM);
 		sleep(1);
 		kill(0 - getpgrp(), SIGKILL);
 	}
-	color(ORIGINAL_PAIR);	/* Restore the old color settings */
-	stty_ctdl(SB_RESTORE);	/* return the old terminal settings */
-	/* 
-	 * uncomment the following if you need to know why Citadel exited
-	 printf("*** Exit code %d at %s:%d\n", code, file, line);
-	 sleep(2);
-	 */
-	exit(code);		/* exit with the proper exit code */
+	color(ORIGINAL_PAIR);	// Restore the old color settings
+	stty_ctdl(SB_RESTORE);	// return the old terminal settings
+	exit(code);		// exit with the proper exit code
 }
 
 
@@ -193,9 +181,7 @@ void userlist(CtdlIPC * ipc, char *patn) {
 }
 
 
-/*
- * grab assorted info about the user...
- */
+// grab assorted info about the user...
 void load_user_info(char *params) {
 	extract_token(fullname, params, 0, '|', sizeof fullname);
 	axlevel = extract_int(params, 1);
@@ -207,11 +193,9 @@ void load_user_info(char *params) {
 }
 
 
-/*
- * Remove a room from the march list.  'floornum' is ignored unless
- * 'roomname' is set to _FLOOR_, in which case all rooms on the requested
- * floor will be removed from the march list.
- */
+// Remove a room from the march list.  'floornum' is ignored unless
+// 'roomname' is set to _FLOOR_, in which case all rooms on the requested
+// floor will be removed from the march list.
 void remove_march(char *roomname, int floornum) {
 	struct march *mptr, *mptr2;
 
@@ -243,10 +227,8 @@ void remove_march(char *roomname, int floornum) {
 }
 
 
-/*
- * Locate the room on the march list which we most want to go to.  Each room
- * is measured given a "weight" of preference based on various factors.
- */
+// Locate the room on the march list which we most want to go to.  Each room
+// is measured given a "weight" of preference based on various factors.
 char *pop_march(int desired_floor, struct march *_march) {
 	static char TheRoom[ROOMNAMELEN];
 	int TheWeight = 0;
@@ -276,9 +258,7 @@ char *pop_march(int desired_floor, struct march *_march) {
 }
 
 
-/*
- * jump directly to a room
- */
+// jump directly to a room
 void dotgoto(CtdlIPC * ipc, char *towhere, int display_name, int fromungoto) {
 	char aaa[SIZ], bbb[SIZ];
 	static long ls = 0L;
@@ -461,9 +441,8 @@ void gotonext(CtdlIPC * ipc) {
 	struct march *mptr, *mptr2;
 	char next_room[ROOMNAMELEN];
 
-	/* Check to see if the march-mode list is already allocated.
-	 * If it is, pop the first room off the list and go there.
-	 */
+	// Check to see if the march-mode list is already allocated.
+	// If it is, pop the first room off the list and go there.
 	if (marchptr == NULL) {
 		CtdlIPCKnownRooms(ipc, SubscribedRoomsWithNewMessages, AllFloors, &marchptr, buf);
 
@@ -498,15 +477,13 @@ void gotonext(CtdlIPC * ipc) {
 }
 
 
-/*
- * forget all rooms on a given floor
- */
+// forget all rooms on a given floor
 void forget_all_rooms_on(CtdlIPC * ipc, int ffloor) {
 	char buf[SIZ];
 	struct march *flist = NULL;
 	struct march *fptr = NULL;
 	struct ctdlipcroom *room = NULL;
-	int r;			/* IPC response code */
+	int r;			// IPC response code
 
 	scr_printf("Forgetting all rooms on %s...\n", &floorlist[ffloor][0]);
 	remove_march("_FLOOR_", ffloor);
@@ -533,9 +510,7 @@ void forget_all_rooms_on(CtdlIPC * ipc, int ffloor) {
 }
 
 
-/*
- * routine called by gotofloor() to move to a new room on a new floor
- */
+// routine called by gotofloor() to move to a new room on a new floor
 void gf_toroom(CtdlIPC * ipc, char *towhere, int mode) {
 	int floor_being_left;
 
@@ -557,9 +532,7 @@ void gf_toroom(CtdlIPC * ipc, char *towhere, int mode) {
 }
 
 
-/*
- * go to a new floor
- */
+// go to a new floor
 void gotofloor(CtdlIPC * ipc, char *towhere, int mode) {
 	int a, tofloor;
 	int r;			/* IPC response code */
