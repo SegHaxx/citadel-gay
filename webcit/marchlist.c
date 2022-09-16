@@ -4,7 +4,8 @@
 /*
  * Free a session's march list
  */
-void free_march_list(wcsession * wcf) {
+void free_march_list(wcsession *wcf)
+{
 	struct march *mptr;
 
 	while (wcf->march != NULL) {
@@ -19,7 +20,8 @@ void free_march_list(wcsession * wcf) {
 /*
  * remove a room from the march list
  */
-void remove_march(const StrBuf * aaa) {
+void remove_march(const StrBuf *aaa)
+{
 	struct march *mptr, *mptr2;
 
 	if (WC->march == NULL)
@@ -37,8 +39,7 @@ void remove_march(const StrBuf * aaa) {
 			mptr2->next = mptr->next;
 			free(mptr);
 			mptr = mptr2;
-		}
-		else {
+		} else {
 			mptr2 = mptr;
 		}
 	}
@@ -53,7 +54,8 @@ void remove_march(const StrBuf * aaa) {
  * \param desired_floor the room number on the citadel server
  * \return the roomname
  */
-char *pop_march(int desired_floor) {
+char *pop_march(int desired_floor)
+{
 	static char TheRoom[128];
 	int TheWeight = 0;
 	int weight;
@@ -76,7 +78,6 @@ char *pop_march(int desired_floor) {
 		if (weight > TheWeight) {
 			TheWeight = weight;
 			strcpy(TheRoom, mptr->march_name);
-
 /* TODOO: and now????
 			TheFloor = mptr->march_floor;
 			TheOrder = mptr->march_order;
@@ -97,7 +98,8 @@ char *pop_march(int desired_floor) {
  * We start the search in the current room rather than the beginning to prevent
  * two or more concurrent users from dragging each other back to the same room.
  */
-void gotonext(void) {
+void gotonext(void)
+{
 	char buf[256];
 	struct march *mptr = NULL;
 	struct march *mptr2 = NULL;
@@ -124,8 +126,8 @@ void gotonext(void) {
 						return;
 					if (ELoop % 100 == 0)
 						sleeeeeeeeeep(1);
-					ELoop++;
-					continue;
+					ELoop ++;
+					continue;					
 				}
 				extract_token(room_name, buf, 0, '|', sizeof room_name);
 				if (strcasecmp(room_name, ChrPtr(WC->CurRoom.name))) {
@@ -134,9 +136,9 @@ void gotonext(void) {
 					safestrncpy(mptr->march_name, room_name, sizeof mptr->march_name);
 					mptr->march_floor = extract_int(buf, 2);
 					mptr->march_order = extract_int(buf, 3);
-					if (WC->march == NULL)
+					if (WC->march == NULL) 
 						WC->march = mptr;
-					else
+					else 
 						mptr2->next = mptr;
 					mptr2 = mptr;
 				}
@@ -149,12 +151,11 @@ void gotonext(void) {
 		mptr = (struct march *) malloc(sizeof(struct march));
 		mptr->next = NULL;
 		mptr->march_order = 0;
-		mptr->march_floor = 0;
+	    	mptr->march_floor = 0;
 		strcpy(mptr->march_name, "_BASEROOM_");
 		if (WC->march == NULL) {
 			WC->march = mptr;
-		}
-		else {
+		} else {
 			mptr2 = WC->march;
 			while (mptr2->next != NULL)
 				mptr2 = mptr2->next;
@@ -167,10 +168,9 @@ void gotonext(void) {
 		remove_march(WC->CurRoom.name);
 	}
 	if (WC->march != NULL) {
-		next_room = NewStrBufPlain(pop_march(-1), -1);	/*TODO: migrate march to strbuf */
+		next_room = NewStrBufPlain(pop_march(-1), -1);/*TODO: migrate march to strbuf */
 		putlbstr("gotonext", 1);
-	}
-	else {
+	} else {
 		next_room = NewStrBufPlain(HKEY("_BASEROOM_"));
 	}
 
@@ -182,7 +182,8 @@ void gotonext(void) {
 /*
  * un-goto the previous room
  */
-void ungoto(void) {
+void ungoto(void)
+{
 	StrBuf *Buf;
 
 	if (havebstr("startmsg")) {
@@ -215,10 +216,12 @@ void ungoto(void) {
 
 
 
-void tmplput_ungoto(StrBuf * Target, WCTemplputParams * TP) {
+void tmplput_ungoto(StrBuf *Target, WCTemplputParams *TP)
+{
 	wcsession *WCC = WC;
 
-	if ((WCC != NULL) && (!IsEmptyStr(WCC->ugname)))
+	if ((WCC!=NULL) && 
+	    (!IsEmptyStr(WCC->ugname)))
 		StrBufAppendBufPlain(Target, WCC->ugname, -1, 0);
 }
 
@@ -230,14 +233,20 @@ void _gotonext(void) {
 
 
 
-int ConditionalHaveUngoto(StrBuf * Target, WCTemplputParams * TP) {
+int ConditionalHaveUngoto(StrBuf *Target, WCTemplputParams *TP)
+{
 	wcsession *WCC = WC;
-
-	return ((WCC != NULL) && (!IsEmptyStr(WCC->ugname)) && (strcasecmp(WCC->ugname, ChrPtr(WCC->CurRoom.name)) == 0));
+	
+	return ((WCC!=NULL) && 
+		(!IsEmptyStr(WCC->ugname)) && 
+		(strcasecmp(WCC->ugname, ChrPtr(WCC->CurRoom.name)) == 0));
 }
 
 
-void InitModule_MARCHLIST(void) {
+void 
+InitModule_MARCHLIST
+(void)
+{
 	RegisterConditional("COND:UNGOTO", 0, ConditionalHaveUngoto, CTX_NONE);
 	RegisterNamespace("ROOM:UNGOTO", 0, 0, tmplput_ungoto, NULL, CTX_NONE);
 

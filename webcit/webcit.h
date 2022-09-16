@@ -1,4 +1,3 @@
-
 /*
  * Copyright (c) 1987-2021 by the citadel.org team
  *
@@ -91,7 +90,6 @@ typedef struct wcsession wcsession;
 #include "sockets.h"
 #include "utils.h"
 #ifdef HAVE_OPENSSL
-
 /* Work around RedHat's b0rken OpenSSL includes */
 #define OPENSSL_NO_KRB5
 #include <openssl/ssl.h>
@@ -101,7 +99,7 @@ extern char *ssl_cipher_list;
 #define	DEFAULT_SSL_CIPHER_LIST	"DEFAULT"	/* See http://openssl.org/docs/apps/ciphers.html */
 #endif
 
-#if SIZEOF_SIZE_T == SIZEOF_INT
+#if SIZEOF_SIZE_T == SIZEOF_INT 
 #define SIZE_T_FMT "%d"
 #else
 #define SIZE_T_FMT "%ld"
@@ -116,7 +114,7 @@ extern char *ssl_cipher_list;
 #define CALENDAR_ROOM_NAME	"Calendar"
 #define PRODID "-//Citadel//NONSGML Citadel Calendar//EN"
 
-#define SIZ			4096	/* generic buffer size */
+#define SIZ			4096		/* generic buffer size */
 
 #define TRACE syslog(LOG_DEBUG, "\033[3%dmCHECKPOINT: %s:%d\033[0m", ((__LINE__%6)+1), __FILE__, __LINE__)
 
@@ -124,19 +122,19 @@ extern char *ssl_cipher_list;
 #undef memcpy
 #endif
 
-#define SLEEPING		180	/* TCP connection timeout */
-#define WEBCIT_TIMEOUT		900	/* WebCit session timeout */
-#define PORT_NUM		80	/* port number to listen on */
+#define SLEEPING		180			/* TCP connection timeout */
+#define WEBCIT_TIMEOUT		900			/* WebCit session timeout */
+#define PORT_NUM		80			/* port number to listen on */
 #define DEVELOPER_ID		0
 #define CLIENT_ID		4
-#define CLIENT_VERSION 957	/* This version of WebCit */
-#define MINIMUM_CIT_VERSION	931	/* Minimum required version of Citadel server */
-#define	LIBCITADEL_MIN		931	/* Minimum required version of libcitadel */
+#define CLIENT_VERSION 957		/* This version of WebCit */
+#define MINIMUM_CIT_VERSION	931			/* Minimum required version of Citadel server */
+#define	LIBCITADEL_MIN		931			/* Minimum required version of libcitadel */
 #define DEFAULT_CTDLDIR		"/usr/local/citadel"	/* Default Citadel server directory */
-#define TARGET			"webcit01"	/* Window target for inline URL's */
-#define HOUSEKEEPING		15	/* Housekeeping frequency */
+#define TARGET			"webcit01"		/* Window target for inline URL's */
+#define HOUSEKEEPING		15			/* Housekeeping frequency */
 #define MAX_WORKER_THREADS	250
-#define LISTEN_QUEUE_LENGTH	100	/* listen() backlog queue */
+#define LISTEN_QUEUE_LENGTH	100			/* listen() backlog queue */
 
 #define USERCONFIGROOM		"My Citadel Config"
 #define DEFAULT_MAXMSGS		20
@@ -151,7 +149,7 @@ extern char *ssl_cipher_list;
 #define MAJORCODE(a) (((int)(a / 100) ) * 100)
 
 #define LISTING_FOLLOWS	100
-#define CIT_OK 		200
+#define CIT_OK 		200	
 #define MORE_DATA 	300
 #define SEND_LISTING 	400
 #define ERROR 		500
@@ -161,27 +159,27 @@ extern char *ssl_cipher_list;
 #define ASYNC_MSG 	900
 
 #define MINORCODE(a) (a % 100)
-#define ASYNC_GEXP 			02
-#define INTERNAL_ERROR 			10
-#define TOO_BIG 			11
-#define ILLEGAL_VALUE 			12
-#define NOT_LOGGED_IN 			20
-#define CMD_NOT_SUPPORTED 		30
-#define SERVER_SHUTTING_DOWN 		31
-#define PASSWORD_REQUIRED 		40
-#define ALREADY_LOGGED_IN 		41
-#define USERNAME_REQUIRED 		42
-#define HIGHER_ACCESS_REQUIRED 		50
-#define MAX_SESSIONS_EXCEEDED 		51
-#define RESOURCE_BUSY 			52
-#define RESOURCE_NOT_OPEN 		53
-#define NOT_HERE 			60
-#define INVALID_FLOOR_OPERATION 	61
-#define NO_SUCH_USER 			70
-#define FILE_NOT_FOUND 			71
-#define ROOM_NOT_FOUND 			72
-#define NO_SUCH_SYSTEM 			73
-#define ALREADY_EXISTS 			74
+#define ASYNC_GEXP 			02	
+#define INTERNAL_ERROR 			10	
+#define TOO_BIG 			11	
+#define ILLEGAL_VALUE 			12	
+#define NOT_LOGGED_IN 			20	
+#define CMD_NOT_SUPPORTED 		30	
+#define SERVER_SHUTTING_DOWN 		31	
+#define PASSWORD_REQUIRED 		40	
+#define ALREADY_LOGGED_IN 		41	
+#define USERNAME_REQUIRED 		42	
+#define HIGHER_ACCESS_REQUIRED 		50	
+#define MAX_SESSIONS_EXCEEDED 		51	
+#define RESOURCE_BUSY 			52	
+#define RESOURCE_NOT_OPEN 		53	
+#define NOT_HERE 			60	
+#define INVALID_FLOOR_OPERATION 	61	
+#define NO_SUCH_USER 			70	
+#define FILE_NOT_FOUND 			71	
+#define ROOM_NOT_FOUND 			72	
+#define NO_SUCH_SYSTEM 			73	
+#define ALREADY_EXISTS 			74	
 #define MESSAGE_NOT_FOUND 		75
 
 /*
@@ -195,8 +193,8 @@ extern char *ssl_cipher_list;
  */
 
 typedef struct __ExpirePolicy {
-	int expire_mode;
-	int expire_value;
+        int expire_mode;
+        int expire_value;
 } ExpirePolicy;
 
 /*
@@ -204,27 +202,27 @@ typedef struct __ExpirePolicy {
  */
 typedef struct urlcontent urlcontent;
 struct urlcontent {
-	char url_key[32];	/* key */
+	char url_key[32];		/* key */
 	long klen;
-	StrBuf *url_data;	/* value */
+	StrBuf *url_data;		/* value */
 	HashList *sub;
 };
 
 /*
  * Information about the Citadel server to which we are connected
- */
+ */ 
 typedef struct _serv_info {
-	int serv_pid;		/* Process ID of the Citadel server */
-	StrBuf *serv_nodename;	/* Node name of the Citadel server */
-	StrBuf *serv_humannode;	/* Juman readable node name of the Citadel server */
-	StrBuf *serv_fqdn;	/* Fully qualified Domain Name (such as uncensored.citadel.org) */
-	StrBuf *serv_software;	/* Free form text description of the server software in use */
-	int serv_rev_level;	/* Server version number (times 100) */
-	StrBuf *serv_bbs_city;	/* Geographic location of the Citadel server */
-	StrBuf *serv_sysadm;	/* Name of system administrator */
-	int serv_supports_ldap;	/* is the server linked against an ldap tree for adresses? */
+	int serv_pid;			/* Process ID of the Citadel server */
+	StrBuf *serv_nodename;		/* Node name of the Citadel server */
+	StrBuf *serv_humannode;	        /* Juman readable node name of the Citadel server */
+	StrBuf *serv_fqdn;		/* Fully qualified Domain Name (such as uncensored.citadel.org) */
+	StrBuf *serv_software;		/* Free form text description of the server software in use */
+	int serv_rev_level;		/* Server version number (times 100) */
+	StrBuf *serv_bbs_city;		/* Geographic location of the Citadel server */
+	StrBuf *serv_sysadm;		/* Name of system administrator */
+	int serv_supports_ldap;		/* is the server linked against an ldap tree for adresses? */
 	int serv_newuser_disabled;	/* Has the server disabled self-service new user creation? */
-	StrBuf *serv_default_cal_zone;	/* Default timezone for unspecified calendar items */
+	StrBuf *serv_default_cal_zone;  /* Default timezone for unspecified calendar items */
 	int serv_supports_sieve;	/* Server supports Sieve mail filtering */
 	int serv_fulltext_enabled;	/* Full text index is enabled */
 	StrBuf *serv_svn_revision;	/* svn or git revision of the server */
@@ -233,20 +231,20 @@ typedef struct _serv_info {
 } ServInfo;
 
 
-typedef struct _disp_cal {
-	icalcomponent *cal;	/* cal items for display */
-	long cal_msgnum;	/* cal msgids for display */
-	char *from;		/* owner of this component */
-	int unread;		/* already seen by the user? */
+typedef struct _disp_cal {					
+	icalcomponent *cal;		/* cal items for display */
+	long cal_msgnum;		/* cal msgids for display */
+	char *from;                     /* owner of this component */
+	int unread;                     /* already seen by the user? */
 
 	time_t event_start;
 	time_t event_end;
 
 	int multi_day_event;
 	int is_repeat;
-	icalcomponent *SortBy;	/* cal items for display */
+	icalcomponent *SortBy;		/* cal items for display */
 	icalproperty_status Status;
-} disp_cal;
+} disp_cal;						
 
 typedef struct _IcalKindEnumMap {
 	const char *Name;
@@ -256,7 +254,7 @@ typedef struct _IcalKindEnumMap {
 typedef struct _IcalMethodEnumMap {
 	const char *Name;
 	long NameLen;
-	icalproperty_method map;
+        icalproperty_method map;
 } IcalMethodEnumMap;
 
 
@@ -289,7 +287,7 @@ typedef enum _RESTDispatchID {
 
 typedef int (*WebcitRESTDispatchID)(RESTDispatchID WhichAction, int IgnoreFloor);
 typedef void (*WebcitHandlerFunc)(void);
-typedef struct _WebcitHandler {
+typedef struct  _WebcitHandler{
 	WebcitHandlerFunc F;
 	WebcitRESTDispatchID RID;
 	long Flags;
@@ -297,7 +295,7 @@ typedef struct _WebcitHandler {
 	StrBuf *DisplayName;
 } WebcitHandler;
 
-void WebcitAddUrlHandler(const char *UrlString, long UrlSLen, const char *DisplayName, long dslen, WebcitHandlerFunc F, long Flags);
+void WebcitAddUrlHandler(const char * UrlString, long UrlSLen, const char *DisplayName, long dslen, WebcitHandlerFunc F, long Flags);
 
 typedef struct _headereval {
 	ExamineMsgHeaderFunc evaluator;
@@ -335,7 +333,7 @@ extern const char *ReqStrs[eNONE];
 #define AUTH_BASIC 2
 
 typedef struct _HdrRefs {
-	long eReqType;		/* HTTP method */
+	long eReqType;				/* HTTP method */
 	int desired_session;
 	int SessionKey;
 
@@ -343,7 +341,7 @@ typedef struct _HdrRefs {
 	int DontNeedAuth;
 	long ContentLength;
 	time_t if_modified_since;
-	int gzip_ok;		/* Nonzero if Accept-encoding: gzip */
+	int gzip_ok;				/* Nonzero if Accept-encoding: gzip */
 	int prohibit_caching;
 	int dav_depth;
 	int Static;
@@ -362,7 +360,7 @@ typedef struct _HdrRefs {
 } HdrRefs;
 
 typedef struct _ParsedHttpHdrs {
-	int http_sock;		/* HTTP server socket */
+	int http_sock;				/* HTTP server socket */
 	long HaveRange;
 	long RangeStart;
 	long RangeTil;
@@ -374,13 +372,13 @@ typedef struct _ParsedHttpHdrs {
 	StrBuf *c_password;
 	StrBuf *c_roomname;
 	StrBuf *c_language;
-	StrBuf *this_page;	/* URL of current page */
-	StrBuf *PlainArgs;
+	StrBuf *this_page;			/* URL of current page */
+	StrBuf *PlainArgs; 
 	StrBuf *HostHeader;
 
-	HashList *urlstrings;	/* variables passed to webcit in a URL */
-	HashList *HTTPHeaders;	/* the headers the client sent us */
-	int nWildfireHeaders;	/* how many wildfire headers did we already send? */
+	HashList *urlstrings;		        /* variables passed to webcit in a URL */
+	HashList *HTTPHeaders;                  /* the headers the client sent us */
+	int nWildfireHeaders;                   /* how many wildfire headers did we already send? */
 
 	HdrRefs HR;
 } ParsedHttpHdrs;
@@ -390,98 +388,95 @@ typedef struct _ParsedHttpHdrs {
  * HTTP transactions are bound to one at a time.
  */
 struct wcsession {
-
 /* infrastructural members */
-	wcsession *next;	/* Linked list */
-	pthread_mutex_t SessionMutex;	/* mutex for exclusive access */
-	int wc_session;		/* WebCit session ID */
-	int killthis;		/* Nonzero == purge this session */
-	int ctdl_pid;		/* Session ID on the Citadel server */
-	int nonce;		/* session nonce (to prevent session riding) */
-	int inuse;		/* set to nonzero if bound to a running thread */
-	int isFailure;		/* Http 2xx or 5xx? */
+	wcsession *next;			/* Linked list */
+	pthread_mutex_t SessionMutex;		/* mutex for exclusive access */
+	int wc_session;				/* WebCit session ID */
+	int killthis;				/* Nonzero == purge this session */
+	int ctdl_pid;				/* Session ID on the Citadel server */
+	int nonce;				/* session nonce (to prevent session riding) */
+	int inuse;				/* set to nonzero if bound to a running thread */
+	int isFailure;                          /* Http 2xx or 5xx? */
 
 /* Session local Members */
-	int serv_sock;		/* Client socket to Citadel server */
-	StrBuf *ReadBuf;	/* linebuffered reads from the server */
-	StrBuf *MigrateReadLineBuf;	/* here we buffer legacy server read stuff */
-	const char *ReadPos;	/* whats our read position in ReadBuf? */
-	int last_chat_seq;	/* When in chat - last message seq# we saw */
-	time_t lastreq;		/* Timestamp of most recent HTTP */
-	time_t last_pager_check;	/* last time we polled for instant msgs */
-	ServInfo *serv_info;	/* Information about the citserver we're connected to */
-	StrBuf *PushedDestination;	/* Where to go after login, registration, etc. */
+	int serv_sock;				/* Client socket to Citadel server */
+	StrBuf *ReadBuf;                        /* linebuffered reads from the server */
+	StrBuf *MigrateReadLineBuf;             /* here we buffer legacy server read stuff */
+	const char *ReadPos;                    /* whats our read position in ReadBuf? */
+	int last_chat_seq;			/* When in chat - last message seq# we saw */
+	time_t lastreq;				/* Timestamp of most recent HTTP */
+	time_t last_pager_check;		/* last time we polled for instant msgs */
+	ServInfo *serv_info;			/* Information about the citserver we're connected to */
+	StrBuf *PushedDestination;		/* Where to go after login, registration, etc. */
 
 /* Request local Members */
-	StrBuf *CLineBuf;	/* linebuffering client stuff */
+	StrBuf *CLineBuf;                       /* linebuffering client stuff */
 	ParsedHttpHdrs *Hdr;
-	StrBuf *WBuf;		/* Our output buffer */
-	StrBuf *HBuf;		/* Our HeaderBuffer */
-	StrBuf *WFBuf;		/* Wildfire error logging buffer */
-	StrBuf *trailing_javascript;	/* extra javascript to be appended to page */
+	StrBuf *WBuf;                           /* Our output buffer */
+	StrBuf *HBuf;                           /* Our HeaderBuffer */
+	StrBuf *WFBuf;                          /* Wildfire error logging buffer */
+	StrBuf *trailing_javascript;		/* extra javascript to be appended to page */
 	StrBuf *ImportantMsg;
-	HashList *Directory;	/* Parts of the directory URL in snippets */
-	const Floor *CurrentFloor;	/* when Parsing REST, which floor are we on? */
+	HashList *Directory;			/* Parts of the directory URL in snippets */
+	const Floor *CurrentFloor;              /* when Parsing REST, which floor are we on? */
 
 /* accounting */
-	StrBuf *wc_username;	/* login name of current user */
-	StrBuf *wc_fullname;	/* Screen name of current user */
-	StrBuf *wc_password;	/* Password of current user */
-	StrBuf *httpauth_pass;	/* only for GroupDAV sessions */
-	int axlevel;		/* this user's access level */
-	int is_aide;		/* nonzero == this user is an Admin */
-	int connected;		/* nonzero == we are connected to Citadel */
-	int logged_in;		/* nonzero == we are logged in  */
-	int need_regi;		/* This user needs to register. */
-	int need_vali;		/* New users require validation. */
+	StrBuf *wc_username;			/* login name of current user */
+	StrBuf *wc_fullname;			/* Screen name of current user */
+	StrBuf *wc_password;			/* Password of current user */
+	StrBuf *httpauth_pass;  		/* only for GroupDAV sessions */
+	int axlevel;				/* this user's access level */
+	int is_aide;				/* nonzero == this user is an Admin */
+	int connected;				/* nonzero == we are connected to Citadel */
+	int logged_in;				/* nonzero == we are logged in  */
+	int need_regi;				/* This user needs to register. */
+	int need_vali;				/* New users require validation. */
 
 /* Preferences */
-	StrBuf *cs_inet_email;	/* User's preferred Internet addr. */
-	HashList *hash_prefs;	/* WebCit preferences for this user */
-	StrBuf *DefaultCharset;	/* Charset the user preferes */
-	int downloaded_prefs;	/* Has the client download its prefs yet? */
-	int SavePrefsToServer;	/* Should we save our preferences to the server at the end of the request? */
-	int selected_language;	/* Language selected by user */
-	int time_format_cache;	/* which timeformat does our user like? */
+	StrBuf *cs_inet_email;  		/* User's preferred Internet addr. */
+	HashList *hash_prefs;			/* WebCit preferences for this user */
+	StrBuf *DefaultCharset;                 /* Charset the user preferes */
+	int downloaded_prefs;                   /* Has the client download its prefs yet? */
+	int SavePrefsToServer;                  /* Should we save our preferences to the server at the end of the request? */
+	int selected_language;			/* Language selected by user */
+	int time_format_cache;                  /* which timeformat does our user like? */
 
-	folder CurRoom;		/* information about our current room */
-	const folder *ThisRoom;	/* if REST found a room, remember it here. */
-
+	folder CurRoom;                         /* information about our current room */
+	const folder *ThisRoom;                 /* if REST found a room, remember it here. */
 /* next/previous room thingabob */
-	struct march *march;	/* march mode room list */
-	char ugname[128];	/* where does 'ungoto' take us */
-	long uglsn;		/* last seen message number for ungoto */
+	struct march *march;			/* march mode room list */
+	char ugname[128];			/* where does 'ungoto' take us */
+	long uglsn;				/* last seen message number for ungoto */
 
 /* Uploading; mime attachments for composing messages */
-	HashList *attachments;	/* list of attachments for 'enter message' */
-	int upload_length;	/* content length of http-uploaded data */
-	StrBuf *upload;		/* pointer to http-uploaded data */
-	StrBuf *upload_filename;	/* filename of http-uploaded data */
-	char upload_content_type[256];	/* content type of http-uploaded data */
+	HashList *attachments;             	/* list of attachments for 'enter message' */
+	int upload_length;			/* content length of http-uploaded data */
+	StrBuf *upload;				/* pointer to http-uploaded data */
+	StrBuf *upload_filename;		/* filename of http-uploaded data */
+	char upload_content_type[256];		/* content type of http-uploaded data */
 
-	int remember_new_mail;	/* last count of new mail messages */
+	int remember_new_mail;			/* last count of new mail messages */
 
 /* Roomiew control */
-	HashList *Floors;	/* floors our citserver has hashed numeric for quicker access */
-	HashList *FloorsByName;	/* same but hashed by its name */
-	HashList *Rooms;	/* our directory structure as loaded by LKRA */
-	HashList *summ;		/* list of messages for mailbox summary view */
-
+	HashList *Floors;                       /* floors our citserver has hashed numeric for quicker access*/
+	HashList *FloorsByName;                 /* same but hashed by its name */
+	HashList *Rooms;                        /* our directory structure as loaded by LKRA */
+	HashList *summ;                         /* list of messages for mailbox summary view */
   /** Perhaps these should be within a struct instead */
-	long startmsg;		/* message number to start at */
-	long maxmsgs;		/* maximum messages to display */
-	long num_displayed;	/* number of messages actually displayed */
-	HashList *disp_cal_items;	/* sorted list of calendar items; startdate is the sort criteria. */
+	long startmsg;                          /* message number to start at */
+	long maxmsgs;                           /* maximum messages to display */
+        long num_displayed;                     /* number of messages actually displayed */
+	HashList *disp_cal_items;               /* sorted list of calendar items; startdate is the sort criteria. */
 
 
 	char last_chat_user[256];
 
-	StrBuf *IconTheme;	/* Icontheme setting */
+	StrBuf *IconTheme;                      /* Icontheme setting */
 
 /* Iconbar controls */
 	int cache_max_folders;
 	int cache_num_floors;
-	long *IBSettingsVec;	/* which icons should be shown / not shown? */
+	long *IBSettingsVec;                    /* which icons should be shown / not shown? */
 	const StrBuf *floordiv_expanded;	/* which floordiv currently expanded */
 	int ib_wholist_expanded;
 	int ib_roomlist_expanded;
@@ -494,14 +489,14 @@ struct wcsession {
 	StrBuf *ConvertBuf2;
 
 /* cache stuff for templates. TODO: find a smarter way */
-	HashList *ServCfg;	/* cache our server config for editing */
-	HashList *InetCfg;	/* Our inet server config for editing */
+	HashList *ServCfg;                      /* cache our server config for editing */
+	HashList *InetCfg;                      /* Our inet server config for editing */
 	ExpirePolicy Policy[maxpolicy];
 
 };
 
 
-typedef void (*Header_Evaluator)(StrBuf * Line, ParsedHttpHdrs * hdr);
+typedef void (*Header_Evaluator)(StrBuf *Line, ParsedHttpHdrs *hdr);
 
 typedef struct _HttpHeader {
 	Header_Evaluator H;
@@ -519,7 +514,7 @@ enum {
 };
 
 #ifndef num_parms
-#define num_parms(source)		num_tokens(source, '|')
+#define num_parms(source)		num_tokens(source, '|') 
 #endif
 
 #define site_prefix	(WC ? (WC->Hdr->HostHeader) : NULL)
@@ -536,9 +531,9 @@ extern pthread_key_t ThreadSSL;
 void init_ssl(void);
 void endtls(void);
 int starttls(int sock);
-extern SSL_CTX *ssl_ctx;
-int client_read_sslbuffer(StrBuf * buf, int timeout);
-int client_write_ssl(const StrBuf * Buf);
+extern SSL_CTX *ssl_ctx;  
+int client_read_sslbuffer(StrBuf *buf, int timeout);
+int client_write_ssl(const StrBuf *Buf);
 #endif
 
 extern int is_https;
@@ -561,21 +556,21 @@ void http_redirect(const char *);
 #ifdef UBER_VERBOSE_DEBUGGING
 #define wc_printf(...) wcc_printf(__FILE__, __FUNCTION__, __LINE__, __VA_ARGS__)
 void wcc_printf(const char *FILE, const char *FUNCTION, long LINE, const char *format, ...);
-#else
-void wc_printf(const char *format, ...) __attribute__((__format__(__printf__, 1, 2)));
+#else 
+void wc_printf(const char *format,...)__attribute__((__format__(__printf__,1,2)));
 #endif
-void hprintf(const char *format, ...) __attribute__((__format__(__printf__, 1, 2)));
-void CheckAuthBasic(ParsedHttpHdrs * hdr);
-void GetAuthBasic(ParsedHttpHdrs * hdr);
+void hprintf(const char *format,...)__attribute__((__format__(__printf__,1,2)));
+void CheckAuthBasic(ParsedHttpHdrs *hdr);
+void GetAuthBasic(ParsedHttpHdrs *hdr);
 void sleeeeeeeeeep(int);
 size_t wc_strftime(char *s, size_t max, const char *format, const struct tm *tm);
 void fmt_time(char *buf, size_t siz, time_t thetime);
 void httpdate(char *buf, time_t thetime);
-time_t httpdate_to_timestamp(StrBuf * buf);
+time_t httpdate_to_timestamp(StrBuf *buf);
 void end_webcit_session(void);
-void cookie_to_stuff(StrBuf * cookie, int *session, StrBuf * user, StrBuf * pass, StrBuf * room, StrBuf * language);
-void locate_host(StrBuf * TBuf, int);
-void become_logged_in(const StrBuf * user, const StrBuf * pass, StrBuf * serv_response);
+void cookie_to_stuff(StrBuf *cookie, int *session, StrBuf *user, StrBuf *pass, StrBuf *room, StrBuf *language);
+void locate_host(StrBuf *TBuf, int);
+void become_logged_in(const StrBuf *user, const StrBuf *pass, StrBuf *serv_response);
 void display_login(void);
 void display_openids(void);
 void display_default_landing_page(void);
@@ -586,44 +581,43 @@ void display_aide_menu(void);
 void RegisterEmbeddableMimeType(const char *MimeType, long MTLen, int Priority);
 void CreateMimeStr(void);
 void pop_destination(void);
-void FmOut(StrBuf * Target, const char *align, const StrBuf * Source);
+void FmOut(StrBuf *Target, const char *align, const StrBuf *Source);
 void wDumpContent(int);
 void PutRequestLocalMem(void *Data, DeleteHashDataFunc DeleteIt);
 void output_headers(int do_httpheaders, int do_htmlhead, int do_room_banner, int unset_cookies, int suppress_check, int cache);
 void cdataout(char *rawdata);
 void url(char *buf, size_t bufsize);
-void UrlizeText(StrBuf * Target, StrBuf * Source, StrBuf * WrkBuf);
+void UrlizeText(StrBuf* Target, StrBuf *Source, StrBuf *WrkBuf);
 void display_success(const char *successmessage);
 void shutdown_sessions(void);
 StrBuf *load_mimepart(long msgnum, char *partnum);
-void MimeLoadData(wc_mime_attachment * Mime);
-void do_edit_vcard(long msgnum, char *partnum, message_summary * VCMsg, wc_mime_attachment * VCAtt, const char *return_to,
-		   const char *force_room);
+void MimeLoadData(wc_mime_attachment *Mime);
+void do_edit_vcard(long msgnum, char *partnum, message_summary *VCMsg, wc_mime_attachment *VCAtt, const char *return_to, const char *force_room);
 void select_user_to_edit(const char *preselect);
 void convenience_page(const char *titlebarcolor, const char *titlebarmsg, const char *messagetext);
 void output_html(const char *, int, int, StrBuf *, StrBuf *);
 ssize_t write(int fd, const void *buf, size_t count);
-void cal_process_attachment(wc_mime_attachment * Mime);
+void cal_process_attachment(wc_mime_attachment *Mime);
 void begin_ajax_response(void);
 void end_ajax_response(void);
 extern char *months[];
 extern char *days[];
-long locate_user_vcard_in_this_room(message_summary ** VCMsg, wc_mime_attachment ** VCAtt);
+long locate_user_vcard_in_this_room(message_summary **VCMsg, wc_mime_attachment **VCAtt);
 void http_transmit_thing(const char *content_type, int is_static);
 void http_transmit_headers(const char *content_type, int is_static, long is_chunked, int is_gzip);
 long unescape_input(char *buf);
 void check_thread_pool_size(void);
-void StrEndTab(StrBuf * Target, int tabnum, int num_tabs);
-void StrBeginTab(StrBuf * Target, int tabnum, int num_tabs, StrBuf ** Names);
-void StrTabbedDialog(StrBuf * Target, int num_tabs, StrBuf * tabnames[]);
+void StrEndTab(StrBuf *Target, int tabnum, int num_tabs);
+void StrBeginTab(StrBuf *Target, int tabnum, int num_tabs, StrBuf **Names);
+void StrTabbedDialog(StrBuf *Target, int num_tabs, StrBuf *tabnames[]);
 void tabbed_dialog(int num_tabs, const char *tabnames[]);
 void begin_tab(int tabnum, int num_tabs);
 void end_tab(int tabnum, int num_tabs);
-int get_time_format_cached(void);
+int get_time_format_cached (void);
 void display_wiki_pagelist(void);
 void str_wiki_index(StrBuf *);
-HashList *GetRoomListHashLKRA(StrBuf * Target, WCTemplputParams * TP);
-void TmplGettext(StrBuf * Target, WCTemplputParams * TP);	/* actual supported locales */
+HashList *GetRoomListHashLKRA(StrBuf *Target, WCTemplputParams *TP);
+void TmplGettext(StrBuf *Target, WCTemplputParams *TP); /* actual supported locales */
 void set_selected_language(const char *);
 void go_selected_language(void);
 const char *get_selected_language(void);
@@ -648,11 +642,11 @@ void display_enter(void);
 #define WC_TIMEFORMAT_AMPM 1
 #define WC_TIMEFORMAT_24 2
 
-extern int time_to_die;		/* Nonzero if server is shutting down */
+extern int time_to_die;			/* Nonzero if server is shutting down */
 extern int DisableGzip;
 
 void display_summary_page(void);
-HashList *GetValidDomainNames(StrBuf * Target, WCTemplputParams * TP);
+HashList *GetValidDomainNames(StrBuf *Target, WCTemplputParams *TP);
 void output_error_pic(const char *ErrMsg1, const char *ErrMsg2);
 void jsonMessageListHdr(void);
-extern char *ctdl_dir;		/* Directory where Citadel Server is running */
+extern char *ctdl_dir;				/* Directory where Citadel Server is running */

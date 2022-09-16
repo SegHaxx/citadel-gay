@@ -13,7 +13,7 @@
 #include "webcit.h"
 
 // List subscription handling
-int Conditional_LISTSUB_EXECUTE_SUBSCRIBE(StrBuf * Target, WCTemplputParams * TP) {
+int Conditional_LISTSUB_EXECUTE_SUBSCRIBE(StrBuf *Target, WCTemplputParams *TP) {
 	int rc;
 	StrBuf *Line;
 	const char *ImpMsg;
@@ -48,7 +48,7 @@ int Conditional_LISTSUB_EXECUTE_SUBSCRIBE(StrBuf * Target, WCTemplputParams * TP
 }
 
 
-int Conditional_LISTSUB_EXECUTE_UNSUBSCRIBE(StrBuf * Target, WCTemplputParams * TP) {
+int Conditional_LISTSUB_EXECUTE_UNSUBSCRIBE(StrBuf *Target, WCTemplputParams *TP) {
 	int rc;
 	StrBuf *Line;
 	const char *ImpMsg;
@@ -83,7 +83,7 @@ int Conditional_LISTSUB_EXECUTE_UNSUBSCRIBE(StrBuf * Target, WCTemplputParams * 
 }
 
 
-int confirm_sub_or_unsub(char *cmd, StrBuf * Target, WCTemplputParams * TP) {
+int confirm_sub_or_unsub(char *cmd, StrBuf *Target, WCTemplputParams *TP) {
 	int rc;
 	StrBuf *Line;
 
@@ -99,19 +99,19 @@ int confirm_sub_or_unsub(char *cmd, StrBuf * Target, WCTemplputParams * TP) {
 }
 
 
-int Conditional_LISTSUB_EXECUTE_CONFIRMSUBSCRIBE(StrBuf * Target, WCTemplputParams * TP) {
+int Conditional_LISTSUB_EXECUTE_CONFIRMSUBSCRIBE(StrBuf *Target, WCTemplputParams *TP) {
 	if (strcmp(bstr("cmd"), "confirm_subscribe")) {
 		return 0;
 	}
-	return (confirm_sub_or_unsub("confirm_subscribe", Target, TP));
+	return(confirm_sub_or_unsub("confirm_subscribe", Target, TP));
 }
 
 
-int Conditional_LISTSUB_EXECUTE_CONFIRMUNSUBSCRIBE(StrBuf * Target, WCTemplputParams * TP) {
+int Conditional_LISTSUB_EXECUTE_CONFIRMUNSUBSCRIBE(StrBuf *Target, WCTemplputParams *TP) {
 	if (strcmp(bstr("cmd"), "confirm_unsubscribe")) {
 		return 0;
 	}
-	return (confirm_sub_or_unsub("confirm_unsubscribe", Target, TP));
+	return(confirm_sub_or_unsub("confirm_unsubscribe", Target, TP));
 }
 
 
@@ -125,10 +125,13 @@ void do_listsub(void) {
 }
 
 
-void InitModule_LISTSUB(void) {
-	RegisterConditional("COND:LISTSUB:EXECUTE:SUBSCRIBE", 0, Conditional_LISTSUB_EXECUTE_SUBSCRIBE, CTX_NONE);
-	RegisterConditional("COND:LISTSUB:EXECUTE:UNSUBSCRIBE", 0, Conditional_LISTSUB_EXECUTE_UNSUBSCRIBE, CTX_NONE);
+void 
+InitModule_LISTSUB
+(void)
+{
+	RegisterConditional("COND:LISTSUB:EXECUTE:SUBSCRIBE", 0, Conditional_LISTSUB_EXECUTE_SUBSCRIBE,  CTX_NONE);
+	RegisterConditional("COND:LISTSUB:EXECUTE:UNSUBSCRIBE", 0, Conditional_LISTSUB_EXECUTE_UNSUBSCRIBE,  CTX_NONE);
 	RegisterConditional("COND:LISTSUB:EXECUTE:CONFIRMSUBSCRIBE", 0, Conditional_LISTSUB_EXECUTE_CONFIRMSUBSCRIBE, CTX_NONE);
 	RegisterConditional("COND:LISTSUB:EXECUTE:CONFIRMUNSUBSCRIBE", 0, Conditional_LISTSUB_EXECUTE_CONFIRMUNSUBSCRIBE, CTX_NONE);
-	WebcitAddUrlHandler(HKEY("listsub"), "", 0, do_listsub, ANONYMOUS | COOKIEUNNEEDED | FORCE_SESSIONCLOSE);
+	WebcitAddUrlHandler(HKEY("listsub"), "", 0, do_listsub, ANONYMOUS|COOKIEUNNEEDED|FORCE_SESSIONCLOSE);
 }

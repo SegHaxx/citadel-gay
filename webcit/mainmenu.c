@@ -1,4 +1,3 @@
-
 /*
  * The main menu and other things
  *
@@ -37,14 +36,14 @@ void display_aide_menu(void) {
 
 // Handle generic server commands, possibly entered from a screen, possibly set up as a way to avoid custom code
 void do_generic(void) {
-	WCTemplputParams SubTP;
+        WCTemplputParams SubTP;
 	int Done = 0;
 	StrBuf *Buf;
 	StrBuf *LineBuf;
 	char *junk;
 	size_t len;
 
-	if ((!havebstr("sc_button")) && (!havebstr("ok_button")) && (!havebstr("cancel_button"))) {
+	if ( (!havebstr("sc_button")) && (!havebstr("ok_button")) && (!havebstr("cancel_button")) ) {
 		display_main_menu();
 		return;
 	}
@@ -57,11 +56,12 @@ void do_generic(void) {
 		Buf = NewStrBuf();
 		serv_puts(bstr("g_cmd"));
 		StrBuf_ServGetln(Buf);
-
+		
 		switch (GetServerStatus(Buf, NULL)) {
 		case 8:
 			serv_puts("\n\n000");
-			if ((StrLength(Buf) == 3) && !strcmp(ChrPtr(Buf), "000")) {
+			if ( (StrLength(Buf)==3) && 
+		     	!strcmp(ChrPtr(Buf), "000")) {
 				StrBufAppendBufPlain(Buf, HKEY("\000"), 0);
 				break;
 			}
@@ -71,7 +71,8 @@ void do_generic(void) {
 			while (!Done) {
 				if (StrBuf_ServGetln(LineBuf) < 0)
 					break;
-				if ((StrLength(LineBuf) == 3) && !strcmp(ChrPtr(LineBuf), "000")) {
+				if ( (StrLength(LineBuf)==3) && 
+			     	!strcmp(ChrPtr(LineBuf), "000")) {
 					Done = 1;
 				}
 				StrBufAppendBuf(Buf, LineBuf, 0);
@@ -99,7 +100,7 @@ void do_generic(void) {
 		}
 		FreeStrBuf(&Buf);
 	}
-
+	
 	// We may have been supplied with instructions regarding the location
 	// to which we must return after posting.  If found, go there.
 	if (havebstr("return_to")) {
@@ -111,13 +112,13 @@ void do_generic(void) {
 	else {
 		begin_burst();
 		output_headers(1, 0, 0, 0, 1, 0);
-
+	
 		StackContext(NULL, &SubTP, Buf, CTX_STRBUF, 0, NULL);
 		{
 			DoTemplate(HKEY("aide_display_generic_result"), NULL, &SubTP);
 		}
 		UnStackContext(&SubTP);
-		wDumpContent(1);
+        	wDumpContent(1);
 	}
 
 }
@@ -127,10 +128,10 @@ void do_generic(void) {
 void display_shutdown(void) {
 	StrBuf *Line;
 	char *when;
-
+	
 	Line = NewStrBuf();
-	when = bstr("when");
-	if (strcmp(when, "now") == 0) {
+	when=bstr("when");
+	if (strcmp(when, "now") == 0){
 		serv_printf("DOWN 1");
 		StrBuf_ServGetln(Line);
 		GetServerStatusMsg(Line, NULL, 1, 5);
@@ -146,15 +147,17 @@ void display_shutdown(void) {
 	}
 	else if (strcmp(when, "page") == 0) {
 		char *message;
-
+	       
 		message = bstr("message");
-		if ((message == NULL) || (IsEmptyStr(message))) {
+		if ((message == NULL) || (IsEmptyStr(message)))
+		{
 			begin_burst();
 			output_headers(1, 0, 0, 0, 1, 0);
 			DoTemplate(HKEY("aide_display_serverrestart_page"), NULL, &NoCtx);
 			end_burst();
 		}
-		else {
+		else
+		{
 			serv_printf("SEXP broadcast|%s", message);
 			StrBuf_ServGetln(Line);
 			GetServerStatusMsg(Line, NULL, 1, 0);
@@ -162,7 +165,7 @@ void display_shutdown(void) {
 			begin_burst();
 			output_headers(1, 0, 0, 0, 1, 0);
 			DoTemplate(HKEY("aide_display_serverrestart_page"), NULL, &NoCtx);
-			end_burst();
+			end_burst();			
 		}
 	}
 	else if (!strcmp(when, "idle")) {
@@ -173,13 +176,16 @@ void display_shutdown(void) {
 		begin_burst();
 		output_headers(1, 0, 0, 0, 1, 0);
 		DoTemplate(HKEY("aide_display_menu"), NULL, &NoCtx);
-		end_burst();
+		end_burst();			
 	}
 	FreeStrBuf(&Line);
 }
 
 
-void InitModule_MAINMENU(void) {
+void 
+InitModule_MAINMENU
+(void)
+{
 	WebcitAddUrlHandler(HKEY("display_aide_menu"), "", 0, display_aide_menu, 0);
 	WebcitAddUrlHandler(HKEY("server_shutdown"), "", 0, display_shutdown, 0);
 	WebcitAddUrlHandler(HKEY("display_main_menu"), "", 0, display_main_menu, 0);

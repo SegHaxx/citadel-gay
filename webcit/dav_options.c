@@ -1,4 +1,3 @@
-
 /*
  * Handles DAV OPTIONS requests (experimental -- not required by GroupDAV)
  *
@@ -20,7 +19,8 @@
 /*
  * The pathname is always going to be /groupdav/room_name/msg_num
  */
-void dav_options(void) {
+void dav_options(void)
+{
 	wcsession *WCC = WC;
 	StrBuf *dav_roomname;
 	StrBuf *dav_uid;
@@ -65,10 +65,13 @@ void dav_options(void) {
 		hprintf("HTTP/1.1 404 not found\r\n");
 		dav_common_headers();
 		hprintf("Date: %s\r\n", datestring);
-		hprintf("Content-Type: text/plain\r\n");
+		hprintf(
+			"Content-Type: text/plain\r\n");
 		begin_burst();
-		wc_printf("There is no folder called \"%s\" on this server.\r\n", ChrPtr(dav_roomname)
-		    );
+		wc_printf(
+			"There is no folder called \"%s\" on this server.\r\n",
+			ChrPtr(dav_roomname)
+		);
 		end_burst();
 		FreeStrBuf(&dav_roomname);
 		FreeStrBuf(&dav_uid);
@@ -86,12 +89,14 @@ void dav_options(void) {
 			dav_common_headers();
 			hprintf("Content-Type: text/plain\r\n");
 			begin_burst();
-			wc_printf("Object \"%s\" was not found in the \"%s\" folder.\r\n", ChrPtr(dav_uid), ChrPtr(dav_roomname)
-			    );
+			wc_printf(
+				"Object \"%s\" was not found in the \"%s\" folder.\r\n",
+				ChrPtr(dav_uid),
+				ChrPtr(dav_roomname)
+			);
 			FreeStrBuf(&dav_roomname);
 			FreeStrBuf(&dav_uid);
-			end_burst();
-			return;
+			end_burst();return;
 		}
 
 		hprintf("HTTP/1.1 200 OK\r\n");
@@ -99,7 +104,7 @@ void dav_options(void) {
 		hprintf("Date: %s\r\n", datestring);
 		hprintf("DAV: 1\r\n");
 		hprintf("Allow: OPTIONS, PROPFIND, GET, PUT, DELETE\r\n");
-
+		
 		begin_burst();
 		end_burst();
 		FreeStrBuf(&dav_roomname);
@@ -115,8 +120,9 @@ void dav_options(void) {
 	 * an OPTIONS on the room itself.
 	 */
 	syslog(LOG_DEBUG, "\033[36mOPTIONS requested for room '%s' (%slogged in)\033[0m",
-	       ChrPtr(WC->CurRoom.name), ((WC->logged_in) ? "" : "not ")
-	    );
+		ChrPtr(WC->CurRoom.name),
+		((WC->logged_in) ? "" : "not ")
+	);
 	hprintf("HTTP/1.1 200 OK\r\n");
 	dav_common_headers();
 	hprintf("Date: %s\r\n", datestring);
@@ -124,7 +130,7 @@ void dav_options(void) {
 	/*
 	 * Offer CalDAV (RFC 4791) if this is a calendar room
 	 */
-	if ((WC->CurRoom.view == VIEW_CALENDAR) || (WC->CurRoom.view == VIEW_CALBRIEF)) {
+	if ( (WC->CurRoom.view == VIEW_CALENDAR) || (WC->CurRoom.view == VIEW_CALBRIEF) ) {
 		hprintf("DAV: 1, calendar-access\r\n");
 		syslog(LOG_DEBUG, "\033[36mDAV: 1, calendar-access\033[0m");
 	}

@@ -1,4 +1,3 @@
-
 /*
  * Output an HTML message, modifying it slightly to make sure it plays nice
  * with the rest of our web framework.
@@ -21,18 +20,17 @@
 /*
  * Strip surrounding single or double quotes from a string.
  */
-void stripquotes(char *s) {
+void stripquotes(char *s)
+{
 	int len;
 
-	if (!s)
-		return;
+	if (!s) return;
 
 	len = strlen(s);
-	if (len < 2)
-		return;
+	if (len < 2) return;
 
-	if (((s[0] == '\"') && (s[len - 1] == '\"')) || ((s[0] == '\'') && (s[len - 1] == '\''))) {
-		s[len - 1] = 0;
+	if ( ( (s[0] == '\"') && (s[len-1] == '\"') ) || ( (s[0] == '\'') && (s[len-1] == '\'') ) ) {
+		s[len-1] = 0;
 		strcpy(s, &s[1]);
 	}
 }
@@ -45,24 +43,20 @@ void stripquotes(char *s) {
  * meta_http_equiv	Content of the "http-equiv" portion of the META tag
  * meta_content		Content of the "content" portion of the META tag
  */
-void extract_charset_from_meta(char *charset, char *meta_http_equiv, char *meta_content) {
+void extract_charset_from_meta(char *charset, char *meta_http_equiv, char *meta_content)
+{
 	char *ptr;
 	char buf[64];
 
-	if (!charset)
-		return;
-	if (!meta_http_equiv)
-		return;
-	if (!meta_content)
-		return;
+	if (!charset) return;
+	if (!meta_http_equiv) return;
+	if (!meta_content) return;
 
 
-	if (strcasecmp(meta_http_equiv, "Content-type"))
-		return;
+	if (strcasecmp(meta_http_equiv, "Content-type")) return;
 
 	ptr = strchr(meta_content, ';');
-	if (!ptr)
-		return;
+	if (!ptr) return;
 
 	safestrncpy(buf, ++ptr, sizeof buf);
 	striplt(buf);
@@ -81,8 +75,7 @@ void extract_charset_from_meta(char *charset, char *meta_http_equiv, char *meta_
 		}
 
 		/* Remove wandering punctuation */
-		if ((ptr = strchr(charset, '\"')))
-			*ptr = 0;
+		if ((ptr=strchr(charset, '\"'))) *ptr = 0;
 		striplt(charset);
 	}
 }
@@ -95,7 +88,7 @@ void extract_charset_from_meta(char *charset, char *meta_http_equiv, char *meta_
  * Also fixup img src="cid:..." type inline images to fetch the image
  *
  */
-void output_html(const char *supplied_charset, int treat_as_wiki, int msgnum, StrBuf * Source, StrBuf * Target) {
+void output_html(const char *supplied_charset, int treat_as_wiki, int msgnum, StrBuf *Source, StrBuf *Target) {
 	char buf[SIZ];
 	char *msg;
 	char *ptr;
@@ -115,12 +108,12 @@ void output_html(const char *supplied_charset, int treat_as_wiki, int msgnum, St
 	char charset[128];
 	StrBuf *BodyArea = NULL;
 #ifdef HAVE_ICONV
-	iconv_t ic = (iconv_t) (-1);
-	char *ibuf;		/* Buffer of characters to be converted */
-	char *obuf;		/* Buffer for converted characters      */
-	size_t ibuflen;		/* Length of input buffer               */
-	size_t obuflen;		/* Length of output buffer              */
-	char *osav;		/* Saved pointer to output buffer       */
+	iconv_t ic = (iconv_t)(-1) ;
+	char *ibuf;                   /* Buffer of characters to be converted */
+	char *obuf;                   /* Buffer for converted characters      */
+	size_t ibuflen;               /* Length of input buffer               */
+	size_t obuflen;               /* Length of output buffer              */
+	char *osav;                   /* Saved pointer to output buffer       */
 #endif
 	if (Target == NULL)
 		Target = WC->WBuf;
@@ -129,33 +122,32 @@ void output_html(const char *supplied_charset, int treat_as_wiki, int msgnum, St
 	msg = strdup("");
 	sprintf(new_window, "<a target=\"%s\" href=", TARGET);
 
-	if (Source == NULL)
-		while (serv_getln(buf, sizeof buf), strcmp(buf, "000")) {
-			line_length = strlen(buf);
-			buffer_length = content_length + line_length + 2;
-			ptr = realloc(msg, buffer_length);
-			if (ptr == NULL) {
-				StrBufAppendPrintf(Target, "<b>");
-				StrBufAppendPrintf(Target, _("realloc() error! couldn't get %d bytes: %s"),
-						   buffer_length + 1, strerror(errno));
-				StrBufAppendPrintf(Target, "</b><br><br>\n");
-				while (serv_getln(buf, sizeof buf), strcmp(buf, "000")) {
-
+	if (Source == NULL) while (serv_getln(buf, sizeof buf), strcmp(buf, "000")) {
+		line_length = strlen(buf);
+		buffer_length = content_length + line_length + 2;
+		ptr = realloc(msg, buffer_length);
+		if (ptr == NULL) {
+			StrBufAppendPrintf(Target, "<b>");
+			StrBufAppendPrintf(Target, _("realloc() error! couldn't get %d bytes: %s"),
+					buffer_length + 1,
+					strerror(errno));
+			StrBufAppendPrintf(Target, "</b><br><br>\n");
+			while (serv_getln(buf, sizeof buf), strcmp(buf, "000")) {
 				/** flush */
-				}
-				free(msg);
-				return;
 			}
-			msg = ptr;
-			strcpy(&msg[content_length], buf);
-			content_length += line_length;
-			strcpy(&msg[content_length], "\n");
-			content_length += 1;
+			free(msg);
+			return;
 		}
+		msg = ptr;
+		strcpy(&msg[content_length], buf);
+		content_length += line_length;
+		strcpy(&msg[content_length], "\n");
+		content_length += 1;
+	}
 	else {
 		content_length = StrLength(Source);
 		free(msg);
-		msg = (char *) ChrPtr(Source);	/* TODO: remove cast */
+		msg = (char*) ChrPtr(Source);/* TODO: remove cast */
 		buffer_length = content_length;
 	}
 
@@ -168,11 +160,9 @@ void output_html(const char *supplied_charset, int treat_as_wiki, int msgnum, St
 
 		/** Advance to next tag */
 		ptr = strchr(ptr, '<');
-		if ((ptr == NULL) || (ptr >= msgend))
-			break;
+		if ((ptr == NULL) || (ptr >= msgend)) break;
 		++ptr;
-		if ((ptr == NULL) || (ptr >= msgend))
-			break;
+		if ((ptr == NULL) || (ptr >= msgend)) break;
 
 		/*
 		 *  Look for META tags.  Some messages (particularly in
@@ -208,7 +198,8 @@ void output_html(const char *supplied_charset, int treat_as_wiki, int msgnum, St
 							strcpy(meta_content, &meta_content[8]);
 							stripquotes(meta_http_equiv);
 							stripquotes(meta_content);
-							extract_charset_from_meta(charset, meta_http_equiv, meta_content);
+							extract_charset_from_meta(charset,
+									meta_http_equiv, meta_content);
 						}
 						free(meta_content);
 					}
@@ -221,56 +212,59 @@ void output_html(const char *supplied_charset, int treat_as_wiki, int msgnum, St
 		/*
 		 * Any of these tags cause everything up to and including
 		 * the tag to be removed.
-		 */
-		if ((!strncasecmp(ptr, "HTML", 4))
-		    || (!strncasecmp(ptr, "HEAD", 4))
-		    || (!strncasecmp(ptr, "/HEAD", 5))
-		    || (!strncasecmp(ptr, "BODY", 4))) {
+		 */	
+		if ( (!strncasecmp(ptr, "HTML", 4))
+				||(!strncasecmp(ptr, "HEAD", 4))
+				||(!strncasecmp(ptr, "/HEAD", 5))
+				||(!strncasecmp(ptr, "BODY", 4)) ) {
 			char *pBody = NULL;
 
 			if (!strncasecmp(ptr, "BODY", 4)) {
 				pBody = ptr;
 			}
 			ptr = strchr(ptr, '>');
-			if ((ptr == NULL) || (ptr >= msgend))
-				break;
+			if ((ptr == NULL) || (ptr >= msgend)) break;
 			if ((pBody != NULL) && (ptr - pBody > 4)) {
-				char *src;
+				char* src;
 				char *cid_start, *cid_end;
 
 				*ptr = '\0';
-				pBody += 4;
+				pBody += 4; 
 				while ((isspace(*pBody)) && (pBody < ptr))
-					pBody++;
-				BodyArea = NewStrBufPlain(NULL, ptr - pBody);
+					pBody ++;
+				BodyArea = NewStrBufPlain(NULL,  ptr - pBody);
 
 				if (pBody < ptr) {
 					src = strstr(pBody, "cid:");
 					if (src) {
 						cid_start = src + 4;
 						cid_end = cid_start;
-						while ((*cid_end != '"') && !isspace(*cid_end) && (cid_end < ptr))
-							cid_end++;
+						while ((*cid_end != '"') && 
+								!isspace(*cid_end) &&
+								(cid_end < ptr))
+							cid_end ++;
 
 						/* copy tag and attributes up to src="cid: */
 						StrBufAppendBufPlain(BodyArea, pBody, src - pBody, 0);
 
 						/* add in /webcit/mimepart/<msgno>/CID/ 
 						   trailing / stops dumb URL filters getting excited */
-						StrBufAppendPrintf(BodyArea, "/webcit/mimepart/%d/", msgnum);
+						StrBufAppendPrintf(BodyArea,
+								"/webcit/mimepart/%d/",msgnum);
 						StrBufAppendBufPlain(BodyArea, cid_start, cid_end - cid_start, 0);
 
 						if (ptr - cid_end > 0)
-							StrBufAppendBufPlain(BodyArea, cid_end + 1, ptr - cid_end, 0);
+							StrBufAppendBufPlain(BodyArea, 
+									cid_end + 1, 
+									ptr - cid_end, 0);
 					}
-					else
+					else 
 						StrBufAppendBufPlain(BodyArea, pBody, ptr - pBody, 0);
 				}
 				*ptr = '>';
 			}
 			++ptr;
-			if ((ptr == NULL) || (ptr >= msgend))
-				break;
+			if ((ptr == NULL) || (ptr >= msgend)) break;
 			msgstart = ptr;
 		}
 
@@ -278,8 +272,8 @@ void output_html(const char *supplied_charset, int treat_as_wiki, int msgnum, St
 		 * Any of these tags cause everything including and following
 		 * the tag to be removed.
 		 */
-		if ((!strncasecmp(ptr, "/HTML", 5))
-		    || (!strncasecmp(ptr, "/BODY", 5))) {
+		if ( (!strncasecmp(ptr, "/HTML", 5))
+				||(!strncasecmp(ptr, "/BODY", 5)) ) {
 			--ptr;
 			msgend = ptr;
 			strcpy(ptr, "");
@@ -298,21 +292,22 @@ void output_html(const char *supplied_charset, int treat_as_wiki, int msgnum, St
 
 	/** Convert foreign character sets to UTF-8 if necessary. */
 #ifdef HAVE_ICONV
-	if ((strcasecmp(charset, "us-ascii"))
-	    && (strcasecmp(charset, "UTF-8"))
-	    && (strcasecmp(charset, ""))
-	    ) {
+	if ( (strcasecmp(charset, "us-ascii"))
+			&& (strcasecmp(charset, "UTF-8"))
+			&& (strcasecmp(charset, ""))
+	   ) {
 		syslog(LOG_DEBUG, "Converting %s to UTF-8\n", charset);
 		ctdl_iconv_open("UTF-8", charset, &ic);
-		if (ic == (iconv_t) (-1)) {
-			syslog(LOG_WARNING, "%s:%d iconv_open() failed: %s\n", __FILE__, __LINE__, strerror(errno));
+		if (ic == (iconv_t)(-1) ) {
+			syslog(LOG_WARNING, "%s:%d iconv_open() failed: %s\n",
+					__FILE__, __LINE__, strerror(errno));
 		}
 	}
-	if (Source == NULL) {
-		if (ic != (iconv_t) (-1)) {
+	if  (Source == NULL) {
+		if (ic != (iconv_t)(-1) ) {
 			ibuf = msg;
 			ibuflen = content_length;
-			obuflen = content_length + (content_length / 2);
+			obuflen = content_length + (content_length / 2) ;
 			obuf = (char *) malloc(obuflen);
 			osav = obuf;
 			iconv(ic, &ibuf, &ibuflen, &obuf, &obuflen);
@@ -324,23 +319,23 @@ void output_html(const char *supplied_charset, int treat_as_wiki, int msgnum, St
 		}
 	}
 	else {
-		if (ic != (iconv_t) (-1)) {
+		if (ic != (iconv_t)(-1) ) {
 			StrBuf *Buf = NewStrBufPlain(NULL, StrLength(Source) + 8096);;
 			StrBufConvert(Source, Buf, &ic);
 			FreeStrBuf(&Buf);
 			iconv_close(ic);
-			msg = (char *) ChrPtr(Source);	/* TODO: get rid of this. */
+			msg = (char*)ChrPtr(Source); /* TODO: get rid of this. */
 		}
 	}
 
 #endif
 
 	/*
-	 *      At this point, the message has been stripped down to
-	 *      only the content inside the <BODY></BODY> tags, and has
-	 *      been converted to UTF-8 if it was originally in a foreign
-	 *      character set.  The text is also guaranteed to be null
-	 *      terminated now.
+	 *	At this point, the message has been stripped down to
+	 *	only the content inside the <BODY></BODY> tags, and has
+	 *	been converted to UTF-8 if it was originally in a foreign
+	 *	character set.  The text is also guaranteed to be null
+	 *	terminated now.
 	 */
 
 	if (converted_msg == NULL) {
@@ -349,7 +344,7 @@ void output_html(const char *supplied_charset, int treat_as_wiki, int msgnum, St
 	}
 
 	if (BodyArea != NULL) {
-		StrBufAppendBufPlain(converted_msg, HKEY("<table "), 0);
+		StrBufAppendBufPlain(converted_msg, HKEY("<table "), 0);  
 		StrBufAppendBuf(converted_msg, BodyArea, 0);
 		StrBufAppendBufPlain(converted_msg, HKEY(" width=\"100%\"><tr><td>"), 0);
 	}
@@ -376,28 +371,29 @@ void output_html(const char *supplied_charset, int treat_as_wiki, int msgnum, St
 		 */
 		if (!strncasecmp(ptr, "<a href=\"mailto:", 16)) {
 			content_length += 64;
-			StrBufAppendPrintf(converted_msg, "<a href=\"display_enter?force_room=_MAIL_?recp=");
+			StrBufAppendPrintf(converted_msg,
+					"<a href=\"display_enter?force_room=_MAIL_?recp=");
 			ptr = &ptr[16];
 			++alevel;
 			++brak;
 		}
-
 		/** Make external links open in a separate window */
 		else if (!strncasecmp(ptr, "<a href=\"", 9)) {
 			++alevel;
 			++brak;
-			if (((strchr(ptr, ':') < strchr(ptr, '/')))
-			    && ((strchr(ptr, '/') < strchr(ptr, '>')))
-			    ) {
+			if ( ((strchr(ptr, ':') < strchr(ptr, '/')))
+					&&  ((strchr(ptr, '/') < strchr(ptr, '>'))) 
+			   ) {
 				/* open external links to new window */
 				StrBufAppendPrintf(converted_msg, new_window);
 				ptr = &ptr[8];
 			}
-			else if ((treat_as_wiki)
-				 && (strncasecmp(ptr, "<a href=\"wiki?", 14))
-				 && (strncasecmp(ptr, "<a href=\"dotgoto?", 17))
-				 && (strncasecmp(ptr, "<a href=\"knrooms?", 17))
-			    ) {
+			else if (
+				(treat_as_wiki)
+				&& (strncasecmp(ptr, "<a href=\"wiki?", 14))
+				&& (strncasecmp(ptr, "<a href=\"dotgoto?", 17))
+				&& (strncasecmp(ptr, "<a href=\"knrooms?", 17))
+			) {
 				content_length += 64;
 				StrBufAppendPrintf(converted_msg, "<a href=\"wiki?go=");
 				StrBufUrlescAppend(converted_msg, WC->CurRoom.name, NULL);
@@ -409,40 +405,42 @@ void output_html(const char *supplied_charset, int treat_as_wiki, int msgnum, St
 				ptr = &ptr[9];
 			}
 		}
-
 		/** Fixup <img src="cid:... ...> to fetch the mime part */
 		else if (!strncasecmp(ptr, "<img ", 5)) {
 			char *cid_start, *cid_end;
-			char *tag_end = strchr(ptr, '>');
-			char *src;
+			char* tag_end=strchr(ptr,'>');
+			char* src;
 			/* FIXME - handle this situation (maybe someone opened an <img cid... 
 			 * and then ended the message)
 			 */
 			if (!tag_end) {
 				syslog(LOG_DEBUG, "tag_end is null and ptr is:\n");
 				syslog(LOG_DEBUG, "%s\n", ptr);
-				syslog(LOG_DEBUG, "Theoretical bytes remaining: %d\n", (int) (msgend - ptr));
+				syslog(LOG_DEBUG, "Theoretical bytes remaining: %d\n", (int)(msgend - ptr));
 			}
 
-			src = strstr(ptr, "src=\"cid:");
+			src=strstr(ptr, "src=\"cid:");
 			++brak;
 
-			if (src && isspace(*(src - 1))
-			    && tag_end && (cid_start = strchr(src, ':'))
-			    && (cid_end = strchr(cid_start, '"'))
-			    && (cid_end < tag_end)
-			    ) {
+			if (src
+			    && isspace(*(src-1))
+				&& tag_end
+				&& (cid_start=strchr(src,':'))
+				&& (cid_end=strchr(cid_start,'"'))
+				&& (cid_end < tag_end)
+			) {
 				/* copy tag and attributes up to src="cid: */
 				StrBufAppendBufPlain(converted_msg, ptr, src - ptr, 0);
 				cid_start++;
 
 				/* add in /webcit/mimepart/<msgno>/CID/ 
 				   trailing / stops dumb URL filters getting excited */
-				StrBufAppendPrintf(converted_msg, " src=\"/webcit/mimepart/%d/", msgnum);
+				StrBufAppendPrintf(converted_msg,
+						" src=\"/webcit/mimepart/%d/",msgnum);
 				StrBufAppendBufPlain(converted_msg, cid_start, cid_end - cid_start, 0);
 				StrBufAppendBufPlain(converted_msg, "/\"", -1, 0);
 
-				ptr = cid_end + 1;
+				ptr = cid_end+1;
 			}
 			StrBufAppendBufPlain(converted_msg, ptr, tag_end - ptr, 0);
 			ptr = tag_end;
@@ -452,44 +450,45 @@ void output_html(const char *supplied_charset, int treat_as_wiki, int msgnum, St
 		 * Turn anything that looks like a URL into a real link, as long
 		 * as it's not inside a tag already
 		 */
-		else if ((brak == 0) && (alevel == 0) && ((!strncasecmp(ptr, "http://", 7)) || (!strncasecmp(ptr, "https://", 8)))) {
-
+		else if ( (brak == 0) && (alevel == 0) &&
+			  ( (!strncasecmp(ptr, "http://", 7)) ||
+			    (!strncasecmp(ptr, "https://", 8)))) {
 			/** Find the end of the link */
 			int strlenptr;
 			linklen = 0;
-
+				
 			strlenptr = strlen(ptr);
-			for (i = 0; i <= strlenptr; ++i) {
-				if ((ptr[i] == 0)
-				    || (isspace(ptr[i]))
-				    || (ptr[i] == 10)
-				    || (ptr[i] == 13)
-				    || (ptr[i] == '(')
-				    || (ptr[i] == ')')
-				    || (ptr[i] == '<')
-				    || (ptr[i] == '>')
-				    || (ptr[i] == '[')
-				    || (ptr[i] == ']')
-				    || (ptr[i] == '"')
-				    || (ptr[i] == '\'')
-				    )
-					linklen = i;
+			for (i=0; i<=strlenptr; ++i) {
+				if ((ptr[i]==0)
+				    ||(isspace(ptr[i]))
+				    ||(ptr[i]==10)
+				    ||(ptr[i]==13)
+				    ||(ptr[i]=='(')
+				    ||(ptr[i]==')')
+				    ||(ptr[i]=='<')
+				    ||(ptr[i]=='>')
+				    ||(ptr[i]=='[')
+				    ||(ptr[i]==']')
+				    ||(ptr[i]=='"')
+				    ||(ptr[i]=='\'')
+					) linklen = i;
 				/* did s.b. send us an entity? */
 				if (ptr[i] == '&') {
-					if ((ptr[i + 2] == ';') ||
-					    (ptr[i + 3] == ';') ||
-					    (ptr[i + 5] == ';') || (ptr[i + 6] == ';') || (ptr[i + 7] == ';'))
+					if ((ptr[i+2] ==';') ||
+					    (ptr[i+3] ==';') ||
+					    (ptr[i+5] ==';') ||
+					    (ptr[i+6] ==';') ||
+					    (ptr[i+7] ==';'))
 						linklen = i;
 				}
-				if (linklen > 0)
-					break;
+				if (linklen > 0) break;
 			}
 			if (linklen > 0) {
 				char *ltreviewptr;
 				char *nbspreviewptr;
 				char linkedchar;
 				int len;
-
+					
 				len = linklen;
 				linkedchar = ptr[len];
 				ptr[len] = '\0';
@@ -531,43 +530,38 @@ void output_html(const char *supplied_charset, int treat_as_wiki, int msgnum, St
 			 * so we don't turn things that look like URL's into
 			 * links, when they're already links - or image sources.
 			 */
-			if ((ptr > msg) && (*(ptr - 1) == '<')) {
+			if ((ptr > msg) && (*(ptr-1) == '<')) {
 				++brak;
 			}
-			if ((ptr > msg) && (*(ptr - 1) == '>')) {
+			if ((ptr > msg) && (*(ptr-1) == '>')) {
 				--brak;
 				if ((scriptlevel == 0) && (script_start_pos >= 0)) {
 					StrBufCutRight(converted_msg, StrLength(converted_msg) - script_start_pos);
 					script_start_pos = (-1);
 				}
 			}
-			if (!strncasecmp(ptr, "</A>", 3))
-				--alevel;
+			if (!strncasecmp(ptr, "</A>", 3)) --alevel;
 		}
 	}
 
 	if (BodyArea != NULL) {
-		StrBufAppendBufPlain(converted_msg, HKEY("</td></tr></table>"), 0);
+		StrBufAppendBufPlain(converted_msg, HKEY("</td></tr></table>"), 0);  
 		FreeStrBuf(&BodyArea);
 	}
 
 	/**	uncomment these two lines to override conversion	*/
-
 	/**	memcpy(converted_msg, msg, content_length);		*/
-
 	/**	output_length = content_length;				*/
 
 	/** Output our big pile of markup */
 	StrBufAppendBuf(Target, converted_msg, 0);
 
-      BAIL:
-	/** A little trailing vertical whitespace... */
+BAIL:	/** A little trailing vertical whitespace... */
 	StrBufAppendPrintf(Target, "<br><br>\n");
 
 	/** Now give back the memory */
 	FreeStrBuf(&converted_msg);
-	if ((msg != NULL) && (Source == NULL))
-		free(msg);
+	if ((msg != NULL) && (Source == NULL)) free(msg);
 }
 
 
@@ -579,10 +573,11 @@ void output_html(const char *supplied_charset, int treat_as_wiki, int msgnum, St
  * Look for URL's embedded in a buffer and make them linkable.  We use a
  * target window in order to keep the Citadel session in its own window.
  */
-void UrlizeText(StrBuf * Target, StrBuf * Source, StrBuf * WrkBuf) {
+void UrlizeText(StrBuf* Target, StrBuf *Source, StrBuf *WrkBuf)
+{
 	int len, UrlLen, Offset, TrailerLen;
 	const char *start, *end, *pos;
-
+	
 	FlushStrBuf(Target);
 
 	start = NULL;
@@ -602,25 +597,25 @@ void UrlizeText(StrBuf * Target, StrBuf * Source, StrBuf * WrkBuf) {
 	FlushStrBuf(WrkBuf);
 
 	for (pos = ChrPtr(Source) + len; pos > start; --pos) {
-		if ((!isprint(*pos))
-		    || (isspace(*pos))
-		    || (*pos == '{')
-		    || (*pos == '}')
-		    || (*pos == '|')
-		    || (*pos == '\\')
-		    || (*pos == '^')
-		    || (*pos == '[')
-		    || (*pos == ']')
-		    || (*pos == '`')
-		    || (*pos == '<')
-		    || (*pos == '>')
-		    || (*pos == '(')
-		    || (*pos == ')')
-		    ) {
+		if (  (!isprint(*pos))
+		   || (isspace(*pos))
+		   || (*pos == '{')
+		   || (*pos == '}')
+		   || (*pos == '|')
+		   || (*pos == '\\')
+		   || (*pos == '^')
+		   || (*pos == '[')
+		   || (*pos == ']')
+		   || (*pos == '`')
+		   || (*pos == '<')
+		   || (*pos == '>')
+		   || (*pos == '(')
+		   || (*pos == ')')
+		) {
 			end = pos;
 		}
 	}
-
+	
 	UrlLen = end - start;
 	StrBufAppendBufPlain(WrkBuf, start, UrlLen, 0);
 
@@ -628,7 +623,8 @@ void UrlizeText(StrBuf * Target, StrBuf * Source, StrBuf * WrkBuf) {
 	if (Offset != 0)
 		StrBufAppendBufPlain(Target, ChrPtr(Source), Offset, 0);
 	StrBufAppendPrintf(Target, "%ca href=%c%s%c TARGET=%c%s%c%c%s%c/A%c",
-			   LB, QU, ChrPtr(WrkBuf), QU, QU, TARGET, QU, RB, ChrPtr(WrkBuf), LB, RB);
+			   LB, QU, ChrPtr(WrkBuf), QU, QU, TARGET, 
+			   QU, RB, ChrPtr(WrkBuf), LB, RB);
 
 	TrailerLen = StrLength(Source) - (end - ChrPtr(Source));
 	if (TrailerLen > 0)
@@ -636,7 +632,8 @@ void UrlizeText(StrBuf * Target, StrBuf * Source, StrBuf * WrkBuf) {
 }
 
 
-void url(char *buf, size_t bufsize) {
+void url(char *buf, size_t bufsize)
+{
 	int len, UrlLen, Offset, TrailerLen, outpos;
 	char *start, *end, *pos;
 	char urlbuf[SIZ];
@@ -659,28 +656,28 @@ void url(char *buf, size_t bufsize) {
 	if (start == NULL)
 		return;
 
-	for (pos = buf + len; pos > start; --pos) {
-		if ((!isprint(*pos))
-		    || (isspace(*pos))
-		    || (*pos == '{')
-		    || (*pos == '}')
-		    || (*pos == '|')
-		    || (*pos == '\\')
-		    || (*pos == '^')
-		    || (*pos == '[')
-		    || (*pos == ']')
-		    || (*pos == '`')
-		    || (*pos == '<')
-		    || (*pos == '>')
-		    || (*pos == '(')
-		    || (*pos == ')')
-		    ) {
+	for (pos = buf+len; pos > start; --pos) {
+		if (  (!isprint(*pos))
+		   || (isspace(*pos))
+		   || (*pos == '{')
+		   || (*pos == '}')
+		   || (*pos == '|')
+		   || (*pos == '\\')
+		   || (*pos == '^')
+		   || (*pos == '[')
+		   || (*pos == ']')
+		   || (*pos == '`')
+		   || (*pos == '<')
+		   || (*pos == '>')
+		   || (*pos == '(')
+		   || (*pos == ')')
+		) {
 			end = pos;
 		}
 	}
-
+	
 	UrlLen = end - start;
-	if (UrlLen > sizeof(urlbuf)) {
+	if (UrlLen > sizeof(urlbuf)){
 		syslog(LOG_WARNING, "URL: content longer than buffer!");
 		return;
 	}
@@ -690,8 +687,9 @@ void url(char *buf, size_t bufsize) {
 	Offset = start - buf;
 	if ((Offset != 0) && (Offset < sizeof(outbuf)))
 		memcpy(outbuf, buf, Offset);
-	outpos = snprintf(&outbuf[Offset], sizeof(outbuf) - Offset,
-			  "%ca href=%c%s%c TARGET=%c%s%c%c%s%c/A%c", LB, QU, urlbuf, QU, QU, TARGET, QU, RB, urlbuf, LB, RB);
+	outpos = snprintf(&outbuf[Offset], sizeof(outbuf) - Offset,  
+			  "%ca href=%c%s%c TARGET=%c%s%c%c%s%c/A%c",
+			  LB, QU, urlbuf, QU, QU, TARGET, QU, RB, urlbuf, LB, RB);
 	if (outpos >= sizeof(outbuf) - Offset) {
 		syslog(LOG_WARNING, "URL: content longer than buffer!");
 		return;
@@ -704,6 +702,7 @@ void url(char *buf, size_t bufsize) {
 		syslog(LOG_WARNING, "URL: content longer than buffer!");
 		return;
 	}
-	memcpy(buf, outbuf, Offset + outpos + TrailerLen);
+	memcpy (buf, outbuf, Offset + outpos + TrailerLen);
 	*(buf + Offset + outpos + TrailerLen) = '\0';
 }
+

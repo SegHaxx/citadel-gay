@@ -1,4 +1,3 @@
-
 /*
  * This module handles multiuser chat.
  *
@@ -19,7 +18,8 @@
 /*
  * Display the screen containing multiuser chat for a room.
  */
-void do_chat(void) {
+void do_chat(void)
+{
 	char buf[256];
 
 	WC->last_chat_seq = 0;
@@ -141,12 +141,15 @@ void chat_exit(void) {
 	char buf[1024];
 
 	serv_puts("RCHT exit");
-	serv_getln(buf, sizeof buf);	/* Throw away the server reply */
+	serv_getln(buf, sizeof buf);		/* Throw away the server reply */
 }
 
 
 
-void InitModule_ROOMCHAT(void) {
+void 
+InitModule_ROOMCHAT
+(void)
+{
 	WebcitAddUrlHandler(HKEY("chat"), "", 0, do_chat, 0);
 	WebcitAddUrlHandler(HKEY("chat_recv"), "", 0, chat_recv, AJAX);
 	WebcitAddUrlHandler(HKEY("chat_rwho"), "", 0, chat_rwho, AJAX);
@@ -155,6 +158,9 @@ void InitModule_ROOMCHAT(void) {
 }
 
 
-void SessionDestroyModule_ROOMCHAT(wcsession * sess) {
+void 
+SessionDestroyModule_ROOMCHAT
+(wcsession *sess)
+{
 	/* nothing here anymore */
 }

@@ -1,4 +1,3 @@
-
 /* 
  * Functions which handle Internet domain configuration etc.
  */
@@ -34,20 +33,21 @@ ConstStr CfgNames[] = {
 	{ HKEY("notify") }
 };
 
-
+	
 
 
 /*
  * display the inet config dialog 
  */
-void load_inetconf(void) {
+void load_inetconf(void)
+{
 	wcsession *WCC = WC;
 	StrBuf *Buf, *CfgToken, *Value;
 	void *vHash;
 	HashList *Hash;
 	char nnn[64];
 	int i, len, nUsed;
-
+	
 	WCC->InetCfg = NewHash(1, NULL);
 
 	for (i = 0; i < (sizeof(CfgNames) / sizeof(ConstStr)); i++) {
@@ -58,10 +58,11 @@ void load_inetconf(void) {
 	serv_printf("CONF GETSYS|application/x-citadel-internet-config");
 	Buf = NewStrBuf();
 	StrBuf_ServGetln(Buf);
-
+		
 	if (GetServerStatus(Buf, NULL) == 1) {
 		CfgToken = NewStrBuf();
-		while ((len = StrBuf_ServGetln(Buf), ((len >= 0) && ((len != 3) || strcmp(ChrPtr(Buf), "000"))))) {
+		while ((len = StrBuf_ServGetln(Buf), ((len >= 0) && ((len != 3) || strcmp(ChrPtr(Buf), "000")))))
+		{
 			Value = NewStrBuf();
 			StrBufExtract_token(CfgToken, Buf, 1, '|');
 
@@ -73,15 +74,15 @@ void load_inetconf(void) {
 
 			StrBufExtract_token(Value, Buf, 0, '|');
 			GetHash(WCC->InetCfg, ChrPtr(CfgToken), StrLength(CfgToken), &vHash);
-			Hash = (HashList *) vHash;
+			Hash = (HashList*) vHash;
 			if (Hash == NULL) {
 				syslog(LOG_WARNING, "ERROR Loading inet config line: [%s]", ChrPtr(Buf));
 				FreeStrBuf(&Value);
 				continue;
 			}
 			nUsed = GetCount(Hash);
-			nUsed = snprintf(nnn, sizeof(nnn), "%d", nUsed + 1);
-			Put(Hash, nnn, nUsed, Value, HFreeStrBuf);
+			nUsed = snprintf(nnn, sizeof(nnn), "%d", nUsed+1);
+			Put(Hash, nnn, nUsed, Value, HFreeStrBuf); 
 		}
 		FreeStrBuf(&CfgToken);
 	}
@@ -106,7 +107,7 @@ void new_save_inetconf(void) {
 	eType = sbstr("etype");
 
 	GetHash(WCC->InetCfg, ChrPtr(eType), StrLength(eType), &vHash);
-	Hash = (HashList *) vHash;
+	Hash = (HashList*) vHash;
 	if (Hash == NULL) {
 		AppendImportantMessage(_("Invalid Parameter"), -1);
 		url_do_template();
@@ -115,16 +116,17 @@ void new_save_inetconf(void) {
 
 	if (strcasecmp(bstr("oper"), "delete") == 0) {
 		eNum = sbstr("ename");
-		if (!GetHash(Hash, ChrPtr(eNum), StrLength(eNum), &vStr) || (vStr == NULL)) {
+		if (!GetHash(Hash, ChrPtr(eNum), StrLength(eNum), &vStr) ||
+		    (vStr == NULL)) {
 			AppendImportantMessage(_("Invalid Parameter"), -1);
 			url_do_template();
 			return;
 		}
 
-		Str = (StrBuf *) vStr;
+		Str = (StrBuf*)vStr;
 		AppendImportantMessage(SKEY(Str));
 		AppendImportantMessage(_(" has been deleted."), -1);
-		FlushStrBuf(Str);
+		FlushStrBuf(Str);	
 	}
 	else if (!strcasecmp(bstr("oper"), "add")) {
 		StrBuf *name;
@@ -136,12 +138,12 @@ void new_save_inetconf(void) {
 		}
 
 		nUsed = GetCount(Hash);
-		nUsed = snprintf(nnn, sizeof(nnn), "%d", nUsed + 1);
+		nUsed = snprintf(nnn, sizeof(nnn), "%d", nUsed+1);
 		name = NewStrBufDup(eName);
 		StrBufTrim(name);
-		Put(Hash, nnn, nUsed, name, HFreeStrBuf);
+		Put(Hash, nnn, nUsed, name, HFreeStrBuf); 
 		AppendImportantMessage(SKEY(eName));
-		AppendImportantMessage( /*<domain> added status message */ _(" added."), -1);
+		AppendImportantMessage( /*<domain> added status message*/ _(" added."), -1); 
 	}
 
 	Buf = NewStrBuf();
@@ -154,7 +156,7 @@ void new_save_inetconf(void) {
 			long KeyLen;
 
 			GetHash(WCC->InetCfg, CKEY(CfgNames[i]), &vHash);
-			Hash = (HashList *) vHash;
+			Hash = (HashList*) vHash;
 			if (Hash == NULL) {
 				AppendImportantMessage(_("Invalid Parameter"), -1);
 				url_do_template();
@@ -163,12 +165,12 @@ void new_save_inetconf(void) {
 			if (GetCount(Hash) > 0) {
 				where = GetNewHashPos(Hash, 0);
 				while (GetNextHashPos(Hash, where, &KeyLen, &Key, &vStr)) {
-					Str = (StrBuf *) vStr;
-					if ((Str != NULL) && (StrLength(Str) > 0))
-						serv_printf("%s|%s", ChrPtr(Str), CfgNames[i].Key);
+					Str = (StrBuf*) vStr;
+					if ((Str!= NULL) && (StrLength(Str) > 0))
+						serv_printf("%s|%s", ChrPtr(Str), CfgNames[i].Key); 
 				}
 				DeleteHashPos(&where);
-			}
+			}			
 		}
 		serv_puts("000");
 		DeleteHash(&WCC->InetCfg);
@@ -178,7 +180,8 @@ void new_save_inetconf(void) {
 }
 
 
-void DeleteInetConfHash(StrBuf * Target, WCTemplputParams * TP) {
+void DeleteInetConfHash(StrBuf *Target, WCTemplputParams *TP)
+{
 	wcsession *WCC = WC;
 
 	if (WCC->InetCfg != NULL)
@@ -187,7 +190,8 @@ void DeleteInetConfHash(StrBuf * Target, WCTemplputParams * TP) {
 }
 
 
-HashList *GetInetConfHash(StrBuf * Target, WCTemplputParams * TP) {
+HashList *GetInetConfHash(StrBuf *Target, WCTemplputParams *TP)
+{
 	wcsession *WCC = WC;
 	void *vHash;
 
@@ -199,27 +203,35 @@ HashList *GetInetConfHash(StrBuf * Target, WCTemplputParams * TP) {
 }
 
 
-HashList *GetValidDomainNames(StrBuf * Target, WCTemplputParams * TP) {
+HashList *GetValidDomainNames(StrBuf *Target, WCTemplputParams *TP) 
+{
 	StrBuf *Line;
 	HashList *ValidDomainNames = NULL;
 	long State;
 	int gvdnlevel = 0;
-
+	
 	serv_printf("GVDN %d", gvdnlevel);
 	Line = NewStrBuf();
 	StrBuf_ServGetln(Line);
-	if (GetServerStatus(Line, &State) == 1) {
+	if (GetServerStatus(Line, &State) == 1) 
+	{
 		int Done = 0;
 		int n = 0;
 
 		ValidDomainNames = NewHash(1, NULL);
-		while (!Done && (StrBuf_ServGetln(Line) >= 0))
-			if ((StrLength(Line) == 3) && !strcmp(ChrPtr(Line), "000")) {
+		while(!Done && (StrBuf_ServGetln(Line) >= 0))
+			if ( (StrLength(Line)==3) && 
+			     !strcmp(ChrPtr(Line), "000"))
+			{
 				Done = 1;
 			}
-			else {
-				Put(ValidDomainNames, IKEY(n), NewStrBufDup(Line), HFreeStrBuf);
-				n++;	/* #0 is the type... */
+			else
+			{
+				Put(ValidDomainNames, 
+				    IKEY(n),
+				    NewStrBufDup(Line), 
+				    HFreeStrBuf);
+				n++; /* #0 is the type... */
 			}
 	}
 	else if (State == 550)
@@ -232,10 +244,12 @@ HashList *GetValidDomainNames(StrBuf * Target, WCTemplputParams * TP) {
 
 
 
-void InitModule_INETCONF(void) {
+void 
+InitModule_INETCONF
+(void)
+{
 	WebcitAddUrlHandler(HKEY("save_inetconf"), "", 0, new_save_inetconf, 0);
 	RegisterIterator("SERVCFG:INET", 1, NULL, GetInetConfHash, NULL, NULL, CTX_STRBUF, CTX_NONE, IT_NOFLAG);
-	RegisterNamespace("SERVCFG:FLUSHINETCFG", 0, 0, DeleteInetConfHash, NULL, CTX_NONE);
-	RegisterIterator("ITERATE:VALID:DOMAINNAMES", 1, NULL, GetValidDomainNames, NULL, DeleteHash, CTX_STRBUF, CTX_NONE,
-			 IT_NOFLAG);
+	RegisterNamespace("SERVCFG:FLUSHINETCFG",0, 0, DeleteInetConfHash, NULL, CTX_NONE);
+	RegisterIterator("ITERATE:VALID:DOMAINNAMES", 1, NULL, GetValidDomainNames, NULL, DeleteHash, CTX_STRBUF, CTX_NONE, IT_NOFLAG);
 }

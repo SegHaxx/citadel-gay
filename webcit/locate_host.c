@@ -1,4 +1,3 @@
-
 /*
  * Given a socket, supply the name of the host at the other end.
  *
@@ -19,13 +18,14 @@
 /*
  * IPv4/IPv6 locate_host()
  */
-void locate_host(StrBuf * tbuf, int client_socket) {
+void locate_host(StrBuf *tbuf, int client_socket)
+{
 	struct sockaddr_in6 clientaddr;
 	unsigned int addrlen = sizeof(clientaddr);
 	char clienthost[NI_MAXHOST] = "";
 
-	getpeername(client_socket, (struct sockaddr *) &clientaddr, &addrlen);
-	getnameinfo((struct sockaddr *) &clientaddr, addrlen, clienthost, sizeof(clienthost), NULL, 0, 0);
-	StrBufAppendBufPlain(tbuf, clienthost, -1, 0);
+	getpeername(client_socket, (struct sockaddr *)&clientaddr, &addrlen);
+	getnameinfo((struct sockaddr *)&clientaddr, addrlen, clienthost, sizeof(clienthost), NULL, 0, 0);
+        StrBufAppendBufPlain(tbuf, clienthost, -1, 0);
 	syslog(LOG_DEBUG, "Client is at %s\n", clienthost);
 }

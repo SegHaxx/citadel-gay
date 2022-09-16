@@ -1,4 +1,3 @@
-
 /*
  * Dynamic HTML (formerly known as "AJAX") powered auto-completion
  *
@@ -19,7 +18,8 @@
 /*
  * Address book popup results
  */
-HashList *GetAddressbookList() {
+HashList* GetAddressbookList()
+{
 	HashList *List = NULL;
 	const StrBuf *WhichAddrBook;
 	StrBuf *saved_roomname;
@@ -41,13 +41,19 @@ HashList *GetAddressbookList() {
 		gotoroom(WhichAddrBook);
 		serv_puts("DVCA");
 	}
-
+	
 	Line = NewStrBuf();
 	StrBuf_ServGetln(Line);
-	if (GetServerStatus(Line, NULL) == 1) {
+	if (GetServerStatus(Line, NULL)  == 1) {
 		List = NewHash(1, NULL);
-		while (BufLen = StrBuf_ServGetln(Line), ((BufLen >= 0) && ((BufLen != 3) || strcmp(ChrPtr(Line), "000")))) {
-			if (IsLocalAddrBook && (BufLen > 5) && (strncmp(ChrPtr(Line), "SYS_", 4) == 0)) {
+		while (BufLen = StrBuf_ServGetln(Line), 
+		       ((BufLen >= 0) && 
+			((BufLen != 3) || strcmp(ChrPtr(Line), "000"))))
+		{
+			if (IsLocalAddrBook &&
+			    (BufLen > 5) &&
+			    (strncmp(ChrPtr(Line), "SYS_", 4) == 0))
+			{
 				continue;
 			}
 			Name = NewStrBufPlain(NULL, StrLength(Line));
@@ -69,7 +75,10 @@ HashList *GetAddressbookList() {
 
 
 
-void InitModule_ADDRBOOK_POPUP(void) {
+void 
+InitModule_ADDRBOOK_POPUP
+(void)
+{
 
 	RegisterIterator("ITERATE:ABNAMES", 0, NULL, GetAddressbookList, NULL, NULL, CTX_STRBUF, CTX_NONE, IT_NOFLAG);
 }

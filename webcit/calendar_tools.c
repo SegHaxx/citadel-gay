@@ -1,4 +1,3 @@
-
 /*
  * Miscellaneous functions which handle calendar components.
  *
@@ -53,16 +52,14 @@ void display_icaltimetype_as_webform(struct icaltimetype *t, char *prefix, int d
 	int all_day_event = 0;
 	int time_format;
 	char timebuf[32];
-
-	time_format = get_time_format_cached();
+	
+	time_format = get_time_format_cached ();
 
 	now = time(NULL);
 	localtime_r(&now, &tm_now);
 
-	if (t == NULL)
-		return;
-	if (t->is_date)
-		all_day_event = 1;
+	if (t == NULL) return;
+	if (t->is_date) all_day_event = 1;
 	tt = icaltime_as_timet(*t);
 	if (all_day_event) {
 		gmtime_r(&tt, &tm);
@@ -96,14 +93,19 @@ void display_icaltimetype_as_webform(struct icaltimetype *t, char *prefix, int d
 	wc_printf("_time\">");
 	wc_printf(_("Hour: "));
 	wc_printf("<SELECT NAME=\"%s_hour\" SIZE=\"1\">\n", prefix);
-	for (i = 0; i <= 23; ++i) {
+	for (i=0; i<=23; ++i) {
 
 		if (time_format == WC_TIMEFORMAT_24) {
-			wc_printf("<OPTION %s VALUE=\"%d\">%d</OPTION>\n", ((tm.tm_hour == i) ? "SELECTED" : ""), i, i);
+			wc_printf("<OPTION %s VALUE=\"%d\">%d</OPTION>\n",
+				((tm.tm_hour == i) ? "SELECTED" : ""),
+				i, i
+				);
 		}
 		else {
-			wc_printf("<OPTION %s VALUE=\"%d\">%s</OPTION>\n", ((tm.tm_hour == i) ? "SELECTED" : ""), i, hourname[i]
-			    );
+			wc_printf("<OPTION %s VALUE=\"%d\">%s</OPTION>\n",
+				((tm.tm_hour == i) ? "SELECTED" : ""),
+				i, hourname[i]
+				);
 		}
 
 	}
@@ -111,9 +113,12 @@ void display_icaltimetype_as_webform(struct icaltimetype *t, char *prefix, int d
 
 	wc_printf(_("Minute: "));
 	wc_printf("<SELECT NAME=\"%s_minute\" SIZE=\"1\">\n", prefix);
-	for (i = 0; i <= 59; ++i) {
-		if ((i % 5 == 0) || (tm.tm_min == i)) {
-			wc_printf("<OPTION %s VALUE=\"%d\">:%02d</OPTION>\n", ((tm.tm_min == i) ? "SELECTED" : ""), i, i);
+	for (i=0; i<=59; ++i) {
+		if ( (i % 5 == 0) || (tm.tm_min == i) ) {
+			wc_printf("<OPTION %s VALUE=\"%d\">:%02d</OPTION>\n",
+				((tm.tm_min == i) ? "SELECTED" : ""),
+				i, i
+				);
 		}
 	}
 	wc_printf("</SELECT></span>\n");
@@ -127,19 +132,18 @@ void display_icaltimetype_as_webform(struct icaltimetype *t, char *prefix, int d
  * Get date/time from a web form and convert it into an icaltimetype struct.
  */
 void icaltime_from_webform(struct icaltimetype *t, char *prefix) {
-	char vname[32];
+  	char vname[32];
 
-	if (!t)
-		return;
+	if (!t) return;
 
-	/* Stuff with zero values */
+ 	/* Stuff with zero values */
 	memset(t, 0, sizeof(struct icaltimetype));
 
 	/* Get the year/month/date all in one shot -- it will be in ISO YYYY-MM-DD format */
-	sscanf((char *) BSTR(prefix), "%04d-%02d-%02d", &t->year, &t->month, &t->day);
+	sscanf((char*)BSTR(prefix), "%04d-%02d-%02d", &t->year, &t->month, &t->day);
 
 	/* hour */
-	sprintf(vname, "%s_hour", prefix);
+ 	sprintf(vname, "%s_hour", prefix);
 	t->hour = IBSTR(vname);
 
 	/* minute */
@@ -156,14 +160,13 @@ void icaltime_from_webform(struct icaltimetype *t, char *prefix) {
  * Get date (no time) from a web form and convert it into an icaltimetype struct.
  */
 void icaltime_from_webform_dateonly(struct icaltimetype *t, char *prefix) {
-	if (!t)
-		return;
+	if (!t) return;
 
-	/* Stuff with zero values */
+ 	/* Stuff with zero values */
 	memset(t, 0, sizeof(struct icaltimetype));
 
 	/* Get the year/month/date all in one shot -- it will be in ISO YYYY-MM-DD format */
-	sscanf((char *) BSTR(prefix), "%04d-%02d-%02d", &t->year, &t->month, &t->day);
+	sscanf((char*)BSTR(prefix), "%04d-%02d-%02d", &t->year, &t->month, &t->day);
 
 	/* time zone is set to the default zone for this server */
 	t->zone = icaltimezone_get_utc_timezone();
@@ -174,19 +177,22 @@ void icaltime_from_webform_dateonly(struct icaltimetype *t, char *prefix) {
 /*
  * Render a PARTSTAT parameter as a string (and put it in parentheses)
  */
-void partstat_as_string(char *buf, icalproperty * attendee) {
+void partstat_as_string(char *buf, icalproperty *attendee) {
 	icalparameter *partstat_param;
 	icalparameter_partstat partstat;
 
 	strcpy(buf, _("(status unknown)"));
 
-	partstat_param = icalproperty_get_first_parameter(attendee, ICAL_PARTSTAT_PARAMETER);
+	partstat_param = icalproperty_get_first_parameter(
+		attendee,
+		ICAL_PARTSTAT_PARAMETER
+		);
 	if (partstat_param == NULL) {
 		return;
 	}
 
 	partstat = icalparameter_get_partstat(partstat_param);
-	switch (partstat) {
+	switch(partstat) {
 	case ICAL_PARTSTAT_X:
 		strcpy(buf, "(x)");
 		break;
@@ -225,7 +231,7 @@ void partstat_as_string(char *buf, icalproperty * attendee) {
  *
  * Note: if you change anything here, change it in Citadel server's ical_send_out_invitations() too.
  */
-icalcomponent *ical_encapsulate_subcomponent(icalcomponent * subcomp) {
+icalcomponent *ical_encapsulate_subcomponent(icalcomponent *subcomp) {
 	icalcomponent *encaps;
 	icalproperty *p;
 	struct icaltimetype t;
@@ -250,26 +256,28 @@ icalcomponent *ical_encapsulate_subcomponent(icalcomponent * subcomp) {
 
 	/* search for... */
 	for (p = icalcomponent_get_first_property(subcomp, ICAL_ANY_PROPERTY);
-	     p != NULL; p = icalcomponent_get_next_property(subcomp, ICAL_ANY_PROPERTY)) {
-		if ((icalproperty_isa(p) == ICAL_COMPLETED_PROPERTY)
-		    || (icalproperty_isa(p) == ICAL_CREATED_PROPERTY)
-		    || (icalproperty_isa(p) == ICAL_DATEMAX_PROPERTY)
-		    || (icalproperty_isa(p) == ICAL_DATEMIN_PROPERTY)
-		    || (icalproperty_isa(p) == ICAL_DTEND_PROPERTY)
-		    || (icalproperty_isa(p) == ICAL_DTSTAMP_PROPERTY)
-		    || (icalproperty_isa(p) == ICAL_DTSTART_PROPERTY)
-		    || (icalproperty_isa(p) == ICAL_DUE_PROPERTY)
-		    || (icalproperty_isa(p) == ICAL_EXDATE_PROPERTY)
-		    || (icalproperty_isa(p) == ICAL_LASTMODIFIED_PROPERTY)
-		    || (icalproperty_isa(p) == ICAL_MAXDATE_PROPERTY)
-		    || (icalproperty_isa(p) == ICAL_MINDATE_PROPERTY)
-		    || (icalproperty_isa(p) == ICAL_RECURRENCEID_PROPERTY)
-		    ) {
+	     p != NULL;
+	     p = icalcomponent_get_next_property(subcomp, ICAL_ANY_PROPERTY))
+	{
+		if ( (icalproperty_isa(p) == ICAL_COMPLETED_PROPERTY)
+		  || (icalproperty_isa(p) == ICAL_CREATED_PROPERTY)
+		  || (icalproperty_isa(p) == ICAL_DATEMAX_PROPERTY)
+		  || (icalproperty_isa(p) == ICAL_DATEMIN_PROPERTY)
+		  || (icalproperty_isa(p) == ICAL_DTEND_PROPERTY)
+		  || (icalproperty_isa(p) == ICAL_DTSTAMP_PROPERTY)
+		  || (icalproperty_isa(p) == ICAL_DTSTART_PROPERTY)
+		  || (icalproperty_isa(p) == ICAL_DUE_PROPERTY)
+		  || (icalproperty_isa(p) == ICAL_EXDATE_PROPERTY)
+		  || (icalproperty_isa(p) == ICAL_LASTMODIFIED_PROPERTY)
+		  || (icalproperty_isa(p) == ICAL_MAXDATE_PROPERTY)
+		  || (icalproperty_isa(p) == ICAL_MINDATE_PROPERTY)
+		  || (icalproperty_isa(p) == ICAL_RECURRENCEID_PROPERTY)
+		) {
 			t = icalproperty_get_dtstart(p);	/*/ it's safe to use dtstart for all of them */
-			if ((icaltime_is_valid_time(t)) && (z = icaltime_get_timezone(t), z)) {
-
+			if ((icaltime_is_valid_time(t)) && (z=icaltime_get_timezone(t), z)) {
+			
 				zone_already_attached = 0;
-				for (i = 0; i < 5; ++i) {
+				for (i=0; i<5; ++i) {
 					if (z == attached_zones[i]) {
 						++zone_already_attached;
 						syslog(LOG_DEBUG, "zone already attached!!\n");
@@ -280,8 +288,9 @@ icalcomponent *ical_encapsulate_subcomponent(icalcomponent * subcomp) {
 					attached_zones[num_zones_attached++] = z;
 				}
 
-				icalproperty_set_parameter(p, icalparameter_new_tzid(icaltimezone_get_tzid((icaltimezone *) z))
-				    );
+				icalproperty_set_parameter(p,
+					icalparameter_new_tzid(icaltimezone_get_tzid((icaltimezone *)z))
+				);
 			}
 		}
 	}
@@ -300,16 +309,15 @@ icalcomponent *ical_encapsulate_subcomponent(icalcomponent * subcomp) {
 	icalcomponent_add_property(encaps, icalproperty_new_version("2.0"));
 
 	/* Attach any timezones we need */
-	if (num_zones_attached > 0)
-		for (i = 0; i < num_zones_attached; ++i) {
-			icalcomponent *zc;
-			zc = icalcomponent_new_clone(icaltimezone_get_component((icaltimezone *) attached_zones[i]));
-			icalcomponent_add_component(encaps, zc);
-		}
+	if (num_zones_attached > 0) for (i=0; i<num_zones_attached; ++i) {
+		icalcomponent *zc;
+		zc = icalcomponent_new_clone(icaltimezone_get_component((icaltimezone *)attached_zones[i]));
+		icalcomponent_add_component(encaps, zc);
+	}
 
 	/* Encapsulate the subcomponent inside */
 	icalcomponent_add_component(encaps, subcomp);
 
 	/* Return the object we just created. */
-	return (encaps);
+	return(encaps);
 }

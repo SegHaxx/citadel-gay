@@ -1,4 +1,3 @@
-
 /*
  * Copyright (c) 1996-2012 by the citadel.org team
  *
@@ -17,7 +16,8 @@
 /*
  * Display the OpenIDs associated with an account
  */
-void display_openids(void) {
+void display_openids(void)
+{
 	wcsession *WCC = WC;
 	char buf[1024];
 	int bg = 0;
@@ -31,30 +31,31 @@ void display_openids(void) {
 	if (WCC->serv_info->serv_supports_openid) {
 
 		wc_printf("<table class=\"altern\">");
-
+	
 		serv_puts("OIDL");
 		serv_getln(buf, sizeof buf);
-		if (buf[0] == '1')
-			while (serv_getln(buf, sizeof buf), strcmp(buf, "000")) {
-				bg = 1 - bg;
-				wc_printf("<tr class=\"%s\">", (bg ? "even" : "odd"));
-				wc_printf("<td><img src=\"static/webcit_icons/openid-small.gif\"></td><td>");
-				escputs(buf);
-				wc_printf("</td><td>");
-				wc_printf("<a href=\"openid_detach?id_to_detach=");
-				urlescputs(buf);
-				wc_printf("\" onClick=\"return confirm('%s');\">", _("Do you really want to delete this OpenID?"));
-				wc_printf("%s</a>", _("(delete)"));
-				wc_printf("</td></tr>\n");
-			}
-
+		if (buf[0] == '1') while (serv_getln(buf, sizeof buf), strcmp(buf, "000")) {
+			bg = 1 - bg;
+			wc_printf("<tr class=\"%s\">", (bg ? "even" : "odd"));
+			wc_printf("<td><img src=\"static/webcit_icons/openid-small.gif\"></td><td>");
+			escputs(buf);
+			wc_printf("</td><td>");
+			wc_printf("<a href=\"openid_detach?id_to_detach=");
+			urlescputs(buf);
+			wc_printf("\" onClick=\"return confirm('%s');\">",
+				_("Do you really want to delete this OpenID?"));
+			wc_printf("%s</a>", _("(delete)"));
+			wc_printf("</td></tr>\n");
+		}
+	
 		wc_printf("</table><br>\n");
-
-		wc_printf("<form method=\"POST\" action=\"openid_attach\">\n");
+	
+	        wc_printf("<form method=\"POST\" action=\"openid_attach\">\n");
 		wc_printf("<input type=\"hidden\" name=\"nonce\" value=\"%d\">\n", WCC->nonce);
 		wc_printf(_("Add an OpenID: "));
-		wc_printf("<input type=\"text\" name=\"openid_url\" class=\"openid_urlarea\" size=\"40\">\n");
-		wc_printf("<input type=\"submit\" name=\"attach_button\" value=\"%s\">" "</form></center>\n", _("Attach"));
+	        wc_printf("<input type=\"text\" name=\"openid_url\" class=\"openid_urlarea\" size=\"40\">\n");
+	        wc_printf("<input type=\"submit\" name=\"attach_button\" value=\"%s\">"
+			"</form></center>\n", _("Attach"));
 	}
 
 	else {
@@ -77,9 +78,11 @@ void openid_attach(void) {
 		syslog(LOG_DEBUG, "Attempting to attach %s\n", bstr("openid_url"));
 
 		snprintf(buf, sizeof buf,
-			 "OIDS %s|%s/finalize_openid_login?attach_existing=1|%s",
-			 bstr("openid_url"), ChrPtr(site_prefix), ChrPtr(site_prefix)
-		    );
+			"OIDS %s|%s/finalize_openid_login?attach_existing=1|%s",
+			bstr("openid_url"),
+			ChrPtr(site_prefix),
+			ChrPtr(site_prefix)
+		);
 
 		serv_puts(buf);
 		serv_getln(buf, sizeof buf);
@@ -115,7 +118,10 @@ void openid_detach(void) {
 	display_openids();
 }
 
-void InitModule_OPENID(void) {
+void 
+InitModule_OPENID
+(void)
+{
 	WebcitAddUrlHandler(HKEY("display_openids"), "", 0, display_openids, 0);
 	WebcitAddUrlHandler(HKEY("openid_attach"), "", 0, openid_attach, 0);
 	WebcitAddUrlHandler(HKEY("openid_detach"), "", 0, openid_detach, 0);

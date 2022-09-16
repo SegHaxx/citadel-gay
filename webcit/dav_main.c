@@ -1,4 +1,3 @@
-
 /*
  * Entry point for GroupDAV functions
  *
@@ -31,8 +30,11 @@ HashList *DavNamespaces = NULL;
  *
  */
 void dav_common_headers(void) {
-	hprintf("Server: %s / %s\r\n" "Connection: close\r\n", PACKAGE_STRING, ChrPtr(WC->serv_info->serv_software)
-	    );
+	hprintf(
+		"Server: %s / %s\r\n"
+		"Connection: close\r\n",
+		PACKAGE_STRING, ChrPtr(WC->serv_info->serv_software)
+	);
 }
 
 
@@ -46,8 +48,8 @@ void euid_escapize(char *target, const char *source) {
 
 	strcpy(target, "");
 	len = strlen(source);
-	for (i = 0; i < len; ++i) {
-		if ((isalnum(source[i])) || (source[i] == '-') || (source[i] == '_')) {
+	for (i=0; i<len; ++i) {
+		if ( (isalnum(source[i])) || (source[i]=='-') || (source[i]=='_') ) {
 			target[target_length] = source[i];
 			target[++target_length] = 0;
 		}
@@ -93,11 +95,12 @@ void euid_unescapize(char *target, const char *source) {
 /*
  * Main entry point for GroupDAV requests
  */
-void dav_main(void) {
+void dav_main(void)
+{
 	wcsession *WCC = WC;
 	int i, len;
 
-	syslog(LOG_DEBUG, "dav_main() called, logged_in=%d", WCC->logged_in);
+	syslog(LOG_DEBUG, "dav_main() called, logged_in=%d", WCC->logged_in );
 
 	StrBufUnescape(WCC->Hdr->HR.ReqLine, 0);
 	StrBufStripSlashes(WCC->Hdr->HR.ReqLine, 0);
@@ -111,8 +114,8 @@ void dav_main(void) {
 		StrBufTrim(WCC->Hdr->HR.dav_ifmatch);
 		if (ChrPtr(WCC->Hdr->HR.dav_ifmatch)[0] == '\"') {
 			StrBufCutLeft(WCC->Hdr->HR.dav_ifmatch, 1);
-			len--;
-			for (i = 0; i < len; ++i) {
+			len --;
+			for (i=0; i<len; ++i) {
 				if (ChrPtr(WCC->Hdr->HR.dav_ifmatch)[i] == '\"') {
 					StrBufCutAt(WCC->Hdr->HR.dav_ifmatch, i, NULL);
 					len = StrLength(WCC->Hdr->HR.dav_ifmatch);
@@ -124,59 +127,61 @@ void dav_main(void) {
 		}
 	}
 
-	switch (WCC->Hdr->HR.eReqType) {
-		/*
-		 * The OPTIONS method is not required by GroupDAV but it will be
-		 * needed for future implementations of other DAV-based protocols.
-		 */
+	switch (WCC->Hdr->HR.eReqType)
+	{
+	/*
+	 * The OPTIONS method is not required by GroupDAV but it will be
+	 * needed for future implementations of other DAV-based protocols.
+	 */
 	case eOPTIONS:
 		dav_options();
 		break;
 
-		/*
-		 * The PROPFIND method is basically used to list all objects in a
-		 * room, or to list all relevant rooms on the server.
-		 */
+	/*
+	 * The PROPFIND method is basically used to list all objects in a
+	 * room, or to list all relevant rooms on the server.
+	 */
 	case ePROPFIND:
 		dav_propfind();
 		break;
 
-		/*
-		 * The GET method is used for fetching individual items.
-		 */
+	/*
+	 * The GET method is used for fetching individual items.
+	 */
 	case eGET:
 		dav_get();
 		break;
-
-		/*
-		 * The PUT method is used to add or modify items.
-		 */
+	
+	/*
+	 * The PUT method is used to add or modify items.
+	 */
 	case ePUT:
 		dav_put();
 		break;
-
-		/*
-		 * The DELETE method kills, maims, and destroys.
-		 */
+	
+	/*
+	 * The DELETE method kills, maims, and destroys.
+	 */
 	case eDELETE:
 		dav_delete();
 		break;
 
-		/*
-		 * The REPORT method tells us that Mike Shaver is a self-righteous asshole.
-		 */
+	/*
+	 * The REPORT method tells us that Mike Shaver is a self-righteous asshole.
+	 */
 	case eREPORT:
 		dav_report();
 		break;
 
 	default:
-		/*
-		 * Couldn't find what we were looking for.  Die in a car fire.
-		 */
+	/*
+	 * Couldn't find what we were looking for.  Die in a car fire.
+	 */
 		hprintf("HTTP/1.1 501 Method not implemented\r\n");
 		dav_common_headers();
 		hprintf("Content-Type: text/plain\r\n");
-		wc_printf("GroupDAV method \"%s\" is not implemented.\r\n", ReqStrs[WCC->Hdr->HR.eReqType]);
+		wc_printf("GroupDAV method \"%s\" is not implemented.\r\n",
+			ReqStrs[WCC->Hdr->HR.eReqType]);
 		end_burst();
 	}
 }
@@ -184,30 +189,33 @@ void dav_main(void) {
 
 /*
  * Output our host prefix for globally absolute URL's.
- */
+ */  
 void dav_identify_host(void) {
 	wc_printf("%s", ChrPtr(site_prefix));
 }
 
 
-void tmplput_dav_HOSTNAME(StrBuf * Target, WCTemplputParams * TP) {
+void tmplput_dav_HOSTNAME(StrBuf *Target, WCTemplputParams *TP) 
+{
 	StrBufAppendPrintf(Target, "%s", ChrPtr(site_prefix));
 }
 
 /*
  * Output our host prefix for globally absolute URL's.
- */
+ */  
 void dav_identify_hosthdr(void) {
 	hprintf("%s", ChrPtr(site_prefix));
 }
 
 
-void Header_HandleIfMatch(StrBuf * Line, ParsedHttpHdrs * hdr) {
+void Header_HandleIfMatch(StrBuf *Line, ParsedHttpHdrs *hdr)
+{
 	hdr->HR.dav_ifmatch = Line;
 }
+	
 
-
-void Header_HandleDepth(StrBuf * Line, ParsedHttpHdrs * hdr) {
+void Header_HandleDepth(StrBuf *Line, ParsedHttpHdrs *hdr)
+{
 	if (!strcasecmp(ChrPtr(Line), "infinity")) {
 		hdr->HR.dav_depth = 32767;
 	}
@@ -220,27 +228,34 @@ void Header_HandleDepth(StrBuf * Line, ParsedHttpHdrs * hdr) {
 }
 
 
-int Conditional_DAV_DEPTH(StrBuf * Target, WCTemplputParams * TP) {
+int Conditional_DAV_DEPTH(StrBuf *Target, WCTemplputParams *TP)
+{
 	return WC->Hdr->HR.dav_depth == GetTemplateTokenNumber(Target, TP, 2, 0);
 }
 
 
-void RegisterDAVNamespace(const char *UrlString,
-			  long UrlSLen,
-			  const char *DisplayName, long dslen, WebcitHandlerFunc F, WebcitRESTDispatchID RID, long Flags) {
+void RegisterDAVNamespace(const char * UrlString, 
+			  long UrlSLen, 
+			  const char *DisplayName, 
+			  long dslen, 
+			  WebcitHandlerFunc F, 
+			  WebcitRESTDispatchID RID,
+			  long Flags)
+{
 	void *vHandler;
 
 	/* first put it in... */
-	WebcitAddUrlHandler(UrlString, UrlSLen, DisplayName, dslen, F, Flags | PARSE_REST_URL);
+	WebcitAddUrlHandler(UrlString, UrlSLen, DisplayName, dslen, F, Flags|PARSE_REST_URL);
 	/* get it out again... */
 	GetHash(HandlerHash, UrlString, UrlSLen, &vHandler);
-	((WebcitHandler *) vHandler)->RID = RID;
+	((WebcitHandler*)vHandler)->RID = RID;
 	/* and keep a copy of it, so we can compare it later */
 	Put(DavNamespaces, UrlString, UrlSLen, vHandler, reference_free_handler);
 }
 
 
-int Conditional_DAV_NS(StrBuf * Target, WCTemplputParams * TP) {
+int Conditional_DAV_NS(StrBuf *Target, WCTemplputParams *TP)
+{
 	wcsession *WCC = WC;
 	void *vHandler;
 	const char *NS;
@@ -252,7 +267,8 @@ int Conditional_DAV_NS(StrBuf * Target, WCTemplputParams * TP) {
 }
 
 
-int Conditional_DAV_NSCURRENT(StrBuf * Target, WCTemplputParams * TP) {
+int Conditional_DAV_NSCURRENT(StrBuf *Target, WCTemplputParams *TP)
+{
 	wcsession *WCC = WC;
 	void *vHandler;
 
@@ -261,12 +277,13 @@ int Conditional_DAV_NSCURRENT(StrBuf * Target, WCTemplputParams * TP) {
 }
 
 
-void tmplput_DAV_NAMESPACE(StrBuf * Target, WCTemplputParams * TP) {
+void tmplput_DAV_NAMESPACE(StrBuf *Target, WCTemplputParams *TP)
+{
 	wcsession *WCC = WC;
 
 	if (TP->Filter.ContextType == CTX_DAVNS) {
 		WebcitHandler *H;
-		H = (WebcitHandler *) CTX(CTX_DAVNS);
+		H = (WebcitHandler*) CTX(CTX_DAVNS);
 		if (H != NULL)
 			StrBufAppendTemplate(Target, TP, H->Name, 0);
 	}
@@ -276,14 +293,15 @@ void tmplput_DAV_NAMESPACE(StrBuf * Target, WCTemplputParams * TP) {
 }
 
 
-int GroupdavDispatchREST(RESTDispatchID WhichAction, int IgnoreFloor) {
+int GroupdavDispatchREST(RESTDispatchID WhichAction, int IgnoreFloor)
+{
 	wcsession *WCC = WC;
 	void *vDir;
-
-	switch (WhichAction) {
+	
+	switch(WhichAction){
 	case ExistsID:
 		GetHash(WCC->Directory, IKEY(WCC->ThisRoom->nRoomNameParts + 1), &vDir);
-		return locate_message_by_uid(ChrPtr((StrBuf *) vDir)) != -1;
+		return locate_message_by_uid(ChrPtr((StrBuf*)vDir)) != -1;
 		/* TODO: remember euid */
 	case PutID:
 	case DeleteID:
@@ -295,32 +313,45 @@ int GroupdavDispatchREST(RESTDispatchID WhichAction, int IgnoreFloor) {
 }
 
 
-void ServerStartModule_DAV(void) {
+void
+ServerStartModule_DAV
+(void)
+{
 
 	DavNamespaces = NewHash(1, NULL);
 }
 
 
-void ServerShutdownModule_DAV(void) {
+void 
+ServerShutdownModule_DAV
+(void)
+{
 	DeleteHash(&DavNamespaces);
 }
 
 
-void InitModule_GROUPDAV(void) {
+void 
+InitModule_GROUPDAV
+(void)
+{
 	RegisterCTX(CTX_DAVNS);
-	RegisterDAVNamespace(HKEY("groupdav"), HKEY("GroupDAV"),
-			     dav_main, GroupdavDispatchREST, XHTTP_COMMANDS | COOKIEUNNEEDED | FORCE_SESSIONCLOSE);
+	RegisterDAVNamespace(HKEY("groupdav"), HKEY("GroupDAV"), 
+			     dav_main, GroupdavDispatchREST, 
+			     XHTTP_COMMANDS|COOKIEUNNEEDED|FORCE_SESSIONCLOSE
+	);
 
 	RegisterNamespace("DAV:HOSTNAME", 0, 0, tmplput_dav_HOSTNAME, NULL, CTX_NONE);
 
-	RegisterConditional("COND:DAV:NS", 0, Conditional_DAV_NS, CTX_NONE);
+	RegisterConditional("COND:DAV:NS", 0, Conditional_DAV_NS,  CTX_NONE);
 
-	RegisterIterator("DAV:NS", 0, DavNamespaces, NULL, NULL, NULL, CTX_DAVNS, CTX_NONE, IT_NOFLAG);
+	RegisterIterator("DAV:NS", 0, DavNamespaces, NULL, 
+			 NULL, NULL, CTX_DAVNS, CTX_NONE, IT_NOFLAG
+	);
 
-	RegisterConditional("COND:DAV:NSCURRENT", 0, Conditional_DAV_NSCURRENT, CTX_DAVNS);
+	RegisterConditional("COND:DAV:NSCURRENT", 0, Conditional_DAV_NSCURRENT,  CTX_DAVNS);
 	RegisterNamespace("DAV:NAMESPACE", 0, 1, tmplput_DAV_NAMESPACE, NULL, CTX_NONE);
 
 	RegisterHeaderHandler(HKEY("IF-MATCH"), Header_HandleIfMatch);
 	RegisterHeaderHandler(HKEY("DEPTH"), Header_HandleDepth);
-	RegisterConditional("COND:DAV:DEPTH", 1, Conditional_DAV_DEPTH, CTX_NONE);
+	RegisterConditional("COND:DAV:DEPTH", 1, Conditional_DAV_DEPTH,  CTX_NONE);
 }

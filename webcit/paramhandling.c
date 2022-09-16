@@ -1,4 +1,3 @@
-
 /*
  * parse urlparts and post data
  *
@@ -17,12 +16,12 @@
 #include "webserver.h"
 
 /* uncomment to see all parameters sent to the server by the browser. */
-
 /* #define DEBUG_URLSTRINGS */
 
 
-void free_url(void *U) {
-	urlcontent *u = (urlcontent *) U;
+void free_url(void *U)
+{
+	urlcontent *u = (urlcontent*) U;
 	FreeStrBuf(&u->url_data);
 	if (u->sub != NULL) {
 		DeleteHash(&u->sub);
@@ -30,25 +29,27 @@ void free_url(void *U) {
 	free(u);
 }
 
-void PutSubstructUrlKey(HashList * list, urlcontent * u, char **keys, long *lengths, int max, int which) {
+void PutSubstructUrlKey(HashList *list, urlcontent *u, char **keys, long *lengths, int max, int which){
 	void *vUrl;
 	urlcontent *subu;
 	HashList *thisList = list;
-	if (GetHash(list, keys[which], lengths[which], &vUrl) && (vUrl != NULL)) {
-		subu = (urlcontent *) vUrl;
+	if (GetHash(list, keys[which], lengths[which], &vUrl) &&
+	    (vUrl != NULL))
+	{
+		subu = (urlcontent*) vUrl;
 		if (subu->sub == NULL) {
 			subu->sub = NewHash(1, NULL);
 		}
 		thisList = subu->sub;
-	}
+	} 
 	else if (which < max) {
 		subu = (urlcontent *) malloc(sizeof(urlcontent));
-
+		
 		memcpy(subu->url_key, keys[which], lengths[which]);
 		subu->klen = lengths[which];
 		subu->url_data = NULL;
 		subu->sub = NewHash(1, NULL);
-
+		
 		Put(list, subu->url_key, subu->klen, subu, free_url);
 		thisList = subu->sub;
 	}
@@ -60,7 +61,7 @@ void PutSubstructUrlKey(HashList * list, urlcontent * u, char **keys, long *leng
 	}
 }
 
-void PutUrlKey(HashList * urlstrings, urlcontent * u, int have_colons) {
+void PutUrlKey(HashList *urlstrings, urlcontent *u, int have_colons) {
 	if (have_colons == 0) {
 		Put(urlstrings, u->url_key, u->klen, u, free_url);
 	}
@@ -78,8 +79,12 @@ void PutUrlKey(HashList * urlstrings, urlcontent * u, int have_colons) {
 		pche = u->url_key + u->klen;
 		while ((i < 10) && (pch <= pche)) {
 			if ((have_colons == 2) &&
-			    (*pch == '%') && (*(pch + 1) == '3') && ((*(pch + 2) == 'A') || (*(pch + 1) == 'a')
-			    )) {
+			    (*pch == '%') &&
+			    (*(pch + 1) == '3') && 
+			    ((*(pch + 2) == 'A') ||
+			     (*(pch + 1) == 'a')
+				    ))
+			{
 				*pch = '\0';
 
 				if (i == 0) {
@@ -96,7 +101,8 @@ void PutUrlKey(HashList * urlstrings, urlcontent * u, int have_colons) {
 				pchs = pch;
 				i++;
 			}
-			else if ((have_colons == 1) && (*pch == ':')) {
+			else if ((have_colons == 1) &&
+				 (*pch == ':')) {
 				*pch = '\0';
 				if (i == 0) {
 					/* Separate the toplevel key : */
@@ -105,12 +111,12 @@ void PutUrlKey(HashList * urlstrings, urlcontent * u, int have_colons) {
 				/* sub-section: */
 				keys[i] = pchs;
 				lengths[i] = pch - pchs;
-
+			
 				pch++;
 				pchs = pch;
 				i++;
 			}
-			else if (pch == pche) {
+			else if (pch == pche){
 				/* sub-section: */
 				keys[i] = pchs;
 				lengths[i] = pch - pchs;
@@ -118,10 +124,10 @@ void PutUrlKey(HashList * urlstrings, urlcontent * u, int have_colons) {
 				break;
 			}
 			else {
-				pch++;
+				pch ++;
 			}
 		}
-
+		
 		PutSubstructUrlKey(urlstrings, u, keys, lengths, i - 1, 0);
 	}
 }
@@ -129,7 +135,8 @@ void PutUrlKey(HashList * urlstrings, urlcontent * u, int have_colons) {
 /*
  * Extract variables from the URL.
  */
-void ParseURLParams(StrBuf * url) {
+void ParseURLParams(StrBuf *url)
+{
 	const char *aptr, *bptr, *eptr, *up = NULL;
 	int len, keylen = 0;
 	urlcontent *u = NULL;
@@ -147,8 +154,12 @@ void ParseURLParams(StrBuf * url) {
 			if (*aptr == ':') {
 				have_colon = 1;
 			}
-			else if ((*aptr == '%') && (*(aptr + 1) == '3') && ((*(aptr + 2) == 'A') || (*(aptr + 1) == 'a')
-				 )) {
+			else if ((*aptr == '%') &&
+				 (*(aptr + 1) == '3') && 
+				 ((*(aptr + 2) == 'A') ||
+				  (*(aptr + 1) == 'a')
+					 ))
+			{
 				have_colon = 2;
 			}
 			aptr++;
@@ -159,14 +170,14 @@ void ParseURLParams(StrBuf * url) {
 		aptr++;
 		bptr = aptr;
 		while ((bptr < eptr) && (*bptr != '\0')
-		       && (*bptr != '&') && (*bptr != '?') && (*bptr != ' ')) {
+		      && (*bptr != '&') && (*bptr != '?') && (*bptr != ' ')) {
 			bptr++;
 		}
-		keylen = aptr - up - 1;	/* -1 -> '=' */
+		keylen = aptr - up - 1; /* -1 -> '=' */
 		if (keylen > sizeof(u->url_key)) {
 			syslog(LOG_WARNING, "%s:%d: invalid url_key of size %d in string size %ld",
-			       __FILE__, __LINE__, keylen, (long) sizeof(u->url_key)
-			    );
+				__FILE__, __LINE__, keylen, (long)sizeof(u->url_key)
+			);
 			free(u);
 			return;
 		}
@@ -176,19 +187,23 @@ void ParseURLParams(StrBuf * url) {
 			free(u);
 			return;
 		}
-
+		
 		u = (urlcontent *) malloc(sizeof(urlcontent));
 		memcpy(u->url_key, up, keylen);
 		u->url_key[keylen] = '\0';
 		u->klen = keylen;
 		u->sub = NULL;
 
-		if (strncmp(u->url_key, "__", 2) != 0) {
+		if (strncmp(u->url_key, "__", 2) != 0)
+		{
 			len = bptr - aptr;
 			u->url_data = NewStrBufPlain(aptr, len);
 			StrBufUnescape(u->url_data, 1);
 #ifdef DEBUG_URLSTRINGS
-			syslog(LOG_DEBUG, "%s = [%d]  %s\n", u->url_key, StrLength(u->url_data), ChrPtr(u->url_data));
+			syslog(LOG_DEBUG, "%s = [%d]  %s\n", 
+				u->url_key, 
+				StrLength(u->url_data), 
+				ChrPtr(u->url_data)); 
 #endif
 			PutUrlKey(WCC->Hdr->urlstrings, u, have_colon);
 		}
@@ -196,9 +211,11 @@ void ParseURLParams(StrBuf * url) {
 			len = bptr - aptr;
 			u->url_data = NewStrBufPlain(aptr, len);
 			StrBufUnescape(u->url_data, 1);
-			syslog(LOG_WARNING, "REJECTED because of __ is internal only: %s = [%d]  %s\n",
-			       u->url_key, StrLength(u->url_data), ChrPtr(u->url_data));
-
+			syslog(LOG_WARNING, "REJECTED because of __ is internal only: %s = [%d]  %s\n", 
+				u->url_key, 
+				StrLength(u->url_data), 
+				ChrPtr(u->url_data)); 
+			
 			free_url(u);
 		}
 		up = bptr;
@@ -209,7 +226,8 @@ void ParseURLParams(StrBuf * url) {
 /*
  * free urlstring memory
  */
-void free_urls(void) {
+void free_urls(void)
+{
 	DeleteHash(&WC->Hdr->urlstrings);
 }
 
@@ -217,17 +235,18 @@ void free_urls(void) {
  * Diagnostic function to display the contents of all variables
  */
 
-void dump_vars(void) {
+void dump_vars(void)
+{
 	wcsession *WCC = WC;
 	urlcontent *u;
 	void *U;
 	long HKLen;
 	const char *HKey;
 	HashPos *Cursor;
-
-	Cursor = GetNewHashPos(WCC->Hdr->urlstrings, 0);
+	
+	Cursor = GetNewHashPos (WCC->Hdr->urlstrings, 0);
 	while (GetNextHashPos(WCC->Hdr->urlstrings, Cursor, &HKLen, &HKey, &U)) {
-		u = (urlcontent *) U;
+		u = (urlcontent*) U;
 		wc_printf("%38s = %s\n", u->url_key, ChrPtr(u->url_data));
 	}
 }
@@ -236,12 +255,14 @@ void dump_vars(void) {
  * Return the value of a variable supplied to the current web page (from the url or a form)
  */
 
-const char *XBstr(const char *key, size_t keylen, size_t *len) {
+const char *XBstr(const char *key, size_t keylen, size_t *len)
+{
 	void *U;
 
-	if ((WC->Hdr->urlstrings != NULL) && GetHash(WC->Hdr->urlstrings, key, keylen, &U)) {
-		*len = StrLength(((urlcontent *) U)->url_data);
-		return ChrPtr(((urlcontent *) U)->url_data);
+	if ((WC->Hdr->urlstrings != NULL) && 
+	    GetHash(WC->Hdr->urlstrings, key, keylen, &U)) {
+		*len = StrLength(((urlcontent *)U)->url_data);
+		return ChrPtr(((urlcontent *)U)->url_data);
 	}
 	else {
 		*len = 0;
@@ -249,12 +270,14 @@ const char *XBstr(const char *key, size_t keylen, size_t *len) {
 	}
 }
 
-const char *XBSTR(const char *key, size_t *len) {
+const char *XBSTR(const char *key, size_t *len)
+{
 	void *U;
 
-	if ((WC->Hdr->urlstrings != NULL) && GetHash(WC->Hdr->urlstrings, key, strlen(key), &U)) {
-		*len = StrLength(((urlcontent *) U)->url_data);
-		return ChrPtr(((urlcontent *) U)->url_data);
+	if ((WC->Hdr->urlstrings != NULL) &&
+	    GetHash(WC->Hdr->urlstrings, key, strlen (key), &U)){
+		*len = StrLength(((urlcontent *)U)->url_data);
+		return ChrPtr(((urlcontent *)U)->url_data);
 	}
 	else {
 		*len = 0;
@@ -263,93 +286,113 @@ const char *XBSTR(const char *key, size_t *len) {
 }
 
 
-const char *BSTR(const char *key) {
+const char *BSTR(const char *key)
+{
 	void *U;
 
-	if ((WC->Hdr->urlstrings != NULL) && GetHash(WC->Hdr->urlstrings, key, strlen(key), &U))
-		return ChrPtr(((urlcontent *) U)->url_data);
-	else
+	if ((WC->Hdr->urlstrings != NULL) &&
+	    GetHash(WC->Hdr->urlstrings, key, strlen (key), &U))
+		return ChrPtr(((urlcontent *)U)->url_data);
+	else	
 		return ("");
 }
 
-const char *Bstr(const char *key, size_t keylen) {
+const char *Bstr(const char *key, size_t keylen)
+{
 	void *U;
 
-	if ((WC->Hdr->urlstrings != NULL) && GetHash(WC->Hdr->urlstrings, key, keylen, &U))
-		return ChrPtr(((urlcontent *) U)->url_data);
-	else
+	if ((WC->Hdr->urlstrings != NULL) && 
+	    GetHash(WC->Hdr->urlstrings, key, keylen, &U))
+		return ChrPtr(((urlcontent *)U)->url_data);
+	else	
 		return ("");
 }
 
-const StrBuf *SBSTR(const char *key) {
+const StrBuf *SBSTR(const char *key)
+{
 	void *U;
 
-	if ((WC->Hdr->urlstrings != NULL) && GetHash(WC->Hdr->urlstrings, key, strlen(key), &U))
-		return ((urlcontent *) U)->url_data;
-	else
+	if ((WC->Hdr->urlstrings != NULL) &&
+	    GetHash(WC->Hdr->urlstrings, key, strlen (key), &U))
+		return ((urlcontent *)U)->url_data;
+	else	
 		return NULL;
 }
 
-const StrBuf *SBstr(const char *key, size_t keylen) {
+const StrBuf *SBstr(const char *key, size_t keylen)
+{
 	void *U;
 
-	if ((WC->Hdr->urlstrings != NULL) && GetHash(WC->Hdr->urlstrings, key, keylen, &U))
-		return ((urlcontent *) U)->url_data;
-	else
+	if ((WC->Hdr->urlstrings != NULL) && 
+	    GetHash(WC->Hdr->urlstrings, key, keylen, &U))
+		return ((urlcontent *)U)->url_data;
+	else	
 		return NULL;
 }
 
-long LBstr(const char *key, size_t keylen) {
+long LBstr(const char *key, size_t keylen)
+{
 	void *U;
 
-	if ((WC->Hdr->urlstrings != NULL) && GetHash(WC->Hdr->urlstrings, key, keylen, &U))
-		return StrTol(((urlcontent *) U)->url_data);
-	else
+	if ((WC->Hdr->urlstrings != NULL) && 
+	    GetHash(WC->Hdr->urlstrings, key, keylen, &U))
+		return StrTol(((urlcontent *)U)->url_data);
+	else	
 		return (0);
 }
 
-int IBstr(const char *key, size_t keylen) {
+int IBstr(const char *key, size_t keylen)
+{
 	void *U;
 
-	if ((WC->Hdr->urlstrings != NULL) && GetHash(WC->Hdr->urlstrings, key, keylen, &U))
-		return StrTol(((urlcontent *) U)->url_data);
-	else
+	if ((WC->Hdr->urlstrings != NULL) && 
+	    GetHash(WC->Hdr->urlstrings, key, keylen, &U))
+		return StrTol(((urlcontent *)U)->url_data);
+	else	
 		return (0);
 }
 
-int IBSTR(const char *key) {
+int IBSTR(const char *key)
+{
 	void *U;
 
-	if ((WC->Hdr->urlstrings != NULL) && GetHash(WC->Hdr->urlstrings, key, strlen(key), &U))
-		return StrToi(((urlcontent *) U)->url_data);
-	else
+	if ((WC->Hdr->urlstrings != NULL) && 
+	    GetHash(WC->Hdr->urlstrings, key, strlen(key), &U))
+		return StrToi(((urlcontent *)U)->url_data);
+	else	
 		return (0);
 }
 
-int HaveBstr(const char *key, size_t keylen) {
+int HaveBstr(const char *key, size_t keylen)
+{
 	void *U;
 
-	if ((WC->Hdr->urlstrings != NULL) && GetHash(WC->Hdr->urlstrings, key, keylen, &U))
-		return (StrLength(((urlcontent *) U)->url_data) != 0);
-	else
+	if ((WC->Hdr->urlstrings != NULL) && 
+	    GetHash(WC->Hdr->urlstrings, key, keylen, &U))
+		return (StrLength(((urlcontent *)U)->url_data) != 0);
+	else	
 		return (0);
 }
 
-int YesBstr(const char *key, size_t keylen) {
+int YesBstr(const char *key, size_t keylen)
+{
 	void *U;
 
-	if ((WC->Hdr->urlstrings != NULL) && GetHash(WC->Hdr->urlstrings, key, keylen, &U))
-		return strcmp(ChrPtr(((urlcontent *) U)->url_data), "yes") == 0;
-	else
+	if ((WC->Hdr->urlstrings != NULL) && 
+	    GetHash(WC->Hdr->urlstrings, key, keylen, &U))
+		return strcmp( ChrPtr(((urlcontent *)U)->url_data), "yes") == 0;
+	else	
 		return (0);
 }
 
-int YESBSTR(const char *key) {
+int YESBSTR(const char *key)
+{
 	void *U;
 
-	if ((WC->Hdr->urlstrings != NULL) && GetHash(WC->Hdr->urlstrings, key, strlen(key), &U))
-		return strcmp(ChrPtr(((urlcontent *) U)->url_data), "yes") == 0;
-	else
+	if ((WC->Hdr->urlstrings != NULL) && 
+	    GetHash(WC->Hdr->urlstrings, key, strlen(key), &U))
+		return strcmp( ChrPtr(((urlcontent *)U)->url_data), "yes") == 0;
+	else	
 		return (0);
 }
 
@@ -357,12 +400,14 @@ int YESBSTR(const char *key) {
 /*
  * Return a sub array that was separated by a colon:
  */
-HashList *getSubStruct(const char *key, size_t keylen) {
+HashList* getSubStruct(const char *key, size_t keylen)
+{
 	void *U;
 
-	if ((WC->Hdr->urlstrings != NULL) && GetHash(WC->Hdr->urlstrings, key, strlen(key), &U))
-		return ((urlcontent *) U)->sub;
-	else
+	if ((WC->Hdr->urlstrings != NULL) && 
+	    GetHash(WC->Hdr->urlstrings, key, strlen(key), &U))
+		return ((urlcontent *)U)->sub;
+	else	
 		return NULL;
 }
 
@@ -370,12 +415,14 @@ HashList *getSubStruct(const char *key, size_t keylen) {
 /*
  * Return the value of a variable of a substruct provided by getSubStruct
  */
-const char *XSubBstr(HashList * sub, const char *key, size_t keylen, size_t *len) {
+const char *XSubBstr(HashList *sub, const char *key, size_t keylen, size_t *len)
+{
 	void *U;
 
-	if ((sub != NULL) && GetHash(sub, key, keylen, &U)) {
-		*len = StrLength(((urlcontent *) U)->url_data);
-		return ChrPtr(((urlcontent *) U)->url_data);
+	if ((sub != NULL) && 
+	    GetHash(sub, key, keylen, &U)) {
+		*len = StrLength(((urlcontent *)U)->url_data);
+		return ChrPtr(((urlcontent *)U)->url_data);
 	}
 	else {
 		*len = 0;
@@ -383,63 +430,75 @@ const char *XSubBstr(HashList * sub, const char *key, size_t keylen, size_t *len
 	}
 }
 
-const char *SubBstr(HashList * sub, const char *key, size_t keylen) {
+const char *SubBstr(HashList *sub, const char *key, size_t keylen)
+{
 	void *U;
 
-	if ((sub != NULL) && GetHash(sub, key, keylen, &U)) {
-		return ChrPtr(((urlcontent *) U)->url_data);
+	if ((sub != NULL) && 
+	    GetHash(sub, key, keylen, &U)) {
+		return ChrPtr(((urlcontent *)U)->url_data);
 	}
-	else
+	else	
 		return ("");
 }
 
-const StrBuf *SSubBstr(HashList * sub, const char *key, size_t keylen) {
+const StrBuf *SSubBstr(HashList *sub, const char *key, size_t keylen)
+{
 	void *U;
 
-	if ((sub != NULL) && GetHash(sub, key, keylen, &U)) {
-		return ((urlcontent *) U)->url_data;
+	if ((sub != NULL) && 
+	    GetHash(sub, key, keylen, &U)) {
+		return ((urlcontent *)U)->url_data;
 	}
-	else
+	else	
 		return NULL;
 }
 
-long LSubBstr(HashList * sub, const char *key, size_t keylen) {
+long LSubBstr(HashList *sub, const char *key, size_t keylen)
+{
 	void *U;
 
-	if ((sub != NULL) && GetHash(sub, key, keylen, &U)) {
-		return StrTol(((urlcontent *) U)->url_data);
+	if ((sub != NULL) && 
+	    GetHash(sub, key, keylen, &U)) {
+		return StrTol(((urlcontent *)U)->url_data);
 	}
-	else
+	else	
 		return (0);
 }
 
-int ISubBstr(HashList * sub, const char *key, size_t keylen) {
+int ISubBstr(HashList *sub, const char *key, size_t keylen)
+{
 	void *U;
 
-	if ((sub != NULL) && GetHash(sub, key, keylen, &U)) {
-		return StrTol(((urlcontent *) U)->url_data);
+	if ((sub != NULL) && 
+	    GetHash(sub, key, keylen, &U)) {
+		return StrTol(((urlcontent *)U)->url_data);
 	}
-	else
+	else	
 		return (0);
 }
 
-int HaveSubBstr(HashList * sub, const char *key, size_t keylen) {
+int HaveSubBstr(HashList *sub, const char *key, size_t keylen)
+{
 	void *U;
 
-	if ((sub != NULL) && GetHash(sub, key, keylen, &U)) {
-		return (StrLength(((urlcontent *) U)->url_data) != 0);
+	if ((sub != NULL) && 
+	    GetHash(sub, key, keylen, &U)) {
+		return (StrLength(((urlcontent *)U)->url_data) != 0);
 	}
-	else
+	else	
 		return (0);
 }
 
-int YesSubBstr(HashList * sub, const char *key, size_t keylen) {
+int YesSubBstr(HashList *sub, const char *key, size_t keylen)
+{
 	void *U;
 
-	if ((sub != NULL) && GetHash(sub, key, keylen, &U)) {
-		return strcmp(ChrPtr(((urlcontent *) U)->url_data), "yes") == 0;
+	if ((sub != NULL) && 
+	    GetHash(sub, key, keylen, &U)) {
+		return strcmp( ChrPtr(((urlcontent *)U)->url_data), "yes") == 0;
 	}
-	else
+	else	
 		return (0);
 }
 
@@ -462,70 +521,80 @@ int YesSubBstr(HashList * sub, const char *key, size_t keylen) {
  * userdata	Not used here
  */
 void upload_handler(char *name, char *filename, char *partnum, char *disp,
-		    void *content, char *cbtype, char *cbcharset, size_t length, char *encoding, char *cbid, void *userdata) {
+			void *content, char *cbtype, char *cbcharset,
+			size_t length, char *encoding, char *cbid, void *userdata)
+{
 	wcsession *WCC = WC;
 	urlcontent *u;
 	long keylen;
 
 #ifdef DEBUG_URLSTRINGS
-	syslog(LOG_DEBUG, "upload_handler() name=%s, type=%s, len=" SIZE_T_FMT, name, cbtype, length);
+	syslog(LOG_DEBUG, "upload_handler() name=%s, type=%s, len="SIZE_T_FMT, name, cbtype, length);
 #endif
 	if (WCC->Hdr->urlstrings == NULL)
 		WCC->Hdr->urlstrings = NewHash(1, NULL);
 
 	/* Form fields */
-	if ((length > 0) && (IsEmptyStr(cbtype))) {
+	if ( (length > 0) && (IsEmptyStr(cbtype)) ) {
 		u = (urlcontent *) malloc(sizeof(urlcontent));
-
+		
 		keylen = safestrncpy(u->url_key, name, sizeof(u->url_key));
 		u->url_data = NewStrBufPlain(content, length);
 		u->klen = keylen;
 		u->sub = NULL;
-
-		if (strncmp(u->url_key, "__", 2) != 0) {
+		
+		if (strncmp(u->url_key, "__", 2) != 0)
+		{
 			PutUrlKey(WCC->Hdr->urlstrings, u, (strchr(u->url_key, ':') != NULL));
 		}
 		else {
-			syslog(LOG_INFO, "REJECTED because of __ is internal only: %s = [%d]  %s\n",
-			       u->url_key, StrLength(u->url_data), ChrPtr(u->url_data));
-
+			syslog(LOG_INFO, "REJECTED because of __ is internal only: %s = [%d]  %s\n", 
+				u->url_key, 
+				StrLength(u->url_data), 
+				ChrPtr(u->url_data)); 
+			
 			free_url(u);
 		}
 #ifdef DEBUG_URLSTRINGS
-		syslog(LOG_DEBUG, "Key: <%s> len: [%d] Data: <%s>", u->url_key, StrLength(u->url_data), ChrPtr(u->url_data));
+		syslog(LOG_DEBUG, "Key: <%s> len: [%d] Data: <%s>", 
+			u->url_key, 
+			StrLength(u->url_data), 
+			ChrPtr(u->url_data));
 #endif
 	}
 
 	/* Uploaded files */
-	if ((length > 0) && (!IsEmptyStr(cbtype))) {
+	if ( (length > 0) && (!IsEmptyStr(cbtype)) ) {
 		WCC->upload = NewStrBufPlain(content, length);
 		WCC->upload_length = length;
 		WCC->upload_filename = NewStrBufPlain(filename, -1);
 		safestrncpy(WCC->upload_content_type, cbtype, sizeof(WC->upload_content_type));
 #ifdef DEBUG_URLSTRINGS
-		syslog(LOG_DEBUG, "File: <%s> len: [%ld]", filename, (long int) length);
+		syslog(LOG_DEBUG, "File: <%s> len: [%ld]", filename, (long int)length);
 #endif
-
+		
 	}
 
 }
 
-void PutBstr(const char *key, long keylen, StrBuf * Value) {
+void PutBstr(const char *key, long keylen, StrBuf *Value)
+{
 	urlcontent *u;
 
-	if (keylen >= sizeof(u->url_key)) {
+	if(keylen >= sizeof(u->url_key)) {
 		syslog(LOG_WARNING, "%s:%d: invalid url_key of size %ld", __FILE__, __LINE__, keylen);
 		FreeStrBuf(&Value);
 		return;
 	}
-	u = (urlcontent *) malloc(sizeof(urlcontent));
+	u = (urlcontent*)malloc(sizeof(urlcontent));
 	memcpy(u->url_key, key, keylen + 1);
 	u->klen = keylen;
 	u->url_data = Value;
 	u->sub = NULL;
 	Put(WC->Hdr->urlstrings, u->url_key, keylen, u, free_url);
 }
-void PutlBstr(const char *key, long keylen, long Value) {
+void PutlBstr(const char *key, long keylen, long Value)
+{
 	StrBuf *Buf;
 
 	Buf = NewStrBufPlain(NULL, sizeof(long) * 16);
@@ -535,45 +604,53 @@ void PutlBstr(const char *key, long keylen, long Value) {
 
 
 
-int ConditionalBstr(StrBuf * Target, WCTemplputParams * TP) {
-	if (TP->Tokens->nParameters == 3)
+int ConditionalBstr(StrBuf *Target, WCTemplputParams *TP)
+{
+	if(TP->Tokens->nParameters == 3)
 		return HaveBstr(TKEY(2));
 	else {
-		if (IS_NUMBER(TP->Tokens->Params[3]->Type)) {
-			return LBstr(TKEY(2)) == GetTemplateTokenNumber(Target, TP, 3, 0);
+		if (IS_NUMBER(TP->Tokens->Params[3]->Type))
+		{
+			return LBstr(TKEY(2)) == 
+				GetTemplateTokenNumber(Target, 
+						       TP, 
+						       3, 
+						       0);
 		}
 		else {
 			const char *pch;
 			long len;
 
-			GetTemplateTokenString(Target, TP, 3, &pch, &len);
+			GetTemplateTokenString (Target, TP, 3, &pch, &len);
 			return strcmp(Bstr(TKEY(2)), pch) == 0;
 		}
 	}
 }
 
-void tmplput_bstr(StrBuf * Target, WCTemplputParams * TP) {
+void tmplput_bstr(StrBuf *Target, WCTemplputParams *TP)
+{
 	const StrBuf *Buf = SBstr(TKEY(0));
 	if (Buf != NULL)
 		StrBufAppendTemplate(Target, TP, Buf, 1);
 }
 
 
-void tmplput_bstrforward(StrBuf * Target, WCTemplputParams * TP) {
+void tmplput_bstrforward(StrBuf *Target, WCTemplputParams *TP)
+{
 	const StrBuf *Buf = SBstr(TKEY(0));
 	if (Buf != NULL) {
-		StrBufAppendBufPlain(Target, HKEY("?"), 0);
+		StrBufAppendBufPlain(Target, HKEY("?"), 0);		
 		StrBufAppendBufPlain(Target, TKEY(0), 0);
-		StrBufAppendBufPlain(Target, HKEY("="), 0);
+		StrBufAppendBufPlain(Target, HKEY("="), 0);		
 		StrBufAppendTemplate(Target, TP, Buf, 1);
 	}
 }
 
-void diagnostics(void) {
+void diagnostics(void)
+{
 	output_headers(1, 1, 1, 0, 0, 0);
 	wc_printf("Session: %d<hr />\n", WC->wc_session);
 	wc_printf("Command: <br><PRE>\n");
-
 /*	
 StrEscAppend(WC->WBuf, NULL, WC->UrlFragment1, 0, 0);
 	wc_printf("<br>\n");
@@ -589,11 +666,12 @@ StrEscAppend(WC->WBuf, NULL, WC->UrlFragment3, 0, 0);
 }
 
 
-void tmplput_url_part(StrBuf * Target, WCTemplputParams * TP) {
+void tmplput_url_part(StrBuf *Target, WCTemplputParams *TP)
+{
 	StrBuf *Name = NULL;
 	StrBuf *UrlBuf = NULL;
 	wcsession *WCC = WC;
-
+	
 	if (WCC != NULL) {
 		long n;
 
@@ -611,41 +689,44 @@ void tmplput_url_part(StrBuf * Target, WCTemplputParams * TP) {
 			StrBufExtract_token(UrlBuf, WCC->Hdr->HR.ReqLine, 1, '/');
 		}
 
-		if (UrlBuf == NULL) {
+		if (UrlBuf == NULL)  {
 			LogTemplateError(Target, "urlbuf", ERR_PARM1, TP, "not set.");
 		}
 		StrBufAppendTemplate(Target, TP, UrlBuf, 2);
-		if (Name == NULL)
-			FreeStrBuf(&UrlBuf);
+		if (Name == NULL) FreeStrBuf(&UrlBuf);
 	}
 }
 
 typedef struct __BstrPair {
 	StrBuf *x;
 	StrBuf *y;
-} BstrPair;
+}BstrPair;
 CtxType CTX_BSTRPAIRS = CTX_NONE;
-void HFreeBstrPair(void *pv) {
-	BstrPair *p = (BstrPair *) pv;
+void HFreeBstrPair(void *pv)
+{
+	BstrPair *p = (BstrPair*) pv;
 	FreeStrBuf(&p->x);
 	FreeStrBuf(&p->y);
 	free(pv);
 }
 
-HashList *iterate_GetBstrPairs(StrBuf * Target, WCTemplputParams * TP) {
+HashList *iterate_GetBstrPairs(StrBuf *Target, WCTemplputParams *TP)
+{
 	StrBuf *X, *Y;
-	const char *ch = NULL;
-	long len;
+        const char *ch = NULL;
+        long len;
 	const StrBuf *TheBStr;
 	BstrPair *OnePair;
-	HashList *List;
+        HashList *List;
 	const char *Pos = NULL;
 	int i = 0;
 
-	if (HaveTemplateTokenString(NULL, TP, 2, &ch, &len)) {
-		GetTemplateTokenString(Target, TP, 2, &ch, &len);
-	}
-	else {
+	if (HaveTemplateTokenString(NULL, TP, 2, &ch, &len))
+        {
+                GetTemplateTokenString(Target, TP, 2, &ch, &len);
+        }
+	else 
+	{
 		return NULL;
 	}
 
@@ -653,7 +734,8 @@ HashList *iterate_GetBstrPairs(StrBuf * Target, WCTemplputParams * TP) {
 	if ((TheBStr == NULL) || (StrLength(TheBStr) == 0))
 		return NULL;
 	List = NewHash(1, NULL);
-	while (Pos != StrBufNOTNULL) {
+	while (Pos != StrBufNOTNULL)
+	{
 		X = NewStrBufPlain(NULL, StrLength(TheBStr));
 		StrBufExtract_NextToken(X, TheBStr, &Pos, '|');
 		if (Pos == StrBufNOTNULL) {
@@ -663,7 +745,7 @@ HashList *iterate_GetBstrPairs(StrBuf * Target, WCTemplputParams * TP) {
 		}
 		Y = NewStrBufPlain(NULL, StrLength(TheBStr));
 		StrBufExtract_NextToken(Y, TheBStr, &Pos, '|');
-		OnePair = (BstrPair *) malloc(sizeof(BstrPair));
+		OnePair = (BstrPair*)malloc(sizeof(BstrPair));
 		OnePair->x = X;
 		OnePair->y = Y;
 		Put(List, IKEY(i), OnePair, HFreeBstrPair);
@@ -673,20 +755,22 @@ HashList *iterate_GetBstrPairs(StrBuf * Target, WCTemplputParams * TP) {
 }
 
 
-void tmplput_bstr_pair(StrBuf * Target, WCTemplputParams * TP, int XY) {
-	BstrPair *Pair = (BstrPair *) CTX(CTX_BSTRPAIRS);
+void tmplput_bstr_pair(StrBuf *Target, WCTemplputParams *TP, int XY)
+{
+	BstrPair *Pair = (BstrPair*) CTX(CTX_BSTRPAIRS);
 
-	StrBufAppendTemplate(Target, TP, (XY) ? Pair->y : Pair->x, 0);
+	StrBufAppendTemplate(Target, TP, (XY)?Pair->y:Pair->x, 0);
 }
 
-void tmplput_bstr_pair_x(StrBuf * Target, WCTemplputParams * TP) {
-	tmplput_bstr_pair(Target, TP, 0);
-}
-void tmplput_bstr_pair_y(StrBuf * Target, WCTemplputParams * TP) {
-	tmplput_bstr_pair(Target, TP, 1);
-}
+void tmplput_bstr_pair_x(StrBuf *Target, WCTemplputParams *TP)
+{	tmplput_bstr_pair(Target, TP, 0); }
+void tmplput_bstr_pair_y(StrBuf *Target, WCTemplputParams *TP)
+{	tmplput_bstr_pair(Target, TP, 1); }
 
-void InitModule_PARAMHANDLING(void) {
+void 
+InitModule_PARAMHANDLING
+(void)
+{
 	RegisterCTX(CTX_BSTRPAIRS);
 	WebcitAddUrlHandler(HKEY("diagnostics"), "", 0, diagnostics, NEED_URL);
 
@@ -701,11 +785,17 @@ void InitModule_PARAMHANDLING(void) {
 }
 
 
-void SessionAttachModule_PARAMHANDLING(wcsession * sess) {
-	sess->Hdr->urlstrings = NewHash(1, NULL);
+void
+SessionAttachModule_PARAMHANDLING
+(wcsession *sess)
+{
+	sess->Hdr->urlstrings = NewHash(1,NULL);
 }
 
-void SessionDetachModule_PARAMHANDLING(wcsession * sess) {
+void
+SessionDetachModule_PARAMHANDLING
+(wcsession *sess)
+{
 	DeleteHash(&sess->Hdr->urlstrings);
 	FreeStrBuf(&sess->upload_filename);
 }

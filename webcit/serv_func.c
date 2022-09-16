@@ -24,7 +24,7 @@ void SetInlinMimeRenderers(void) {
 }
 
 
-void DeleteServInfo(ServInfo ** FreeMe) {
+void DeleteServInfo(ServInfo **FreeMe) {
 	if (*FreeMe == NULL)
 		return;
 	FreeStrBuf(&(*FreeMe)->serv_nodename);
@@ -45,7 +45,7 @@ void DeleteServInfo(ServInfo ** FreeMe) {
  * browser_host		the citadel we want to connect to
  * user_agent		which browser uses our client?
  */
-ServInfo *get_serv_info(StrBuf * browser_host, StrBuf * user_agent) {
+ServInfo *get_serv_info(StrBuf *browser_host, StrBuf *user_agent) {
 	ServInfo *info;
 	StrBuf *Buf;
 	int a;
@@ -54,11 +54,17 @@ ServInfo *get_serv_info(StrBuf * browser_host, StrBuf * user_agent) {
 	Buf = NewStrBuf();
 
 	/* Tell the server what kind of client is connecting */
-	serv_printf("IDEN %d|%d|%d|%s|%s", DEVELOPER_ID, CLIENT_ID, CLIENT_VERSION, ChrPtr(user_agent), ChrPtr(browser_host)
-	    );
+	serv_printf("IDEN %d|%d|%d|%s|%s",
+		    DEVELOPER_ID,
+		    CLIENT_ID,
+		    CLIENT_VERSION,
+		    ChrPtr(user_agent),
+		    ChrPtr(browser_host)
+	);
 	StrBuf_ServGetln(Buf);
 	if (GetServerStatus(Buf, NULL) != 2) {
-		syslog(LOG_WARNING, "get_serv_info(IDEN): unexpected answer [%s]\n", ChrPtr(Buf));
+		syslog(LOG_WARNING, "get_serv_info(IDEN): unexpected answer [%s]\n",
+			ChrPtr(Buf));
 		FreeStrBuf(&Buf);
 		return NULL;
 	}
@@ -71,7 +77,8 @@ ServInfo *get_serv_info(StrBuf * browser_host, StrBuf * user_agent) {
 	serv_puts("ICAL sgi|1");
 	StrBuf_ServGetln(Buf);
 	if (GetServerStatus(Buf, NULL) != 2) {
-		syslog(LOG_WARNING, "get_serv_info(ICAL sgi|1): unexpected answer [%s]\n", ChrPtr(Buf));
+		syslog(LOG_WARNING, "get_serv_info(ICAL sgi|1): unexpected answer [%s]\n",
+			ChrPtr(Buf));
 		FreeStrBuf(&Buf);
 		return NULL;
 	}
@@ -80,15 +87,20 @@ ServInfo *get_serv_info(StrBuf * browser_host, StrBuf * user_agent) {
 	serv_puts("INFO");
 	StrBuf_ServGetln(Buf);
 	if (GetServerStatus(Buf, NULL) != 1) {
-		syslog(LOG_WARNING, "get_serv_info(INFO sgi|1): unexpected answer [%s]\n", ChrPtr(Buf));
+		syslog(LOG_WARNING, "get_serv_info(INFO sgi|1): unexpected answer [%s]\n",
+			ChrPtr(Buf));
 		FreeStrBuf(&Buf);
 		return NULL;
 	}
 
-	info = (ServInfo *) malloc(sizeof(ServInfo));
+	info = (ServInfo*)malloc(sizeof(ServInfo));
 	memset(info, 0, sizeof(ServInfo));
 	a = 0;
-	while (rc = StrBuf_ServGetln(Buf), (rc >= 0) && ((rc != 3) || strcmp(ChrPtr(Buf), "000"))) {
+	while (rc = StrBuf_ServGetln(Buf),
+	       (rc >= 0) &&
+	       ((rc != 3) || 
+		strcmp(ChrPtr(Buf), "000")))
+	{
 		switch (a) {
 		case 0:
 			info->serv_pid = StrToi(Buf);
@@ -146,7 +158,7 @@ ServInfo *get_serv_info(StrBuf * browser_host, StrBuf * user_agent) {
 	return info;
 }
 
-int GetConnected(void) {
+int GetConnected (void) {
 	StrBuf *Buf;
 
 	if (WC->ReadBuf == NULL) {
@@ -158,7 +170,7 @@ int GetConnected(void) {
 		snprintf(serv_sock_name, sizeof serv_sock_name, "%s/citadel.socket", ctdl_dir);
 	}
 	WC->serv_sock = connect_to_citadel(serv_sock_name);
-
+	
 	if (WC->serv_sock < 0) {
 		WC->connected = 0;
 		FreeStrBuf(&WC->ReadBuf);
@@ -178,12 +190,13 @@ int GetConnected(void) {
 			if (Status == 551) {
 				hprintf("HTTP/1.1 503 Service Unavailable\r\n");
 				hprintf("Content-type: text/plain; charset=utf-8\r\n");
-				wc_printf(_
-					  ("This server is already serving its maximum number of users and cannot accept any additional logins at this time.  Please try again later or contact your system administrator."));
+				wc_printf(_("This server is already serving its maximum number of users and cannot accept any additional logins at this time.  Please try again later or contact your system administrator."));
 			}
 			else {
-				wc_printf("%ld %s\n", Status, _("Received unexpected answer from Citadel server; bailing out.")
-				    );
+				wc_printf("%ld %s\n",
+					Status,
+					_("Received unexpected answer from Citadel server; bailing out.")
+				);
 				hprintf("HTTP/1.1 502 Bad Gateway\r\n");
 				hprintf("Content-type: text/plain; charset=utf-8\r\n");
 			}
@@ -198,17 +211,18 @@ int GetConnected(void) {
 		 * unless we are following X-Forwarded-For: headers
 		 * and such a header has already turned up something.
 		 */
-		if ((!follow_xff) || (StrLength(WC->Hdr->HR.browser_host) == 0)) {
+		if ( (!follow_xff) || (StrLength(WC->Hdr->HR.browser_host) == 0) ) {
 			if (WC->Hdr->HR.browser_host == NULL) {
 				WC->Hdr->HR.browser_host = NewStrBuf();
-				Put(WC->Hdr->HTTPHeaders, HKEY("FreeMeWithTheOtherHeaders"), WC->Hdr->HR.browser_host, HFreeStrBuf);
+				Put(WC->Hdr->HTTPHeaders, HKEY("FreeMeWithTheOtherHeaders"), 
+				    WC->Hdr->HR.browser_host, HFreeStrBuf);
 			}
 			locate_host(WC->Hdr->HR.browser_host, WC->Hdr->http_sock);
 		}
 		if (WC->serv_info == NULL) {
 			WC->serv_info = get_serv_info(WC->Hdr->HR.browser_host, WC->Hdr->HR.user_agent);
 		}
-		if (WC->serv_info == NULL) {
+		if (WC->serv_info == NULL){
 			begin_burst();
 			wc_printf(_("Received unexpected answer from Citadel server; bailing out."));
 			hprintf("HTTP/1.1 502 Bad Gateway\r\n");
@@ -220,10 +234,15 @@ int GetConnected(void) {
 		if (WC->serv_info->serv_rev_level < MINIMUM_CIT_VERSION) {
 			begin_burst();
 			wc_printf(_("You are connected to a Citadel "
-				    "server running Citadel %d.%02d. \n"
-				    "In order to run this version of WebCit "
-				    "you must also have Citadel %d.%02d or"
-				    " newer.\n\n\n"), WC->serv_info->serv_rev_level, 0, MINIMUM_CIT_VERSION, 0);
+				  "server running Citadel %d.%02d. \n"
+				  "In order to run this version of WebCit "
+				  "you must also have Citadel %d.%02d or"
+				  " newer.\n\n\n"),
+				WC->serv_info->serv_rev_level,
+				0,
+				MINIMUM_CIT_VERSION,
+				0
+				);
 			hprintf("HTTP/1.1 200 OK\r\n");
 			hprintf("Content-type: text/plain; charset=utf-8\r\n");
 			end_burst();
@@ -236,7 +255,7 @@ int GetConnected(void) {
 }
 
 
-void FmOut(StrBuf * Target, const char *align, const StrBuf * Source) {
+void FmOut(StrBuf *Target, const char *align, const StrBuf *Source) {
 	const char *ptr, *pte;
 	const char *BufPtr = NULL;
 	StrBuf *Line = NewStrBufPlain(NULL, SIZ);
@@ -250,8 +269,9 @@ void FmOut(StrBuf * Target, const char *align, const StrBuf * Source) {
 
 	StrBufAppendPrintf(Target, "<div class=\"fmout-%s\">\n", align);
 
-	if (StrLength(Source) > 0)
-		do {
+	if (StrLength(Source) > 0) 
+		do 
+		{
 			StrBufSipLine(Line, Source, &BufPtr);
 			bq = 0;
 			i = 0;
@@ -263,26 +283,27 @@ void FmOut(StrBuf * Target, const char *align, const StrBuf * Source) {
 				StrBufAppendBufPlain(Target, HKEY("<br>"), 0);
 			}
 			intext = 1;
-			if (isspace(*ptr))
-				while ((ptr < pte) && ((*ptr == '>') || isspace(*ptr))) {
-					if (*ptr == '>')
-						bq++;
-					ptr++;
-					i++;
-				}
+			if (isspace(*ptr)) while ((ptr < pte) &&
+						  ((*ptr == '>') ||
+						   isspace(*ptr)))
+					   {
+						   if (*ptr == '>')
+							   bq++;
+						   ptr ++;
+						   i++;
+					   }
 
 			/*
 			 * Quoted text should be displayed in italics and in a
 			 * different colour.  This code understands Citadel-style
 			 * " >" quotes and will convert to <BLOCKQUOTE> tags.
 			 */
-			if (i > 0)
-				StrBufCutLeft(Line, i);
+			if (i > 0) StrBufCutLeft(Line, i);
+		
 
-
-			for (i = bn; i < bq; i++)
+			for (i = bn; i < bq; i++)				
 				StrBufAppendBufPlain(Target, HKEY("<blockquote>"), 0);
-			for (i = bq; i < bn; i++)
+			for (i = bq; i < bn; i++)				
 				StrBufAppendBufPlain(Target, HKEY("</blockquote>"), 0);
 			bn = bq;
 
@@ -296,7 +317,8 @@ void FmOut(StrBuf * Target, const char *align, const StrBuf * Source) {
 
 			StrBufAppendBufPlain(Target, HKEY("\n"), 0);
 		}
-		while ((BufPtr != StrBufNOTNULL) && (BufPtr != NULL));
+		while ((BufPtr != StrBufNOTNULL) &&
+		       (BufPtr != NULL));
 
 	for (i = 0; i < bn; i++) {
 		StrBufAppendBufPlain(Target, HKEY("</blockquote>"), 0);
@@ -326,16 +348,14 @@ void text_to_server(char *ptr) {
 		}
 		else if (ch == 10) {
 			len = strlen(buf);
-			while ((isspace(buf[len - 1]))
-			       && (buf[0] != '\0')
-			       && (buf[1] != '\0'))
+			while ( (isspace(buf[len - 1]))
+				&& (buf[0] !=  '\0') 
+				&& (buf[1] !=  '\0') )
 				buf[--len] = 0;
 			serv_puts(buf);
 			buf[0] = 0;
-			if (ptr[pos] != 0)
-				strcat(buf, " ");
-		}
-		else {
+			if (ptr[pos] != 0) strcat(buf, " ");
+		} else {
 			a = strlen(buf);
 			buf[a + 1] = 0;
 			buf[a] = ch;
@@ -357,7 +377,7 @@ void text_to_server(char *ptr) {
 /*
  * Transmit message text (in memory) to the server, converting to Quoted-Printable encoding as we go.
  */
-void text_to_server_qp(const StrBuf * SendMeEncoded) {
+void text_to_server_qp(const StrBuf *SendMeEncoded) {
 	StrBuf *ServBuf;
 
 	ServBuf = StrBufRFC2047encodeMessage(SendMeEncoded);
@@ -393,20 +413,22 @@ void server_to_text() {
  * usual 000 terminator is found.  Caller is responsible for freeing
  * the returned pointer.
  */
-int read_server_text(StrBuf * Buf, long *nLines) {
+int read_server_text(StrBuf *Buf, long *nLines) {
 	StrBuf *ReadBuf;
 	long nRead;
 	long nTotal = 0;
 	long nlines;
-
+	
 	nlines = 0;
 	ReadBuf = NewStrBuf();
-	while ((WC->serv_sock != -1) &&
-	       (nRead = StrBuf_ServGetln(ReadBuf), (nRead >= 0) && ((nRead != 3) || (strcmp(ChrPtr(ReadBuf), "000") != 0)))) {
+	while ((WC->serv_sock!=-1) &&
+	       (nRead = StrBuf_ServGetln(ReadBuf), (nRead >= 0) &&
+		((nRead != 3)||(strcmp(ChrPtr(ReadBuf), "000") != 0))))
+	{
 		StrBufAppendBuf(Buf, ReadBuf, 0);
 		StrBufAppendBufPlain(Buf, HKEY("\n"), 0);
 		nTotal += nRead;
-		nlines++;
+		nlines ++;
 	}
 	FreeStrBuf(&ReadBuf);
 	*nLines = nlines;
@@ -414,12 +436,14 @@ int read_server_text(StrBuf * Buf, long *nLines) {
 }
 
 
-int GetServerStatusMsg(StrBuf * Line, long *FullState, int PutImportantMessage, int MajorOK) {
+int GetServerStatusMsg(StrBuf *Line, long* FullState, int PutImportantMessage, int MajorOK) {
 	int rc;
 	if (FullState != NULL)
 		*FullState = StrTol(Line);
 	rc = ChrPtr(Line)[0] - 48;
-	if ((!PutImportantMessage) || (MajorOK == rc) || (StrLength(Line) <= 4))
+	if ((!PutImportantMessage) || 
+	    (MajorOK == rc)||
+	    (StrLength(Line) <= 4))
 		return rc;
 
 	AppendImportantMessage(ChrPtr(Line) + 4, StrLength(Line) - 4);
@@ -427,82 +451,81 @@ int GetServerStatusMsg(StrBuf * Line, long *FullState, int PutImportantMessage, 
 }
 
 
-void tmplput_serv_ip(StrBuf * Target, WCTemplputParams * TP) {
+void tmplput_serv_ip(StrBuf *Target, WCTemplputParams *TP) {
 	StrBufAppendPrintf(Target, "%d", WC->ctdl_pid);
 }
 
-void tmplput_serv_admin(StrBuf * Target, WCTemplputParams * TP) {
+void tmplput_serv_admin(StrBuf *Target, WCTemplputParams *TP) {
 	if (WC->serv_info == NULL)
 		return;
 	StrBufAppendTemplate(Target, TP, WC->serv_info->serv_sysadm, 0);
 }
 
-void tmplput_serv_nodename(StrBuf * Target, WCTemplputParams * TP) {
+void tmplput_serv_nodename(StrBuf *Target, WCTemplputParams *TP) {
 	if (WC->serv_info == NULL)
 		return;
 	StrBufAppendTemplate(Target, TP, WC->serv_info->serv_nodename, 0);
 }
 
-void tmplput_serv_humannode(StrBuf * Target, WCTemplputParams * TP) {
+void tmplput_serv_humannode(StrBuf *Target, WCTemplputParams *TP) {
 	if (WC->serv_info == NULL)
 		return;
 	StrBufAppendTemplate(Target, TP, WC->serv_info->serv_humannode, 0);
 }
 
-void tmplput_serv_fqdn(StrBuf * Target, WCTemplputParams * TP) {
+void tmplput_serv_fqdn(StrBuf *Target, WCTemplputParams *TP) {
 	if (WC->serv_info == NULL)
 		return;
 	StrBufAppendTemplate(Target, TP, WC->serv_info->serv_fqdn, 0);
 }
 
-void tmplput_serv_software(StrBuf * Target, WCTemplputParams * TP) {
+void tmplput_serv_software(StrBuf *Target, WCTemplputParams *TP) {
 	if (WC->serv_info == NULL)
 		return;
 	StrBufAppendTemplate(Target, TP, WC->serv_info->serv_software, 0);
 }
 
-void tmplput_serv_rev_level(StrBuf * Target, WCTemplputParams * TP) {
-	if (WC->serv_info == NULL)
-		return;
+void tmplput_serv_rev_level(StrBuf *Target, WCTemplputParams *TP) {
+	if (WC->serv_info == NULL) return;
 	StrBufAppendPrintf(Target, "%d", WC->serv_info->serv_rev_level);
 }
-int conditional_serv_newuser_disabled(StrBuf * Target, WCTemplputParams * TP) {
+int conditional_serv_newuser_disabled(StrBuf *Target, WCTemplputParams *TP) {
 	if (WC->serv_info == NULL)
 		return 0;
 	return WC->serv_info->serv_newuser_disabled != 0;
 }
 
-int conditional_serv_supports_guest(StrBuf * Target, WCTemplputParams * TP) {
-	if (WC->serv_info == NULL)
+int conditional_serv_supports_guest(StrBuf *Target, WCTemplputParams *TP) {
+        if (WC->serv_info == NULL)
 		return 0;
-	return WC->serv_info->serv_supports_guest != 0;
+        return WC->serv_info->serv_supports_guest != 0;
 }
 
-int conditional_serv_supports_openid(StrBuf * Target, WCTemplputParams * TP) {
+int conditional_serv_supports_openid(StrBuf *Target, WCTemplputParams *TP) {
 	if (WC->serv_info == NULL)
 		return 0;
 	return WC->serv_info->serv_supports_openid != 0;
 }
 
-int conditional_serv_fulltext_enabled(StrBuf * Target, WCTemplputParams * TP) {
+int conditional_serv_fulltext_enabled(StrBuf *Target, WCTemplputParams *TP) {
 	if (WC->serv_info == NULL)
 		return 0;
 	return WC->serv_info->serv_fulltext_enabled != 0;
 }
 
-int conditional_serv_ldap_enabled(StrBuf * Target, WCTemplputParams * TP) {
+int conditional_serv_ldap_enabled(StrBuf *Target, WCTemplputParams *TP) {
 	if (WC->serv_info == NULL)
 		return 0;
 	return WC->serv_info->serv_supports_ldap != 0;
 }
 
-void tmplput_serv_bbs_city(StrBuf * Target, WCTemplputParams * TP) {
+void tmplput_serv_bbs_city(StrBuf *Target, WCTemplputParams *TP) {
 	if (WC->serv_info == NULL)
 		return;
 	StrBufAppendTemplate(Target, TP, WC->serv_info->serv_bbs_city, 0);
 }
 
-void tmplput_mesg(StrBuf * Target, WCTemplputParams * TP) {
+void tmplput_mesg(StrBuf *Target, WCTemplputParams *TP) {
 	int n = 0;
 	int Done = 0;
 	StrBuf *Line;
@@ -514,17 +537,19 @@ void tmplput_mesg(StrBuf * Target, WCTemplputParams * TP) {
 
 	StrBuf_ServGetln(Line);
 	if (GetServerStatus(Line, NULL) == 1) {
-		while (!Done && (StrBuf_ServGetln(Line) >= 0)) {
-			if ((StrLength(Line) == 3) && !strcmp(ChrPtr(Line), "000"))
+		while (!Done &&  (StrBuf_ServGetln(Line)>=0)) {
+			if ( (StrLength(Line)==3) && 
+			     !strcmp(ChrPtr(Line), "000")) 
 				Done = 1;
-			else {
+			else
+			{
 				if (n > 0)
 					StrBufAppendBufPlain(Buf, "\n", 1, 0);
 				StrBufAppendBuf(Buf, Line, 0);
 			}
 			n++;
 		}
-
+	
 		FlushStrBuf(Line);
 		FmOut(Line, "center", Buf);
 		StrBufAppendTemplate(Target, TP, Line, 1);
@@ -533,7 +558,7 @@ void tmplput_mesg(StrBuf * Target, WCTemplputParams * TP) {
 	FreeStrBuf(&Line);
 }
 
-void tmplput_site_prefix(StrBuf * Target, WCTemplputParams * TP) {
+void tmplput_site_prefix(StrBuf *Target, WCTemplputParams *TP) {
 	if ((WC != NULL) && (WC->Hdr->HostHeader != NULL)) {
 		StrBufAppendTemplate(Target, TP, WC->Hdr->HostHeader, 0);
 	}
@@ -546,44 +571,54 @@ void RegisterEmbeddableMimeType(const char *MimeType, long MTLen, int Priority) 
 }
 
 void CreateMimeStr(void) {
-	HashPos *it;
+	HashPos  *it;
 	void *vMime;
 	long len = 0;
 	const char *Key;
 
 	it = GetNewHashPos(EmbeddableMimes, 0);
-	while (GetNextHashPos(EmbeddableMimes, it, &len, &Key, &vMime) && (vMime != NULL)) {
+	while (GetNextHashPos(EmbeddableMimes, it, &len, &Key, &vMime) &&
+               (vMime != NULL)) {
 		if (StrLength(EmbeddableMimeStrs) > 0)
 			StrBufAppendBufPlain(EmbeddableMimeStrs, HKEY("|"), 0);
-		else
+		else 
 			StrBufAppendBufPlain(EmbeddableMimeStrs, HKEY("MSGP "), 0);
-		StrBufAppendBuf(EmbeddableMimeStrs, (StrBuf *) vMime, 0);
+		StrBufAppendBuf(EmbeddableMimeStrs, (StrBuf*) vMime, 0);
 	}
 	DeleteHashPos(&it);
 }
 
-void ServerStartModule_SERV_FUNC(void) {
+void
+ServerStartModule_SERV_FUNC
+(void)
+{
 	EmbeddableMimes = NewHash(1, Flathash);
 	EmbeddableMimeStrs = NewStrBuf();
 }
 
 
-void ServerShutdownModule_SERV_FUNC(void) {
+void
+ServerShutdownModule_SERV_FUNC
+(void)
+{
 	FreeStrBuf(&EmbeddableMimeStrs);
 	DeleteHash(&EmbeddableMimes);
 }
 
-void InitModule_SERVFUNC(void) {
+void 
+InitModule_SERVFUNC
+(void)
+{
 	RegisterConditional("COND:SERV:OPENID", 2, conditional_serv_supports_openid, CTX_NONE);
 	RegisterConditional("COND:SERV:NEWU", 2, conditional_serv_newuser_disabled, CTX_NONE);
 	RegisterConditional("COND:SERV:FULLTEXT_ENABLED", 2, conditional_serv_fulltext_enabled, CTX_NONE);
 	RegisterConditional("COND:SERV:LDAP_ENABLED", 2, conditional_serv_ldap_enabled, CTX_NONE);
-	RegisterConditional("COND:SERV:SUPPORTS_GUEST", 2, conditional_serv_supports_guest, CTX_NONE);
+        RegisterConditional("COND:SERV:SUPPORTS_GUEST", 2, conditional_serv_supports_guest, CTX_NONE);
 	RegisterNamespace("SERV:PID", 0, 0, tmplput_serv_ip, NULL, CTX_NONE);
 	RegisterNamespace("SERV:NODENAME", 0, 1, tmplput_serv_nodename, NULL, CTX_NONE);
 	RegisterNamespace("SERV:HUMANNODE", 0, 1, tmplput_serv_humannode, NULL, CTX_NONE);
 	RegisterNamespace("SERV:FQDN", 0, 1, tmplput_serv_fqdn, NULL, CTX_NONE);
-
+	
 	RegisterNamespace("SERV:SOFTWARE", 0, 1, tmplput_serv_software, NULL, CTX_NONE);
 	RegisterNamespace("SERV:REV_LEVEL", 0, 0, tmplput_serv_rev_level, NULL, CTX_NONE);
 	RegisterNamespace("SERV:BBS_CITY", 0, 1, tmplput_serv_bbs_city, NULL, CTX_NONE);
@@ -597,6 +632,9 @@ void InitModule_SERVFUNC(void) {
 
 
 
-void SessionDestroyModule_SERVFUNC(wcsession * sess) {
+void 
+SessionDestroyModule_SERVFUNC
+(wcsession *sess)
+{
 	DeleteServInfo(&sess->serv_info);
 }

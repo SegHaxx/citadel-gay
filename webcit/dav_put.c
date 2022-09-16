@@ -1,4 +1,3 @@
-
 /*
  * Handles GroupDAV PUT requests.
  *
@@ -23,7 +22,8 @@
  * component.  This would be for webcal:// 'publish' operations, not
  * for GroupDAV.
  */
-void dav_put_bigics(void) {
+void dav_put_bigics(void)
+{
 	wcsession *WCC = WC;
 	char buf[1024];
 
@@ -64,7 +64,8 @@ void dav_put_bigics(void) {
  * [/groupdav/]room_name/euid	(GroupDAV)
  * [/groupdav/]room_name		(webcal)
  */
-void dav_put(void) {
+void dav_put(void) 
+{
 	wcsession *WCC = WC;
 	StrBuf *dav_roomname;
 	StrBuf *dav_uid;
@@ -87,7 +88,8 @@ void dav_put(void) {
 	dav_uid = NewStrBuf();;
 	StrBufExtract_token(dav_roomname, WCC->Hdr->HR.ReqLine, 0, '/');
 	StrBufExtract_token(dav_uid, WCC->Hdr->HR.ReqLine, 1, '/');
-	if ((!strcasecmp(ChrPtr(dav_uid), "ics")) || (!strcasecmp(ChrPtr(dav_uid), "calendar.ics"))) {
+	if ((!strcasecmp(ChrPtr(dav_uid), "ics")) || 
+	    (!strcasecmp(ChrPtr(dav_uid), "calendar.ics"))) {
 		FlushStrBuf(dav_uid);
 	}
 
@@ -100,10 +102,11 @@ void dav_put(void) {
 		dav_common_headers();
 		hprintf("Content-Type: text/plain\r\n");
 		begin_burst();
-		wc_printf("There is no folder called \"%s\" on this server.\r\n", ChrPtr(dav_roomname));
+		wc_printf("There is no folder called \"%s\" on this server.\r\n",
+			ChrPtr(dav_roomname));
 		end_burst();
 		FreeStrBuf(&dav_roomname);
-		FreeStrBuf(&dav_uid);
+		FreeStrBuf(&dav_uid);		
 		return;
 	}
 
@@ -121,9 +124,9 @@ void dav_put(void) {
 		if (StrTol(WCC->Hdr->HR.dav_ifmatch) != old_msgnum) {
 			hprintf("HTTP/1.1 412 Precondition Failed\r\n");
 			syslog(LOG_INFO, "HTTP/1.1 412 Precondition Failed (ifmatch=%ld, old_msgnum=%ld)\r\n",
-			       StrTol(WCC->Hdr->HR.dav_ifmatch), old_msgnum);
+				StrTol(WCC->Hdr->HR.dav_ifmatch), old_msgnum);
 			dav_common_headers();
-
+			
 			end_burst();
 			FreeStrBuf(&dav_roomname);
 			FreeStrBuf(&dav_uid);
@@ -166,14 +169,14 @@ void dav_put(void) {
 	n = 0;
 	FlushStrBuf(dav_uid);
 	while (serv_getln(buf, sizeof buf), strcmp(buf, "000")) {
-		switch (n++) {
-		case 0:
+		switch(n++) {
+		case 0: 
 			new_msgnum = atol(buf);
 			break;
-		case 1:
+		case 1:	
 			syslog(LOG_DEBUG, "new_msgnum=%ld (%s)\n", new_msgnum, buf);
 			break;
-		case 2:
+		case 2: 
 			StrBufAppendBufPlain(dav_uid, buf, -1, 0);
 			break;
 		default:
@@ -189,7 +192,8 @@ void dav_put(void) {
 		dav_common_headers();
 		hprintf("Content-type: text/plain\r\n");
 		begin_burst();
-		wc_printf("new_msgnum is %ld\r\n" "\r\n", new_msgnum);
+		wc_printf("new_msgnum is %ld\r\n"
+			"\r\n", new_msgnum);
 		end_burst();
 		FreeStrBuf(&dav_roomname);
 		FreeStrBuf(&dav_uid);
@@ -198,17 +202,17 @@ void dav_put(void) {
 
 	/* We created this item for the first time. */
 	if (old_msgnum < 0L) {
-		char escaped_uid[1024];
+	        char escaped_uid[1024];
 		hprintf("HTTP/1.1 201 Created\r\n");
 		syslog(LOG_DEBUG, "HTTP/1.1 201 Created\r\n");
 		dav_common_headers();
 		hprintf("etag: \"%ld\"\r\n", new_msgnum);
 		hprintf("Location: ");
 		dav_identify_hosthdr();
-		hprintf("/groupdav/");	/* TODO */
+		hprintf("/groupdav/");/* TODO */
 		hurlescputs(ChrPtr(dav_roomname));
-		euid_escapize(escaped_uid, ChrPtr(dav_uid));
-		hprintf("/%s\r\n", escaped_uid);
+	        euid_escapize(escaped_uid, ChrPtr(dav_uid));
+	        hprintf("/%s\r\n", escaped_uid);
 		end_burst();
 		FreeStrBuf(&dav_roomname);
 		FreeStrBuf(&dav_uid);

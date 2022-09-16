@@ -1,4 +1,3 @@
-
 /*
  * Copyright (c) 1996-2012 by the citadel.org team
  *
@@ -20,8 +19,7 @@ extern locale_t *wc_locales;
 
 typedef unsigned char byte;
 
-#define FALSE 0	/**< no. */
-
+#define FALSE 0 /**< no. */
 #define TRUE 1 /**< yes. */
 
 /*
@@ -33,7 +31,8 @@ typedef unsigned char byte;
  * format	strftime() format
  * tm		Input date/time
  */
-size_t wc_strftime(char *s, size_t max, const char *format, const struct tm *tm) {
+size_t wc_strftime(char *s, size_t max, const char *format, const struct tm *tm)
+{
 
 #ifdef ENABLE_NLS
 #ifdef HAVE_USELOCALE
@@ -56,14 +55,15 @@ size_t wc_strftime(char *s, size_t max, const char *format, const struct tm *tm)
 /*
  * Format a date/time stamp for output 
  */
-long webcit_fmt_date(char *buf, size_t siz, time_t thetime, int Format) {
+long webcit_fmt_date(char *buf, size_t siz, time_t thetime, int Format)
+{
 	long retlen = 0;
 	struct tm tm;
 	struct tm today_tm;
 	time_t today_timet;
 	int time_format;
 
-	time_format = get_time_format_cached();
+	time_format = get_time_format_cached ();
 	today_timet = time(NULL);
 	localtime_r(&today_timet, &today_tm);
 
@@ -72,45 +72,45 @@ long webcit_fmt_date(char *buf, size_t siz, time_t thetime, int Format) {
 	/*
 	 * DATEFMT_FULL:      full display 
 	 * DATEFMT_BRIEF:     if date == today, show only the time
-	 *                    otherwise, for messages up to 6 months old, 
+	 *		      otherwise, for messages up to 6 months old, 
 	 *                 show the month and day, and the time
-	 *                    older than 6 months, show only the date
+	 *		      older than 6 months, show only the date
 	 * DATEFMT_RAWDATE:   show full date, regardless of age 
 	 * DATEFMT_LOCALEDATE:   show full date as prefered for the locale
 	 */
 
 	switch (Format) {
-	case DATEFMT_BRIEF:
-		if ((tm.tm_year == today_tm.tm_year)
-		    && (tm.tm_mon == today_tm.tm_mon)
-		    && (tm.tm_mday == today_tm.tm_mday)) {
+		case DATEFMT_BRIEF:
+			if ((tm.tm_year == today_tm.tm_year)
+			  &&(tm.tm_mon == today_tm.tm_mon)
+			  &&(tm.tm_mday == today_tm.tm_mday)) {
+				if (time_format == WC_TIMEFORMAT_24) 
+					retlen = wc_strftime(buf, siz, "%k:%M", &tm);
+				else
+					retlen = wc_strftime(buf, siz, "%l:%M%p", &tm);
+			}
+			else if (today_timet - thetime < 15552000) {
+				if (time_format == WC_TIMEFORMAT_24) 
+					retlen = wc_strftime(buf, siz, "%b %d %k:%M", &tm);
+				else
+					retlen = wc_strftime(buf, siz, "%b %d %l:%M%p", &tm);
+			}
+			else {
+				retlen = wc_strftime(buf, siz, "%b %d %Y", &tm);
+			}
+			break;
+		case DATEFMT_FULL:
 			if (time_format == WC_TIMEFORMAT_24)
-				retlen = wc_strftime(buf, siz, "%k:%M", &tm);
+				retlen = wc_strftime(buf, siz, "%a %b %d %Y %T %Z", &tm);
 			else
-				retlen = wc_strftime(buf, siz, "%l:%M%p", &tm);
-		}
-		else if (today_timet - thetime < 15552000) {
-			if (time_format == WC_TIMEFORMAT_24)
-				retlen = wc_strftime(buf, siz, "%b %d %k:%M", &tm);
-			else
-				retlen = wc_strftime(buf, siz, "%b %d %l:%M%p", &tm);
-		}
-		else {
-			retlen = wc_strftime(buf, siz, "%b %d %Y", &tm);
-		}
-		break;
-	case DATEFMT_FULL:
-		if (time_format == WC_TIMEFORMAT_24)
-			retlen = wc_strftime(buf, siz, "%a %b %d %Y %T %Z", &tm);
-		else
-			retlen = wc_strftime(buf, siz, "%a %b %d %Y %r %Z", &tm);
-		break;
-	case DATEFMT_RAWDATE:
-		retlen = wc_strftime(buf, siz, "%a %b %d %Y", &tm);
-		break;
-	case DATEFMT_LOCALEDATE:
-		retlen = wc_strftime(buf, siz, "%x", &tm);
-		break;
+				retlen = wc_strftime(buf, siz, "%a %b %d %Y %r %Z", &tm);
+			break;
+		case DATEFMT_RAWDATE:
+			retlen = wc_strftime(buf, siz, "%a %b %d %Y", &tm);
+			break;
+		case DATEFMT_LOCALEDATE:
+			retlen = wc_strftime(buf, siz, "%x", &tm);
+			break;
 	}
 	return retlen;
 }
@@ -124,7 +124,7 @@ long guess_calhourformat(void) {
 	struct tm tm;
 	memset(&tm, 0, sizeof tm);
 	wc_strftime(buf, 64, "%X", &tm);
-	if (buf[strlen(buf) - 1] == 'M') {
+	if (buf[strlen(buf)-1] == 'M') {
 		return 12;
 	}
 	return 24;
@@ -134,11 +134,13 @@ long guess_calhourformat(void) {
 /*
  * learn the users timeformat preference.
  */
-int get_time_format_cached(void) {
+int get_time_format_cached (void)
+{
 	long calhourformat;
 	int *time_format_cache;
 	time_format_cache = &(WC->time_format_cache);
-	if (*time_format_cache == WC_TIMEFORMAT_NONE) {
+	if (*time_format_cache == WC_TIMEFORMAT_NONE)
+	{
 		get_pref_long("calhourformat", &calhourformat, 99);
 
 		/* If we don't know the user's time format preference yet,
@@ -149,7 +151,7 @@ int get_time_format_cached(void) {
 		}
 
 		/* Now set the preference */
-		if (calhourformat == 24)
+		if (calhourformat == 24) 
 			*time_format_cache = WC_TIMEFORMAT_24;
 		else
 			*time_format_cache = WC_TIMEFORMAT_AMPM;
@@ -162,12 +164,13 @@ int get_time_format_cached(void) {
  * buf		the output buffer
  * thetime	time to format into buf
  */
-void fmt_time(char *buf, size_t siz, time_t thetime) {
+void fmt_time(char *buf, size_t siz, time_t thetime)
+{
 	struct tm *tm;
 	int hour;
 	int time_format;
-
-	time_format = get_time_format_cached();
+	
+	time_format = get_time_format_cached ();
 	buf[0] = 0;
 	tm = localtime(&thetime);
 	hour = tm->tm_hour;
@@ -177,11 +180,14 @@ void fmt_time(char *buf, size_t siz, time_t thetime) {
 		hour = hour - 12;
 
 	if (time_format == WC_TIMEFORMAT_24) {
-		snprintf(buf, siz, "%d:%02d", tm->tm_hour, tm->tm_min);
+		snprintf(buf, siz, "%d:%02d",
+			tm->tm_hour, tm->tm_min
+		);
 	}
 	else {
-		snprintf(buf, siz, "%d:%02d%s", hour, tm->tm_min, ((tm->tm_hour > 12) ? "pm" : "am")
-		    );
+		snprintf(buf, siz, "%d:%02d%s",
+			hour, tm->tm_min, ((tm->tm_hour > 12) ? "pm" : "am")
+		);
 	}
 }
 
@@ -194,15 +200,17 @@ void fmt_time(char *buf, size_t siz, time_t thetime) {
  * FIXME won't read asctime
  * Doesn't understand timezone, but we only should be using GMT/UTC anyway
  */
-time_t httpdate_to_timestamp(StrBuf * buf) {
+time_t httpdate_to_timestamp(StrBuf *buf)
+{
 	time_t t = 0;
 	struct tm tt;
 	const char *c;
 
 	/** Skip day of week, to number */
-	for (c = ChrPtr(buf); *c != ' '; c++);
+	for (c = ChrPtr(buf); *c != ' '; c++)
+		;
 	c++;
-
+	
 	memset(&tt, 0, sizeof(tt));
 
 	/* Get day of month */
@@ -212,33 +220,33 @@ time_t httpdate_to_timestamp(StrBuf * buf) {
 
 	/* Get month */
 	switch (*c) {
-	case 'A':		/* April, August */
+	case 'A':	/* April, August */
 		tt.tm_mon = (c[1] == 'p') ? 3 : 7;
 		break;
-	case 'D':		/* December */
+	case 'D':	/* December */
 		tt.tm_mon = 11;
 		break;
-	case 'F':		/* February */
+	case 'F':	/* February */
 		tt.tm_mon = 1;
 		break;
-	case 'M':		/* March, May */
+	case 'M':	/* March, May */
 		tt.tm_mon = (c[2] == 'r') ? 2 : 4;
 		break;
-	case 'J':		/* January, June, July */
+	case 'J':	/* January, June, July */
 		tt.tm_mon = (c[2] == 'n') ? ((c[1] == 'a') ? 0 : 5) : 6;
 		break;
-	case 'N':		/* November */
+	case 'N':	/* November */
 		tt.tm_mon = 10;
 		break;
-	case 'O':		/* October */
+	case 'O':	/* October */
 		tt.tm_mon = 9;
 		break;
-	case 'S':		/* September */
+	case 'S':	/* September */
 		tt.tm_mon = 8;
 		break;
 	default:
 		return 42;
-		break;		/* NOTREACHED */
+		break;	/* NOTREACHED */
 	}
 	c += 4;
 
@@ -275,26 +283,30 @@ time_t httpdate_to_timestamp(StrBuf * buf) {
 #ifdef __FreeBSD__
 	tt.tm_sec = tt.tm_sec - tt.tm_gmtoff;
 #else
-	tt.tm_sec = tt.tm_sec - (int) timezone;
+	tt.tm_sec = tt.tm_sec - (int)timezone;
 #endif
 	t = mktime(&tt);
 	return t;
 }
 
 
-void LoadTimeformatSettingsCache(StrBuf * Preference, long lvalue) {
+void LoadTimeformatSettingsCache(StrBuf *Preference, long lvalue)
+{
 	int *time_format_cache;
-
-	time_format_cache = &(WC->time_format_cache);
-	if (lvalue == 24)
-		*time_format_cache = WC_TIMEFORMAT_24;
-	else
-		*time_format_cache = WC_TIMEFORMAT_AMPM;
+	
+	 time_format_cache = &(WC->time_format_cache);
+	 if (lvalue == 24) 
+		 *time_format_cache = WC_TIMEFORMAT_24;
+	 else
+		 *time_format_cache = WC_TIMEFORMAT_AMPM;
 }
 
 
 
-void InitModule_DATETIME(void) {
+void 
+InitModule_DATETIME
+(void)
+{
 	RegisterPreference("calhourformat", _("Time format"), PRF_INT, LoadTimeformatSettingsCache);
 
 

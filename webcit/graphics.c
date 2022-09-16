@@ -1,4 +1,3 @@
-
 /*
  * Handles HTTP upload of graphics files into the system.
  *
@@ -15,7 +14,7 @@
 
 #include "webcit.h"
 
-extern void output_static(const char *What);
+extern void output_static(const char* What);
 
 
 // display the picture (icon, photo, whatever) associated with the current room
@@ -42,7 +41,8 @@ void display_roompic(void) {
 
 
 // upload the picture (icon, photo, whatever) associated with the current room
-void common_code_for_editroompic_and_editpic(char *servcmd) {
+void common_code_for_editroompic_and_editpic(char *servcmd)
+{
 	if (havebstr("cancel_button")) {
 		AppendImportantMessage(_("Graphics upload has been cancelled."), -1);
 		display_main_menu();
@@ -54,8 +54,8 @@ void common_code_for_editroompic_and_editpic(char *servcmd) {
 		display_main_menu();
 		return;
 	}
-
-	serv_printf("%s %ld|%s", servcmd, (long) WC->upload_length, GuessMimeType(ChrPtr(WC->upload), WC->upload_length));
+	
+	serv_printf("%s %ld|%s", servcmd, (long)WC->upload_length, GuessMimeType(ChrPtr(WC->upload), WC->upload_length));
 	StrBuf *Line = NewStrBuf();
 	StrBuf_ServGetln(Line);
 	if (GetServerStatusMsg(Line, NULL, 0, 0) == 7) {
@@ -71,19 +71,22 @@ void common_code_for_editroompic_and_editpic(char *servcmd) {
 
 
 // upload the picture (icon, photo, whatever) associated with the current room
-void editroompic(void) {
+void editroompic(void)
+{
 	common_code_for_editroompic_and_editpic("ULRI");
 }
 
-
+	
 // upload the picture (icon, photo, whatever) associated with the current user
-void editpic(void) {
+void editpic(void)
+{
 	common_code_for_editroompic_and_editpic("ULUI");
 }
 
 
 // display the screen for uploading graphics to the server
-void display_graphics_upload(char *filename) {
+void display_graphics_upload(char *filename)
+{
 	StrBuf *Line;
 
 	Line = NewStrBuf();
@@ -93,7 +96,8 @@ void display_graphics_upload(char *filename) {
 		display_main_menu();
 		return;
 	}
-	else {
+	else
+	{
 		output_headers(1, 0, 0, 0, 1, 0);
 		do_template("files_graphicsupload");
 		end_burst();
@@ -102,7 +106,8 @@ void display_graphics_upload(char *filename) {
 }
 
 
-void do_graphics_upload(char *filename) {
+void do_graphics_upload(char *filename)
+{
 	StrBuf *Line;
 	const char *MimeType;
 	wcsession *WCC = WC;
@@ -122,7 +127,7 @@ void do_graphics_upload(char *filename) {
 		display_main_menu();
 		return;
 	}
-
+	
 	MimeType = GuessMimeType(ChrPtr(WCC->upload), bytes_remaining);
 	serv_printf("UIMG 1|%s|%s", MimeType, filename);
 
@@ -144,7 +149,7 @@ void do_graphics_upload(char *filename) {
 			FreeStrBuf(&Line);
 			return;
 		}
-		thisblock = extract_int(ChrPtr(Line) + 4, 0);
+		thisblock = extract_int(ChrPtr(Line) +4, 0);
 		serv_write(&ChrPtr(WCC->upload)[pos], thisblock);
 		pos += thisblock;
 		bytes_remaining -= thisblock;
@@ -154,19 +159,15 @@ void do_graphics_upload(char *filename) {
 	StrBuf_ServGetln(Line);
 	if (*ChrPtr(Line) != 'x') {
 		display_success(ChrPtr(Line) + 4);
-
+	
 	}
 	FreeStrBuf(&Line);
 
 }
 
 
-void edithellopic(void) {
-	do_graphics_upload("hello");
-}
-void editgoodbuyepic(void) {
-	do_graphics_upload("UIMG 1|%s|goodbuye");
-}
+void edithellopic(void)    { do_graphics_upload("hello"); }
+void editgoodbuyepic(void) { do_graphics_upload("UIMG 1|%s|goodbuye"); }
 
 /* The users photo display / upload facility */
 void display_editpic(void) {
@@ -174,7 +175,6 @@ void display_editpic(void) {
 	putbstr("__UPLURL", NewStrBufPlain(HKEY("editpic")));
 	display_graphics_upload("editpic");
 }
-
 /* room picture dispay / upload facility */
 void display_editroompic(void) {
 	putbstr("__PICDESC", NewStrBufPlain(_("the icon for this room"), -1));
@@ -199,7 +199,10 @@ void display_editgoodbyepic(void) {
 }
 
 
-void InitModule_GRAPHICS(void) {
+void 
+InitModule_GRAPHICS
+(void)
+{
 	WebcitAddUrlHandler(HKEY("display_editpic"), "", 0, display_editpic, 0);
 	WebcitAddUrlHandler(HKEY("editpic"), "", 0, editpic, 0);
 	WebcitAddUrlHandler(HKEY("display_editroompic"), "", 0, display_editroompic, 0);

@@ -1,4 +1,3 @@
-
 /*
  * WebCit "system dependent" code.
  *
@@ -56,22 +55,22 @@
 #endif
 
 pthread_mutex_t Critters[MAX_SEMAPHORES];	/* Things needing locking */
-pthread_key_t MyConKey;		/* TSD key for MyContext() */
-pthread_key_t MyReq;		/* TSD key for MyReq() */
+pthread_key_t MyConKey;				/* TSD key for MyContext() */
+pthread_key_t MyReq;				/* TSD key for MyReq() */
 int msock;			/* master listening socket */
-int time_to_die = 0;		/* Nonzero if server is shutting down */
+int time_to_die = 0;            /* Nonzero if server is shutting down */
 
-extern void *context_loop(ParsedHttpHdrs * Hdr);
+extern void *context_loop(ParsedHttpHdrs *Hdr);
 extern void *housekeeping_loop(void);
 extern void do_housekeeping(void);
 
-char file_etc_mimelist[PATH_MAX] = "";
+char file_etc_mimelist[PATH_MAX]="";
 
 char etc_dir[PATH_MAX];
-char static_dir[PATH_MAX];	/* calculated on startup */
-char static_local_dir[PATH_MAX];	/* calculated on startup */
-char static_icon_dir[PATH_MAX];	/* where should we find our mime icons? */
-char *static_dirs[] = {		/* needs same sort order as the web mapping */
+char static_dir[PATH_MAX];		/* calculated on startup */
+char static_local_dir[PATH_MAX];		/* calculated on startup */
+char static_icon_dir[PATH_MAX];          /* where should we find our mime icons? */
+char  *static_dirs[]={				/* needs same sort order as the web mapping */
 	"./static",
 	"./static.local",
 	"./tiny_mce",
@@ -79,13 +78,14 @@ char *static_dirs[] = {		/* needs same sort order as the web mapping */
 };
 
 int ExitPipe[2];
-HashList *GZMimeBlackList = NULL;	/* mimetypes which shouldn't be gzip compressed */
+HashList *GZMimeBlackList = NULL; /* mimetypes which shouldn't be gzip compressed */
 
-void LoadMimeBlacklist(void) {
+void LoadMimeBlacklist(void)
+{
 	StrBuf *MimeBlackLine;
 	IOBuffer IOB;
 	eReadState state;
-
+	
 	memset(&IOB, 0, sizeof(IOBuffer));
 	IOB.fd = open(file_etc_mimelist, O_RDONLY);
 
@@ -93,17 +93,22 @@ void LoadMimeBlacklist(void) {
 	MimeBlackLine = NewStrBuf();
 	GZMimeBlackList = NewHash(1, NULL);
 
-	do {
+	do
+	{
 		state = StrBufChunkSipLine(MimeBlackLine, &IOB);
 
-		switch (state) {
+		switch (state)
+		{
 		case eMustReadMore:
 			if (StrBuf_read_one_chunk_callback(IOB.fd, 0, &IOB) <= 0)
 				state = eReadFail;
 			break;
 		case eReadSuccess:
-			if ((StrLength(MimeBlackLine) > 1) && (*ChrPtr(MimeBlackLine) != '#')) {
-				Put(GZMimeBlackList, SKEY(MimeBlackLine), (void *) 1, reference_free_handler);
+			if ((StrLength(MimeBlackLine) > 1) && 
+			    (*ChrPtr(MimeBlackLine) != '#'))
+			{
+				Put(GZMimeBlackList, SKEY(MimeBlackLine),
+				    (void*) 1, reference_free_handler);
 			}
 			FlushStrBuf(MimeBlackLine);
 			break;
@@ -116,29 +121,34 @@ void LoadMimeBlacklist(void) {
 	while (state != eReadFail);
 
 	close(IOB.fd);
-
+	
 	FreeStrBuf(&IOB.Buf);
 	FreeStrBuf(&MimeBlackLine);
 }
 
-void CheckGZipCompressionAllowed(const char *MimeType, long MLen) {
+void CheckGZipCompressionAllowed(const char *MimeType, long MLen)
+{
 	void *v;
 
 	if (WC->Hdr->HR.gzip_ok)
-		WC->Hdr->HR.gzip_ok = GetHash(GZMimeBlackList, MimeType, MLen, &v) == 0;
+	    WC->Hdr->HR.gzip_ok = GetHash(GZMimeBlackList, MimeType, MLen, &v) == 0;
 }
 
-void InitialiseSemaphores(void) {
+void InitialiseSemaphores(void)
+{
 	int i;
 
 	/* Set up a bunch of semaphores to be used for critical sections */
-	for (i = 0; i < MAX_SEMAPHORES; ++i) {
+	for (i=0; i<MAX_SEMAPHORES; ++i) {
 		pthread_mutex_init(&Critters[i], NULL);
 	}
 
-	if (pipe(ExitPipe)) {
-		syslog(LOG_WARNING, "Failed to open exit pipe: %d [%s]\n", errno, strerror(errno));
-
+	if (pipe(ExitPipe))
+	{
+		syslog(LOG_WARNING, "Failed to open exit pipe: %d [%s]\n", 
+		       errno, 
+		       strerror(errno));
+		
 		exit(-1);
 	}
 }
@@ -146,32 +156,36 @@ void InitialiseSemaphores(void) {
 /*
  * Obtain a semaphore lock to begin a critical section.
  */
-void begin_critical_section(int which_one) {
+void begin_critical_section(int which_one)
+{
 	pthread_mutex_lock(&Critters[which_one]);
 }
 
 /*
  * Release a semaphore lock to end a critical section.
  */
-void end_critical_section(int which_one) {
+void end_critical_section(int which_one)
+{
 	pthread_mutex_unlock(&Critters[which_one]);
 }
 
 
-void ShutDownWebcit(void) {
+void ShutDownWebcit(void)
+{
 
 	DeleteHash(&GZMimeBlackList);
-	free_zone_directory();
-	icaltimezone_release_zone_tab();
-	icalmemory_free_ring();
-	ShutDownLibCitadel();
-	shutdown_modules();
+	free_zone_directory ();
+	icaltimezone_release_zone_tab ();
+	icalmemory_free_ring ();
+	ShutDownLibCitadel ();
+	shutdown_modules ();
 }
 
 /*
  * Entry point for worker threads
  */
-void worker_entry(void) {
+void worker_entry(void)
+{
 	int ssock;
 	int i = 0;
 	int fail_this_transaction = 0;
@@ -179,72 +193,71 @@ void worker_entry(void) {
 
 	memset(&Hdr, 0, sizeof(ParsedHttpHdrs));
 	Hdr.HR.eReqType = eGET;
-	http_new_modules(&Hdr);
+	http_new_modules(&Hdr);	
 
 	do {
 		/* Each worker thread blocks on accept() while waiting for something to do. */
 		fail_this_transaction = 0;
-		ssock = -1;
+		ssock = -1; 
 		errno = EAGAIN;
 		do {
 			fd_set wset;
 			--num_threads_executing;
-			FD_ZERO(&wset);
-			FD_SET(msock, &wset);
-			FD_SET(ExitPipe[1], &wset);
+                        FD_ZERO(&wset);
+                        FD_SET(msock, &wset);
+                        FD_SET(ExitPipe[1], &wset);
 
-			select(msock + 1, NULL, &wset, NULL, NULL);
+                        select(msock + 1, NULL, &wset, NULL, NULL);
 			if (time_to_die)
 				break;
 
 			ssock = accept(msock, NULL, 0);
 			++num_threads_executing;
-			if (ssock < 0)
-				fail_this_transaction = 1;
-		} while ((msock > 0) && (ssock < 0) && (time_to_die == 0));
+			if (ssock < 0) fail_this_transaction = 1;
+		} while ((msock > 0) && (ssock < 0)  && (time_to_die == 0));
 
-		if ((msock == -1) || (time_to_die)) {	/* ok, we're going down. */
+		if ((msock == -1)||(time_to_die))
+		{/* ok, we're going down. */
 			int shutdown = 0;
 
 			/* The first thread to get here will have to do the cleanup.
 			 * Make sure it's really just one.
 			 */
 			begin_critical_section(S_SHUTDOWN);
-			if (msock == -1) {
+			if (msock == -1)
+			{
 				msock = -2;
 				shutdown = 1;
 			}
 			end_critical_section(S_SHUTDOWN);
-			if (shutdown == 1) {	/* we're the one to cleanup the mess. */
+			if (shutdown == 1)
+			{/* we're the one to cleanup the mess. */
 				http_destroy_modules(&Hdr);
 				syslog(LOG_DEBUG, "I'm master shutdown: tagging sessions to be killed.\n");
 				shutdown_sessions();
 				syslog(LOG_DEBUG, "master shutdown: waiting for others\n");
-				sleeeeeeeeeep(1);	/* wait so some others might finish... */
+				sleeeeeeeeeep(1); /* wait so some others might finish... */
 				syslog(LOG_DEBUG, "master shutdown: cleaning up sessions\n");
 				do_housekeeping();
 				syslog(LOG_DEBUG, "master shutdown: cleaning up libical\n");
 
 				ShutDownWebcit();
 
-				syslog(LOG_DEBUG, "master shutdown exiting.\n");
+				syslog(LOG_DEBUG, "master shutdown exiting.\n");				
 				exit(0);
 			}
 			break;
 		}
-		if (ssock < 0)
-			continue;
+		if (ssock < 0 ) continue;
 
 		check_thread_pool_size();
 
 		/* Now do something. */
 		if (msock < 0) {
-			if (ssock > 0)
-				close(ssock);
+			if (ssock > 0) close (ssock);
 			syslog(LOG_DEBUG, "in between.");
 			pthread_exit(NULL);
-		}
-		else {
+		} else {
 			/* Got it? do some real work! */
 			/* Set the SO_REUSEADDR socket option */
 			i = 1;
@@ -258,17 +271,18 @@ void worker_entry(void) {
 					close(ssock);
 				}
 			}
-			else
+			else 
 #endif
 			{
-				int fdflags;
+				int fdflags; 
 				fdflags = fcntl(ssock, F_GETFL);
 				if (fdflags < 0)
-					syslog(LOG_WARNING, "unable to get server socket flags! %s \n", strerror(errno));
+					syslog(LOG_WARNING, "unable to get server socket flags! %s \n",
+						strerror(errno));
 				fdflags = fdflags | O_NONBLOCK;
 				if (fcntl(ssock, F_SETFL, fdflags) < 0)
 					syslog(LOG_WARNING, "unable to set server socket nonblocking flags! %s \n",
-					       strerror(errno));
+						strerror(errno));
 			}
 
 			if (fail_this_transaction == 0) {
@@ -329,9 +343,9 @@ void graceful_shutdown(int signum) {
 	fd = msock;
 	msock = -1;
 	time_to_die = 1;
-	FD = fdopen(fd, "a+");
-	fflush(FD);
-	fclose(FD);
+	FD=fdopen(fd, "a+");
+	fflush (FD);
+	fclose (FD);
 	close(fd);
 	write(ExitPipe[0], HKEY("                              "));
 }
@@ -340,7 +354,8 @@ void graceful_shutdown(int signum) {
 /*
  * Start running as a daemon.
  */
-void start_daemon(char *pid_file) {
+void start_daemon(char *pid_file) 
+{
 	int status = 0;
 	pid_t child = 0;
 	FILE *fp;
@@ -374,19 +389,19 @@ void start_daemon(char *pid_file) {
 	do {
 		current_child = fork();
 
-
+	
 		if (current_child < 0) {
 			perror("fork");
-			ShutDownLibCitadel();
+			ShutDownLibCitadel ();
 			exit(errno);
 		}
-
+	
 		else if (current_child == 0) {	/* child process */
 			signal(SIGHUP, graceful_shutdown);
 
-			return;	/* continue starting webcit. */
+			return; /* continue starting webcit. */
 		}
-		else {		/* watcher process */
+		else { /* watcher process */
 			if (pid_file) {
 				fp = fopen(pid_file, "w");
 				if (fp != NULL) {
@@ -408,7 +423,7 @@ void start_daemon(char *pid_file) {
 			}
 
 			/* Exit code 101-109 means the watcher should exit */
-			else if ((WEXITSTATUS(status) >= 101) && (WEXITSTATUS(status) <= 109)) {
+			else if ( (WEXITSTATUS(status) >= 101) && (WEXITSTATUS(status) <= 109) ) {
 				do_restart = 0;
 			}
 
@@ -428,7 +443,7 @@ void start_daemon(char *pid_file) {
 	if (pid_file) {
 		unlink(pid_file);
 	}
-	ShutDownLibCitadel();
+	ShutDownLibCitadel ();
 	exit(WEXITSTATUS(status));
 }
 
@@ -436,7 +451,8 @@ void start_daemon(char *pid_file) {
 /*
  * Spawn an additional worker thread into the pool.
  */
-void spawn_another_worker_thread() {
+void spawn_another_worker_thread()
+{
 	pthread_t SessThread;	/* Thread descriptor */
 	pthread_attr_t attr;	/* Thread attributes */
 	int ret;
@@ -467,11 +483,13 @@ void spawn_another_worker_thread() {
 }
 
 
-void webcit_calc_dirs_n_files(int relh, const char *basedir, int home, char *webcitdir, char *relhome) {
-	char dirbuffer[PATH_MAX] = "";
+void
+webcit_calc_dirs_n_files(int relh, const char *basedir, int home, char *webcitdir, char *relhome)
+{
+	char dirbuffer[PATH_MAX]="";
 	/* calculate all our path on a central place */
-	/* where to keep our config */
-
+    /* where to keep our config */
+	
 #define COMPUTE_DIRECTORY(SUBDIR) memcpy(dirbuffer,SUBDIR, sizeof dirbuffer);\
 	snprintf(SUBDIR,sizeof SUBDIR,  "%s%s%s%s%s%s%s", \
 			 (home&!relh)?webcitdir:basedir, \
@@ -481,22 +499,25 @@ void webcit_calc_dirs_n_files(int relh, const char *basedir, int home, char *web
              (relhome[0]!='\0')?"/":"",\
 			 dirbuffer,\
 			 (dirbuffer[0]!='\0')?"/":"");
-	basedir = RUNDIR;
+	basedir=RUNDIR;
 	COMPUTE_DIRECTORY(socket_dir);
-	basedir = WWWDIR "/static";
+	basedir=WWWDIR "/static";
 	COMPUTE_DIRECTORY(static_dir);
-	basedir = WWWDIR "/static/icons";
+	basedir=WWWDIR "/static/icons";
 	COMPUTE_DIRECTORY(static_icon_dir);
-	basedir = WWWDIR "/static.local";
+	basedir=WWWDIR "/static.local";
 	COMPUTE_DIRECTORY(static_local_dir);
 	StripSlashes(static_dir, 1);
 	StripSlashes(static_icon_dir, 1);
 	StripSlashes(static_local_dir, 1);
 
-	basedir = ETCDIR;
+	basedir=ETCDIR;
 	COMPUTE_DIRECTORY(etc_dir);
 	StripSlashes(etc_dir, 1);
-	snprintf(file_etc_mimelist, sizeof file_etc_mimelist, "%s/nogz-mimetypes.txt", etc_dir);
+	snprintf(file_etc_mimelist,
+		 sizeof file_etc_mimelist, 
+		 "%s/nogz-mimetypes.txt",
+		 etc_dir);
 
 	/* we should go somewhere we can leave our coredump, if enabled... */
 	syslog(LOG_INFO, "Changing directory to %s\n", socket_dir);
@@ -505,7 +526,8 @@ void webcit_calc_dirs_n_files(int relh, const char *basedir, int home, char *web
 	}
 }
 
-void drop_root(uid_t UID) {
+void drop_root(uid_t UID)
+{
 	struct passwd pw, *pwp = NULL;
 #ifdef HAVE_GETPWUID_R
 	char pwbuf[SIZ];
@@ -516,25 +538,28 @@ void drop_root(uid_t UID) {
 	 * corresponding group ids
 	 */
 	if (UID != -1) {
-
+		
 #ifdef HAVE_GETPWUID_R
 #ifdef SOLARIS_GETPWUID
 		pwp = getpwuid_r(UID, &pw, pwbuf, sizeof(pwbuf));
-#else				/* SOLARIS_GETPWUID */
+#else /* SOLARIS_GETPWUID */
 		getpwuid_r(UID, &pw, pwbuf, sizeof(pwbuf), &pwp);
-#endif				/* SOLARIS_GETPWUID */
-#else				/* HAVE_GETPWUID_R */
+#endif /* SOLARIS_GETPWUID */
+#else /* HAVE_GETPWUID_R */
 		pwp = NULL;
-#endif				/* HAVE_GETPWUID_R */
+#endif /* HAVE_GETPWUID_R */
 
 		if (pwp == NULL)
-			syslog(LOG_CRIT, "WARNING: getpwuid(%d): %s\n" "Group IDs will be incorrect.\n", UID, strerror(errno));
+			syslog(LOG_CRIT, "WARNING: getpwuid(%d): %s\n"
+				"Group IDs will be incorrect.\n", UID,
+				strerror(errno));
 		else {
 			initgroups(pw.pw_name, pw.pw_gid);
 			if (setgid(pw.pw_gid))
-				syslog(LOG_CRIT, "setgid(%ld): %s\n", (long) pw.pw_gid, strerror(errno));
+				syslog(LOG_CRIT, "setgid(%ld): %s\n", (long)pw.pw_gid,
+					strerror(errno));
 		}
-		syslog(LOG_INFO, "Changing uid to %ld\n", (long) UID);
+		syslog(LOG_INFO, "Changing uid to %ld\n", (long)UID);
 		if (setuid(UID) != 0) {
 			syslog(LOG_CRIT, "setuid() failed: %s\n", strerror(errno));
 		}
@@ -548,14 +573,15 @@ void drop_root(uid_t UID) {
 /*
  * print the actual stack frame.
  */
-void wc_backtrace(long LogLevel) {
+void wc_backtrace(long LogLevel)
+{
 #ifdef HAVE_BACKTRACE
 	void *stack_frames[50];
 	size_t size, i;
 	char **strings;
 
 
-	size = backtrace(stack_frames, sizeof(stack_frames) / sizeof(void *));
+	size = backtrace(stack_frames, sizeof(stack_frames) / sizeof(void*));
 	strings = backtrace_symbols(stack_frames, size);
 	for (i = 0; i < size; i++) {
 		if (strings != NULL)

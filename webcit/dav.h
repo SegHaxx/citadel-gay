@@ -1,4 +1,3 @@
-
 /*
  * Copyright (c) 1996-2013 by the citadel.org team
  *
@@ -39,6 +38,10 @@ void euid_unescapize(char *, const char *);
 void dav_identify_host(void);
 void dav_identify_hosthdr(void);
 
-void RegisterDAVNamespace(const char *UrlString,
-			  long UrlSLen,
-			  const char *DisplayName, long dslen, WebcitHandlerFunc F, WebcitRESTDispatchID RID, long Flags);
+void RegisterDAVNamespace(const char * UrlString, 
+			  long UrlSLen, 
+			  const char *DisplayName, 
+			  long dslen, 
+			  WebcitHandlerFunc F, 
+			  WebcitRESTDispatchID RID,
+			  long Flags);

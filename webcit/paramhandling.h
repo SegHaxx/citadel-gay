@@ -1,4 +1,3 @@
-
 /*
  * Copyright (c) 1996-2013 by the citadel.org team
  *
@@ -13,9 +12,10 @@
 
 /* URL / Mime Post parsing -> paramhandling.c */
 void upload_handler(char *name, char *filename, char *partnum, char *disp,
-		    void *content, char *cbtype, char *cbcharset, size_t length, char *encoding, char *cbid, void *userdata);
+		    void *content, char *cbtype, char *cbcharset,
+		    size_t length, char *encoding, char *cbid, void *userdata);
 
-void ParseURLParams(StrBuf * url);
+void ParseURLParams(StrBuf *url);
 
 
 /* These may return NULL if not foud */
@@ -41,27 +41,27 @@ int HaveBstr(const char *key, size_t keylen);
 int YesBstr(const char *key, size_t keylen);
 int YESBSTR(const char *key);
 
-HashList *getSubStruct(const char *key, size_t keylen);
+HashList* getSubStruct(const char *key, size_t keylen);
 
 /* These may return NULL if not foud */
 #define ssubbstr(s, a) SSubBstr(s, a, sizeof(a) - 1)
-const StrBuf *SSubBstr(HashList * sub, const char *key, size_t keylen);
+const StrBuf *SSubBstr(HashList *sub, const char *key, size_t keylen);
 
 #define xsubbstr(s, a, b) (char*) XSubBstr(s, a, sizeof(a) - 1, b)
-const char *XSubBstr(HashList * sub, const char *key, size_t keylen, size_t *len);
+const char *XSubBstr(HashList *sub, const char *key, size_t keylen, size_t *len);
 
 #define lsubbstr(s, a) LSubBstr(s, a, sizeof(a) - 1)
-long LSubBstr(HashList * sub, const char *key, size_t keylen);
+long LSubBstr(HashList *sub, const char *key, size_t keylen);
 
 #define isubbstr(s, a) ISubBstr(s, a, sizeof(a) - 1)
 #define isubbcstr(s, a) ISubBstr(s, a.Key, a.len)
-int ISubBstr(HashList * sub, const char *key, size_t keylen);
+int ISubBstr(HashList *sub, const char *key, size_t keylen);
 
 #define havesubbstr(s, a) HaveSubBstr(s, a, sizeof(a) - 1)
-int HaveSubBstr(HashList * sub, const char *key, size_t keylen);
+int HaveSubBstr(HashList *sub, const char *key, size_t keylen);
 
 #define yessubbstr(s, a) YesSubBstr(s, a, sizeof(a) - 1)
-int YesSubBstr(HashList * sub, const char *key, size_t keylen);
+int YesSubBstr(HashList *sub, const char *key, size_t keylen);
 
 
 
@@ -70,10 +70,10 @@ int YesSubBstr(HashList * sub, const char *key, size_t keylen);
 #define bstr(a) (char*) Bstr(a, sizeof(a) - 1)
 const char *BSTR(const char *key);
 const char *Bstr(const char *key, size_t keylen);
-
 /* if you want to ease some parts by just parametring yourself... */
 #define putbstr(a, b) PutBstr(a, sizeof(a) - 1, b)
-void PutBstr(const char *key, long keylen, StrBuf * Value);
+void PutBstr(const char *key, long keylen, StrBuf *Value);
 
 #define putlbstr(a, b) PutlBstr(a, sizeof(a) - 1, b)
 void PutlBstr(const char *key, long keylen, long Value);
+

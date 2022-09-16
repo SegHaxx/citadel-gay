@@ -1,4 +1,3 @@
-
 /*
  * Copyright (c) 1996-2013 by the citadel.org team
  *
@@ -11,8 +10,8 @@
  * GNU General Public License for more details.
  */
 
-void StrEscPuts(const StrBuf * strbuf);
-void StrEscputs1(const StrBuf * strbuf, int nbsp, int nolinebreaks);
+void StrEscPuts(const StrBuf *strbuf);
+void StrEscputs1(const StrBuf *strbuf, int nbsp, int nolinebreaks);
 
 void urlescputs(const char *);
 void hurlescputs(const char *);

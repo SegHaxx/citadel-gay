@@ -52,7 +52,7 @@ void bind_to_key_and_certificate(void) {
 	SSL_CTX_use_certificate_chain_file(new_ctx, cert_file);
 	SSL_CTX_use_PrivateKey_file(new_ctx, key_file, SSL_FILETYPE_PEM);
 
-	if (!SSL_CTX_check_private_key(new_ctx)) {
+	if ( !SSL_CTX_check_private_key(new_ctx) ) {
 		syslog(LOG_WARNING, "crypto: cannot install certificate: %s", ERR_reason_error_string(ERR_get_error()));
 	}
 
@@ -106,21 +106,21 @@ int starttls(int sock) {
 
 	// Check the modification time of the key and certificate -- reload if they changed
 	update_key_and_cert_if_needed();
-
+	
 	// SSL is a thread-specific thing, I think.
 	pthread_setspecific(ThreadSSL, NULL);
 
 	if (!ssl_ctx) {
-		return (1);
+		return(1);
 	}
 	if (!(newssl = SSL_new(ssl_ctx))) {
 		syslog(LOG_WARNING, "SSL_new failed: %s", ERR_reason_error_string(ERR_get_error()));
-		return (2);
+		return(2);
 	}
 	if (!(SSL_set_fd(newssl, sock))) {
 		syslog(LOG_WARNING, "SSL_set_fd failed: %s", ERR_reason_error_string(ERR_get_error()));
 		SSL_free(newssl);
-		return (3);
+		return(3);
 	}
 	retval = SSL_accept(newssl);
 	if (retval < 1) {
@@ -145,12 +145,13 @@ int starttls(int sock) {
 	BIO_set_close(SSL_get_rbio(newssl), BIO_NOCLOSE);
 	bits = SSL_CIPHER_get_bits(SSL_get_current_cipher(newssl), &alg_bits);
 	syslog(LOG_INFO, "SSL/TLS using %s on %s (%d of %d bits)",
-	       SSL_CIPHER_get_name(SSL_get_current_cipher(newssl)),
-	       SSL_CIPHER_get_version(SSL_get_current_cipher(newssl)), bits, alg_bits);
+		SSL_CIPHER_get_name(SSL_get_current_cipher(newssl)),
+		SSL_CIPHER_get_version(SSL_get_current_cipher(newssl)),
+		bits, alg_bits);
 
 	pthread_setspecific(ThreadSSL, newssl);
 	syslog(LOG_INFO, "SSL started");
-	return (0);
+	return(0);
 }
 
 
@@ -173,15 +174,14 @@ void endtls(void) {
 
 
 // Send binary data to the client encrypted.
-int client_write_ssl(const StrBuf * Buf) {
+int client_write_ssl(const StrBuf *Buf) {
 	const char *buf;
 	int retval;
 	int nremain;
 	long nbytes;
 	char junk[1];
 
-	if (THREADSSL == NULL)
-		return -1;
+	if (THREADSSL == NULL) return -1;
 
 	nbytes = nremain = StrLength(Buf);
 	buf = ChrPtr(Buf);
@@ -215,14 +215,13 @@ int client_write_ssl(const StrBuf * Buf) {
 
 
 // read data from the encrypted layer.
-int client_read_sslbuffer(StrBuf * buf, int timeout) {
+int client_read_sslbuffer(StrBuf *buf, int timeout) {
 	char sbuf[16384];	// OpenSSL communicates in 16k blocks, so let's speak its native tongue.
 	int rlen;
 	char junk[1];
 	SSL *pssl = THREADSSL;
 
-	if (pssl == NULL)
-		return (-1);
+	if (pssl == NULL) return(-1);
 
 	while (1) {
 		if (SSL_want_read(pssl)) {

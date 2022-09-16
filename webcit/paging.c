@@ -1,4 +1,3 @@
-
 /*
  * This module handles instant message related functions.
  *
@@ -18,17 +17,18 @@
 /*
  * display the form for paging (x-messaging) another user
  */
-void display_page(void) {
+void display_page(void)
+{
 	char recp[SIZ];
 
 	strcpy(recp, bstr("recp"));
 
-	output_headers(1, 1, 1, 0, 0, 0);
-	wc_printf("<div id=\"room_banner_override\">\n");
-	wc_printf("<h1>");
+        output_headers(1, 1, 1, 0, 0, 0);
+        wc_printf("<div id=\"room_banner_override\">\n");
+        wc_printf("<h1>");
 	wc_printf(_("Send instant message"));
 	wc_printf("</h1>");
-	wc_printf("</div>\n");
+        wc_printf("</div>\n");
 
 	wc_printf("<div id=\"content\" class=\"service\">\n");
 
@@ -51,7 +51,8 @@ void display_page(void) {
 	wc_printf(_("Enter message text:"));
 	wc_printf("<br>");
 
-	wc_printf("<TEXTAREA NAME=\"msgtext\" wrap=soft ROWS=5 COLS=40 " "WIDTH=40></TEXTAREA>\n");
+	wc_printf("<TEXTAREA NAME=\"msgtext\" wrap=soft ROWS=5 COLS=40 "
+		"WIDTH=40></TEXTAREA>\n");
 
 	wc_printf("</TD></TR></TABLE><br>\n");
 
@@ -66,7 +67,8 @@ void display_page(void) {
 /*
  * page another user
  */
-void page_user(void) {
+void page_user(void)
+{
 	char recp[256];
 	StrBuf *Line;
 
@@ -74,8 +76,7 @@ void page_user(void) {
 
 	if (!havebstr("send_button")) {
 		AppendImportantMessage(_("Message was not sent."), -1);
-	}
-	else {
+	} else {
 		Line = NewStrBuf();
 		serv_printf("SEXP %s|-", recp);
 		StrBuf_ServGetln(Line);
@@ -99,12 +100,12 @@ void page_user(void) {
  * If there are instant messages waiting, and we notice that we haven't checked them in
  * a while, it probably means that we need to open the instant messenger window.
  */
-int Conditional_PAGE_WAITING(StrBuf * Target, WCTemplputParams * TP) {
+int Conditional_PAGE_WAITING(StrBuf *Target, WCTemplputParams *TP)
+{
 	int len;
 	char buf[SIZ];
 
 	/** JavaScript function to alert the user that popups are probably blocked */
-
 	/** First, do the check as part of our page load. */
 	serv_puts("NOOP");
 	len = serv_getln(buf, sizeof buf);
@@ -132,11 +133,14 @@ void ajax_send_instant_message(void) {
 		serv_puts("000");
 	}
 
-	escputs(buf);		/* doesn't really matter what we return - the client ignores it */
+	escputs(buf);	/* doesn't really matter what we return - the client ignores it */
 }
 
 
-void InitModule_PAGING(void) {
+void 
+InitModule_PAGING
+(void)
+{
 	WebcitAddUrlHandler(HKEY("display_page"), "", 0, display_page, 0);
 	WebcitAddUrlHandler(HKEY("page_user"), "", 0, page_user, 0);
 	WebcitAddUrlHandler(HKEY("ajax_send_instant_message"), "", 0, ajax_send_instant_message, AJAX);
@@ -144,6 +148,9 @@ void InitModule_PAGING(void) {
 }
 
 
-void SessionDestroyModule_PAGING(wcsession * sess) {
+void 
+SessionDestroyModule_PAGING
+(wcsession *sess)
+{
 	/* nothing here anymore */
 }

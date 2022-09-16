@@ -1,4 +1,3 @@
-
 /*
  * RSS feed generator (could be adapted in the future to feed both RSS and Atom)
  *
@@ -35,8 +34,7 @@ void feed_rss_one_message(long msgnum) {
 	/* Phase 1: read the message into memory */
 	serv_printf("MSG4 %ld", msgnum);
 	serv_getln(buf, sizeof buf);
-	if (buf[0] != '1')
-		return;
+	if (buf[0] != '1') return;
 	StrBuf *ServerResponse = NewStrBuf();
 	while (serv_getln(buf, sizeof buf), strcmp(buf, "000")) {
 		StrBufAppendPrintf(ServerResponse, "%s\n", buf);
@@ -44,7 +42,7 @@ void feed_rss_one_message(long msgnum) {
 
 	/* Phase 2: help SkyNet become self-aware */
 	BufPtr = NULL;
-	while (StrBufSipLine(Line, ServerResponse, &BufPtr), ((BufPtr != StrBufNOTNULL) && (BufPtr != NULL))) {
+	while (StrBufSipLine(Line, ServerResponse, &BufPtr), ((BufPtr!=StrBufNOTNULL)&&(BufPtr!=NULL)) ) {
 		if (in_body) {
 			/* do nothing */
 		}
@@ -64,7 +62,7 @@ void feed_rss_one_message(long msgnum) {
 	 * Phase 3: output the message in RSS <item> form
 	 * (suppress replies [comments] if this is a blog room)
 	 */
-	if ((WC->CurRoom.view != VIEW_BLOG) || (is_top_level_post == 1)) {
+	if ( (WC->CurRoom.view != VIEW_BLOG) || (is_top_level_post == 1) ) {
 		wc_printf("<item>");
 		wc_printf("<link>%s/readfwd?go=", ChrPtr(site_prefix));
 		urlescputs(ChrPtr(WC->CurRoom.name));
@@ -75,15 +73,15 @@ void feed_rss_one_message(long msgnum) {
 			wc_printf("?start_reading_at=%ld", msgnum);
 		}
 		wc_printf("</link>");
-
+	
 		BufPtr = NULL;
 		in_body = 0;
 		in_messagetext = 0;
-		while (StrBufSipLine(Line, ServerResponse, &BufPtr), ((BufPtr != StrBufNOTNULL) && (BufPtr != NULL))) {
+		while (StrBufSipLine(Line, ServerResponse, &BufPtr), ((BufPtr!=StrBufNOTNULL)&&(BufPtr!=NULL)) ) {
 			safestrncpy(buf, ChrPtr(Line), sizeof buf);
 
 			/* XML parsers can be picky; strip out nonprintable header characters */
-			if ((strlen(buf) >= 6) && (buf[4] == '=')) {
+			if ((strlen(buf)>=6) && (buf[4]=='=')) {
 				char *p = &buf[5];
 				while (*p) {
 					if (!isprint(*p)) {
@@ -125,17 +123,18 @@ void feed_rss_one_message(long msgnum) {
 				}
 				if (!found_guid) {
 					wc_printf("<guid isPermaLink=\"false\">%ld@%s</guid>",
-						  msgnum, ChrPtr(WC->serv_info->serv_humannode)
-					    );
+						msgnum,
+						ChrPtr(WC->serv_info->serv_humannode)
+					);
 				}
 				wc_printf("<description>");
 				in_body = 1;
 				messagetext = NewStrBuf();
 			}
 		}
-
+	
 		if (in_body) {
-			cdataout((char *) ChrPtr(messagetext));
+			cdataout((char*)ChrPtr(messagetext));
 			FreeStrBuf(&messagetext);
 			wc_printf("</description>");
 		}
@@ -164,12 +163,11 @@ void feed_rss_do_messages(void) {
 	Stat.lowest_found = (-1);
 	Stat.highest_found = (-1);
 	num_msgs = load_msg_ptrs("MSGS ALL", NULL, NULL, &Stat, NULL, NULL, NULL, NULL, 0);
-	if (num_msgs < 1)
-		return;
+	if (num_msgs < 1) return;
 
-	i = num_msgs;		/* convention is to feed newest-to-oldest */
+	i = num_msgs;					/* convention is to feed newest-to-oldest */
 	while (i > 0) {
-		Msg = GetMessagePtrAt(i - 1, WCC->summ);
+		Msg = GetMessagePtrAt(i-1, WCC->summ);
 		if (Msg != NULL) {
 			feed_rss_one_message(Msg->msgnum);
 		}
@@ -181,7 +179,8 @@ void feed_rss_do_messages(void) {
 /*
  * Output the room info file of the current room as a <description> for the channel
  */
-void feed_rss_do_room_info_as_description(void) {
+void feed_rss_do_room_info_as_description(void)
+{
 	wc_printf("<description>");
 	escputs(ChrPtr(WC->CurRoom.name));	/* FIXME use the output of RINF instead */
 	wc_printf("</description>\r\n");
@@ -196,11 +195,18 @@ void feed_rss(void) {
 
 	output_headers(0, 0, 0, 0, 1, 0);
 	hprintf("Content-type: text/xml; charset=utf-8\r\n");
-	hprintf("Server: %s / %s\r\n" "Connection: close\r\n", PACKAGE_STRING, ChrPtr(WC->serv_info->serv_software)
-	    );
+	hprintf(
+		"Server: %s / %s\r\n"
+		"Connection: close\r\n"
+	,
+		PACKAGE_STRING, ChrPtr(WC->serv_info->serv_software)
+	);
 	begin_burst();
 
-	wc_printf("<?xml version=\"1.0\"?>" "<rss version=\"2.0\">" "<channel>");
+	wc_printf("<?xml version=\"1.0\"?>"
+		"<rss version=\"2.0\">"
+		"<channel>"
+	);
 
 	wc_printf("<title>");
 	escputs(ChrPtr(WC->CurRoom.name));
@@ -234,7 +240,10 @@ void feed_rss(void) {
 	feed_rss_do_room_info_as_description();
 	feed_rss_do_messages();
 
-	wc_printf("</channel>" "</rss>" "\r\n\r\n");
+	wc_printf("</channel>"
+		"</rss>"
+		"\r\n\r\n"
+	);
 
 	wDumpContent(0);
 }
@@ -243,20 +252,25 @@ void feed_rss(void) {
 /*
  * Offer the RSS feed meta tag for this room
  */
-void tmplput_rssmeta(StrBuf * Target, WCTemplputParams * TP) {
+void tmplput_rssmeta(StrBuf *Target, WCTemplputParams *TP) 
+{
 	wcsession *WCC = WC;
 	char feed_link[1024];
 
 	strcpy(feed_link, "/feed_rss?go=");
-	urlesc(&feed_link[20], sizeof(feed_link) - 20, (char *) ChrPtr(WCC->CurRoom.name));
-	StrBufAppendPrintf(Target, "<link rel=\"alternate\" title=\"RSS\" href=\"%s\" type=\"application/rss+xml\">", feed_link);
+	urlesc(&feed_link[20], sizeof(feed_link) - 20, (char *)ChrPtr(WCC->CurRoom.name) );
+	StrBufAppendPrintf(Target,
+		"<link rel=\"alternate\" title=\"RSS\" href=\"%s\" type=\"application/rss+xml\">",
+		feed_link
+	);
 }
 
 
 /*
  * Offer the RSS feed button for this room
  */
-void tmplput_rssbutton(StrBuf * Target, WCTemplputParams * TP) {
+void tmplput_rssbutton(StrBuf *Target, WCTemplputParams *TP) 
+{
 	StrBuf *FeedLink = NULL;
 
 	FeedLink = NewStrBufPlain(HKEY("/feed_rss?go="));
@@ -270,8 +284,11 @@ void tmplput_rssbutton(StrBuf * Target, WCTemplputParams * TP) {
 }
 
 
-void InitModule_RSS(void) {
-	WebcitAddUrlHandler(HKEY("feed_rss"), "", 0, feed_rss, ANONYMOUS | COOKIEUNNEEDED);
+void 
+InitModule_RSS
+(void)
+{
+	WebcitAddUrlHandler(HKEY("feed_rss"), "", 0, feed_rss, ANONYMOUS|COOKIEUNNEEDED);
 	RegisterNamespace("THISROOM:FEED:RSS", 0, 0, tmplput_rssbutton, NULL, CTX_NONE);
 	RegisterNamespace("THISROOM:FEED:RSSMETA", 0, 0, tmplput_rssmeta, NULL, CTX_NONE);
 }

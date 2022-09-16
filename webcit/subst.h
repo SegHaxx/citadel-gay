@@ -1,4 +1,3 @@
-
 /*
  * Copyright (c) 1996-2013 by the citadel.org team
  *
@@ -39,12 +38,12 @@ extern HashList *LocalTemplateCache;
  * \brief Values for wcs_type
  */
 enum {
-	WCS_STRING,		/* its a string */
-	WCS_FUNCTION,		/* its a function callback */
-	WCS_SERVCMD,		/* its a command to send to the citadel server */
-	WCS_STRBUF,		/* its a strbuf we own */
-	WCS_STRBUF_REF,		/* its a strbuf we mustn't free */
-	WCS_LONG		/* its an integer */
+	WCS_STRING,       /* its a string */
+	WCS_FUNCTION,     /* its a function callback */
+	WCS_SERVCMD,      /* its a command to send to the citadel server */
+	WCS_STRBUF,       /* its a strbuf we own */
+	WCS_STRBUF_REF,   /* its a strbuf we mustn't free */
+	WCS_LONG          /* its an integer */
 };
 
 #define CTX_NONE 0
@@ -56,7 +55,7 @@ typedef struct __CtxTypeStruct {
 } CtxTypeStruct;
 
 CtxTypeStruct *GetContextType(CtxType Type);
-void RegisterContextType(const char *name, long len, CtxType * TheCtx);
+void RegisterContextType(const char *name, long len, CtxType *TheCtx);
 #define RegisterCTX(a) RegisterContextType(#a, sizeof(#a) - 1, &a)
 
 extern CtxType CTX_STRBUF;
@@ -71,9 +70,9 @@ extern CtxType CTX_LONGVECTOR;
  * if not, we will log/print an error and refuse to call it.
  */
 typedef struct _contexts {
-	CtxType ContextType;	/* do we require a User Context ? */
-	int nMinArgs;		/* How many arguments do we need at least? */
-	int nMaxArgs;		/* up to how many arguments can we handle? */
+	CtxType ContextType;                /* do we require a User Context ? */
+	int nMinArgs;                   /* How many arguments do we need at least? */
+	int nMaxArgs;                   /* up to how many arguments can we handle? */
 } ContextFilter;
 
 
@@ -82,15 +81,15 @@ typedef struct WCTemplateToken WCTemplateToken;
 typedef struct WCTemplputParams WCTemplputParams;
 
 /* this is the signature of a tmplput function */
-typedef void (*WCHandlerFunc)(StrBuf * Target, WCTemplputParams * TP);
+typedef void (*WCHandlerFunc)(StrBuf *Target, WCTemplputParams *TP);
 
-/* if you want to pre-evaluate parts of your token, or do additional syntax, use this. */
-typedef int (*WCPreevalFunc)(WCTemplateToken * Token);
+/* if you want to pre-evaluate parts of your token, or do additional syntax, use this. */ 
+typedef int (*WCPreevalFunc)(WCTemplateToken *Token);
 
 /* make a template token a lookup key: */
 #define TKEY(a) TP->Tokens->Params[a]->Start, TP->Tokens->Params[a]->len
 
-void *GetContextPayload(WCTemplputParams * TP, CtxType ContextType);
+void *GetContextPayload(WCTemplputParams *TP, CtxType ContextType);
 #define CTX(a) GetContextPayload(TP, a)
 
 /**
@@ -98,16 +97,16 @@ void *GetContextPayload(WCTemplputParams * TP, CtxType ContextType);
  * this is the signature of a conditional function 
  * Note: Target is just passed in for error messages; don't write onto it in regular cases.
  */
-typedef int (*WCConditionalFunc)(StrBuf * Target, WCTemplputParams * TP);
+typedef int (*WCConditionalFunc)(StrBuf *Target, WCTemplputParams *TP);
 
 typedef enum _eBitMask {
 	eNO = 0,
 	eOR,
 	eAND
-} eBitMask;
+}eBitMask;
 
 typedef struct _TemplateParam {
-	/* are we a string or a number? */
+        /* are we a string or a number? */
 	int Type;
 	/* string data: */
 	const char *Start;
@@ -121,10 +120,10 @@ typedef struct _TemplateParam {
 /**
  * @ingroup subst
  * Representation of a token; everything thats inbetween <? and >
- */
+ */ 
 struct WCTemplateToken {
-	/* Reference to the filename we're in to print error messages; not to be freed */
-	const StrBuf *FileName;
+        /* Reference to the filename we're in to print error messages; not to be freed */
+	const StrBuf *FileName; 
 	/* Raw copy of our original token; for error printing */
 	StrBuf *FlatToken;
 	/* Which line did the template parser pick us up in? For error printing */
@@ -165,7 +164,7 @@ struct WCTemplputParams {
 	WCTemplateToken *Tokens;
 	WCTemplputParams *Sub, *Super;
 	WCConditionalFunc ExitCtx;
-	long ExitCTXID;
+        long ExitCTXID;
 };
 
 
@@ -178,10 +177,10 @@ typedef struct _ConditionalStruct {
 } ConditionalStruct;
 
 
-typedef void (*SubTemplFunc)(StrBuf * TemplBuffer, WCTemplputParams * TP);
-typedef HashList *(*RetrieveHashlistFunc)(StrBuf * Target, WCTemplputParams * TP);
-typedef void (*HashDestructorFunc)(HashList ** KillMe);
-typedef int (*FilterByParamFunc)(const char *key, long len, void *Context, StrBuf * Target, WCTemplputParams * TP);
+typedef void (*SubTemplFunc)(StrBuf *TemplBuffer, WCTemplputParams *TP);
+typedef HashList *(*RetrieveHashlistFunc)(StrBuf *Target, WCTemplputParams *TP);
+typedef void (*HashDestructorFunc) (HashList **KillMe);
+typedef int (*FilterByParamFunc)(const char* key, long len, void *Context, StrBuf *Target, WCTemplputParams *TP);
 
 extern WCTemplputParams NoCtx;
 
@@ -191,7 +190,6 @@ extern WCTemplputParams NoCtx;
 #define ERR_NAME 0
 #define ERR_PARM1 1
 #define ERR_PARM2 2
-
 /**
  * @ingroup subst
  * @brief log an error while evaluating a token; print it to the actual template 
@@ -199,10 +197,12 @@ extern WCTemplputParams NoCtx;
  * @param Type What sort of thing are we talking about? Tokens? Conditionals?
  * @param TP grab our set of default information here
  * @param Format for the custom error message
- */
-void LogTemplateError(StrBuf * Target,
-		      const char *Type,
-		      int ErrorPos, WCTemplputParams * TP, const char *Format, ...) __attribute__((__format__(__printf__, 5, 6)));
+ */ 
+void LogTemplateError (StrBuf *Target, 
+		       const char *Type, 
+		       int ErrorPos, 
+		       WCTemplputParams *TP, 
+		       const char *Format, ...)__attribute__((__format__(__printf__,5,6)));
 
 
 /**
@@ -211,8 +211,8 @@ void LogTemplateError(StrBuf * Target,
  * @param Target your Target Buffer to print the error message next to the log
  * @param Type What sort of thing are we talking about? Tokens? Conditionals?
  * @param Format for the custom error message
- */
-void LogError(StrBuf * Target, const char *Type, const char *Format, ...);
+ */ 
+void LogError (StrBuf *Target, const char *Type, const char *Format, ...);
 
 /**
  * @ingroup subst
@@ -228,13 +228,20 @@ void LogError(StrBuf * Target, const char *Type, const char *Format, ...);
  * @param Value reference to the string of the token; don't free me.
  * @param len the length of Value
  */
-void GetTemplateTokenString(StrBuf * Target, WCTemplputParams * TP, int N, const char **Value, long *len);
-
+void GetTemplateTokenString(StrBuf *Target, 
+			    WCTemplputParams *TP,
+			    int N,
+			    const char **Value, 
+			    long *len);
 /**
  * @ingroup subst
  * @return whether @ref GetTemplateTokenString would be able to give you a string
  */
-int HaveTemplateTokenString(StrBuf * Target, WCTemplputParams * TP, int N, const char **Value, long *len);
+int HaveTemplateTokenString(StrBuf *Target, 
+			    WCTemplputParams *TP,
+			    int N,
+			    const char **Value, 
+			    long *len);
 
 
 
@@ -252,7 +259,9 @@ int HaveTemplateTokenString(StrBuf * Target, WCTemplputParams * TP, int N, const
  * @param dflt default value to be retrieved if not found in preferences
  * \returns the long value
  */
-long GetTemplateTokenNumber(StrBuf * Target, WCTemplputParams * TP, int N, long dflt);
+long GetTemplateTokenNumber(StrBuf *Target, 
+			    WCTemplputParams *TP, 
+			    int N, long dflt);
 
 /**
  * @brief put a token value into the template
@@ -267,13 +276,18 @@ long GetTemplateTokenNumber(StrBuf * Target, WCTemplputParams * TP, int N, long 
  * @param FormatTypeIndex which parameter contains the escaping functionality?
  *        if this token doesn't have as much parameters, plain append is done.
  */
-void StrBufAppendTemplate(StrBuf * Target, WCTemplputParams * TP, const StrBuf * Source, int FormatTypeIndex);
+void StrBufAppendTemplate(StrBuf *Target, 
+			  WCTemplputParams *TP,
+			  const StrBuf *Source, 
+			  int FormatTypeIndex);
 
-void StrBufAppendTemplateStr(StrBuf * Target, WCTemplputParams * TP, const char *Source, int FormatTypeIndex);
+void StrBufAppendTemplateStr(StrBuf *Target, 
+			     WCTemplputParams *TP,
+			     const char *Source, 
+			     int FormatTypeIndex);
 
 
 #define RegisterNamespace(a, b, c, d, e, f) RegisterNS(a, sizeof(a)-1, b, c, d, e, f)
-
 /**
  * @ingroup subst
  * @brief register a template token handler
@@ -285,8 +299,12 @@ void StrBufAppendTemplateStr(StrBuf * Target, WCTemplputParams * TP, const char 
  *        syntax checks here or pre-evaluate stuff for better performance
  * @param ContextRequired if your token requires a specific context, else say CTX_NONE here.
  */
-void RegisterNS(const char *NSName, long len,
-		int nMinArgs, int nMaxArgs, WCHandlerFunc HandlerFunc, WCPreevalFunc PreEvalFunc, int ContextRequired);
+void RegisterNS(const char *NSName, long len, 
+		int nMinArgs, 
+		int nMaxArgs, 
+		WCHandlerFunc HandlerFunc,
+		WCPreevalFunc PreEvalFunc,
+		int ContextRequired);
 
 /**
  * @ingroup subst
@@ -300,8 +318,11 @@ void RegisterNS(const char *NSName, long len,
  * @param ExitCtxCond if non-NULL, will be called after the area of the conditional is left behind.
  * @param ContextRequired if your token requires a specific context, else say CTX_NONE here.
  */
-void RegisterContextConditional(const char *Name, long len,
-				int nParams, WCConditionalFunc CondF, WCConditionalFunc ExitCtxCond, int ContextRequired);
+void RegisterContextConditional(const char *Name, long len, 
+				int nParams,
+				WCConditionalFunc CondF, 
+				WCConditionalFunc ExitCtxCond,
+				int ContextRequired);
 
 #define RegisterCtxConditional(Name, nParams, CondF, ExitCtxCond, ContextRequired) \
 	RegisterContextConditional(Name, sizeof(Name) -1, nParams, CondF, ExitCtxCond, ContextRequired)
@@ -320,8 +341,8 @@ void RegisterContextConditional(const char *Name, long len,
  * @param len length of Name
  * @param Value the value to associate with Name
  */
-void RegisterTokenParamDefine(const char *Name, long len, long Value);
-
+void RegisterTokenParamDefine(const char *Name, long len, 
+			      long Value);
 /**
  * teh r0x0r! forward your favourite define from C to the templates with one easy call!
  */
@@ -334,52 +355,63 @@ void RegisterTokenParamDefine(const char *Name, long len, long Value);
  * @param len length of Name
  * @param Value the value to return if not found
  */
-long GetTokenDefine(const char *Name, long len, long DefValue);
+long GetTokenDefine(const char *Name, 
+		    long len, 
+		    long DefValue);
 
 
 #define IT_NOFLAG 0
 #define IT_FLAG_DETECT_GROUPCHANGE (1<<0)
-#define IT_ADDT_PARAM(n) 5 + n	/* If you have AdditionalParams, use this macro to fetch them. */
+#define IT_ADDT_PARAM(n) 5 + n /* If you have AdditionalParams, use this macro to fetch them. */
 #define RegisterIterator(a, b, c, d, e, f, g, h, i) RegisterITERATOR(a, sizeof(a)-1, b, c, d, e, f, NULL, g, h, i)
 #define RegisterFilteredIterator(a, b, c, d, e, f, g, h, i, j) RegisterITERATOR(a, sizeof(a)-1, b, c, d, e, f, g, h, i, j)
-void RegisterITERATOR(const char *Name, long len,	/* Our identifier */
-		      int AdditionalParams,	/* do we use more parameters? */
-		      HashList * StaticList,	/* pointer to webcit lifetime hashlists */
-		      RetrieveHashlistFunc GetHash,	/* else retrieve the hashlist by calling this function */
-		      SubTemplFunc DoSubTempl,	/* call this function on each iteration for svput & friends */
-		      HashDestructorFunc Destructor,	/* use this function to shut down the hash; NULL if its a reference */
-		      FilterByParamFunc Filter,	/* use this function if you want to skip items */
-		      CtxType ContextType,	/* which context do we provide to the subtemplate? */
-		      CtxType XPectContextType,	/* which context do we expct to be called in? */
+void RegisterITERATOR(const char *Name, long len, /* Our identifier */
+		      int AdditionalParams,       /* do we use more parameters? */
+		      HashList *StaticList,       /* pointer to webcit lifetime hashlists */
+		      RetrieveHashlistFunc GetHash, /* else retrieve the hashlist by calling this function */
+		      SubTemplFunc DoSubTempl,       /* call this function on each iteration for svput & friends */
+		      HashDestructorFunc Destructor, /* use this function to shut down the hash; NULL if its a reference */
+		      FilterByParamFunc Filter,      /* use this function if you want to skip items */
+		      CtxType ContextType,               /* which context do we provide to the subtemplate? */
+		      CtxType XPectContextType,          /* which context do we expct to be called in? */
 		      int Flags);
 
 
 
-void StackDynamicContext(WCTemplputParams * Super,
-			 WCTemplputParams * Sub,
+void StackDynamicContext(WCTemplputParams *Super, 
+			 WCTemplputParams *Sub, 
 			 void *Context,
-			 CtxType ContextType, int nArgs, WCTemplateToken * Tokens, WCConditionalFunc ExitCtx, long ExitCTXID);
+			 CtxType ContextType,
+			 int nArgs,
+			 WCTemplateToken *Tokens, 
+			 WCConditionalFunc ExitCtx,
+			 long ExitCTXID);
 
 #define StackContext(Super, Sub, Context, ContextType, nArgs, Tokens) \
 	StackDynamicContext(Super, Sub, Context, ContextType, nArgs, Tokens, NULL, 0)
 
 
-void UnStackContext(WCTemplputParams * Sub);
+void UnStackContext(WCTemplputParams *Sub);
 
 
 
-CompareFunc RetrieveSort(WCTemplputParams * TP,
-			 const char *OtherPrefix, long OtherPrefixLen, const char *Default, long ldefault, long DefaultDirection);
-void RegisterSortFunc(const char *name, long len,
+CompareFunc RetrieveSort(WCTemplputParams *TP, 
+			 const char *OtherPrefix, long OtherPrefixLen,  
+			 const char *Default, long ldefault, 
+			 long DefaultDirection);
+void RegisterSortFunc(const char *name, long len, 
 		      const char *prepend, long preplen,
-		      CompareFunc Forward, CompareFunc Reverse, CompareFunc GroupChange, CtxType ContextType);
+		      CompareFunc Forward, 
+		      CompareFunc Reverse, 
+		      CompareFunc GroupChange, 
+		      CtxType ContextType);
 
 void dbg_print_longvector(long *LongVector);
 
 #define do_template(a) DoTemplate(a, sizeof(a) -1, NULL, &NoCtx)
-const StrBuf *DoTemplate(const char *templatename, long len, StrBuf * Target, WCTemplputParams * TP);
+const StrBuf *DoTemplate(const char *templatename, long len, StrBuf *Target, WCTemplputParams *TP);
 void url_do_template(void);
 
 
-int CompareSubstToToken(TemplateParam * ParamToCompare, TemplateParam * ParamToLookup);
-int CompareSubstToStrBuf(StrBuf * Compare, TemplateParam * ParamToLookup);
+int CompareSubstToToken(TemplateParam *ParamToCompare, TemplateParam *ParamToLookup);
+int CompareSubstToStrBuf(StrBuf *Compare, TemplateParam *ParamToLookup);

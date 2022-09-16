@@ -1,4 +1,3 @@
-
 /*
  * Lots of different room-related operations.
  *
@@ -17,48 +16,49 @@
 #include "webserver.h"
 
 ConstStr QRFlagList[] = {
-	{ HKEY(strof(QR_PERMANENT)) },
-	{ HKEY(strof(QR_INUSE)) },
-	{ HKEY(strof(QR_PRIVATE)) },
-	{ HKEY(strof(QR_PASSWORDED)) },
-	{ HKEY(strof(QR_GUESSNAME)) },
-	{ HKEY(strof(QR_DIRECTORY)) },
-	{ HKEY(strof(QR_UPLOAD)) },
-	{ HKEY(strof(QR_DOWNLOAD)) },
-	{ HKEY(strof(QR_VISDIR)) },
-	{ HKEY(strof(QR_ANONONLY)) },
-	{ HKEY(strof(QR_ANONOPT)) },
-	{ HKEY(strof(QR_NETWORK)) },
-	{ HKEY(strof(QR_PREFONLY)) },
-	{ HKEY(strof(QR_READONLY)) },
-	{ HKEY(strof(QR_MAILBOX)) }
+	{HKEY(strof(QR_PERMANENT))},
+	{HKEY(strof(QR_INUSE))},
+	{HKEY(strof(QR_PRIVATE))},
+	{HKEY(strof(QR_PASSWORDED))},
+	{HKEY(strof(QR_GUESSNAME))},
+	{HKEY(strof(QR_DIRECTORY))},
+	{HKEY(strof(QR_UPLOAD))},
+	{HKEY(strof(QR_DOWNLOAD))},
+	{HKEY(strof(QR_VISDIR))},
+	{HKEY(strof(QR_ANONONLY))},
+	{HKEY(strof(QR_ANONOPT))},
+	{HKEY(strof(QR_NETWORK))},
+	{HKEY(strof(QR_PREFONLY))},
+	{HKEY(strof(QR_READONLY))},
+	{HKEY(strof(QR_MAILBOX))}
 };
-
 ConstStr QR2FlagList[] = {
-	{ HKEY(strof(QR2_SYSTEM)) },
-	{ HKEY(strof(QR2_SELFLIST)) },
-	{ HKEY(strof(QR2_COLLABDEL)) },
-	{ HKEY(strof(QR2_SUBJECTREQ)) },
-	{ HKEY(strof(QR2_SMTP_PUBLIC)) },
-	{ HKEY(strof(QR2_MODERATED)) },
-	{ HKEY(strof(QR2_NOUPLMSG)) },
-	{ HKEY("") },
-	{ HKEY("") },
-	{ HKEY("") },
-	{ HKEY("") },
-	{ HKEY("") },
-	{ HKEY("") },
-	{ HKEY("") },
-	{ HKEY("") }
+	{HKEY(strof(QR2_SYSTEM))},
+	{HKEY(strof(QR2_SELFLIST))},
+	{HKEY(strof(QR2_COLLABDEL))},
+	{HKEY(strof(QR2_SUBJECTREQ))},
+	{HKEY(strof(QR2_SMTP_PUBLIC))},
+	{HKEY(strof(QR2_MODERATED))},
+	{HKEY(strof(QR2_NOUPLMSG))}, 
+	{HKEY("")}, 
+	{HKEY("")}, 
+	{HKEY("")}, 
+	{HKEY("")}, 
+	{HKEY("")}, 
+	{HKEY("")}, 
+	{HKEY("")}, 
+	{HKEY("")}
 };
 
-void _DBG_QR(long QR) {
+void _DBG_QR(long QR)
+{
 	int i = 1;
-	int j = 0;
+	int j=0;
 	StrBuf *QRVec;
 
 	QRVec = NewStrBufPlain(NULL, 256);
-	while (i != 0) {
+	while (i != 0)
+	{
 		if ((QR & i) != 0) {
 			if (StrLength(QRVec) > 0)
 				StrBufAppendBufPlain(QRVec, HKEY(" | "), 0);
@@ -73,13 +73,15 @@ void _DBG_QR(long QR) {
 
 
 
-void _DBG_QR2(long QR2) {
+void _DBG_QR2(long QR2)
+{
 	int i = 1;
-	int j = 0;
+	int j=0;
 	StrBuf *QR2Vec;
 
 	QR2Vec = NewStrBufPlain(NULL, 256);
-	while (i != 0) {
+	while (i != 0)
+	{
 		if ((QR2 & i) != 0) {
 			if (StrLength(QR2Vec) > 0)
 				StrBufAppendBufPlain(QR2Vec, HKEY(" | "), 0);
@@ -125,7 +127,7 @@ void dotgoto(void) {
 /*
  * goto next room
  */
-void smart_goto(const StrBuf * next_room) {
+void smart_goto(const StrBuf *next_room) {
 	if (gotoroom(next_room) / 100 == 2)
 		readloop(readnew, eUseDefault);
 	else
@@ -135,7 +137,8 @@ void smart_goto(const StrBuf * next_room) {
 /*
  * goto a private room
  */
-void goto_private(void) {
+void goto_private(void)
+{
 	char hold_rm[SIZ];
 	StrBuf *Buf;
 	const StrBuf *gr_name;
@@ -148,9 +151,11 @@ void goto_private(void) {
 	gr_name = sbstr("gr_name");
 	Buf = NewStrBuf();
 	strcpy(hold_rm, ChrPtr(WC->CurRoom.name));
-	serv_printf("GOTO %s|%s", ChrPtr(gr_name), bstr("gr_pass"));
+	serv_printf("GOTO %s|%s",
+		    ChrPtr(gr_name),
+		    bstr("gr_pass"));
 	StrBuf_ServGetln(Buf);
-	if (GetServerStatus(Buf, &err) == 2) {
+	if  (GetServerStatus(Buf, &err) == 2) {
 		FlushRoomlist();
 		smart_goto(gr_name);
 		FreeStrBuf(&Buf);
@@ -162,7 +167,7 @@ void goto_private(void) {
 		return;
 	}
 	StrBufCutLeft(Buf, 4);
-	AppendImportantMessage(SKEY(Buf));
+	AppendImportantMessage (SKEY(Buf));
 	Buf = NewStrBufPlain(HKEY("_BASEROOM_"));
 	smart_goto(Buf);
 	FreeStrBuf(&Buf);
@@ -172,7 +177,8 @@ void goto_private(void) {
 /*
  * back end routine to take the session to a new room
  */
-long gotoroom(const StrBuf * gname) {
+long gotoroom(const StrBuf *gname)
+{
 	wcsession *WCC = WC;
 	StrBuf *Buf;
 	static long ls = (-1L);
@@ -206,7 +212,7 @@ long gotoroom(const StrBuf * gname) {
 		serv_printf("GOTO 00000000000000000000");
 	}
 	StrBuf_ServGetln(Buf);
-	if (GetServerStatus(Buf, &err) != 2) {
+	if  (GetServerStatus(Buf, &err) != 2) {
 		if (failvisibly) {
 			FreeStrBuf(&Buf);
 			return err;
@@ -239,7 +245,8 @@ long gotoroom(const StrBuf * gname) {
 
 
 
-void ParseGoto(folder * room, StrBuf * Line) {
+void ParseGoto(folder *room, StrBuf *Line)
+{
 	wcsession *WCC = WC;
 	const char *Pos;
 	int flag;
@@ -249,19 +256,20 @@ void ParseGoto(folder * room, StrBuf * Line) {
 	if (StrLength(Line) < 4) {
 		return;
 	}
-
+	
 	/* ignore the commandstate... */
 	Pos = ChrPtr(Line) + 4;
 
-	if (room->RoomNameParts != NULL) {
+	if (room->RoomNameParts != NULL)
+	{
 		int i;
-		for (i = 0; i < room->nRoomNameParts; i++)
+		for (i=0; i < room->nRoomNameParts; i++)
 			FreeStrBuf(&room->RoomNameParts[i]);
 		free(room->RoomNameParts);
 		room->RoomNameParts = NULL;
 	}
 
-	pBuf = room->name;
+	pBuf = room->name;  
 	if (pBuf == NULL)
 		pBuf = NewStrBufPlain(NULL, StrLength(Line));
 	else
@@ -271,14 +279,14 @@ void ParseGoto(folder * room, StrBuf * Line) {
 
 	StrBufExtract_NextToken(room->name, Line, &Pos, '|');
 
-	room->nNewMessages = StrBufExtractNext_long(Line, &Pos, '|');
+	room->nNewMessages = StrBufExtractNext_long(Line, &Pos, '|'); 
 	if (room->nNewMessages > 0)
 		room->RAFlags |= UA_HASNEWMSGS;
 
 	room->nTotalMessages = StrBufExtractNext_long(Line, &Pos, '|');
 
-	room->ShowInfo = StrBufExtractNext_long(Line, &Pos, '|');
-
+	room->ShowInfo =  StrBufExtractNext_long(Line, &Pos, '|');
+	
 	room->QRFlags = StrBufExtractNext_long(Line, &Pos, '|');
 
 	DBG_QR(room->QRFlags);
@@ -310,51 +318,62 @@ void ParseGoto(folder * room, StrBuf * Line) {
 
 	/* find out, whether we are in a sub-room */
 	room->nRoomNameParts = StrBufNum_tokens(room->name, '\\');
-	if (room->nRoomNameParts > 1) {
+	if (room->nRoomNameParts > 1)
+	{
 		int i;
-
+		
 		Pos = NULL;
-		room->RoomNameParts = malloc(sizeof(StrBuf *) * (room->nRoomNameParts + 1));
-		memset(room->RoomNameParts, 0, sizeof(StrBuf *) * (room->nRoomNameParts + 1));
-		for (i = 0; i < room->nRoomNameParts; i++) {
+		room->RoomNameParts = malloc(sizeof(StrBuf*) * (room->nRoomNameParts + 1));
+		memset(room->RoomNameParts, 0, sizeof(StrBuf*) * (room->nRoomNameParts + 1));
+		for (i=0; i < room->nRoomNameParts; i++)
+		{
 			room->RoomNameParts[i] = NewStrBuf();
-			StrBufExtract_NextToken(room->RoomNameParts[i], room->name, &Pos, '\\');
+			StrBufExtract_NextToken(room->RoomNameParts[i],
+						room->name, &Pos, '\\');
 		}
 	}
 
 	/* Private mailboxes on the main floor get remapped to the personal folder */
-	if ((room->QRFlags & QR_MAILBOX) && (room->floorid == 0)) {
+	if ((room->QRFlags & QR_MAILBOX) && 
+	    (room->floorid == 0))
+	{
 		room->floorid = VIRTUAL_MY_FLOOR;
-		if ((room->nRoomNameParts == 1) && (StrLength(room->name) == 4) && (strcmp(ChrPtr(room->name), "Mail") == 0)) {
+		if ((room->nRoomNameParts == 1) && 
+		    (StrLength(room->name) == 4) && 
+		    (strcmp(ChrPtr(room->name), "Mail") == 0))
+		{
 			room->is_inbox = 1;
 		}
-
+		
 	}
 	/* get a pointer to the floor we're on: */
 	if (WCC->Floors == NULL)
 		GetFloorListHash(NULL, NULL);
 
 	GetHash(WCC->Floors, IKEY(room->floorid), &vFloor);
-	room->Floor = (const Floor *) vFloor;
+	room->Floor = (const Floor*) vFloor;
 }
 
 /*
  * Delete the current room
  */
-void delete_room(void) {
+void delete_room(void)
+{
 	StrBuf *Line = NewStrBuf();
 	const StrBuf *GoBstr;
-
+	
 	GoBstr = sbstr("go");
 
-	if (GoBstr != NULL) {
-		if (gotoroom(GoBstr) == 200) {
+	if (GoBstr != NULL)
+	{
+		if (gotoroom(GoBstr) == 200)
+		{
 			serv_puts("KILL 1");
 			StrBuf_ServGetln(Line);
 			if (GetServerStatusMsg(Line, NULL, 1, 2) == 2) {
 				StrBuf *Buf;
-
-				FlushRoomlist();
+				
+				FlushRoomlist ();
 				Buf = NewStrBufPlain(HKEY("_BASEROOM_"));
 				smart_goto(Buf);
 				FreeStrBuf(&Buf);
@@ -370,7 +389,8 @@ void delete_room(void) {
 /*
  * zap a room
  */
-void zap(void) {
+void zap(void)
+{
 	char buf[SIZ];
 	StrBuf *final_destination;
 
@@ -391,7 +411,7 @@ void zap(void) {
 				StrBufAppendBufPlain(final_destination, HKEY("_BASEROOM_"), 0);
 			}
 		}
-		FlushRoomlist();
+		FlushRoomlist ();
 	}
 	smart_goto(final_destination);
 	FreeStrBuf(&final_destination);
@@ -401,7 +421,8 @@ void zap(void) {
 /*
  * mark all messages in current room as having been read
  */
-void slrp_highest(void) {
+void slrp_highest(void)
+{
 	char buf[256];
 
 	serv_puts("SLRP HIGHEST");
@@ -429,10 +450,11 @@ void slrp_highest(void) {
 
 
 
-void LoadRoomAide(void) {
+void LoadRoomAide(void)
+{
 	wcsession *WCC = WC;
 	StrBuf *Buf;
-
+	
 	if (WCC->CurRoom.RoomAideLoaded)
 		return;
 
@@ -442,29 +464,30 @@ void LoadRoomAide(void) {
 	StrBuf_ServGetln(Buf);
 	if (GetServerStatus(Buf, NULL) != 2) {
 		FlushStrBuf(WCC->CurRoom.RoomAide);
-		AppendImportantMessage(ChrPtr(Buf) + 4, StrLength(Buf) - 4);
-	}
-	else {
+		AppendImportantMessage (ChrPtr(Buf) + 4, 
+					StrLength(Buf) - 4);
+	} else {
 		const char *Pos;
 
 		Pos = ChrPtr(Buf) + 4;
 
 		FreeStrBuf(&WCC->CurRoom.RoomAide);
-		WCC->CurRoom.RoomAide = NewStrBufPlain(NULL, StrLength(Buf));
+		WCC->CurRoom.RoomAide = NewStrBufPlain (NULL, StrLength (Buf));
 
-		StrBufExtract_NextToken(WCC->CurRoom.RoomAide, Buf, &Pos, '|');
+		StrBufExtract_NextToken(WCC->CurRoom.RoomAide, Buf, &Pos, '|'); 
 	}
-	FreeStrBuf(&Buf);
+	FreeStrBuf (&Buf);
 }
 
-int SaveRoomAide(folder * Room) {
+int SaveRoomAide(folder *Room)
+{
 	StrBuf *Buf;
-	Buf = NewStrBuf();
+	Buf = NewStrBuf ();
 	serv_printf("SETA %s", ChrPtr(Room->RoomAide));
 	StrBuf_ServGetln(Buf);
 	if (GetServerStatus(Buf, NULL) != 2) {
 		StrBufCutLeft(Buf, 4);
-		AppendImportantMessage(SKEY(Buf));
+		AppendImportantMessage (SKEY(Buf));
 		FreeStrBuf(&Buf);
 		return 0;
 	}
@@ -473,7 +496,8 @@ int SaveRoomAide(folder * Room) {
 }
 
 
-int GetCurrentRoomFlags(folder * Room, int CareForStatusMessage) {
+int GetCurrentRoomFlags(folder *Room, int CareForStatusMessage)
+{
 	StrBuf *Buf;
 
 	Buf = NewStrBuf();
@@ -484,12 +508,11 @@ int GetCurrentRoomFlags(folder * Room, int CareForStatusMessage) {
 		FlushStrBuf(Room->Directory);
 		StrBufCutLeft(Buf, 4);
 		if (CareForStatusMessage)
-			AppendImportantMessage(SKEY(Buf));
+			AppendImportantMessage (SKEY(Buf));
 		FreeStrBuf(&Buf);
 		Room->XALoaded = 2;
 		return 0;
-	}
-	else {
+	} else {
 		const char *Pos;
 
 		Pos = ChrPtr(Buf) + 4;
@@ -497,29 +520,30 @@ int GetCurrentRoomFlags(folder * Room, int CareForStatusMessage) {
 		FreeStrBuf(&Room->XAPass);
 		FreeStrBuf(&Room->Directory);
 
-		Room->XAPass = NewStrBufPlain(NULL, StrLength(Buf));
-		Room->Directory = NewStrBufPlain(NULL, StrLength(Buf));
+		Room->XAPass = NewStrBufPlain (NULL, StrLength (Buf));
+		Room->Directory = NewStrBufPlain (NULL, StrLength (Buf));
 
 		FreeStrBuf(&Room->name);
 		Room->name = NewStrBufPlain(NULL, StrLength(Buf));
-		StrBufExtract_NextToken(Room->name, Buf, &Pos, '|');
-
-		StrBufExtract_NextToken(Room->XAPass, Buf, &Pos, '|');
-		StrBufExtract_NextToken(Room->Directory, Buf, &Pos, '|');
-
+		StrBufExtract_NextToken(Room->name, Buf, &Pos, '|'); 
+					
+		StrBufExtract_NextToken(Room->XAPass, Buf, &Pos, '|'); 
+		StrBufExtract_NextToken(Room->Directory, Buf, &Pos, '|'); 
+		
 		Room->QRFlags = StrBufExtractNext_long(Buf, &Pos, '|');
 		Room->floorid = StrBufExtractNext_long(Buf, &Pos, '|');
 		Room->Order = StrBufExtractNext_long(Buf, &Pos, '|');
 		Room->defview = StrBufExtractNext_long(Buf, &Pos, '|');
 		Room->QRFlags2 = StrBufExtractNext_long(Buf, &Pos, '|');
-		FreeStrBuf(&Buf);
+		FreeStrBuf (&Buf);
 		Room->XALoaded = 1;
 		return 1;
 	}
 }
 
 
-int SetCurrentRoomFlags(folder * Room) {
+int SetCurrentRoomFlags(folder *Room)
+{
 	StrBuf *Buf;
 
 	Buf = NewStrBuf();
@@ -530,24 +554,29 @@ int SetCurrentRoomFlags(folder * Room) {
 		    ChrPtr(Room->name),
 		    ChrPtr(Room->XAPass),
 		    ChrPtr(Room->Directory),
-		    Room->QRFlags, Room->BumpUsers, Room->floorid, Room->Order, Room->defview, Room->QRFlags2);
+		    Room->QRFlags, 
+		    Room->BumpUsers,
+		    Room->floorid, 
+		    Room->Order,
+		    Room->defview,
+		    Room->QRFlags2);
 
 	StrBuf_ServGetln(Buf);
 	if (GetServerStatus(Buf, NULL) != 2) {
 		StrBufCutLeft(Buf, 4);
-		AppendImportantMessage(SKEY(Buf));
+		AppendImportantMessage (SKEY(Buf));
 		FreeStrBuf(&Buf);
 		return 0;
-	}
-	else {
+	} else {
 		FreeStrBuf(&Buf);
 		return 1;
 	}
 }
 
-void LoadRoomXA(void) {
+void LoadRoomXA (void)
+{
 	wcsession *WCC = WC;
-
+		
 	if (WCC->CurRoom.XALoaded > 0)
 		return;
 
@@ -555,11 +584,12 @@ void LoadRoomXA(void) {
 }
 
 
-void LoadXRoomPic(void) {
+void LoadXRoomPic(void)
+{
 	wcsession *WCC = WC;
 	StrBuf *Buf;
 	off_t bytes;
-
+	
 	if (WCC->CurRoom.XHaveRoomPicLoaded) {
 		return;
 	}
@@ -572,20 +602,20 @@ void LoadXRoomPic(void) {
 		StrBufCutLeft(Buf, 4);
 		bytes = StrBufExtract_long(Buf, 0, '|');
 		WCC->CurRoom.XHaveRoomPic = 1;
-		StrBuf_ServGetBLOBBuffered(Buf, bytes);	// discard the data
-	}
-	else {
+		StrBuf_ServGetBLOBBuffered(Buf, bytes);		// discard the data
+	} else {
 		WCC->CurRoom.XHaveRoomPic = 0;
 	}
-	FreeStrBuf(&Buf);
+	FreeStrBuf (&Buf);
 }
 
 
-void LoadXRoomInfoText(void) {
+void LoadXRoomInfoText(void)
+{
 	wcsession *WCC = WC;
 	StrBuf *Buf;
 	int Done = 0;
-
+	
 	if (WCC->CurRoom.XHaveInfoTextLoaded) {
 		return;
 	}
@@ -597,12 +627,13 @@ void LoadXRoomInfoText(void) {
 
 	StrBuf_ServGetln(Buf);
 	if (GetServerStatus(Buf, NULL) == 1) {
-		WCC->CurRoom.XInfoText = NewStrBuf();
-
-		while (!Done && StrBuf_ServGetln(Buf) >= 0) {
-			if ((StrLength(Buf) == 3) && !strcmp(ChrPtr(Buf), "000"))
+		WCC->CurRoom.XInfoText = NewStrBuf ();
+		
+		while (!Done && StrBuf_ServGetln(Buf)>=0) {
+			if ( (StrLength(Buf)==3) && 
+			     !strcmp(ChrPtr(Buf), "000")) 
 				Done = 1;
-			else
+			else 
 				StrBufAppendBuf(WCC->CurRoom.XInfoText, Buf, 0);
 		}
 	}
@@ -611,11 +642,12 @@ void LoadXRoomInfoText(void) {
 }
 
 
-void LoadXRoomXCountFiles(void) {
+void LoadXRoomXCountFiles(void)
+{
 	wcsession *WCC = WC;
 	StrBuf *Buf;
 	int Done = 0;
-
+	
 	if (WCC->CurRoom.XHaveDownloadCount)
 		return;
 
@@ -625,16 +657,17 @@ void LoadXRoomXCountFiles(void) {
 	serv_puts("RDIR");
 	StrBuf_ServGetln(Buf);
 	if (GetServerStatus(Buf, NULL) == 1) {
-
-		while (!Done && StrBuf_ServGetln(Buf) >= 0) {
-			if ((StrLength(Buf) == 3) && !strcmp(ChrPtr(Buf), "000"))
+		
+		while (!Done && StrBuf_ServGetln(Buf)>=0) {
+			if ( (StrLength(Buf)==3) && 
+			     !strcmp(ChrPtr(Buf), "000")) 
 				Done = 1;
-			else
+			else 
 				WCC->CurRoom.XDownloadCount++;
 		}
 	}
 
-	FreeStrBuf(&Buf);
+	FreeStrBuf (&Buf);
 }
 
 
@@ -644,31 +677,31 @@ void LoadXRoomXCountFiles(void) {
 void toggle_self_service(void) {
 	wcsession *WCC = WC;
 
-	if (GetCurrentRoomFlags(&WCC->CurRoom, 1) == 0)
+	if (GetCurrentRoomFlags (&WCC->CurRoom, 1) == 0)
 		return;
 
-	if (yesbstr("QR2_SelfList"))
+	if (yesbstr("QR2_SelfList")) 
 		WCC->CurRoom.QRFlags2 = WCC->CurRoom.QRFlags2 | QR2_SELFLIST;
-	else
+	else 
 		WCC->CurRoom.QRFlags2 = WCC->CurRoom.QRFlags2 & ~QR2_SELFLIST;
 
-	if (yesbstr("QR2_SMTP_PUBLIC"))
+	if (yesbstr("QR2_SMTP_PUBLIC")) 
 		WCC->CurRoom.QRFlags2 = WCC->CurRoom.QRFlags2 | QR2_SMTP_PUBLIC;
 	else
 		WCC->CurRoom.QRFlags2 = WCC->CurRoom.QRFlags2 & ~QR2_SMTP_PUBLIC;
 
-	if (yesbstr("QR2_Moderated"))
+	if (yesbstr("QR2_Moderated")) 
 		WCC->CurRoom.QRFlags2 = WCC->CurRoom.QRFlags2 | QR2_MODERATED;
 	else
 		WCC->CurRoom.QRFlags2 = WCC->CurRoom.QRFlags2 & ~QR2_MODERATED;
-	if (yesbstr("QR2_SubsOnly"))
+	if (yesbstr("QR2_SubsOnly")) 
 		WCC->CurRoom.QRFlags2 = WCC->CurRoom.QRFlags2 | QR2_SMTP_PUBLIC;
 	else
 		WCC->CurRoom.QRFlags2 = WCC->CurRoom.QRFlags2 & ~QR2_SMTP_PUBLIC;
 
-	SetCurrentRoomFlags(&WCC->CurRoom);
+	SetCurrentRoomFlags (&WCC->CurRoom);
 
-	output_headers(1, 1, 1, 0, 0, 0);
+	output_headers(1, 1, 1, 0, 0, 0);	
 	do_template("room_edit");
 	wDumpContent(1);
 }
@@ -678,7 +711,8 @@ void toggle_self_service(void) {
 /*
  * save new parameters for a room
  */
-void editroom(void) {
+void editroom(void)
+{
 	wcsession *WCC = WC;
 	const StrBuf *Ptr;
 	const StrBuf *er_name;
@@ -693,27 +727,27 @@ void editroom(void) {
 		putlbstr("success", 0);
 		AppendImportantMessage(_("Cancelled.  Changes were not saved."), -1);
 		if (templ != NULL) {
-			output_headers(1, 0, 0, 0, 0, 0);
+			output_headers(1, 0, 0, 0, 0, 0);	
 			DoTemplate(SKEY(templ), NULL, &NoCtx);
 			end_burst();
 		}
 		else {
-			output_headers(1, 1, 1, 0, 0, 0);
+			output_headers(1, 1, 1, 0, 0, 0);	
 			do_template("room_edit");
 			wDumpContent(1);
 		}
 		return;
 	}
 
-	if (GetCurrentRoomFlags(&WCC->CurRoom, 1) == 0) {
+	if (GetCurrentRoomFlags (&WCC->CurRoom, 1) == 0) {
 		putlbstr("success", 0);
 		if (templ != NULL) {
-			output_headers(1, 0, 0, 0, 0, 0);
+			output_headers(1, 0, 0, 0, 0, 0);	
 			DoTemplate(SKEY(templ), NULL, &NoCtx);
 			end_burst();
 		}
 		else {
-			output_headers(1, 1, 1, 0, 0, 0);
+			output_headers(1, 1, 1, 0, 0, 0);	
 			do_template("room_edit");
 			wDumpContent(1);
 		}
@@ -735,85 +769,73 @@ void editroom(void) {
 	}
 	if (!strcmp(ChrPtr(Ptr), "personal")) {
 		WCC->CurRoom.QRFlags |= QR_MAILBOX;
-	}
-	else {
+	} else {
 		WCC->CurRoom.QRFlags &= ~QR_MAILBOX;
 	}
 
 	if (yesbstr("prefonly")) {
 		WCC->CurRoom.QRFlags |= QR_PREFONLY;
-	}
-	else {
+	} else {
 		WCC->CurRoom.QRFlags &= ~QR_PREFONLY;
 	}
 
 	if (yesbstr("readonly")) {
 		WCC->CurRoom.QRFlags |= QR_READONLY;
-	}
-	else {
+	} else {
 		WCC->CurRoom.QRFlags &= ~QR_READONLY;
 	}
 
 	if (yesbstr("collabdel")) {
 		WCC->CurRoom.QRFlags2 |= QR2_COLLABDEL;
-	}
-	else {
+	} else {
 		WCC->CurRoom.QRFlags2 &= ~QR2_COLLABDEL;
 	}
 
 	if (yesbstr("permanent")) {
 		WCC->CurRoom.QRFlags |= QR_PERMANENT;
-	}
-	else {
+	} else {
 		WCC->CurRoom.QRFlags &= ~QR_PERMANENT;
 	}
 
 	if (yesbstr("subjectreq")) {
 		WCC->CurRoom.QRFlags2 |= QR2_SUBJECTREQ;
-	}
-	else {
+	} else {
 		WCC->CurRoom.QRFlags2 &= ~QR2_SUBJECTREQ;
 	}
 
 	if (yesbstr("network")) {
 		WCC->CurRoom.QRFlags |= QR_NETWORK;
-	}
-	else {
+	} else {
 		WCC->CurRoom.QRFlags &= ~QR_NETWORK;
 	}
 
 	if (yesbstr("directory")) {
 		WCC->CurRoom.QRFlags |= QR_DIRECTORY;
-	}
-	else {
+	} else {
 		WCC->CurRoom.QRFlags &= ~QR_DIRECTORY;
 	}
 
 	if (yesbstr("ulallowed")) {
 		WCC->CurRoom.QRFlags |= QR_UPLOAD;
-	}
-	else {
+	} else {
 		WCC->CurRoom.QRFlags &= ~QR_UPLOAD;
 	}
 
 	if (yesbstr("dlallowed")) {
 		WCC->CurRoom.QRFlags |= QR_DOWNLOAD;
-	}
-	else {
+	} else {
 		WCC->CurRoom.QRFlags &= ~QR_DOWNLOAD;
 	}
 
 	if (yesbstr("ulmsg")) {
 		WCC->CurRoom.QRFlags2 |= QR2_NOUPLMSG;
-	}
-	else {
+	} else {
 		WCC->CurRoom.QRFlags2 &= ~QR2_NOUPLMSG;
 	}
 
 	if (yesbstr("visdir")) {
 		WCC->CurRoom.QRFlags |= QR_VISDIR;
-	}
-	else {
+	} else {
 		WCC->CurRoom.QRFlags &= ~QR_VISDIR;
 	}
 
@@ -825,8 +847,8 @@ void editroom(void) {
 	if (!strcmp(ChrPtr(Ptr), "anon2"))
 		WCC->CurRoom.QRFlags |= QR_ANONOPT;
 
-	er_name = sbstr("er_name");
-	er_dirname = sbstr("er_dirname");
+	er_name     = sbstr("er_name");
+	er_dirname  = sbstr("er_dirname");
 	er_roomaide = sbstr("er_roomaide");
 	er_password = sbstr("er_password");
 
@@ -848,22 +870,22 @@ void editroom(void) {
 
 	succ1 = SetCurrentRoomFlags(&WCC->CurRoom);
 
-	succ2 = SaveRoomAide(&WCC->CurRoom);
-
+	succ2 = SaveRoomAide (&WCC->CurRoom);
+	
 	if (succ1 + succ2 == 0) {
 		putlbstr("success", 1);
-		AppendImportantMessage(_("Your changes have been saved."), -1);
+		AppendImportantMessage (_("Your changes have been saved."), -1);
 	}
 	else {
 		putlbstr("success", 0);
 	}
 	if (templ != NULL) {
-		output_headers(1, 0, 0, 0, 0, 0);
+		output_headers(1, 0, 0, 0, 0, 0);	
 		DoTemplate(SKEY(templ), NULL, &NoCtx);
 		end_burst();
 	}
 	else {
-		output_headers(1, 1, 1, 0, 0, 0);
+		output_headers(1, 1, 1, 0, 0, 0);	
 		do_template("room_edit");
 		wDumpContent(1);
 	}
@@ -875,14 +897,16 @@ void editroom(void) {
 /*
  * Display form for Invite, Kick, and show Who Knows a room
  */
-void do_invt_kick(void) {
+void do_invt_kick(void) 
+{
 	StrBuf *Buf, *User;
 	const StrBuf *UserNames;
 	int Kick, Invite;
 	wcsession *WCC = WC;
 
 
-	if (GetCurrentRoomFlags(&WCC->CurRoom, 1) == 1) {
+	if (GetCurrentRoomFlags(&WCC->CurRoom, 1) == 1)
+	{
 		const char *Pos;
 		UserNames = sbstr("username");
 		Kick = havebstr("kick_button");
@@ -890,46 +914,50 @@ void do_invt_kick(void) {
 
 		User = NewStrBufPlain(NULL, StrLength(UserNames));
 		Buf = NewStrBuf();
-
+		
 		Pos = ChrPtr(UserNames);
-		while (Pos != StrBufNOTNULL) {
+		while (Pos != StrBufNOTNULL)
+		{
 			StrBufExtract_NextToken(User, UserNames, &Pos, ',');
 			StrBufTrim(User);
-			if ((StrLength(User) > 0) && (Kick)) {
+			if ((StrLength(User) > 0) && (Kick))
+			{
 				serv_printf("KICK %s", ChrPtr(User));
 				if (StrBuf_ServGetln(Buf) < 0)
 					break;
 				if (GetServerStatus(Buf, NULL) != 2) {
 					StrBufCutLeft(Buf, 4);
 					AppendImportantMessage(SKEY(Buf));
-				}
-				else {
-					StrBufPrintf(Buf,
-						     _("User '%s' kicked out of room '%s'."),
-						     ChrPtr(User), ChrPtr(WCC->CurRoom.name)
-					    );
+				} else {
+					StrBufPrintf(Buf, 
+						     _("User '%s' kicked out of room '%s'."), 
+						     ChrPtr(User), 
+						     ChrPtr(WCC->CurRoom.name)
+						);
 					AppendImportantMessage(SKEY(Buf));
 				}
 			}
-			else if ((StrLength(User) > 0) && (Invite)) {
+			else if ((StrLength(User) > 0) && (Invite))
+			{
 				serv_printf("INVT %s", ChrPtr(User));
 				if (StrBuf_ServGetln(Buf) < 0)
 					break;
 				if (GetServerStatus(Buf, NULL) != 2) {
 					StrBufCutLeft(Buf, 4);
 					AppendImportantMessage(SKEY(Buf));
-				}
-				else {
-					StrBufPrintf(Buf,
-						     _("User '%s' invited to room '%s'."), ChrPtr(User), ChrPtr(WCC->CurRoom.name)
-					    );
+				} else {
+					StrBufPrintf(Buf, 
+						     _("User '%s' invited to room '%s'."), 
+						     ChrPtr(User), 
+						     ChrPtr(WCC->CurRoom.name)
+						);
 					AppendImportantMessage(SKEY(Buf));
 				}
 			}
-		}
-	}
+                }
+        }
 
-	output_headers(1, 1, 1, 0, 0, 0);
+	output_headers(1, 1, 1, 0, 0, 0);	
 	do_template("room_edit");
 	wDumpContent(1);
 }
@@ -938,7 +966,8 @@ void do_invt_kick(void) {
 /*
  * Create a new room
  */
-void entroom(void) {
+void entroom(void)
+{
 	StrBuf *Line;
 	const StrBuf *er_name;
 	const StrBuf *er_type;
@@ -954,7 +983,7 @@ void entroom(void) {
 		putlbstr("success", 0);
 		AppendImportantMessage(_("Cancelled.  No new room was created."), -1);
 		if (template != NULL) {
-			output_headers(1, 0, 0, 0, 0, 0);
+			output_headers(1, 0, 0, 0, 0, 0);	
 			DoTemplate(SKEY(template), NULL, &NoCtx);
 			end_burst();
 		}
@@ -979,7 +1008,13 @@ void entroom(void) {
 	else if (!strcmp(ChrPtr(er_type), "personal"))
 		er_num_type = 4;
 
-	serv_printf("CRE8 1|%s|%d|%s|%d|%d|%d", ChrPtr(er_name), er_num_type, ChrPtr(er_password), er_floor, 0, er_view);
+	serv_printf("CRE8 1|%s|%d|%s|%d|%d|%d", 
+		    ChrPtr(er_name), 
+		    er_num_type, 
+		    ChrPtr(er_password), 
+		    er_floor, 
+		    0, 
+		    er_view);
 
 	Line = NewStrBuf();
 	StrBuf_ServGetln(Line);
@@ -987,7 +1022,7 @@ void entroom(void) {
 		putlbstr("success", 0);
 		FreeStrBuf(&Line);
 		if (template != NULL) {
-			output_headers(1, 0, 0, 0, 0, 0);
+			output_headers(1, 0, 0, 0, 0, 0);	
 			DoTemplate(SKEY(template), NULL, &NoCtx);
 			end_burst();
 		}
@@ -996,27 +1031,25 @@ void entroom(void) {
 		}
 		return;
 	}
-
 	/** TODO: Room created, now update the left hand icon bar for this user */
 	gotoroom(er_name);
 
 	serv_printf("VIEW %d", er_view);
 	StrBuf_ServGetln(Line);
-	FreeStrBuf(&Line);	/* TODO: should we care about errors? */
+	FreeStrBuf(&Line); /* TODO: should we care about errors? */
 	WCC->CurRoom.view = er_view;
 
 	putlbstr("success", 1);
 	if (template != NULL) {
-		output_headers(1, 0, 0, 0, 0, 0);
+		output_headers(1, 0, 0, 0, 0, 0);	
 		DoTemplate(SKEY(template), NULL, &NoCtx);
 		end_burst();
 	}
-	else if ((WCC->CurRoom.RAFlags & UA_ADMINALLOWED) != 0) {
-		output_headers(1, 1, 1, 0, 0, 0);
+	else if ( (WCC->CurRoom.RAFlags & UA_ADMINALLOWED) != 0) {
+		output_headers(1, 1, 1, 0, 0, 0);	
 		do_template("room_edit");
 		wDumpContent(1);
-	}
-	else {
+	} else {
 		smart_goto(WCC->CurRoom.name);
 	}
 	FreeStrBuf(&Line);
@@ -1050,7 +1083,7 @@ void set_room_policy(void) {
 
 	if (!havebstr("ok_button")) {
 		AppendImportantMessage(_("Cancelled.  Changes were not saved."), -1);
-		output_headers(1, 1, 1, 0, 0, 0);
+		output_headers(1, 1, 1, 0, 0, 0);	
 		do_template("room_edit");
 		wDumpContent(1);
 		return;
@@ -1069,7 +1102,7 @@ void set_room_policy(void) {
 	FreeStrBuf(&Line);
 	ReloadCurrentRoom();
 
-	output_headers(1, 1, 1, 0, 0, 0);
+	output_headers(1, 1, 1, 0, 0, 0);	
 	do_template("room_edit");
 	wDumpContent(1);
 }
@@ -1095,8 +1128,8 @@ void netedit(void) {
 	int Done;
 
 	line[0] = '\0';
-	if (havebstr("force_room")) {
-		gotoroom(sbstr("force_room"));
+        if (havebstr("force_room")) {
+                gotoroom(sbstr("force_room"));
 	}
 	/*/ TODO: do line dynamic! */
 	if (havebstr("line_pop3host")) {
@@ -1107,9 +1140,9 @@ void netedit(void) {
 		strcat(line, "|");
 		strcat(line, bstr("line_pop3pass"));
 		strcat(line, "|");
-		strcat(line, ibstr("line_pop3keep") ? "1" : "0");
+		strcat(line, ibstr("line_pop3keep") ? "1" : "0" );
 		strcat(line, "|");
-		sprintf(&line[strlen(line)], "%ld", lbstr("line_pop3int"));
+		sprintf(&line[strlen(line)],"%ld", lbstr("line_pop3int"));
 		strcat(line, bstr("suffix"));
 	}
 	else if (havebstr("line")) {
@@ -1120,16 +1153,19 @@ void netedit(void) {
 	else if (havebstr("alias")) {
 		const char *domain;
 		domain = bstr("aliasdomain");
-		if ((domain == NULL) || IsEmptyStr(domain)) {
+		if ((domain == NULL) || IsEmptyStr(domain))
+		{
 			malias_set_default = 1;
 			strcpy(line, bstr("prefix"));
 			strcat(line, bstr("default_aliasdomain"));
 		}
-		else {
+		else
+		{
 			malias = 1;
 			sepchar = ',';
 			strcat(line, bstr("prefix"));
-			if (!IsEmptyStr(domain)) {
+			if (!IsEmptyStr(domain))
+			{
 				strcat(line, "@");
 				strcat(line, domain);
 			}
@@ -1139,7 +1175,7 @@ void netedit(void) {
 		}
 	}
 	else {
-		output_headers(1, 1, 1, 0, 0, 0);
+		output_headers(1, 1, 1, 0, 0, 0);	
 		do_template("room_edit");
 		wDumpContent(1);
 		return;
@@ -1148,14 +1184,14 @@ void netedit(void) {
 	Line = NewStrBuf();
 	TmpBuf = NewStrBuf();
 	if (malias)
-		serv_puts("GNET " FILE_MAILALIAS);
+		serv_puts("GNET "FILE_MAILALIAS);
 	else
 		serv_puts("GNET");
 	StrBuf_ServGetln(Line);
-	if (GetServerStatus(Line, NULL) != 1) {
-		AppendImportantMessage(SRV_STATUS_MSG(Line));
+	if  (GetServerStatus(Line, NULL) != 1) {
+		AppendImportantMessage(SRV_STATUS_MSG(Line));	
 		FreeStrBuf(&Line);
-		output_headers(1, 1, 1, 0, 0, 0);
+		output_headers(1, 1, 1, 0, 0, 0);	
 		do_template("room_edit");
 		wDumpContent(1);
 		return;
@@ -1165,24 +1201,31 @@ void netedit(void) {
 	Done = 0;
 	extract_token(cmpb0, line, 0, sepchar, sizeof cmpb0);
 	extract_token(cmpb1, line, 1, sepchar, sizeof cmpb1);
-	while (!Done && StrBuf_ServGetln(Line) >= 0) {
-		if ((StrLength(Line) == 3) && !strcmp(ChrPtr(Line), "000")) {
+	while (!Done && StrBuf_ServGetln(Line)>=0) {
+		if ( (StrLength(Line)==3) && 
+		     !strcmp(ChrPtr(Line), "000")) 
+		{
 			Done = 1;
 		}
-		else {
+		else
+		{
 			if (StrLength(Line) == 0)
 				continue;
 
-			if (malias_set_default) {
-				if (strncasecmp(ChrPtr(Line), HKEY("roommailalias|")) != 0) {
+			if (malias_set_default)
+			{
+				if (strncasecmp(ChrPtr(Line), HKEY("roommailalias|")) != 0)
+				{
 					StrBufAppendBufPlain(Line, HKEY("\n"), 0);
 					StrBufAppendBuf(TmpBuf, Line, 0);
 				}
 			}
-			else {
+			else
+			{
 				extract_token(cmpa0, ChrPtr(Line), 0, sepchar, sizeof cmpa0);
 				extract_token(cmpa1, ChrPtr(Line), 1, sepchar, sizeof cmpa1);
-				if ((strcasecmp(cmpa0, cmpb0)) || (strcasecmp(cmpa1, cmpb1))) {
+				if ( (strcasecmp(cmpa0, cmpb0)) || (strcasecmp(cmpa1, cmpb1)) )
+				{
 					StrBufAppendBufPlain(Line, HKEY("\n"), 0);
 					StrBufAppendBuf(TmpBuf, Line, 0);
 				}
@@ -1191,14 +1234,14 @@ void netedit(void) {
 	}
 
 	if (malias)
-		serv_puts("SNET " FILE_MAILALIAS);
+		serv_puts("SNET "FILE_MAILALIAS);
 	else
 		serv_puts("SNET");
 	StrBuf_ServGetln(Line);
-	if (GetServerStatus(Line, NULL) != 4) {
+	if  (GetServerStatus(Line, NULL) != 4) {
 
-		AppendImportantMessage(SRV_STATUS_MSG(Line));
-		output_headers(1, 1, 1, 0, 0, 0);
+		AppendImportantMessage(SRV_STATUS_MSG(Line));	
+		output_headers(1, 1, 1, 0, 0, 0);	
 		do_template("room_edit");
 		wDumpContent(1);
 		FreeStrBuf(&Line);
@@ -1217,7 +1260,7 @@ void netedit(void) {
 		}
 		else {
 			/* adding multiple addresses separated by commas */
-			for (i = 0; i < num_addrs; ++i) {
+			for (i=0; i<num_addrs; ++i) {
 				strcpy(line, bstr("prefix"));
 				extract_token(buf, bstr("line"), i, ',', sizeof buf);
 				striplt(buf);
@@ -1231,16 +1274,16 @@ void netedit(void) {
 	serv_puts("000");
 	serv_puts("NOOP");
 	StrBuf_ServGetln(Line);
-	if (GetServerStatus(Line, NULL) != 2) {	/* WHOOOPS? ERROR? */
-		AppendImportantMessage(SRV_STATUS_MSG(Line));
-		StrBuf_ServGetln(Line);	/* resync... */
+	if  (GetServerStatus(Line, NULL) != 2) { /* WHOOOPS? ERROR? */
+		AppendImportantMessage(SRV_STATUS_MSG(Line));	
+		StrBuf_ServGetln(Line); /* resync... */
 	}
 
 
 	FlushIgnetCfgs(&WC->CurRoom);
 	FreeStrBuf(&Line);
 
-	output_headers(1, 1, 1, 0, 0, 0);
+	output_headers(1, 1, 1, 0, 0, 0);	
 	do_template("room_edit");
 	wDumpContent(1);
 }
@@ -1248,9 +1291,10 @@ void netedit(void) {
 /*
  * Known rooms list (box style)
  */
-void knrooms(void) {
+void knrooms(void)
+{
 	DeleteHash(&WC->Rooms);
-	output_headers(1, 1, 1, 0, 0, 0);
+	output_headers(1, 1, 1, 0, 0, 0); 
 	do_template("knrooms");
 	wDumpContent(1);
 }
@@ -1285,20 +1329,20 @@ void delete_floor(void) {
 	int floornum;
 	StrBuf *Buf;
 	const char *Err;
-
+		
 	floornum = ibstr("floornum");
 	Buf = NewStrBuf();
 	serv_printf("KFLR %d|1", floornum);
-
+	
 	StrBufTCP_read_line(Buf, &WC->serv_sock, 0, &Err);
 
 	if (GetServerStatus(Buf, NULL) == 2) {
-		StrBufPlain(Buf, _("Floor has been deleted."), -1);
+		StrBufPlain(Buf, _("Floor has been deleted."),-1);
 	}
 	else {
 		StrBufCutLeft(Buf, 4);
 	}
-	AppendImportantMessage(SKEY(Buf));
+	AppendImportantMessage (SKEY(Buf));
 
 	FlushRoomlist();
 	http_transmit_thing(ChrPtr(do_template("floors")), 0);
@@ -1317,12 +1361,12 @@ void create_floor(void) {
 	StrBufTCP_read_line(Buf, &WC->serv_sock, 0, &Err);
 
 	if (GetServerStatus(Buf, NULL) == 2) {
-		StrBufPlain(Buf, _("New floor has been created."), -1);
+		StrBufPlain(Buf, _("New floor has been created."),-1);
 	}
 	else {
 		StrBufCutLeft(Buf, 4);
 	}
-	AppendImportantMessage(SKEY(Buf));
+	AppendImportantMessage (SKEY(Buf));
 	FlushRoomlist();
 	http_transmit_thing(ChrPtr(do_template("floors")), 0);
 	FreeStrBuf(&Buf);
@@ -1342,7 +1386,7 @@ void rename_floor(void) {
 	StrBuf_ServGetln(Buf);
 
 	StrBufCutLeft(Buf, 4);
-	AppendImportantMessage(SKEY(Buf));
+	AppendImportantMessage (SKEY(Buf));
 
 	http_transmit_thing(ChrPtr(do_template("floors")), 0);
 	FreeStrBuf(&Buf);
@@ -1350,7 +1394,8 @@ void rename_floor(void) {
 
 
 
-void jsonRoomFlr(void) {
+void jsonRoomFlr(void) 
+{
 	/* Send as our own (application/json) content type */
 	hprintf("HTTP/1.1 200 OK\r\n");
 	hprintf("Content-type: application/json; charset=utf-8\r\n");
@@ -1358,11 +1403,12 @@ void jsonRoomFlr(void) {
 	hprintf("Connection: close\r\n");
 	hprintf("Pragma: no-cache\r\nCache-Control: no-store\r\nExpires:-1\r\n");
 	begin_burst();
-	DoTemplate(HKEY("json_roomflr"), NULL, &NoCtx);
-	end_burst();
+	DoTemplate(HKEY("json_roomflr"),NULL,&NoCtx);
+	end_burst(); 
 }
 
-void _FlushRoomList(wcsession * WCC) {
+void _FlushRoomList(wcsession *WCC)
+{
 	free_march_list(WCC);
 	DeleteHash(&WCC->Floors);
 	DeleteHash(&WCC->Rooms);
@@ -1370,7 +1416,8 @@ void _FlushRoomList(wcsession * WCC) {
 	FlushFolder(&WCC->CurRoom);
 }
 
-void ReloadCurrentRoom(void) {
+void ReloadCurrentRoom(void)
+{
 	wcsession *WCC = WC;
 	StrBuf *CurRoom;
 
@@ -1381,15 +1428,22 @@ void ReloadCurrentRoom(void) {
 	FreeStrBuf(&CurRoom);
 }
 
-void FlushRoomlist(void) {
+void FlushRoomlist(void)
+{
 	wcsession *WCC = WC;
 	_FlushRoomList(WCC);
 }
 
 
-void InitModule_ROOMOPS(void) {
-	RegisterPreference("roomlistview", _("Room list view"), PRF_STRING, NULL);
-	RegisterPreference("emptyfloors", _("Show empty floors"), PRF_YESNO, NULL);
+void 
+InitModule_ROOMOPS
+(void)
+{
+	RegisterPreference("roomlistview",
+                           _("Room list view"),
+                           PRF_STRING,
+                           NULL);
+        RegisterPreference("emptyfloors", _("Show empty floors"), PRF_YESNO, NULL);
 
 	WebcitAddUrlHandler(HKEY("json_roomflr"), "", 0, jsonRoomFlr, 0);
 
@@ -1405,7 +1459,7 @@ void InitModule_ROOMOPS(void) {
 	WebcitAddUrlHandler(HKEY("zap"), "", 0, zap, 0);
 	WebcitAddUrlHandler(HKEY("entroom"), "", 0, entroom, 0);
 	WebcitAddUrlHandler(HKEY("do_invt_kick"), "", 0, do_invt_kick, 0);
-
+	
 	WebcitAddUrlHandler(HKEY("netedit"), "", 0, netedit, 0);
 	WebcitAddUrlHandler(HKEY("editroom"), "", 0, editroom, 0);
 	WebcitAddUrlHandler(HKEY("delete_room"), "", 0, delete_room, 0);
@@ -1463,12 +1517,12 @@ void InitModule_ROOMOPS(void) {
 	REGISTERTokenParamDefine(US_USER_SET);
 
 	REGISTERTokenParamDefine(VIEW_BBS);
-	REGISTERTokenParamDefine(VIEW_MAILBOX);
+	REGISTERTokenParamDefine(VIEW_MAILBOX);	
 	REGISTERTokenParamDefine(VIEW_ADDRESSBOOK);
-	REGISTERTokenParamDefine(VIEW_CALENDAR);
-	REGISTERTokenParamDefine(VIEW_TASKS);
-	REGISTERTokenParamDefine(VIEW_NOTES);
-	REGISTERTokenParamDefine(VIEW_WIKI);
+	REGISTERTokenParamDefine(VIEW_CALENDAR);	
+	REGISTERTokenParamDefine(VIEW_TASKS);	
+	REGISTERTokenParamDefine(VIEW_NOTES);		
+	REGISTERTokenParamDefine(VIEW_WIKI);		
 	REGISTERTokenParamDefine(VIEW_CALBRIEF);
 	REGISTERTokenParamDefine(VIEW_JOURNAL);
 	REGISTERTokenParamDefine(VIEW_BLOG);
@@ -1481,14 +1535,14 @@ void InitModule_ROOMOPS(void) {
 	REGISTERTokenParamDefine(lastsent);
 
 	REGISTERTokenParamDefine(ignet_push_share);
-	{			/* these are the parts of an IGNET push config */
+	{ /* these are the parts of an IGNET push config */
 		REGISTERTokenParamDefine(GNET_IGNET_NODE);
 		REGISTERTokenParamDefine(GNET_IGNET_ROOM);
 	}
 	REGISTERTokenParamDefine(listrecp);
 	REGISTERTokenParamDefine(digestrecp);
 	REGISTERTokenParamDefine(pop3client);
-	{			/* These are the parts of a pop3 client line... */
+	{ /* These are the parts of a pop3 client line... */
 		REGISTERTokenParamDefine(GNET_POP3_HOST);
 		REGISTERTokenParamDefine(GNET_POP3_USER);
 		REGISTERTokenParamDefine(GNET_POP3_DONT_DELETE_REMOTE);
@@ -1503,6 +1557,10 @@ void InitModule_ROOMOPS(void) {
 }
 
 
-void SessionDestroyModule_ROOMOPS(wcsession * sess) {
-	_FlushRoomList(sess);
+void 
+SessionDestroyModule_ROOMOPS
+(wcsession *sess)
+{
+	_FlushRoomList (sess);
 }
+
