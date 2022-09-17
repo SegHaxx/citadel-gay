@@ -1046,11 +1046,10 @@ void get_serv_info(CtdlIPC * ipc, char *supplied_hostname) {
 				/* Look up the , in the bible if you're confused */
 				(locate_host(ipc, buf), buf), buf);
 
-	/* Indicate to the server that we prefer to decode Base64 and
-	 * quoted-printable on the client side.
-	 */
+	// Indicate to the server that we prefer to decode Base64 and
+	// quoted-printable on the client side.
 	if ((CtdlIPCSpecifyPreferredFormats(ipc, buf, "dont_decode") / 100) != 2) {
-		scr_printf("ERROR: Extremely old server; MSG4 framework not supported.\n");
+		scr_printf("Error %s:%d", __FILE__ , __LINE__);
 		logoff(ipc, 0);
 	}
 
@@ -1063,7 +1062,7 @@ void get_serv_info(CtdlIPC * ipc, char *supplied_hostname) {
 	 * the plain text when we have it available.
 	 */
 	if ((CtdlIPCSpecifyPreferredFormats(ipc, buf, "text/plain|text/html|text/x-markdown") / 100) != 2) {
-		scr_printf("ERROR: Extremely old server; MSG4 framework not supported.\n");
+		scr_printf("Error %s:%d", __FILE__ , __LINE__);
 		logoff(ipc, 0);
 	}
 }
