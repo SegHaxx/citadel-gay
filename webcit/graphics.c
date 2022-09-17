@@ -1,16 +1,14 @@
-/*
- * Handles HTTP upload of graphics files into the system.
- *
- * Copyright (c) 1996-2016 by the citadel.org team
- *
- * This program is open source software.  You can redistribute it and/or
- * modify it under the terms of the GNU General Public License, version 3.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- */
+// Handles HTTP upload of graphics files into the system.
+//
+// Copyright (c) 1996-2022 by the citadel.org team
+//
+// This program is open source software.  You can redistribute it and/or
+// modify it under the terms of the GNU General Public License, version 3.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
 
 #include "webcit.h"
 
@@ -41,8 +39,7 @@ void display_roompic(void) {
 
 
 // upload the picture (icon, photo, whatever) associated with the current room
-void common_code_for_editroompic_and_editpic(char *servcmd)
-{
+void common_code_for_editroompic_and_editpic(char *servcmd) {
 	if (havebstr("cancel_button")) {
 		AppendImportantMessage(_("Graphics upload has been cancelled."), -1);
 		display_main_menu();
@@ -71,45 +68,26 @@ void common_code_for_editroompic_and_editpic(char *servcmd)
 
 
 // upload the picture (icon, photo, whatever) associated with the current room
-void editroompic(void)
-{
+void editroompic(void) {
 	common_code_for_editroompic_and_editpic("ULRI");
 }
 
 	
 // upload the picture (icon, photo, whatever) associated with the current user
-void editpic(void)
-{
+void editpic(void) {
 	common_code_for_editroompic_and_editpic("ULUI");
 }
 
 
 // display the screen for uploading graphics to the server
-void display_graphics_upload(char *filename)
-{
-	StrBuf *Line;
-
-	syslog(LOG_DEBUG, "display_graphics_upload(%s)", filename);
-
-	Line = NewStrBuf();
-	serv_printf("UIMG 0||%s", filename);
-	StrBuf_ServGetln(Line);
-	if (GetServerStatusMsg(Line, NULL, 1, 2) != 2) {
-		display_main_menu();
-		return;
-	}
-	else
-	{
-		output_headers(1, 0, 0, 0, 1, 0);
-		do_template("files_graphicsupload");
-		end_burst();
-	}
-	FreeStrBuf(&Line);
+void display_graphics_upload(char *filename) {
+	output_headers(1, 0, 0, 0, 1, 0);
+	do_template("files_graphicsupload");
+	end_burst();
 }
 
 
-void do_graphics_upload(char *filename)
-{
+void do_graphics_upload(char *filename) {
 	StrBuf *Line;
 	const char *MimeType;
 	wcsession *WCC = WC;
@@ -171,20 +149,21 @@ void do_graphics_upload(char *filename)
 void edithellopic(void)    { do_graphics_upload("hello"); }
 void editgoodbyepic(void) { do_graphics_upload("UIMG 1|%s|goodbye"); }
 
-/* The users photo display / upload facility */
+// The user's photo display / upload facility
 void display_editpic(void) {
 	putbstr("__PICDESC", NewStrBufPlain(_("your photo"), -1));
 	putbstr("__UPLURL", NewStrBufPlain(HKEY("editpic")));
 	display_graphics_upload("editpic");
 }
-/* room picture dispay / upload facility */
+
+// room picture dispay / upload facility
 void display_editroompic(void) {
 	putbstr("__PICDESC", NewStrBufPlain(_("the icon for this room"), -1));
 	putbstr("__UPLURL", NewStrBufPlain(HKEY("editroompic")));
 	display_graphics_upload("editroompic");
 }
 
-/* the greetingpage hello pic */
+// the login page graphics
 void display_edithello(void) {
 	putbstr("__WHICHPIC", NewStrBufPlain(HKEY("hello")));
 	putbstr("__PICDESC", NewStrBufPlain(_("graphics to be displayed on the login screen"), -1));
@@ -192,7 +171,7 @@ void display_edithello(void) {
 	display_graphics_upload("edithellopic");
 }
 
-/* the logoff banner */
+// the logoff banner
 void display_editgoodbyepic(void) {
 	putbstr("__WHICHPIC", NewStrBufPlain(HKEY("UIMG 0|%s|goodbye")));
 	putbstr("__PICDESC", NewStrBufPlain(_("the Logoff banner picture"), -1));
