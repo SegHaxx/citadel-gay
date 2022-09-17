@@ -89,6 +89,8 @@ void display_graphics_upload(char *filename)
 {
 	StrBuf *Line;
 
+	syslog(LOG_DEBUG, "display_graphics_upload(%s)", filename);
+
 	Line = NewStrBuf();
 	serv_printf("UIMG 0||%s", filename);
 	StrBuf_ServGetln(Line);
