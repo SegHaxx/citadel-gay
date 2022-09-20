@@ -48,17 +48,25 @@ function display_room_list_renderer(floor_list, room_list) {
 	for (var i in room_list) {
 		if (room_list[i].current_view == views.VIEW_BBS) {
 			output[room_list[i].floor] +=
-				"<div class=\"ctdl-roomlist-room\" onClick=\"javascript:gotoroom('"
+
+				"<div class=\"ctdl-roomlist-room\" onClick=\"javascript:gotoroom('"	// container
 				+ escapeJS(escapeHTML(room_list[i].name)) + "');\">"
-				+ "<i class=\"ctdl-roomlist-roomicon "
+
+				+ "<div><i class=\"ctdl-roomlist-roomicon "				// room icon
 				+ (room_list[i].hasnewmsgs ? "w3-blue" : "w3-gray")
-				+ " fas fa-comments fa-fw\"></i><span class=\"ctdl-roomlist-roomname"
+				+ " fas fa-comments fa-fw\"></i></div>"
+
+				+ "<div class=\"ctdl-roomlist-roomname"					// room name
 				+ (room_list[i].hasnewmsgs ? " ctdl-roomlist-roomname-hasnewmsgs" : "")
-				+ " w3-left\">"
+				+ "\">"
 				+ escapeHTML(room_list[i].name)
-				+ "</span><span class=\"ctdl-roomlist-mtime w3-right\">"
+				+ "</div>"
+
+				+ "<div class=\"ctdl-roomlist-mtime\">"					// date/time of last post
 				+ string_timestamp(room_list[i].mtime)
-				+ "</span></div>";
+				+ "</div>"
+
+				+ "</div>"								// end container
 		}
 	}
 
