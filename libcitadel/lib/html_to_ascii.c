@@ -185,34 +185,52 @@ char *html_to_ascii(const char *inputmsg, int msglen, int screenwidth, int ansi)
 					strcat(outbuf, nl);
 				}
 
-#if 0
-	These seemed like a good idea at the time, but it just makes a mess.
-
 				else if (
 					(!strcasecmp(tag, "B"))
-					|| (!strcasecmp(tag, "/B"))
 					|| (!strcasecmp(tag, "STRONG"))
+				) {
+					if (ansi) {
+						strcat(outbuf, "\033[1m");
+					}
+				}
+				else if (
+					(!strcasecmp(tag, "/B"))
 					|| (!strcasecmp(tag, "/STRONG"))
 				) {
-					strcat(outbuf, "*");
+					if (ansi) {
+						strcat(outbuf, "\033[22m");
+					}
 				}
 
 				else if (
 					(!strcasecmp(tag, "I"))
-					|| (!strcasecmp(tag, "/I"))
 					|| (!strcasecmp(tag, "EM"))
-					|| (!strcasecmp(tag, "/EM"))
 				) {
-					strcat(outbuf, "/");
+					if (ansi) {
+						strcat(outbuf, "\033[3m");
+					}
 				}
 
 				else if (
-					(!strcasecmp(tag, "U"))
-					|| (!strcasecmp(tag, "/U"))
+					(!strcasecmp(tag, "/I"))
+					|| (!strcasecmp(tag, "/EM"))
 				) {
-					strcat(outbuf, "_");
+					if (ansi) {
+						strcat(outbuf, "\033[23m");
+					}
 				}
-#endif
+
+				else if (!strcasecmp(tag, "U")) {
+					if (ansi) {
+						strcat(outbuf, "\033[4m");
+					}
+				}
+
+				else if (!strcasecmp(tag, "/U")) {
+					if (ansi) {
+						strcat(outbuf, "\033[24m");
+					}
+				}
 
 				else if (!strcasecmp(tag, "BR")) {
 					strcat(outbuf, nl);
