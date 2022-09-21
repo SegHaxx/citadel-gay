@@ -1,13 +1,11 @@
-/*
- * Header file for libcitadel
- *
- * Copyright (c) 1987-2022 by the citadel.org team
- *
+// Header file for libcitadel
+//
+// Copyright (c) 1987-2022 by the citadel.org team
+//
 // This program is open source software.  Use, duplication, or disclosure
 // is subject to the terms of the GNU General Public License, version 3.
- */
 
-/* protect against double includes */
+// protect against double includes
 #ifndef LIBCITADEL_H
 #define LIBCITADEL_H
 
@@ -433,7 +431,7 @@ char *rfc2047encode(const char *line, long length);
 int is_msg_in_mset(const char *mset, long msgnum);
 int pattern2(char *search, char *patn);
 void stripltlen(char *, int *);
-char *html_to_ascii(const char *inputmsg, int msglen, int screenwidth);
+char *html_to_ascii(const char *inputmsg, int msglen, int screenwidth, int ansi);
 void LoadEntityList(char *FileName);
 void utf8ify_rfc822_string(char *buf);
 

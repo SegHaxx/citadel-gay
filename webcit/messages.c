@@ -905,7 +905,7 @@ void post_mime_to_server(void) {
 		serv_puts("Content-type: text/plain; charset=utf-8");
 		serv_puts("Content-Transfer-Encoding: quoted-printable");
 		serv_puts("");
-		txtmail = html_to_ascii(bstr("msgtext"), 0, 80);
+		txtmail = html_to_ascii(bstr("msgtext"), 0, 80, 0);
 		Buf = NewStrBufPlain(txtmail, -1);
         	free(txtmail);
 

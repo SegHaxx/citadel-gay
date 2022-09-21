@@ -1254,7 +1254,7 @@ void fixed_output(char *name, char *filename, char *partnum, char *disp,
 	}
 
 	if (!strcasecmp(cbtype, "text/html")) {
-		ptr = html_to_ascii(content, length, 80);
+		ptr = html_to_ascii(content, length, 80, 0);
 		wlen = strlen(ptr);
 		client_write(ptr, wlen);
 		if ((wlen > 0) && (ptr[wlen-1] != '\n')) {
