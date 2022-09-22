@@ -1,10 +1,8 @@
-/*
- * Functions which handle translation between HTML and plain text
- * Copyright (c) 2000-2018 by the citadel.org team
- *
+// Functions which handle translation between HTML and plain text
+// Copyright (c) 2000-2022 by the citadel.org team
+//
 // This program is open source software.  Use, duplication, or disclosure
 // is subject to the terms of the GNU General Public License, version 3.
- */
 
 #include <stdlib.h>
 #include <unistd.h>
@@ -31,13 +29,14 @@
 #include "libcitadel.h"
  
 
-/*
- * Convert HTML to plain text.
- *
- * inputmsg      = pointer to raw HTML message
- * screenwidth   = desired output screenwidth
- */
-char *html_to_ascii(const char *inputmsg, int msglen, int screenwidth) {
+// Convert HTML to plain text.
+//
+// inputmsg	= pointer to raw HTML message
+// msglen	= stop reading after this many bytes
+// screenwidth	= desired output screenwidth
+// ansi		= if nonzero, assume output is to a terminal that supports ANSI escape codes
+//
+char *html_to_ascii(const char *inputmsg, int msglen, int screenwidth, int ansi) {
 	char inbuf[SIZ];
 	int inbuf_len = 0;
 	char outbuf[SIZ];
@@ -48,9 +47,9 @@ char *html_to_ascii(const char *inputmsg, int msglen, int screenwidth) {
 	size_t outptr_buffer_size;
 	size_t output_len = 0;
 	int i, j, ch, did_out, rb, scanch;
-	int nest = 0;		/* Bracket nesting level */
-	int blockquote = 0;	/* BLOCKQUOTE nesting level */
-	int styletag = 0;	/* STYLE tag nesting level */
+	int nest = 0;				// Bracket nesting level
+	int blockquote = 0;			// BLOCKQUOTE nesting level
+	int styletag = 0;			// STYLE tag nesting level
 	int styletag_start = 0;
 	int bytes_processed = 0;
 	char nl[128];
@@ -186,34 +185,52 @@ char *html_to_ascii(const char *inputmsg, int msglen, int screenwidth) {
 					strcat(outbuf, nl);
 				}
 
-#if 0
-	These seemed like a good idea at the time, but it just makes a mess.
-
 				else if (
 					(!strcasecmp(tag, "B"))
-					|| (!strcasecmp(tag, "/B"))
 					|| (!strcasecmp(tag, "STRONG"))
+				) {
+					if (ansi) {
+						strcat(outbuf, "\033[1m");
+					}
+				}
+				else if (
+					(!strcasecmp(tag, "/B"))
 					|| (!strcasecmp(tag, "/STRONG"))
 				) {
-					strcat(outbuf, "*");
+					if (ansi) {
+						strcat(outbuf, "\033[22m");
+					}
 				}
 
 				else if (
 					(!strcasecmp(tag, "I"))
-					|| (!strcasecmp(tag, "/I"))
 					|| (!strcasecmp(tag, "EM"))
-					|| (!strcasecmp(tag, "/EM"))
 				) {
-					strcat(outbuf, "/");
+					if (ansi) {
+						strcat(outbuf, "\033[3m");
+					}
 				}
 
 				else if (
-					(!strcasecmp(tag, "U"))
-					|| (!strcasecmp(tag, "/U"))
+					(!strcasecmp(tag, "/I"))
+					|| (!strcasecmp(tag, "/EM"))
 				) {
-					strcat(outbuf, "_");
+					if (ansi) {
+						strcat(outbuf, "\033[23m");
+					}
 				}
-#endif
+
+				else if (!strcasecmp(tag, "U")) {
+					if (ansi) {
+						strcat(outbuf, "\033[4m");
+					}
+				}
+
+				else if (!strcasecmp(tag, "/U")) {
+					if (ansi) {
+						strcat(outbuf, "\033[24m");
+					}
+				}
 
 				else if (!strcasecmp(tag, "BR")) {
 					strcat(outbuf, nl);
@@ -230,6 +247,9 @@ char *html_to_ascii(const char *inputmsg, int msglen, int screenwidth) {
 				else if (!strcasecmp(tag, "BLOCKQUOTE")) {
 					++blockquote;
 					strcpy(nl, "\n");
+					if ( (blockquote == 1) && (ansi) ) {
+						strcat(nl, "\033[2m\033[3m");
+					}
 					for (j=0; j<blockquote; ++j) strcat(nl, ">");
 					strcat(outbuf, nl);
 				}
@@ -237,6 +257,9 @@ char *html_to_ascii(const char *inputmsg, int msglen, int screenwidth) {
 				else if (!strcasecmp(tag, "/BLOCKQUOTE")) {
 					strcat(outbuf, "\n");
 					--blockquote;
+					if ( (blockquote == 0) && (ansi) ) {
+						strcat(outbuf, "\033[22m\033[23m");
+					}
 					strcpy(nl, "\n");
 					for (j=0; j<blockquote; ++j) strcat(nl, ">");
 					strcat(outbuf, nl);

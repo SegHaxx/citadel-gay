@@ -1406,6 +1406,7 @@ int fmout(int width,		// screen width to use
 	char old = 0;		// The previous character
 	int column = 0;		// Current column
 	size_t i;		// Generic counter
+	int in_quote = 0;
 
 	// Space for a single word, which can be at most screenwidth
 	word = (char *) calloc(1, width);
@@ -1429,11 +1430,18 @@ int fmout(int width,		// screen width to use
 
 	// Run the message body
 	while (*e) {
+
 		// Catch characters that shouldn't be there at all
 		if (*e == '\r') {
 			e++;
 			continue;
 		}
+
+		if ( (in_quote) && (*e == '\n') && (enable_color) ) {
+			in_quote = 0;
+			scr_printf("\033[22m\033[23m");
+		}
+
 		if (*e == '\n') {	// newline?
 			e++;
 			if (*e == ' ') {	// paragraph?
@@ -1456,6 +1464,11 @@ int fmout(int width,		// screen width to use
 			}
 			old = '\n';
 			continue;
+		}
+
+		if ( (*e == '>') && (column <= 1) && (!fpout) && (enable_color) ) {
+			in_quote = 1;
+			scr_printf("\033[2m\033[3m");
 		}
 
 		// Or are we looking at a space?
