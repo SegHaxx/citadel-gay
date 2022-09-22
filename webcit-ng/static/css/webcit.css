@@ -291,6 +291,11 @@ blockquote pre {
 }
 
 .ctdl-roomlist-room {
+	display: flex;
+	flex-direction: row;
+	flex-wrap: nowrap;
+	justify-content: space-around;
+	align-items: stretch;
 	overflow: hidden;
 	border-radius: 10px;
 	border-style: outset;
