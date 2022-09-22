@@ -13,6 +13,7 @@ function clear_sidebar_selection() {
 			items[i].classList.remove("ctdl-sidebar-button-selected");
 		}
 	}
+	document.getElementById("ctdl_mail_folder_list").style.display = "none";
 }
 
 
@@ -43,6 +44,11 @@ function render_room_view(gt_msg, lt_msg) {
 			document.getElementById("ctdl-main").innerHTML =
 				"<center>The view for " + current_room + " is " + current_view + " but there is no renderer.</center>";
 			break;
+	}
+
+	// Show the mail folder list only when the Mail view is active.
+	if (current_view == views.VIEW_MAILBOX) {
+		document.getElementById("ctdl_mail_folder_list").style.display = "block";
 	}
 
 }

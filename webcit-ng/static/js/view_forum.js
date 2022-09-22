@@ -45,10 +45,10 @@ function forum_readmessages(target_div_name, gt_msg, lt_msg) {
 				}
 				target_div.innerHTML +=
 					"<div id=\"" + new_old_div_name + "\">" +
-					"<div class=\"ctdl-forum-nav\">" +
-					"<a href=\"javascript:forum_readmessages('" + new_old_div_name + "', 0, " + newlt + ");\">" +
+					"<div class=\"ctdl-forum-nav\" " +
+					"onclick=\"javascript:forum_readmessages('" + new_old_div_name + "', 0, " + newlt + ");\">" +
 					"<i class=\"fa fa-arrow-circle-up\"></i>&nbsp;&nbsp;" +
-					_("Older posts") + "&nbsp;&nbsp;<i class=\"fa fa-arrow-circle-up\"></a></div></div></a></div></div>" ;
+					_("Older posts") + "&nbsp;&nbsp;<i class=\"fa fa-arrow-circle-up\"></div></div></a></div></div>" ;
 			}
 
 			// The messages will go here.
@@ -66,10 +66,10 @@ function forum_readmessages(target_div_name, gt_msg, lt_msg) {
 				target_div.innerHTML +=
 					"<div id=\"" + new_new_div_name + "\">" +
 					"<div id=\"ctdl-newmsg-here\"></div>" +
-					"<div class=\"ctdl-forum-nav\">" +
-					"<a href=\"javascript:forum_readmessages('" + new_new_div_name + "', " + newgt + ", 9999999999);\">" +
+					"<div class=\"ctdl-forum-nav\" " +
+					"onClick=\"javascript:forum_readmessages('" + new_new_div_name + "', " + newgt + ", 9999999999);\">" +
 					"<i class=\"fa fa-arrow-circle-down\"></i>&nbsp;&nbsp;" +
-					_("Newer posts") + "&nbsp;&nbsp;<i class=\"fa fa-arrow-circle-down\"></a></div></div>" ;
+					_("Newer posts") + "&nbsp;&nbsp;<i class=\"fa fa-arrow-circle-down\"></div></div>" ;
 			}
 
 			// Now figure out where to scroll to after rendering.

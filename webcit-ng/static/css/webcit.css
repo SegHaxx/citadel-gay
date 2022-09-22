@@ -234,7 +234,10 @@ html,body,h1,h2,h3,h4,h5 {
 
 .ctdl-forum-nav {
 	text-align: center;
-	color: #ffff00;
+	color: Black;
+	background-color: Gainsboro;
+	padding-top: 5px;
+	padding-bottom: 5px;
 }
 
 .ctdl-forum-nav a {
