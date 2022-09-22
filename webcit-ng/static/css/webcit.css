@@ -97,18 +97,25 @@ html,body,h1,h2,h3,h4,h5 {
 	padding: 10px;
 }
 
-.ctdl-sidebar-class button {
+.ctdl-sidebar-button {
 	width: 100%;
 	padding: 10px;
 	text-align: left;
 	border-color: GhostWhite;
-	background-color: GhostWhite;
+	background-color: Gainsboro;
 	color: #000000;
 	font-size: 1vw;
 }
 
-.ctdl-sidebar-class button:hover {
-	background-color: White;
+.ctdl-sidebar-button:hover {
+	background-color: Blue;
+	color: White;
+}
+
+.ctdl-sidebar-button-selected {
+	font-weight: bold;
+	color: White;
+	background-color: SlateGrey;
 }
 
 .ctdl-grid-banner-item button {
@@ -295,12 +302,12 @@ blockquote pre {
 	flex-direction: row;
 	flex-wrap: nowrap;
 	justify-content: space-around;
-	align-items: stretch;
+	align-items: center;
 	overflow: hidden;
 	border-radius: 10px;
 	border-style: outset;
 	background-color: White;
-	padding: 0.5vw;
+	padding: 0.3vw;
 	margin-top: 0;
 	margin-bottom: 0.25vw;
 	margin-left: 1vw;
@@ -310,23 +317,23 @@ blockquote pre {
 .ctdl-roomlist-roomicon {
 	overflow: hidden;
 	font-size: large;
-	margin-left: 1vw;
-	margin-right: 1vw;
-	padding-left: 0.75vw;
-	padding-right: 1.75vw;
-	padding-top: 0.75vw;
-	padding-bottom: 0.75vw;
+	margin-right: auto;
 }
 
 .ctdl-roomlist-roomname {
 	font-size: large;
+	margin-right: auto;
+	padding-left: 1vw;
+	padding-right: 1vw;
 }
 
 .ctdl-roomlist-roomname-hasnewmsgs {
 	font-weight: bold;
+	margin-right: auto;
 }
 
 .ctdl-roomlist-mtime {
+	margin-left: auto;
 }
 
 .ctdl-mailbox-grid-container {

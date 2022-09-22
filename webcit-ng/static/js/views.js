@@ -4,32 +4,37 @@
 // disclosure are subject to the GNU General Public License v3.
 
 
+
+// Clear the sidebar buttons of any style indicating that one is selected
+function clear_sidebar_selection() {
+	var items = document.getElementById("ctdl-sidebar").getElementsByTagName("*");
+	for (var i = items.length; i--;) {
+		if (items[i].id.includes("ctdl-sidebar-button-")) {
+			items[i].classList.remove("ctdl-sidebar-button-selected");
+		}
+	}
+}
+
+
 // This function is the dispatcher that determines the correct view for a room,
 // and calls the correct renderer.  Greater/Less than bounds are accepted.
 function render_room_view(gt_msg, lt_msg) {
 
 	document.getElementById("ctdl-newmsg-button").style.display = "none";		// the view renderer will set this
-
-	// Clear the highlighting out of all the sidebar buttons
-	var items = document.getElementById("ctdl-sidebar").getElementsByTagName("*");
-	for (var i = items.length; i--;) {
-		if (items[i].id.includes("ctdl-sidebar-button-")) {
-			items[i].classList.remove("w3-blue");
-		}
-	}
+	clear_sidebar_selection();
 
 	switch(current_view) {
 
 		// The "forum" module displays rooms with the "VIEW_BBS" view as classic style web forums.
 		case views.VIEW_BBS:
-			document.getElementById("ctdl-sidebar-button-forums").classList.add("w3-blue");
+			document.getElementById("ctdl-sidebar-button-forums").classList.add("ctdl-sidebar-button-selected");
 			document.getElementById("ctdl-main").innerHTML = "<div id=\"ctdl-mrp\" class=\"ctdl-forum-reading-pane\"></div>";
 			forum_readmessages("ctdl-mrp", gt_msg, lt_msg);
 			break;
 
 		// The "mail" module displays rooms with the VIEW_MAILBOX view as a webmail program.
 		case views.VIEW_MAILBOX:
-			document.getElementById("ctdl-sidebar-button-mail").classList.add("w3-blue");
+			document.getElementById("ctdl-sidebar-button-mail").classList.add("ctdl-sidebar-button-selected");
 			document.getElementById("ctdl-main").innerHTML = "";
 			mail_display();
 			break;
