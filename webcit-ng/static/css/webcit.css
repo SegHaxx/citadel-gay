@@ -10,13 +10,13 @@
 	margin: 0;
 } 
 
-.ctdl-main-grid-container {			/* This grid contains the "holy grail layout" of the screen */
+.ctdl-main-grid-container {			/* This grid implements the "holy grail layout" of the screen */
 	display: grid;
 	grid-template-rows: 5vh auto;
 	grid-template-columns: 12vw auto;
 	grid-template-areas:
-		'header header'
-		'menu main';
+		'ctdl-mg-banner ctdl-mg-banner'
+		'ctdl-mg-menu ctdl-mg-main';
 	gap: 3px;
 	background-color: DarkSlateGrey;	/* This is the color of the lines between the boxes, and also the boxes themselves if not overridden */
 	padding: 0;				/* This is the border around the edges of the screen */
@@ -25,17 +25,17 @@
 }
 
 .ctdl-grid-banner-item {			/* Top banner, referenced by the grid container */
-	grid-area: header;
+	grid-area: ctdl-mg-banner;
 	background-color: DarkSlateGrey;
 }
 
 .ctdl-grid-sidebar-item {			/* Side bar, referenced by the grid container */
-	grid-area: menu;
+	grid-area: ctdl-mg-menu;
 	background-color: GhostWhite;
 }
 
 .ctdl-grid-main-item {				/* Main content area of the screen, referenced by the grid container */
-	grid-area: main;
+	grid-area: ctdl-mg-main;
 	overflow-x: hidden;
 	overflow-y: auto;
 }
