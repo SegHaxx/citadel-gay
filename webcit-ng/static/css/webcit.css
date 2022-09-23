@@ -101,21 +101,20 @@ html,body,h1,h2,h3,h4,h5 {
 	width: 100%;
 	padding: 10px;
 	text-align: left;
-	border-color: GhostWhite;
-	background-color: Gainsboro;
-	color: #000000;
+	border: 1px solid GhostWhite;
+	background-color: GhostWhite;
+	color: Black;
 	font-size: 1vw;
+	border-radius: 5px;
 }
 
 .ctdl-sidebar-button:hover {
-	background-color: Blue;
-	color: White;
+	border-color: Blue;
 }
 
 .ctdl-sidebar-button-selected {
 	font-weight: bold;
-	color: White;
-	background-color: SlateGrey;
+	background-color: Gainsboro;
 }
 
 .ctdl-grid-banner-item button {
