@@ -42,7 +42,7 @@ function update_banner() {
 	if (current_room) {
 		document.getElementById("ctdl_banner_title").innerHTML = current_room;
 		if (is_room_aide) {
-			document.getElementById("ctdl_banner_title").innerHTML += "<i class=\"fa fa-user-cog\"></i>";
+			document.getElementById("ctdl_banner_title").innerHTML += "&nbsp;<i class=\"fa fa-user-cog\"></i>";
 		}
 		document.title = current_room;
 	}

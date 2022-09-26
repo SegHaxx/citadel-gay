@@ -42,25 +42,70 @@
 
 .ctdl-main-grid-container > div {
 	text-align: left;
-	padding: 0;
+}
+
+.ctdl-banner-buttons {				/* Flexbox container for everything we stick into the banner */
+	display: flex;
+	flex-direction: row;
+	flex-wrap: nowrap;
+	justify-content: space-between;
+	align-items: center;
+	margin: 0;
+	width: 100%;
+	height: 100%;
+	overflow: hidden;
+}
+
+.ctdl-banner-left {				/* Items which should be grouped to the LEFT side of the banner */
+	display: flex;
+	flex-direction: row;
+	flex-wrap: nowrap;
+	align-items: center;
+}
+
+.ctdl-banner-center {				/* Items which should be grouped to the MIDDLE of the banner */
+	display: flex;
+	flex-direction: row;
+	flex-wrap: nowrap;
+	align-items: center;
+}
+
+.ctdl-banner-right {				/* Items which should be grouped to the RIGHT side of the banner */
+	display: flex;
+	flex-direction: row;
+	flex-wrap: nowrap;
+	align-items: center;
 }
 
 .ctdl-banner-buttons li, .ctdl-banner-buttons li button {
 	float: left;
 	display: block;
-	padding: 8px;
 	background-color: DarkSlateGrey;
 	color: White;
 	font-size: 1.25vw;
 	border: none;
+	padding-left: 4px;
+	padding-right: 4px;
 }
 
 .ctdl-banner-buttons li button:hover {
 	background-color: Black;
 }
 
-.ctdl-banner-buttons a {
+.ctdl-banner-buttons a {			/* For example, the Login / Log Off button */
 	color: White;
+}
+
+.ctdl-banner-buttons span {			/* For example, the name of the logged in user */
+	color: White;
+}
+
+.ctdl-logo-img {
+	background-color: White;
+	border-radius: 5px;
+	padding-bottom: 3px;
+	padding-left: 3px;
+	padding-right: 3px;
 }
 
 html,body,h1,h2,h3,h4,h5 {
@@ -120,14 +165,6 @@ html,body,h1,h2,h3,h4,h5 {
 .ctdl-grid-banner-item button {
 	background-color: #888888;
 	color: #FFFFFF;
-}
-
-.ctdl-logo-img {
-	background-color: White;
-	border-radius: 5px;
-	padding-bottom: 3px;
-	padding-left: 3px;
-	padding-right: 3px;
 }
 
 .ctdl-forum-reading-pane {
