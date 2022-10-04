@@ -83,13 +83,13 @@ function mail_display_message(msgnum, target_div) {
 function select_message(msgnum) {
 	// unhighlight any previously selected message
 	try {
-		document.getElementById("ctdl-msgsum-" + selected_message).classList.remove("w3-blue");
+		document.getElementById("ctdl-msgsum-" + selected_message).classList.remove("ctdl-mail-selected");
 	}
 	catch {
 	}
 
 	// highlight the newly selected message
-	document.getElementById("ctdl-msgsum-" + msgnum).classList.add("w3-blue");
+	document.getElementById("ctdl-msgsum-" + msgnum).classList.add("ctdl-mail-selected");
 	//document.getElementById("ctdl-msgsum-" + msgnum).scrollIntoView();
 
 	// display the message if it isn't already displayed

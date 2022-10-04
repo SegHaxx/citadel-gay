@@ -412,15 +412,13 @@ blockquote pre {
 
 .ctdl-mailbox-table tr {
 	cursor: pointer;
-}
-
-.ctdl-mailbox-table tr:nth-child(even) {	/* this gives us the alternating-bar effect */
-	background-color: Gainsboro;
+	border-top: solid 1px LightGrey;
 }
 
 .ctdl-mailbox-table tr:hover {
-	background-color: Blue;
-	color: White;
+	border-top: solid 1px Blue;
+	border-bottom: solid 1px Blue;
+	background-color: LightGrey;
 }
 
 .ctdl-mailbox-table th {
@@ -437,6 +435,11 @@ blockquote pre {
 	background-color: SlateGrey;
 	color: White;
 	cursor: default;
+}
+
+.ctdl-mail-selected {
+	background-color: Blue;
+	color: White;
 }
 
 .ctdl-mail-subject {				/* Subject column in mailbox message list */
