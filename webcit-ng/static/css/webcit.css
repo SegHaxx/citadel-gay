@@ -469,6 +469,7 @@ blockquote pre {
 	height: 100%;
 	overflow: auto;
 	border: 2px dashed red;			/* FIXME this goes away after testing */
+	background-color: GhostWhite;
 }
 
 .ctdl-login-screen-grid-container {

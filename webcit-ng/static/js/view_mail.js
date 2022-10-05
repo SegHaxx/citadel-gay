@@ -207,10 +207,12 @@ function mail_compose(is_quoted, references, msgid) {
 	document.getElementById("ctdl-main").innerHTML
 		= "<div id=\"ctdl-compose-mail\" class=\"ctdl-compose-mail\">"
 
+		// These should be hidden but we're in the process of building
+		+ "is_quoted: <input id=\"ctdl_mc_is_quoted\" style=\"display:block\" value=\"" + is_quoted + "\"></input>"
+		+ "references: <input id=\"ctdl_mc_references\" style=\"display:block\" value=\"" + references + "\"></input>"
+		+ "reply-to msgid: <input id=\"ctdl_mc_reply_msgid\" style=\"display:block\" value=\"" + msgid + "\"></input>"
+
 		+ "<table border=\"1\" width=\"100%\">"
-		+ "<tr><td>is_quoted</td><td>" + is_quoted + "</td></tr>"
-		+ "<tr><td>references</td><td>" + references + "</td></tr>"
-		+ "<tr><td>msgid</td><td>" + msgid + "</td></tr>"
 		+ "<tr><td>from</td><td>" + current_user + "</td></tr>"
 		+ "<tr><td>to</td><td></td></tr>"
 		+ "<tr><td>subject</td><td></td></tr></table>"
