@@ -230,6 +230,9 @@ function mail_compose(is_quoted, references, msgid) {
 
 		+ "<div class=\"ctdl-compose-message-box\" id=\"ctdl-editor-body\" contenteditable=\"true\">"
 		+ "</div>"
+
+		+ "<div class=\"ctdl-compose-toolbar\">save, boldface, mass explosions, etc. etc. etc."
+		+ "</div>"
 	;
 
 }

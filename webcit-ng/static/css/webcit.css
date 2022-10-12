@@ -8,6 +8,10 @@
 	box-sizing: border-box;
 	padding: 0;
 	margin: 0;
+}
+
+[contenteditable]:focus {
+	outline: 0px solid transparent;
 } 
 
 .ctdl-main-grid-container {			/* This grid implements the "holy grail layout" of the screen */
@@ -472,12 +476,13 @@ blockquote pre {
 	padding: 0;
 	background-color: GhostWhite;
 	display: grid;
-	grid-template-rows: auto auto 1fr;
+	grid-template-rows: auto auto 1fr auto;
 	grid-template-columns: auto 1fr;
 	grid-template-areas:
 		'ctdl-compose-to-label ctdl-compose-to-field'
 		'ctdl-compose-subject-label ctdl-compose-subject-field'
-		'ctdl-compose-message-box ctdl-compose-message-box';
+		'ctdl-compose-message-box ctdl-compose-message-box'
+		'ctdl-compose-toolbar ctdl-compose-toolbar';
 	gap: 3px;
 }
 
@@ -509,6 +514,12 @@ blockquote pre {
 	grid-area: ctdl-compose-message-box;
 	overflow-x: wrap;
 	overflow-y: auto;
+	padding: 0.5vw;
+}
+
+.ctdl-compose-toolbar {
+	grid-area: ctdl-compose-toolbar;
+	overflow: none;
 	padding: 0.5vw;
 }
 
