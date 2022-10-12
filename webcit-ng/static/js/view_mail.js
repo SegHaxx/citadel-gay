@@ -204,19 +204,27 @@ function render_mailbox_display() {
 // Compose a new mail message (called by the Reply button here, or by the dispatcher in views.js)
 function mail_compose(is_quoted, references, msgid) {
 
+	// is_quoted	true or false depending on whether the user selected "reply quoted" (is this appropriate for mail?)
+	// references	list of references, be sure to use this in a reply
+	// msgid	if a reply, the msgid of the most recent message in the chain, the one to which we are replying
+
 	document.getElementById("ctdl-main").innerHTML
-		= "<div id=\"ctdl-compose-mail\" class=\"ctdl-compose-mail\">"
 
-		// These should be hidden but we're in the process of building
-		+ "is_quoted: <input id=\"ctdl_mc_is_quoted\" style=\"display:block\" value=\"" + is_quoted + "\"></input>"
-		+ "references: <input id=\"ctdl_mc_references\" style=\"display:block\" value=\"" + references + "\"></input>"
-		+ "reply-to msgid: <input id=\"ctdl_mc_reply_msgid\" style=\"display:block\" value=\"" + msgid + "\"></input>"
+		// Hidden values that we are storing right here in the document tree for later
+		= "<input id=\"ctdl_mc_is_quoted\" style=\"display:none\" value=\"" + is_quoted + "\"></input>"
+		+ "<input id=\"ctdl_mc_references\" style=\"display:none\" value=\"" + references + "\"></input>"
+		+ "<input id=\"ctdl_mc_reply_msgid\" style=\"display:none\" value=\"" + msgid + "\"></input>"
 
-		+ "<table border=\"1\" width=\"100%\">"
-		+ "<tr><td>from</td><td>" + current_user + "</td></tr>"
-		+ "<tr><td>to</td><td></td></tr>"
-		+ "<tr><td>subject</td><td></td></tr></table>"
-		+ "<div class=\"ctdl-msg-body\" id=\"ctdl-editor-body\" style=\"padding:5px;\" contenteditable=\"true\">"
+		// Grid!
+		+ "<div id=\"ctdl-compose-mail\" class=\"ctdl-compose-mail\">"
+
+		// Now display some things
+		+ "<div class=\"ctdl-compose-to-label\">Tooo:</div>"
+		+ "<div class=\"ctdl-compose-to-field\" contenteditable=\"true\">hahahahaha</div>"
+		+ "<div class=\"ctdl-compose-subject-label\">Soobjeckt:</div>"
+		+ "<div class=\"ctdl-compose-subject-field\" contenteditable=\"true\">h0h0h0h</div>"
+
+		+ "<div class=\"ctdl-compose-message-box\" id=\"ctdl-editor-body\" contenteditable=\"true\">"
 		+ "</div>"
 	;
 
