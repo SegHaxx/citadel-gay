@@ -204,10 +204,14 @@ function render_mailbox_display() {
 // Compose a new mail message (called by the Reply button here, or by the dispatcher in views.js)
 function mail_compose(is_quoted, references, msgid) {
 
+	// Make the "Write mail" button disappear.  We're already there!
+	document.getElementById("ctdl-newmsg-button").style.display = "none";
+
 	// is_quoted	true or false depending on whether the user selected "reply quoted" (is this appropriate for mail?)
 	// references	list of references, be sure to use this in a reply
 	// msgid	if a reply, the msgid of the most recent message in the chain, the one to which we are replying
 
+	// Now display the screen.
 	document.getElementById("ctdl-main").innerHTML
 
 		// Hidden values that we are storing right here in the document tree for later
