@@ -219,10 +219,7 @@ html,body,h1,h2,h3,h4,h5 {
 	border-style: solid;
 	border-width: thin;
 	border-color: Black;
-}
-
-.ctdl-msg-button a {
-	color: Black;
+	cursor: default;
 }
 
 .ctdl-msg-button:hover {
@@ -230,16 +227,20 @@ html,body,h1,h2,h3,h4,h5 {
 	color: GhostWhite;
 	transition: .3s;
 	border-color: #123456;
+	cursor: default;
+}
+
+.ctdl-msg-button a {
+	color: Black;
+	text-decoration: none;
+	cursor: default;
 }
 
 .ctdl-msg-button a:hover {
 	color: White;
+	cursor: default;
 }
 
-
-.ctdl-msg-button a {
-	text-decoration: none;
-}
 
 .ctdl-avatar {
 	width: 32px;
@@ -515,12 +516,24 @@ blockquote pre {
 	overflow-x: wrap;
 	overflow-y: auto;
 	padding: 0.5vw;
+	border-bottom: 1px solid Grey;
+	margin-left: 0.5vw;
+	margin-right: 0.5vw;
 }
 
 .ctdl-compose-toolbar {
 	grid-area: ctdl-compose-toolbar;
 	overflow: none;
 	padding: 0.5vw;
+	display: flex;
+	flex-direction: row;
+	flex-wrap: nowrap;
+	justify-content: space-between;
+	align-items: center;
+	margin: 0:
+	width: 100%;
+	height: 100%;
+	overflow: hidden;
 }
 
 .ctdl-login-screen-grid-container {

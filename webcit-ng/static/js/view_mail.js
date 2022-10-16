@@ -31,7 +31,7 @@ function mail_render_one(msg, target_div) {
 		+ "<a href=\"javascript:mail_compose(true,'"+msg.wefw+"','"+msg.msgn+"');\">"
 		+ "<i class=\"fa fa-reply\"></i> " 
 		+ _("Reply")
-		+ "</a></span>"
+		+ "</a></span>";
 	
 		if (can_delete_messages) {
 			outmsg +=
@@ -219,19 +219,26 @@ function mail_compose(is_quoted, references, msgid) {
 		+ "<input id=\"ctdl_mc_references\" style=\"display:none\" value=\"" + references + "\"></input>"
 		+ "<input id=\"ctdl_mc_reply_msgid\" style=\"display:none\" value=\"" + msgid + "\"></input>"
 
-		// Grid!
+		// Header fields, the composition window, and the button bar are arranged using a Grid layout.
 		+ "<div id=\"ctdl-compose-mail\" class=\"ctdl-compose-mail\">"
 
-		// Now display some things
-		+ "<div class=\"ctdl-compose-to-label\">Tooo:</div>"
-		+ "<div class=\"ctdl-compose-to-field\" contenteditable=\"true\">hahahahaha</div>"
-		+ "<div class=\"ctdl-compose-subject-label\">Soobjeckt:</div>"
-		+ "<div class=\"ctdl-compose-subject-field\" contenteditable=\"true\">h0h0h0h</div>"
+		// Visible header fields
+		+ "<div class=\"ctdl-compose-to-label\">" + _("To:") + "</div>"
+		+ "<div class=\"ctdl-compose-to-field\" id=\"ctdl-compose-to-field\" contenteditable=\"true\"></div>"
+		+ "<div class=\"ctdl-compose-subject-label\">" + _("Subject:") + "</div>"
+		+ "<div class=\"ctdl-compose-subject-field\" id=\"ctdl-compose-subject-field\" contenteditable=\"true\"></div>"
 
+		// Message composition box
 		+ "<div class=\"ctdl-compose-message-box\" id=\"ctdl-editor-body\" contenteditable=\"true\">"
 		+ "</div>"
 
-		+ "<div class=\"ctdl-compose-toolbar\">save, boldface, mass explosions, etc. etc. etc."
+		// The button bar is a Grid element, and is also a Flexbox container.
+		+ "<div class=\"ctdl-compose-toolbar\">"
+		+ "<span class=\"ctdl-msg-button\"><i class=\"fa fa-check\" style=\"color:green\"> </i>" + _("Send message") + "</span>"
+		+ "<span class=\"ctdl-msg-button\">" + _("Save to Drafts") + "</span>"
+		+ "<span class=\"ctdl-msg-button\">" + _("Attachments:") + "</span>"
+		+ "<span class=\"ctdl-msg-button\">" + _("Contacts") + "</span>"
+		+ "<span class=\"ctdl-msg-button\"><i class=\"fa fa-trash\" style=\"color:red\"></i> " + _("Cancel") + "</span>"
 		+ "</div>"
 	;
 
