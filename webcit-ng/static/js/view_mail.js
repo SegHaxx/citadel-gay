@@ -247,9 +247,9 @@ function mail_compose(is_quoted, references, msgid) {
 
 		// The button bar is a Grid element, and is also a Flexbox container.
 		+ "<div class=\"ctdl-compose-toolbar\">"
-		+ "<span class=\"ctdl-msg-button\"><i class=\"fa fa-check\" style=\"color:green\"> </i>" + _("Send message") + "</span>"
+		+ "<span class=\"ctdl-msg-button\"><i class=\"fa fa-check\" style=\"color:green\"></i> " + _("Send message") + "</span>"
 		+ "<span class=\"ctdl-msg-button\">" + _("Save to Drafts") + "</span>"
-		+ "<span class=\"ctdl-msg-button\">" + _("Attachments:") + "</span>"
+		+ "<span class=\"ctdl-msg-button\">" + _("Attachments:") + " 0" + "</span>"
 		+ "<span class=\"ctdl-msg-button\">" + _("Contacts") + "</span>"
 		+ "<span class=\"ctdl-msg-button\"><i class=\"fa fa-trash\" style=\"color:red\"></i> " + _("Cancel") + "</span>"
 		+ "</div>"

@@ -298,6 +298,7 @@ blockquote {
 	color: Navy !important;
 	margin-bottom: 0px;
 	padding-bottom: 0px;
+	margin-left: 1em;
 }
 
 blockquote blockquote {
