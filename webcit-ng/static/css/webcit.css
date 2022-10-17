@@ -477,10 +477,12 @@ blockquote pre {
 	padding: 0;
 	background-color: GhostWhite;
 	display: grid;
-	grid-template-rows: auto auto 1fr auto;
+	grid-template-rows: auto auto auto auto 1fr auto;
 	grid-template-columns: auto 1fr;
 	grid-template-areas:
-		'ctdl-compose-to-label ctdl-compose-to-field'
+		'ctdl-compose-to-label ctdl-compose-to-line'
+		'ctdl-compose-cc-label ctdl-compose-cc-field'
+		'ctdl-compose-bcc-label ctdl-compose-bcc-field'
 		'ctdl-compose-subject-label ctdl-compose-subject-field'
 		'ctdl-compose-message-box ctdl-compose-message-box'
 		'ctdl-compose-toolbar ctdl-compose-toolbar';
@@ -492,11 +494,51 @@ blockquote pre {
 	padding: 0.5vw;
 }
 
-.ctdl-compose-to-field {
-	grid-area: ctdl-compose-to-field;
+.ctdl-compose-to-line {
+	grid-area: ctdl-compose-to-line;
 	padding: 0.5vw;
 	border-bottom: 1px solid Grey;
 	margin-right: 0.5vw;
+	display: flex;
+	flex-direction: row;
+	flex-wrap: nowrap;
+	margin: 0;
+	width: 100%;
+	height: 100%;
+	overflow: hidden;
+}
+
+.ctdl-compose-to-field {
+	flex-grow: 1;
+
+}
+
+.ctdl-compose-cc-label {
+	grid-area: ctdl-compose-cc-label;
+	padding: 0.5vw;
+	display: none;
+}
+
+.ctdl-compose-cc-field {
+	grid-area: ctdl-compose-cc-field;
+	padding: 0.5vw;
+	border-bottom: 1px solid Grey;
+	margin-right: 0.5vw;
+	display: none;
+}
+
+.ctdl-compose-bcc-label {
+	grid-area: ctdl-compose-bcc-label;
+	padding: 0.5vw;
+	display: none;
+}
+
+.ctdl-compose-bcc-field {
+	grid-area: ctdl-compose-bcc-field;
+	padding: 0.5vw;
+	border-bottom: 1px solid Grey;
+	margin-right: 0.5vw;
+	display: none;
 }
 
 .ctdl-compose-subject-label {

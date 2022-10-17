@@ -222,9 +222,22 @@ function mail_compose(is_quoted, references, msgid) {
 		// Header fields, the composition window, and the button bar are arranged using a Grid layout.
 		+ "<div id=\"ctdl-compose-mail\" class=\"ctdl-compose-mail\">"
 
-		// Visible header fields
+		// Visible To: field, plus a box to make the CC/BCC lines appear
 		+ "<div class=\"ctdl-compose-to-label\">" + _("To:") + "</div>"
+		+ "<div class=\"ctdl-compose-to-line\">"
 		+ "<div class=\"ctdl-compose-to-field\" id=\"ctdl-compose-to-field\" contenteditable=\"true\"></div>"
+		+ "<div class=\"ctdl-cc-bcc-buttons ctdl-msg-button\" id=\"ctdl-cc-bcc-buttons\" "
+		+ "onClick=\"make_cc_bcc_visible()\">"
+		+ _("CC:") + "/" + _("BCC:") + "</div>"
+		+ "</div>"
+
+		// CC/BCC
+		+ "<div class=\"ctdl-compose-cc-label\" id=\"ctdl-compose-cc-label\">" + _("CC:") + "</div>"
+		+ "<div class=\"ctdl-compose-cc-field\" id=\"ctdl-compose-cc-field\" contenteditable=\"true\"></div>"
+		+ "<div class=\"ctdl-compose-bcc-label\" id=\"ctdl-compose-bcc-label\">" + _("BCC:") + "</div>"
+		+ "<div class=\"ctdl-compose-bcc-field\" id=\"ctdl-compose-bcc-field\" contenteditable=\"true\"></div>"
+
+		// Visible subject field
 		+ "<div class=\"ctdl-compose-subject-label\">" + _("Subject:") + "</div>"
 		+ "<div class=\"ctdl-compose-subject-field\" id=\"ctdl-compose-subject-field\" contenteditable=\"true\"></div>"
 
@@ -243,3 +256,12 @@ function mail_compose(is_quoted, references, msgid) {
 	;
 
 }
+
+function make_cc_bcc_visible() {
+	document.getElementById("ctdl-cc-bcc-buttons").style.display = "none";
+	document.getElementById("ctdl-compose-cc-label").style.display = "block";
+	document.getElementById("ctdl-compose-cc-field").style.display = "block";
+	document.getElementById("ctdl-compose-bcc-label").style.display = "block";
+	document.getElementById("ctdl-compose-bcc-field").style.display = "block";
+}
+
