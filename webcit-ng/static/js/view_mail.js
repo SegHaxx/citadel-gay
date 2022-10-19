@@ -251,7 +251,7 @@ function mail_compose(is_quoted, references, msgid) {
 		+ "<span class=\"ctdl-msg-button\">" + _("Save to Drafts") + "</span>"
 		+ "<span class=\"ctdl-msg-button\">" + _("Attachments:") + " 0" + "</span>"
 		+ "<span class=\"ctdl-msg-button\">" + _("Contacts") + "</span>"
-		+ "<span class=\"ctdl-msg-button\"><i class=\"fa fa-trash\" style=\"color:red\"></i> " + _("Cancel") + "</span>"
+		+ "<span class=\"ctdl-msg-button\" onClick=\"gotoroom(current_room)\"><i class=\"fa fa-trash\" style=\"color:red\"></i> " + _("Cancel") + "</span>"
 		+ "</div>"
 	;
 
