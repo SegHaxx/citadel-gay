@@ -247,14 +247,13 @@ function mail_compose(is_quoted, references, msgid) {
 
 		// The button bar is a Grid element, and is also a Flexbox container.
 		+ "<div class=\"ctdl-compose-toolbar\">"
-		+ "<span class=\"ctdl-msg-button\"><i class=\"fa fa-check\" style=\"color:green\"></i> " + _("Send message") + "</span>"
+		+ "<span class=\"ctdl-msg-button\" onclick=\"mail_save_message()\"><i class=\"fa fa-check\" style=\"color:green\"></i> " + _("Send message") + "</span>"
 		+ "<span class=\"ctdl-msg-button\">" + _("Save to Drafts") + "</span>"
 		+ "<span class=\"ctdl-msg-button\">" + _("Attachments:") + " 0" + "</span>"
 		+ "<span class=\"ctdl-msg-button\">" + _("Contacts") + "</span>"
 		+ "<span class=\"ctdl-msg-button\" onClick=\"gotoroom(current_room)\"><i class=\"fa fa-trash\" style=\"color:red\"></i> " + _("Cancel") + "</span>"
 		+ "</div>"
 	;
-
 }
 
 function make_cc_bcc_visible() {
@@ -263,5 +262,67 @@ function make_cc_bcc_visible() {
 	document.getElementById("ctdl-compose-cc-field").style.display = "block";
 	document.getElementById("ctdl-compose-bcc-label").style.display = "block";
 	document.getElementById("ctdl-compose-bcc-field").style.display = "block";
+}
+
+
+// Helper function for mail_save_messages() to extract form values.
+// (We have to replace "|" with "!" because "|" is a field separator in the Citadel protocol)
+function msm_field(element_name) {
+	return (document.getElementById(element_name).innerHTML).replaceAll("|","!");
+}
+
+
+// Save the posted message to the server
+function mail_save_message() {
+
+	document.body.style.cursor = "wait";
+	url = "/ctdl/r/" + escapeHTMLURI(current_room)
+		+ "/dummy_name_for_new_mail"
+		+ "?wefw=" + msm_field("ctdl_mc_references")				// references (if present)
+		+ "&subj=" + msm_field("ctdl-compose-subject-field")			// subject (if present)
+		+ "&mailto=" + msm_field("ctdl-compose-to-field")			// To: (required)
+		+ "&mailcc=" + msm_field("ctdl-compose-cc-field")			// Cc: (if present)
+		+ "&mailbcc=" + msm_field("ctdl-compose-bcc-field")			// Bcc: (if present)
+		;
+	boundary = randomString();
+	body_text =
+		"--" + boundary + "\r\n"
+		+ "Content-type: text/html\r\n"
+		+ "Content-transfer-encoding: quoted-printable\r\n"
+		+ "\r\n"
+		+ quoted_printable_encode(
+			"<html><body>" + document.getElementById("ctdl-editor-body").innerHTML + "</body></html>"
+		) + "\r\n"
+		+ "--" + boundary + "--\r\n"
+	;
+
+	var request = new XMLHttpRequest();
+	request.open("PUT", url, true);
+	request.setRequestHeader("Content-type", "multipart/mixed; boundary=\"" + boundary + "\"");
+	request.onreadystatechange = function() {
+		if (request.readyState == 4) {
+			document.body.style.cursor = "default";
+			if (Math.trunc(request.status / 100) == 2) {
+				headers = request.getAllResponseHeaders().split("\n");
+				for (var i in headers) {
+					if (headers[i].startsWith("etag: ")) {
+						new_msg_num = headers[i].split(" ")[1];
+					}
+				}
+
+				// After saving the message, go back to the mailbox view.
+				gotoroom(current_room);
+
+			}
+			else {
+				error_message = request.responseText;
+				if (error_message.length == 0) {
+					error_message = _("An error has occurred.");
+				}
+				alert(error_message);						// editor remains open
+			}
+		}
+	};
+	request.send(body_text);
 }
 
