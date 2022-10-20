@@ -135,17 +135,24 @@ void dav_put_message(struct http_transaction *h, struct ctdlsession *c, char *eu
 	char response_string[1024];
 
 	if ((h->request_body == NULL) || (h->request_body_length < 1)) {
-		do_404(h);			// Refuse to post a null message
+		do_404(h);				// Refuse to post a null message
 		return;
 	}
 
-	char *wefw = get_url_param(h, "wefw");	// references
+	// Extract metadata from the URL
+	char *wefw = get_url_param(h, "wefw");		// References:
 	if (!wefw) wefw = "";
-	char *subj = get_url_param(h, "subj");	// subject
+	char *subj = get_url_param(h, "subj");		// Subject:
 	if (!subj) subj = "";
+	char *mailto = get_url_param(h, "mailto");	// To:
+	if (!mailto) mailto = "";
+	char *mailcc = get_url_param(h, "mailcc");	// Cc:
+	if (!mailcc) mailcc = "";
+	char *mailbcc = get_url_param(h, "mailbcc");	// Bcc:
+	if (!mailbcc) mailbcc = "";
 
 	// Mode 4 will give us metadata back after upload
-	ctdl_printf(c, "ENT0 1|||4|%s||1|||||%s|", subj, wefw);
+	ctdl_printf(c, "ENT0 1|%s||4|%s||1|%s|%s|||%s|", mailto, subj, mailcc, mailbcc, wefw);
 	ctdl_readline(c, buf, sizeof buf);
 	if (buf[0] != '8') {
 		h->response_code = 502;

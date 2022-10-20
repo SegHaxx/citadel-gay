@@ -31,6 +31,12 @@ function mail_render_one(msg, target_div) {
 		+ "<a href=\"javascript:mail_compose(true,'"+msg.wefw+"','"+msg.msgn+"');\">"
 		+ "<i class=\"fa fa-reply\"></i> " 
 		+ _("Reply")
+		+ "</a></span>"
+	
+		+ "<span class=\"ctdl-msg-button\">"				// Reply-All (mail is always Quoted)
+		+ "<a href=\"javascript:mail_compose(true,'"+msg.wefw+"','"+msg.msgn+"');\">"
+		+ "<i class=\"fa fa-reply-all\"></i> " 
+		+ _("ReplyAll")
 		+ "</a></span>";
 	
 		if (can_delete_messages) {
@@ -267,8 +273,8 @@ function make_cc_bcc_visible() {
 
 // Helper function for mail_save_messages() to extract form values.
 // (We have to replace "|" with "!" because "|" is a field separator in the Citadel protocol)
-function msm_field(element_name) {
-	return (document.getElementById(element_name).innerHTML).replaceAll("|","!");
+function msm_field(element_name, separator) {
+	return (document.getElementById(element_name).innerHTML).replaceAll("|",separator);
 }
 
 
@@ -278,12 +284,12 @@ function mail_save_message() {
 	document.body.style.cursor = "wait";
 	url = "/ctdl/r/" + escapeHTMLURI(current_room)
 		+ "/dummy_name_for_new_mail"
-		+ "?wefw=" + msm_field("ctdl_mc_references")				// references (if present)
-		+ "&subj=" + msm_field("ctdl-compose-subject-field")			// subject (if present)
-		+ "&mailto=" + msm_field("ctdl-compose-to-field")			// To: (required)
-		+ "&mailcc=" + msm_field("ctdl-compose-cc-field")			// Cc: (if present)
-		+ "&mailbcc=" + msm_field("ctdl-compose-bcc-field")			// Bcc: (if present)
-		;
+		+ "?wefw="	+ msm_field("ctdl_mc_references", "!")				// references (if present)
+		+ "&subj="	+ msm_field("ctdl-compose-subject-field", " ")			// subject (if present)
+		+ "&mailto="	+ msm_field("ctdl-compose-to-field", ",")			// To: (required)
+		+ "&mailcc="	+ msm_field("ctdl-compose-cc-field", ",")			// Cc: (if present)
+		+ "&mailbcc="	+ msm_field("ctdl-compose-bcc-field", ",")			// Bcc: (if present)
+	;
 	boundary = randomString();
 	body_text =
 		"--" + boundary + "\r\n"
