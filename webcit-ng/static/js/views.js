@@ -61,7 +61,7 @@ function entmsg_dispatcher() {
 			forum_entmsg();
 			break;
 		case views.VIEW_MAILBOX:
-			mail_compose(false, "", "");
+			mail_compose(false, "", 0);
 			break;
 		default:
 			break;

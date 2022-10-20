@@ -11,7 +11,8 @@ var RefreshMailboxInterval;							// We store our refresh timer here
 
 
 // Render a message into the mailbox view
-function mail_render_one(msg, target_div) {
+// (We want the message number and the message itself because we need to keep the msgnum for reply purposes)
+function mail_render_one(msgnum, msg, target_div) {
 	let div = "FIXME";
 	try {
 		outmsg =
@@ -28,13 +29,13 @@ function mail_render_one(msg, target_div) {
 		+ "<span class=\"ctdl-msg-header-buttons\">"			// begin buttons on right side
 	
 		+ "<span class=\"ctdl-msg-button\">"				// Reply (mail is always Quoted)
-		+ "<a href=\"javascript:mail_compose(true,'"+msg.wefw+"','"+msg.msgn+"');\">"
+		+ "<a href=\"javascript:mail_compose(true,'"+msg.wefw+"','"+msgnum+"');\">"
 		+ "<i class=\"fa fa-reply\"></i> " 
 		+ _("Reply")
 		+ "</a></span>"
 	
 		+ "<span class=\"ctdl-msg-button\">"				// Reply-All (mail is always Quoted)
-		+ "<a href=\"javascript:mail_compose(true,'"+msg.wefw+"','"+msg.msgn+"');\">"
+		+ "<a href=\"javascript:mail_compose(true,'"+msg.wefw+"','"+msgnum+"');\">"
 		+ "<i class=\"fa fa-reply-all\"></i> " 
 		+ _("ReplyAll")
 		+ "</a></span>";
@@ -78,7 +79,7 @@ function mail_display_message(msgnum, target_div) {
 		response = await fetch(url);
 		msg = await(response.json());
 		if (response.ok) {
-			mail_render_one(msg, target_div);
+			mail_render_one(msgnum, msg, target_div);
 		}
 	}
 	mail_fetch_msg();
@@ -208,7 +209,8 @@ function render_mailbox_display() {
 
 
 // Compose a new mail message (called by the Reply button here, or by the dispatcher in views.js)
-function mail_compose(is_quoted, references, msgid) {
+function mail_compose(is_quoted, references, msgnum) {
+	quoted_div_name = randomString();
 
 	// Make the "Write mail" button disappear.  We're already there!
 	document.getElementById("ctdl-newmsg-button").style.display = "none";
@@ -218,12 +220,10 @@ function mail_compose(is_quoted, references, msgid) {
 	// msgid	if a reply, the msgid of the most recent message in the chain, the one to which we are replying
 
 	// Now display the screen.
-	document.getElementById("ctdl-main").innerHTML
-
+	compose_screen =
 		// Hidden values that we are storing right here in the document tree for later
-		= "<input id=\"ctdl_mc_is_quoted\" style=\"display:none\" value=\"" + is_quoted + "\"></input>"
+		  "<input id=\"ctdl_mc_is_quoted\" style=\"display:none\" value=\"" + is_quoted + "\"></input>"
 		+ "<input id=\"ctdl_mc_references\" style=\"display:none\" value=\"" + references + "\"></input>"
-		+ "<input id=\"ctdl_mc_reply_msgid\" style=\"display:none\" value=\"" + msgid + "\"></input>"
 
 		// Header fields, the composition window, and the button bar are arranged using a Grid layout.
 		+ "<div id=\"ctdl-compose-mail\" class=\"ctdl-compose-mail\">"
@@ -249,7 +249,18 @@ function mail_compose(is_quoted, references, msgid) {
 
 		// Message composition box
 		+ "<div class=\"ctdl-compose-message-box\" id=\"ctdl-editor-body\" contenteditable=\"true\">"
-		+ "</div>"
+	;
+
+	if (is_quoted) {
+		compose_screen +=
+			  "<br><br><blockquote><div id=\"" + quoted_div_name + "\">"
+			+ "FIXME get the quoted message into here"
+			+ "</div></blockquote>";
+		;
+	}
+
+	compose_screen +=
+		  "</div>"
 
 		// The button bar is a Grid element, and is also a Flexbox container.
 		+ "<div class=\"ctdl-compose-toolbar\">"
@@ -260,6 +271,9 @@ function mail_compose(is_quoted, references, msgid) {
 		+ "<span class=\"ctdl-msg-button\" onClick=\"gotoroom(current_room)\"><i class=\"fa fa-trash\" style=\"color:red\"></i> " + _("Cancel") + "</span>"
 		+ "</div>"
 	;
+
+	document.getElementById("ctdl-main").innerHTML = compose_screen;
+
 }
 
 function make_cc_bcc_visible() {
