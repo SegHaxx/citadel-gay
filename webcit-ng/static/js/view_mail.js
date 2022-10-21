@@ -12,52 +12,59 @@ var RefreshMailboxInterval;							// We store our refresh timer here
 
 // Render a message into the mailbox view
 // (We want the message number and the message itself because we need to keep the msgnum for reply purposes)
-function mail_render_one(msgnum, msg, target_div) {
+function mail_render_one(msgnum, msg, target_div, include_controls) {
 	let div = "FIXME";
 	try {
 		outmsg =
 	  	  "<div class=\"ctdl-mmsg-wrapper\">"				// begin message wrapper
-		+ render_userpic(msg.from)					// user avatar
-		+ "<div class=\"ctdl-mmsg-content\">"				// begin content
-		+ "<div class=\"ctdl-msg-header\">"				// begin header
-		+ "<span class=\"ctdl-msg-header-info\">"			// begin header info on left side
-		+ render_msg_author(msg)
-		+ "<span class=\"ctdl-msgdate\">"
-		+ string_timestamp(msg.time,0)
-		+ "</span>"							// end msgdate
-		+ "</span>"							// end header info on left side
-		+ "<span class=\"ctdl-msg-header-buttons\">"			// begin buttons on right side
-	
-		+ "<span class=\"ctdl-msg-button\">"				// Reply (mail is always Quoted)
-		+ "<a href=\"javascript:mail_compose(true,'"+msg.wefw+"','"+msgnum+"');\">"
-		+ "<i class=\"fa fa-reply\"></i> " 
-		+ _("Reply")
-		+ "</a></span>"
-	
-		+ "<span class=\"ctdl-msg-button\">"				// Reply-All (mail is always Quoted)
-		+ "<a href=\"javascript:mail_compose(true,'"+msg.wefw+"','"+msgnum+"');\">"
-		+ "<i class=\"fa fa-reply-all\"></i> " 
-		+ _("ReplyAll")
-		+ "</a></span>";
-	
-		if (can_delete_messages) {
+		;
+
+		if (include_controls) {						// omit controls if this is a pull quote
 			outmsg +=
-		  	"<span class=\"ctdl-msg-button\">"
-			+ "<a href=\"javascript:forum_delete_message('"+div+"','"+msg.msgnum+"');\">"
-			+ "<i class=\"fa fa-trash\"></i> " 
-			+ _("Delete")
+			  render_userpic(msg.from)				// user avatar
+			+ "<div class=\"ctdl-mmsg-content\">"			// begin content
+			+ "<div class=\"ctdl-msg-header\">"			// begin header
+			+ "<span class=\"ctdl-msg-header-info\">"		// begin header info on left side
+			+ render_msg_author(msg)
+			+ "<span class=\"ctdl-msgdate\">"
+			+ string_timestamp(msg.time,0)
+			+ "</span>"						// end msgdate
+			+ "</span>"						// end header info on left side
+			+ "<span class=\"ctdl-msg-header-buttons\">"		// begin buttons on right side
+		
+			+ "<span class=\"ctdl-msg-button\">"			// Reply (mail is always Quoted)
+			+ "<a href=\"javascript:mail_compose(true,'"+msg.wefw+"','"+msgnum+"');\">"
+			+ "<i class=\"fa fa-reply\"></i> " 
+			+ _("Reply")
+			+ "</a></span>"
+		
+			+ "<span class=\"ctdl-msg-button\">"			// Reply-All (mail is always Quoted)
+			+ "<a href=\"javascript:mail_compose(true,'"+msg.wefw+"','"+msgnum+"');\">"
+			+ "<i class=\"fa fa-reply-all\"></i> " 
+			+ _("ReplyAll")
 			+ "</a></span>";
-		}
-	
-		outmsg +=
-		  "</span>";							// end buttons on right side
-		if (msg.subj) {
+		
+			if (can_delete_messages) {
+				outmsg +=
+			  	"<span class=\"ctdl-msg-button\">"
+				+ "<a href=\"javascript:forum_delete_message('"+div+"','"+msg.msgnum+"');\">"
+				+ "<i class=\"fa fa-trash\"></i> " 
+				+ _("Delete")
+				+ "</a></span>";
+			}
+		
 			outmsg +=
-	  		"<br><span class=\"ctdl-msgsubject\">" + msg.subj + "</span>";
+			  "</span>";						// end buttons on right side
+			if (msg.subj) {
+				outmsg +=
+		  		"<br><span class=\"ctdl-msgsubject\">" + msg.subj + "</span>";
+			}
+			outmsg +=
+		  	  "</div>";						// end header
 		}
+
 		outmsg +=
-	  	  "</div>"							// end header
-		+ "<div class=\"ctdl-msg-body\" id=\"" + div + "_body\">"	// begin body
+		  "<div class=\"ctdl-msg-body\" id=\"" + div + "_body\">"	// begin body
 		+ msg.text
 		+ "</div>"							// end body
 		+ "</div>"							// end content
@@ -72,14 +79,14 @@ function mail_render_one(msgnum, msg, target_div) {
 }
 
 
-// display an individual message
-function mail_display_message(msgnum, target_div) {
+// display an individual message (note: this wants an actual div object, not a string containing the name of a div)
+function mail_display_message(msgnum, target_div, include_controls) {
 	url = "/ctdl/r/" + escapeHTMLURI(current_room) + "/" + msgnum + "/json";
 	mail_fetch_msg = async() => {
 		response = await fetch(url);
 		msg = await(response.json());
 		if (response.ok) {
-			mail_render_one(msgnum, msg, target_div);
+			mail_render_one(msgnum, msg, target_div, include_controls);
 		}
 	}
 	mail_fetch_msg();
@@ -102,7 +109,7 @@ function select_message(msgnum) {
 	// display the message if it isn't already displayed
 	if (selected_message != msgnum) {
 		selected_message = msgnum;
-		mail_display_message(msgnum, document.getElementById("ctdl-mailbox-reading-pane"));
+		mail_display_message(msgnum, document.getElementById("ctdl-mailbox-reading-pane"), 1);
 	}
 }
 
@@ -273,6 +280,7 @@ function mail_compose(is_quoted, references, msgnum) {
 	;
 
 	document.getElementById("ctdl-main").innerHTML = compose_screen;
+	mail_display_message(msgnum, document.getElementById(quoted_div_name), 0);
 
 }
 
