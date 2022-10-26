@@ -10,6 +10,17 @@ var selected_message = 0;							// Remember the last message that was selected
 var RefreshMailboxInterval;							// We store our refresh timer here
 
 
+// Render reply address for a message (FIXME we might want to figure out in-reply-to)
+function reply_addr(msg) {
+	if (msg.locl) {
+		return(msg.from);
+	}
+	else {
+		return(msg.from + " &lt;" + msg.rfca + "&gt;");
+	}
+}
+
+
 // Render a message into the mailbox view
 // (We want the message number and the message itself because we need to keep the msgnum for reply purposes)
 function mail_render_one(msgnum, msg, target_div, include_controls) {
@@ -33,7 +44,7 @@ function mail_render_one(msgnum, msg, target_div, include_controls) {
 			+ "<span class=\"ctdl-msg-header-buttons\">"		// begin buttons on right side
 		
 			+ "<span class=\"ctdl-msg-button\">"			// Reply (mail is always Quoted)
-			+ "<a href=\"javascript:mail_compose(true,'"+msg.wefw+"','"+msgnum+"', '', '', 'Re: '+msg.subj);\">"
+			+ "<a href=\"javascript:mail_compose(true,'"+msg.wefw+"','"+msgnum+"', reply_addr(msg), '', 'Re: '+msg.subj);\">"
 			+ "<i class=\"fa fa-reply\"></i> " 
 			+ _("Reply")
 			+ "</a></span>"

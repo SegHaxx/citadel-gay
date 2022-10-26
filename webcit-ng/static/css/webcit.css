@@ -497,7 +497,10 @@ blockquote pre {
 
 .ctdl-compose-to-line {
 	grid-area: ctdl-compose-to-line;
-	padding: 0.5vw;
+	padding-left: 0;
+	padding-right: 0.5vw;
+	padding-top: 0.5vw;
+	padding-bottom: 1px;
 	border-bottom: 1px solid Grey;
 	margin-right: 0.5vw;
 	display: flex;
@@ -522,10 +525,13 @@ blockquote pre {
 
 .ctdl-compose-cc-field {
 	grid-area: ctdl-compose-cc-field;
-	padding: 0.5vw;
 	border-bottom: 1px solid Grey;
 	margin-right: 0.5vw;
 	display: none;
+	padding-left: 0;
+	padding-right: 0.5vw;
+	padding-top: 0.5vw;
+	padding-bottom: 0;
 }
 
 .ctdl-compose-bcc-label {
@@ -536,7 +542,10 @@ blockquote pre {
 
 .ctdl-compose-bcc-field {
 	grid-area: ctdl-compose-bcc-field;
-	padding: 0.5vw;
+	padding-left: 0;
+	padding-right: 0.5vw;
+	padding-top: 0.5vw;
+	padding-bottom: 0;
 	border-bottom: 1px solid Grey;
 	margin-right: 0.5vw;
 	display: none;
@@ -549,7 +558,10 @@ blockquote pre {
 
 .ctdl-compose-subject-field {
 	grid-area: ctdl-compose-subject-field;
-	padding: 0.5vw;
+	padding-left: 0;
+	padding-right: 0.5vw;
+	padding-top: 0.5vw;
+	padding-bottom: 0;
 	border-bottom: 1px solid Grey;
 	margin-right: 0.5vw;
 }
