@@ -33,13 +33,13 @@ function mail_render_one(msgnum, msg, target_div, include_controls) {
 			+ "<span class=\"ctdl-msg-header-buttons\">"		// begin buttons on right side
 		
 			+ "<span class=\"ctdl-msg-button\">"			// Reply (mail is always Quoted)
-			+ "<a href=\"javascript:mail_compose(true,'"+msg.wefw+"','"+msgnum+"', '', '', '');\">"
+			+ "<a href=\"javascript:mail_compose(true,'"+msg.wefw+"','"+msgnum+"', '', '', 'Re: '+msg.subj);\">"
 			+ "<i class=\"fa fa-reply\"></i> " 
 			+ _("Reply")
 			+ "</a></span>"
 		
 			+ "<span class=\"ctdl-msg-button\">"			// Reply-All (mail is always Quoted)
-			+ "<a href=\"javascript:mail_compose(true,'"+msg.wefw+"','"+msgnum+"', '', '', '');\">"
+			+ "<a href=\"javascript:mail_compose(true,'"+msg.wefw+"','"+msgnum+"', '', '', 'Re: '+msg.subj);\">"
 			+ "<i class=\"fa fa-reply-all\"></i> " 
 			+ _("ReplyAll")
 			+ "</a></span>";
