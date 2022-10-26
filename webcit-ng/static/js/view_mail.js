@@ -33,13 +33,13 @@ function mail_render_one(msgnum, msg, target_div, include_controls) {
 			+ "<span class=\"ctdl-msg-header-buttons\">"		// begin buttons on right side
 		
 			+ "<span class=\"ctdl-msg-button\">"			// Reply (mail is always Quoted)
-			+ "<a href=\"javascript:mail_compose(true,'"+msg.wefw+"','"+msgnum+"');\">"
+			+ "<a href=\"javascript:mail_compose(true,'"+msg.wefw+"','"+msgnum+"', '', '', '');\">"
 			+ "<i class=\"fa fa-reply\"></i> " 
 			+ _("Reply")
 			+ "</a></span>"
 		
 			+ "<span class=\"ctdl-msg-button\">"			// Reply-All (mail is always Quoted)
-			+ "<a href=\"javascript:mail_compose(true,'"+msg.wefw+"','"+msgnum+"');\">"
+			+ "<a href=\"javascript:mail_compose(true,'"+msg.wefw+"','"+msgnum+"', '', '', '');\">"
 			+ "<i class=\"fa fa-reply-all\"></i> " 
 			+ _("ReplyAll")
 			+ "</a></span>";
@@ -216,7 +216,7 @@ function render_mailbox_display() {
 
 
 // Compose a new mail message (called by the Reply button here, or by the dispatcher in views.js)
-function mail_compose(is_quoted, references, msgnum) {
+function mail_compose(is_quoted, references, msgnum, m_to, m_cc, m_subject) {
 	quoted_div_name = randomString();
 
 	// Make the "Write mail" button disappear.  We're already there!
@@ -238,7 +238,7 @@ function mail_compose(is_quoted, references, msgnum) {
 		// Visible To: field, plus a box to make the CC/BCC lines appear
 		+ "<div class=\"ctdl-compose-to-label\">" + _("To:") + "</div>"
 		+ "<div class=\"ctdl-compose-to-line\">"
-		+ "<div class=\"ctdl-compose-to-field\" id=\"ctdl-compose-to-field\" contenteditable=\"true\"></div>"
+		+ "<div class=\"ctdl-compose-to-field\" id=\"ctdl-compose-to-field\" contenteditable=\"true\">" + m_to + "</div>"
 		+ "<div class=\"ctdl-cc-bcc-buttons ctdl-msg-button\" id=\"ctdl-cc-bcc-buttons\" "
 		+ "onClick=\"make_cc_bcc_visible()\">"
 		+ _("CC:") + "/" + _("BCC:") + "</div>"
@@ -246,13 +246,13 @@ function mail_compose(is_quoted, references, msgnum) {
 
 		// CC/BCC
 		+ "<div class=\"ctdl-compose-cc-label\" id=\"ctdl-compose-cc-label\">" + _("CC:") + "</div>"
-		+ "<div class=\"ctdl-compose-cc-field\" id=\"ctdl-compose-cc-field\" contenteditable=\"true\"></div>"
+		+ "<div class=\"ctdl-compose-cc-field\" id=\"ctdl-compose-cc-field\" contenteditable=\"true\">" + m_cc + "</div>"
 		+ "<div class=\"ctdl-compose-bcc-label\" id=\"ctdl-compose-bcc-label\">" + _("BCC:") + "</div>"
 		+ "<div class=\"ctdl-compose-bcc-field\" id=\"ctdl-compose-bcc-field\" contenteditable=\"true\"></div>"
 
 		// Visible subject field
 		+ "<div class=\"ctdl-compose-subject-label\">" + _("Subject:") + "</div>"
-		+ "<div class=\"ctdl-compose-subject-field\" id=\"ctdl-compose-subject-field\" contenteditable=\"true\"></div>"
+		+ "<div class=\"ctdl-compose-subject-field\" id=\"ctdl-compose-subject-field\" contenteditable=\"true\">" + m_subject + "</div>"
 
 		// Message composition box
 		+ "<div class=\"ctdl-compose-message-box\" id=\"ctdl-editor-body\" contenteditable=\"true\">"
@@ -281,8 +281,8 @@ function mail_compose(is_quoted, references, msgnum) {
 
 	document.getElementById("ctdl-main").innerHTML = compose_screen;
 	mail_display_message(msgnum, document.getElementById(quoted_div_name), 0);
-
 }
+
 
 function make_cc_bcc_visible() {
 	document.getElementById("ctdl-cc-bcc-buttons").style.display = "none";
