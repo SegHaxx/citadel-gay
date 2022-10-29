@@ -1,9 +1,9 @@
-CFLAGS := -ggdb -Wno-format-truncation
-LDFLAGS := 
+CFLAGS := $(CFLAGS) -ggdb -Wno-format-truncation
+LDFLAGS := $(LDFLAGS)
 
 # link
 webcit: server/*.c
-	gcc server/*.c $(LDFLAGS) -lcitadel -lpthread -lcrypto -lssl -lexpat -o webcit
+	gcc $(CFLAGS) server/*.c $(LDFLAGS) -lcitadel -lpthread -lcrypto -lssl -lexpat -o webcit
 
 # remove compilation products
 clean:
