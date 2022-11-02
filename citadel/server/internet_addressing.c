@@ -713,9 +713,6 @@ void unfold_rfc822_field(char **field, char **FieldEnd)
 
 
 // Split an RFC822-style address into userid, host, and full name
-//
-// Note: This still handles obsolete address syntaxes such as user%node@node and ...node!user
-//       We should probably remove that.
 void process_rfc822_addr(const char *rfc822, char *user, char *node, char *name) {
 	int a;
 
@@ -729,17 +726,9 @@ void process_rfc822_addr(const char *rfc822, char *user, char *node, char *name)
 	strcpy(name, rfc822);
 	stripout(name, '<', '>');
 
-	// strip anything to the left of a bang
-	while ((!IsEmptyStr(name)) && (haschar(name, '!') > 0))
-		strcpy(name, &name[1]);
-
-	// and anything to the right of a @ or %
+	// and anything to the right of a @
 	for (a = 0; name[a] != '\0'; ++a) {
 		if (name[a] == '@') {
-			name[a] = 0;
-			break;
-		}
-		if (name[a] == '%') {
 			name[a] = 0;
 			break;
 		}
@@ -775,22 +764,13 @@ void process_rfc822_addr(const char *rfc822, char *user, char *node, char *name)
 		stripallbut(user, '<', '>');
 	}
 
-	// strip anything to the left of a bang
-	while ((!IsEmptyStr(user)) && (haschar(user, '!') > 0))
-		strcpy(user, &user[1]);
-
-	// and anything to the right of a @ or %
+	// and anything to the right of a @
 	for (a = 0; user[a] != '\0'; ++a) {
 		if (user[a] == '@') {
 			user[a] = 0;
 			break;
 		}
-		if (user[a] == '%') {
-			user[a] = 0;
-			break;
-		}
 	}
-
 
 	// extract node name
 	strcpy(node, rfc822);
@@ -804,33 +784,14 @@ void process_rfc822_addr(const char *rfc822, char *user, char *node, char *name)
 	}
 
 	// If no node specified, tack ours on instead
-	if (
-		(haschar(node, '@')==0)
-		&& (haschar(node, '%')==0)
-		&& (haschar(node, '!')==0)
-	) {
+	if (haschar(node, '@') == 0) {
 		strcpy(node, CtdlGetConfigStr("c_nodename"));
 	}
 	else {
-
 		// strip anything to the left of a @
-		while ((!IsEmptyStr(node)) && (haschar(node, '@') > 0))
+		while ((!IsEmptyStr(node)) && (haschar(node, '@') > 0)) {
 			strcpy(node, &node[1]);
-	
-		// strip anything to the left of a %
-		while ((!IsEmptyStr(node)) && (haschar(node, '%') > 0))
-			strcpy(node, &node[1]);
-	
-		// reduce multiple system bang paths to node!user
-		while ((!IsEmptyStr(node)) && (haschar(node, '!') > 1))
-			strcpy(node, &node[1]);
-	
-		// now get rid of the user portion of a node!user string
-		for (a = 0; node[a] != '\0'; ++a)
-			if (node[a] == '!') {
-				node[a] = 0;
-				break;
-			}
+		}
 	}
 
 	// strip leading and trailing spaces in all strings
