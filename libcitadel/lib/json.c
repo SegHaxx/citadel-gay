@@ -1,11 +1,10 @@
-/*
- * JSON data type and serializer for Citadel
- *
- * Copyright (c) 1987-2018 by the citadel.org team
- *
+//
+// JSON data type and serializer for Citadel
+//
+// Copyright (c) 1987-2018 by the citadel.org team
+//
 // This program is open source software.  Use, duplication, or disclosure
 // is subject to the terms of the GNU General Public License, version 3.
- */
 
 #include "sysdep.h"
 #include <sys/types.h>
@@ -25,8 +24,7 @@
 #define JSON_ARRAY 4
 #define JSON_OBJECT 7
 
-struct JsonValue
-{
+struct JsonValue {
 	int Type;
 	StrBuf *Name;
 	StrBuf *Value;
@@ -34,8 +32,7 @@ struct JsonValue
 };
 
 
-void DeleteJSONValue(void *vJsonValue)
-{
+void DeleteJSONValue(void *vJsonValue) {
 	JsonValue *Val = (JsonValue*) vJsonValue;
 	FreeStrBuf(&Val->Name);
 	FreeStrBuf(&Val->Value);
@@ -44,15 +41,13 @@ void DeleteJSONValue(void *vJsonValue)
 }
 
 
-JsonValue *NewJsonObject(const char *Key, long keylen)
-{
+JsonValue *NewJsonObject(const char *Key, long keylen) {
 	JsonValue *Ret;
 
 	Ret = (JsonValue*) malloc(sizeof(JsonValue));
 	memset(Ret, 0, sizeof(JsonValue));
 	Ret->Type = JSON_OBJECT;
-	if (Key != NULL)
-	{
+	if (Key != NULL) {
 		Ret->Name = NewStrBufPlain(Key, keylen);
 	}
 	Ret->SubValues = NewHash(1, NULL);
@@ -60,15 +55,13 @@ JsonValue *NewJsonObject(const char *Key, long keylen)
 }
 
 
-JsonValue *NewJsonArray(const char *Key, long keylen)
-{
+JsonValue *NewJsonArray(const char *Key, long keylen) {
 	JsonValue *Ret;
 
 	Ret = (JsonValue*) malloc(sizeof(JsonValue));
 	memset(Ret, 0, sizeof(JsonValue));
 	Ret->Type = JSON_ARRAY;
-	if (Key != NULL)
-	{
+	if (Key != NULL) {
 		Ret->Name = NewStrBufPlain(Key, keylen);
 	}
 	Ret->SubValues = NewHash(1, lFlathash);
@@ -76,15 +69,13 @@ JsonValue *NewJsonArray(const char *Key, long keylen)
 }
 
 
-JsonValue *NewJsonNumber(const char *Key, long keylen, long Number)
-{
+JsonValue *NewJsonNumber(const char *Key, long keylen, long Number) {
 	JsonValue *Ret;
 
 	Ret = (JsonValue*) malloc(sizeof(JsonValue));
 	memset(Ret, 0, sizeof(JsonValue));
 	Ret->Type = JSON_NUM;
-	if (Key != NULL)
-	{
+	if (Key != NULL) {
 		Ret->Name = NewStrBufPlain(Key, keylen);
 	}
 	Ret->Value = NewStrBufPlain(NULL, 64);
@@ -93,15 +84,13 @@ JsonValue *NewJsonNumber(const char *Key, long keylen, long Number)
 }
 
 
-JsonValue *NewJsonBigNumber(const char *Key, long keylen, double Number)
-{
+JsonValue *NewJsonBigNumber(const char *Key, long keylen, double Number) {
 	JsonValue *Ret;
 
 	Ret = (JsonValue*) malloc(sizeof(JsonValue));
 	memset(Ret, 0, sizeof(JsonValue));
 	Ret->Type = JSON_NUM;
-	if (Key != NULL)
-	{
+	if (Key != NULL) {
 		Ret->Name = NewStrBufPlain(Key, keylen);
 	}
 	Ret->Value = NewStrBufPlain(NULL, 128);
@@ -110,42 +99,35 @@ JsonValue *NewJsonBigNumber(const char *Key, long keylen, double Number)
 }
 
 
-JsonValue *NewJsonString(const char *Key, long keylen, StrBuf *CopyMe, int copy_or_smash)
-{
+JsonValue *NewJsonString(const char *Key, long keylen, StrBuf *CopyMe, int copy_or_smash) {
 	JsonValue *Ret;
 
 	Ret = (JsonValue*) malloc(sizeof(JsonValue));
 	memset(Ret, 0, sizeof(JsonValue));
 	Ret->Type = JSON_STRING;
-	if (Key != NULL)
-	{
+	if (Key != NULL) {
 		Ret->Name = NewStrBufPlain(Key, keylen);
 	}
-	if (copy_or_smash == NEWJSONSTRING_COPYBUF)
-	{
+	if (copy_or_smash == NEWJSONSTRING_COPYBUF) {
 		Ret->Value = NewStrBufDup(CopyMe);
 	}
-	else if (copy_or_smash == NEWJSONSTRING_SMASHBUF)
-	{
+	else if (copy_or_smash == NEWJSONSTRING_SMASHBUF) {
 		Ret->Value = CopyMe;
 	}
-	else
-	{
+	else {
 		Ret->Value = NULL;		// error condition
 	}
 	return Ret;
 }
 
 
-JsonValue *NewJsonPlainString(const char *Key, long keylen, const char *CopyMe, long len)
-{
+JsonValue *NewJsonPlainString(const char *Key, long keylen, const char *CopyMe, long len) {
 	JsonValue *Ret;
 
 	Ret = (JsonValue*) malloc(sizeof(JsonValue));
 	memset(Ret, 0, sizeof(JsonValue));
 	Ret->Type = JSON_STRING;
-	if (Key != NULL)
-	{
+	if (Key != NULL) {
 		Ret->Name = NewStrBufPlain(Key, keylen);
 	}
 	Ret->Value = NewStrBufPlain(CopyMe, len);
@@ -153,8 +135,7 @@ JsonValue *NewJsonPlainString(const char *Key, long keylen, const char *CopyMe, 
 }
 
 
-JsonValue *NewJsonNull(const char *Key, long keylen)
-{
+JsonValue *NewJsonNull(const char *Key, long keylen) {
 	JsonValue *Ret;
 
 	Ret = (JsonValue*) malloc(sizeof(JsonValue));
@@ -169,33 +150,28 @@ JsonValue *NewJsonNull(const char *Key, long keylen)
 }
 
 
-JsonValue *NewJsonBool(const char *Key, long keylen, int value)
-{
+JsonValue *NewJsonBool(const char *Key, long keylen, int value) {
 	JsonValue *Ret;
 
 	Ret = (JsonValue*) malloc(sizeof(JsonValue));
 	memset(Ret, 0, sizeof(JsonValue));
 	Ret->Type = JSON_BOOL;
-	if (Key != NULL)
-	{
+	if (Key != NULL) {
 		Ret->Name = NewStrBufPlain(Key, keylen);
 	}
 	if (value) {
 		Ret->Value = NewStrBufPlain(HKEY("true"));
 	}
-	else
-	{
+	else {
 		Ret->Value = NewStrBufPlain(HKEY("false"));
 	}
 	return Ret;
 }
 
 
-void JsonArrayAppend(JsonValue *Array, JsonValue *Val)
-{
+void JsonArrayAppend(JsonValue *Array, JsonValue *Val) {
 	long n;
-	if (Array->Type != JSON_ARRAY)
-	{
+	if (Array->Type != JSON_ARRAY) {
 		return;
 	}
 
@@ -204,18 +180,15 @@ void JsonArrayAppend(JsonValue *Array, JsonValue *Val)
 }
 
 
-void JsonObjectAppend(JsonValue *Array, JsonValue *Val)
-{
-	if ((Array->Type != JSON_OBJECT) || (Val->Name == NULL))
-	{
+void JsonObjectAppend(JsonValue *Array, JsonValue *Val) {
+	if ((Array->Type != JSON_OBJECT) || (Val->Name == NULL)) {
 		return;
 	}
 	Put(Array->SubValues, SKEY(Val->Name), Val, DeleteJSONValue);
 }
 
 
-void SerializeJson(StrBuf *Target, JsonValue *Val, int FreeVal)
-{
+void SerializeJson(StrBuf *Target, JsonValue *Val, int FreeVal) {
 	void *vValue, *vPrevious;
 	JsonValue *SubVal;
 	HashPos *It;
@@ -243,10 +216,8 @@ void SerializeJson(StrBuf *Target, JsonValue *Val, int FreeVal)
 		vPrevious = NULL;
 		StrBufAppendBufPlain(Target, HKEY("["), 0);
 		It = GetNewHashPos(Val->SubValues, 0);
-		while (GetNextHashPos(Val->SubValues, It, &keylen, &Key, &vValue))
-		{
-			if (vPrevious != NULL) 
-			{
+		while (GetNextHashPos(Val->SubValues, It, &keylen, &Key, &vValue)) {
+			if (vPrevious != NULL) {
 				StrBufAppendBufPlain(Target, HKEY(","), 0);
 			}
 			SubVal = (JsonValue*) vValue;
@@ -260,12 +231,10 @@ void SerializeJson(StrBuf *Target, JsonValue *Val, int FreeVal)
 		vPrevious = NULL;
 		StrBufAppendBufPlain(Target, HKEY("{"), 0);
 		It = GetNewHashPos(Val->SubValues, 0);
-		while (GetNextHashPos(Val->SubValues, It, &keylen, &Key, &vValue))
-		{
+		while (GetNextHashPos(Val->SubValues, It, &keylen, &Key, &vValue)) {
 			SubVal = (JsonValue*) vValue;
 
-			if (vPrevious != NULL)
-			{
+			if (vPrevious != NULL) {
 				StrBufAppendBufPlain(Target, HKEY(","), 0);
 			}
 			StrBufAppendBufPlain(Target, HKEY("\""), 0);
@@ -279,8 +248,7 @@ void SerializeJson(StrBuf *Target, JsonValue *Val, int FreeVal)
 		DeleteHashPos(&It);
 		break;
 	}
-	if (FreeVal)
-	{
+	if (FreeVal) {
 		DeleteJSONValue(Val);
 	}
 }

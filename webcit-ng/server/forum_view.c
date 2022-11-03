@@ -19,6 +19,22 @@ void setup_for_forum_view(struct ctdlsession *c) {
 }
 
 
+// Convenience function for json_render_one_message()
+// Converts a string of comma-separated recipients into a JSON Array
+JsonValue *json_tokenize_recipients(const char *Key, long keylen, char *recp) {
+	char tokbuf[1024];
+
+	JsonValue *j = NewJsonArray(Key, keylen);
+	int num_recp = num_tokens(recp, ',');
+	for (int i=0; i<num_recp; ++i) {
+		extract_token(tokbuf, recp, i, ',', sizeof(tokbuf));
+		striplt(tokbuf);
+		JsonArrayAppend(j, NewJsonPlainString(HKEY("r"), tokbuf, strlen(tokbuf)));
+	}
+	return(j);
+}
+
+
 // Fetch a single message and return it in JSON format for client-side rendering
 void json_render_one_message(struct http_transaction *h, struct ctdlsession *c, long msgnum) {
 	StrBuf *raw_msg = NULL;
@@ -66,8 +82,13 @@ void json_render_one_message(struct http_transaction *h, struct ctdlsession *c, 
 		else if (!strncasecmp(buf, "wefw=", 5)) {
 			JsonObjectAppend(j, NewJsonPlainString(HKEY("wefw"), &buf[5], -1));
 		}
+		else if (!strncasecmp(buf, "rcpt=", 5)) {
+			JsonObjectAppend(j, json_tokenize_recipients(HKEY("rcpt"), &buf[5]));
+		}
+		else if (!strncasecmp(buf, "cccc=", 5)) {
+			JsonObjectAppend(j, json_tokenize_recipients(HKEY("cccc"), &buf[5]));
+		}
 	}
-
 	JsonObjectAppend(j, NewJsonNumber(HKEY("locl"), message_originated_locally));
 
 	if (!strcmp(buf, "text")) {

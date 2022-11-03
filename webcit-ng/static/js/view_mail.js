@@ -66,6 +66,7 @@ function mail_render_one(msgnum, msg, target_div, include_controls) {
 		
 			outmsg +=
 			  "</span>";						// end buttons on right side
+			outmsg += "<br><span>To: lorem ipsum &lt;dolor@sit.amet&gt;</span>"
 			if (msg.subj) {
 				outmsg +=
 		  		"<br><span class=\"ctdl-msgsubject\">" + msg.subj + "</span>";
