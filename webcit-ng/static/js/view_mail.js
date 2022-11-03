@@ -66,11 +66,37 @@ function mail_render_one(msgnum, msg, target_div, include_controls) {
 		
 			outmsg +=
 			  "</span>";						// end buttons on right side
-			outmsg += "<br><span>To: lorem ipsum &lt;dolor@sit.amet&gt;</span>"
+
+			// Display the To: recipients, if any are present
+			if (msg.rcpt) {
+				outmsg += "<br><span>" + _("To:") + " ";
+				for (var r=0; r<msg.rcpt.length; ++r) {
+					if (r != 0) {
+						outmsg += ", ";
+					}
+					outmsg += escapeHTML(msg.rcpt[r]);
+				}
+				outmsg += "</span>";
+			}
+
+			// Display the Cc: recipients, if any are present
+			if (msg.cccc) {
+				outmsg += "<br><span>" + _("Cc:") + " ";
+				for (var r=0; r<msg.cccc.length; ++r) {
+					if (r != 0) {
+						outmsg += ", ";
+					}
+					outmsg += escapeHTML(msg.cccc[r]);
+				}
+				outmsg += "</span>";
+			}
+
+			// Display a subject line, but only if the message has a subject (internal Citadel messages often don't)
 			if (msg.subj) {
 				outmsg +=
 		  		"<br><span class=\"ctdl-msgsubject\">" + msg.subj + "</span>";
 			}
+
 			outmsg +=
 		  	  "</div>";						// end header
 		}
