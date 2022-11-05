@@ -254,7 +254,7 @@ function render_mailbox_display() {
 
 
 // Compose a new mail message (called by the Reply button here, or by the dispatcher in views.js)
-function mail_compose(is_quoted, references, msgnum, m_to, m_cc, m_subject) {
+function mail_compose(is_quoted, references, quoted_msgnum, m_to, m_cc, m_subject) {
 	quoted_div_name = randomString();
 
 	// Make the "Write mail" button disappear.  We're already there!
@@ -297,11 +297,7 @@ function mail_compose(is_quoted, references, msgnum, m_to, m_cc, m_subject) {
 	;
 
 	if (is_quoted) {
-		compose_screen +=
-			  "<br><br><blockquote><div id=\"" + quoted_div_name + "\">"
-			+ "FIXME get the quoted message into here"
-			+ "</div></blockquote>";
-		;
+		compose_screen += "<br><br><blockquote><div id=\"" + quoted_div_name + "\"></div></blockquote>";
 	}
 
 	compose_screen +=
@@ -318,7 +314,7 @@ function mail_compose(is_quoted, references, msgnum, m_to, m_cc, m_subject) {
 	;
 
 	document.getElementById("ctdl-main").innerHTML = compose_screen;
-	mail_display_message(msgnum, document.getElementById(quoted_div_name), 0);
+	mail_display_message(quoted_msgnum, document.getElementById(quoted_div_name), 0);
 }
 
 
