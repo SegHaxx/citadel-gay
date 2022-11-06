@@ -13,11 +13,17 @@ var RefreshMailboxInterval;							// We store our refresh timer here
 // Render reply address for a message (FIXME we might want to figure out in-reply-to)
 function reply_addr(msg) {
 	if (msg.locl) {
-		return(msg.from);
+		return([msg.from]);
 	}
 	else {
-		return(msg.from + " &lt;" + msg.rfca + "&gt;");
+		return([msg.from + " &lt;" + msg.rfca + "&gt;"]);
 	}
+}
+
+
+// Render the To: recipients for a reply-all operation
+function replyall_to(msg) {
+	return([...reply_addr(msg), ...msg.rcpt]);
 }
 
 
@@ -44,13 +50,13 @@ function mail_render_one(msgnum, msg, target_div, include_controls) {
 			+ "<span class=\"ctdl-msg-header-buttons\">"		// begin buttons on right side
 		
 			+ "<span class=\"ctdl-msg-button\">"			// Reply (mail is always Quoted)
-			+ "<a href=\"javascript:mail_compose(true,'"+msg.wefw+"','"+msgnum+"', reply_addr(msg), '', 'Re: '+msg.subj);\">"
+			+ "<a href=\"javascript:mail_compose(true,'"+msg.wefw+"','"+msgnum+"', reply_addr(msg), [], 'Re: '+msg.subj);\">"
 			+ "<i class=\"fa fa-reply\"></i> " 
 			+ _("Reply")
 			+ "</a></span>"
 		
 			+ "<span class=\"ctdl-msg-button\">"			// Reply-All (mail is always Quoted)
-			+ "<a href=\"javascript:mail_compose(true,'"+msg.wefw+"','"+msgnum+"', '', '', 'Re: '+msg.subj);\">"
+			+ "<a href=\"javascript:mail_compose(true,'"+msg.wefw+"','"+msgnum+"', replyall_to(msg), msg.cccc, 'Re: '+msg.subj);\">"
 			+ "<i class=\"fa fa-reply-all\"></i> " 
 			+ _("ReplyAll")
 			+ "</a></span>";
@@ -255,6 +261,38 @@ function render_mailbox_display() {
 
 // Compose a new mail message (called by the Reply button here, or by the dispatcher in views.js)
 function mail_compose(is_quoted, references, quoted_msgnum, m_to, m_cc, m_subject) {
+	console.log("mail_compose()");
+
+	// m_to will be an array of zero or more recipients for the To: field.  Convert it to a string.
+	if (m_to) {
+		m_to = Array.from(new Set(m_to));	// remove dupes
+		m_to_str = "";
+		for (i=0; i<m_to.length; ++i) {
+			if (i > 0) {
+				m_to_str += ", ";
+			}
+			m_to_str += m_to[i].replaceAll("<", "&lt;").replaceAll(">", "&gt;");
+		}
+	}
+	else {
+		m_to_str = "";
+	}
+
+	// m_to will be an array of zero or more recipients for the Cc: field.  Convert it to a string.
+	if (m_cc) {
+		m_cc = Array.from(new Set(m_cc));	// remove dupes
+		m_cc_str = "";
+		for (i=0; i<m_cc.length; ++i) {
+			if (i > 0) {
+				m_cc_str += ", ";
+			}
+			m_cc_str += m_cc[i].replaceAll("<", "&lt;").replaceAll(">", "&gt;");
+		}
+	}
+	else {
+		m_cc_str = "";
+	}
+
 	quoted_div_name = randomString();
 
 	// Make the "Write mail" button disappear.  We're already there!
@@ -276,7 +314,7 @@ function mail_compose(is_quoted, references, quoted_msgnum, m_to, m_cc, m_subjec
 		// Visible To: field, plus a box to make the CC/BCC lines appear
 		+ "<div class=\"ctdl-compose-to-label\">" + _("To:") + "</div>"
 		+ "<div class=\"ctdl-compose-to-line\">"
-		+ "<div class=\"ctdl-compose-to-field\" id=\"ctdl-compose-to-field\" contenteditable=\"true\">" + m_to + "</div>"
+		+ "<div class=\"ctdl-compose-to-field\" id=\"ctdl-compose-to-field\" contenteditable=\"true\">" + m_to_str + "</div>"
 		+ "<div class=\"ctdl-cc-bcc-buttons ctdl-msg-button\" id=\"ctdl-cc-bcc-buttons\" "
 		+ "onClick=\"make_cc_bcc_visible()\">"
 		+ _("CC:") + "/" + _("BCC:") + "</div>"
@@ -284,7 +322,7 @@ function mail_compose(is_quoted, references, quoted_msgnum, m_to, m_cc, m_subjec
 
 		// CC/BCC
 		+ "<div class=\"ctdl-compose-cc-label\" id=\"ctdl-compose-cc-label\">" + _("CC:") + "</div>"
-		+ "<div class=\"ctdl-compose-cc-field\" id=\"ctdl-compose-cc-field\" contenteditable=\"true\">" + m_cc + "</div>"
+		+ "<div class=\"ctdl-compose-cc-field\" id=\"ctdl-compose-cc-field\" contenteditable=\"true\">" + m_cc_str + "</div>"
 		+ "<div class=\"ctdl-compose-bcc-label\" id=\"ctdl-compose-bcc-label\">" + _("BCC:") + "</div>"
 		+ "<div class=\"ctdl-compose-bcc-field\" id=\"ctdl-compose-bcc-field\" contenteditable=\"true\"></div>"
 
