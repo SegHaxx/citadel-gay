@@ -353,13 +353,15 @@ function mail_compose(is_quoted, references, quoted_msgnum, m_to, m_cc, m_subjec
 
 	document.getElementById("ctdl-main").innerHTML = compose_screen;
 	mail_display_message(quoted_msgnum, document.getElementById(quoted_div_name), 0);
+	if (m_cc) {
+		document.getElementById("ctdl-compose-cc-label").style.display = "block";
+		document.getElementById("ctdl-compose-cc-field").style.display = "block";
+	}
 }
 
 
 function make_cc_bcc_visible() {
 	document.getElementById("ctdl-cc-bcc-buttons").style.display = "none";
-	document.getElementById("ctdl-compose-cc-label").style.display = "block";
-	document.getElementById("ctdl-compose-cc-field").style.display = "block";
 	document.getElementById("ctdl-compose-bcc-label").style.display = "block";
 	document.getElementById("ctdl-compose-bcc-field").style.display = "block";
 }
