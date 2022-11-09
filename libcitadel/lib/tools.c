@@ -282,8 +282,7 @@ size_t striplt(char *buf) {
  * ch	the char to search
  * returns the number of times ch appears in st
  */
-int haschar(const char *st, int ch)
-{
+int haschar(const char *st, int ch) {
 	const char *ptr;
 	int b;
 	b = 0;
@@ -302,8 +301,7 @@ int haschar(const char *st, int ch)
  * Determine whether the specified message number is contained within the
  * specified sequence set.
  */
-int is_msg_in_sequence_set(const char *mset, long msgnum)
-{
+int is_msg_in_sequence_set(const char *mset, long msgnum) {
 	int num_sets;
 	int s;
 	char setstr[128], lostr[128], histr[128];
@@ -342,8 +340,7 @@ int is_msg_in_sequence_set(const char *mset, long msgnum)
  * maxlen	Size of string buffer
  * returns pointer to the source memory right after we stopped reading.
  */
-char *memreadline(char *start, char *buf, int maxlen)
-{
+char *memreadline(char *start, char *buf, int maxlen) {
 	char ch;
 	char *ptr;
 	int len = 0;		/* tally our own length to avoid strlen() delays */
@@ -371,8 +368,7 @@ char *memreadline(char *start, char *buf, int maxlen)
  * retlen	the length of the returned string
  * returns a pointer to the source memory right after we stopped reading.
  */
-char *memreadlinelen(char *start, char *buf, int maxlen, int *retlen)
-{
+char *memreadlinelen(char *start, char *buf, int maxlen, int *retlen) {
 	char ch;
 	char *ptr;
 	int len = 0;		/* tally our own length to avoid strlen() delays */
@@ -668,6 +664,7 @@ inline static char *_bmstrcasestr_len(char *text, size_t textlen, const char *pa
 	return (NULL);
 }
 
+
 /*
  * bmstrcasestr() -- case-insensitive substring search
  *
@@ -691,8 +688,6 @@ char *bmstrcasestr(char *text, const char *pattern) {
 char *bmstrcasestr_len(char *text, size_t textlen, const char *pattern, size_t patlen) {
 	return _bmstrcasestr_len(text, textlen, pattern, patlen);
 }
-
-
 
 
 /*
@@ -753,6 +748,7 @@ inline static const char *_cbmstrcasestr_len(const char *text, size_t textlen, c
 	return (NULL);
 }
 
+
 /*
  * bmstrcasestr() -- case-insensitive substring search
  *
@@ -773,9 +769,11 @@ const char *cbmstrcasestr(const char *text, const char *pattern) {
 	return _cbmstrcasestr_len(text, textlen, pattern, patlen);
 }
 
+
 const char *cbmstrcasestr_len(const char *text, size_t textlen, const char *pattern, size_t patlen) {
 	return _cbmstrcasestr_len(text, textlen, pattern, patlen);
 }
+
 
 /*
  * Local replacement for controversial C library function that generates
@@ -796,7 +794,6 @@ void CtdlMakeTempFileName(char *name, int len) {
 }
 
 
-
 /*
  * Determine whether the specified message number is contained within the specified set.
  * Returns nonzero if the specified message number is in the specified message set string.
@@ -804,12 +801,10 @@ void CtdlMakeTempFileName(char *name, int len) {
 int is_msg_in_mset(const char *mset, long msgnum) {
 	int num_sets;
 	int s;
-	char setstr[SIZ], lostr[SIZ], histr[SIZ];       /* was 1024 */
+	char setstr[SIZ], lostr[SIZ], histr[SIZ];
 	long lo, hi;
 
-	/*
-	 * Now set it for all specified messages.
-	 */
+	// Now set it for all specified messages.
 	num_sets = num_tokens(mset, ',');
 	for (s=0; s<num_sets; ++s) {
 		extract_token(setstr, mset, s, ',', sizeof setstr);
@@ -834,12 +829,9 @@ int is_msg_in_mset(const char *mset, long msgnum) {
 }
 
 
-/*
- * searches for a pattern within a search string
- * returns position in string
- */
-int pattern2(char *search, char *patn)
-{
+// searches for a pattern within a search string
+// returns position in string
+int pattern2(char *search, char *patn) {
 	int a;
 	int len, plen;
 	len = strlen (search);
@@ -857,8 +849,7 @@ int pattern2(char *search, char *patn)
  * buf - the string to modify
  * len - length of the string. 
  */
-void stripltlen(char *buf, int *len)
-{
+void stripltlen(char *buf, int *len) {
 	int delta = 0;
 	if (*len == 0) return;
 	while ((*len > delta) && (isspace(buf[delta]))){
@@ -877,8 +868,7 @@ void stripltlen(char *buf, int *len)
 /*
  * Convert all whitespace characters in a supplied string to underscores
  */
-void convert_spaces_to_underscores(char *str)
-{
+void convert_spaces_to_underscores(char *str) {
 	int len;
 	int i;
 
@@ -896,8 +886,7 @@ void convert_spaces_to_underscores(char *str)
 /*
  * check whether the provided string needs to be qp encoded or not
  */
-int CheckEncode(const char *pch, long len, const char *pche)
-{
+int CheckEncode(const char *pch, long len, const char *pche) {
 	if (pche == NULL)
 		pche = pch + len;
 	while (pch < pche) {

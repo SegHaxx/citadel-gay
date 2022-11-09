@@ -517,7 +517,7 @@ int StrBufPlain(StrBuf *Buf, const char* ptr, int nChars) {
 }
 
 
-/**
+/*
  *  use strbuf as wrapper for a string constant for easy handling
  *  StringConstant a string to wrap
  *  SizeOfStrConstant should be sizeof(StringConstant)-1
@@ -540,7 +540,7 @@ StrBuf* _NewConstStrBuf(const char* StringConstant, size_t SizeOfStrConstant)
 }
 
 
-/**
+/*
  *  flush the content of a Buf; keep its struct
  *  buf Buffer to flush
  */
@@ -555,7 +555,7 @@ int FlushStrBuf(StrBuf *buf)
 	return 0;
 }
 
-/**
+/*
  *  wipe the content of a Buf thoroughly (overwrite it -> expensive); keep its struct
  *  buf Buffer to wipe
  */
@@ -575,7 +575,7 @@ int FLUSHStrBuf(StrBuf *buf)
 #ifdef SIZE_DEBUG
 int hFreeDbglog = -1;
 #endif
-/**
+/*
  *  Release a Buffer
  * Its a double pointer, so it can NULL your pointer
  * so fancy SIG11 appear instead of random results
@@ -639,7 +639,7 @@ void HFreeStrBuf (void *VFreeMe) {
  *                      Simple string transformations                          *
  *******************************************************************************/
 
-/**
+/*
  *  Wrapper around atol
  */
 long StrTol(const StrBuf *Buf)
@@ -652,7 +652,7 @@ long StrTol(const StrBuf *Buf)
 		return 0;
 }
 
-/**
+/*
  *  Wrapper around atoi
  */
 int StrToi(const StrBuf *Buf)
@@ -665,7 +665,7 @@ int StrToi(const StrBuf *Buf)
 		return 0;
 }
 
-/**
+/*
  *  Checks to see if the string is a pure number 
  *  Buf The buffer to inspect
  * @returns 1 if its a pure number, 0, if not.

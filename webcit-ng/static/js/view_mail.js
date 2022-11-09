@@ -343,7 +343,7 @@ function mail_compose(is_quoted, references, quoted_msgnum, m_to, m_cc, m_subjec
 
 		// The button bar is a Grid element, and is also a Flexbox container.
 		+ "<div class=\"ctdl-compose-toolbar\">"
-		+ "<span class=\"ctdl-msg-button\" onclick=\"mail_save_message()\"><i class=\"fa fa-paper-plane\" style=\"color:green\"></i> " + _("Send message") + "</span>"
+		+ "<span class=\"ctdl-msg-button\" onclick=\"mail_send_message()\"><i class=\"fa fa-paper-plane\" style=\"color:green\"></i> " + _("Send message") + "</span>"
 		+ "<span class=\"ctdl-msg-button\">" + _("Save to Drafts") + "</span>"
 		+ "<span class=\"ctdl-msg-button\">" + _("Attachments:") + " 0" + "</span>"
 		+ "<span class=\"ctdl-msg-button\">" + _("Contacts") + "</span>"
@@ -367,7 +367,7 @@ function make_cc_bcc_visible() {
 }
 
 
-// Helper function for mail_save_messages() to extract form values.
+// Helper function for mail_send_messages() to extract form values.
 // (We have to replace "|" with "!" because "|" is a field separator in the Citadel protocol)
 function msm_field(element_name, separator) {
 	return (document.getElementById(element_name).innerHTML).replaceAll("|",separator);
@@ -375,7 +375,7 @@ function msm_field(element_name, separator) {
 
 
 // Save the posted message to the server
-function mail_save_message() {
+function mail_send_message() {
 
 	document.body.style.cursor = "wait";
 	url = "/ctdl/r/" + escapeHTMLURI(current_room)
@@ -386,6 +386,7 @@ function mail_save_message() {
 		+ "&mailcc="	+ msm_field("ctdl-compose-cc-field", ",")			// Cc: (if present)
 		+ "&mailbcc="	+ msm_field("ctdl-compose-bcc-field", ",")			// Bcc: (if present)
 	;
+	console.log(url);
 	boundary = randomString();
 	body_text =
 		"--" + boundary + "\r\n"

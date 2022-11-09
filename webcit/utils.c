@@ -1,6 +1,4 @@
-/*
- * de/encoding stuff. hopefully mostly to be depricated in favour of subst.c + strbuf
- */
+// de/encoding stuff. hopefully mostly to be depricated in favour of subst.c + strbuf
 
 #define SHOW_ME_VAPPEND_PRINTF
 #include <stdio.h>
@@ -8,11 +6,8 @@
 #include "webcit.h"
 
 
-/*   
- * remove escaped strings from i.e. the url string (like %20 for blanks)
- */
-long unescape_input(char *buf)
-{
+// remove escaped strings from i.e. the url string (like %20 for blanks)
+long unescape_input(char *buf) {
 	unsigned int a, b;
 	char hex[3];
 	long buflen;
@@ -30,7 +25,7 @@ long unescape_input(char *buf)
 		if (buf[a] == '+')
 			buf[a] = ' ';
 		if (buf[a] == '%') {
-			/* don't let % chars through, rather truncate the input. */
+			// don't let % chars through, rather truncate the input.
 			if (a + 2 > buflen) {
 				buf[a] = '\0';
 				buflen = a;
@@ -54,22 +49,19 @@ long unescape_input(char *buf)
 	return a;
 }
 
-/*
- * Copy a string, escaping characters which have meaning in HTML.  
- *
- * target              target buffer
- * strbuf              source buffer
- * nbsp                        If nonzero, spaces are converted to non-breaking spaces.
- * nolinebreaks                if set, linebreaks are removed from the string.
- */
-long stresc(char *target, long tSize, char *strbuf, int nbsp, int nolinebreaks)
-{
+// Copy a string, escaping characters which have meaning in HTML.  
+//
+// target              target buffer
+// strbuf              source buffer
+// nbsp                        If nonzero, spaces are converted to non-breaking spaces.
+// nolinebreaks                if set, linebreaks are removed from the string.
+long stresc(char *target, long tSize, char *strbuf, int nbsp, int nolinebreaks) {
         char *aptr, *bptr, *eptr;
  
         *target = '\0';
         aptr = strbuf;
         bptr = target;
-        eptr = target + tSize - 6; /* our biggest unit to put in...  */
+        eptr = target + tSize - 6; // our biggest unit to put in...
  
  
         while ((bptr < eptr) && !IsEmptyStr(aptr) ){
@@ -127,37 +119,25 @@ long stresc(char *target, long tSize, char *strbuf, int nbsp, int nolinebreaks)
         return (bptr - target);
 }
 
-/* 
- * static wrapper for ecsputs1
- */
-void escputs(const char *strbuf)
-{
+// static wrapper for escputs1
+void escputs(const char *strbuf) {
 	StrEscAppend(WC->WBuf, NULL, strbuf, 0, 0);
 }
 
-/*
- * urlescape buffer and print it to the client
- */
-void urlescputs(const char *strbuf)
-{
+// urlescape buffer and print it to the client
+void urlescputs(const char *strbuf) {
 	StrBufUrlescAppend(WC->WBuf, NULL, strbuf);
 }
 
 
-/**
- * urlescape buffer and print it as header 
- */
-void hurlescputs(const char *strbuf) 
-{
+// urlescape buffer and print it as header 
+void hurlescputs(const char *strbuf) {
 	StrBufUrlescAppend(WC->HBuf, NULL, strbuf);
 }
 
 
-/*
- * Output a string to the client as a CDATA block
- */
-void cdataout(char *rawdata)
-{
+// Output a string to the client as a CDATA block
+void cdataout(char *rawdata) {
 	char *ptr = rawdata;
 	wc_printf("<![CDATA[");
 
@@ -175,4 +155,3 @@ void cdataout(char *rawdata)
 
 	wc_printf("]]>");
 }
-

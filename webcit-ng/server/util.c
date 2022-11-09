@@ -1,10 +1,6 @@
-//
 // Utility functions
-//
 // Copyright (c) 1996-2022 by the citadel.org team
-//
-// This program is open source software.  Use, duplication, or
-// disclosure are subject to the GNU General Public License v3.
+// This program is open source software.  Use, duplication, or disclosure are subject to the GNU General Public License v3.
 
 #include "webcit.h"
 
