@@ -367,10 +367,15 @@ function make_cc_bcc_visible() {
 }
 
 
-// Helper function for mail_send_messages() to extract form values.
-// (We have to replace "|" with "!" because "|" is a field separator in the Citadel protocol)
+// Helper function for mail_send_messages() to extract and decode metadata values.
 function msm_field(element_name, separator) {
-	return (document.getElementById(element_name).innerHTML).replaceAll("|",separator);
+	let s1 = document.getElementById(element_name).innerHTML;
+	let s2 = s1.replaceAll("|",separator);	// Replace "|" with "!" because "|" is a field separator in Citadel wire protocol
+	let s3 = decodeURI(s2);
+	let s4 = document.createElement("textarea");	// This One Weird Trick Unescapes All HTML Entities
+	s4.innerHTML = s3;
+	s5 = s4.value;
+	return(s5);
 }
 
 
