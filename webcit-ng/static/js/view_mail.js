@@ -374,7 +374,7 @@ function msm_field(element_name, separator) {
 	let s3 = decodeURI(s2);
 	let s4 = document.createElement("textarea");	// This One Weird Trick Unescapes All HTML Entities
 	s4.innerHTML = s3;
-	s5 = s4.value;
+	let s5 = s4.value;
 	return(s5);
 }
 
