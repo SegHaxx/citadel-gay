@@ -383,7 +383,7 @@ function msm_field(element_name, separator) {
 function mail_send_message() {
 
 	document.body.style.cursor = "wait";
-	url = "/ctdl/r/" + escapeHTMLURI(current_room)
+	let url = "/ctdl/r/" + escapeHTMLURI(current_room)
 		+ "/dummy_name_for_new_mail"
 		+ "?wefw="	+ msm_field("ctdl_mc_references", "!")				// references (if present)
 		+ "&subj="	+ msm_field("ctdl-compose-subject-field", " ")			// subject (if present)
