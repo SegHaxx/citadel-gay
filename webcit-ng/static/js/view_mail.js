@@ -391,7 +391,6 @@ function mail_send_message() {
 		+ "&mailcc="	+ msm_field("ctdl-compose-cc-field", ",")			// Cc: (if present)
 		+ "&mailbcc="	+ msm_field("ctdl-compose-bcc-field", ",")			// Bcc: (if present)
 	;
-	console.log(url);
 	boundary = randomString();
 	body_text =
 		"--" + boundary + "\r\n"

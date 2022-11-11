@@ -1,67 +1,26 @@
-/*
- * Copyright (c) 1987-2011 by the citadel.org team
- *
+// Copyright (c) 1987-2022 by the citadel.org team
+//
+// Hashlist is a simple implementation of key value pairs. It doesn't implement collision handling.
+// the hashing algorithm is pluggeable on creation. 
+// items are added with a function pointer to a destructor; that way complex structures can be added.
+// if no pointer is given, simply free is used. Use reference_free_handler if you don't want us to free your memory.
+//
 // This program is open source software.  Use, duplication, or disclosure
 // is subject to the terms of the GNU General Public License, version 3.
- */
 
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 #include <limits.h>
-//dbg
 #include <stdio.h>
 #include "libcitadel.h"
 #include "lookup3.h"
 
 typedef struct Payload Payload;
 
-/**
- * @defgroup HashList Hashlist Key Value list implementation; 
- * Hashlist is a simple implementation of key value pairs. It doesn't implement collision handling.
- * the Hashingalgorythm is pluggeable on creation. 
- * items are added with a functionpointer destructs them; that way complex structures can be added.
- * if no pointer is given, simply free is used. Use @ref reference_free_handler if you don't want us to free you rmemory.
- */
 
-/**
- * @defgroup HashListData Datastructures used for the internals of HashList
- * @ingroup HashList
- */
-
-/**
- * @defgroup HashListDebug Hashlist debugging functions
- * @ingroup HashList
- */
-
-/**
- * @defgroup HashListPrivate Hashlist internal functions
- * @ingroup HashList
- */
-
-/**
- * @defgroup HashListSort Hashlist sorting functions
- * @ingroup HashList
- */
-
-/**
- * @defgroup HashListAccess Hashlist functions to access / put / delete items in(to) the list
- * @ingroup HashList
- */
-
-/**
- * @defgroup HashListAlgorithm functions to condense Key to an integer.
- * @ingroup HashList
- */
-
-/**
- * @defgroup HashListMset MSet is sort of a derived hashlist, its special for treating Messagesets as Citadel uses them to store access rangesx
- * @ingroup HashList
- */
-
-/**
- * @ingroup HashListData
- * @brief Hash Payload storage Structure; filled in linear.
+/*
+ * Hash Payload storage Structure; filled in linear.
  */
 struct Payload {
 	void *Data; /**< the Data belonging to this storage */
@@ -69,9 +28,8 @@ struct Payload {
 };
 
 
-/**
- * @ingroup HashListData
- * @brief Hash key element; sorted by key
+/*
+ * Hash key element; sorted by key
  */
 struct HashKey {
 	long Key;         /**< Numeric Hashkey comperator for hash sorting */
@@ -81,9 +39,8 @@ struct HashKey {
 	Payload *PL;      /**< pointer to our payload for sorting */
 };
 
-/**
- * @ingroup HashListData
- * @brief Hash structure; holds arrays of Hashkey and Payload. 
+/*
+ * Hash structure; holds arrays of Hashkey and Payload. 
  */
 struct HashList {
 	Payload **Members;     /**< Our Payload members. This fills up linear */
@@ -97,9 +54,8 @@ struct HashList {
 	long uniq;             /**< are the keys going to be uniq? */
 };
 
-/**
- * @ingroup HashListData
- * @brief Anonymous Hash Iterator Object. used for traversing the whole array from outside 
+/*
+ * Anonymous Hash Iterator Object. used for traversing the whole array from outside 
  */
 struct HashPos {
 	long Position;        /**< Position inside of the hash */
@@ -107,17 +63,15 @@ struct HashPos {
 };
 
 
-/**
- * @ingroup HashListDebug
- * @brief Iterate over the hash and call PrintEntry. 
- * @param Hash your Hashlist structure
- * @param Trans is called so you could for example print 'A:' if the next entries are like that.
+/*
+ * Iterate over the hash and call PrintEntry. 
+ * Hash your Hashlist structure
+ * Trans is called so you could for example print 'A:' if the next entries are like that.
  *        Must be aware to receive NULL in both pointers.
- * @param PrintEntry print entry one by one
- * @return the number of items printed
+ * PrintEntry print entry one by one
+ * returns the number of items printed
  */
-int PrintHash(HashList *Hash, TransitionFunc Trans, PrintHashDataFunc PrintEntry)
-{
+int PrintHash(HashList *Hash, TransitionFunc Trans, PrintHashDataFunc PrintEntry) {
 	int i;
 	void *Previous;
 	void *Next;
@@ -151,21 +105,18 @@ int PrintHash(HashList *Hash, TransitionFunc Trans, PrintHashDataFunc PrintEntry
 	return i;
 }
 
-const char *dbg_PrintStrBufPayload(const char *Key, void *Item, int Odd)
-{
+const char *dbg_PrintStrBufPayload(const char *Key, void *Item, int Odd) {
 	return ChrPtr((StrBuf*)Item);
 }
 
-/**
- * @ingroup HashListDebug
- * @brief verify the contents of a hash list; here for debugging purposes.
- * @param Hash your Hashlist structure
- * @param First Functionpointer to allow you to print your payload
- * @param Second Functionpointer to allow you to print your payload
- * @return 0
+/*
+ * verify the contents of a hash list; here for debugging purposes.
+ * Hash your Hashlist structure
+ * First Functionpointer to allow you to print your payload
+ * Second Functionpointer to allow you to print your payload
+ * returns 0
  */
-int dbg_PrintHash(HashList *Hash, PrintHashContent First, PrintHashContent Second)
-{
+int dbg_PrintHash(HashList *Hash, PrintHashContent First, PrintHashContent Second) {
 #ifdef DEBUG
 	const char *foo;
 	const char *bar;
@@ -238,8 +189,7 @@ int dbg_PrintHash(HashList *Hash, PrintHashContent First, PrintHashContent Secon
 }
 
 
-int TestValidateHash(HashList *TestHash)
-{
+int TestValidateHash(HashList *TestHash) {
 	long i;
 
 	if (TestHash->nMembersUsed != TestHash->nLookupTableItems)
@@ -248,8 +198,7 @@ int TestValidateHash(HashList *TestHash)
 	if (TestHash->nMembersUsed > TestHash->MemberSize)
 		return 2;
 
-	for (i=0; i < TestHash->nMembersUsed; i++)
-	{
+	for (i=0; i < TestHash->nMembersUsed; i++) {
 
 		if (TestHash->LookupTable[i]->Position > TestHash->nMembersUsed)
 			return 3;
@@ -262,13 +211,11 @@ int TestValidateHash(HashList *TestHash)
 	return 0;
 }
 
-/**
- * @ingroup HashListAccess
- * @brief instanciate a new hashlist
- * @return the newly allocated list. 
+/*
+ * instanciate a new hashlist
+ * returns the newly allocated list. 
  */
-HashList *NewHash(int Uniq, HashFunc F)
-{
+HashList *NewHash(int Uniq, HashFunc F) {
 	HashList *NewList;
 	NewList = malloc (sizeof(HashList));
 	if (NewList == NULL)
@@ -276,16 +223,14 @@ HashList *NewHash(int Uniq, HashFunc F)
 	memset(NewList, 0, sizeof(HashList));
 
 	NewList->Members = malloc(sizeof(Payload*) * 100);
-	if (NewList->Members == NULL)
-	{
+	if (NewList->Members == NULL) {
 		free(NewList);
 		return NULL;
 	}
 	memset(NewList->Members, 0, sizeof(Payload*) * 100);
 
 	NewList->LookupTable = malloc(sizeof(HashKey*) * 100);
-	if (NewList->LookupTable == NULL)
-	{
+	if (NewList->LookupTable == NULL) {
 		free(NewList->Members);
 		free(NewList);
 		return NULL;
@@ -300,21 +245,18 @@ HashList *NewHash(int Uniq, HashFunc F)
 	return NewList;
 }
 
-int GetCount(HashList *Hash)
-{
+int GetCount(HashList *Hash) {
 	if(Hash==NULL) return 0;
 	return Hash->nLookupTableItems;
 }
 
 
-/**
- * @ingroup HashListPrivate
- * @brief private destructor for one hash element.
+/*
+ * private destructor for one hash element.
  * Crashing? go one frame up and do 'print *FreeMe->LookupTable[i]'
- * @param Data an element to free using the user provided destructor, or just plain free
+ * Data an element to free using the user provided destructor, or just plain free
  */
-static void DeleteHashPayload (Payload *Data)
-{
+static void DeleteHashPayload (Payload *Data) {
 	/** do we have a destructor for our payload? */
 	if (Data->Destructor)
 		Data->Destructor(Data->Data);
@@ -322,24 +264,20 @@ static void DeleteHashPayload (Payload *Data)
 		free(Data->Data);
 }
 
-/**
- * @ingroup HashListPrivate
- * @brief Destructor for nested hashes
+/*
+ * Destructor for nested hashes
  */
-void HDeleteHash(void *vHash)
-{
+void HDeleteHash(void *vHash) {
 	HashList *FreeMe = (HashList*)vHash;
 	DeleteHash(&FreeMe);
 }
 
-/**
- * @ingroup HashListAccess
- * @brief flush the members of a hashlist 
+/*
+ * flush the members of a hashlist 
  * Crashing? do 'print *FreeMe->LookupTable[i]'
- * @param Hash Hash to destroy. Is NULL'ed so you are shure its done.
+ * Hash Hash to destroy. Is NULL'ed so you are shure its done.
  */
-void DeleteHashContent(HashList **Hash)
-{
+void DeleteHashContent(HashList **Hash) {
 	int i;
 	HashList *FreeMe;
 
@@ -347,17 +285,14 @@ void DeleteHashContent(HashList **Hash)
 	if (FreeMe == NULL)
 		return;
 	/* even if there are sparse members already deleted... */
-	for (i=0; i < FreeMe->nMembersUsed; i++)
-	{
+	for (i=0; i < FreeMe->nMembersUsed; i++) {
 		/** get rid of our payload */
-		if (FreeMe->Members[i] != NULL)
-		{
+		if (FreeMe->Members[i] != NULL) {
 			DeleteHashPayload(FreeMe->Members[i]);
 			free(FreeMe->Members[i]);
 		}
 		/** delete our hashing data */
-		if (FreeMe->LookupTable[i] != NULL)
-		{
+		if (FreeMe->LookupTable[i] != NULL) {
 			free(FreeMe->LookupTable[i]->HashKey);
 			free(FreeMe->LookupTable[i]);
 		}
@@ -368,19 +303,18 @@ void DeleteHashContent(HashList **Hash)
 	memset(FreeMe->Members, 0, sizeof(Payload*) * FreeMe->MemberSize);
 	memset(FreeMe->LookupTable, 0, sizeof(HashKey*) * FreeMe->MemberSize);
 
-	/** did s.b. want an array of our keys? free them. */
+	// free the array of our keys
 	if (FreeMe->MyKeys != NULL)
 		free(FreeMe->MyKeys);
 }
 
-/**
- * @ingroup HashListAccess
- * @brief destroy a hashlist and all of its members
+
+/*
+ * destroy a hashlist and all of its members
  * Crashing? do 'print *FreeMe->LookupTable[i]'
- * @param Hash Hash to destroy. Is NULL'ed so you are shure its done.
+ * Hash Hash to destroy. Is NULL'ed so you are shure its done.
  */
-void DeleteHash(HashList **Hash)
-{
+void DeleteHash(HashList **Hash) {
 	HashList *FreeMe;
 
 	FreeMe = *Hash;
@@ -396,13 +330,12 @@ void DeleteHash(HashList **Hash)
 	*Hash = NULL;
 }
 
-/**
- * @ingroup HashListPrivate
- * @brief Private function to increase the hash size.
- * @param Hash the Hasharray to increase
+
+/*
+ * Private function to increase the hash size.
+ * Hash the Hasharray to increase
  */
-static int IncreaseHashSize(HashList *Hash)
-{
+static int IncreaseHashSize(HashList *Hash) {
 	/* Ok, Our space is used up. Double the available space. */
 	Payload **NewPayloadArea;
 	HashKey **NewTable;
@@ -424,8 +357,7 @@ static int IncreaseHashSize(HashList *Hash)
 	if (NewPayloadArea == NULL)
 		return 0;
 	NewTable = malloc(sizeof(HashKey*) * Hash->MemberSize * 2);
-	if (NewTable == NULL)
-	{
+	if (NewTable == NULL) {
 		free(NewPayloadArea);
 		return 0;
 	}
@@ -447,16 +379,15 @@ static int IncreaseHashSize(HashList *Hash)
 }
 
 
-/**
- * @ingroup HashListPrivate
- * @brief private function to add a new item to / replace an existing in -  the hashlist
+/*
+ * private function to add a new item to / replace an existing in -  the hashlist
  * if the hash list is full, its re-alloced with double size.
- * @param Hash our hashlist to manipulate
- * @param HashPos where should we insert / replace?
- * @param HashKeyStr the Hash-String
- * @param HKLen length of HashKeyStr
- * @param Data your Payload to add
- * @param Destructor Functionpointer to free Data. if NULL, default free() is used.
+ * Hash our hashlist to manipulate
+ * HashPos where should we insert / replace?
+ * HashKeyStr the Hash-String
+ * HKLen length of HashKeyStr
+ * Data your Payload to add
+ * Destructor Functionpointer to free Data. if NULL, default free() is used.
  */
 static int InsertHashItem(HashList *Hash, 
 			  long HashPos, 
@@ -481,14 +412,12 @@ static int InsertHashItem(HashList *Hash,
 	if (NewPayloadItem == NULL)
 		return 0;
 	NewHashKey = (HashKey*) malloc (sizeof(HashKey));
-	if (NewHashKey == NULL)
-	{
+	if (NewHashKey == NULL) {
 		free(NewPayloadItem);
 		return 0;
 	}
 	HashKeyOrgVal = (char *) malloc (HKLen + 1);
-	if (HashKeyOrgVal == NULL)
-	{
+	if (HashKeyOrgVal == NULL) {
 		free(NewHashKey);
 		free(NewPayloadItem);
 		return 0;
@@ -513,11 +442,8 @@ static int InsertHashItem(HashList *Hash,
 
 		ItemsAfter = Hash->nLookupTableItems - HashPos;
 		/** make space were we can fill us in */
-		if (ItemsAfter > 0)
-		{
-			memmove(&Hash->LookupTable[HashPos + 1],
-				&Hash->LookupTable[HashPos],
-				ItemsAfter * sizeof(HashKey*));
+		if (ItemsAfter > 0) {
+			memmove(&Hash->LookupTable[HashPos + 1], &Hash->LookupTable[HashPos], ItemsAfter * sizeof(HashKey*));
 		} 
 	}
 	
@@ -528,16 +454,14 @@ static int InsertHashItem(HashList *Hash,
 	return 1;
 }
 
-/**
- * @ingroup HashListSort
- * @brief if the user has tainted the hash, but wants to insert / search items by their key
+/*
+ * if the user has tainted the hash, but wants to insert / search items by their key
  *  we need to search linear through the array. You have been warned that this will take more time!
- * @param Hash Our Hash to manipulate
- * @param HashBinKey the Hash-Number to lookup. 
- * @return the position (most closely) matching HashBinKey (-> Caller needs to compare! )
+ * Hash Our Hash to manipulate
+ * HashBinKey the Hash-Number to lookup. 
+ * returns the position (most closely) matching HashBinKey (-> Caller needs to compare! )
  */
-static long FindInTaintedHash(HashList *Hash, long HashBinKey)
-{
+static long FindInTaintedHash(HashList *Hash, long HashBinKey) {
 	long SearchPos;
 
 	if (Hash == NULL)
@@ -551,15 +475,13 @@ static long FindInTaintedHash(HashList *Hash, long HashBinKey)
 	return SearchPos;
 }
 
-/**
- * @ingroup HashListPrivate
- * @brief Private function to lookup the Item / the closest position to put it in
- * @param Hash Our Hash to manipulate
- * @param HashBinKey the Hash-Number to lookup. 
- * @return the position (most closely) matching HashBinKey (-> Caller needs to compare! )
+/*
+ * Private function to lookup the Item / the closest position to put it in
+ * Hash Our Hash to manipulate
+ * HashBinKey the Hash-Number to lookup. 
+ * returns the position (most closely) matching HashBinKey (-> Caller needs to compare! )
  */
-static long FindInHash(HashList *Hash, long HashBinKey)
-{
+static long FindInHash(HashList *Hash, long HashBinKey) {
 	long SearchPos;
 	long StepWidth;
 
@@ -571,9 +493,7 @@ static long FindInHash(HashList *Hash, long HashBinKey)
 
 	SearchPos = Hash->nLookupTableItems / 2;
 	StepWidth = SearchPos / 2;
-	while ((SearchPos > 0) && 
-	       (SearchPos < Hash->nLookupTableItems)) 
-	{
+	while ((SearchPos > 0) && (SearchPos < Hash->nLookupTableItems)) {
 		/** Did we find it? */
 		if (Hash->LookupTable[SearchPos]->Key == HashBinKey){
 			return SearchPos;
@@ -588,15 +508,14 @@ static long FindInHash(HashList *Hash, long HashBinKey)
 		}
 		else { /** We are right next to our target, within 4 positions */
 			if (Hash->LookupTable[SearchPos]->Key > HashBinKey) {
-				if ((SearchPos > 0) && 
-				    (Hash->LookupTable[SearchPos - 1]->Key < HashBinKey))
+				if ((SearchPos > 0) && (Hash->LookupTable[SearchPos - 1]->Key < HashBinKey))
 					return SearchPos;
 				SearchPos --;
 			}
 			else {
-				if ((SearchPos + 1 < Hash->nLookupTableItems) && 
-				    (Hash->LookupTable[SearchPos + 1]->Key > HashBinKey))
+				if ((SearchPos + 1 < Hash->nLookupTableItems) && (Hash->LookupTable[SearchPos + 1]->Key > HashBinKey)) {
 					return SearchPos;
+				}
 				SearchPos ++;
 			}
 			StepWidth--;
@@ -606,17 +525,14 @@ static long FindInHash(HashList *Hash, long HashBinKey)
 }
 
 
-/**
- * @ingroup HashListAlgorithm
- * @brief another hashing algorithm; treat it as just a pointer to int.
- * @param str Our pointer to the int value
- * @param len the length of the data pointed to; needs to be sizeof int, else we won't use it!
- * @return the calculated hash value
+/*
+ * another hashing algorithm; treat it as just a pointer to int.
+ * str Our pointer to the int value
+ * len the length of the data pointed to; needs to be sizeof int, else we won't use it!
+ * returns the calculated hash value
  */
-long Flathash(const char *str, long len)
-{
-	if (len != sizeof (int))
-	{
+long Flathash(const char *str, long len) {
+	if (len != sizeof (int)) {
 #ifdef DEBUG
 		int *crash = NULL;
 		*crash = 1;
@@ -626,17 +542,14 @@ long Flathash(const char *str, long len)
 	else return *(int*)str;
 }
 
-/**
- * @ingroup HashListAlgorithm
- * @brief another hashing algorithm; treat it as just a pointer to long.
- * @param str Our pointer to the long value
- * @param len the length of the data pointed to; needs to be sizeof long, else we won't use it!
- * @return the calculated hash value
+/*
+ * another hashing algorithm; treat it as just a pointer to long.
+ * str Our pointer to the long value
+ * len the length of the data pointed to; needs to be sizeof long, else we won't use it!
+ * returns the calculated hash value
  */
-long lFlathash(const char *str, long len)
-{
-	if (len != sizeof (long))
-	{
+long lFlathash(const char *str, long len) {
+	if (len != sizeof (long)) {
 #ifdef DEBUG
 		int *crash = NULL;
 		*crash = 1;
@@ -646,15 +559,13 @@ long lFlathash(const char *str, long len)
 	else return *(long*)str;
 }
 
-/**
- * @ingroup HashListAlgorithm
- * @brief another hashing algorithm; accepts exactly 4 characters, convert it to a hash key.
- * @param str Our pointer to the long value
- * @param len the length of the data pointed to; needs to be sizeof long, else we won't use it!
- * @return the calculated hash value
+/*
+ * another hashing algorithm; accepts exactly 4 characters, convert it to a hash key.
+ * str Our pointer to the long value
+ * len the length of the data pointed to; needs to be sizeof long, else we won't use it!
+ * returns the calculated hash value
  */
-long FourHash(const char *key, long length) 
-{
+long FourHash(const char *key, long length) {
 	int i;
 	int ret = 0;
 	const unsigned char *ptr = (const unsigned char*)key;
@@ -669,15 +580,13 @@ long FourHash(const char *key, long length)
 	return ret;
 }
 
-/**
- * @ingroup HashListPrivate
- * @brief private abstract wrapper around the hashing algorithm
- * @param HKey the hash string
- * @param HKLen length of HKey
- * @return the calculated hash value
+/*
+ * private abstract wrapper around the hashing algorithm
+ * HKey the hash string
+ * HKLen length of HKey
+ * returns the calculated hash value
  */
-inline static long CalcHashKey (HashList *Hash, const char *HKey, long HKLen)
-{
+inline static long CalcHashKey (HashList *Hash, const char *HKey, long HKLen) {
 	if (Hash == NULL)
 		return 0;
 
@@ -688,17 +597,15 @@ inline static long CalcHashKey (HashList *Hash, const char *HKey, long HKLen)
 }
 
 
-/**
- * @ingroup HashListAccess
- * @brief Add a new / Replace an existing item in the Hash
- * @param Hash the list to manipulate
- * @param HKey the hash-string to store Data under
- * @param HKLen Length of HKey
- * @param Data the payload you want to associate with HKey
- * @param DeleteIt if not free() should be used to delete Data set to NULL, else DeleteIt is used.
+/*
+ * Add a new / Replace an existing item in the Hash
+ * Hash the list to manipulate
+ * HKey the hash-string to store Data under
+ * HKLen Length of HKey
+ * Data the payload you want to associate with HKey
+ * DeleteIt if not free() should be used to delete Data set to NULL, else DeleteIt is used.
  */
-void Put(HashList *Hash, const char *HKey, long HKLen, void *Data, DeleteHashDataFunc DeleteIt)
-{
+void Put(HashList *Hash, const char *HKey, long HKLen, void *Data, DeleteHashDataFunc DeleteIt) {
 	long HashBinKey;
 	long HashAt;
 
@@ -738,17 +645,15 @@ void Put(HashList *Hash, const char *HKey, long HKLen, void *Data, DeleteHashDat
 	}
 }
 
-/**
- * @ingroup HashListAccess
- * @brief Lookup the Data associated with HKey
- * @param Hash the Hashlist to search in
- * @param HKey the hashkey to look up
- * @param HKLen length of HKey
- * @param Data returns the Data associated with HKey
- * @return 0 if not found, 1 if.
+/*
+ * Lookup the Data associated with HKey
+ * Hash the Hashlist to search in
+ * HKey the hashkey to look up
+ * HKLen length of HKey
+ * Data returns the Data associated with HKey
+ * returns 0 if not found, 1 if.
  */
-int GetHash(HashList *Hash, const char *HKey, long HKLen, void **Data)
-{
+int GetHash(HashList *Hash, const char *HKey, long HKLen, void **Data) {
 	long HashBinKey;
 	long HashAt;
 
@@ -778,20 +683,17 @@ int GetHash(HashList *Hash, const char *HKey, long HKLen, void **Data)
 }
 
 /* TODO? */
-int GetKey(HashList *Hash, char *HKey, long HKLen, void **Payload)
-{
+int GetKey(HashList *Hash, char *HKey, long HKLen, void **Payload) {
 	return 0;
 }
 
-/**
- * @ingroup HashListAccess
- * @brief get the Keys present in this hash, similar to array_keys() in PHP
+/*
+ * get the Keys present in this hash, similar to array_keys() in PHP
  *  Attention: List remains to Hash! don't modify or free it!
- * @param Hash Your Hashlist to extract the keys from
- * @param List returns the list of hashkeys stored in Hash
+ * Hash Your Hashlist to extract the keys from
+ * List returns the list of hashkeys stored in Hash
  */
-int GetHashKeys(HashList *Hash, char ***List)
-{
+int GetHashKeys(HashList *Hash, char ***List) {
 	long i;
 
 	*List = NULL;
@@ -812,17 +714,15 @@ int GetHashKeys(HashList *Hash, char ***List)
 	return Hash->nLookupTableItems;
 }
 
-/**
- * @ingroup HashListAccess
- * @brief creates a hash-linear iterator object
- * @param Hash the list we reference
- * @param StepWidth in which step width should we iterate?
+/*
+ * creates a hash-linear iterator object
+ * Hash the list we reference
+ * StepWidth in which step width should we iterate?
  *  If negative, the last position matching the 
  *  step-raster is provided.
- * @return the hash iterator
+ * returns the hash iterator
  */
-HashPos *GetNewHashPos(const HashList *Hash, int StepWidth)
-{
+HashPos *GetNewHashPos(const HashList *Hash, int StepWidth) {
 	HashPos *Ret;
 	
 	Ret = (HashPos*)malloc(sizeof(HashPos));
@@ -842,18 +742,16 @@ HashPos *GetNewHashPos(const HashList *Hash, int StepWidth)
 	return Ret;
 }
 
-/**
- * @ingroup HashListAccess
- * @brief resets a hash-linear iterator object
- * @param Hash the list we reference
- * @param StepWidth in which step width should we iterate?
- * @param it the iterator object to manipulate
+/*
+ * resets a hash-linear iterator object
+ * Hash the list we reference
+ * StepWidth in which step width should we iterate?
+ * it the iterator object to manipulate
  *  If negative, the last position matching the 
  *  step-raster is provided.
- * @return the hash iterator
+ * returns the hash iterator
  */
-void RewindHashPos(const HashList *Hash, HashPos *it, int StepWidth)
-{
+void RewindHashPos(const HashList *Hash, HashPos *it, int StepWidth) {
 	if (StepWidth != 0)
 		it->StepWidth = StepWidth;
 	else
@@ -866,17 +764,15 @@ void RewindHashPos(const HashList *Hash, HashPos *it, int StepWidth)
 	}
 }
 
-/**
- * @ingroup HashListAccess
- * @brief Set iterator object to point to key. If not found, don't change iterator
- * @param Hash the list we reference
- * @param HKey key to search for
- * @param HKLen length of key
- * @param At HashPos to update
- * @return 0 if not found
+/*
+ * Set iterator object to point to key. If not found, don't change iterator
+ * Hash the list we reference
+ * HKey key to search for
+ * HKLen length of key
+ * At HashPos to update
+ * returns 0 if not found
  */
-int GetHashPosFromKey(HashList *Hash, const char *HKey, long HKLen, HashPos *At)
-{
+int GetHashPosFromKey(HashList *Hash, const char *HKey, long HKLen, HashPos *At) {
 	long HashBinKey;
 	long HashAt;
 
@@ -899,15 +795,13 @@ int GetHashPosFromKey(HashList *Hash, const char *HKey, long HKLen, HashPos *At)
 	return 1;
 }
 
-/**
- * @ingroup HashListAccess
- * @brief Delete from the Hash the entry at Position
- * @param Hash the list we reference
- * @param At the position within the Hash
- * @return 0 if not found
+/*
+ * Delete from the Hash the entry at Position
+ * Hash the list we reference
+ * At the position within the Hash
+ * returns 0 if not found
  */
-int DeleteEntryFromHash(HashList *Hash, HashPos *At)
-{
+int DeleteEntryFromHash(HashList *Hash, HashPos *At) {
 	Payload *FreeMe;
 	if (Hash == NULL)
 		return 0;
@@ -927,12 +821,10 @@ int DeleteEntryFromHash(HashList *Hash, HashPos *At)
 
 
 	/** delete our hashing data */
-	if (Hash->LookupTable[At->Position] != NULL)
-	{
+	if (Hash->LookupTable[At->Position] != NULL) {
 		free(Hash->LookupTable[At->Position]->HashKey);
 		free(Hash->LookupTable[At->Position]);
-		if (At->Position < Hash->nLookupTableItems)
-		{
+		if (At->Position < Hash->nLookupTableItems) {
 			memmove(&Hash->LookupTable[At->Position],
 				&Hash->LookupTable[At->Position + 1],
 				(Hash->nLookupTableItems - At->Position - 1) * 
@@ -948,23 +840,20 @@ int DeleteEntryFromHash(HashList *Hash, HashPos *At)
 
 
 	/** get rid of our payload */
-	if (FreeMe != NULL)
-	{
+	if (FreeMe != NULL) {
 		DeleteHashPayload(FreeMe);
 		free(FreeMe);
 	}
 	return 1;
 }
 
-/**
- * @ingroup HashListAccess
- * @brief retrieve the counter from the itteratoor
- * @param Hash which 
- * @param At the Iterator to analyze
- * @return the n'th hashposition we point at
+/*
+ * retrieve the counter from the itteratoor
+ * Hash which 
+ * At the Iterator to analyze
+ * returns the n'th hashposition we point at
  */
-int GetHashPosCounter(HashList *Hash, HashPos *At)
-{
+int GetHashPosCounter(HashList *Hash, HashPos *At) {
 	if ((Hash == NULL) || 
 	    (At->Position >= Hash->nLookupTableItems) || 
 	    (At->Position < 0) ||
@@ -973,32 +862,27 @@ int GetHashPosCounter(HashList *Hash, HashPos *At)
 	return At->Position;
 }
 
-/**
- * @ingroup HashListAccess
- * @brief frees a linear hash iterator
+/*
+ * frees a linear hash iterator
  */
-void DeleteHashPos(HashPos **DelMe)
-{
-	if (*DelMe != NULL)
-	{
+void DeleteHashPos(HashPos **DelMe) {
+	if (*DelMe != NULL) {
 		free(*DelMe);
 		*DelMe = NULL;
 	}
 }
 
 
-/**
- * @ingroup HashListAccess
- * @brief Get the data located where HashPos Iterator points at, and Move HashPos one forward
- * @param Hash your Hashlist to follow
- * @param At the position to retrieve the Item from and move forward afterwards
- * @param HKLen returns Length of Hashkey Returned
- * @param HashKey returns the Hashkey corrosponding to HashPos
- * @param Data returns the Data found at HashPos
- * @return whether the item was found or not.
+/*
+ * Get the data located where HashPos Iterator points at, and Move HashPos one forward
+ * Hash your Hashlist to follow
+ * At the position to retrieve the Item from and move forward afterwards
+ * HKLen returns Length of Hashkey Returned
+ * HashKey returns the Hashkey corrosponding to HashPos
+ * Data returns the Data found at HashPos
+ * returns whether the item was found or not.
  */
-int GetNextHashPos(const HashList *Hash, HashPos *At, long *HKLen, const char **HashKey, void **Data)
-{
+int GetNextHashPos(const HashList *Hash, HashPos *At, long *HKLen, const char **HashKey, void **Data) {
 	long PayloadPos;
 
 	if ((Hash == NULL) || 
@@ -1020,18 +904,16 @@ int GetNextHashPos(const HashList *Hash, HashPos *At, long *HKLen, const char **
 	return 1;
 }
 
-/**
- * @ingroup HashListAccess
- * @brief Get the data located where HashPos Iterator points at
- * @param Hash your Hashlist to follow
- * @param At the position retrieve the data from
- * @param HKLen returns Length of Hashkey Returned
- * @param HashKey returns the Hashkey corrosponding to HashPos
- * @param Data returns the Data found at HashPos
- * @return whether the item was found or not.
+/*
+ * Get the data located where HashPos Iterator points at
+ * Hash your Hashlist to follow
+ * At the position retrieve the data from
+ * HKLen returns Length of Hashkey Returned
+ * HashKey returns the Hashkey corrosponding to HashPos
+ * Data returns the Data found at HashPos
+ * returns whether the item was found or not.
  */
-int GetHashPos(HashList *Hash, HashPos *At, long *HKLen, const char **HashKey, void **Data)
-{
+int GetHashPos(HashList *Hash, HashPos *At, long *HKLen, const char **HashKey, void **Data) {
 	long PayloadPos;
 
 	if ((Hash == NULL) || 
@@ -1047,15 +929,13 @@ int GetHashPos(HashList *Hash, HashPos *At, long *HKLen, const char **HashKey, v
 	return 1;
 }
 
-/**
- * @ingroup HashListAccess
- * @brief Move HashPos one forward
- * @param Hash your Hashlist to follow
- * @param At the position to move forward
- * @return whether there is a next item or not.
+/*
+ * Move HashPos one forward
+ * Hash your Hashlist to follow
+ * At the position to move forward
+ * returns whether there is a next item or not.
  */
-int NextHashPos(HashList *Hash, HashPos *At)
-{
+int NextHashPos(HashList *Hash, HashPos *At) {
 	if ((Hash == NULL) || 
 	    (At->Position >= Hash->nLookupTableItems) || 
 	    (At->Position < 0) ||
@@ -1073,19 +953,17 @@ int NextHashPos(HashList *Hash, HashPos *At)
 		 (At->Position > Hash->nLookupTableItems));
 }
 
-/**
- * @ingroup HashListAccess
- * @brief Get the data located where At points to
+/*
+ * Get the data located where At points to
  * note: you should prefer iterator operations instead of using me.
- * @param Hash your Hashlist peek from
- * @param At get the item in the position At.
- * @param HKLen returns Length of Hashkey Returned
- * @param HashKey returns the Hashkey corrosponding to HashPos
- * @param Data returns the Data found at HashPos
- * @return whether the item was found or not.
+ * Hash your Hashlist peek from
+ * At get the item in the position At.
+ * HKLen returns Length of Hashkey Returned
+ * HashKey returns the Hashkey corrosponding to HashPos
+ * Data returns the Data found at HashPos
+ * returns whether the item was found or not.
  */
-int GetHashAt(HashList *Hash,long At, long *HKLen, const char **HashKey, void **Data)
-{
+int GetHashAt(HashList *Hash,long At, long *HKLen, const char **HashKey, void **Data) {
 	long PayloadPos;
 
 	if ((Hash == NULL) || 
@@ -1099,15 +977,14 @@ int GetHashAt(HashList *Hash,long At, long *HKLen, const char **HashKey, void **
 	return 1;
 }
 
-/**
- * @ingroup HashListSort
- * @brief Get the data located where At points to
+/*
+ * Get the data located where At points to
  * note: you should prefer iterator operations instead of using me.
- * @param Hash your Hashlist peek from
- * @param HKLen returns Length of Hashkey Returned
- * @param HashKey returns the Hashkey corrosponding to HashPos
- * @param Data returns the Data found at HashPos
- * @return whether the item was found or not.
+ * Hash your Hashlist peek from
+ * HKLen returns Length of Hashkey Returned
+ * HashKey returns the Hashkey corrosponding to HashPos
+ * Data returns the Data found at HashPos
+ * returns whether the item was found or not.
  */
 /*
 long GetHashIDAt(HashList *Hash,long At)
@@ -1122,14 +999,12 @@ long GetHashIDAt(HashList *Hash,long At)
 */
 
 
-/**
- * @ingroup HashListSort
- * @brief sorting function for sorting the Hash alphabeticaly by their strings
- * @param Key1 first item
- * @param Key2 second item
+/*
+ * sorting function for sorting the Hash alphabeticaly by their strings
+ * Key1 first item
+ * Key2 second item
  */
-static int SortByKeys(const void *Key1, const void* Key2)
-{
+static int SortByKeys(const void *Key1, const void* Key2) {
 	HashKey *HKey1, *HKey2;
 	HKey1 = *(HashKey**) Key1;
 	HKey2 = *(HashKey**) Key2;
@@ -1137,14 +1012,12 @@ static int SortByKeys(const void *Key1, const void* Key2)
 	return strcasecmp(HKey1->HashKey, HKey2->HashKey);
 }
 
-/**
- * @ingroup HashListSort
- * @brief sorting function for sorting the Hash alphabeticaly reverse by their strings
- * @param Key1 first item
- * @param Key2 second item
+/*
+ * sorting function for sorting the Hash alphabeticaly reverse by their strings
+ * Key1 first item
+ * Key2 second item
  */
-static int SortByKeysRev(const void *Key1, const void* Key2)
-{
+static int SortByKeysRev(const void *Key1, const void* Key2) {
 	HashKey *HKey1, *HKey2;
 	HKey1 = *(HashKey**) Key1;
 	HKey2 = *(HashKey**) Key2;
@@ -1152,14 +1025,12 @@ static int SortByKeysRev(const void *Key1, const void* Key2)
 	return strcasecmp(HKey2->HashKey, HKey1->HashKey);
 }
 
-/**
- * @ingroup HashListSort
- * @brief sorting function to regain hash-sequence and revert tainted status
- * @param Key1 first item
- * @param Key2 second item
+/*
+ * sorting function to regain hash-sequence and revert tainted status
+ * Key1 first item
+ * Key2 second item
  */
-static int SortByHashKeys(const void *Key1, const void* Key2)
-{
+static int SortByHashKeys(const void *Key1, const void* Key2) {
 	HashKey *HKey1, *HKey2;
 	HKey1 = *(HashKey**) Key1;
 	HKey2 = *(HashKey**) Key2;
@@ -1168,16 +1039,14 @@ static int SortByHashKeys(const void *Key1, const void* Key2)
 }
 
 
-/**
- * @ingroup HashListSort
- * @brief sort the hash alphabeticaly by their keys.
+/*
+ * sort the hash alphabeticaly by their keys.
  * Caution: This taints the hashlist, so accessing it later 
  * will be significantly slower! You can un-taint it by SortByHashKeyStr
- * @param Hash the list to sort
- * @param Order 0/1 Forward/Backward
+ * Hash the list to sort
+ * Order 0/1 Forward/Backward
  */
-void SortByHashKey(HashList *Hash, int Order)
-{
+void SortByHashKey(HashList *Hash, int Order) {
 	if (Hash->nLookupTableItems < 2)
 		return;
 	qsort(Hash->LookupTable, Hash->nLookupTableItems, sizeof(HashKey*), 
@@ -1185,14 +1054,12 @@ void SortByHashKey(HashList *Hash, int Order)
 	Hash->tainted = 1;
 }
 
-/**
- * @ingroup HashListSort
- * @brief sort the hash by their keys (so it regains untainted state).
+/*
+ * sort the hash by their keys (so it regains untainted state).
  * this will result in the sequence the hashing allgorithm produces it by default.
- * @param Hash the list to sort
+ * Hash the list to sort
  */
-void SortByHashKeyStr(HashList *Hash)
-{
+void SortByHashKeyStr(HashList *Hash) {
 	Hash->tainted = 0;
 	if (Hash->nLookupTableItems < 2)
 		return;
@@ -1200,28 +1067,25 @@ void SortByHashKeyStr(HashList *Hash)
 }
 
 
-/**
- * @ingroup HashListSort
- * @brief gives user sort routines access to the hash payload
- * @param HashVoid to retrieve Data to
- * @return Data belonging to HashVoid
+/*
+ * gives user sort routines access to the hash payload
+ * HashVoid to retrieve Data to
+ * returns Data belonging to HashVoid
  */
-const void *GetSearchPayload(const void *HashVoid)
-{
+const void *GetSearchPayload(const void *HashVoid) {
 	return (*(HashKey**)HashVoid)->PL->Data;
 }
 
-/**
- * @ingroup HashListSort
- * @brief sort the hash by your sort function. see the following sample.
+/*
+ * sort the hash by your sort function. see the following sample.
  * this will result in the sequence the hashing allgorithm produces it by default.
- * @param Hash the list to sort
- * @param SortBy Sortfunction; see below how to implement this
+ * Hash the list to sort
+ * SortBy Sortfunction; see below how to implement this
  */
-void SortByPayload(HashList *Hash, CompareFunc SortBy)
-{
-	if (Hash->nLookupTableItems < 2)
+void SortByPayload(HashList *Hash, CompareFunc SortBy) {
+	if (Hash->nLookupTableItems < 2) {
 		return;
+	}
 	qsort(Hash->LookupTable, Hash->nLookupTableItems, sizeof(HashKey*), SortBy);
 	Hash->tainted = 1;
 }
@@ -1229,7 +1093,7 @@ void SortByPayload(HashList *Hash, CompareFunc SortBy)
 
 
 
-/**
+/*
  * given you've put char * into your hash as a payload, a sort function might
  * look like this:
  * int SortByChar(const void* First, const void* Second)
@@ -1242,19 +1106,16 @@ void SortByPayload(HashList *Hash, CompareFunc SortBy)
  */
 
 
-/**
- * @ingroup HashListAccess
- * @brief Generic function to free a reference.  
+/*
+ * Generic function to free a reference.  
  * since a reference actualy isn't needed to be freed, do nothing.
  */
-void reference_free_handler(void *ptr) 
-{
+void reference_free_handler(void *ptr) {
 	return;
 }
 
 
-/**
- * @ingroup HashListAlgorithm
+/*
  * This exposes the hashlittle() function to consumers.
  */
 int HashLittle(const void *key, size_t length) {
@@ -1262,14 +1123,12 @@ int HashLittle(const void *key, size_t length) {
 }
 
 
-/**
- * @ingroup HashListMset
- * @brief parses an MSet string into a list for later use
- * @param MSetList List to be read from MSetStr
- * @param MSetStr String containing the list
+/*
+ * parses an MSet string into a list for later use
+ * MSetList List to be read from MSetStr
+ * MSetStr String containing the list
  */
-int ParseMSet(MSet **MSetList, StrBuf *MSetStr)
-{
+int ParseMSet(MSet **MSetList, StrBuf *MSetStr) {
 	const char *POS = NULL, *SetPOS = NULL;
 	StrBuf *OneSet;
 	HashList *ThisMSet;
@@ -1285,8 +1144,7 @@ int ParseMSet(MSet **MSetList, StrBuf *MSetStr)
 		return 0;
 
 	ThisMSet = NewHash(0, lFlathash);
-	if (ThisMSet == NULL)
-	{
+	if (ThisMSet == NULL) {
 		FreeStrBuf(&OneSet);
 		return 0;
 	}
@@ -1302,8 +1160,7 @@ int ParseMSet(MSet **MSetList, StrBuf *MSetStr)
 		StartSet = StrBufExtractNext_long(OneSet, &SetPOS, ':');
 		EndSet = 0; /* no range is our default. */
 		/* do we have an end (aka range?) */
-		if ((SetPOS != NULL) && (SetPOS != StrBufNOTNULL))
-		{
+		if ((SetPOS != NULL) && (SetPOS != StrBufNOTNULL)) {
 			if (*(SetPOS) == '*')
 				EndSet = LONG_MAX; /* ranges with '*' go until infinity */
 			else 
@@ -1312,8 +1169,7 @@ int ParseMSet(MSet **MSetList, StrBuf *MSetStr)
 		}
 
 		pEndSet = (long*) malloc (sizeof(long));
-		if (pEndSet == NULL)
-		{
+		if (pEndSet == NULL) {
 			FreeStrBuf(&OneSet);
 			DeleteHash(&ThisMSet);
 			return 0;
@@ -1331,14 +1187,12 @@ int ParseMSet(MSet **MSetList, StrBuf *MSetStr)
 	return 1;
 }
 
-/**
- * @ingroup HashListMset
- * @brief checks whether a message is inside a mset
- * @param MSetList List to search for MsgNo
- * @param MsgNo number to search in mset
+/*
+ * checks whether a message is inside a mset
+ * MSetList List to search for MsgNo
+ * MsgNo number to search in mset
  */
-int IsInMSetList(MSet *MSetList, long MsgNo)
-{
+int IsInMSetList(MSet *MSetList, long MsgNo) {
 	/* basicaly we are a ... */
 	long MemberPosition;
 	HashList *Hash = (HashList*) MSetList;
@@ -1383,12 +1237,10 @@ int IsInMSetList(MSet *MSetList, long MsgNo)
 }
 
 
-/**
- * @ingroup HashListMset
- * @brief frees a mset [redirects to @ref DeleteHash
- * @param FreeMe to be free'd
+/*
+ * frees a mset [redirects to @ref DeleteHash
+ * FreeMe to be free'd
  */
-void DeleteMSet(MSet **FreeMe)
-{
+void DeleteMSet(MSet **FreeMe) {
 	DeleteHash((HashList**) FreeMe);
 }
