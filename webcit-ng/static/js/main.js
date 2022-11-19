@@ -79,7 +79,7 @@ function gotoroom(roomname) {
 			can_delete_messages = data.can_delete_messages;
 			console.log("new mail: " + data.new_mail);
 			update_banner();
-			render_room_view(0, 9999999999);
+			render_room_view();
 		}
 	}
 	fetch_room();

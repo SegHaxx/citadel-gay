@@ -503,3 +503,10 @@ function forum_close_urlbox(do_save) {
 function forum_entmsg() {
 	open_reply_box("ctdl-newmsg-here", false, "", "");
 }
+
+
+// RENDERER FOR THIS VIEW
+function view_render_forums() {
+	document.getElementById("ctdl-main").innerHTML = "<div id=\"ctdl-mrp\" class=\"ctdl-forum-reading-pane\"></div>";
+	forum_readmessages("ctdl-mrp", 0, 9999999999);
+}

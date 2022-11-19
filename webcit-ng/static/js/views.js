@@ -17,38 +17,75 @@ function clear_sidebar_selection() {
 }
 
 
-// This function is the dispatcher that determines the correct view for a room,
-// and calls the correct renderer.  Greater/Less than bounds are accepted.
-function render_room_view(gt_msg, lt_msg) {
+// This function is the dispatcher that determines the correct view for a room, and calls the correct renderer.
+function render_room_view() {
 
 	document.getElementById("ctdl-newmsg-button").style.display = "none";		// the view renderer will set this
 	clear_sidebar_selection();
+	document.getElementById("ctdl-main").innerHTML = _("Loading messages from server, please wait");
 
 	switch(current_view) {
 
 		// The "forum" module displays rooms with the "VIEW_BBS" view as classic style web forums.
 		case views.VIEW_BBS:
 			document.getElementById("ctdl-sidebar-button-forums").classList.add("ctdl-sidebar-button-selected");
-			document.getElementById("ctdl-main").innerHTML = "<div id=\"ctdl-mrp\" class=\"ctdl-forum-reading-pane\"></div>";
-			forum_readmessages("ctdl-mrp", gt_msg, lt_msg);
+			view_render_forums();
 			break;
 
 		// The "mail" module displays rooms with the VIEW_MAILBOX view as a webmail program.
 		case views.VIEW_MAILBOX:
+		case views.VIEW_DRAFTS:
 			document.getElementById("ctdl-sidebar-button-mail").classList.add("ctdl-sidebar-button-selected");
-			document.getElementById("ctdl-main").innerHTML = "";
-			mail_display();
+			document.getElementById("ctdl_mail_folder_list").style.display = "block";	// show folder list
+			view_render_mail();
+			break;
+
+		// The "contacts" module displays rooms with the VIEW_ADDRESSBOOK view as a contacts manager.
+		case views.VIEW_ADDRESSBOOK:
+			document.getElementById("ctdl-main").innerHTML =
+				"<center>'" + current_room + "' is an address book but there is no renderer.</center>";
+			break;
+
+		case views.VIEW_CALENDAR:
+		case views.VIEW_CALBRIEF:
+			document.getElementById("ctdl-main").innerHTML =
+				"<center>'" + current_room + "' is a calendar but there is no renderer.</center>";
+			break;
+
+		case views.VIEW_TASKS:
+			document.getElementById("ctdl-main").innerHTML =
+				"<center>'" + current_room + "' is a task list but there is no renderer.</center>";
+			break;
+
+		case views.VIEW_NOTES:
+			document.getElementById("ctdl-main").innerHTML =
+				"<center>'" + current_room + "' is a notes list but there is no renderer.</center>";
+			break;
+
+		case views.VIEW_WIKI:
+			document.getElementById("ctdl-main").innerHTML =
+				"<center>'" + current_room + "' is a wiki but there is no renderer.</center>";
+			break;
+
+		case views.VIEW_JOURNAL:
+			document.getElementById("ctdl-main").innerHTML =
+				"<center>'" + current_room + "' is a journal but there is no renderer.</center>";
+			break;
+
+		case views.VIEW_BLOG:
+			document.getElementById("ctdl-main").innerHTML =
+				"<center>'" + current_room + "' is a blog but there is no renderer.</center>";
+			break;
+
+		case views.VIEW_QUEUE:
+			document.getElementById("ctdl-main").innerHTML =
+				"<center>We ought to be displaying the email queue here.</center>";
 			break;
 
 		default:
 			document.getElementById("ctdl-main").innerHTML =
 				"<center>The view for " + current_room + " is " + current_view + " but there is no renderer.</center>";
 			break;
-	}
-
-	// Show the mail folder list only when the Mail view is active.
-	if (current_view == views.VIEW_MAILBOX) {
-		document.getElementById("ctdl_mail_folder_list").style.display = "block";
 	}
 
 }

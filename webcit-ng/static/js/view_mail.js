@@ -180,8 +180,8 @@ function mail_render_row(msg) {
 }
 
 
-// Set up the mailbox view
-function mail_display() {
+// RENDERER FOR THIS VIEW
+function view_render_mail() {
 	// Put the "enter new message" button into the sidebar
 	document.getElementById("ctdl-newmsg-button").innerHTML = "<i class=\"fa fa-edit\"></i>" + _("Write mail");
 	document.getElementById("ctdl-newmsg-button").style.display = "block";
