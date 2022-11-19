@@ -591,7 +591,7 @@ char *html_to_ascii(const char *inputmsg, int msglen, int screenwidth, int ansi)
 	output_len += strlen(outbuf);
 
 	/* Strip leading/trailing whitespace.  We can't do this with
-	 * striplt() because it uses too many strlen()'s
+	 * string_trim() because it uses too many strlen()'s
 	 */
 	while ((output_len > 0) && (isspace(outptr[0]))) {
 		strcpy(outptr, &outptr[1]);

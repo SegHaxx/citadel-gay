@@ -140,8 +140,8 @@ void perform_one_http_transaction(struct client_handle *ch) {
 				new_request_header.key = strdup(buf);
 				++c;
 				new_request_header.val = strdup(c);
-				striplt(new_request_header.key);
-				striplt(new_request_header.val);
+				string_trim(new_request_header.key);
+				string_trim(new_request_header.val);
 				array_append(h.request_headers, &new_request_header);
 #ifdef DEBUG_HTTP
 				syslog(LOG_DEBUG, "\033[1m\033[35m{ %s: %s\033[0m", new_request_header.key, new_request_header.val);

@@ -311,21 +311,21 @@ void xmpp_xml_end(void *data, const char *supplied_el) {
 	if (!strcasecmp(el, "resource")) {
 		if (XMPP->chardata_len > 0) {
 			safestrncpy(XMPP->iq_client_resource, XMPP->chardata, sizeof XMPP->iq_client_resource);
-			striplt(XMPP->iq_client_resource);
+			string_trim(XMPP->iq_client_resource);
 		}
 	}
 
 	else if (!strcasecmp(el, "username")) {		/* NON SASL ONLY */
 		if (XMPP->chardata_len > 0) {
 			safestrncpy(XMPP->iq_client_username, XMPP->chardata, sizeof XMPP->iq_client_username);
-			striplt(XMPP->iq_client_username);
+			string_trim(XMPP->iq_client_username);
 		}
 	}
 
 	else if (!strcasecmp(el, "password")) {		/* NON SASL ONLY */
 		if (XMPP->chardata_len > 0) {
 			safestrncpy(XMPP->iq_client_password, XMPP->chardata, sizeof XMPP->iq_client_password);
-			striplt(XMPP->iq_client_password);
+			string_trim(XMPP->iq_client_password);
 		}
 	}
 

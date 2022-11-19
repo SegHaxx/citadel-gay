@@ -96,7 +96,7 @@ void rss_start_element(void *data, const char *el, const char **attribute) {
 					r->link = NULL;
 				}
 				r->link = strdup(attribute[i+1]);
-				striplt(r->link);
+				string_trim(r->link);
 			}
 		}
 	}

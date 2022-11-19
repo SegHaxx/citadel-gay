@@ -126,8 +126,8 @@ LDAP *ctdl_ldap_bind(void) {
 	ldap_set_option(ldserver, LDAP_OPT_PROTOCOL_VERSION, &ctdl_require_ldap_version);
 	ldap_set_option(ldserver, LDAP_OPT_REFERRALS, (void *)LDAP_OPT_OFF);
 
-	striplt(CtdlGetConfigStr("c_ldap_bind_dn"));
-	striplt(CtdlGetConfigStr("c_ldap_bind_pw"));
+	string_trim(CtdlGetConfigStr("c_ldap_bind_dn"));
+	string_trim(CtdlGetConfigStr("c_ldap_bind_pw"));
 	i = ldap_simple_bind_s(ldserver,
 		(!IsEmptyStr(CtdlGetConfigStr("c_ldap_bind_dn")) ? CtdlGetConfigStr("c_ldap_bind_dn") : NULL),
 		(!IsEmptyStr(CtdlGetConfigStr("c_ldap_bind_pw")) ? CtdlGetConfigStr("c_ldap_bind_pw") : NULL)

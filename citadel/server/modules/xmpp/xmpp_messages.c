@@ -61,7 +61,7 @@ void xmpp_output_incoming_messages(void) {
 			xmlesc(xmlbuf2, ptr->sender_email, sizeof xmlbuf2)
 		);
 		if (ptr->text != NULL) {
-			striplt(ptr->text);
+			string_trim(ptr->text);
 			cprintf("<body>%s</body>", xmlesc(xmlbuf1, ptr->text, sizeof xmlbuf1));
 			free(ptr->text);
 		}

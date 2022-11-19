@@ -257,7 +257,7 @@ int wiki_upload_beforesave(struct CtdlMessage *msg, struct recptypes *recp) {
 	do {
 		ptr = memreadline(ptr, buf, sizeof buf);
 		if (*ptr != 0) {
-			striplt(buf);
+			string_trim(buf);
 			if (!IsEmptyStr(buf) && (!strncasecmp(buf, "Content-type:", 13))) {
 				if (
 					(bmstrcasestr(buf, "multipart") != NULL)
@@ -446,7 +446,7 @@ void wiki_rev_callback(char *name, char *filename, char *partnum, char *disp,
 
 	CtdlDecodeBase64(memo, filename, strlen(filename));
 	extract_token(this_rev, memo, 0, '|', sizeof this_rev);
-	striplt(this_rev);
+	string_trim(this_rev);
 
 	/* Perform the patch */
 	fp = popen("patch -f -s -p0 -r /dev/null >/dev/null 2>/dev/null", "w");
@@ -580,7 +580,7 @@ void wiki_rev(char *pagename, char *rev, char *operation)
 	memset(&hecbd, 0, sizeof(struct HistoryEraserCallBackData));
 	hecbd.tempfilename = temp;
 	hecbd.stop_when = rev;
-	striplt(hecbd.stop_when);
+	string_trim(hecbd.stop_when);
 
 	mime_parser(CM_RANGE(msg, eMesageText), *wiki_rev_callback, NULL, NULL, (void *)&hecbd, 0);
 	CM_Free(msg);

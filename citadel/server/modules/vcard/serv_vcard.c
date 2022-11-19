@@ -95,7 +95,7 @@ void extract_inet_email_addrs(char *emailaddrbuf, size_t emailaddrbuf_len,
 		k = vcard_get_prop(v, "email", 1, instance, 1);
 		if ( (s != NULL) && (k != NULL) && (bmstrcasestr(k, "internet")) ) {
 			addr = strdup(s);
-			striplt(addr);
+			string_trim(addr);
 			if (!IsEmptyStr(addr)) {
 				IsDirectoryAddress = IsDirectory(addr, 1);
 
@@ -826,7 +826,7 @@ void dvca_mime_callback(char *name, char *filename, char *partnum, char *disp,
 		if (displayname[i] == ';') displayname[i] = ',';
 		if (displayname[i] == ',') has_commas = 1;
 	}
-	striplt(displayname);
+	string_trim(displayname);
 
 	cprintf("%s%s%s <%s>\n",
 		(has_commas ? "\"" : ""),
@@ -1112,7 +1112,7 @@ void store_this_ha(struct addresses_to_be_filed *aptr) {
 
 		/* Make a vCard out of each address */
 		extract_token(recipient, aptr->collected_addresses, i, ',', sizeof recipient);
-		striplt(recipient);
+		string_trim(recipient);
 		v = vcard_new_from_rfc822_addr(recipient);
 		if (v != NULL) {
 			const char *s;

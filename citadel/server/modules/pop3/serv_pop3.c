@@ -99,7 +99,7 @@ void pop3_user(char *argbuf) {
 	}
 
 	strcpy(username, argbuf);
-	striplt(username);
+	string_trim(username);
 
 	if (CtdlLoginExistingUser(username) == login_ok) {
 		cprintf("+OK Password required for %s\r\n", username);
@@ -186,7 +186,7 @@ void pop3_pass(char *argbuf) {
 	char password[SIZ];
 
 	safestrncpy(password, argbuf, sizeof password);
-	striplt(password);
+	string_trim(password);
 
 	if (CtdlTryPassword(password, strlen(password)) == pass_ok) {
 		pop3_login();

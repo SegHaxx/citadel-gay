@@ -2658,7 +2658,7 @@ long CtdlSubmitMsg(struct CtdlMessage *msg,	/* message to save */
 		if (mptr != NULL) {
 			char *aptr;
 			safestrncpy(content_type, &mptr[13], sizeof content_type);
-			striplt(content_type);
+			string_trim(content_type);
 			aptr = content_type;
 			while (!IsEmptyStr(aptr)) {
 				if ((*aptr == ';')
@@ -3128,8 +3128,8 @@ struct CtdlMessage *CtdlMakeMessageLen(
 	msg->cm_anon_type = type;
 	msg->cm_format_type = format_type;
 
-	if (recipient != NULL) rcplen = striplt(recipient);
-	if (recp_cc != NULL) cclen = striplt(recp_cc);
+	if (recipient != NULL) rcplen = string_trim(recipient);
+	if (recp_cc != NULL) cclen = string_trim(recp_cc);
 
 	/* Path or Return-Path */
 	if (myelen > 0) {
@@ -3178,7 +3178,7 @@ struct CtdlMessage *CtdlMakeMessageLen(
 
 	if (subject != NULL) {
 		long length;
-		length = striplt(subject);
+		length = string_trim(subject);
 		if (length > 0) {
 			long i;
 			long IsAscii;

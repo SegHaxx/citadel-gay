@@ -28,7 +28,7 @@ JsonValue *json_tokenize_recipients(const char *Key, long keylen, char *recp) {
 	int num_recp = num_tokens(recp, ',');
 	for (int i=0; i<num_recp; ++i) {
 		extract_token(tokbuf, recp, i, ',', sizeof(tokbuf));
-		striplt(tokbuf);
+		string_trim(tokbuf);
 		JsonArrayAppend(j, NewJsonPlainString(HKEY("r"), tokbuf, strlen(tokbuf)));
 	}
 	return(j);
@@ -96,11 +96,11 @@ void json_render_one_message(struct http_transaction *h, struct ctdlsession *c, 
 			// rfc822 header parsing here
 			if (!strncasecmp(buf, "Content-transfer-encoding:", 26)) {
 				strcpy(content_transfer_encoding, &buf[26]);
-				striplt(content_transfer_encoding);
+				string_trim(content_transfer_encoding);
 			}
 			if (!strncasecmp(buf, "Content-type:", 13)) {
 				strcpy(content_type, &buf[13]);
-				striplt(content_type);
+				string_trim(content_type);
 			}
 		}
 		if (!strcmp(buf, "000")) {		// if we have an empty message, don't try to read further

@@ -77,7 +77,7 @@ void dav_get_message(struct http_transaction *h, struct ctdlsession *c, long msg
 			if (v) {
 				*v = 0;
 				++v;
-				striplt(v);	// we now have a key (k) and a value (v)
+				string_trim(v);	// we now have a key (k) and a value (v)
 				if ((!strcasecmp(k, "content-type"))	// fields which can be passed from RFC822 to HTTP as-is
 				    || (!strcasecmp(k, "date"))
 				) {

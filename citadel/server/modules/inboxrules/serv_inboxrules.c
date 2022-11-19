@@ -206,7 +206,7 @@ struct inboxrules *deserialize_inbox_rules(char *serialized_rules) {
 			int t = 0;
 			for (t=0; t<nt; ++t) {
 				extract_token(rtoken, decoded_rule, t, '|', sizeof(rtoken));
-				striplt(rtoken);
+				string_trim(rtoken);
 				switch(t) {
 					case 1:								// field to compare
 						for (i=0; i<=field_all; ++i) {

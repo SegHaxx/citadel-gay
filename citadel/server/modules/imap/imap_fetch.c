@@ -382,7 +382,7 @@ void imap_output_envelope_addr(char *addr) {
 	/* Output them one by one. */
 	for (i=0; i<num_addrs; ++i) {
 		extract_token(individual_addr, addr, i, ',', sizeof individual_addr);
-		striplt(individual_addr);
+		string_trim(individual_addr);
 		process_rfc822_addr(individual_addr, user, node, name);
 		IAPuts("(");
 		IPutStr(name, strlen(name));

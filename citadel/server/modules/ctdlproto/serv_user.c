@@ -26,7 +26,7 @@ void cmd_user(char *cmdbuf) {
 	int a;
 
 	extract_token(username, cmdbuf, 0, '|', sizeof username);
-	striplt(username);
+	string_trim(username);
 	syslog(LOG_DEBUG, "user_ops: cmd_user(%s)", username);
 
 	a = CtdlLoginExistingUser(username);
@@ -486,7 +486,7 @@ void ListThisUser(char *username, void *data) {
 void cmd_list(char *cmdbuf) {
 	char searchstring[256];
 	extract_token(searchstring, cmdbuf, 0, '|', sizeof searchstring);
-	striplt(searchstring);
+	string_trim(searchstring);
 	cprintf("%d \n", LISTING_FOLLOWS);
 	ForEachUser(ListThisUser, (void *)searchstring );
 	cprintf("000\n");

@@ -478,7 +478,7 @@ int CtdlLoginExistingUser(const char *trythisname) {
 
 	// Continue attempting user validation...
 	safestrncpy(username, trythisname, sizeof (username));
-	striplt(username);
+	string_trim(username);
 
 	if (IsEmptyStr(username)) {
 		return login_not_found;

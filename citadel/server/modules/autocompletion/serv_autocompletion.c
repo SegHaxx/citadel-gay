@@ -41,7 +41,7 @@ char *n_to_fn(char *value) {
 	for (i=0; i<strlen(nnn); ++i) {
 		if (!strncmp(&nnn[i], "  ", 2)) strcpy(&nnn[i], &nnn[i+1]);
 	}
-	striplt(nnn);
+	string_trim(nnn);
 	return(nnn);
 }
 

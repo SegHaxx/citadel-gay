@@ -52,7 +52,7 @@ void extract_charset_from_meta(char *charset, char *meta_http_equiv, char *meta_
 		return;
 
 	safestrncpy(buf, ++ptr, sizeof buf);
-	striplt(buf);
+	string_trim(buf);
 	if (!strncasecmp(buf, "charset=", 8)) {
 		strcpy(charset, &buf[8]);
 
@@ -68,7 +68,7 @@ void extract_charset_from_meta(char *charset, char *meta_http_equiv, char *meta_
 		// Remove wandering punctuation
 		if ((ptr = strchr(charset, '\"')))
 			*ptr = 0;
-		striplt(charset);
+		string_trim(charset);
 	}
 }
 
@@ -151,7 +151,7 @@ StrBuf *html2html(const char *supplied_charset, int treat_as_wiki, char *roomnam
 				meta = malloc(meta_length + 1);
 				safestrncpy(meta, meta_start, meta_length);
 				meta[meta_length] = 0;
-				striplt(meta);
+				string_trim(meta);
 				if (!strncasecmp(meta, "HTTP-EQUIV=", 11)) {
 					meta_http_equiv = strdup(&meta[11]);
 					spaceptr = strchr(meta_http_equiv, ' ');

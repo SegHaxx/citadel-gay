@@ -245,7 +245,7 @@ void StripSlashes(char *Dir, int TrailingSlash) {
 
 
 // Strip leading and trailing spaces from a string
-size_t striplt(char *buf) {
+size_t string_trim(char *buf) {
 	char *first_nonspace = NULL;
 	char *last_nonspace = NULL;
 	char *ptr;
@@ -849,7 +849,7 @@ int pattern2(char *search, char *patn) {
  * buf - the string to modify
  * len - length of the string. 
  */
-void stripltlen(char *buf, int *len) {
+void string_trimlen(char *buf, int *len) {
 	int delta = 0;
 	if (*len == 0) return;
 	while ((*len > delta) && (isspace(buf[delta]))){

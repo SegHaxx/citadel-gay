@@ -390,7 +390,7 @@ static long parse_MimeHeaders(interesting_mime_headers *m,
 			if (!strncasecmp(header, "Content-type:", 13)) {
 				memcpy (m->b[content_type].Key, &header[13], headerlen - 12);
 				m->b[content_type].Key[headerlen - 12] = '\0';
-				m->b[content_type].len = striplt (m->b[content_type].Key);
+				m->b[content_type].len = string_trim (m->b[content_type].Key);
 
 				m->b[content_type_name].len = extract_key(m->b[content_type_name].Key, CKEY(m->b[content_type]), HKEY("name"), '=');
 				m->b[charset].len           = extract_key(m->b[charset].Key,           CKEY(m->b[content_type]), HKEY("charset"), '=');
@@ -411,18 +411,18 @@ static long parse_MimeHeaders(interesting_mime_headers *m,
 			else if (!strncasecmp(header, "Content-Disposition:", 20)) {
 				memcpy (m->b[disposition].Key, &header[20], headerlen - 19);
 				m->b[disposition].Key[headerlen - 19] = '\0';
-				m->b[disposition].len = striplt(m->b[disposition].Key);
+				m->b[disposition].len = string_trim(m->b[disposition].Key);
 
 				m->b[content_disposition_name].len = extract_key(m->b[content_disposition_name].Key, CKEY(m->b[disposition]), HKEY("name"), '=');
 				m->b[filename].len                 = extract_key(m->b[filename].Key,                 CKEY(m->b[disposition]), HKEY("filename"), '=');
 				pch = strchr(m->b[disposition].Key, ';');
 				if (pch != NULL) *pch = '\0';
-				m->b[disposition].len = striplt(m->b[disposition].Key);
+				m->b[disposition].len = string_trim(m->b[disposition].Key);
 			}
 			else if (!strncasecmp(header, "Content-ID:", 11)) {
 				memcpy(m->b[id].Key, &header[11], headerlen - 11);
 				m->b[id].Key[headerlen - 11] = '\0';
-				striplt(m->b[id].Key);
+				string_trim(m->b[id].Key);
 				m->b[id].len = stripallbut(m->b[id].Key, '<', '>');
 			}
 			else if (!strncasecmp(header, "Content-length: ", 15)) {
@@ -435,7 +435,7 @@ static long parse_MimeHeaders(interesting_mime_headers *m,
 			else if (!strncasecmp(header, "Content-transfer-encoding: ", 26)) {
 				memcpy(m->b[encoding].Key, &header[26], headerlen - 26);
 				m->b[encoding].Key[headerlen - 26] = '\0';
-				m->b[encoding].len = striplt(m->b[encoding].Key);
+				m->b[encoding].len = string_trim(m->b[encoding].Key);
 			}
 			*header = '\0';
 			headerlen = 0;

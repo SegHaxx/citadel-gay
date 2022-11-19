@@ -374,7 +374,7 @@ void do_internet_configuration(CtdlIPC * ipc) {
 		switch (ch) {
 		case 'a':
 			newprompt("Enter host name: ", buf, 50);
-			striplt(buf);
+			string_trim(buf);
 			if (!IsEmptyStr(buf)) {
 				++num_recs;
 				if (num_recs == 1) {
@@ -549,7 +549,7 @@ void network_config_management(CtdlIPC * ipc, char *entrytype, char *comment) {
 				if (buf[i] == '#')
 					buf[i] = 0;
 			}
-			striplt(buf);
+			string_trim(buf);
 			if (!IsEmptyStr(buf)) {
 				fprintf(changefp, "%s|%s\n", entrytype, buf);
 			}

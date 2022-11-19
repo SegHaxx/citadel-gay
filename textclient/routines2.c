@@ -109,8 +109,8 @@ void entregis(CtdlIPC * ipc) {
 		if (r / 100 == 2) {
 			extract_token(diruser, buf, 0, '@', sizeof diruser);
 			extract_token(dirnode, buf, 1, '@', sizeof dirnode);
-			striplt(diruser);
-			striplt(dirnode);
+			string_trim(diruser);
+			string_trim(dirnode);
 			if ((strcasecmp(diruser, fullname))
 			    || (strcasecmp(dirnode, ipc->ServInfo.nodename))) {
 				scr_printf("\nYou can't use %s as your address.\n", tmpemail);

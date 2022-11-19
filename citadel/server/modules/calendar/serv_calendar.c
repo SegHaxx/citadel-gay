@@ -207,7 +207,7 @@ void ical_send_a_reply(icalcomponent *request, char *action) {
 			ch = icalproperty_get_attendee(attendee);
 			if ((ch != NULL) && !strncasecmp(ch, "MAILTO:", 7)) {
 				safestrncpy(attendee_string, ch + 7, sizeof (attendee_string));
-				striplt(attendee_string);
+				string_trim(attendee_string);
 				recp = validate_recipients(attendee_string, NULL, 0);
 				if (recp != NULL) {
 					if (!strcasecmp(recp->recp_local, CC->user.fullname)) {
@@ -254,7 +254,7 @@ void ical_send_a_reply(icalcomponent *request, char *action) {
 		}
 		if (!strncasecmp(organizer_string, "MAILTO:", 7)) {
 			strcpy(organizer_string, &organizer_string[7]);
-			striplt(organizer_string);
+			string_trim(organizer_string);
 		} else {
 			strcpy(organizer_string, "");
 		}
@@ -2220,7 +2220,7 @@ void ical_saving_vevent(icalcomponent *top_level_cal, icalcomponent *cal) {
 		}
 		if (!strncasecmp(organizer_string, "MAILTO:", 7)) {
 			strcpy(organizer_string, &organizer_string[7]);
-			striplt(organizer_string);
+			string_trim(organizer_string);
 			/*
 			 * If the user saving the event is listed as the
 			 * organizer, then send out invitations.
@@ -2490,7 +2490,7 @@ void ical_fixed_output_backend(icalcomponent *cal, int recursion_level) {
 
 			/* screen name or email address */
 			safestrncpy(buf, ch + 7, sizeof(buf));
-			striplt(buf);
+			string_trim(buf);
 			cprintf("%s ", buf);
 		}
 		cprintf("\n");

@@ -52,14 +52,14 @@ int match_etags(char *taglist, long msgnum) {
 
 	for (i = 0; i < num_tags; ++i) {
 		extract_token(tag, taglist, i, ',', sizeof tag);
-		striplt(tag);
+		string_trim(tag);
 		char *lq = (strchr(tag, '"'));
 		char *rq = (strrchr(tag, '"'));
 		if (lq < rq) {					// has two double quotes
 			strcpy(rq, "");
 			strcpy(tag, ++lq);
 		}
-		striplt(tag);
+		string_trim(tag);
 		if (!strcmp(tag, "*")) {			// wildcard match
 			return (1);
 		}

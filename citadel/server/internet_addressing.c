@@ -174,8 +174,8 @@ int expand_aliases(char *name, char *aliases) {
 			if (bar) {
 				bar[0] = 0;
 				++bar;
-				striplt(aaa);
-				striplt(bar);
+				string_trim(aaa);
+				string_trim(bar);
 				if ( (!IsEmptyStr(aaa)) && (!strcasecmp(name, aaa)) ) {
 					syslog(LOG_DEBUG, "internet_addressing: global alias <%s> to <%s>", name, bar);
 					strcpy(name, bar);
@@ -191,7 +191,7 @@ int expand_aliases(char *name, char *aliases) {
 	safestrncpy(original_name, name, sizeof original_name);
 
 	// should these checks still be here, or maybe move them to split_recps() ?
-	striplt(name);
+	string_trim(name);
 	remove_any_whitespace_to_the_left_or_right_of_at_symbol(name);
 	stripallbut(name, '<', '>');
 
@@ -277,7 +277,7 @@ Array *split_recps(char *addresses, Array *append_to) {
 	for (i=0; i<num_addresses; ++i) {
 		char this_address[256];
 		extract_token(this_address, a, i, ',', sizeof this_address);
-		striplt(this_address);				// strip leading and trailing whitespace
+		string_trim(this_address);				// strip leading and trailing whitespace
 		stripout(this_address, '(', ')');		// remove any portion in parentheses
 		stripallbut(this_address, '<', '>');		// if angle brackets are present, keep only what is inside them
 		if (!IsEmptyStr(this_address)) {
@@ -795,9 +795,9 @@ void process_rfc822_addr(const char *rfc822, char *user, char *node, char *name)
 	}
 
 	// strip leading and trailing spaces in all strings
-	striplt(user);
-	striplt(node);
-	striplt(name);
+	string_trim(user);
+	string_trim(node);
+	string_trim(name);
 
 	// If we processed a string that had the address in angle brackets
 	// but no name outside the brackets, we now have an empty name.  In
@@ -1141,11 +1141,11 @@ char *rfc822_fetch_field(const char *rfc822, const char *fieldname) {
 		strcat(fieldbuf, " ");
 		cont = &fieldbuf[strlen(fieldbuf)];
 		ptr = cmemreadline(ptr, cont, SIZ-strlen(fieldbuf) );
-		striplt(cont);
+		string_trim(cont);
 	}
 
 	strcpy(fieldbuf, &fieldbuf[strlen(fieldhdr)]);
-	striplt(fieldbuf);
+	string_trim(fieldbuf);
 
 	return(fieldbuf);
 }
@@ -1182,7 +1182,7 @@ int IsDirectory(char *addr, int allow_masq_domains) {
 	int h;
 
 	extract_token(domain, addr, 1, '@', sizeof domain);
-	striplt(domain);
+	string_trim(domain);
 
 	h = CtdlHostAlias(domain);
 
@@ -1319,7 +1319,7 @@ char *harvest_collected_addresses(struct CtdlMessage *msg) {
 					if (!IsEmptyStr(coll)) {
 						strcat(coll, ",");
 					}
-					striplt(addr);
+					string_trim(addr);
 					strcat(coll, addr);
 				}
 			}

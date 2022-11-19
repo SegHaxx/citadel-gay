@@ -935,7 +935,7 @@ int migr_restore_message_metadata(long msgnum, int refcount) {
 	if (mptr != NULL) {
 		char *aptr;
 		safestrncpy(smi.meta_content_type, &mptr[13], sizeof smi.meta_content_type);
-		striplt(smi.meta_content_type);
+		string_trim(smi.meta_content_type);
 		aptr = smi.meta_content_type;
 		while (!IsEmptyStr(aptr)) {
 			if ((*aptr == ';')

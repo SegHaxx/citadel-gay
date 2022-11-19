@@ -81,7 +81,7 @@ void edit_user_internet_email_addresses(CtdlIPC * ipc, char *who) {
 		switch (ch) {
 		case 'a':
 			newprompt("Enter new email address: ", buf, 50);
-			striplt(buf);
+			string_trim(buf);
 			if (!IsEmptyStr(buf)) {
 				// FIXME validate the email address (format, our own domain, addr does not belong to another user)
 				++num_recs;

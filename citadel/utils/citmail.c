@@ -247,7 +247,7 @@ int main(int argc, char **argv) {
 				for (i=0; i<num_recp_on_this_line; ++i) {
 					extract_token(this_recp, add_these_recipients,
 						i, ',', sizeof this_recp);
-					striplt(this_recp);
+					string_trim(this_recp);
 					if (!IsEmptyStr(this_recp)) {
 						++num_recipients;
 						recipients = realloc(recipients,

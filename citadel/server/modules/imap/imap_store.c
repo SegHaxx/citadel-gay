@@ -116,7 +116,7 @@ void imap_do_store(citimap_command *Cmd) {
 		if (whichflags[strlen(whichflags)-1]==')') {
 			whichflags[strlen(whichflags)-1]=0;
 		}
-		striplt(whichflags);
+		string_trim(whichflags);
 
 		/* A client might twiddle more than one bit at a time.
 		 * Note that we check for the flag names without the leading

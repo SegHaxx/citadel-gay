@@ -62,7 +62,7 @@ void remove_charset_attribute(char *strbuf)
 	t = num_tokens(strbuf, ';');
 	for (i=0; i<t; ++i) {
 		extract_token(compare, strbuf, i, ';', sizeof compare);
-		striplt(compare);
+		string_trim(compare);
 		if (!strncasecmp(compare, "charset=", 8)) {
 			remove_token(strbuf, i, ';');
 		}
@@ -387,7 +387,7 @@ void vcard_fn_to_n(char *vname, char *n, size_t vname_size) {
 
 	/* Anything left is probably the first name */
 	safestrncpy(firstname, buf, sizeof firstname);
-	striplt(firstname);
+	string_trim(firstname);
 
 	/* Compose the structured name */
 	snprintf(vname, vname_size, "%s;%s;%s;%s;%s", lastname, firstname, middlename,
