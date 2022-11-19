@@ -10,7 +10,7 @@ var selected_message = 0;							// Remember the last message that was selected
 var RefreshMailboxInterval;							// We store our refresh timer here
 
 
-// Render reply address for a message (FIXME we might want to figure out in-reply-to)
+// Render reply address for a message (FIXME figure out how to deal with "reply-to:")
 function reply_addr(msg) {
 	//if (msg.locl) {
 		//return([msg.from]);
@@ -360,6 +360,8 @@ function mail_compose(is_quoted, references, quoted_msgnum, m_to, m_cc, m_subjec
 }
 
 
+// Called when the user clicks the button to make the hidden "CC" and "BCC" lines appear.
+// It is also called automatically during a Reply when CC is pre-populated.
 function make_cc_bcc_visible() {
 	document.getElementById("ctdl-cc-bcc-buttons").style.display = "none";
 	document.getElementById("ctdl-compose-bcc-label").style.display = "block";
@@ -370,7 +372,7 @@ function make_cc_bcc_visible() {
 // Helper function for mail_send_messages() to extract and decode metadata values.
 function msm_field(element_name, separator) {
 	let s1 = document.getElementById(element_name).innerHTML;
-	let s2 = s1.replaceAll("|",separator);	// Replace "|" with "!" because "|" is a field separator in Citadel wire protocol
+	let s2 = s1.replaceAll("|",separator);		// Replace "|" with "!" because "|" is a field separator in Citadel wire protocol
 	let s3 = decodeURI(s2);
 	let s4 = document.createElement("textarea");	// This One Weird Trick Unescapes All HTML Entities
 	s4.innerHTML = s3;
