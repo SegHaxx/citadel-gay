@@ -432,4 +432,3 @@ function mail_send_message() {
 	};
 	request.send(body_text);
 }
-
