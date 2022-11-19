@@ -41,3 +41,6 @@ var views = {
 	VIEW_QUEUE		: 11,   // SMTP queue rooms
 	VIEW_WIKIMD		: 12,	// markdown wiki (no longer implemented)
 };
+
+// new mail sound (we'll make it selectable later)
+const new_mail_sound = new Audio("/ctdl/s/sounds/hi_from_stu.wav");

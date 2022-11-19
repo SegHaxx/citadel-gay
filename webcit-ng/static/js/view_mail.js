@@ -8,6 +8,11 @@
 
 var selected_message = 0;							// Remember the last message that was selected
 var RefreshMailboxInterval;							// We store our refresh timer here
+var highest_mailnum;								// This is used to detect newly arrived mail
+var newmail_notify = {
+        NO  : 0,								// do not perform new mail notifications
+        YES : 1									// yes, perform new mail notifications
+};
 
 
 // Render reply address for a message (FIXME figure out how to deal with "reply-to:")
@@ -177,7 +182,6 @@ function mail_render_row(msg) {
 
 // Set up the mailbox view
 function mail_display() {
-
 	// Put the "enter new message" button into the sidebar
 	document.getElementById("ctdl-newmsg-button").innerHTML = "<i class=\"fa fa-edit\"></i>" + _("Write mail");
 	document.getElementById("ctdl-newmsg-button").style.display = "block";
@@ -189,7 +193,8 @@ function mail_display() {
 		+ "</div>"
 	;
 
-	render_mailbox_display();
+	highest_mailnum = 0;					// Keep track of highest message number to track newly arrived messages
+	render_mailbox_display(newmail_notify.NO);
 	try {							// if this was already set up, clear it so there aren't multiple
 		clearInterval(RefreshMailboxInterval);
 	}
@@ -201,14 +206,12 @@ function mail_display() {
 
 // Refresh the mailbox, either for the first time or whenever needed
 function refresh_mail_display() {
-
 	// If the "ctdl-mailbox-pane" no longer exists, the user has navigated to a different part of the site,
 	// so cancel the refresh.
 	try {
 		document.getElementById("ctdl-mailbox-pane").innerHTML;
 	}
 	catch {
-		console.log("ending refresh_mail_display()");
 		clearInterval(RefreshMailboxInterval);
 		return;
 	}
@@ -220,7 +223,7 @@ function refresh_mail_display() {
 		stat = await(response.json());
 		if (stat.room_mtime > room_mtime) {
 			room_mtime = stat.room_mtime;
-			render_mailbox_display();
+			render_mailbox_display(newmail_notify.YES);
 		}
 	}
 	fetch_stat();
@@ -228,7 +231,10 @@ function refresh_mail_display() {
 
 
 // This is where the rendering of the message list in the mailbox view is performed.
-function render_mailbox_display() {
+// Set notify to newmail_notify.NO or newmail_notify.YES depending on whether we want notifications for new mail.
+function render_mailbox_display(notify) {
+
+	let do_notify = 0;
 
 	url = "/ctdl/r/" + escapeHTMLURI(current_room) + "/mailbox";
 	fetch_mailbox = async() => {
@@ -243,8 +249,13 @@ function render_mailbox_display() {
 				+ "<th>#</th>"
 				+ "</tr>";
 
-			for (var i=0; i<msgs.length; ++i) {
+			for (let i=0; i<msgs.length; ++i) {
 				box += mail_render_row(msgs[i]);
+				let m = parseInt(msgs[i].msgnum);
+				if (m > highest_mailnum) {
+					highest_mailnum = m;
+					do_notify += 1;
+				}
 			}
 
 			box +=	"</table>";
@@ -252,6 +263,10 @@ function render_mailbox_display() {
 
 			if (selected_message > 0) {			// if we had a message selected, keep it selected
 				select_message(selected_message);
+			}
+			if ( (do_notify > 0) && (notify == newmail_notify.YES) ) {
+				console.log(do_notify + " new mail");
+				new_mail_sound.play();			// FIXME do a visual notification as well
 			}
 		}
 	}
@@ -261,8 +276,6 @@ function render_mailbox_display() {
 
 // Compose a new mail message (called by the Reply button here, or by the dispatcher in views.js)
 function mail_compose(is_quoted, references, quoted_msgnum, m_to, m_cc, m_subject) {
-	console.log("mail_compose()");
-
 	// m_to will be an array of zero or more recipients for the To: field.  Convert it to a string.
 	if (m_to) {
 		m_to = Array.from(new Set(m_to));	// remove dupes
