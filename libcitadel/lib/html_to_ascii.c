@@ -68,7 +68,7 @@ char *html_to_ascii(const char *inputmsg, int msglen, int screenwidth, int ansi)
 	output_len = 0;
 
 	do {
-		/* Fill the input buffer */
+		// Fill the input buffer
 		inbuf_len = strlen(inbuf);
 		if ( (done_reading == 0) && (inbuf_len < (SIZ-128)) ) {
 
@@ -88,11 +88,10 @@ char *html_to_ascii(const char *inputmsg, int msglen, int screenwidth, int ansi)
 
 		}
 
-		/* Do some parsing */
+		// Do some parsing
 		if (!IsEmptyStr(inbuf)) {
 
-
-		    /* Fold in all the spacing */
+		    // Fold in all the spacing
 		    for (i=0; !IsEmptyStr(&inbuf[i]); ++i) {
 			if (inbuf[i]==10) inbuf[i]=32;
 			if (inbuf[i]==13) inbuf[i]=32;
@@ -113,10 +112,10 @@ char *html_to_ascii(const char *inputmsg, int msglen, int screenwidth, int ansi)
 				strcpy(tag, "");
 			}
 
-			else if (ch == '>') {	/* We have a tag. */
+			else if (ch == '>') {	// We have a tag.
 				if (nest > 0) --nest;
 
-				/* Unqualify the tag (truncate at first space) */
+				// Unqualify the tag (truncate at first space)
 				if (strchr(tag, ' ') != NULL) {
 					strcpy(strchr(tag, ' '), "");
 				}
@@ -294,10 +293,10 @@ char *html_to_ascii(const char *inputmsg, int msglen, int screenwidth, int ansi)
 		    strcpy(inbuf, &inbuf[i]);
 		}
 
-		/* Convert &; tags to the forbidden characters */
+		// Convert &; tags to the forbidden characters
 		if (!IsEmptyStr(outbuf)) for (i=0; !IsEmptyStr(&outbuf[i]); ++i) {
 
-			/* Character entity references */
+			// Character entity references
 			if (!strncasecmp(&outbuf[i], "&nbsp;", 6)) {
 				outbuf[i] = ' ';
 				strcpy(&outbuf[i+1], &outbuf[i+6]);
@@ -492,7 +491,7 @@ char *html_to_ascii(const char *inputmsg, int msglen, int screenwidth, int ansi)
 				strcpy(&outbuf[i+1], &outbuf[i+7]);
 			}
 
-			/* two-digit decimal equivalents */
+			// two-digit decimal equivalents
 			else if (outbuf[i] == '&'       &&
 				 outbuf[i + 1] == '#'   &&
 				 isdigit(outbuf[i + 2]) && 
@@ -505,7 +504,7 @@ char *html_to_ascii(const char *inputmsg, int msglen, int screenwidth, int ansi)
 				strcpy(&outbuf[i+1], &outbuf[i+5]);
 			}
 
-			/* three-digit decimal equivalents */
+			// three-digit decimal equivalents
 			else if (outbuf[i] == '&'       &&
 				 outbuf[i + 1] == '#'   &&
 				 isdigit(outbuf[i + 2]) && 
@@ -519,7 +518,7 @@ char *html_to_ascii(const char *inputmsg, int msglen, int screenwidth, int ansi)
 				strcpy(&outbuf[i+1], &outbuf[i+6]);
 			}
 
-			/* four-digit decimal equivalents */
+			// four-digit decimal equivalents
 			else if (outbuf[i] == '&'       &&
 				 outbuf[i + 1] == '#'   &&
 				 isdigit(outbuf[i + 2]) && 
@@ -536,7 +535,7 @@ char *html_to_ascii(const char *inputmsg, int msglen, int screenwidth, int ansi)
 
 		}
 
-		/* Make sure the output buffer is big enough */
+		// Make sure the output buffer is big enough
 		if ((output_len + strlen(outbuf) + SIZ) > outptr_buffer_size) {
 			outptr_buffer_size += SIZ;
 			outptr = realloc(outptr, outptr_buffer_size);
@@ -545,7 +544,7 @@ char *html_to_ascii(const char *inputmsg, int msglen, int screenwidth, int ansi)
 			}
 		}
 
-		/* Output any lines terminated with hard line breaks */
+		// Output any lines terminated with hard line breaks
 		do {
 			did_out = 0;
 			if (strlen(outbuf) > 0) {
@@ -563,7 +562,7 @@ char *html_to_ascii(const char *inputmsg, int msglen, int screenwidth, int ansi)
 		    }
 		} while (did_out);
 
-		/* Add soft line breaks */
+		// Add soft line breaks
 		if (strlen(outbuf) > (screenwidth - 2 )) {
 			rb = (-1);
 			for (i=0; i<(screenwidth-2); ++i) {
@@ -575,9 +574,9 @@ char *html_to_ascii(const char *inputmsg, int msglen, int screenwidth, int ansi)
 				strcpy(&outptr[output_len], nl);
 				output_len += strlen(nl);
 				strcpy(outbuf, &outbuf[rb+1]);
-			} else {
-				strncpy(&outptr[output_len], outbuf,
-					screenwidth-2);
+			}
+			else {
+				strncpy(&outptr[output_len], outbuf, screenwidth-2);
 				output_len += (screenwidth-2);
 				strcpy(&outptr[output_len], nl);
 				output_len += strlen(nl);
@@ -590,9 +589,7 @@ char *html_to_ascii(const char *inputmsg, int msglen, int screenwidth, int ansi)
 	strcpy(&outptr[output_len], outbuf);
 	output_len += strlen(outbuf);
 
-	/* Strip leading/trailing whitespace.  We can't do this with
-	 * string_trim() because it uses too many strlen()'s
-	 */
+	// Strip leading/trailing whitespace.
 	while ((output_len > 0) && (isspace(outptr[0]))) {
 		strcpy(outptr, &outptr[1]);
 		--output_len;
@@ -602,6 +599,7 @@ char *html_to_ascii(const char *inputmsg, int msglen, int screenwidth, int ansi)
 		--output_len;
 	}
 
+	// Make sure the final line ends with a newline character.
 	if ((output_len > 0) && (outptr[output_len-1] != '\n')) {
 		strcat(outptr, "\n");
 		++output_len;

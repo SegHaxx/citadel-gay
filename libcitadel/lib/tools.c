@@ -34,7 +34,7 @@
 #define TRUE  1
 #define FALSE 0
 
-typedef unsigned char byte;	      /* Byte type */
+typedef unsigned char byte;	      // Byte type
 
 // copy a string into a buffer of a known size. abort if we exceed the limits
 //
@@ -129,7 +129,7 @@ void remove_token(char *source, int parmnum, char separator) {
 	char *d, *s;		// dest, source
 	int count = 0;
 
-	/* Find desired parameter */
+	// Find desired parameter
 	d = source;
 	while (count < parmnum) {
 		// End of string, bail!
@@ -200,7 +200,7 @@ char *rfc2047encode(const char *line, long length) {
 	long end;
 #define UTF8_HEADER "=?UTF-8?B?"
 
-	/* check if we're already done */
+	// check if we're already done
 	AlreadyEncoded = strstr(line, "=?");
 	if ((AlreadyEncoded != NULL) && ((strstr(AlreadyEncoded, "?B?") != NULL)|| (strstr(AlreadyEncoded, "?Q?") != NULL))) {
 		return strdup(line);
@@ -244,7 +244,7 @@ void StripSlashes(char *Dir, int TrailingSlash) {
 }
 
 
-// Strip leading and trailing spaces from a string
+// Trim leading and trailing whitespace from a string
 size_t string_trim(char *buf) {
 	char *first_nonspace = NULL;
 	char *last_nonspace = NULL;
@@ -276,12 +276,10 @@ size_t string_trim(char *buf) {
 }
 
 
-/*
- * check for the presence of a character within a string (returns count)
- * st	the string to examine
- * ch	the char to search
- * returns the number of times ch appears in st
- */
+// check for the presence of a character within a string (returns count)
+// st	the string to examine
+// ch	the char to search
+// returns the number of times ch appears in st
 int haschar(const char *st, int ch) {
 	const char *ptr;
 	int b;
@@ -297,10 +295,7 @@ int haschar(const char *st, int ch) {
 }
 
 
-/*
- * Determine whether the specified message number is contained within the
- * specified sequence set.
- */
+// Determine whether the specified message number is contained within the specified sequence set.
 int is_msg_in_sequence_set(const char *mset, long msgnum) {
 	int num_sets;
 	int s;
@@ -312,16 +307,13 @@ int is_msg_in_sequence_set(const char *mset, long msgnum) {
 		extract_token(setstr, mset, s, ',', sizeof setstr);
 
 		extract_token(lostr, setstr, 0, ':', sizeof lostr);
-		if (num_tokens(setstr, ':') >= 2)
-		{
+		if (num_tokens(setstr, ':') >= 2) {
 			extract_token(histr, setstr, 1, ':', sizeof histr);
-			if (!strcmp(histr, "*"))
-			{
+			if (!strcmp(histr, "*")) {
 				snprintf(histr, sizeof histr, "%ld", LONG_MAX);
 			}
 		} 
-		else
-		{
+		else {
 			strcpy(histr, lostr);
 		}
 		lo = atol(lostr);
@@ -333,17 +325,15 @@ int is_msg_in_sequence_set(const char *mset, long msgnum) {
 	return(0);
 }
 
-/* 
- * Utility function to "readline" from memory
- * start	Location in memory from which we are reading.
- * buf		the buffer to place the string in.
- * maxlen	Size of string buffer
- * returns pointer to the source memory right after we stopped reading.
- */
+// Utility function to "readline" from memory
+// start	Location in memory from which we are reading.
+// buf		the buffer to place the string in.
+// maxlen	Size of string buffer
+// returns pointer to the source memory right after we stopped reading.
 char *memreadline(char *start, char *buf, int maxlen) {
 	char ch;
 	char *ptr;
-	int len = 0;		/* tally our own length to avoid strlen() delays */
+	int len = 0;		// tally our own length to avoid strlen() delays
 
 	ptr = start;
 
@@ -360,79 +350,16 @@ char *memreadline(char *start, char *buf, int maxlen) {
 }
 
 
-/*
- * Utility function to "readline" from memory
- * start	Location in memory from which we are reading.
- * buf		the buffer to place the string in.
- * maxlen	Size of string buffer
- * retlen	the length of the returned string
- * returns a pointer to the source memory right after we stopped reading.
- */
+// Utility function to "readline" from memory
+// start	Location in memory from which we are reading.
+// buf		the buffer to place the string in.
+// maxlen	Size of string buffer
+// retlen	the length of the returned string
+// returns a pointer to the source memory right after we stopped reading.
 char *memreadlinelen(char *start, char *buf, int maxlen, int *retlen) {
 	char ch;
 	char *ptr;
-	int len = 0;		/* tally our own length to avoid strlen() delays */
-
-	ptr = start;
-
-	while (1)
-	{
-		ch = *ptr++;
-		if ((len + 1 < (maxlen)) && (ch != 13) && (ch != 10))
-		{
-			buf[len++] = ch;
-		}
-		if ((ch == 10) || (ch == 0))
-		{
-			buf[len] = 0;
-			*retlen = len;
-			return ptr;
-		}
-	}
-}
-
-
-/** 
- * \brief Utility function to "readline" from memory
- * \param start Location in memory from which we are reading.
- * \param buf the buffer to place the string in.
- * \param maxlen Size of string buffer
- * \return Pointer to the source memory right after we stopped reading.
- */
-const char *cmemreadline(const char *start, char *buf, int maxlen)
-{
-	char ch;
-	const char *ptr;
-	int len = 0;		/**< tally our own length to avoid strlen() delays */
-
-	ptr = start;
-
-	while (1) {
-		ch = *ptr++;
-		if ((len + 1 < (maxlen)) && (ch != 13) && (ch != 10)) {
-			buf[len++] = ch;
-		}
-		if ((ch == 10) || (ch == 0)) {
-			buf[len] = 0;
-			return ptr;
-		}
-	}
-}
-
-
-/** 
- * \brief Utility function to "readline" from memory
- * \param start Location in memory from which we are reading.
- * \param buf the buffer to place the string in.
- * \param maxlen Size of string buffer
- * \param retlen the length of the returned string
- * \return Pointer to the source memory right after we stopped reading.
- */
-const char *cmemreadlinelen(const char *start, char *buf, int maxlen, int *retlen)
-{
-	char ch;
-	const char *ptr;
-	int len = 0;		/**< tally our own length to avoid strlen() delays */
+	int len = 0;		// tally our own length to avoid strlen() delays
 
 	ptr = start;
 
@@ -450,10 +377,59 @@ const char *cmemreadlinelen(const char *start, char *buf, int maxlen, int *retle
 }
 
 
-/*
- * Strip a boundarized substring out of a string (for example, remove
- * parentheses and anything inside them).
- */
+// Utility function to "readline" from memory
+// start Location in memory from which we are reading.
+// buf the buffer to place the string in.
+// maxlen Size of string buffer
+// return Pointer to the source memory right after we stopped reading.
+const char *cmemreadline(const char *start, char *buf, int maxlen) {
+	char ch;
+	const char *ptr;
+	int len = 0;		// tally our own length to avoid strlen() delays
+
+	ptr = start;
+
+	while (1) {
+		ch = *ptr++;
+		if ((len + 1 < (maxlen)) && (ch != 13) && (ch != 10)) {
+			buf[len++] = ch;
+		}
+		if ((ch == 10) || (ch == 0)) {
+			buf[len] = 0;
+			return ptr;
+		}
+	}
+}
+
+
+// Utility function to "readline" from memory
+// start Location in memory from which we are reading.
+// buf the buffer to place the string in.
+// maxlen Size of string buffer
+// retlen the length of the returned string
+// return Pointer to the source memory right after we stopped reading.
+const char *cmemreadlinelen(const char *start, char *buf, int maxlen, int *retlen) {
+	char ch;
+	const char *ptr;
+	int len = 0;		// tally our own length to avoid strlen() delays
+
+	ptr = start;
+
+	while (1) {
+		ch = *ptr++;
+		if ((len + 1 < (maxlen)) && (ch != 13) && (ch != 10)) {
+			buf[len++] = ch;
+		}
+		if ((ch == 10) || (ch == 0)) {
+			buf[len] = 0;
+			*retlen = len;
+			return ptr;
+		}
+	}
+}
+
+
+// Strip a boundarized substring out of a string (for example, remove parentheses and anything inside them).
 int stripout(char *str, char leftboundary, char rightboundary) {
 	int a;
         int lb = (-1);
@@ -477,10 +453,8 @@ int stripout(char *str, char leftboundary, char rightboundary) {
 }
 
 
-/*
- * Reduce a string down to a boundarized substring (for example, remove
- * parentheses and anything outside them).
- */
+// Reduce a string down to a boundarized substring (for example, remove
+// parentheses and anything outside them).
 long stripallbut(char *str, char leftboundary, char rightboundary) {
 	long len = 0;
 
@@ -519,14 +493,12 @@ char *myfgets(char *s, int size, FILE *stream) {
 	return ret;
 }
 
-/** 
- * \brief Escape a string for feeding out as a URL.
- * \param outbuf the output buffer
- * \param oblen the size of outbuf to sanitize
- * \param strbuf the input buffer
- */
-void urlesc(char *outbuf, size_t oblen, char *strbuf)
-{
+
+// Escape a string for feeding out as a URL.
+// outbuf the output buffer
+// oblen the size of outbuf to sanitize
+// strbuf the input buffer
+void urlesc(char *outbuf, size_t oblen, char *strbuf) {
 	int a, b, c, len, eclen, olen;
 	char *ec = " +#&;`'|*?-~<>^()[]{}/$\"\\";
 
@@ -551,10 +523,7 @@ void urlesc(char *outbuf, size_t oblen, char *strbuf)
 }
 
 
-
-/*
- * In our world, we want strcpy() to be able to work with overlapping strings.
- */
+// In our world, we want strcpy() to be able to work with overlapping strings.
 #ifdef strcpy
 #undef strcpy
 #endif
@@ -564,14 +533,12 @@ char *strcpy(char *dest, const char *src) {
 }
 
 
-/*
- * Generate a new, globally unique UID parameter for a calendar etc. object
- */
+// Generate a new, globally unique UID parameter for a calendar etc. object
 void generate_uuid(char *buf) {
 	static int seq = (-1);
 	static int no_kernel_uuid = 0;
 
-	/* If we are running on Linux then we have a kernelspace uuid generator available */
+	// If we are running on Linux then we have a kernelspace uuid generator available
 
 	if (no_kernel_uuid == 0) {
 		FILE *fp;
@@ -587,7 +554,7 @@ void generate_uuid(char *buf) {
 		}
 	}
 
-	/* If the kernel didn't provide us with a uuid, we generate a pseudo-random one */
+	// If the kernel didn't provide us with a uuid, we generate a pseudo-random one
 
 	no_kernel_uuid = 1;
 
@@ -606,13 +573,12 @@ void generate_uuid(char *buf) {
 	);
 }
 
-/*
- * bmstrcasestr() -- case-insensitive substring search
- *
- * This uses the Boyer-Moore search algorithm and is therefore quite fast.
- * The code is roughly based on the strstr() replacement from 'tin' written
- * by Urs Jannsen.
- */
+
+// bmstrcasestr() -- case-insensitive substring search
+//
+// This uses the Boyer-Moore search algorithm and is therefore quite fast.
+// The code is roughly based on the strstr() replacement from 'tin' written
+// by Urs Jannsen.
 inline static char *_bmstrcasestr_len(char *text, size_t textlen, const char *pattern, size_t patlen) {
 
 	register unsigned char *p, *t;
@@ -623,28 +589,26 @@ inline static char *_bmstrcasestr_len(char *text, size_t textlen, const char *pa
 	if (!text) return(NULL);
 	if (!pattern) return(NULL);
 
-	/* algorithm fails if pattern is empty */
+	// algorithm fails if pattern is empty
 	if ((p1 = patlen) == 0)
 		return (text);
 
-	/* code below fails (whenever i is unsigned) if pattern too long */
+	// code below fails (whenever i is unsigned) if pattern too long
 	if (p1 > textlen)
 		return (NULL);
 
-	/* set up deltas */
+	// set up deltas
 	delta = deltaspace;
 	for (i = 0; i <= 255; i++)
 		delta[i] = p1;
 	for (p = (unsigned char *) pattern, i = p1; --i > 0;)
 		delta[tolower(*p++)] = i;
 
-	/*
-	 * From now on, we want patlen - 1.
-	 * In the loop below, p points to the end of the pattern,
-	 * t points to the end of the text to be tested against the
-	 * pattern, and i counts the amount of text remaining, not
-	 * including the part to be tested.
-	 */
+	// From now on, we want patlen - 1.
+	// In the loop below, p points to the end of the pattern,
+	// t points to the end of the text to be tested against the
+	// pattern, and i counts the amount of text remaining, not
+	// including the part to be tested.
 	p1--;
 	p = (unsigned char *) pattern + p1;
 	t = (unsigned char *) text + p1;
