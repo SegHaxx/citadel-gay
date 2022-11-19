@@ -7,8 +7,8 @@
 // Inline display the author of a message.  This can be called from many different views.
 // For messages originating locally, it renders the display name linked to their profile.
 // For messages originating locally, it renders the display name and their email address.
-function render_msg_author(msg) {
-	if (msg.locl) {
+function render_msg_author(msg, view) {
+	if ((msg.locl) && (view == views.VIEW_BBS)) {
 		return(
 			"<span class=\"ctdl-username\" onClick=\"javascript:user_profile('" + msg.from + "');\">"
 			+ msg.from

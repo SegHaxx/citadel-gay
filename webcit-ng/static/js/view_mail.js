@@ -12,12 +12,12 @@ var RefreshMailboxInterval;							// We store our refresh timer here
 
 // Render reply address for a message (FIXME we might want to figure out in-reply-to)
 function reply_addr(msg) {
-	if (msg.locl) {
-		return([msg.from]);
-	}
-	else {
+	//if (msg.locl) {
+		//return([msg.from]);
+	//}
+	//else {
 		return([msg.from + " &lt;" + msg.rfca + "&gt;"]);
-	}
+	//}
 }
 
 
@@ -42,7 +42,7 @@ function mail_render_one(msgnum, msg, target_div, include_controls) {
 			+ "<div class=\"ctdl-mmsg-content\">"			// begin content
 			+ "<div class=\"ctdl-msg-header\">"			// begin header
 			+ "<span class=\"ctdl-msg-header-info\">"		// begin header info on left side
-			+ render_msg_author(msg)
+			+ render_msg_author(msg, views.VIEW_MAILBOX)
 			+ "<span class=\"ctdl-msgdate\">"
 			+ string_timestamp(msg.time,0)
 			+ "</span>"						// end msgdate

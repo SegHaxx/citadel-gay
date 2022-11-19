@@ -180,7 +180,7 @@ function forum_render_one(msg, existing_div) {
 		+ "<div class=\"ctdl-fmsg-content\">"				// begin content
 		+ "<div class=\"ctdl-msg-header\">"				// begin header
 		+ "<span class=\"ctdl-msg-header-info\">"			// begin header info on left side
-		+ render_msg_author(msg)					// author
+		+ render_msg_author(msg, views.VIEW_BBS)			// author
 		+ "<span class=\"ctdl-msgdate\">"
 		+ string_timestamp(msg.time,0)
 		+ "</span>"							// end msgdate
