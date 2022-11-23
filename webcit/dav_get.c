@@ -201,15 +201,15 @@ void dav_get(void)
 		if (!in_body) {
 			if (!strncasecmp(buf, "Date:", 5)) {
 				safestrncpy(date, &buf[5], sizeof date);
-				striplt(date);
+				string_trim(date);
 			}
 			if (!strncasecmp(buf, "Content-type:", 13)) {
 				safestrncpy(content_type, &buf[13], sizeof content_type);
-				striplt(content_type);
+				string_trim(content_type);
 				ptr = bmstrcasestr(&buf[13], "charset=");
 				if (ptr) {
 					safestrncpy(charset, ptr+8, sizeof charset);
-					striplt(charset);
+					string_trim(charset);
 					endptr = strchr(charset, ';');
 					if (endptr != NULL) strcpy(endptr, "");
 				}

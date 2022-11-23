@@ -175,7 +175,7 @@ void cal_process_object(StrBuf *Target,
 
 			// screen name or email address
 			safestrncpy(buf, ch + 7, sizeof(buf));
-			striplt(buf);
+			string_trim(buf);
 			StrEscAppend(Target, NULL, buf, 0, 0);
 			StrBufAppendPrintf(Target, " ");
 
@@ -683,11 +683,11 @@ void load_ical_object(long msgnum, int unread,
 			if (!IsEmptyStr(bptr)) {
 				if (!strncasecmp(bptr, "Content-type: ", 14)) {
 					safestrncpy(msg4_content_type, &bptr[14], sizeof msg4_content_type);
-					striplt(msg4_content_type);
+					string_trim(msg4_content_type);
 				}
 				else if (!strncasecmp(bptr, "Content-transfer-encoding: ", 27)) {
 					safestrncpy(msg4_content_encoding, &bptr[27], sizeof msg4_content_encoding);
-					striplt(msg4_content_type);
+					string_trim(msg4_content_type);
 				}
 				else if ((!strncasecmp(bptr, "Content-length: ", 16))) {
 					msg4_content_length = atoi(&bptr[16]);

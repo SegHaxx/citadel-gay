@@ -248,7 +248,7 @@ void check_attendee_availability(icalcomponent *vevent) {
 
 			/** screen name or email address */
 			safestrncpy(attendee_string, ch + 7, sizeof(attendee_string));
-			striplt(attendee_string);
+			string_trim(attendee_string);
 
 			check_individual_attendee(attendee_string,
 						dtstart_t, dtend_t,

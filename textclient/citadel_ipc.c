@@ -671,7 +671,7 @@ int CtdlIPCGetSingleMessage(CtdlIPC * ipc, long msgnum, int headers, int as_mime
 					if (!strncasecmp(bbb, "Content-type:", 13)) {
 						extract_token(mret[0]->content_type, bbb, 0, '\n', sizeof mret[0]->content_type);
 						strcpy(mret[0]->content_type, &mret[0]->content_type[13]);
-						striplt(mret[0]->content_type);
+						string_trim(mret[0]->content_type);
 
 						/* strip out ";charset=" portion.  FIXME do something with
 						 * the charset (like... convert it) instead of just throwing
@@ -685,12 +685,12 @@ int CtdlIPCGetSingleMessage(CtdlIPC * ipc, long msgnum, int headers, int as_mime
 					if (!strncasecmp(bbb, "X-Citadel-MSG4-Partnum:", 23)) {
 						extract_token(mret[0]->mime_chosen, bbb, 0, '\n', sizeof mret[0]->mime_chosen);
 						strcpy(mret[0]->mime_chosen, &mret[0]->mime_chosen[23]);
-						striplt(mret[0]->mime_chosen);
+						string_trim(mret[0]->mime_chosen);
 					}
 					if (!strncasecmp(bbb, "Content-transfer-encoding:", 26)) {
 						extract_token(encoding, bbb, 0, '\n', sizeof encoding);
 						strcpy(encoding, &encoding[26]);
-						striplt(encoding);
+						string_trim(encoding);
 					}
 					remove_token(bbb, 0, '\n');
 				} while ((bbb[0] != 0) && (bbb[0] != '\n'));

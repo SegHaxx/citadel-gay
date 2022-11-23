@@ -800,7 +800,7 @@ void edituser(void) {
 		}
 
 		/* Remove any naughty inappropriate whitespace */
-		striplt(all_the_emails);
+		string_trim(all_the_emails);
 		while (pos = strstr(all_the_emails, "\n,"), (pos != NULL)) {
 			strcpy(pos, pos+1);
 		}

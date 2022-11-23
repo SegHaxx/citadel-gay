@@ -359,7 +359,7 @@ void display_edit_individual_event(icalcomponent *supplied_vevent, long msgnum, 
 		strcpy(organizer_string, icalproperty_get_organizer(organizer));
 		if (!strncasecmp(organizer_string, "mailto:", 7)) {
 			strcpy(organizer_string, &organizer_string[7]);
-			striplt(organizer_string);
+			string_trim(organizer_string);
 			serv_printf("ISME %s", organizer_string);
 			serv_getln(buf, sizeof buf);
 			if (buf[0] == '2') {
@@ -470,7 +470,7 @@ void display_edit_individual_event(icalcomponent *supplied_vevent, long msgnum, 
 
 			/* screen name or email address */
 			safestrncpy(attendee_string, ch + 7, sizeof(attendee_string));
-			striplt(attendee_string);
+			string_trim(attendee_string);
 			if (i++) wc_printf("\n");
 			escputs(attendee_string);
 			wc_printf(" ");
@@ -1098,7 +1098,7 @@ void save_individual_event(icalcomponent *supplied_vevent, long msgnum, char *fr
 		/* Now iterate! */
 		for (i=0; i<num_tokens(form_attendees, '\n'); ++i) {
 			extract_token(buf, form_attendees, i, '\n', sizeof buf);
-			striplt(buf);
+			string_trim(buf);
 			if (!IsEmptyStr(buf)) {
 				sprintf(attendee_string, "MAILTO:%s", buf);
 				foundit = 0;
@@ -1125,11 +1125,11 @@ STARTOVER:	for (attendee = icalcomponent_get_first_property(vevent, ICAL_ATTENDE
 			ch = icalproperty_get_attendee(attendee);
 			if ((ch != NULL) && !strncasecmp(ch, "MAILTO:", 7)) {
 				safestrncpy(attendee_string, ch + 7, sizeof(attendee_string));
-				striplt(attendee_string);
+				string_trim(attendee_string);
 				foundit = 0;
 				for (i=0; i<num_tokens(form_attendees, '\n'); ++i) {
 					extract_token(buf, form_attendees, i, '\n', sizeof buf);
-					striplt(buf);
+					string_trim(buf);
 					if (!strcasecmp(buf, attendee_string)) ++foundit;
 				}
 				if (foundit == 0) {

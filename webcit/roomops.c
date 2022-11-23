@@ -1179,7 +1179,7 @@ void netedit(void) {
 			for (i=0; i<num_addrs; ++i) {
 				strcpy(line, bstr("prefix"));
 				extract_token(buf, bstr("line"), i, ',', sizeof buf);
-				striplt(buf);
+				string_trim(buf);
 				strcat(line, buf);
 				strcat(line, bstr("suffix"));
 				serv_puts(line);
