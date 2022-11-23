@@ -508,7 +508,6 @@ void get_the_room_itself(struct http_transaction *h, struct ctdlsession *c) {
 	JsonObjectAppend(j, NewJsonNumber(HKEY("total_messages"), c->total_messages));
 	JsonObjectAppend(j, NewJsonNumber(HKEY("last_seen"), c->last_seen));
 	JsonObjectAppend(j, NewJsonNumber(HKEY("room_mtime"), c->room_mtime));
-	JsonObjectAppend(j, NewJsonNumber(HKEY("new_mail"), c->new_mail));
 
 	StrBuf *sj = NewStrBuf();
 	SerializeJson(sj, j, 1);	// '1' == free the source array
@@ -632,7 +631,7 @@ void ctdl_r(struct http_transaction *h, struct ctdlsession *c) {
 			c->last_seen = extract_long(&buf[4], 6);	// The highest message number the user has read in this room
 			//      7       (int)rmailflag                  Boolean flag: 1 if this is a Mail> room, 0 otherwise.
 			c->is_room_aide = extract_int(&buf[4], 8);
-			c->new_mail = extract_int(&buf[4], 9);		// the number of new messages in the user's INBOX
+			//	9					This position is no longer used
 			//      10      (int)CC->room.QRfloor           The floor number this room resides on
 			c->room_current_view = extract_int(&buf[4], 11);
 			c->room_default_view = extract_int(&buf[4], 12);

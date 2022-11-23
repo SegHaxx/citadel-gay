@@ -91,7 +91,6 @@ struct ctdlsession {
 	time_t last_access;			// Timestamp of last request that used this session
 	time_t num_requests_handled;
 	time_t room_mtime;			// Timestampt of the most recent write activity in this room
-	int new_mail;				// number of new messages in the user's INBOX
 };
 
 extern char *ssl_cipher_list;

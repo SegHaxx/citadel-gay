@@ -77,7 +77,6 @@ function gotoroom(roomname) {
 			is_room_aide = data.is_room_aide;
 			room_mtime = data.room_mtime;
 			can_delete_messages = data.can_delete_messages;
-			console.log("new mail: " + data.new_mail);
 			update_banner();
 			render_room_view();
 		}

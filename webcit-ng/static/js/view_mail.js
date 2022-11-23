@@ -231,10 +231,8 @@ function refresh_mail_display() {
 
 
 // This is where the rendering of the message list in the mailbox view is performed.
-// Set notify to newmail_notify.NO or newmail_notify.YES depending on whether we want notifications for new mail.
+// Set notify to newmail_notify.NO or newmail_notify.YES depending on whether we are interested in the arrival of new messages.
 function render_mailbox_display(notify) {
-
-	let do_notify = 0;
 
 	url = "/ctdl/r/" + escapeHTMLURI(current_room) + "/mailbox";
 	fetch_mailbox = async() => {
@@ -254,7 +252,6 @@ function render_mailbox_display(notify) {
 				let m = parseInt(msgs[i].msgnum);
 				if (m > highest_mailnum) {
 					highest_mailnum = m;
-					do_notify += 1;
 				}
 			}
 
@@ -264,10 +261,20 @@ function render_mailbox_display(notify) {
 			if (selected_message > 0) {			// if we had a message selected, keep it selected
 				select_message(selected_message);
 			}
+
+
+
+
+/*
 			if ( (do_notify > 0) && (notify == newmail_notify.YES) ) {
 				console.log(do_notify + " new mail");
 				new_mail_sound.play();			// FIXME do a visual notification as well
+									// FIXME move this to BIFF
 			}
+ */
+
+
+
 		}
 	}
 	fetch_mailbox();
