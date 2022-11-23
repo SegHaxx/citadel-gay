@@ -9,23 +9,21 @@
 #include "threads.h"
 
 
-/*
- * Values for CitContext.state
- * 
- * A session that is doing nothing is in CON_IDLE state.  When activity
- * is detected on the socket, it goes to CON_READY, indicating that it
- * needs to have a worker thread bound to it.  When a thread binds to
- * the session, it goes to CON_EXECUTING and does its thing.  When the
- * transaction is finished, the thread sets it back to CON_IDLE and lets
- * it go.
- */
+// Values for CitContext.state
+// 
+// A session that is doing nothing is in CON_IDLE state.  When activity
+// is detected on the socket, it goes to CON_READY, indicating that it
+// needs to have a worker thread bound to it.  When a thread binds to
+// the session, it goes to CON_EXECUTING and does its thing.  When the
+// transaction is finished, the thread sets it back to CON_IDLE and lets
+// it go.
 typedef enum __CCState {
-	CON_IDLE,		/* This context is doing nothing */
-	CON_GREETING,		/* This context needs to output its greeting */
-	CON_STARTING,		/* This context is outputting its greeting */
-	CON_READY,		/* This context needs attention */
-	CON_EXECUTING,		/* This context is bound to a thread */
-	CON_SYS                 /* This is a system context and mustn't be purged */
+	CON_IDLE,		// This context is doing nothing
+	CON_GREETING,		// This context needs to output its greeting
+	CON_STARTING,		// This context is outputting its greeting
+	CON_READY,		// This context needs attention
+	CON_EXECUTING,		// This context is bound to a thread
+	CON_SYS                 // This is a system context and mustn't be purged
 } CCState;
 
 #ifndef __CIT_CONTEXT__
@@ -33,10 +31,8 @@ typedef enum __CCState {
 typedef struct CitContext CitContext;
 #endif
 
-/*
- * This structure keeps track of all information relating to a running 
- * session on the server.  We keep one of these for each session.
- */
+// This structure keeps track of all information relating to a running 
+// session on the server.  We keep one of these for each session.
 struct CitContext {
 	CitContext *prev;	/* Link to previous session in list */
 	CitContext *next;	/* Link to next session in the list */
@@ -157,9 +153,6 @@ CitContext *CloneContext(CitContext *CloneMe);
 
 /* forcibly close and flush fd's on shutdown */
 void terminate_all_sessions(void);
-
-/* Deprecated, user CtdlBumpNewMailCounter() instead */
-void BumpNewMailCounter(long) __attribute__ ((deprecated));
 
 void terminate_idle_sessions(void);
 int CtdlTerminateOtherSession (int session_num);

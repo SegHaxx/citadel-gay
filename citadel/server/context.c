@@ -2,7 +2,7 @@
 // Citadel context management stuff.
 // Here's where we (hopefully) have all the code that manipulates contexts.
 //
-// Copyright (c) 1987-2020 by the citadel.org team
+// Copyright (c) 1987-2022 by the citadel.org team
 //
 // This program is open source software.  Use, duplication, or disclosure
 // is subject to the terms of the GNU General Public License, version 3.
@@ -32,10 +32,10 @@ int CtdlTrySingleUser(void) {
 	int can_do = 0;
 	
 	begin_critical_section(S_SINGLE_USER);
-	if (want_single_user)
+	if (want_single_user) {
 		can_do = 0;
-	else
-	{
+	}
+	else {
 		can_do = 1;
 		want_single_user = 1;
 	}
@@ -93,31 +93,26 @@ int CtdlTerminateOtherSession (int session_num) {
 		}
 	}
 
-	if (((ret & TERM_FOUND) != 0) && ((ret & TERM_ALLOWED) != 0))
-	{
-		if (ccptr->user.usernum == CC->user.usernum)
+	if (((ret & TERM_FOUND) != 0) && ((ret & TERM_ALLOWED) != 0)) {
+		if (ccptr->user.usernum == CC->user.usernum) {
 			ccptr->kill_me = KILLME_ADMIN_TERMINATE;
-		else
+		}
+		else {
 			ccptr->kill_me = KILLME_IDLE;
+		}
 		end_critical_section(S_SESSION_TABLE);
 	}
-	else
+	else {
 		end_critical_section(S_SESSION_TABLE);
+	}
 
 	return ret;
 }
 
 
-/*
- * Check to see if the user who we just sent mail to is logged in.  If yes,
- * bump the 'new mail' counter for their session.  That enables them to
- * receive a new mail notification without having to hit the database.
- */
-void BumpNewMailCounter(long which_user) {
-	CtdlBumpNewMailCounter(which_user);
-}
-
-
+// Check to see if the user who we just sent mail to is logged in.  If yes,
+// bump the 'new mail' counter for their session.  That enables them to
+// receive a new mail notification without having to hit the database.
 void CtdlBumpNewMailCounter(long which_user) {
 	CitContext *ptr;
 

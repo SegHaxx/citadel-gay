@@ -2803,9 +2803,7 @@ long CtdlSubmitMsg(struct CtdlMessage *msg,	/* message to save */
 		
 	CM_SetFieldLONG(msg, eVltMsgNum, newmsgid);
 
-	/* If this is private, local mail, make a copy in the
-	 * recipient's mailbox and bump the reference count.
-	 */
+	// If this is private, local mail, make a copy in the recipient's mailbox and bump the reference count.
 	if ((recps != NULL) && (recps->num_local > 0)) {
 		char *pch;
 		int ntokens;
@@ -2819,7 +2817,7 @@ long CtdlSubmitMsg(struct CtdlMessage *msg,	/* message to save */
 			if (CtdlGetUser(&userbuf, recipient) == 0) {
 				CtdlMailboxName(actual_rm, sizeof actual_rm, &userbuf, MAILROOM);
 				CtdlSaveMsgPointerInRoom(actual_rm, newmsgid, 0, msg);
-				CtdlBumpNewMailCounter(userbuf.usernum);
+				CtdlBumpNewMailCounter(userbuf.usernum);	// if this user is logged in, tell them they have new mail.
 				PerformMessageHooks(msg, recps, EVT_AFTERUSRMBOXSAVE);
 			}
 			else {
