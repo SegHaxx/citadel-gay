@@ -23,6 +23,7 @@ var room_mtime = 0;
 var can_delete_messages = 0;
 var messages_per_page = 20;
 var march_list = [] ;
+var new_mail = 0;
 
 
 // List of defined views shamelessly swiped from libcitadel headers

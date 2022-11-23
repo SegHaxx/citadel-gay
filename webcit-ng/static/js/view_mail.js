@@ -261,20 +261,6 @@ function render_mailbox_display(notify) {
 			if (selected_message > 0) {			// if we had a message selected, keep it selected
 				select_message(selected_message);
 			}
-
-
-
-
-/*
-			if ( (do_notify > 0) && (notify == newmail_notify.YES) ) {
-				console.log(do_notify + " new mail");
-				new_mail_sound.play();			// FIXME do a visual notification as well
-									// FIXME move this to BIFF
-			}
- */
-
-
-
 		}
 	}
 	fetch_mailbox();

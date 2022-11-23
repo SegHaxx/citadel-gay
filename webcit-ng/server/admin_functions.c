@@ -84,6 +84,21 @@ void whoami(struct http_transaction *h, struct ctdlsession *c) {
 }
 
 
+// /ctdl/a/biff returns the number of new messages that have arrived in the inbox
+// since the beginning of the session or since the last call to biff
+void biff(struct http_transaction *h, struct ctdlsession *c) {
+	char biffbuff[1024];
+
+	ctdl_printf(c, "BIFF");				// send the command
+	ctdl_readline(c, biffbuff, sizeof(biffbuff));	// read the result
+	h->response_code = 200;
+	h->response_string = strdup("OK");
+	add_response_header(h, strdup("Content-type"), strdup("text/plain"));
+	h->response_body = strdup(&biffbuff[4]);
+	h->response_body_length = strlen(h->response_body);
+}
+
+
 // Dispatcher for paths starting with /ctdl/a/
 void ctdl_a(struct http_transaction *h, struct ctdlsession *c) {
 	if (!strcasecmp(h->url, "/ctdl/a/login")) {	// log in
@@ -98,6 +113,11 @@ void ctdl_a(struct http_transaction *h, struct ctdlsession *c) {
 
 	if (!strcasecmp(h->url, "/ctdl/a/whoami")) {	// return display name of user
 		whoami(h, c);
+		return;
+	}
+
+	if (!strcasecmp(h->url, "/ctdl/a/biff")) {	// check for new messages in the inbox
+		biff(h, c);
 		return;
 	}
 

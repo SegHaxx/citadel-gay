@@ -4,8 +4,28 @@
 // disclosure are subject to the GNU General Public License v3.
 
 
+do_biff = async() => {
+	response = await fetch("/ctdl/a/biff");
+	if (response.ok) {
+		biff_result = await(response.text());
+		try {
+			new_mail += parseInt(biff_result);
+		}
+		catch {
+		}
+	}
+
+	if (new_mail > 0) {
+		console.log("YOU'VE GOT MAIL!");
+		new_mail_sound.play();			// FIXME do a visual notification as well
+		new_mail = 0;
+	}
+}
+
+
 // This is called at the very beginning of the main page load.
 ctdl_startup = async() => {
+	var BiffInterval;
 	response = await fetch("/ctdl/c/info");
 
 	if (response.ok) {
@@ -24,6 +44,15 @@ ctdl_startup = async() => {
 		else {									// Otherwise,
 			display_login_screen("");					// display the login modal.
 		}
+
+		var BiffInterval;
+		try {							// if this was already set up, clear it so there aren't multiple
+			clearInterval(BiffInterval);
+		}
+		catch {
+		}
+		do_biff();
+		BiffInterval = setInterval(do_biff, 10000);
 	}
 	else {
 		document.getElementById("ctdl-main").innerHTML =
