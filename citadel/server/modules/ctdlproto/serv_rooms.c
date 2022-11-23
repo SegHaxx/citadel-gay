@@ -236,7 +236,6 @@ void cmd_lzrm(char *argbuf) {
 
 // cmd_goto()  -  goto a new room
 void cmd_goto(char *gargs) {
-	struct CitContext *CCC = CC;
 	struct ctdlroom QRscratch;
 	int c;
 	int ok = 0;
@@ -252,7 +251,7 @@ void cmd_goto(char *gargs) {
 	extract_token(password, gargs, 1, '|', sizeof password);
 	transiently = extract_int(gargs, 2);
 
-	CtdlGetUser(&CCC->user, CCC->curr_user);
+	CtdlGetUser(&CC->user, CC->curr_user);
 
 	// Handle some of the macro named rooms
 	convert_room_name_macros(towhere, sizeof towhere);
@@ -262,7 +261,7 @@ void cmd_goto(char *gargs) {
 
 	// Then try a mailbox name match
 	if (c != 0) {
-		CtdlMailboxName(augmented_roomname, sizeof augmented_roomname, &CCC->user, towhere);
+		CtdlMailboxName(augmented_roomname, sizeof augmented_roomname, &CC->user, towhere);
 		c = CtdlGetRoom(&QRscratch, augmented_roomname);
 		if (c == 0) {
 			safestrncpy(towhere, augmented_roomname, sizeof towhere);
@@ -272,14 +271,14 @@ void cmd_goto(char *gargs) {
 	// And if the room was found...
 	if (c == 0) {
 		// Let internal programs go directly to any room.
-		if (CCC->internal_pgm) {
-			memcpy(&CCC->room, &QRscratch, sizeof(struct ctdlroom));
+		if (CC->internal_pgm) {
+			memcpy(&CC->room, &QRscratch, sizeof(struct ctdlroom));
 			CtdlUserGoto(NULL, 1, transiently, NULL, NULL, NULL, NULL);
 			return;
 		}
 
 		// See if there is an existing user/room relationship
-		CtdlRoomAccess(&QRscratch, &CCC->user, &ra, NULL);
+		CtdlRoomAccess(&QRscratch, &CC->user, &ra, NULL);
 
 		// normal clients have to pass through security
 		if (ra & UA_GOTOALLOWED) {
@@ -289,14 +288,14 @@ void cmd_goto(char *gargs) {
 		if (ok == 1) {
 			if ((QRscratch.QRflags & QR_MAILBOX) &&
 			    ((ra & UA_GOTOALLOWED))) {
-				memcpy(&CCC->room, &QRscratch, sizeof(struct ctdlroom));
+				memcpy(&CC->room, &QRscratch, sizeof(struct ctdlroom));
 				CtdlUserGoto(NULL, 1, transiently, NULL, NULL, NULL, NULL);
 				return;
 			}
 			else if ((QRscratch.QRflags & QR_PASSWORDED) &&
 				((ra & UA_KNOWN) == 0) &&
 				(strcasecmp(QRscratch.QRpasswd, password)) &&
-				(CCC->user.axlevel < AxAideU)
+				(CC->user.axlevel < AxAideU)
 			) {
 				cprintf("%d wrong or missing passwd\n", ERROR + PASSWORD_REQUIRED);
 				return;
@@ -305,12 +304,12 @@ void cmd_goto(char *gargs) {
 				   ((QRscratch.QRflags & QR_PASSWORDED) == 0) &&
 				   ((QRscratch.QRflags & QR_GUESSNAME) == 0) &&
 				   ((ra & UA_KNOWN) == 0) &&
-			           (CCC->user.axlevel < AxAideU)
+			           (CC->user.axlevel < AxAideU)
                                   ) {
 				syslog(LOG_DEBUG, "rooms: failed to acquire private room");
 			}
 			else {
-				memcpy(&CCC->room, &QRscratch, sizeof(struct ctdlroom));
+				memcpy(&CC->room, &QRscratch, sizeof(struct ctdlroom));
 				CtdlUserGoto(NULL, 1, transiently, NULL, NULL, NULL, NULL);
 				return;
 			}
