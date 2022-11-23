@@ -104,7 +104,6 @@ typedef struct _folder {
 	long LastMessageRead;
 	long HighestRead;
 	int ShowInfo;
-	int UsersNewMAilboxMessages; /* should we notify the user about new messages? */
 	int IsTrash;
 /* Only available if certain other commands ran */
 	int XHaveRoomPic;

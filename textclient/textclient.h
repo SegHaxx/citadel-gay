@@ -284,7 +284,6 @@ struct ctdlipcroom {
 	long RRlastread;		/* Highest message user has read */
 	char RRismailbox;		/* Is this room a mailbox room? */
 	char RRaide;			/* User can do aide commands in room */
-	long RRnewmail;			/* Number of new mail messages */
 	char RRfloor;			/* Which floor this room is on */
 	char RRcurrentview;		/* The user's current view for this room */
 	char RRdefaultview;		/* The default view for this room */

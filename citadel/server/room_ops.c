@@ -33,12 +33,7 @@ int CtdlDoIHavePermissionToReadMessagesInThisRoom(void) {
 // Check to see whether we have permission to post a message in the current
 // room.  Returns a *CITADEL ERROR CODE* and puts a message in errmsgbuf, or
 // returns 0 on success.
-int CtdlDoIHavePermissionToPostInThisRoom(
-	char *errmsgbuf, 
-	size_t n, 
-	PostType PostPublic,
-	int is_reply
-) {
+int CtdlDoIHavePermissionToPostInThisRoom(char *errmsgbuf, size_t n, PostType PostPublic, int is_reply) {
 	int ra;
 
 	if (!(CC->logged_in) && (PostPublic == POST_LOGGED_IN)) {
@@ -620,9 +615,7 @@ int CtdlIsNonEditable(struct ctdlroom *qrbuf) {
 // Make the specified room the current room for this session.  No validation
 // or access control is done here -- the caller should make sure that the
 // specified room exists and is ok to access.
-void CtdlUserGoto(char *where, int display_result, int transiently,
-		int *retmsgs, int *retnew, long *retoldest, long *retnewest)
-{
+void CtdlUserGoto(char *where, int display_result, int transiently, int *retmsgs, int *retnew, long *retoldest, long *retnewest) {
 	int a;
 	int new_messages = 0;
 	int old_messages = 0;
@@ -632,7 +625,6 @@ void CtdlUserGoto(char *where, int display_result, int transiently,
 	int info = 0;
 	int rmailflag;
 	int raideflag;
-	int newmailcount = 0;
 	visit vbuf;
 	char truncated_roomname[ROOMNAMELEN];
         struct cdbdata *cdbfr;
@@ -679,9 +671,6 @@ void CtdlUserGoto(char *where, int display_result, int transiently,
 		CtdlSetRelationship(&vbuf, &CC->user, &CC->room);
 	}
 	end_critical_section(S_USERS);
-
-	// Check for new mail
-	newmailcount = NewMailCount();
 
 	// Set info to 1 if the room banner is new since our last visit.
 	// Some clients only want to display it when it changes.
@@ -776,7 +765,7 @@ void CtdlUserGoto(char *where, int display_result, int transiently,
 			(long)vbuf.v_lastseen,
 			(int)rmailflag,
 			(int)raideflag,
-			(int)newmailcount,
+			0,					// new mail is no longer counted here
 			(int)CC->room.QRfloor,
 			(int)vbuf.v_view,
 			(int)CC->room.QRdefaultview,

@@ -273,7 +273,7 @@ void ParseGoto(folder *room, StrBuf *Line) {
 		room->RAFlags |= UA_ADMINALLOWED;
 	}
 
-	room->UsersNewMAilboxMessages = StrBufExtractNext_long(Line, &Pos, '|');
+	StrBufExtractNext_long(Line, &Pos, '|');			// position 9 is unused
 	room->floorid = StrBufExtractNext_int(Line, &Pos, '|');
 	room->view = StrBufExtractNext_long(Line, &Pos, '|');
 	room->defview = StrBufExtractNext_long(Line, &Pos, '|');

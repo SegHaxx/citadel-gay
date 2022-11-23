@@ -774,6 +774,11 @@ void cmd_lout(char *argbuf) {
 }
 
 
+void cmd_biff(char *argbuf) {				// has new mail arrived?
+	cprintf("%d %d\n", CIT_OK, NewMailCount());
+}
+
+
 // Initialization function, called from modules_init.c
 char *ctdl_module_init_serv_user(void) {
 	if (!threading) {
@@ -804,6 +809,7 @@ char *ctdl_module_init_serv_user(void) {
 		CtdlRegisterProtoHook(cmd_renu, "RENU", "Rename a user");
 		CtdlRegisterProtoHook(cmd_newu, "NEWU", "Log in as a new user");
 		CtdlRegisterProtoHook(cmd_isme, "ISME", "Determine whether an email address belongs to a user");
+		CtdlRegisterProtoHook(cmd_biff, "BIFF", "Count new messages that have arrived in the inbox");
 	}
 	/* return our Subversion id for the Log */
 	return "user";

@@ -488,11 +488,11 @@ int CtdlIPCGotoRoom(CtdlIPC * ipc, const char *room, const char *passwd, struct 
 		rret[0]->RRlastread = extract_long(cret, 6);
 		rret[0]->RRismailbox = extract_int(cret, 7);
 		rret[0]->RRaide = extract_int(cret, 8);
-		rret[0]->RRnewmail = extract_long(cret, 9);
+		// position 9 is no longer used
 		rret[0]->RRfloor = extract_int(cret, 10);
 		rret[0]->RRcurrentview = extract_int(cret, 11);
 		rret[0]->RRdefaultview = extract_int(cret, 12);
-		/* position 13 is a trash folder flag ... irrelevant in this client */
+		// position 13 is a trash folder flag ... irrelevant in this client
 		rret[0]->RRflags2 = extract_int(cret, 14);
 	}
 	else {

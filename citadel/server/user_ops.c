@@ -1118,7 +1118,8 @@ void ForEachUser(void (*CallBack) (char *, void *out_data), void *in_data) {
 }
 
 
-// Count the number of new mail messages the user has
+// Return the number of new messages that have arrived in the user's inbox while they were logged in.
+// Resets to zero when called.
 int NewMailCount() {
 	int num_newmsgs = 0;
 	num_newmsgs = CC->newmail;

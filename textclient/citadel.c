@@ -262,7 +262,6 @@ char *pop_march(int desired_floor, struct march *_march) {
 void dotgoto(CtdlIPC * ipc, char *towhere, int display_name, int fromungoto) {
 	char aaa[SIZ], bbb[SIZ];
 	static long ls = 0L;
-	int newmailcount = 0;
 	int partial_match, best_match;
 	char from_floor;
 	int ugpos = uglistsize;
@@ -405,8 +404,7 @@ void dotgoto(CtdlIPC * ipc, char *towhere, int display_name, int fromungoto) {
 	if (room->RRinfoupdated > 0)
 		readinfo(ipc);
 
-	/* check for newly arrived mail if we can */
-	newmailcount = room->RRnewmail;
+	/* check for newly arrived mail if we can   FIXME use BIFF command for this
 	if (newmailcount > 0) {
 		color(BRIGHT_RED);
 		if (newmailcount == 1) {
@@ -422,12 +420,14 @@ void dotgoto(CtdlIPC * ipc, char *towhere, int display_name, int fromungoto) {
 				scr_printf("*** failed to check for mail calling %s Reason %d.\n", rc_gotmail_cmd, rv);
 		}
 	}
+	*/
+
 	free(room);
 
 	if (screenwidth > 5)
 		snprintf(&status_line[1], screenwidth - 1, "%s  |  %s  |  %s  |  %s  |  %d new mail  |",
 			 (secure ? "Encrypted" : "Unencrypted"),
-			 ipc->ServInfo.humannode, ipc->ServInfo.site_location, room_name, newmailcount);
+			 ipc->ServInfo.humannode, ipc->ServInfo.site_location, room_name, 0);		// FIXME use BIFF
 }
 
 
