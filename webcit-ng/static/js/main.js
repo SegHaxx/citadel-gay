@@ -148,7 +148,7 @@ function load_new_march_list(which_oper) {
 		march_list = await(response.json());
 		if (response.ok) {
 			march_list = march_list.filter(function(room) {
-				return room.hasnewmsgs;
+				return(room.hasnewmsgs && room.default_view == views.VIEW_BBS);
 			});
 			march_list = march_list.sort(function(a,b) {
 				if (a.floor != b.floor) {

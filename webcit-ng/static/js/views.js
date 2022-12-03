@@ -20,7 +20,12 @@ function clear_sidebar_selection() {
 // This function is the dispatcher that determines the correct view for a room, and calls the correct renderer.
 function render_room_view() {
 
-	document.getElementById("ctdl-newmsg-button").style.display = "none";		// the view renderer will set this
+	// The view renderer will set its own room navigation buttons
+	for (const d of ["ctdl-newmsg-button", "ctdl-ungoto-button", "ctdl-skip-button", "ctdl-goto-button"]) {
+		console.log(d);
+		document.getElementById(d).style.display = "none";
+	}
+
 	clear_sidebar_selection();
 	document.getElementById("ctdl-main").innerHTML = _("Loading messages from server, please wait");
 
