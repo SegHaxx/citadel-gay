@@ -143,7 +143,16 @@ function mail_display_message(msgnum, target_div, include_controls) {
 
 
 // A message has been selected...
-function select_message(msgnum) {
+function select_message(event, msgnum) {
+
+	console.log("select_message(" + event + ", " + msgnum + ")");
+	if (event.ctrlKey) {
+		console.log("...with ctrl");
+	}
+	if (event.shiftKey) {
+		console.log("...with shift");
+	}
+
 	// unhighlight any previously selected message
 	try {
 		document.getElementById("ctdl-msgsum-" + selected_message).classList.remove("ctdl-mail-selected");
@@ -167,9 +176,8 @@ function select_message(msgnum) {
 function mail_render_row(msg) {
 	row	= "<tr "
 		+ "id=\"ctdl-msgsum-" + msg["msgnum"] + "\" "
-		+ "onClick=\"select_message(" + msg["msgnum"] + ");\" "
-		//+ "onmouseenter=\"console.log('mouse in');\" "
-		//+ "onmouseleave=\"console.log('mouse out');\""
+		+ "onClick=\"select_message(event," + msg["msgnum"] + ");\""
+		+ "onselectstart=\"return false;\""
 		+ ">"
 		+ "<td class=\"ctdl-mail-subject\">" + msg["subject"] + "</td>"
 		+ "<td class=\"ctdl-mail-sender\">" + msg["author"] + "</td>"
@@ -259,7 +267,7 @@ function render_mailbox_display(notify) {
 			document.getElementById("ctdl-mailbox-pane").innerHTML = box;
 
 			if (selected_message > 0) {			// if we had a message selected, keep it selected
-				select_message(selected_message);
+				select_message(null, selected_message);
 			}
 		}
 	}
