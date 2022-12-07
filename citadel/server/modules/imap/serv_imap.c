@@ -1,21 +1,9 @@
 // IMAP server for the Citadel system
 //
-// Copyright (C) 2000-2022 by Art Cancro and others.
-// This code is released under the terms of the GNU General Public License.
+// Copyright (c) 1987-2022 by the citadel.org team
 //
-// WARNING: the IMAP protocol is badly designed.  No implementation of it
-// is perfect.  Indeed, with so much gratuitous complexity, *all* IMAP
-// implementations have bugs.
-//
-// This program is open source software; you can redistribute it and/or modify
-// it under the terms of the GNU General Public License as published by
-// the Free Software Foundation; either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License for more details.
+// This program is open source software.  Use, duplication, or disclosure
+// is subject to the terms of the GNU General Public License, version 3.
 
 #include "../../sysdep.h"
 #include <stdlib.h>
@@ -53,11 +41,7 @@
 
 #include "../../ctdl_module.h"
 HashList *ImapCmds = NULL;
-void registerImapCMD(const char *First, long FLen, 
-		     const char *Second, long SLen,
-		     imap_handler H,
-		     int Flags)
-{
+void registerImapCMD(const char *First, long FLen, const char *Second, long SLen, imap_handler H, int Flags) {
 	imap_handler_hook *h;
 
 	h = (imap_handler_hook*) malloc(sizeof(imap_handler_hook));
@@ -78,8 +62,7 @@ void registerImapCMD(const char *First, long FLen,
 }
 
 
-const imap_handler_hook *imap_lookup(int num_parms, ConstStr *Params)
-{
+const imap_handler_hook *imap_lookup(int num_parms, ConstStr *Params) {
 	struct CitContext *CCC = CC;
 	void *v;
 	citimap *Imap = CCCIMAP;
@@ -92,15 +75,13 @@ const imap_handler_hook *imap_lookup(int num_parms, ConstStr *Params)
 	StrBufUpCase(Imap->Reply);
 
 	syslog(LOG_DEBUG, "---- Looking up [%s] -----", ChrPtr(Imap->Reply));
-	if (GetHash(ImapCmds, SKEY(Imap->Reply), &v))
-	{
+	if (GetHash(ImapCmds, SKEY(Imap->Reply), &v)) {
 		syslog(LOG_DEBUG, "Found."); 
 		FlushStrBuf(Imap->Reply);
 		return (imap_handler_hook *) v;
 	}
 
-	if (num_parms == 1)
-	{
+	if (num_parms == 1) {
 		syslog(LOG_DEBUG, "NOT Found."); 
 		FlushStrBuf(Imap->Reply);
 		return NULL;
@@ -109,8 +90,7 @@ const imap_handler_hook *imap_lookup(int num_parms, ConstStr *Params)
 	syslog(LOG_DEBUG, "---- Looking up [%s] -----", ChrPtr(Imap->Reply));
 	StrBufAppendBufPlain(Imap->Reply, CKEY(Params[2]), 0);
 	StrBufUpCase(Imap->Reply);
-	if (GetHash(ImapCmds, SKEY(Imap->Reply), &v))
-	{
+	if (GetHash(ImapCmds, SKEY(Imap->Reply), &v)) {
 		syslog(LOG_DEBUG, "Found."); 
 		FlushStrBuf(Imap->Reply);
 		return (imap_handler_hook *) v;
@@ -120,6 +100,7 @@ const imap_handler_hook *imap_lookup(int num_parms, ConstStr *Params)
        	return NULL;
 }
 
+
 /* imap_rename() uses this struct containing list of rooms to rename */
 struct irl {
 	struct irl *next;
@@ -128,6 +109,7 @@ struct irl {
 	int irl_newfloor;
 };
 
+
 /* Data which is passed between imap_rename() and imap_rename_backend() */
 typedef struct __irlparms {
 	const char *oldname;
@@ -135,14 +117,13 @@ typedef struct __irlparms {
 	const char *newname;
 	long newnamelen;
 	struct irl **irl;
-}irlparms;
+} irlparms;
 
 
 /*
  * If there is a message ID map in memory, free it
  */
-void imap_free_msgids(void)
-{
+void imap_free_msgids(void) {
 	citimap *Imap = IMAP;
 	if (Imap->msgids != NULL) {
 		free(Imap->msgids);
@@ -251,7 +232,6 @@ void imap_set_seen_flags(int first_msg) {
 }
 
 
-
 /*
  * Back end for imap_load_msgids()
  *
@@ -271,7 +251,6 @@ void imap_add_single_msgid(long msgnum, void *userdata) {
 	Imap->msgids[Imap->num_msgs - 1] = msgnum;
 	Imap->flags[Imap->num_msgs - 1] = 0;
 }
-
 
 
 /*
@@ -348,7 +327,8 @@ void imap_rescan_msgids(void) {
 		num_msgs = cdbfr->len / sizeof(long);
 		cdbfr->len = 0;
 		cdb_free(cdbfr);
-	} else {
+	}
+	else {
 		num_msgs = 0;
 	}
 
@@ -468,8 +448,7 @@ void imap_cleanup_function(void) {
 
 
 /*
- * Does the actual work of the CAPABILITY command (because we need to
- * output this stuff in other places as well)
+ * Does the actual work of the CAPABILITY command (because we need to output this stuff in other places as well)
  */
 void imap_output_capability_string(void) {
 	IAPuts("CAPABILITY IMAP4REV1 NAMESPACE ID AUTH=PLAIN AUTH=LOGIN UIDPLUS");
@@ -595,8 +574,7 @@ void imap_login(int num_parms, ConstStr *Params) {
 				IAPrintf("] Hello, %s\r\n", CC->user.fullname);
 				return;
 			}
-			else
-			{
+			else {
 				IReplyPrintf("NO AUTHENTICATE %s failed", Params[3].Key);
 				return;
 			}
@@ -876,10 +854,7 @@ void imap_select(int num_parms, ConstStr *Params) {
 	 */
 	IAPuts("* FLAGS (\\Deleted \\Seen \\Answered)\r\n");
 	IAPuts("* OK [PERMANENTFLAGS (\\Deleted \\Seen \\Answered)] permanent flags\r\n");
-
-	IReplyPrintf("OK [%s] %s completed",
-		(Imap->readonly ? "READ-ONLY" : "READ-WRITE"), Params[1].Key
-	);
+	IReplyPrintf("OK [%s] %s completed", (Imap->readonly ? "READ-ONLY" : "READ-WRITE"), Params[1].Key);
 }
 
 
@@ -1088,8 +1063,7 @@ int imap_grabroom(char *returned_roomname, const char *foldername, int zapped_ok
 
 	/* Then try a mailbox name match */
 	if (c != 0) {
-		CtdlMailboxName(augmented_roomname, sizeof augmented_roomname,
-			    &CC->user, roomname);
+		CtdlMailboxName(augmented_roomname, sizeof augmented_roomname, &CC->user, roomname);
 		c = CtdlGetRoom(&QRscratch, augmented_roomname);
 		if (c == 0)
 			safestrncpy(roomname, augmented_roomname, sizeof(roomname));
@@ -1113,7 +1087,8 @@ int imap_grabroom(char *returned_roomname, const char *foldername, int zapped_ok
 	if (!ok) {
 		strcpy(returned_roomname, "");
 		return (2);
-	} else {
+	}
+	else {
 		safestrncpy(returned_roomname, QRscratch.QRname, ROOMNAMELEN);
 		return (0);
 	}
@@ -1247,7 +1222,8 @@ void imap_unsubscribe(int num_parms, ConstStr *Params) {
 	 */
 	if (CtdlForgetThisRoom() == 0) {
 		IReply("OK UNSUBSCRIBE completed");
-	} else {
+	}
+	else {
 		IReply("NO You may not unsubscribe from this folder.");
 	}
 
@@ -1293,7 +1269,8 @@ void imap_delete(int num_parms, ConstStr *Params) {
 	if (CtdlDoIHavePermissionToDeleteThisRoom(&CC->room)) {
 		CtdlScheduleRoomForDeletion(&CC->room);
 		IReply("OK DELETE completed");
-	} else {
+	}
+	else {
 		IReply("NO Can't delete this folder.");
 	}
 
@@ -1405,9 +1382,7 @@ void imap_rename(int num_parms, ConstStr *Params) {
 
 		/* ... and now rename them. */
 		while (irl != NULL) {
-			r = CtdlRenameRoom(irl->irl_oldroom,
-					   irl->irl_newroom,
-					   irl->irl_newfloor);
+			r = CtdlRenameRoom(irl->irl_oldroom, irl->irl_newroom, irl->irl_newfloor);
 			if (r != crr_ok) {
 				/* FIXME handle error returns better */
 				syslog(LOG_ERR, "CtdlRenameRoom() error %d", r);
@@ -1462,8 +1437,7 @@ void imap_command_loop(void) {
 	else if (Imap->authstate == imap_as_expecting_plainauth) {
 		syslog(LOG_INFO, "<plain_auth>");
 	}
-	else if ((Imap->authstate == imap_as_expecting_multilineusername) || 
-		 cbmstrcasestr(ChrPtr(Imap->Cmd.CmdBuf), " LOGIN ")) {
+	else if ((Imap->authstate == imap_as_expecting_multilineusername) || cbmstrcasestr(ChrPtr(Imap->Cmd.CmdBuf), " LOGIN ")) {
 		syslog(LOG_INFO, "LOGIN...");
 	}
 	else {

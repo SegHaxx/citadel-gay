@@ -503,12 +503,10 @@ int imap_do_search_msg(int seq, struct CtdlMessage *supplied_msg,
 	if (pos < num_items) {
 
 		if (is_or) {
-			match = (match || imap_do_search_msg(seq, msg,
-				num_items - pos, &itemlist[pos], is_uid));
+			match = (match || imap_do_search_msg(seq, msg, num_items - pos, &itemlist[pos], is_uid));
 		}
 		else {
-			match = (match && imap_do_search_msg(seq, msg,
-				num_items - pos, &itemlist[pos], is_uid));
+			match = (match && imap_do_search_msg(seq, msg, num_items - pos, &itemlist[pos], is_uid));
 		}
 
 	}
@@ -538,15 +536,10 @@ void imap_do_search(int num_items, ConstStr *itemlist, int is_uid) {
 	 */
 	for (i=0; i<num_items; ++i) {
 		if (itemlist[i].Key[0] == '(') {
-			
-			TokenCutLeft(&Imap->Cmd, 
-				     &itemlist[i], 
-				     1);
+			TokenCutLeft(&Imap->Cmd, &itemlist[i], 1);
 		}
 		if (itemlist[i].Key[itemlist[i].len-1] == ')') {
-			TokenCutRight(&Imap->Cmd, 
-				      &itemlist[i], 
-				      1);
+			TokenCutRight(&Imap->Cmd, &itemlist[i], 1);
 		}
 	}
 
