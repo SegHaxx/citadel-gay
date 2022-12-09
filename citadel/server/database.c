@@ -37,19 +37,20 @@
 #include "citserver.h"
 #include "config.h"
 
-static DB *dbp[MAXCDB];		/* One DB handle for each Citadel database */
-static DB_ENV *dbenv;		/* The DB environment (global) */
+static DB *dbp[MAXCDB];		// One DB handle for each Citadel database
+static DB_ENV *dbenv;		// The DB environment (global)
 
 
 void cdb_abort(void) {
 	syslog(LOG_DEBUG, "db: citserver is stopping in order to prevent data loss. uid=%d gid=%d euid=%d egid=%d",
 		getuid(), getgid(), geteuid(), getegid()
 	);
-	exit(CTDLEXIT_DB);
+	raise(SIGABRT);		// This will exit in a way that can produce a core dump if needed.
+	exit(CTDLEXIT_DB);	// Exit if the signal failed to end the program.
 }
 
 
-/* Verbose logging callback */
+// Verbose logging callback
 void cdb_verbose_log(const DB_ENV *dbenv, const char *msg, const char *what_is_this) {
 	if (!IsEmptyStr(msg)) {
 		syslog(LOG_DEBUG, "db: %s", msg);
@@ -57,13 +58,13 @@ void cdb_verbose_log(const DB_ENV *dbenv, const char *msg, const char *what_is_t
 }
 
 
-/* Verbose logging callback */
+// Verbose logging callback
 void cdb_verbose_err(const DB_ENV *dbenv, const char *errpfx, const char *msg) {
 	syslog(LOG_ERR, "db: %s", msg);
 }
 
 
-/* wrapper for txn_abort() that logs/aborts on error */
+// wrapper for txn_abort() that logs/aborts on error
 static void txabort(DB_TXN *tid) {
 	int ret;
 
@@ -76,7 +77,7 @@ static void txabort(DB_TXN *tid) {
 }
 
 
-/* wrapper for txn_commit() that logs/aborts on error */
+// wrapper for txn_commit() that logs/aborts on error
 static void txcommit(DB_TXN *tid) {
 	int ret;
 
@@ -89,7 +90,7 @@ static void txcommit(DB_TXN *tid) {
 }
 
 
-/* wrapper for txn_begin() that logs/aborts on error */
+// wrapper for txn_begin() that logs/aborts on error
 static void txbegin(DB_TXN **tid) {
 	int ret;
 
@@ -102,13 +103,14 @@ static void txbegin(DB_TXN **tid) {
 }
 
 
-/* panic callback */
-static void dbpanic(DB_ENV * env, int errval) {
+// panic callback
+static void dbpanic(DB_ENV *env, int errval) {
 	syslog(LOG_ERR, "db: PANIC: %s", db_strerror(errval));
+	cdb_abort();
 }
 
 
-static void cclose(DBC * cursor) {
+static void cclose(DBC *cursor) {
 	int ret;
 
 	if ((ret = cursor->c_close(cursor))) {
@@ -118,7 +120,7 @@ static void cclose(DBC * cursor) {
 }
 
 
-static void bailIfCursor(DBC ** cursors, const char *msg) {
+static void bailIfCursor(DBC **cursors, const char *msg) {
 	int i;
 
 	for (i = 0; i < MAXCDB; i++)
@@ -139,9 +141,7 @@ void cdb_check_handles(void) {
 }
 
 
-/*
- * Request a checkpoint of the database.  Called once per minute by the thread manager.
- */
+// Request a checkpoint of the database.  Called once per minute by the thread manager.
 void cdb_checkpoint(void) {
 	int ret;
 
@@ -153,7 +153,7 @@ void cdb_checkpoint(void) {
 		cdb_abort();
 	}
 
-	/* After a successful checkpoint, we can cull the unused logs */
+	// After a successful checkpoint, we can cull the unused logs
 	if (CtdlGetConfigInt("c_auto_cull")) {
 		ret = dbenv->log_set_config(dbenv, DB_LOG_AUTO_REMOVE, 1);
 	}
@@ -163,12 +163,10 @@ void cdb_checkpoint(void) {
 }
 
 
-/*
- * Open the various databases we'll be using.  Any database which
- * does not exist should be created.  Note that we don't need a
- * critical section here, because there aren't any active threads
- * manipulating the database yet.
- */
+// Open the various databases we'll be using.  Any database which
+// does not exist should be created.  Note that we don't need a
+// critical section here, because there aren't any active threads
+// manipulating the database yet.
 void open_databases(void) {
 	int ret;
 	int i;
@@ -181,9 +179,7 @@ void open_databases(void) {
 	syslog(LOG_DEBUG, "db:   Linked libdb: %s", db_version(&dbversion_major, &dbversion_minor, &dbversion_patch));
 	syslog(LOG_DEBUG, "db:    Linked zlib: %s", zlibVersion());
 
-	/*
-	 * Silently try to create the database subdirectory.  If it's already there, no problem.
-	 */
+	// Silently try to create the database subdirectory.  If it's already there, no problem.
 	if ((mkdir(ctdl_db_dir, 0700) != 0) && (errno != EEXIST)) {
 		syslog(LOG_ERR, "db: unable to create database directory [%s]: %m", ctdl_db_dir);
 	}
@@ -209,10 +205,7 @@ void open_databases(void) {
 	dbenv->set_verbose(dbenv, DB_VERB_DEADLOCK, 1);
 	dbenv->set_verbose(dbenv, DB_VERB_RECOVERY, 1);
 
-	/*
-	 * We want to specify the shared memory buffer pool cachesize,
-	 * but everything else is the default.
-	 */
+	// We want to specify the shared memory buffer pool cachesize, but everything else is the default.
 	ret = dbenv->set_cachesize(dbenv, 0, 64 * 1024, 0);
 	if (ret) {
 		syslog(LOG_ERR, "db: set_cachesize: %s", db_strerror(ret));
@@ -274,9 +267,7 @@ void open_databases(void) {
 }
 
 
-/*
- * Make sure we own all the files, because in a few milliseconds we're going to drop root privs.
- */
+// Make sure we own all the files, because in a few milliseconds we're going to drop root privs.
 void cdb_chmod_data(void) {
 	DIR *dp;
 	struct dirent *d;
@@ -298,10 +289,7 @@ void cdb_chmod_data(void) {
 }
 
 
-/*
- * Close all of the db database files we've opened.  This can be done
- * in a loop, since it's just a bunch of closes.
- */
+// Close all of the db database files we've opened.  This can be done in a loop, since it's just a bunch of closes.
 void close_databases(void) {
 	int i;
 	int ret;
@@ -316,7 +304,7 @@ void close_databases(void) {
 		syslog(LOG_ERR, "db: log_flush: %s", db_strerror(ret));
 	}
 
-	/* close the tables */
+	// close the tables
 	syslog(LOG_INFO, "db: closing databases");
 	for (i = 0; i < MAXCDB; ++i) {
 		syslog(LOG_INFO, "db: closing database %02x", i);
@@ -333,7 +321,7 @@ void close_databases(void) {
 	// dbenv->lock_stat_print(dbenv, DB_STAT_ALL);
 	// #endif
 
-	/* Close the handle. */
+	// Close the handle.
 	ret = dbenv->close(dbenv, 0);
 	if (ret) {
 		syslog(LOG_ERR, "db: DBENV->close: %s", db_strerror(ret));
@@ -341,9 +329,7 @@ void close_databases(void) {
 }
 
 
-/*
- * Decompress a database item if it was compressed on disk
- */
+// Decompress a database item if it was compressed on disk
 void cdb_decompress_if_necessary(struct cdbdata *cdb) {
 	static int magic = COMPRESS_MAGIC;
 
@@ -351,7 +337,7 @@ void cdb_decompress_if_necessary(struct cdbdata *cdb) {
 		return;
 	}
 
-	/* At this point we know we're looking at a compressed item. */
+	// At this point we know we're looking at a compressed item.
 
 	struct CtdlCompressHeader zheader;
 	char *uncompressed_data;
@@ -407,7 +393,7 @@ int cdb_store(int cdb, const void *ckey, int ckeylen, void *cdata, int cdatalen)
 	ddata.size = cdatalen;
 	ddata.data = cdata;
 
-	/* Only compress Visit and UseTable records.  Everything else is uncompressed. */
+	// Only compress Visit and UseTable records.  Everything else is uncompressed.
 	if ((cdb == CDB_VISIT) || (cdb == CDB_USETABLE)) {
 		compressing = 1;
 		zheader.magic = COMPRESS_MAGIC;
@@ -471,9 +457,7 @@ int cdb_store(int cdb, const void *ckey, int ckeylen, void *cdata, int cdatalen)
 }
 
 
-/*
- * Delete a piece of data.  Returns 0 if the operation was successful.
- */
+// Delete a piece of data.  Returns 0 if the operation was successful.
 int cdb_delete(int cdb, void *key, int keylen) {
 	DBT dkey;
 	DB_TXN *tid;
@@ -491,7 +475,8 @@ int cdb_delete(int cdb, void *key, int keylen) {
 				cdb_abort();
 			}
 		}
-	} else {
+	}
+	else {
 		bailIfCursor(TSD->cursors, "attempt to delete during r/o cursor");
 
 	      retry:
@@ -501,11 +486,13 @@ int cdb_delete(int cdb, void *key, int keylen) {
 			if (ret == DB_LOCK_DEADLOCK) {
 				txabort(tid);
 				goto retry;
-			} else {
+			}
+			else {
 				syslog(LOG_ERR, "db: cdb_delete(%d): %s", cdb, db_strerror(ret));
 				cdb_abort();
 			}
-		} else {
+		}
+		else {
 			txcommit(tid);
 		}
 	}
@@ -533,11 +520,9 @@ static DBC *localcursor(int cdb) {
 }
 
 
-/*
- * Fetch a piece of data.  If not found, returns NULL.  Otherwise, it returns
- * a struct cdbdata which it is the caller's responsibility to free later on
- * using the cdb_free() routine.
- */
+// Fetch a piece of data.  If not found, returns NULL.  Otherwise, it returns
+// a struct cdbdata which it is the caller's responsibility to free later on
+// using the cdb_free() routine.
 struct cdbdata *cdb_fetch(int cdb, const void *key, int keylen) {
 
 	if (keylen == 0) {		// key length zero is impossible
@@ -582,7 +567,6 @@ struct cdbdata *cdb_fetch(int cdb, const void *key, int keylen) {
 	if (tempcdb == NULL) {
 		syslog(LOG_ERR, "db: cdb_fetch() cannot allocate memory for tempcdb: %m");
 		cdb_abort();
-		return NULL;	/* make it easier for static analysis... */
 	}
 	else {
 		tempcdb->len = dret.size;
@@ -593,14 +577,12 @@ struct cdbdata *cdb_fetch(int cdb, const void *key, int keylen) {
 }
 
 
-/*
- * Free a cdbdata item.
- *
- * Note that we only free the 'ptr' portion if it is not NULL.  This allows
- * other code to assume ownership of that memory simply by storing the
- * pointer elsewhere and then setting 'ptr' to NULL.  cdb_free() will then
- * avoid freeing it.
- */
+// Free a cdbdata item.
+//
+// Note that we only free the 'ptr' portion if it is not NULL.  This allows
+// other code to assume ownership of that memory simply by storing the
+// pointer elsewhere and then setting 'ptr' to NULL.  cdb_free() will then
+// avoid freeing it.
 void cdb_free(struct cdbdata *cdb) {
 	if (cdb->ptr) {
 		free(cdb->ptr);
@@ -618,23 +600,19 @@ void cdb_close_cursor(int cdb) {
 }
 
 
-/* 
- * Prepare for a sequential search of an entire database.
- * (There is guaranteed to be no more than one traversal in
- * progress per thread at any given time.)
- */
+// Prepare for a sequential search of an entire database.
+// (There is guaranteed to be no more than one traversal in
+// progress per thread at any given time.)
 void cdb_rewind(int cdb) {
 	int ret = 0;
 
 	if (TSD->cursors[cdb] != NULL) {
 		syslog(LOG_ERR, "db: cdb_rewind: must close cursor on database %d before reopening", cdb);
 		cdb_abort();
-		/* cclose(TSD->cursors[cdb]); */
+		// cclose(TSD->cursors[cdb]);
 	}
 
-	/*
-	 * Now initialize the cursor
-	 */
+	// Now initialize the cursor
 	ret = dbp[cdb]->cursor(dbp[cdb], TSD->tid, &TSD->cursors[cdb], 0);
 	if (ret) {
 		syslog(LOG_ERR, "db: cdb_rewind: db_cursor: %s", db_strerror(ret));
@@ -643,16 +621,14 @@ void cdb_rewind(int cdb) {
 }
 
 
-/*
- * Fetch the next item in a sequential search.  Returns a pointer to a 
- * cdbdata structure, or NULL if we've hit the end.
- */
+// Fetch the next item in a sequential search.  Returns a pointer to a 
+// cdbdata structure, or NULL if we've hit the end.
 struct cdbdata *cdb_next_item(int cdb) {
 	DBT key, data;
 	struct cdbdata *cdbret;
 	int ret = 0;
 
-	/* Initialize the key/data pair so the flags aren't set. */
+	// Initialize the key/data pair so the flags aren't set.
 	memset(&key, 0, sizeof(key));
 	memset(&data, 0, sizeof(data));
 	data.flags = DB_DBT_MALLOC;
@@ -665,7 +641,7 @@ struct cdbdata *cdb_next_item(int cdb) {
 			cdb_abort();
 		}
 		cdb_close_cursor(cdb);
-		return NULL;	/* presumably, end of file */
+		return NULL;	// presumably, end of file
 	}
 
 	cdbret = (struct cdbdata *) malloc(sizeof(struct cdbdata));
@@ -677,9 +653,7 @@ struct cdbdata *cdb_next_item(int cdb) {
 }
 
 
-/*
- * Transaction-based stuff.  I'm writing this as I bake cookies...
- */
+// Transaction-based stuff.  I'm writing this as I bake cookies...
 void cdb_begin_transaction(void) {
 	bailIfCursor(TSD->cursors, "can't begin transaction during r/o cursor");
 
@@ -715,11 +689,8 @@ void cdb_end_transaction(void) {
 }
 
 
-/*
- * Truncate (delete every record)
- */
+// Truncate (delete every record)
 void cdb_trunc(int cdb) {
-	/* DB_TXN *tid; */
 	int ret;
 	u_int32_t count;
 
@@ -731,25 +702,21 @@ void cdb_trunc(int cdb) {
 		bailIfCursor(TSD->cursors, "attempt to write during r/o cursor");
 
 	      retry:
-		/* txbegin(&tid); */
 
-		if ((ret = dbp[cdb]->truncate(dbp[cdb],	/* db */
-					      NULL,	/* transaction ID */
-					      &count,	/* #rows deleted */
-					      0))) {	/* flags */
+		if ((ret = dbp[cdb]->truncate(dbp[cdb],	// db
+					      NULL,	// transaction ID
+					      &count,	// #rows deleted
+					      0))) {	// flags
 			if (ret == DB_LOCK_DEADLOCK) {
-				/* txabort(tid); */
 				goto retry;
-			} else {
+			}
+			else {
 				syslog(LOG_ERR, "db: cdb_truncate(%d): %s", cdb, db_strerror(ret));
 				if (ret == ENOMEM) {
 					syslog(LOG_ERR, "db: You may need to tune your database; please read http://www.citadel.org/doku.php?id=faq:troubleshooting:out_of_lock_entries for more information.");
 				}
 				exit(CTDLEXIT_DB);
 			}
-		}
-		else {
-			/* txcommit(tid); */
 		}
 	}
 }
@@ -787,7 +754,7 @@ int CheckIfAlreadySeen(StrBuf *guid) {
 		cdb_free(cdbut);
 	}
 
-	/* (Re)write the record, to update the timestamp.  Zeroing it out makes it compress better. */
+	// (Re)write the record, to update the timestamp.  Zeroing it out makes it compress better.
 	memset(&ut, 0, sizeof(struct UseTable));
 	memcpy(ut.ut_msgid, SKEY(guid));
 	ut.ut_timestamp = time(NULL);
@@ -801,6 +768,6 @@ char *ctdl_module_init_database() {
 		// nothing to do here
 	}
 
-	/* return our module id for the log */
+	// return our module id for the log
 	return "database";
 }
