@@ -1,22 +1,9 @@
-/*
- * Implements the STORE command in IMAP.
- *
- * Copyright (c) 2001-2009 by the citadel.org team
- *
- * This program is open source software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 3 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
- */
+// Implements the STORE command in IMAP.
+//
+// Copyright (c) 1987-2022 by the citadel.org team
+//
+// This program is open source software.  Use, duplication, or disclosure
+// is subject to the terms of the GNU General Public License, version 3.
 
 #include "../../ctdl_module.h"
 
@@ -52,12 +39,10 @@
 #include "../../genstamp.h"
 
 
-/*
- * imap_do_store() calls imap_do_store_msg() to tweak the settings of
- * an individual message.
- *
- * We also implement the ".SILENT" protocol option here.  :(
- */
+// imap_do_store() calls imap_do_store_msg() to tweak the settings of
+// an individual message.
+//
+// We also implement the ".SILENT" protocol option here.  :(
 void imap_do_store_msg(int seq, const char *oper, unsigned int bits_to_twiddle) {
 	citimap *Imap = IMAP;
 
@@ -74,10 +59,8 @@ void imap_do_store_msg(int seq, const char *oper, unsigned int bits_to_twiddle) 
 }
 
 
-/*
- * imap_store() calls imap_do_store() to perform the actual bit twiddling
- * on the flags.
- */
+// imap_store() calls imap_do_store() to perform the actual bit twiddling
+// on the flags.
 void imap_do_store(citimap_command *Cmd) {
 	int i, j;
 	unsigned int bits_to_twiddle = 0;
@@ -97,17 +80,12 @@ void imap_do_store(citimap_command *Cmd) {
 		silent = 1;
 	}
 
-	/*
-	 * ss_msglist is an array of message numbers to manipulate.  We
-	 * are going to supply this array to CtdlSetSeen() later.
-	 */
+	// ss_msglist is an array of message numbers to manipulate.  We are going to supply this array to CtdlSetSeen() later.
 	ss_msglist = malloc(Imap->num_msgs * sizeof(long));
 	if (ss_msglist == NULL) return;
 
-	/*
-	 * Ok, go ahead and parse the flags.
-	 */
-	for (i=1; i<Cmd->num_parms; ++i) {///TODO: why strcpy? 
+	// Ok, go ahead and parse the flags.
+	for (i=1; i<Cmd->num_parms; ++i) {
 		strcpy(whichflags, Cmd->Params[i].Key);
 		if (whichflags[0]=='(') {
 			safestrncpy(whichflags, &whichflags[1], 
@@ -118,10 +96,9 @@ void imap_do_store(citimap_command *Cmd) {
 		}
 		string_trim(whichflags);
 
-		/* A client might twiddle more than one bit at a time.
-		 * Note that we check for the flag names without the leading
-		 * backslash because imap_parameterize() strips them out.
-		 */
+		// A client might twiddle more than one bit at a time.
+		// Note that we check for the flag names without the leading
+		// backslash because imap_parameterize() strips them out.
 		num_flags = num_tokens(whichflags, ' ');
 		for (j=0; j<num_flags; ++j) {
 			extract_token(flag, whichflags, j, ' ', sizeof flag);
@@ -161,9 +138,7 @@ void imap_do_store(citimap_command *Cmd) {
 		}
 	}
 
-	/*
-	 * Now manipulate the database -- all in one shot.
-	 */
+	// Now manipulate the database -- all in one shot.
 	if ( (last_item_twiddled >= 0) && (num_ss > 0) ) {
 
 		if (bits_to_twiddle & IMAP_SEEN) {
@@ -190,9 +165,7 @@ void imap_do_store(citimap_command *Cmd) {
 }
 
 
-/*
- * This function is called by the main command loop.
- */
+// This function is called by the main command loop.
 void imap_store(int num_parms, ConstStr *Params) {
 	citimap_command Cmd;
 	int num_items;
@@ -228,9 +201,7 @@ void imap_store(int num_parms, ConstStr *Params) {
 	free(Cmd.Params);
 }
 
-/*
- * This function is called by the main command loop.
- */
+// This function is called by the main command loop.
 void imap_uidstore(int num_parms, ConstStr *Params) {
 	citimap_command Cmd;
 	int num_items;
@@ -265,5 +236,3 @@ void imap_uidstore(int num_parms, ConstStr *Params) {
 	FreeStrBuf(&Cmd.CmdBuf);
 	free(Cmd.Params);
 }
-
-
