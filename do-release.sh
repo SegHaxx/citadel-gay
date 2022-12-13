@@ -5,9 +5,9 @@
 
 echo -e '\033[2J\033[H'
 echo -e '\033[34m\033[1m'
-echo -e '╔═══════════════════════════════════════════════╗'
-echo -e '║      UPDATE-O-VERSION-O-MATIC FOR CITADEL     ║'
-echo -e '╚═══════════════════════════════════════════════╝'
+echo -e '╔════════════════════════════════════════╗'
+echo -e '║      PIPELINE-O-MATIC FOR CITADEL      ║'
+echo -e '╚════════════════════════════════════════╝'
 echo -e '\033[0m'
 
 libcitadel_version=`grep LIBCITADEL_VERSION_NUMBER  libcitadel/lib/libcitadel.h | sed s/"[^0-9.]"/""/g`
