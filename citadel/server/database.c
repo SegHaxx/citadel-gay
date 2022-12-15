@@ -175,22 +175,34 @@ void open_databases(void) {
 	int dbversion_major, dbversion_minor, dbversion_patch;
 
 	syslog(LOG_DEBUG, "db: open_databases() starting");
+	syslog(LOG_DEBUG, "db:    Linked zlib: %s", zlibVersion());
 	syslog(LOG_DEBUG, "db: Compiled libdb: %s", DB_VERSION_STRING);
 	syslog(LOG_DEBUG, "db:   Linked libdb: %s", db_version(&dbversion_major, &dbversion_minor, &dbversion_patch));
-	syslog(LOG_DEBUG, "db:    Linked zlib: %s", zlibVersion());
+
+	// Create synthetic integer version numbers and compare them.
+	// Never allow citserver to run with a libdb older then the one with which it was compiled.
+	int compiled_db_version = ( (DB_VERSION_MAJOR * 1000000) + (DB_VERSION_MINOR * 1000) + (DB_VERSION_PATCH) );
+	int linked_db_version = ( (dbversion_major * 1000000) + (dbversion_minor * 1000) + (dbversion_patch) );
+	if (compiled_db_version > linked_db_version) {
+		syslog(LOG_ERR, "db: citserver is running with a version of libdb older than the one with which it was compiled.");
+		syslog(LOG_ERR, "db: This is an invalid configuration.  citserver will now exit to prevent data loss.");
+		exit(CTDLEXIT_DB);
+	}
 
 	// Silently try to create the database subdirectory.  If it's already there, no problem.
 	if ((mkdir(ctdl_db_dir, 0700) != 0) && (errno != EEXIST)) {
-		syslog(LOG_ERR, "db: unable to create database directory [%s]: %m", ctdl_db_dir);
+		syslog(LOG_ERR, "db: database directory [%s] does not exist and could not be created: %m", ctdl_db_dir);
+		exit(CTDLEXIT_DB);
 	}
 	if (chmod(ctdl_db_dir, 0700) != 0) {
 		syslog(LOG_ERR, "db: unable to set database directory permissions [%s]: %m", ctdl_db_dir);
+		exit(CTDLEXIT_DB);
 	}
 	if (chown(ctdl_db_dir, CTDLUID, (-1)) != 0) {
 		syslog(LOG_ERR, "db: unable to set the owner for [%s]: %m", ctdl_db_dir);
+		exit(CTDLEXIT_DB);
 	}
 	syslog(LOG_DEBUG, "db: Setting up DB environment");
-	// db_env_set_func_yield((int (*)(u_long,  u_long))sched_yield);
 	ret = db_env_create(&dbenv, 0);
 	if (ret) {
 		syslog(LOG_ERR, "db: db_env_create: %s", db_strerror(ret));
@@ -258,7 +270,7 @@ void open_databases(void) {
 		if (ret) {
 			syslog(LOG_ERR, "db: db_open[%02x]: %s", i, db_strerror(ret));
 			if (ret == ENOMEM) {
-				syslog(LOG_ERR, "db: You may need to tune your database; please read http://www.citadel.org/doku.php?id=faq:troubleshooting:out_of_lock_entries for more information.");
+				syslog(LOG_ERR, "db: You may need to tune your database; please check http://www.citadel.org for more information.");
 			}
 			syslog(LOG_ERR, "db: exit code %d", ret);
 			exit(CTDLEXIT_DB);
@@ -279,9 +291,7 @@ void cdb_chmod_data(void) {
 			if (d->d_name[0] != '.') {
 				snprintf(filename, sizeof filename, "%s/%s", ctdl_db_dir, d->d_name);
 				syslog(LOG_DEBUG, "db: chmod(%s, 0600) returned %d", filename, chmod(filename, 0600));
-				syslog(LOG_DEBUG, "db: chown(%s, CTDLUID, -1) returned %d",
-					filename, chown(filename, CTDLUID, (-1))
-				);
+				syslog(LOG_DEBUG, "db: chown(%s, CTDLUID, -1) returned %d", filename, chown(filename, CTDLUID, (-1)));
 			}
 		}
 		closedir(dp);
@@ -317,7 +327,6 @@ void close_databases(void) {
 
 	// This seemed nifty at the time but did anyone really look at it?
 	// #ifdef DB_STAT_ALL
-	// /* print some statistics... */
 	// dbenv->lock_stat_print(dbenv, DB_STAT_ALL);
 	// #endif
 
@@ -427,7 +436,8 @@ int cdb_store(int cdb, const void *ckey, int ckeylen, void *cdata, int cdatalen)
 			free(compressed_data);
 		}
 		return ret;
-	} else {
+	}
+	else {
 		bailIfCursor(TSD->cursors, "attempt to write during r/o cursor");
 
 	      retry:
@@ -441,11 +451,13 @@ int cdb_store(int cdb, const void *ckey, int ckeylen, void *cdata, int cdatalen)
 			if (ret == DB_LOCK_DEADLOCK) {
 				txabort(tid);
 				goto retry;
-			} else {
+			}
+			else {
 				syslog(LOG_ERR, "db: cdb_store(%d): %s", cdb, db_strerror(ret));
 				cdb_abort();
 			}
-		} else {
+		}
+		else {
 			txcommit(tid);
 			if (compressing) {
 				free(compressed_data);
@@ -713,7 +725,7 @@ void cdb_trunc(int cdb) {
 			else {
 				syslog(LOG_ERR, "db: cdb_truncate(%d): %s", cdb, db_strerror(ret));
 				if (ret == ENOMEM) {
-					syslog(LOG_ERR, "db: You may need to tune your database; please read http://www.citadel.org/doku.php?id=faq:troubleshooting:out_of_lock_entries for more information.");
+					syslog(LOG_ERR, "db: You may need to tune your database; please read http://www.citadel.org for more information.");
 				}
 				exit(CTDLEXIT_DB);
 			}
