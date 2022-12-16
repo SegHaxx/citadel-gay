@@ -110,7 +110,7 @@ cc $tempcc -o $tempfile && {
 
 
 ########################################################################
-# FIXME do a real build id here
+# The build ID can be generated from git or from the date
 ########################################################################
 CFLAGS=${CFLAGS}' -DBUILD_ID=\"'$(git describe 2>/dev/null || date +%y%03j)'\"'
 CFLAGS=${CFLAGS}' -DCTDLDIR=\"'${CTDLDIR}'\"'
