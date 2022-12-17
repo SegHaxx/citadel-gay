@@ -32,10 +32,19 @@ echo -e '\033[33m\033[1mcitserver  \033[32m was version     \033[33m'$citserver_
 echo -e '\033[33m\033[1mwebcit     \033[32m was version     \033[33m'$webcit_version'\033[0m'
 echo -e '\033[33m\033[1mtextclient \033[32m was version     \033[33m'$textclient_version'\033[0m'
 echo -e '\033[33m\033[1mnew release\033[32m will be version \033[33m'$NEW_VERSION'\033[0m'
+echo -e ''
+echo -e '\033[41m\033[37m\033[1m THIS WILL INITIATE THE RELEASE PIPELINE. \033[0m'
+echo -n 'Proceed (y/n) ? '
+read x
 
-echo -e ''
-echo -e '\033[37m\033[1mUpdating header files to reflect the new version number\033[0m'
-echo -e ''
+if echo ${x} | egrep -i '^y' ; then
+	echo -e ''
+	echo -e '\033[37m\033[1mUpdating header files to reflect the new version number\033[0m'
+	echo -e ''
+else
+	echo 'Exiting'
+	exit 0
+fi
 
 # Edit libcitadel.h to make it the new version
 sed \
