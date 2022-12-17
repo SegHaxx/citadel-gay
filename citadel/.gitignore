@@ -28,3 +28,4 @@ keys
 netconfigs
 data
 package-version.txt
+core.*
