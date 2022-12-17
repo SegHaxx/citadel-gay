@@ -1,9 +1,8 @@
 # Makefile for Citadel Server
 # Copyright (c) 1987-2022 by Art Cancro and the citadel.org team
-# 
-# This is the new and improved version that does not use the GNU Autotools,
-# because it is The Current Year and we aren't trying to build for weird
-# obscure systems anymore.
+#
+# No, we are NOT using the obsolete GNU Autotools.  This configure script works
+# well on the Linux operating system (which uses the Linux kernel) and on BSD.
 #
 # This program is open source software.  Use, duplication, and/or
 # disclosure are subject to the GNU General Purpose License version 3.
