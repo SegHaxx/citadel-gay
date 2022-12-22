@@ -1,21 +1,9 @@
-/*
- * This is an implementation of OpenID 2.0 relying party support in stateless mode.
- *
- * Copyright (c) 2007-2022 by the citadel.org team
- *
- * This program is open source software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 3 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, see <http://www.gnu.org/licenses/>.
- */
+// This is an implementation of OpenID 2.0 relying party support in stateless mode.
+//
+// Copyright (c) 2007-2022 by the citadel.org team
+//
+// This program is open source software.  Use, duplication, or disclosure
+// is subject to the terms of the GNU General Public License, version 3.
 
 #include "../../sysdep.h"
 #include <stdlib.h>
@@ -38,8 +26,8 @@
 #include "../../user_ops.h"
 
 typedef struct _ctdl_openid {
-	StrBuf *op_url;			/* OpenID Provider Endpoint URL */
-	StrBuf *claimed_id;		/* Claimed Identifier */
+	StrBuf *op_url;			// OpenID Provider Endpoint URL
+	StrBuf *claimed_id;		// Claimed Identifier
 	int verified;
 	HashList *sreg_keys;
 } ctdl_openid;
@@ -51,8 +39,7 @@ enum {
 };
 
 
-void Free_ctdl_openid(ctdl_openid **FreeMe)
-{
+void Free_ctdl_openid(ctdl_openid **FreeMe) {
 	if (*FreeMe == NULL) {
 		return;
 	}
@@ -64,47 +51,34 @@ void Free_ctdl_openid(ctdl_openid **FreeMe)
 }
 
 
-/*
- * This cleanup function blows away the temporary memory used by this module.
- */
+// This cleanup function blows away the temporary memory used by this module.
 void openid_cleanup_function(void) {
-	struct CitContext *CCC = CC;	/* CachedCitContext - performance boost */
 
-	if (CCC->openid_data != NULL) {
+	if (CC->openid_data != NULL) {
 		syslog(LOG_DEBUG, "openid: Clearing OpenID session state");
-		Free_ctdl_openid((ctdl_openid **) &CCC->openid_data);
+		Free_ctdl_openid((ctdl_openid **) &CC->openid_data);
 	}
 }
 
 
-/**************************************************************************/
-/*                                                                        */
-/* Functions in this section handle Citadel internal OpenID mapping stuff */
-/*                                                                        */
-/**************************************************************************/
+// Functions in this section handle Citadel internal OpenID mapping stuff
 
 
-/*
- * The structure of an openid record *key* is:
- *
- * |--------------claimed_id-------------|
- *     (actual length of claimed id)
- *
- *
- * The structure of an openid record *value* is:
- *
- * |-----user_number----|------------claimed_id---------------|
- *    (sizeof long)          (actual length of claimed id)
- *
- */
+// The structure of an openid record *key* is:
+//
+// |--------------claimed_id-------------|
+//     (actual length of claimed id)
+//
+//
+// The structure of an openid record *value* is:
+//
+// |-----user_number----|------------claimed_id---------------|
+//    (sizeof long)          (actual length of claimed id)
 
 
 
-/*
- * Attach an external authenticator (such as an OpenID) to a Citadel account
- */
-int attach_extauth(struct ctdluser *who, StrBuf *claimed_id)
-{
+// Attach an external authenticator (such as an OpenID) to a Citadel account
+int attach_extauth(struct ctdluser *who, StrBuf *claimed_id) {
 	struct cdbdata *cdboi;
 	long fetched_usernum;
 	char *data;
@@ -114,7 +88,7 @@ int attach_extauth(struct ctdluser *who, StrBuf *claimed_id)
 	if (!who) return(1);
 	if (StrLength(claimed_id)==0) return(1);
 
-	/* Check to see if this authenticator is already in the database */
+	// Check to see if this authenticator is already in the database
 
 	cdboi = cdb_fetch(CDB_EXTAUTH, ChrPtr(claimed_id), StrLength(claimed_id));
 	if (cdboi != NULL) {
@@ -131,7 +105,7 @@ int attach_extauth(struct ctdluser *who, StrBuf *claimed_id)
 		}
 	}
 
-	/* Not already in the database, so attach it now */
+	// Not already in the database, so attach it now
 
 	data_len = sizeof(long) + StrLength(claimed_id) + 1;
 	data = malloc(data_len);
@@ -149,9 +123,7 @@ int attach_extauth(struct ctdluser *who, StrBuf *claimed_id)
 }
 
 
-/*
- * When a user is being deleted, we have to delete any OpenID associations
- */
+// When a user is being deleted, we have to delete any OpenID associations
 void extauth_purge(struct ctdluser *usbuf) {
 	struct cdbdata *cdboi;
 	HashList *keys = NULL;
@@ -177,29 +149,26 @@ void extauth_purge(struct ctdluser *usbuf) {
 		cdb_free(cdboi);
 	}
 
-	/* Go through the hash list, deleting keys we stored in it */
+	// Go through the hash list, deleting keys we stored in it
 
 	HashPos = GetNewHashPos(keys, 0);
 	while (GetNextHashPos(keys, HashPos, &len, &Key, &Value)!=0)
 	{
 		syslog(LOG_DEBUG, "openid: deleting associated external authenticator <%s>", (char*)Value);
 		cdb_delete(CDB_EXTAUTH, Value, strlen(Value));
-		/* note: don't free(Value) -- deleting the hash list will handle this for us */
+		// note: don't free(Value) -- deleting the hash list will handle this for us
 	}
 	DeleteHashPos(&HashPos);
 	DeleteHash(&keys);
 }
 
 
-/*
- * List the OpenIDs associated with the currently logged in account
- */
+// List the OpenIDs associated with the currently logged in account
 void cmd_oidl(char *argbuf) {
 	struct cdbdata *cdboi;
 	long usernum = 0L;
 
-	if (CtdlGetConfigInt("c_disable_newu"))
-	{
+	if (CtdlGetConfigInt("c_disable_newu")) {
 		cprintf("%d this system does not support openid.\n", ERROR + CMD_NOT_SUPPORTED);
 		return;
 	}
@@ -221,16 +190,13 @@ void cmd_oidl(char *argbuf) {
 }
 
 
-/*
- * List ALL OpenIDs in the database
- */
+// List ALL OpenIDs in the database
 void cmd_oida(char *argbuf) {
 	struct cdbdata *cdboi;
 	long usernum;
 	struct ctdluser usbuf;
 
-	if (CtdlGetConfigInt("c_disable_newu"))
-	{
+	if (CtdlGetConfigInt("c_disable_newu")) {
 		cprintf("%d this system does not support openid.\n",
 			ERROR + CMD_NOT_SUPPORTED);
 		return;
@@ -257,15 +223,12 @@ void cmd_oida(char *argbuf) {
 }
 
 
-/*
- * Create a new user account, manually specifying the name, after successfully
- * verifying an OpenID (which will of course be attached to the account)
- */
+// Create a new user account, manually specifying the name, after successfully
+// verifying an OpenID (which will of course be attached to the account)
 void cmd_oidc(char *argbuf) {
 	ctdl_openid *oiddata = (ctdl_openid *) CC->openid_data;
 
-	if (CtdlGetConfigInt("c_disable_newu"))
-	{
+	if (CtdlGetConfigInt("c_disable_newu")) {
 		cprintf("%d this system does not support openid.\n",
 			ERROR + CMD_NOT_SUPPORTED);
 		return;
@@ -275,12 +238,11 @@ void cmd_oidc(char *argbuf) {
 		return;
 	}
 
-	/* We can make the semantics of OIDC exactly the same as NEWU, simply
-	 * by _calling_ cmd_newu() and letting it run.  Very clever!
-	 */
+	// We can make the semantics of OIDC exactly the same as NEWU, simply
+	// by _calling_ cmd_newu() and letting it run.  Very clever!
 	cmd_newu(argbuf);
 
-	/* Now, if this logged us in, we have to attach the OpenID */
+	// Now, if this logged us in, we have to attach the OpenID
 	if (CC->logged_in) {
 		attach_extauth(&CC->user, oiddata->claimed_id);
 	}
@@ -288,17 +250,14 @@ void cmd_oidc(char *argbuf) {
 }
 
 
-/*
- * Detach an OpenID from the currently logged in account
- */
+// Detach an OpenID from the currently logged in account
 void cmd_oidd(char *argbuf) {
 	struct cdbdata *cdboi;
 	char id_to_detach[1024];
 	int this_is_mine = 0;
 	long usernum = 0L;
 
-	if (CtdlGetConfigInt("c_disable_newu"))
-	{
+	if (CtdlGetConfigInt("c_disable_newu")) {
 		cprintf("%d this system does not support openid.\n",
 			ERROR + CMD_NOT_SUPPORTED);
 		return;
@@ -331,11 +290,8 @@ void cmd_oidd(char *argbuf) {
 }
 
 
-/*
- * Attempt to auto-create a new Citadel account using the nickname from Attribute Exchange
- */
-int openid_create_user_via_ax(StrBuf *claimed_id, HashList *sreg_keys)
-{
+// Attempt to auto-create a new Citadel account using the nickname from Attribute Exchange
+int openid_create_user_via_ax(StrBuf *claimed_id, HashList *sreg_keys) {
 	char *nickname = NULL;
 	char *firstname = NULL;
 	char *lastname = NULL;
@@ -389,28 +345,24 @@ int openid_create_user_via_ax(StrBuf *claimed_id, HashList *sreg_keys)
 		return(5);
 	}
 
-	/* The desired account name is available.  Create the account and log it in! */
+	// The desired account name is available.  Create the account and log it in!
 	if (create_user(nickname, CREATE_USER_BECOME_USER, NATIVE_AUTH_UID)) return(6);
 
-	/* Generate a random password.
-	 * The user doesn't care what the password is since he is using OpenID.
-	 */
+	// Generate a random password.
+	// The user doesn't care what the password is since he is using OpenID.
 	snprintf(new_password, sizeof new_password, "%08lx%08lx", random(), random());
 	CtdlSetPassword(new_password);
 
-	/* Now attach the verified OpenID to this account. */
+	// Now attach the verified OpenID to this account.
 	attach_extauth(&CC->user, claimed_id);
 
 	return(0);
 }
 
 
-/*
- * If a user account exists which is associated with the Claimed ID, log it in and return zero.
- * Otherwise it returns nonzero.
- */
-int login_via_extauth(StrBuf *claimed_id)
-{
+// If a user account exists which is associated with the Claimed ID, log it in and return zero.
+// Otherwise it returns nonzero.
+int login_via_extauth(StrBuf *claimed_id) {
 	struct cdbdata *cdboi;
 	long usernum = 0;
 
@@ -423,7 +375,7 @@ int login_via_extauth(StrBuf *claimed_id)
 	cdb_free(cdboi);
 
 	if (!CtdlGetUserByNumber(&CC->user, usernum)) {
-		/* Now become the user we just created */
+		// Now become the user we just created
 		safestrncpy(CC->curr_user, CC->user.fullname, sizeof CC->curr_user);
 		do_login();
 		return(0);
@@ -435,20 +387,11 @@ int login_via_extauth(StrBuf *claimed_id)
 }
 
 
+// Functions in this section handle OpenID protocol
 
 
-/**************************************************************************/
-/*                                                                        */
-/* Functions in this section handle OpenID protocol                       */
-/*                                                                        */
-/**************************************************************************/
-
-
-/* 
- * Locate a <link> tag and, given its 'rel=' parameter, return its 'href' parameter
- */
-void extract_link(StrBuf *target_buf, const char *rel, long repllen, StrBuf *source_buf)
-{
+// Locate a <link> tag and, given its 'rel=' parameter, return its 'href' parameter
+void extract_link(StrBuf *target_buf, const char *rel, long repllen, StrBuf *source_buf) {
 	int i;
 	const char *ptr;
 	const char *href_start = NULL;
@@ -488,7 +431,7 @@ void extract_link(StrBuf *target_buf, const char *rel, long repllen, StrBuf *sou
 			    (rel_end >= link_tag_end) ) 
 				continue;
 			if (strncasecmp(rel, rel_start, repllen)!= 0)
-				continue; /* didn't match? never mind... */
+				continue; // didn't match? never mind...
 			
 			href_start = cbmstrcasestr(link_tag_start, "href=");
 			if ((href_start == NULL) || 
@@ -511,10 +454,7 @@ void extract_link(StrBuf *target_buf, const char *rel, long repllen, StrBuf *sou
 }
 
 
-/*
- * Wrapper for curl_easy_init() that includes the options common to all calls
- * used in this module. 
- */
+// Wrapper for curl_easy_init() that includes the options common to all calls used in this module. 
 CURL *ctdl_openid_curl_easy_init(char *errmsg) {
 	CURL *curl;
 
@@ -535,7 +475,7 @@ CURL *ctdl_openid_curl_easy_init(char *errmsg) {
 	curl_easy_setopt(curl, CURLOPT_ENCODING, "");
 #endif
 	curl_easy_setopt(curl, CURLOPT_USERAGENT, CITADEL);
-	curl_easy_setopt(curl, CURLOPT_TIMEOUT, 30);		/* die after 30 seconds */
+	curl_easy_setopt(curl, CURLOPT_TIMEOUT, 30);		// die after 30 seconds
 
 	if (
 		(!IsEmptyStr(CtdlGetConfigStr("c_ip_addr")))
@@ -605,7 +545,7 @@ void xrds_xml_end(void *data, const char *supplied_el) {
 			&& (!strcasecmp(ChrPtr(xrds->CharData), "http://specs.openid.net/auth/2.0/signon"))
 		) {
 			xrds->current_service_is_oid2auth = 1;
-			/* FIXME in this case, the Claimed ID should be considered immutable */
+			// FIXME in this case, the Claimed ID should be considered immutable
 		}
 	}
 
@@ -639,11 +579,9 @@ void xrds_xml_chardata(void *data, const XML_Char *s, int len) {
 }
 
 
-/*
- * Parse an XRDS document.
- * If an OpenID Provider URL is discovered, op_url to that value and return nonzero.
- * If nothing useful happened, return 0.
- */
+// Parse an XRDS document.
+// If an OpenID Provider URL is discovered, op_url to that value and return nonzero.
+// If nothing useful happened, return 0.
 int parse_xrds_document(StrBuf *ReplyBuf) {
 	ctdl_openid *oiddata = (ctdl_openid *) CC->openid_data;
 	struct xrds xrds;
@@ -684,10 +622,8 @@ int parse_xrds_document(StrBuf *ReplyBuf) {
 }
 
 
-/*
- * Callback function for perform_openid2_discovery()
- * We're interested in the X-XRDS-Location: header.
- */
+// Callback function for perform_openid2_discovery()
+// We're interested in the X-XRDS-Location: header.
 size_t yadis_headerfunction(void *ptr, size_t size, size_t nmemb, void *userdata) {
 	char hdr[1024];
 	StrBuf **x_xrds_location = (StrBuf **) userdata;
@@ -704,13 +640,12 @@ size_t yadis_headerfunction(void *ptr, size_t size, size_t nmemb, void *userdata
 }
 
 
-/* Attempt to perform Yadis discovery as specified in Yadis 1.0 section 6.2.5.
- * 
- * If Yadis fails, we then attempt HTML discovery using the same document.
- *
- * If successful, returns nonzero and calls parse_xrds_document() to act upon the received data.
- * If fails, returns 0 and does nothing else.
- */
+// Attempt to perform Yadis discovery as specified in Yadis 1.0 section 6.2.5.
+// 
+// If Yadis fails, we then attempt HTML discovery using the same document.
+//
+// If successful, returns nonzero and calls parse_xrds_document() to act upon the received data.
+// If fails, returns 0 and does nothing else.
 int perform_openid2_discovery(StrBuf *SuppliedURL) {
 	ctdl_openid *oiddata = (ctdl_openid *) CC->openid_data;
 	int docbytes = (-1);
@@ -736,7 +671,7 @@ int perform_openid2_discovery(StrBuf *SuppliedURL) {
 	curl_easy_setopt(curl, CURLOPT_WRITEDATA, ReplyBuf);
 	curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, CurlFillStrBuf_callback);
 
-	my_headers = curl_slist_append(my_headers, "Accept:");	/* disable the default Accept: header */
+	my_headers = curl_slist_append(my_headers, "Accept:");	// disable the default Accept: header
 	my_headers = curl_slist_append(my_headers, "Accept: application/xrds+xml");
 	curl_easy_setopt(curl, CURLOPT_HTTPHEADER, my_headers);
 
@@ -751,24 +686,20 @@ int perform_openid2_discovery(StrBuf *SuppliedURL) {
 	curl_easy_cleanup(curl);
 	docbytes = StrLength(ReplyBuf);
 
-	/*
-	 * The response from the server will be one of:
-	 * 
-	 * Option 1: An HTML document with a <head> element that includes a <meta> element with http-equiv
-	 * attribute, X-XRDS-Location,
-	 *
-	 * Does any provider actually do this?  If so then we will implement it in the future.
-	 */
-
-	/*
-	 * Option 2: HTTP response-headers that include an X-XRDS-Location response-header,
-	 *           together with a document.
-	 * Option 3: HTTP response-headers only, which MAY include an X-XRDS-Location response-header,
-	 *           a contenttype response-header specifying MIME media type,
-	 *           application/xrds+xml, or both.
-	 *
-	 * If the X-XRDS-Location header was delivered, we know about it at this point...
-	 */
+	// The response from the server will be one of:
+	// 
+	// Option 1: An HTML document with a <head> element that includes a <meta> element with http-equiv
+	// attribute, X-XRDS-Location,
+	//
+	// Does any provider actually do this?  If so then we will implement it in the future.
+	//
+	// Option 2: HTTP response-headers that include an X-XRDS-Location response-header,
+	//           together with a document.
+	// Option 3: HTTP response-headers only, which MAY include an X-XRDS-Location response-header,
+	//           a contenttype response-header specifying MIME media type,
+	//           application/xrds+xml, or both.
+	//
+	// If the X-XRDS-Location header was delivered, we know about it at this point...
 	if (	(x_xrds_location)
 		&& (strcmp(ChrPtr(x_xrds_location), ChrPtr(SuppliedURL)))
 	) {
@@ -777,16 +708,12 @@ int perform_openid2_discovery(StrBuf *SuppliedURL) {
 		FreeStrBuf(&x_xrds_location);
 	}
 
-	/*
-	 * Option 4: the returned web page may *be* an XRDS document.  Try to parse it.
-	 */
+	// Option 4: the returned web page may *be* an XRDS document.  Try to parse it.
 	if ( (return_value == 0) && (docbytes >= 0)) {
 		return_value = parse_xrds_document(ReplyBuf);
 	}
 
-	/*
-	 * Option 5: if all else fails, attempt HTML based discovery.
-	 */
+	// Option 5: if all else fails, attempt HTML based discovery.
 	if ( (return_value == 0) && (docbytes >= 0)) {
 		if (oiddata->op_url == NULL) {
 			oiddata->op_url = NewStrBuf();
@@ -804,11 +731,8 @@ int perform_openid2_discovery(StrBuf *SuppliedURL) {
 }
 
 
-/*
- * Setup an OpenID authentication
- */
+// Setup an OpenID authentication
 void cmd_oids(char *argbuf) {
-	struct CitContext *CCC = CC;	/* CachedCitContext - performance boost */
 	const char *Pos = NULL;
 	StrBuf *ArgBuf = NULL;
 	StrBuf *ReplyBuf = NULL;
@@ -817,15 +741,13 @@ void cmd_oids(char *argbuf) {
 	ctdl_openid *oiddata;
 	int discovery_succeeded = 0;
 
-	if (CtdlGetConfigInt("c_disable_newu"))
-	{
-		cprintf("%d this system does not support openid.\n",
-			ERROR + CMD_NOT_SUPPORTED);
+	if (CtdlGetConfigInt("c_disable_newu")) {
+		cprintf("%d this system does not support openid.\n", ERROR + CMD_NOT_SUPPORTED);
 		return;
 	}
-	Free_ctdl_openid ((ctdl_openid**)&CCC->openid_data);
+	Free_ctdl_openid ((ctdl_openid**)&CC->openid_data);
 
-	CCC->openid_data = oiddata = malloc(sizeof(ctdl_openid));
+	CC->openid_data = oiddata = malloc(sizeof(ctdl_openid));
 	if (oiddata == NULL) {
 		syslog(LOG_ERR, "openid: malloc() failed: %m");
 		cprintf("%d malloc failed\n", ERROR + INTERNAL_ERROR);
@@ -844,15 +766,13 @@ void cmd_oids(char *argbuf) {
 
 	syslog(LOG_DEBUG, "openid: user-Supplied Identifier is: %s", ChrPtr(oiddata->claimed_id));
 
-	/********** OpenID 2.0 section 7.3 - Discovery **********/
+	// ********* OpenID 2.0 section 7.3 - Discovery *********
 
-	/* Section 7.3.1 says we have to attempt XRI based discovery.
-	 * No one is using this, no one is asking for it, no one wants it.
-	 * So we're not even going to bother attempting this mode.
-	 */
+	// Section 7.3.1 says we have to attempt XRI based discovery.
+	// No one is using this, no one is asking for it, no one wants it.
+	// So we're not even going to bother attempting this mode.
 
-	/* Attempt section 7.3.2 (Yadis discovery) and section 7.3.3 (HTML discovery);
-	 */
+	// Attempt section 7.3.2 (Yadis discovery) and section 7.3.3 (HTML discovery);
 	discovery_succeeded = perform_openid2_discovery(oiddata->claimed_id);
 
 	if (discovery_succeeded == 0) {
@@ -860,15 +780,13 @@ void cmd_oids(char *argbuf) {
 	}
 
 	else {
-		/*
-		 * If we get to this point we are in possession of a valid OpenID Provider URL.
-		 */
+		// If we get to this point we are in possession of a valid OpenID Provider URL.
 		syslog(LOG_DEBUG, "openid: OP URI '%s' discovered using method %d",
 			ChrPtr(oiddata->op_url),
 			discovery_succeeded
 		);
 
-		/* We have to "normalize" our Claimed ID otherwise it will cause some OP's to barf */
+		// We have to "normalize" our Claimed ID otherwise it will cause some OP's to barf
 		if (cbmstrcasestr(ChrPtr(oiddata->claimed_id), "://") == NULL) {
 			StrBuf *cid = oiddata->claimed_id;
 			oiddata->claimed_id = NewStrBufPlain(HKEY("http://"));
@@ -876,10 +794,8 @@ void cmd_oids(char *argbuf) {
 			FreeStrBuf(&cid);
 		}
 
-		/*
-		 * OpenID 2.0 section 9: request authentication
-		 * Assemble a URL to which the user-agent will be redirected.
-		 */
+		// OpenID 2.0 section 9: request authentication
+		// Assemble a URL to which the user-agent will be redirected.
 	
 		RedirectUrl = NewStrBufDup(oiddata->op_url);
 
@@ -894,16 +810,15 @@ void cmd_oids(char *argbuf) {
 		StrBufAppendBufPlain(RedirectUrl, HKEY("&openid.identity="), 0);
 		StrBufUrlescAppend(RedirectUrl, oiddata->claimed_id, NULL);
 
-		/* return_to tells the provider how to complete the round trip back to our site */
+		// return_to tells the provider how to complete the round trip back to our site
 		StrBufAppendBufPlain(RedirectUrl, HKEY("&openid.return_to="), 0);
 		StrBufUrlescAppend(RedirectUrl, return_to, NULL);
 
-		/* Attribute Exchange
-		 * See:
-		 *	http://openid.net/specs/openid-attribute-exchange-1_0.html
-		 *	http://code.google.com/apis/accounts/docs/OpenID.html#endpoint
-		 * 	http://test-id.net/OP/AXFetch.aspx
-		 */
+		// Attribute Exchange
+		// See:
+		//	http://openid.net/specs/openid-attribute-exchange-1_0.html
+		//	http://code.google.com/apis/accounts/docs/OpenID.html#endpoint
+		// 	http://test-id.net/OP/AXFetch.aspx
 
 		StrBufAppendBufPlain(RedirectUrl, HKEY("&openid.ns.ax="), 0);
 		StrBufUrlescAppend(RedirectUrl, NULL, "http://openid.net/srv/ax/1.0");
@@ -935,9 +850,7 @@ void cmd_oids(char *argbuf) {
 }
 
 
-/*
- * Finalize an OpenID authentication
- */
+// Finalize an OpenID authentication
 void cmd_oidf(char *argbuf) {
 	long len;
 	char buf[2048];
@@ -948,8 +861,7 @@ void cmd_oidf(char *argbuf) {
 	void *Value;
 	ctdl_openid *oiddata = (ctdl_openid *) CC->openid_data;
 
-	if (CtdlGetConfigInt("c_disable_newu"))
-	{
+	if (CtdlGetConfigInt("c_disable_newu")) {
 		cprintf("%d this system does not support openid.\n",
 			ERROR + CMD_NOT_SUPPORTED);
 		return;
@@ -978,9 +890,8 @@ void cmd_oidf(char *argbuf) {
 		Put(keys, thiskey, len, strdup(thisdata), NULL);
 	}
 
-	/* Check to see if this is a correct response.
-	 * Start with verified=1 but then set it to 0 if anything looks wrong.
-	 */
+	// Check to see if this is a correct response.
+	// Start with verified=1 but then set it to 0 if anything looks wrong.
 	oiddata->verified = 1;
 
 	char *openid_ns = NULL;
@@ -1005,7 +916,7 @@ void cmd_oidf(char *argbuf) {
 		syslog(LOG_DEBUG, "openid: provider is asserting the Claimed ID '%s'", ChrPtr(oiddata->claimed_id));
 	}
 
-	/* Validate the assertion against the server */
+	// Validate the assertion against the server
 	syslog(LOG_DEBUG, "openid: validating...");
 
 	CURL *curl;
@@ -1056,11 +967,11 @@ void cmd_oidf(char *argbuf) {
 
 	syslog(LOG_DEBUG, "openid: authentication %s", (oiddata->verified ? "succeeded" : "failed") );
 
-	/* Respond to the client */
+	// Respond to the client
 
 	if (oiddata->verified) {
 
-		/* If we were already logged in, attach the OpenID to the user's account */
+		// If we were already logged in, attach the OpenID to the user's account
 		if (CC->logged_in) {
 			if (attach_extauth(&CC->user, oiddata->claimed_id) == 0) {
 				cprintf("attach\n");
@@ -1072,44 +983,36 @@ void cmd_oidf(char *argbuf) {
 			}
 		}
 
-		/* Otherwise, a user is attempting to log in using the verified OpenID */	
+		// Otherwise, a user is attempting to log in using the verified OpenID
 		else {
-			/*
-			 * Existing user who has claimed this OpenID?
-			 *
-			 * Note: if you think that sending the password back over the wire is insecure,
-			 * check your assumptions.  If someone has successfully asserted an OpenID that
-			 * is associated with the account, they already have password equivalency and can
-			 * login, so they could just as easily change the password, etc.
-			 */
+			// Existing user who has claimed this OpenID?
+			//
+			// Note: if you think that sending the password back over the wire is insecure,
+			// check your assumptions.  If someone has successfully asserted an OpenID that
+			// is associated with the account, they already have password equivalency and can
+			// login, so they could just as easily change the password, etc.
 			if (login_via_extauth(oiddata->claimed_id) == 0) {
 				cprintf("authenticate\n%s\n%s\n", CC->user.fullname, CC->user.password);
 				logged_in_response();
 				syslog(LOG_DEBUG, "openid: logged in using previously claimed OpenID");
 			}
 
-			/*
-			 * If this system does not allow self-service new user registration, the
-			 * remaining modes do not apply, so fail here and now.
-			 */
+			// If this system does not allow self-service new user registration, the
+			// remaining modes do not apply, so fail here and now.
 			else if (CtdlGetConfigInt("c_disable_newu")) {
 				cprintf("fail\n");
 				syslog(LOG_DEBUG, "openid: creating user failed due to local policy");
 			}
 
-			/*
-			 * New user whose OpenID is verified and Attribute Exchange gave us a name?
-			 */
+			// New user whose OpenID is verified and Attribute Exchange gave us a name?
 			else if (openid_create_user_via_ax(oiddata->claimed_id, keys) == 0) {
 				cprintf("authenticate\n%s\n%s\n", CC->user.fullname, CC->user.password);
 				logged_in_response();
 				syslog(LOG_DEBUG, "openid: successfully auto-created new user");
 			}
 
-			/*
-			 * OpenID is verified, but the desired username either was not specified or
-			 * conflicts with an existing user.  Manual account creation is required.
-			 */
+			// OpenID is verified, but the desired username either was not specified or
+			// conflicts with an existing user.  Manual account creation is required.
 			else {
 				char *desired_name = NULL;
 				cprintf("verify_only\n");
@@ -1140,7 +1043,7 @@ void cmd_oidf(char *argbuf) {
 // Initialization function, called from modules_init.c
 char *ctdl_module_init_openid_rp(void) {
 	if (!threading) {
-		/* Only enable the OpenID command set when native mode authentication is in use. */
+		// Only enable the OpenID command set when native mode authentication is in use.
 		if (CtdlGetConfigInt("c_auth_mode") == AUTHMODE_NATIVE) {
 			CtdlRegisterProtoHook(cmd_oids, "OIDS", "Setup OpenID authentication");
 			CtdlRegisterProtoHook(cmd_oidf, "OIDF", "Finalize OpenID authentication");
@@ -1151,9 +1054,9 @@ char *ctdl_module_init_openid_rp(void) {
 		}
 		CtdlRegisterSessionHook(openid_cleanup_function, EVT_LOGOUT, PRIO_LOGOUT + 10);
 		CtdlRegisterUserHook(extauth_purge, EVT_PURGEUSER);
-		openid_level_supported = 1;	/* This module supports OpenID 1.0 only */
+		openid_level_supported = 2;	// This module supports OpenID 2.0 only
 	}
 
-	/* return our module name for the log */
+	// return our module name for the log
 	return "openid_rp";
 }
