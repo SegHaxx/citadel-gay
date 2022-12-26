@@ -1,18 +1,9 @@
-/*
- * Consolidate mail from remote POP3 accounts.
- *
- * Copyright (c) 2007-2022 by the citadel.org team
- *
- * This program is open source software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License as published
- * by the Free Software Foundation; either version 3 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- */
+// Consolidate mail from remote POP3 accounts.
+//
+// Copyright (c) 2007-2022 by the citadel.org team
+//
+// This program is open source software.  Use, duplication, or disclosure
+// is subject to the terms of the GNU General Public License, version 3.
 
 #include <stdlib.h>
 #include <unistd.h>
@@ -51,9 +42,7 @@ struct p3cq {				// module-local queue of pop3 client work that needs processing
 static int doing_pop3client = 0;
 struct p3cq *p3cq = NULL;
 
-/*
- * Process one mailbox.
- */
+// Process one mailbox.
 void pop3client_one_mailbox(char *room, const char *host, const char *user, const char *pass, int keep, long interval) {
 	syslog(LOG_DEBUG, "pop3client: room=<%s> host=<%s> user=<%s> keep=<%d> interval=<%ld>", room, host, user, keep, interval);
 
@@ -80,7 +69,7 @@ void pop3client_one_mailbox(char *room, const char *host, const char *user, cons
 	curl_easy_setopt(curl, CURLOPT_WRITEDATA, Uidls);			// Give it our StrBuf to work with
 	curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, "UIDL");
 
-	/* Try POP3S (SSL encrypted) first */
+	// Try POP3S (SSL encrypted) first
 	snprintf(url, sizeof url, "pop3s://%s", host);
 	curl_easy_setopt(curl, CURLOPT_URL, url);
 	res = curl_easy_perform(curl);
@@ -159,9 +148,7 @@ void pop3client_one_mailbox(char *room, const char *host, const char *user, cons
 
 
 // Scan a room's netconfig looking for RSS feed parsing requests
-//
-void pop3client_scan_room(struct ctdlroom *qrbuf, void *data)
-{
+void pop3client_scan_room(struct ctdlroom *qrbuf, void *data) {
 	char *serialized_config = NULL;
 	int num_configs = 0;
 	char cfgline[SIZ];
@@ -208,28 +195,22 @@ void pop3client_scan(void) {
 		fastest_scan = CtdlGetConfigLong("c_pop3_fetch");
 	}
 
-	/*
-	 * Run POP3 aggregation no more frequently than once every n seconds
-	 */
+	// Run POP3 aggregation no more frequently than once every n seconds
 	if ( (time(NULL) - last_run) < fastest_scan ) {
 		return;
 	}
 
-	/*
-	 * This is a simple concurrency check to make sure only one pop3client
-	 * run is done at a time.  We could do this with a mutex, but since we
-	 * don't really require extremely fine granularity here, we'll do it
-	 * with a static variable instead.
-	 */
+	// This is a simple concurrency check to make sure only one pop3client
+	// run is done at a time.  We could do this with a mutex, but since we
+	// don't really require extremely fine granularity here, we'll do it
+	// with a static variable instead.
 	if (doing_pop3client) return;
 	doing_pop3client = 1;
 
 	syslog(LOG_DEBUG, "pop3client: scan started");
 	CtdlForEachRoom(pop3client_scan_room, NULL);
 
-	/*
-	 * We have to queue and process in separate phases, otherwise we leave a cursor open
-	 */
+	// We have to queue and process in separate phases, otherwise we leave a cursor open
 	syslog(LOG_DEBUG, "pop3client: processing started");
 	while (p3cq != NULL) {
 		pptr = p3cq;
@@ -256,6 +237,6 @@ char *ctdl_module_init_pop3client(void) {
 		CtdlRegisterSessionHook(pop3client_scan, EVT_TIMER, PRIO_AGGR + 50);
 	}
 
-	/* return our module name for the log */
+	// return our module name for the log
  	return "pop3client";
 }
