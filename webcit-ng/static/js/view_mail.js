@@ -6,7 +6,7 @@
 // disclosure are subject to the GNU General Public License v3.
 
 
-var selected_message = 0;							// Remember the last message that was selected
+var displayed_message = 0;							// ID of message currently being displayed
 var RefreshMailboxInterval;							// We store our refresh timer here
 var highest_mailnum;								// This is used to detect newly arrived mail
 var newmail_notify = {
@@ -35,7 +35,7 @@ function replyall_to(msg) {
 // Render a message into the mailbox view
 // (We want the message number and the message itself because we need to keep the msgnum for reply purposes)
 function mail_render_one(msgnum, msg, target_div, include_controls) {
-	let div = "FIXME";
+	let div = "";
 	try {
 		outmsg =
 	  	  "<div class=\"ctdl-mmsg-wrapper\">"				// begin message wrapper
@@ -143,30 +143,46 @@ function mail_display_message(msgnum, target_div, include_controls) {
 
 
 // A message has been selected...
-function select_message(event, msgnum) {
+function click_message(event, msgnum) {
+	var table = document.getElementById("ctdl-onscreen-mailbox");
+	var i, m, row;
 
-	console.log("select_message(" + event + ", " + msgnum + ")");
+	// ctrl + click = toggle an individual message without changing existing selection
 	if (event.ctrlKey) {
-		console.log("...with ctrl");
-	}
-	if (event.shiftKey) {
-		console.log("...with shift");
+		document.getElementById("ctdl-msgsum-" + msgnum).classList.toggle("ctdl-mail-selected");
 	}
 
-	// unhighlight any previously selected message
-	try {
-		document.getElementById("ctdl-msgsum-" + selected_message).classList.remove("ctdl-mail-selected");
-	}
-	catch {
+	// shift + click = select a range of messages
+	else if (event.shiftKey) {
+		for (i=0; row=table.rows[i]; ++i) {
+			m = parseInt(row["id"].substring(12));				// derive msgnum from row id
+			if (
+				((msgnum >= displayed_message) && (m >= displayed_message) && (m <= msgnum))
+				|| ((msgnum <= displayed_message) && (m <= displayed_message) && (m >= msgnum))
+			) {
+				row.classList.add("ctdl-mail-selected");
+			}
+			else {
+				row.classList.remove("ctdl-mail-selected");
+			}
+		}
 	}
 
-	// highlight the newly selected message
-	document.getElementById("ctdl-msgsum-" + msgnum).classList.add("ctdl-mail-selected");
-	//document.getElementById("ctdl-msgsum-" + msgnum).scrollIntoView();
+	// click + no modifiers = select one message and unselect all others
+	else {
+		for (i=0; row=table.rows[i]; ++i) {
+			if (row["id"] == "ctdl-msgsum-" + msgnum) {
+				row.classList.add("ctdl-mail-selected");
+			}
+			else {
+				row.classList.remove("ctdl-mail-selected");
+			}
+		}
+	}
 
 	// display the message if it isn't already displayed
-	if (selected_message != msgnum) {
-		selected_message = msgnum;
+	if (displayed_message != msgnum) {
+		displayed_message = msgnum;
 		mail_display_message(msgnum, document.getElementById("ctdl-mailbox-reading-pane"), 1);
 	}
 }
@@ -176,7 +192,7 @@ function select_message(event, msgnum) {
 function mail_render_row(msg) {
 	row	= "<tr "
 		+ "id=\"ctdl-msgsum-" + msg["msgnum"] + "\" "
-		+ "onClick=\"select_message(event," + msg["msgnum"] + ");\""
+		+ "onClick=\"click_message(event," + msg["msgnum"] + ");\""
 		+ "onselectstart=\"return false;\""
 		+ ">"
 		+ "<td class=\"ctdl-mail-subject\">" + msg["subject"] + "</td>"
@@ -229,10 +245,10 @@ function refresh_mail_display() {
 	fetch_stat = async() => {
 		response = await fetch(url);
 		stat = await(response.json());
-		if (stat.room_mtime > room_mtime) {
+		//if (stat.room_mtime > room_mtime) {			// FIXME commented out to force refreshes
 			room_mtime = stat.room_mtime;
 			render_mailbox_display(newmail_notify.YES);
-		}
+		//}
 	}
 	fetch_stat();
 }
@@ -248,7 +264,7 @@ function render_mailbox_display(notify) {
 		msgs = await(response.json());
 		if (response.ok) {
 
-			box =	"<table class=\"ctdl-mailbox-table\" width=100%><tr>"
+			box =	"<table id=\"ctdl-onscreen-mailbox\" class=\"ctdl-mailbox-table\" width=100%><tr>"
 				+ "<th>" + _("Subject") + "</th>"
 				+ "<th>" + _("Sender") + "</th>"
 				+ "<th>" + _("Date") + "</th>"
@@ -266,9 +282,10 @@ function render_mailbox_display(notify) {
 			box +=	"</table>";
 			document.getElementById("ctdl-mailbox-pane").innerHTML = box;
 
-			if (selected_message > 0) {			// if we had a message selected, keep it selected
-				select_message(null, selected_message);
-			}
+			// FIXME redo this for multi select
+			//if (displayed_message > 0) {			// if we had a message selected, keep it selected
+				//select_message(null, displayed_message);
+			//}
 		}
 	}
 	fetch_mailbox();
