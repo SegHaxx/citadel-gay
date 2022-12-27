@@ -15,6 +15,27 @@ var newmail_notify = {
 };
 
 
+// Handler function for keypresses detected while the mail view is displayed.  Mainly for deleting messages.
+function mail_keypress(event) {
+
+	// If the "ctdl-mailbox-pane" no longer exists, the user has navigated to a different part of the site,
+	// so cancel the event listener.
+	try {
+		document.getElementById("ctdl-mailbox-pane").innerHTML;
+	}
+	catch {
+		document.removeEventListener("keydown", mail_keypress);
+		return;
+	}
+
+	const key = event.key.toLowerCase();
+	if (key == "delete") {
+		console.log("delete key was pressed (FIXME do something with this)");
+	}
+
+}
+
+
 // Render reply address for a message (FIXME figure out how to deal with "reply-to:")
 function reply_addr(msg) {
 	//if (msg.locl) {
@@ -296,6 +317,7 @@ function render_mailbox_display(notify) {
 
 			box +=	"</table>";
 			document.getElementById("ctdl-mailbox-pane").innerHTML = box;
+			document.addEventListener("keydown", mail_keypress);
 		}
 	}
 	fetch_mailbox();
