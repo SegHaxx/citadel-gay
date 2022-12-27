@@ -270,9 +270,11 @@ function render_mailbox_display(notify) {
 
 			// If one or more messages was already selected, remember them so we can re-select them
 			if (displayed_message > 0) {
-				for (i=0; row=oldtable.rows[i]; ++i) {
-					if (row.classList.contains("ctdl-mail-selected")) {
-						previously_selected.push(parseInt(row["id"].substring(12)));
+				if (oldtable) {
+					for (i=0; row=oldtable.rows[i]; ++i) {
+						if (row.classList.contains("ctdl-mail-selected")) {
+							previously_selected.push(parseInt(row["id"].substring(12)));
+						}
 					}
 				}
 			}
