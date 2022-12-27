@@ -36,8 +36,7 @@ function quoted_printable_encode(str) {
 }
 
 
-// Generate a random string of the specified length
-// Useful for generating one-time-use div names
+// generate a random string -- mainly used for generating one-time-use div names
 function randomString() {
 	return Math.random().toString(36).replace('0.','ctdl_' || '');
 }
