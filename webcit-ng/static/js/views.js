@@ -21,7 +21,7 @@ function clear_sidebar_selection() {
 function render_room_view() {
 
 	// The view renderer will set its own room navigation buttons
-	for (const d of ["ctdl-newmsg-button", "ctdl-ungoto-button", "ctdl-skip-button", "ctdl-goto-button"]) {
+	for (const d of ["ctdl-newmsg-button", "ctdl-ungoto-button", "ctdl-skip-button", "ctdl-goto-button", "ctdl-delete-button"]) {
 		document.getElementById(d).style.display = "none";
 	}
 

@@ -15,6 +15,18 @@ var newmail_notify = {
 };
 
 
+// Delete the selected messages (can be activated by mouse click or keypress)
+function mail_delete_selected() {
+	var table = document.getElementById("ctdl-onscreen-mailbox");
+	var i, m, row;
+	for (i=0; row=table.rows[i]; ++i) {
+		if (row.classList.contains("ctdl-mail-selected")) {
+			console.log("delete " + row["id"]);
+		}
+	}
+}
+
+
 // Handler function for keypresses detected while the mail view is displayed.  Mainly for deleting messages.
 function mail_keypress(event) {
 
@@ -30,7 +42,7 @@ function mail_keypress(event) {
 
 	const key = event.key.toLowerCase();
 	if (key == "delete") {
-		console.log("delete key was pressed (FIXME do something with this)");
+		mail_delete_selected();
 	}
 
 }
@@ -228,9 +240,17 @@ function mail_render_row(msg, is_selected) {
 
 // RENDERER FOR THIS VIEW
 function view_render_mail() {
-	// Put the "enter new message" button into the sidebar
+	// Put the "enter new message" button into the topbar
 	document.getElementById("ctdl-newmsg-button").innerHTML = "<i class=\"fa fa-edit\"></i>" + _("Write mail");
 	document.getElementById("ctdl-newmsg-button").style.display = "block";
+
+	// Put the "delete message(s)" button into the topbar
+	if (can_delete_messages) {
+		let d = document.getElementById("ctdl-delete-button");
+		d.innerHTML = "<i class=\"fa fa-trash\"></i>" + _("Delete");
+		d.style.display = "block";
+		d.addEventListener("click", mail_delete_selected);
+	}
 
 	document.getElementById("ctdl-main").innerHTML
 		= "<div id=\"ctdl-mailbox-grid-container\" class=\"ctdl-mailbox-grid-container\">"
