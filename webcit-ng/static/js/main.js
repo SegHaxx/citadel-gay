@@ -25,7 +25,6 @@ do_biff = async() => {
 
 // This is called at the very beginning of the main page load.
 ctdl_startup = async() => {
-	var BiffInterval;
 	response = await fetch("/ctdl/c/info");
 
 	if (response.ok) {
@@ -45,14 +44,14 @@ ctdl_startup = async() => {
 			display_login_screen("");					// display the login modal.
 		}
 
-		var BiffInterval;
-		try {							// if this was already set up, clear it so there aren't multiple
-			clearInterval(BiffInterval);
+		var biff_interval;
+		try {									// if this was already set up,
+			clearInterval(biff_interval);					// clear the old one so there's only one.
 		}
 		catch {
 		}
 		do_biff();
-		BiffInterval = setInterval(do_biff, 10000);
+		biff_interval = setInterval(do_biff, 10000);
 	}
 	else {
 		document.getElementById("ctdl-main").innerHTML =
