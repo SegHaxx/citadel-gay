@@ -15,13 +15,30 @@ var newmail_notify = {
 };
 
 
+// This is the async back end for mail_delete_selected()
+mail_delete_func = async(table, row) => {
+	let m = parseInt(row["id"].substring(12));	// derive msgnum from row id
+	response = await fetch(
+		"/ctdl/r/" + escapeHTMLURI(current_room) + "/" + m,
+		{ method: "DELETE" }
+	);
+	if (response.ok) {				// If the server accepted the delete, blank out the message div.
+		table.deleteRow(row.rowIndex);
+		if (m == displayed_message) {
+			document.getElementById("ctdl-mailbox-reading-pane").innerHTML = "";
+			displayed_message = 0;
+		}
+	}
+}
+
+
 // Delete the selected messages (can be activated by mouse click or keypress)
 function mail_delete_selected() {
 	var table = document.getElementById("ctdl-onscreen-mailbox");
-	var i, m, row;
+	var i, row;
 	for (i=0; row=table.rows[i]; ++i) {
 		if (row.classList.contains("ctdl-mail-selected")) {
-			console.log("delete " + row["id"]);
+			mail_delete_func(table, row);
 		}
 	}
 }
@@ -245,12 +262,10 @@ function view_render_mail() {
 	document.getElementById("ctdl-newmsg-button").style.display = "block";
 
 	// Put the "delete message(s)" button into the topbar
-	if (can_delete_messages) {
-		let d = document.getElementById("ctdl-delete-button");
-		d.innerHTML = "<i class=\"fa fa-trash\"></i>" + _("Delete");
-		d.style.display = "block";
-		d.addEventListener("click", mail_delete_selected);
-	}
+	let d = document.getElementById("ctdl-delete-button");
+	d.innerHTML = "<i class=\"fa fa-trash\"></i>" + _("Delete");
+	d.style.display = "block";
+	d.addEventListener("click", mail_delete_selected);
 
 	document.getElementById("ctdl-main").innerHTML
 		= "<div id=\"ctdl-mailbox-grid-container\" class=\"ctdl-mailbox-grid-container\">"
