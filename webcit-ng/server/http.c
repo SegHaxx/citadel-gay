@@ -144,7 +144,7 @@ void perform_one_http_transaction(struct client_handle *ch) {
 				string_trim(new_request_header.val);
 				array_append(h.request_headers, &new_request_header);
 #ifdef DEBUG_HTTP
-				syslog(LOG_DEBUG, "\033[1m\033[35m{ %s: %s\033[0m", new_request_header.key, new_request_header.val);
+				syslog(LOG_DEBUG, "{ %s: %s", new_request_header.key, new_request_header.val);
 #endif
 			}
 		}
@@ -166,7 +166,7 @@ void perform_one_http_transaction(struct client_handle *ch) {
 				kv.val = strdup(eq);
 				array_append(h.request_parms, &kv);
 #ifdef DEBUG_HTTP
-				syslog(LOG_DEBUG, "\033[1m\033[33m| %s = %s\033[0m", kv.key, kv.val);
+				syslog(LOG_DEBUG, "| %s = %s", kv.key, kv.val);
 #endif
 			}
 		}
@@ -193,7 +193,7 @@ void perform_one_http_transaction(struct client_handle *ch) {
 	}
 	else {
 //#ifdef DEBUG_HTTP
-		syslog(LOG_DEBUG, "\033[33m\033[1m< %s %s\033[0m", h.method, h.url);
+		syslog(LOG_DEBUG, "< %s %s", h.method, h.url);
 //#endif
 
 		// If there is a request body, read it now.
@@ -208,9 +208,9 @@ void perform_one_http_transaction(struct client_handle *ch) {
 
 			// Write the entire request body to stderr -- not what you want during normal operation.
 			#ifdef BODY_TO_STDERR
-			write(2, HKEY("\033[31m"));
+			write(2, HKEY("---\n"));
 			write(2, h.request_body, h.request_body_length);
-			write(2, HKEY("\033[0m\n"));
+			write(2, HKEY("---\n"));
 			#endif
 
 		}
@@ -220,14 +220,14 @@ void perform_one_http_transaction(struct client_handle *ch) {
 
 		// Write the entire response body to stderr -- not what you want during normal operation.
 		#ifdef BODY_TO_STDERR
-		write(2, HKEY("\033[32m"));
+		write(2, HKEY("---\n"));
 		write(2, h.response_body, h.response_body_length);
-		write(2, HKEY("\033[0m\n"));
+		write(2, HKEY("---\n"));
 		#endif
 
 		// Output the results back to the client.
 #ifdef DEBUG_HTTP
-		syslog(LOG_DEBUG, "\033[33m\033[1m> %03d %s\033[0m", h.response_code, h.response_string);
+		syslog(LOG_DEBUG, "> %03d %s", h.response_code, h.response_string);
 #endif
 		client_printf(ch, "HTTP/1.1 %03d %s\r\n", h.response_code, h.response_string);
 		client_printf(ch, "Connection: close\r\n");
@@ -243,7 +243,7 @@ void perform_one_http_transaction(struct client_handle *ch) {
 		for (i=0; i<number_of_response_headers; ++i) {
 			struct keyval *kv = array_get_element_at(h.response_headers, i);
 #ifdef DEBUG_HTTP
-			syslog(LOG_DEBUG, "\033[1m\033[35m} %s: %s\033[0m", kv->key, kv->val);
+			syslog(LOG_DEBUG, "} %s: %s", kv->key, kv->val);
 #endif
 			client_printf(ch, "%s: %s\r\n", kv->key, kv->val);
 		}
