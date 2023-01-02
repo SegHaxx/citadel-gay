@@ -86,10 +86,9 @@
 	display: block;
 	background-color: DarkSlateGrey;
 	color: White;
-	font-size: 1.25vw;
+	font-size: 1.7vh;
 	border: none;
-	padding-left: 4px;
-	padding-right: 4px;
+	padding: 1vh;
 }
 
 .ctdl-banner-buttons li button:hover {
@@ -153,7 +152,7 @@ html,body,h1,h2,h3,h4,h5 {
 	border: 1px solid GhostWhite;
 	background-color: GhostWhite;
 	color: Black;
-	font-size: 1vw;
+	font-size: 1.5vh;
 	border-radius: 5px;
 }
 
