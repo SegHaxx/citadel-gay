@@ -1,6 +1,6 @@
 // Main entry point for the program.
 //
-// Copyright (c) 1996-2022 by the citadel.org team
+// Copyright (c) 1996-2023 by the citadel.org team
 //
 // This program is open source software.  Use, duplication, or
 // disclosure are subject to the GNU General Public License v3.
@@ -95,7 +95,7 @@ int main(int argc, char **argv) {
 
 	// Tell 'em who's in da house
 	syslog(LOG_NOTICE, "MAKE WEBCIT GREAT AGAIN!");
-	syslog(LOG_NOTICE, "Copyright (C) 1996-2022 by the citadel.org team");
+	syslog(LOG_NOTICE, "Copyright (C) 1996-2023 by the citadel.org team");
 	syslog(LOG_NOTICE, " ");
 	syslog(LOG_NOTICE, "This program is open source software: you can redistribute it and/or");
 	syslog(LOG_NOTICE, "modify it under the terms of the GNU General Public License, version 3.");
