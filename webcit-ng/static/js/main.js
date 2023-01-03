@@ -16,7 +16,7 @@ do_biff = async() => {
 	}
 
 	if (new_mail > 0) {
-		console.log("YOU'VE GOT MAIL!");
+		console.log("YOU'VE GOT MAIL!  new_mail = " + new_mail);
 		new_mail_sound.play();			// FIXME do a visual notification as well
 		new_mail = 0;
 	}
