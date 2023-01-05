@@ -1,0 +1,161 @@
+<div class="tabcontent">
+	<center>
+		<table border="0" width="100%" cellpadding="5">
+			<tr><td valign="top">
+			    <table class="altern">
+			      <tr><th><?_("<i>The contents of this room are being mailed <b>as individual messages</b> to the following list recipients:</i><br><br>")></th></tr>
+			      <?ITERATE("ITERATE:THISROOM:GNET", ="room_edit_listrecp_removal", 0, 0, -1, #"listrecp")>
+			    </table>
+			<br>
+			<form method="post" action="netedit">
+			  <p>
+			        <input type="hidden" name="last_tabsel" value="<?TAB:N>">
+				<input type="hidden" name="prefix" value="listrecp|">
+				<input type="hidden" name="nonce" value="<?NONCE>">
+				<input type="hidden" name="go" value="<?THISROOM:NAME("X")>">
+				<input type="text" id="add_as_listrecp" name="line">
+				<input type="submit" name="add_button" value="<?_("Add")>">
+			  </p>
+			</form>
+			</td>
+			<td valign="top">
+			    <table class="altern">
+			      <tr><th><?_("<i>The contents of this room are being mailed <b>in digest form</b> to the following list recipients:</i><br><br>")></th></tr>
+			      <?ITERATE("ITERATE:THISROOM:GNET", ="room_edit_digestrecp_removal", 0, 0, -1, #"digestrecp")>
+			    </table>
+			<br>
+			<form method="post" action="netedit">
+			  <p>
+			        <input type="hidden" name="last_tabsel" value="<?TAB:N>">
+				<input type="hidden" name="prefix" value="digestrecp|">
+				<input type="hidden" name="nonce" value="<?NONCE>">
+				<input type="hidden" name="go" value="<?THISROOM:NAME("X")>">
+				<input type="text" id="add_as_digestrecp" name="line">
+				<input type="submit" name="add_button" value="<?_("Add")>">
+			  </p>
+			</form>
+			</td></tr>
+		</table>
+
+		<table border="0" width="100%" cellpadding="5">
+			<td valign="top">
+			    <table class="altern">
+			      <tr><th><?_("Posts to this room will be sent to these mailing lists")></th></tr>
+			      <tr><td><?_("All messages posted / mailed into this room will be sent to these email addresses. If you link this with mailinglist subscriptions, make shure the default sender address below matches the subscribed address. You will see your messages twice once the mailinglist sends it back to you.")></td></tr>
+			      <?ITERATE("ITERATE:THISROOM:GNET", ="room_edit_participate_removal", 0, 0, -1, #"participate")>
+			    </table>
+			<br>
+			<form method="post" action="netedit">
+			  <p>
+			        <input type="hidden" name="last_tabsel" value="<?TAB:N>">
+				<input type="hidden" name="prefix" value="participate|">
+				<input type="hidden" name="nonce" value="<?NONCE>">
+				<input type="hidden" name="go" value="<?THISROOM:NAME("X")>">
+				<input type="text" id="add_as_digestrecp" name="line">
+				<input type="submit" name="add_button" value="<?_("Add")>">
+			  </p>
+			</form>
+			</td></tr>
+		</table>
+
+		<!-- Pop open an address book - begin -->
+		<div align="right">
+			<a href="javascript:PopOpenAddressBook('add_as_listrecp|<?_("List")>|add_as_digestrecp|<?_("Digest")>')"
+			title="<?_("Add recipients from Contacts or other address books")>">
+			<img align="middle" border="0" width="24" height="24" alt="<?_("Addressbook Popup")>" src="static/webcit_icons/essen/16x16/contact.png">
+			&nbsp;<?_("Add recipients from Contacts or other address books")></a>
+		</div>
+		<!-- Pop open an address book - end -->
+
+		<br>
+		<form method="get" action="toggle_self_service">
+			<table>
+				<!-- Public posting? -->
+				<tr>
+					<td><?_("Allow non-subscribers to mail to this room.")></td>
+					<td><input type="checkbox" name="QR2_SubsOnly" value="yes" <?%("COND:THISROOM:FLAG:QR2", 20, #"QR2_SMTP_PUBLIC", 1, 'checked="checked" ', "")>></td>
+				</tr>
+		
+				<!-- Moderated List? -->
+				<tr>
+					<td><?_("Room post publication needs Admin permission.")></td>
+					<td><input type="checkbox" name="QR2_Moderated" value="yes" <?%("COND:THISROOM:FLAG:QR2", 20, #"QR2_MODERATED", 1, 'checked="checked" ', "")>></td>
+				</tr>
+				<!-- Self Service subscription? -->
+				<tr>
+					<td><?_("Allow self-service subscribe/unsubscribe requests.")></td>
+					<td><input type="checkbox" name="QR2_SelfList" value="yes" <?%("COND:THISROOM:FLAG:QR2", 20, #"QR2_SELFLIST", 1, 'checked="checked" ', "")>></td>
+				</tr>
+				<tr>
+				<!-- Give the admin some hint how to access the subscriber interface -->
+					<td colspan="2">
+						<?_("The URL for subscribe/unsubscribe is: ")>
+						<tt><?%("COND:IS_HTTPS", 3, 1, 0, "https", "http")>://<?SERV:FQDN>/listsub</tt>
+					</td>
+				</tr>
+				<tr>
+				  <td colspan="2" align="center">
+				    <input type="hidden" name="last_tabsel" value="<?TAB:N>">
+				    <input type="hidden" name="nonce" value="<?NONCE>">
+				    <input type="hidden" name="go" value="<?THISROOM:NAME("X")>">
+				    <input type="submit" name="add_button" value="<?_("Save changes")>">
+				  </td>
+				</tr>
+			</table>
+		</form>
+
+		<table class="altern">
+		  <tr>
+		  <td colspan="2">
+		    <?_("Which from address should be used: ")>
+		  </td>
+		  </tr>
+		  <tr>
+		    <td colspan="2">
+		      <form method="post" action="netedit">
+			<p>
+			  <input type="hidden" name="last_tabsel" value="<?TAB:N>">
+			  <input type="hidden" name="alias" value="room_<?THISROOM:NAME("X")>">
+			  <input type="hidden" name="nonce" value="<?NONCE>">
+			  <input type="hidden" name="go" value="<?THISROOM:NAME("X")>">
+			  <input type="hidden" name="prefix" value="roommailalias|">
+			  <select size="1" name="default_aliasdomain">
+				  <option value=""<?%("COND:THISROOM:ISALIAS:CONTEXTSTR", 1, #"eNotSet", "", ' selected="selected"', "")>><?_("none (not advised)")></option>
+		  <?ITERATE("ITERATE:THISROOM:POSSIBLE:MALIAS", ="room_edit_select_alias", 0, 0, -1, "")>
+			  </select>
+			  <input type="submit" name="add_button" value="<?_("Set")>">
+			</p>
+		      </form>
+		    </td>
+		  </tr>
+		</table>
+		<table class="altern">
+		  <tr>
+		  <td colspan="2">
+		    <?_("Alternative public emailaddresses pointing to this room: ")>
+		  </td>
+		  </tr>
+		  <?ITERATE("ITERATE:THISROOM:MALIAS", ="room_edit_alias_removal", 0, 0, -1, "")>
+		  <tr>
+		    <td colspan="2">
+		      <form method="post" action="netedit">
+			<p>
+			  <input type="hidden" name="last_tabsel" value="<?TAB:N>">
+			  <input type="hidden" name="alias" value="room_<?THISROOM:NAME("X")>">
+			  <input type="hidden" name="nonce" value="<?NONCE>">
+			  <input type="hidden" name="go" value="<?THISROOM:NAME("X")>">
+			  <input type="text" id="prefix" name="prefix">
+			  @ 
+			  <select size="1" name="aliasdomain">
+				  <option value=""><?_("All Domains")></option>
+				  <?ITERATE("ITERATE:VALID:DOMAINNAMES", ="room_edit_alias_domainname", 0, 0, -1, "")>
+			  </select>
+			  <input type="submit" name="add_button" value="<?_("Add")>">
+			</p>
+		      </form>
+		    </td>
+		  </tr>
+		</table>
+		
+	</center>
+</div>

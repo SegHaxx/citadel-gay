@@ -1,0 +1,117 @@
+<div id="loginbox_topline_container">
+<div id="loginbox_title">
+<?_("You must be logged in to access this page.")>
+</div>
+<div id="loginbox_closebutton">
+<a href="javascript:toggleModal(0);">
+<?_("Close window")>&nbsp;<img src="static/webcit_icons/closewindow.gif" border="0" alt='<?_("Close window")>'></a>
+</div>
+</div>
+<br><br>
+<div class="login_message" id="login_errmsg"></div>
+<div id="auth_container">
+<div id="authbar">
+<ul id="button">
+<li class="ib_button" style='background-image: url("/static/webcit_icons/citadel-button-32x32.gif");'>
+    <a class="ib_button_link" href="javascript:authtoggle('authbox_userpass');" title="<?SERV:HUMANNODE>"><span>
+        <?SERV:HUMANNODE>
+    </span></a>
+</li>
+<?!("COND:SERV:OPENID",1)><li class="ib_button" style='background-image: url("/static/webcit_icons/openid-32x32.gif");'>
+    <a class="ib_button_link" href="javascript:authtoggle('authbox_openid');" title="OpenID"><span>
+        OpenID
+    </span></a>
+</li><??("X", 1)>
+<?!("COND:SERV:OPENID",2)><li class="ib_button" style='background-image: url("/static/webcit_icons/google-32x32.gif");'>
+    <a class="ib_button_link" href="javascript:authtoggle('authbox_google');" title="Google"><span>
+        Google
+    </span></a>
+</li><??("X", 2)>
+<?!("COND:SERV:OPENID",3)><li class="ib_button" style='background-image: url("/static/webcit_icons/yahoo-32x32.gif");'>
+    <a class="ib_button_link" href="javascript:authtoggle('authbox_yahoo');" title="Yahoo"><span>
+        Yahoo
+    </span></a>
+</li><??("X", 3)>
+<?!("COND:SERV:OPENID",4)><li class="ib_button" style='background-image: url("/static/webcit_icons/aol-32x32.gif");'>
+    <a class="ib_button_link" href="javascript:authtoggle('authbox_aol');" title="AOL"><span>
+        AOL/AIM
+    </span></a>
+</li><??("X", 4)>
+<??("COND:SERV:OPENID",5)>
+<li class="ib_button"></li>
+<li class="ib_button"></li>
+<li class="ib_button"></li>
+<li class="ib_button"></li>
+<??("X", 5)>
+<li class="ib_button"></li>
+<li class="ib_button"></li>
+<li class="ib_button"></li>
+</ul>
+</div>
+
+<div class="authbox" id="authbox_userpass" style="display: block">
+<h2><?_("Log in using a user name and password")></h2>
+<form id="ajax_username_password_form" method="POST" action="ajax_login_username_password">
+<label for="uname"><?_("User name:")></label>
+<input type="text" name="name" id="uname" onKeyPress="username_and_password_onkeypress(event);">
+<br><br>
+<label for="pname"><?_("Password:")></label>
+<input type="password" name="pass" id="pname" onKeyPress="username_and_password_onkeypress(event);">
+<br><br>
+</form>
+<div class="logbuttons"><a href="javascript:ajax_try_username_and_password();"><?_("Log in")></a></div>
+<div class="registernow"><a href="javascript:authtoggle('authbox_newuser');"><?_("New user?  Register now")></a></div>
+</div>
+
+<div class="authbox" id="authbox_newuser" style="display: none">
+<h2><?_("New user?  Register now")></h2>
+<?_("enter the name and password you wish to use, and click &quot;New User.&quot; ")><br><br>
+<form id="ajax_newuser_form" method="POST" action="ajax_login_newuser">
+<label for="uname"><?_("User name:")></label>
+<input type="text" name="name" id="uname" onKeyPress="newuser_onkeypress(event);">
+<br><br>
+<label for="pname"><?_("Password:")></label>
+<input type="password" name="pass" id="pname" onKeyPress="newuser_onkeypress(event);">
+<br><br>
+</form>
+<div class="logbuttons"><a href="javascript:ajax_try_newuser();"><?_("New User")></a></div>
+</div>
+
+<div class="authbox" id="authbox_openid" style="display: none">
+<h2><?_("Log in using OpenID")></h2>
+<form id="ajax_openid_form" method="POST" action="ajax_login_openid">
+<?_("OpenID URL:")>
+<input type="text" name="openid_url" id="openid_url" class="openid_urlarea" onKeyPress="return openid_onkeypress(event);">
+</form>
+<div class="logbuttons"><a href="javascript:ajax_try_openid();"><?_("Log in")></a></div>
+</div>
+
+<div class="authbox" id="authbox_google" style="display: none">
+<h2><?_("Log in using Google")></h2>
+<div class="logbuttons"><a href="javascript:ajax_try_google();"><?_("Log in")></a></div>
+</div>
+
+<div class="authbox" id="authbox_yahoo" style="display: none">
+<h2><?_("Log in using Yahoo")></h2>
+<div class="logbuttons"><a href="javascript:ajax_try_yahoo();"><?_("Log in")></a></div>
+</div>
+
+<div class="authbox" id="authbox_aol" style="display: none">
+<h2><?_("Log in using AOL or AIM")></h2>
+<form id="ajax_aol_form" method="POST" action="ajax_login_aol">
+<?_("Enter your AOL or AIM screen name:")>
+<input type="text" name="aol_screenname" id="aol_screenname" class="openid_urlarea" onKeyPress="return aol_onkeypress(event);">
+</form>
+<div class="logbuttons"><a href="javascript:ajax_try_aol();"><?_("Log in")></a></div>
+</div>
+
+<div class="authbox" id="authbox_success" style="display: none">
+	<br><br><br>
+	<div align="center"><h1>
+		<img src="static/webcit_icons/throbber.gif" alt="">
+		&nbsp;
+		<?_("Please wait")>...
+	</h1></div>
+</div>
+
+</div>

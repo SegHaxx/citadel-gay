@@ -1,0 +1,25 @@
+<tr class="<?ITERATE:ODDEVEN>">
+	<!-- link to page this user -->
+	<td width="5%"><a href="display_page?recp=<?WHO:NAME("X")>">
+   		<img align="middle" src="static/webcit_icons/essen/16x16/chat.png" alt="(p)"></a> 
+	</td>
+	<!-- idle flag -->
+	<td width="5%">
+		<?!("WHO:IDLE", 4)>
+			<img align="middle" src="static/webcit_icons/essen/16x16/user.png" alt="(<?_("idle since")>s <?WHO:IDLESINCE> <?_("Minutes")>)">
+		<?!("X", 4)>
+		<??("WHO:IDLE", 5)>
+			<img align="middle" src="static/webcit_icons/essen/16x16/activeuser.png" alt="(<?_("active")>)">
+		<?!("X", 5)>
+	</td>
+	<td>
+		<!--  username (link to user bio/photo page)  -->
+		<a href="do_template?template=user_show?who=<?WHO:NAME("U")>"> <?WHO:NAME("X")></a> 
+		<??("WHO:NSESSIONS", 6, 0, 1)>[<?WHO:NSESSIONS>]<?!("X", 6)>
+		<!-- room -->
+	</td>
+	<td>
+		<?WHO:ROOM>
+		<?!("WHO:REALROOM", 7)><br><i>  <?WHO:REALROOM("X")>  </i><?!("X", 7)>
+	</td>
+</tr>

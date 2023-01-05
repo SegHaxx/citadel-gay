@@ -1,0 +1,57 @@
+<div class="tabcontent">
+	<i><?_("Retrieve messages from these remote POP3 accounts and store them in this room:")></i>
+	<br />
+	<form method="post" action="netedit">
+<p>
+        <input type="hidden" name="last_tabsel" value="<?TAB:N>" />
+	<input type="hidden" name="prefix" value="pop3client|" />
+	<input type="hidden" name="nonce" value="<?NONCE>">
+	<input type="hidden" name="go" value="<?THISROOM:NAME("X")>">
+</p>
+	<table class="altern" border="0" cellpadding="5">
+		<tr class="even">
+			<th><?_("Remote host")></th>
+			<th><?_("User name")></th>
+			<th><?_("Password")></th>
+			<th><?_("Keep messages on server?")></th>
+			<th><?_("Interval")></th>
+			<th>&nbsp;</th>
+		</tr>
+		<?ITERATE("ITERATE:THISROOM:GNET", ="room_edit_pop3client_removal", 0, 0, -1, #"pop3client")>
+			<tr>
+				<td><input type="text" id="add_as_pop3host" name="line_pop3host" /></td>
+				<td><input type="text" id="add_as_pop3user" name="line_pop3user" /></td>
+				<td><input type="password" id="add_as_pop3pass" name="line_pop3pass" /></td>
+				<td><input type="checkbox" id="add_as_pop3keep" name="line_pop3keep" value="1" /></td>
+				<td><input type="text" id="add_as_pop3int" name="line_pop3int" maxlength="5" /></td>
+				<td><input type="submit" name="add_button" value="<?_("Add")>" /></td>
+			</tr>
+	</table>
+	</form>
+	<hr>
+	<i><?_("Fetch the following RSS feeds and store them in this room:")></i>
+	<br />
+	<form method="post" action="netedit">
+<p>
+	<input type="hidden" name="last_tabsel" value="<?TAB:N>" />
+	<input type="hidden" name="prefix" value="rssclient|" />
+	<input type="hidden" name="nonce" value="<?NONCE>" />
+	<input type="hidden" name="go" value="<?THISROOM:NAME("X")>">
+</p>
+	<table class="altern" border="0" cellpadding="5">
+		<tr class="even">
+			<th>
+				<img src="static/webcit_icons/essen/16x16/rss.png" alt=" " /> 
+				<?_("Feed URL")>
+			</th>
+			<th></th>
+		</tr>
+		<?ITERATE("ITERATE:THISROOM:GNET", ="room_edit_rssclient_removal", 0, 0, -1, #"rssclient")>
+			<tr>
+				<td><input type="text" id="add_as_rssclient" size="72" maxlength="256" name="line_pop3host" /></td>
+				<td><input type="submit" name="add_button" value="<?_("Add")>" /></td>
+			</tr>
+	</table>
+	</form>
+</div>
+

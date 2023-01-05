@@ -1,0 +1,73 @@
+<?!("COND:THISROOM:EDIT", 1)><div class="tabcontent">
+	<br />
+	<form method="post" action="set_room_policy">
+		<input type="hidden" name="nonce" value="<?NONCE>" />
+		<input type="hidden" name="go" value="<?THISROOM:NAME("X")>">
+		<table border="0" cellspacing="5">
+			<tr>
+				<td>
+					<?_("Message expire policy for this room")>
+					<br />
+					<?THISROOM:NAME("X")>
+				</td>
+				<td>
+					<input type="radio" name="roompolicy" value="0" <?%("COND:EXPIRE:MODE", 1, #"roompolicy", #"EXPIRE_NEXTLEVEL" , 'checked="checked"',"")>/>&nbsp;
+					<?_("Use the default policy for this floor")>&nbsp;
+					<br />
+					<input type="radio" name="roompolicy" value="1" <?%("COND:EXPIRE:MODE", 1, #"roompolicy", #"EXPIRE_MANUAL", 'checked="checked"',"")> />&nbsp;
+					<?_("Never automatically expire messages")>
+					<br />
+					<input type="radio" name="roompolicy" value="2" <?%("COND:EXPIRE:MODE", 2, #"roompolicy", #"EXPIRE_NUMMSGS", 'checked="checked"', "")> />&nbsp;
+					<?_("Expire by message count")>
+					<br />
+					<input type="radio" name="roompolicy" value="3" <?%("COND:EXPIRE:MODE", 1, #"roompolicy", #"EXPIRE_AGE", 'checked="checked"', "")> />&nbsp;
+					<?_("Expire by message age")>
+					<br />
+					<?_("Number of messages or days: ")>
+					<input type="text" name="roomvalue" MAXLENGTH="5" value="<?EXPIRE:VALUE(#"roompolicy", #"EXPIRE_NUMMSGS")>">
+				</td>
+			</tr>
+	
+			<??("COND:AIDE", 2)>
+			<tr>
+				<td colspan="2"><hr /></td>
+			</tr>
+			<tr>
+				<td>
+					<?_("Message expire policy for this floor")>
+					<br />
+					<?THISROOM:FLOOR:NAME("X")>
+				</td>
+				<td>
+					<input type="radio" name="floorpolicy" value="0" <?%("COND:EXPIRE:MODE", 1, #"floorpolicy", #"EXPIRE_NEXTLEVEL" , 'checked="checked"',"")>>&nbsp;
+					<?_("Use the system default")>
+					<br />
+					<input type="radio" name="floorpolicy" value="1" <?%("COND:EXPIRE:MODE", 1, #"floorpolicy", #"EXPIRE_MANUAL", 'checked="checked"',"")> />&nbsp;
+					<?_("Never automatically expire messages")>
+					<br />
+					<input type="radio" name="floorpolicy" value="2" <?%("COND:EXPIRE:MODE", 2, #"floorpolicy", #"EXPIRE_NUMMSGS", 'checked="checked"', "")> />&nbsp;
+					<?_("Expire by message count")>
+					<br />
+					<input type="radio" name="floorpolicy" value="3" <?%("COND:EXPIRE:MODE", 1, #"floorpolicy", #"EXPIRE_AGE", 'checked="checked"', "")> />&nbsp;
+					<?_("Expire by message age")>
+					<br />
+					<?_("Number of messages or days: ")>
+					<input type="text" name="floorvalue" MAXLENGTH="5" value="<?EXPIRE:VALUE(#"floorpolicy", #"EXPIRE_NUMMSGS")>">
+					</td>
+				</tr>
+			<??("X", 2)>	
+			<tr>
+				<td colspan="2">
+					<hr />
+					<center>
+						<input type="submit" name="ok_button" value="<?_("Save changes")>" />
+						&nbsp;
+						<input type="submit" name="cancel_button" value="<?_("Cancel")>" />
+					</center>
+				</td>
+			</tr>
+		</table>
+		<input type="hidden" name="last_tabsel" value="<?TAB:N>" />
+	</form>
+</div>
+<?!("X", 1)><??("COND:THISROOM:EDIT", 20)><div class="tabcontent"><?_("Higher access is required to access this function.")></div><??("X", 20)>

@@ -1,0 +1,89 @@
+
+<div align="right">
+
+<a href="javascript:hide_attachments_form();">
+    <?_("Close window")>&nbsp;<img src="static/webcit_icons/closewindow.gif" border="0"></div>
+</a>
+<h2><img src="static/webcit_icons/essen/16x16/attachement.png">&nbsp;<?_("Attachments:")></h2>
+
+<?--("Fine Uploader JS")>
+<script type="text/javascript">
+function createUploader()
+{
+    var uploader = new qq.FineUploader(
+	{
+	    session: {
+		endpoint: "do_template?template=edit_message_json_attlist"
+	    },
+	    callbacks: {
+		onComplete: function (id, xhr, isError) {
+		    console.log("Upload completed for fileid: " + id);
+		    update_attachment_count();
+		},
+		onDeleteComplete: function (id, xhr, isError) {
+		    console.log("Deletion completed for fileid: " + id);
+		    update_attachment_count();
+		}
+	    },
+	    element: document.getElementById('fine-uploader'),
+	    request: {
+		endpoint: 'upload_attachment?nonce=<?NONCE>&template=edit_message_upl_att'
+	    },
+	    text: {
+		formatProgress: "<?_('{percent}% of {total_size}')>",
+		failUpload: "<?_('Upload failed')>",
+		waitingForResponse: "<?_('Processing...')>",
+		paused: "<?_('Paused')>"
+	    },
+	    messages: {
+		tooManyFilesError: "<?_('You may only drop one file.')>",
+		unsupportedBrowser: "<?_('Unrecoverable error - the browser does not permit uploading of any kind.')>"
+	    },
+	    deleteFile: {
+		enabled: true,
+		forceConfirm: true,
+		confirmMessage: "<?_('Are you shure you want to delete {filename}?')>",
+		deletingFailedText: "<?_('failed to delete {filename}!')>",
+		deletingStatusText: "<?_('deleting {filename}')>",
+		endpoint: 'remove_attachment?nonce=<?NONCE>&template=edit_message_upl_att&which_attachment='
+	    }
+	});
+}
+
+  window.onload = createUploader;
+</script>
+
+<?--("the ploader will be rendered in this div:")>
+<div id="fine-uploader"></div>
+
+<?--("Fine Uploader template")>
+<script type="text/template" id="qq-template">
+  <div class="qq-uploader-selector qq-uploader">
+    <div class="qq-upload-drop-area-selector qq-upload-drop-area" qq-hide-dropzone>
+      <span><?_("Drop files here to upload")></span>
+    </div>
+    <div class="qq-upload-button-selector qq-upload-button">
+      <div><?_("Attach file")></div>
+    </div>
+    <span class="qq-drop-processing-selector qq-drop-processing">
+      <span><?_("Processing dropped files...")></span>
+      <span class="qq-drop-processing-spinner-selector qq-drop-processing-spinner"></span>
+    </span>
+    <ul class="qq-upload-list-selector qq-upload-list">
+      <li>
+        <div class="qq-progress-bar-container-selector">
+          <div class="qq-progress-bar-selector qq-progress-bar"></div>
+        </div>
+        <span class="qq-upload-spinner-selector qq-upload-spinner"></span>
+        <span class="qq-edit-filename-icon-selector qq-edit-filename-icon"></span>
+        <span class="qq-upload-file-selector qq-upload-file"></span>
+        <input class="qq-edit-filename-selector qq-edit-filename" tabindex="0" type="text">
+        <span class="qq-upload-size-selector qq-upload-size"></span>
+        <a class="qq-upload-cancel-selector qq-upload-cancel" href="#"><?_("Cancel")></a>
+        <a class="qq-upload-retry-selector qq-upload-retry" href="#"><?_("Retry")></a>
+        <a class="qq-upload-delete-selector qq-upload-delete" href="#"><?_("Remove")></a>
+        <span class="qq-upload-status-text-selector qq-upload-status-text"></span>
+      </li>
+    </ul>
+  </div>
+</script>

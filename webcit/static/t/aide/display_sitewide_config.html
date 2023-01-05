@@ -1,0 +1,27 @@
+<?=("head")><?%("COND:LOGGEDIN", 1, 1, 1, "", ="paging")>
+<div id="banner">
+<h1><?_("Site configuration")></h1>
+</div>
+<div id="content" class="service">
+<?!("COND:AIDE", 1)><?_("You need to be aide to view this.")><?!("X", 1)>
+<??("COND:AIDE", 2)>
+<table border="0" cellspacing="0" cellpadding="0" ><tr><td>
+<form method="post" action="siteconfig">
+<input type="hidden" name="nonce" value= '<?NONCE>'>
+<?DOTABBED(
+	_("General"),			="aide_siteconfig_tab_general",
+	_("Settings"),			="aide_siteconfig_tab_setting",
+	_("SMTP"),			="aide_siteconfig_tab_smtp", 
+	_("IMAP4"),			="aide_siteconfig_tab_imap", 
+	_("Pop3"),			="aide_siteconfig_tab_pop3", 
+	_("Indexing/Journaling"),	="aide_siteconfig_tab_indexing",
+	_("Access"),			="aide_siteconfig_tab_access",
+	_("Directory"),			="aide_siteconfig_tab_directory",
+	_("Auto-purger"),		="aide_siteconfig_tab_autopurger",
+        "", ="aide_siteconfig_submit")>
+</form>
+</td></tr></table>
+<??("X", 2)>
+</div>
+</div>
+<?=("trailing")>

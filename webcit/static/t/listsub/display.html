@@ -1,0 +1,114 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+  <link href="/static/styles/webcit.css" rel="stylesheet" type="text/css">
+  <title><?_("List subscription")></title>
+</head>
+<body>
+
+<div align=center>
+<table border=0 width='75%'><tr><td>
+<?=("box_begin_1")><?_("List subscribe/unsubscribe")><?=("box_begin_2")>
+<div align=center><br>
+
+<?!("COND:BSTR", 10, "cmd", "subscribe")>
+<?!("COND:LISTSUB:EXECUTE:SUBSCRIBE", 11)>
+<center>
+<h1><?_("Confirmation request sent")></h1>
+<?_("You are subscribing ")><tt><?BSTR("email", "X")></tt>
+<?_(" to the ")><b><?BSTR("room", "X")></b>
+<?_(" mailing list.")> 
+<?_("The listserver has sent you an e-mail with one additional Web link for you to click on to confirm your subscription.")>  
+<?_("This extra step is for your protection, as it prevents others from being able to subscribe you to lists without your consent.")>
+<br><br>
+<?_("Please click on the link which is being e-mailed to you and your subscription will be confirmed.")>
+<br>
+<a href="listsub"><?_("Go back...")></a>
+</center>
+<?!("X", 11)><??("COND:BSTR", 12, "__FAIL")>
+<font size=+1><b><?_("ERROR")>: <?IMPORTANTMESSAGE("X")></b></font><br><br>
+<??("X", 12)>
+<?!("X", 10)>
+
+<?!("COND:BSTR", 20, "cmd", "unsubscribe")>
+<?!("COND:LISTSUB:EXECUTE:UNSUBSCRIBE", 21)>
+<center>
+<h1><?_("Confirmation request sent")></h1>
+<?_("You are unsubscribing")> 
+<tt><?BSTR("email", "X")></tt> 
+<?_("from the")> 
+&quot;<?BSTR("room", "X")>&quot; 
+<?_("mailing list.")>
+<?_("The listserver has sent you an e-mail with one additional Web link for you to click on to confirm your unsubscription.")>
+<?_("This extra step is for your protection, as it prevents others from being able to unsubscribe you from lists without your consent.")> 
+<br><br>
+<?_("Please click on the link which is being e-mailed to you and your unsubscription will be confirmed.")><br>
+<a href="listsub"><?_("Back...")></a>
+</center>
+<?!("X", 21)><??("COND:BSTR", 22, "__FAIL")>
+<font SIZE=+1><b><?_("ERROR")>: <?IMPORTANTMESSAGE("X")></b></font>
+<br><br>
+<?!("X", 22)>
+<?!("X", 20)>
+
+<?!("COND:BSTR", 30, "cmd", "confirm_subscribe")>
+<?!("COND:LISTSUB:EXECUTE:CONFIRMSUBSCRIBE", 31)>
+<center><h1><?_("Confirmation successful!")></h1></center>
+<?!("X", 31)><??("COND:BSTR", 32, "__FAIL")>
+<center><h1><?_("Confirmation failed.")></h1></center>
+<?_("This could mean one of two things:")>
+<ul>
+<li><?_("You waited too long to confirm your subscribe/unsubscribe request (the confirmation link is only valid for three days)")></li>
+<li><?_("You have <i>already</i> successfully confirmed your subscribe/unsubscribe request and are attempting to do it again.")></li>
+</ul>
+<?_("The error returned by the server was: ")><?IMPORTANTMESSAGE("X")>
+<??("X", 32)>
+<??("X", 30)>
+
+<?!("COND:BSTR", 33, "cmd", "confirm_unsubscribe")>
+<?!("COND:LISTSUB:EXECUTE:CONFIRMUNSUBSCRIBE", 34)>
+<center><h1><?_("Confirmation successful!")></h1></center>
+<?!("X", 34)><??("COND:BSTR", 35, "__FAIL")>
+<center><h1><?_("Confirmation failed.")></h1></center>
+<?_("This could mean one of two things:")>
+<ul>
+<li><?_("You waited too long to confirm your subscribe/unsubscribe request (the confirmation link is only valid for three days)")></li>
+<li><?_("You have <i>already</i> successfully confirmed your subscribe/unsubscribe request and are attempting to do it again.")></li>
+</ul>
+<?_("The error returned by the server was: ")><?IMPORTANTMESSAGE("X")>
+<??("X", 35)>
+<??("X", 33)>
+
+<?!("COND:BSTR", 40, "cmd", "choose")>
+
+<form method="POST" action="listsub">
+
+<?_("Name of list:")>
+<select name="room" size=1>
+<?ITERATE("LPRM", ="listsub_subscribeable_rooms")>
+</select><br><br>
+
+<?_("Your e-mail address:")> 
+<input type="text" name="email" value="<?BSTR('email', 'X')>" maxlength="128" size="60">
+<br><br>
+
+<div style="display:none"><?_("(If subscribing) preferred format: ")>
+<input type="radio" name="subtype" value="list" CHECKED><?_("One message at a time")>&nbsp; 
+<input type="radio" name="subtype" value="digest"><?_("Digest format")>&nbsp; 
+<br><br></div>
+<input type="submit" name="cmd" value="subscribe">
+<input type="submit" name="cmd" value="unsubscribe">
+<br><br>
+</form>
+
+<hr>
+<?_("When you attempt to subscribe or unsubscribe to a mailing list, you will receive an e-mail containing one additional web link to click on for final confirmation.")>
+<?_("This extra step is for your protection, as it prevents others from being able to subscribe or unsubscribe you to lists.")>
+<br>
+<??("X", 40)>
+</div>
+<?=("box_end")>
+</td></tr></table></div>
+
+</body></html>

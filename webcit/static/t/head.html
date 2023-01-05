@@ -1,0 +1,57 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+	<head>
+		<title><?THISROOM:NAME> - <?SERV:HUMANNODE></title>
+		<meta http-equiv="X-UA-Compatible" content="IE=8" >
+		<meta name="keywords" content="groupware messaging collaboration" >
+		<link href="static/styles/webcit.css" rel="stylesheet" type="text/css">
+		<link href="static/styles/datepicker.css" rel="stylesheet" type="text/css">
+		<link href="static/styles/fineuploader.css" rel="stylesheet" type="text/css">
+		<?THISROOM:FEED:RSSMETA>
+
+		<link href="do_template?template=iconbar_user" rel="stylesheet" type="text/css">
+		<link href="static/styles/iconbaricns.css" rel="<?%("COND:ICONBAR:ACTIVE", 1, 0, #"ib_displayas", "", "alternate ")>stylesheet" type="text/css" id="style_iconbar_icns" title="Default iconbar">
+		<link href="static/styles/iconbarpiconly.css" rel="<?%("COND:ICONBAR:ACTIVE", 1, 1, #"ib_displayas", "","alternate ")>stylesheet" type="text/css" id="style_iconbar_piconly" title="Iconbar without text">
+		<?CSSLOCAL>
+		<!--[if lte IE 8]>
+			<style type="text/css">@import url(static/styles/ie_lte8.css);</style>
+		<![endif]-->
+		<script type="text/javascript" src="static/prototype.js"></script> 
+		<script type="text/javascript" src="static/scriptaculous.js"></script> 
+		<script type="text/javascript" src="static/datepicker-dev.js"></script>
+		<script type="text/javascript" src="static/wcpref.js"></script>
+		<script type="text/javascript" src="static/table.js"></script>
+		<script type="text/javascript" src="static/wclib.js"></script>
+		<script type="text/javascript" src="static/authmethods.js"></script>
+		<script type="text/javascript" src="static/roomops.js"></script>
+		<script type="text/javascript" src="static/ctdldragdrop.js"></script>
+		<script type="text/javascript" src="static/modal.js"></script>
+		<script type="text/javascript" src="static/fineuploader.js"></script>
+
+	</head>
+<body>
+<div id="is_logged_in" style="display:none"><?%("COND:LOGGEDIN", 1, 1, 1, "no", "yes")></div>
+<!-- begin modal box -->
+<div id="modal">
+	<div class="md-overlay-decorator">
+	</div>
+	<div class="md-overlay-wrap">
+		<div class="md-overlay">
+			<div class="md-dialog-decorator">
+			</div>
+			<div class="md-dialog-wrap">
+				<div class="md-dialog" id="dialog">
+					<div class="md-content" id="md-content">
+					  <?!("COND:LOGGEDIN", 1)><?=("get_logged_in")><??("X", 1)>
+						<!-- contents of modal box go here -->
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+<!-- end modal box -->
+<?ICONBAR>
+<div id="global">
+<!--("end head.html")-->

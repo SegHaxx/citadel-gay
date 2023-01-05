@@ -1,0 +1,30 @@
+<?=("head")><?%("COND:LOGGEDIN", 1, 1, 1, "", ="paging")>
+
+<div id="banner">
+        <h1><?_("Add/change/delete floors")></h1>
+</div>
+
+<div id="content" class="service">
+	<table border="1" width="100%" bgcolor="#ffffff">
+		<tr>
+			<th><?_("Floor number")></th>
+			<th><?_("Floor name")></th>
+			<th><?_("Number of rooms")></th>
+			<th><?_("Floor CSS")></th>
+		</tr>
+
+		<?ITERATE("LFLR", ="floors_edit_one")>
+
+		<tr>
+			<td>&nbsp;</td>
+			<td>
+				<form method="post" action="create_floor">
+					<input type="hidden" name="nonce" value="<?NONCE>">
+					<input type="text" name="floorname" maxlength="250">
+					<input type="submit" name="sc" value="<?_("Create new floor")>">
+				</form>
+			</td>
+			<td>&nbsp;</td>
+		</tr>
+	</table>
+<?=("trailing")>
