@@ -1,18 +1,11 @@
-/*
- * Bring external RSS and/or Atom feeds into rooms.  This module implements a
- * very loose parser that scrapes both kinds of feeds and is not picky about
- * the standards compliance of the source data.
- *
- * Copyright (c) 2007-2022 by the citadel.org team
- *
- * This program is open source software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License version 3.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- */
+// Bring external RSS and/or Atom feeds into rooms.  This module implements a
+// very loose parser that scrapes both kinds of feeds and is not picky about
+// the standards compliance of the source data.
+//
+// Copyright (c) 2007-2023 by the citadel.org team
+//
+// This program is open source software.  Use, duplication, or disclosure
+// is subject to the terms of the GNU General Public License, version 3.
 
 #include <stdlib.h>
 #include <unistd.h>
@@ -65,7 +58,6 @@ struct rssurl *rsstodo = NULL;
 
 
 // This handler is called whenever an XML tag opens.
-//
 void rss_start_element(void *data, const char *el, const char **attribute) {
 	struct rssparser *r = (struct rssparser *)data;
 	int i;
@@ -104,7 +96,6 @@ void rss_start_element(void *data, const char *el, const char **attribute) {
 
 
 // This handler is called whenever an XML tag closes.
-//
 void rss_end_element(void *data, const char *el) {
 	struct rssparser *r = (struct rssparser *)data;
 	StrBuf *encoded_field;
@@ -274,9 +265,7 @@ void rss_end_element(void *data, const char *el) {
 
 
 // This handler is called whenever data appears between opening and closing tags.
-//
-void rss_handle_data(void *data, const char *content, int length)
-{
+void rss_handle_data(void *data, const char *content, int length) {
 	struct rssparser *r = (struct rssparser *)data;
 
 	if (r->CData == NULL) {
@@ -288,9 +277,7 @@ void rss_handle_data(void *data, const char *content, int length)
 
 
 // Feed has been downloaded, now parse it.
-//
-void rss_parse_feed(StrBuf *Feed, struct rssroom *rooms)
-{
+void rss_parse_feed(StrBuf *Feed, struct rssroom *rooms) {
 	struct rssparser r;
 
 	memset(&r, 0, sizeof r);
@@ -305,9 +292,7 @@ void rss_parse_feed(StrBuf *Feed, struct rssroom *rooms)
 
 
 // Add a feed/room pair into the todo list
-//
-void rssclient_push_todo(char *rssurl, char *roomname)
-{
+void rssclient_push_todo(char *rssurl, char *roomname) {
 	struct rssurl *r = NULL;
 	struct rssurl *thisone = NULL;
 	struct rssroom *newroom = NULL;
@@ -336,9 +321,7 @@ void rssclient_push_todo(char *rssurl, char *roomname)
 
 
 // pull one feed (possibly multiple rooms)
-//
-void rss_pull_one_feed(struct rssurl *url)
-{
+void rss_pull_one_feed(struct rssurl *url) {
 	CURL *curl;
 	CURLcode res;
 	StrBuf *Downloaded = NULL;
@@ -371,9 +354,7 @@ void rss_pull_one_feed(struct rssurl *url)
 
 
 // We have a list, now download the feeds
-//
-void rss_pull_feeds(void)
-{
+void rss_pull_feeds(void) {
 	struct rssurl *r;
 	struct rssroom *rr;
 
@@ -394,9 +375,7 @@ void rss_pull_feeds(void)
 
 
 // Scan a room's netconfig looking for RSS feed parsing requests
-//
-void rssclient_scan_room(struct ctdlroom *qrbuf, void *data)
-{
+void rssclient_scan_room(struct ctdlroom *qrbuf, void *data) {
 	char *serialized_config = NULL;
 	int num_configs = 0;
 	char cfgline[SIZ];
@@ -426,13 +405,11 @@ void rssclient_scan_room(struct ctdlroom *qrbuf, void *data)
 }
 
 
-/*
- * Scan for rooms that have RSS client requests configured
- */
+// Scan for rooms that have RSS client requests configured
 void rssclient_scan(void) {
 	time_t now = time(NULL);
 
-	/* Run no more than once every 15 minutes. */
+	// Run no more than once every 15 minutes.
 	if ((now - last_run) < 900) {
 		syslog(LOG_DEBUG,
 			"rssclient: polling interval not yet reached; last run was %ldm%lds ago",
