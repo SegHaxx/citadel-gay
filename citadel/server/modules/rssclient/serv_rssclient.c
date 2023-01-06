@@ -126,37 +126,38 @@ void rss_end_element(void *data, const char *el) {
 			if (already_seen == 0) {
 
 				// Compose the message text
+				// FIXME ajc 2023jan06 - this can create lines longer than 1024 characters which chokes the client message parsers
 				StrBuf *TheMessage = NewStrBuf();
 				StrBufAppendPrintf(TheMessage,
 					"Content-type: text/html\n\n"
 					"\n\n"
 					"<html><head></head><body>"
 				);
-		
+
 				if (r->description != NULL) {
 					StrBufAppendPrintf(TheMessage, "%s<br><br>\r\n", r->description);
 					free(r->description);
 					r->description = NULL;
 				}
-		
+
 				if (r->link != NULL) {
 					StrBufAppendPrintf(TheMessage, "<a href=\"%s\">%s</a>\r\n", r->link, r->link);
 					free(r->link);
 					r->link = NULL;
 				}
-	
+
 				StrBufAppendPrintf(TheMessage, "</body></html>\r\n");
 				CM_SetField(r->msg, eMesageText, ChrPtr(TheMessage), StrLength(TheMessage));
 				FreeStrBuf(&TheMessage);
-	
+
 				if (CM_IsEmpty(r->msg, eAuthor)) {
 					CM_SetField(r->msg, eAuthor, HKEY("rss"));
 				}
-	
+
 				if (CM_IsEmpty(r->msg, eTimestamp)) {
 					CM_SetFieldLONG(r->msg, eTimestamp, time(NULL));
 				}
-	
+
 				// Save it to the room(s)
 				struct rssroom *rr = NULL;
 				long msgnum = (-1);
@@ -173,7 +174,7 @@ void rss_end_element(void *data, const char *el) {
 			else {
 				syslog(LOG_DEBUG, "rssclient: already seen %s", r->item_id);
 			}
-	
+
 			CM_Free(r->msg);
 			r->msg = NULL;
 		}

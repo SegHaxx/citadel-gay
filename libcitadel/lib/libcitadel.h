@@ -320,7 +320,7 @@ int StrBufDecodeBase64(StrBuf *Buf);
 void StrBufDecodeQP(StrBuf *Buf);
 int StrBufDecodeBase64To(const StrBuf *BufIn, StrBuf *BufOut);
 int StrBufDecodeHex(StrBuf *Buf);
-StrBuf *StrBufRFC2047encodeMessage(const StrBuf *EncodeMe);
+StrBuf *StrBufQuotedPrintableEncode(const StrBuf *EncodeMe);
 int StrBufRFC2047encode(StrBuf **target, const StrBuf *source);
 StrBuf *StrBufSanitizeEmailRecipientVector(const StrBuf *Recp, 
 					   StrBuf *UserName, 

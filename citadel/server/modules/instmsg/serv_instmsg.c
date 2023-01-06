@@ -428,7 +428,7 @@ void flush_individual_conversation(struct imlog *im) {
 		), 0
 	);
 
-	MsgBuf = StrBufRFC2047encodeMessage(im->conversation);
+	MsgBuf = StrBufQuotedPrintableEncode(im->conversation);
 	FlushStrBuf(im->conversation);
 	FullMsgBuf = NewStrBufPlain(NULL, StrLength(im->conversation) + 100);
 

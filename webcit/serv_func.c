@@ -380,7 +380,7 @@ void text_to_server(char *ptr) {
 void text_to_server_qp(const StrBuf *SendMeEncoded) {
 	StrBuf *ServBuf;
 
-	ServBuf = StrBufRFC2047encodeMessage(SendMeEncoded);
+	ServBuf = StrBufQuotedPrintableEncode(SendMeEncoded);
 	serv_putbuf(ServBuf);
 	FreeStrBuf(&ServBuf);
 }

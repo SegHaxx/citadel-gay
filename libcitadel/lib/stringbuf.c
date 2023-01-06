@@ -1,4 +1,4 @@
-// Copyright (c) 1987-2022 by the citadel.org team
+// Copyright (c) 1987-2023 by the citadel.org team
 //
 // This program is open source software.  Use, duplication, or disclosure
 // is subject to the terms of the GNU General Public License, version 3.
@@ -33,8 +33,7 @@
 
 #ifdef HAVE_ZLIB
 #include <zlib.h>
-int ZEXPORT compress_gzip(Bytef * dest, size_t * destLen,
-                          const Bytef * source, uLong sourceLen, int level);
+int ZEXPORT compress_gzip(Bytef * dest, size_t * destLen, const Bytef * source, uLong sourceLen, int level);
 #endif
 int BaseStrBufSize = 64;
 int EnableSplice = 0;
@@ -3097,13 +3096,10 @@ int StrBufRFC2047encode(StrBuf **target, const StrBuf *source)
 	return (*target)->BufUsed;;
 }
 
-/**
- * 	Quoted-Printable encode a message; make it < 80 columns width.
- * 	source		Source string to be encoded.
- * @returns     buffer with encoded message.
- */
-StrBuf *StrBufRFC2047encodeMessage(const StrBuf *EncodeMe)
-{
+// Quoted-Printable encode a message; make it < 80 columns width.
+// source	Source string to be encoded.
+// returns	buffer with encoded message.
+StrBuf *StrBufQuotedPrintableEncode(const StrBuf *EncodeMe) {
 	StrBuf *OutBuf;
 	char *Optr, *OEptr;
 	const char *ptr, *eptr;
@@ -3117,10 +3113,8 @@ StrBuf *StrBufRFC2047encodeMessage(const StrBuf *EncodeMe)
 	eptr = EncodeMe->buf + EncodeMe->BufUsed;
 	LinePos = 0;
 
-	while (ptr < eptr)
-	{
-		if (Optr + 4 >= OEptr)
-		{
+	while (ptr < eptr) {
+		if (Optr + 4 >= OEptr) {
 			long Offset;
 			Offset = Optr - OutBuf->buf;
 			OutBuf->BufUsed = Optr - OutBuf->buf;
@@ -3128,21 +3122,16 @@ StrBuf *StrBufRFC2047encodeMessage(const StrBuf *EncodeMe)
 			Optr = OutBuf->buf + Offset;
 			OEptr = OutBuf->buf + OutBuf->BufSize;
 		}
-		if (*ptr == '\r')
-		{
-			/* ignore carriage returns */
+		if (*ptr == '\r') {		// ignore carriage returns
 			ptr ++;
 		}
-		else if (*ptr == '\n') {
-			/* hard line break */
+		else if (*ptr == '\n') {	// hard line break
 			memcpy(Optr, HKEY("=0A"));
 			Optr += 3;
 			LinePos += 3;
 			ptr ++;
 		}
-		else if (( (*ptr >= 32) && (*ptr <= 60) ) ||
-			 ( (*ptr >= 62) && (*ptr <= 126) ))
-		{
+		else if (( (*ptr >= 32) && (*ptr <= 60) ) || ( (*ptr >= 62) && (*ptr <= 126) )) {
 			*Optr = *ptr;
 			Optr ++;
 			ptr ++;
@@ -3160,8 +3149,7 @@ StrBuf *StrBufRFC2047encodeMessage(const StrBuf *EncodeMe)
 			ptr ++;
 		}
 
-		if (LinePos > 72) {
-			/* soft line break */
+		if (LinePos > 72) {		// soft line break
 			if (isspace(*(Optr - 1))) {
 				ch = *(Optr - 1);
 				Optr --;
@@ -3187,11 +3175,7 @@ StrBuf *StrBufRFC2047encodeMessage(const StrBuf *EncodeMe)
 }
 
 
-static void AddRecipient(StrBuf *Target, 
-			 StrBuf *UserName, 
-			 StrBuf *EmailAddress, 
-			 StrBuf *EncBuf)
-{
+static void AddRecipient(StrBuf *Target, StrBuf *UserName, StrBuf *EmailAddress, StrBuf *EncBuf) {
 	int QuoteMe = 0;
 
 	if (StrLength(Target) > 0) StrBufAppendBufPlain(Target, HKEY(", "), 0);
@@ -3219,11 +3203,7 @@ static void AddRecipient(StrBuf *Target,
  * \param EncBuf Temporary buffer for internal use; Please provide valid buffer.
  * \returns encoded & sanitized buffer with the contents of Recp; Caller owns this memory.
  */
-StrBuf *StrBufSanitizeEmailRecipientVector(const StrBuf *Recp, 
-					   StrBuf *UserName, 
-					   StrBuf *EmailAddress,
-					   StrBuf *EncBuf)
-{
+StrBuf *StrBufSanitizeEmailRecipientVector(const StrBuf *Recp, StrBuf *UserName, StrBuf *EmailAddress, StrBuf *EncBuf) {
 	StrBuf *Target;
 	const char *pch, *pche;
 	const char *UserStart, *UserEnd, *EmailStart, *EmailEnd, *At;
@@ -3362,8 +3342,7 @@ StrBuf *StrBufSanitizeEmailRecipientVector(const StrBuf *Recp,
  *  search character to search
  *  replace character to replace search by
  */
-void StrBufReplaceChars(StrBuf *buf, char search, char replace)
-{
+void StrBufReplaceChars(StrBuf *buf, char search, char replace) {
 	long i;
 	if (buf == NULL)
 		return;
