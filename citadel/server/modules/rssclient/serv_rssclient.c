@@ -126,13 +126,9 @@ void rss_end_element(void *data, const char *el) {
 			if (already_seen == 0) {
 
 				// Compose the message text
-				// FIXME ajc 2023jan06 - this can create lines longer than 1024 characters which chokes the client message parsers
+
 				StrBuf *TheMessage = NewStrBuf();
-				StrBufAppendPrintf(TheMessage,
-					"Content-type: text/html\n\n"
-					"\n\n"
-					"<html><head></head><body>"
-				);
+				StrBufAppendPrintf(TheMessage, "<html><head></head><body>");
 
 				if (r->description != NULL) {
 					StrBufAppendPrintf(TheMessage, "%s<br><br>\r\n", r->description);
@@ -147,6 +143,21 @@ void rss_end_element(void *data, const char *el) {
 				}
 
 				StrBufAppendPrintf(TheMessage, "</body></html>\r\n");
+
+				// Quoted-Printable encode the HTML message, because RSS and Atom make no guarantee of line length limits.
+				StrBuf *TheMessage_Encoded = StrBufQuotedPrintableEncode(TheMessage);
+
+				// Now we reuse TheMessage -- this time it will contain the MIME headers concatenated with the encoded message.
+				FlushStrBuf(TheMessage);
+				StrBufAppendBufPlain(TheMessage, HKEY(
+					"Content-type: text/html; charset=UTF-8\r\n"
+					"Content-Transfer-Encoding: quoted-printable\r\n"
+					"\r\n"
+					), 0
+				);
+				StrBufAppendBuf(TheMessage, TheMessage_Encoded, 0);
+				FreeStrBuf(&TheMessage_Encoded);
+
 				CM_SetField(r->msg, eMesageText, ChrPtr(TheMessage), StrLength(TheMessage));
 				FreeStrBuf(&TheMessage);
 
