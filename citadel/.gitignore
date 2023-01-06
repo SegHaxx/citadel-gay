@@ -22,6 +22,7 @@ userlist
 gmon.out
 citadel.config
 citadel.control
+citadel.lock
 citadel.pid
 refcount_adjustments.dat
 keys
