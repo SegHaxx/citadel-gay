@@ -77,14 +77,15 @@ function update_banner() {
 	else {
 		document.getElementById("ctdl_banner_title").innerHTML = serv_info.serv_humannode;
 	}
+
+	document.getElementById("current_user_avatar").innerHTML = render_userpic(current_user);
 	document.getElementById("current_user").innerHTML = current_user ;
+
 	if (logged_in) {
 		document.getElementById("lilo").innerHTML = "<a href=\"/ctdl/a/logout\"><i class=\"fa fa-right-from-bracket\"></i>" + _("Log off") + "</a>" ;
-		document.getElementById("current_user_avatar").innerHTML = render_userpic(current_user);
 	}
 	else {
 		document.getElementById("lilo").innerHTML = "<a href=\"javascript:display_login_screen('')\"><i class=\"fa fa-right-to-bracket\"></i>" + _("Log in") + "</a>" ;
-		document.getElementById("current_user_avatar").innerHTML = "<i class=\"fa fa-user-circle fa-3x\"></i>";
 	}
 }
 
