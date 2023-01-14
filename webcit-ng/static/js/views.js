@@ -40,7 +40,7 @@ function render_room_view() {
 		case views.VIEW_MAILBOX:
 		case views.VIEW_DRAFTS:
 			document.getElementById("ctdl-sidebar-button-mail").classList.add("ctdl-sidebar-button-selected");
-			document.getElementById("ctdl_mail_folder_list").style.display = "block";	// show folder list
+			display_mail_folder_list("ctdl_mail_folder_list");
 			view_render_mail();
 			break;
 
