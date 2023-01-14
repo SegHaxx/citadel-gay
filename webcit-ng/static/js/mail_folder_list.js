@@ -33,11 +33,26 @@ function display_mail_folder_list(target_div) {
 
 // Given a JSON object containing the output of the `/ctdl/r` API call, return a rendered mail folder list.
 function render_mail_folder_list(roomlist_json) {
-	let rendered_list = "";
 
+	// Sort first by floor then by room order
+	roomlist_json.sort(function(a, b) {
+		if (a.floor > b.floor) return 1;
+		if (a.floor < b.floor) return -1;
+		if (a.rorder > b.rorder) return 1;
+		if (a.rorder < b.rorder) return -1;
+		return 0;
+	});
+
+	// Turn it into displayable markup
+	let rendered_list = "";
+	rendered_list += "<ul>";
 	for (let i=0; i<roomlist_json.length; ++i) {
-		rendered_list += roomlist_json[i].name + "<br>";
+		if (roomlist_json[i].current_view == views.VIEW_MAILBOX) {
+			rendered_list += "<li>";
+			rendered_list += ( (roomlist_json[i].name == "Mail") ? _("INBOX") : escapeHTML(roomlist_json[i].name));
+		}
 	}
+	rendered_list += "</ul>";
 
 	return rendered_list;
 }

@@ -56,7 +56,7 @@ function escapeHTML(text) {
 }
 
 
-// string escape for html display
+// string escape for html display FIXME can this be replaced with encodeURI() from the standard library?
 function escapeHTMLURI(text) {
 	'use strict';
 	return text.replace(/./g, function (a) {
@@ -66,7 +66,6 @@ function escapeHTMLURI(text) {
 
 
 // string escape for JavaScript string
-//
 function escapeJS(text) {
 	'use strict';
 	return text.replace(/[\"\']/g, function (a) {
