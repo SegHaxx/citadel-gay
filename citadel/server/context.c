@@ -1,8 +1,7 @@
-//
 // Citadel context management stuff.
 // Here's where we (hopefully) have all the code that manipulates contexts.
 //
-// Copyright (c) 1987-2022 by the citadel.org team
+// Copyright (c) 1987-2023 by the citadel.org team
 //
 // This program is open source software.  Use, duplication, or disclosure
 // is subject to the terms of the GNU General Public License, version 3.
@@ -248,10 +247,8 @@ void terminate_all_sessions(void) {
 }
 
 
-/*
- * Terminate a session.
- */
-void RemoveContext (CitContext *con) {
+// Terminate a session.
+void RemoveContext(CitContext *con) {
 	const char *c;
 	if (con == NULL) {
 		syslog(LOG_ERR, "context: RemoveContext() called with NULL, this should not happen");
@@ -259,30 +256,18 @@ void RemoveContext (CitContext *con) {
 	}
 	c = con->ServiceName;
 	if (c == NULL) {
-		c = "WTF?";
+		c = "(unknown)";
 	}
 	syslog(LOG_DEBUG, "context: RemoveContext(%s) session %d", c, con->cs_pid);
 
-	/* Run any cleanup routines registered by loadable modules.
-	 * Note: We have to "become_session()" because the cleanup functions
-	 *       might make references to "CC" assuming it's the right one.
-	 */
+	// Run any cleanup routines registered by loadable modules.
+	// Note: We have to "become_session()" because the cleanup functions might make references to "CC" assuming it's the right one.
 	become_session(con);
 	CtdlUserLogout();
-	PerformSessionHooks(EVT_STOP);
-	client_close();				/* If the client is still connected, blow 'em away. */
+	PerformSessionHooks(EVT_STOP);		// hooks may free some data structures, close SSL, etc.
+	client_close();				// If the client is still connected, disconnect them immediately.
 	become_session(NULL);
-
-	syslog(LOG_INFO, "context: [%3d]SRV[%s] Session ended.", con->cs_pid, c);
-
-	/* 
-	 * If the client is still connected, blow 'em away. 
-	 * if the socket is 0 or -1, its already gone or was never there.
-	 */
-	if (con->client_socket > 0) {
-		syslog(LOG_INFO, "context: closing socket %d", con->client_socket);
-		close(con->client_socket);
-	}
+	syslog(LOG_INFO, "context: session %d (%s) ended.", con->cs_pid, c);
 
 	/* If using AUTHMODE_LDAP, free the DN */
 	if (con->ldap_dn) {
