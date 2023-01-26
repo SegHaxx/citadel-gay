@@ -330,7 +330,7 @@ function open_reply_box(parent_div, is_quoted, references, msgid) {
 	+ "<span id=\"ctdl-replyreferences\" style=\"display:none\">"	// hidden field for references
 	+ compose_references(references,msgid) + "</span>"
 									// begin body
-	+ "<div class=\"ctdl-msg-body\" id=\"ctdl-editor-body\" style=\"padding:5px;\" contenteditable=\"true\">"
+	+ "<div class=\"ctdl-msg-body ctdl-forum-editor-body\" id=\"ctdl-editor-body\" contenteditable=\"true\">"
 	+ "\n";								// empty initial content
 
 	if (is_quoted) {
