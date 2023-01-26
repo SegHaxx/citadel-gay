@@ -109,3 +109,16 @@ function entmsg_dispatcher() {
 	}
 }
 
+
+// This gets called when the user clicks the "delete" button etc.
+function delete_dispatcher() {
+	switch(current_view) {
+		case views.VIEW_MAILBOX:
+			mail_delete_selected();
+			break;
+		default:
+			break;
+	}
+}
+
+

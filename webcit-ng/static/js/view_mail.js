@@ -265,7 +265,7 @@ function view_render_mail() {
 	let d = document.getElementById("ctdl-delete-button");
 	d.innerHTML = "<i class=\"fa fa-trash\"></i>" + _("Delete");
 	d.style.display = "block";
-	d.addEventListener("click", mail_delete_selected);
+	//d.addEventListener("click", mail_delete_selected);
 
 	document.getElementById("ctdl-main").innerHTML
 		= "<div id=\"ctdl-mailbox-grid-container\" class=\"ctdl-mailbox-grid-container\">"
