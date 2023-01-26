@@ -38,6 +38,8 @@ function render_mail_folder_list(roomlist_json) {
 	roomlist_json.sort(function(a, b) {
 		if (a.floor > b.floor) return 1;
 		if (a.floor < b.floor) return -1;
+		if (a.name == "Mail") return -1;
+		if (b.name == "Mail") return 1;
 		if (a.rorder > b.rorder) return 1;
 		if (a.rorder < b.rorder) return -1;
 		return 0;
