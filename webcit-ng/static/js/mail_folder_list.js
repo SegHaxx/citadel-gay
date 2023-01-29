@@ -47,14 +47,16 @@ function render_mail_folder_list(roomlist_json) {
 
 	// Turn it into displayable markup
 	let rendered_list = "";
-	rendered_list += "<ul>";
+	rendered_list += "<ul class=\"ctdl_mail_folders\">\n";
 	for (let i=0; i<roomlist_json.length; ++i) {
 		if (roomlist_json[i].current_view == views.VIEW_MAILBOX) {
-			rendered_list += "<li>";
-			rendered_list += ( (roomlist_json[i].name == "Mail") ? _("INBOX") : escapeHTML(roomlist_json[i].name));
+			rendered_list += "<li onClick=\"gotoroom('" + roomlist_json[i].name + "');\">";
+			rendered_list += ((roomlist_json[i].name == "Mail") ? _("INBOX") : escapeHTML(roomlist_json[i].name));
+			rendered_list += "</li>\n";
 		}
 	}
 	rendered_list += "</ul>";
+	console.log(rendered_list);
 
 	return rendered_list;
 }

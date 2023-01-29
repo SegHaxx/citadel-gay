@@ -1,5 +1,5 @@
 /*
-	Copyright (c) 1996-2022 by Art Cancro and the citadel.org team.
+	Copyright (c) 1996-2023 by Art Cancro and the citadel.org team.
 	This program is open source software.  Use, duplication, or disclosure
 	are subject to the terms of the GNU General Public License, version 3.
 */
@@ -272,6 +272,14 @@ html,body,h1,h2,h3,h4,h5 {
 
 .ctdl-mmsg-content {				/* message text, when in mailbox view */
 	margin-left: 0;
+}
+
+.ctdl_mail_folders li {
+	color: DarkSlateGrey;
+}
+
+.ctdl_mail_folders li:hover {
+	color: Black;
 }
 
 .ctdl-avatar {
