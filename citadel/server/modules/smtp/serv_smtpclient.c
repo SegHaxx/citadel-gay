@@ -2,17 +2,10 @@
 //
 // This is the new, exciting, clever version that makes libcurl do all the work  :)
 //
-// Copyright (c) 1997-2022 by the citadel.org team
+// Copyright (c) 1997-2023 by the citadel.org team
 //
-// This program is open source software; you can redistribute it and/or
-// modify it under the terms of the GNU General Public License as published
-// by the Free Software Foundation; either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License for more details.
+// This program is open source software.  Use, duplication, or disclosure
+// is subject to the terms of the GNU General Public License, version 3.
 
 #include <stdlib.h>
 #include <unistd.h>
@@ -46,10 +39,6 @@ struct smtpmsgsrc {		// Data passed in and out of libcurl for message upload
 };
 
 static int doing_smtpclient = 0;
-long *smtpq = NULL;		// array of msgnums containing queue instructions
-int smtpq_count = 0;		// number of queue messages in smtpq
-int smtpq_alloc = 0;		// current allocation size for smtpq
-
 
 // Initialize the SMTP outbound queue
 void smtp_init_spoolout(void) {
@@ -508,19 +497,8 @@ void smtp_process_one_msg(long qmsgnum) {
 
 // Callback for smtp_do_queue()
 void smtp_add_msg(long msgnum, void *userdata) {
-
-	if (smtpq == NULL) {
-		smtpq_count = 0;
-		smtpq_alloc = 100;
-		smtpq = malloc(smtpq_alloc * sizeof(long));
-	}
-
-	if (smtpq_alloc >= smtpq_count) {
-		smtpq_alloc += 100;
-		smtpq = realloc(smtpq, (smtpq_alloc * sizeof(long)));
-	}
-
-	smtpq[smtpq_count++] = msgnum;
+	Array *smtp_queue = (Array *) userdata;
+	array_append(smtp_queue, &msgnum);
 }
 
 
@@ -540,19 +518,30 @@ void smtp_do_queue(void) {
 	syslog(LOG_DEBUG, "smtpclient: start queue run");
 
 	if (CtdlGetRoom(&CC->room, SMTP_SPOOLOUT_ROOM) != 0) {
-		syslog(LOG_WARNING, "Cannot find room <%s>", SMTP_SPOOLOUT_ROOM);
+		syslog(LOG_WARNING, "smtpclient: cannot find room <%s>", SMTP_SPOOLOUT_ROOM);
 		doing_smtpclient = 0;
 		return;
 	}
-	// Put the queue in memory so we can close the db cursor
-	CtdlForEachMessage(MSGS_ALL, 0L, NULL, SPOOLMIME, NULL, smtp_add_msg, NULL);
 
-	// We are ready to run through the queue now.
-	for (i = 0; i < smtpq_count; ++i) {
-		smtp_process_one_msg(smtpq[i]);
+	// This array will hold the list of queue instruction messages
+	Array *smtp_queue = array_new(sizeof(long));
+	if (smtp_queue == NULL) {
+		syslog(LOG_WARNING, "smtpclient: cannot allocate queue array");
+		doing_smtpclient = 0;
+		return;
 	}
 
-	smtpq_count = 0;	// don't free it, we will use this memory on the next run
+	// Put the queue in memory so we can close the db cursor
+	CtdlForEachMessage(MSGS_ALL, 0L, NULL, SPOOLMIME, NULL, smtp_add_msg, (void *)smtp_queue);
+
+	// We are ready to run through the queue now.
+	for (i = 0; i < array_len(smtp_queue); ++i) {
+		long m;
+		memcpy(&m, array_get_element_at(smtp_queue, i), sizeof(long));
+		smtp_process_one_msg(m);
+	}
+
+	array_free(smtp_queue);
 	doing_smtpclient = 0;
 	syslog(LOG_DEBUG, "smtpclient: end queue run");
 }
