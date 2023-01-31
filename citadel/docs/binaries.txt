@@ -3,18 +3,19 @@ BUILDING THE CITADEL SYSTEM WITH PRIVATE LIBRARIES
 --------------------------------------------------
 
 This method is known to work on Linux and FreeBSD systems.  It is a way of
-building the Citadel system with its own private copies of Berkeley DB and
-libical.  This avoids conflicts with any other version of these libraries
-which may already exist on your host system.
+building the Citadel system with its own private copy of Berkeley DB.  This
+avoids conflicts with any other version of these libraries which may already
+exist on your host system.
 
 You can perform your builds in any directory (such as /usr/src or even your
 home directory).  The target directories will be:
 
 * /usr/local/citadel           (Citadel server, text client, utilities)
 * /usr/local/webcit            (the WebCit front end)
-* /usr/local/ctdlsupport       (libical, libdb, and their headers, etc.)
+* /usr/local/ctdlsupport       (libdb, libcitadel, and their headers, etc.)
 
-The behavior of Easy Install is based upon this methodology.
+If you're running the containerized distribution of Citadel, or have done
+the Easy Install script, your installation is based on this methodology.
 
 1. Unpack the Berkeley DB tarball.  chdir to the "build_unix" directory
    and build the package with these commands:

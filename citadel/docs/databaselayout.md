@@ -21,29 +21,29 @@ This table contains all user records.  It's indexed by
 user name (translated to lower case for indexing purposes).  The records in
 this file look something like this:
 
-struct ctdluser {                       /* User record                      */
-        int version;                    /* Cit vers. which created this rec */
-        uid_t uid;                      /* Associate with a unix account?   */
-        char password[32];              /* password (for Citadel-only users)*/
-        unsigned flags;                 /* See US_ flags below              */
-        long timescalled;               /* Total number of logins           */
-        long posted;                    /* Number of messages posted (ever) */
-        CIT_UBYTE axlevel;              /* Access level                     */
-        long usernum;                   /* User number (never recycled)     */
-        time_t lastcall;                /* Last time the user called        */
-        int USuserpurge;                /* Purge time (in days) for user    */
-        char fullname[64];              /* Name for Citadel messages & mail */
-};
+    struct ctdluser {                   // User record
+        int version;                    // Citadel version. which created this record
+        uid_t uid;                      // Associate with a unix account?
+        char password[32];              // Account password (unless using external authentication)
+        unsigned flags;                 // See US_ flags below
+        long timescalled;               // Total number of logins
+        long posted;                    // Number of messages posted (ever)
+        CIT_UBYTE axlevel;              // Access level
+        long usernum;                   // User number (never recycled)
+        time_t lastcall;                // Last time the user called
+        int USuserpurge;                // Purge time (in days) for user
+        char fullname[64];              // Name for Citadel messages & mail
+    };
  
  Most fields here should be fairly self-explanatory.  The ones that might
 deserve some attention are:
 
- - *uid* -- if uid is not the same as the *unix uid* Citadel is running as, then the
+ - `uid` -- if uid is not the same as the *unix uid* Citadel is running as, then the
    account is assumed to belong to the user on the underlying Unix system with
    that uid.  This allows us to require the user's OS password instead of having
    a separate Citadel password.
  
- - *usernum* -- these are assigned sequentially, and **NEVER REUSED**. This is
+ - `usernum` -- these are assigned sequentially, and **NEVER REUSED**. This is
   important because it allows us to use this number in other data structures
   without having to worry about users being added/removed later on, as you'll
   see later in this document.
@@ -75,11 +75,11 @@ lower case for easy indexing) and it contains records which look like this:
 
 Again, mostly self-explanatory.  Here are the interesting ones:
  
-*QRnumber* is a globally unique room ID, while QRgen is the "generation number"
+`QRnumber` is a globally unique room ID, while `QRgen` is the "generation number"
 of the room (it's actually a timestamp).  The two combined produce a unique
 value which identifies the room.  The reason for two separate fields will be
 explained below when we discuss the visit table.  For now just remember that
-*QRnumber* remains the same for the duration of the room's existence, and QRgen
+`QRnumber` remains the same for the duration of the room's existence, and `QRgen`
 is timestamped once during room creation but may be restamped later on when
 certain circumstances exist.
 
@@ -90,7 +90,7 @@ to note that we keep a reference count of the number of rooms on each floor.
  
 MSGLISTS
 --------
-Each record in this table consists of a bunch of message  numbers
+Each record in this table consists of a bunch of message numbers
 which represent the contents of a room.  A message can exist in more than one
 room (for example, a mail message with multiple recipients -- 'single instance
 store').  This table is never, ever traversed in its entirety.  When you do
@@ -143,21 +143,21 @@ designed in such a way that an "all zeroes" record (which is what you get if
 the record isn't found) represents the default relationship.
  
 With this data, we now know which private rooms we're allowed to visit: if
-the *V_ACCESS* bit is set, the room is one which the user knows, and it may
+the `V_ACCESS` bit is set, the room is one which the user knows, and it may
 appear in his/her known rooms list.  Conversely, we also know which rooms the
-user has zapped: if the *V_FORGET* flag is set, we relegate the room to the
+user has zapped: if the `V_FORGET` flag is set, we relegate the room to the
 zapped list and don't bring it up during new message searches.  It's also
-worth noting that the *V_LOCKOUT* flag works in a similar way to administratively
+worth noting that the `V_LOCKOUT` flag works in a similar way to administratively
 lock users out of rooms.
  
 Implementing the "cause all users to forget room" command, then, becomes very
 simple: we simply change the generation number of the room by putting a new
-timestamp in the *QRgen* field.  This causes all relevant visit records to
+timestamp in the `QRgen` field.  This causes all relevant visit records to
 become irrelevant, because they appear to point to a different room.  At the
 same time, we don't lose the messages in the room, because the msglists table
-is indexed by the room number (*QRnumber*), which never changes.
+is indexed by the room number (`QRnumber`), which never changes.
  
-*v_seen* contains a string which represents the set of messages in this room
+`v_seen` contains a string which represents the set of messages in this room
 which the user has read (marked as 'seen' or 'old').  It follows the same
 syntax used by IMAP and NNTP.  When we search for new messages, we simply
 return any messages that are in the room that are **not** represented by this
@@ -191,12 +191,12 @@ message may exist in more than one room, it's important to keep this reference
 count up to date, and to delete the message from disk when the reference count
 reaches zero.
  
-#Here's the format for the message itself:
+# Here's the format for the message itself:
 
  - Each message begins with an 0xFF 'start of message' byte.
  
  - The next byte denotes whether this is an anonymous message.  The codes
-   available are *MES_NORMAL*, *MES_ANON*, or *MES_AN2* (defined in citadel.h).
+   available are `MES_NORMAL`, `MES_ANON`, or `MES_AN2` (defined in `citadel.h`).
  
  - The third byte is a "message type" code.  The following codes are defined:
   - 0 - "Traditional" Citadel format.  Message is to be displayed "formatted."
@@ -216,80 +216,80 @@ reaches zero.
    all software should be written to IGNORE fields not currently defined.
 
 
-#The type bytes currently defined are:
+# The type bytes currently defined are:
 
 
-| BYTE  |       Enum        | NW   | Mnemonic       |  Enum / Comments
-|-------|-------------------|------|----------------|---------------------------------------------------------
-| A     |    eAuthor        | from | Author         |  The display name of the Author of the message.
-| B     |    eBig_message   |      | Big message    |  This is a flag which indicates that the message is
-|       |                   |      |                |  big, and Citadel is storing the body in a separate
-|       |                   |      |                |  record.  You will never see this field because the
-|       |                   |      |                |  internal API handles it.
-| E     |    eExclusiveID   | exti | Exclusive ID   |  A persistent alphanumeric Message ID used for
-|       |                   |      |                |  replication control.  When a message arrives that
-|       |                   |      |                |  contains an Exclusive ID, any existing messages which
-|       |                   |      |                |  contain the same Exclusive ID and are *older* than this
-|       |                   |      |                |  message should be deleted.  If there exist any messages
-|       |                   |      |                |  with the same Exclusive ID that are *newer*, then this
-|       |                   |      |                |  message should be dropped.
-| F     |    erFc822Addr    | rfca | rFc822 address |  email address or user principal name of the message
-|       |                   |      |                |  author.
-| I     |    emessageId     | msgn | Message ID     |  An RFC822-compatible message ID for this message.
-|       |                   |      |                |  
-| J     |    eJournal       | jrnl | Journal        |  The presence of this field indicates that the message
-|       |                   |      |                |  is disqualified from being journaled, perhaps because
-|       |                   |      |                |  it is itself a journalized message and we wish to
-|       |                   |      |                |  avoid double journaling.
-| K     |    eReplyTo       | rep2 | Reply-To       |  the Reply-To header for mailinglist outbound messages
-| L     |    eListID        | list | List-ID        |  Mailing list identification, as per RFC 2919
-| M     |    eMesageText    | text | Message Text   |  Normal ASCII, newlines seperated by CR's or LF's,
-|       |                   |      |                |  null terminated as always.
-| O     |    eOriginalRoom  | room | Room           |  Room of origin.
-| P     |    eMessagePath   | path | Path           |  Complete path of message, as in the UseNet news
-|       |                   |      |                |  standard.  A user should be able to send Internet mail
-|       |                   |      |                |  to this path. (Note that your system name will not be
-|       |                   |      |                |  tacked onto this until you're sending the message to
-|       |                   |      |                |  someone else)
-| R     |    eRecipient     | rcpt | Recipient      |  Only present in Mail messages.
-| T     |    eTimestamp     | time | date/Time      |  Unix timestamp containing the creation date/time of
-|       |                   |      |                |  the message.
-| U     |    eMsgSubject    | subj | sUbject        |  Message subject.  Optional.
-|       |                   |      |                |  Developers may choose whether they wish to
-|       |                   |      |                |  generate or display subject fields.
-| V     |    eenVelopeTo    | nvto | enVelope-to    |  The recipient specified in incoming SMTP messages.
-| W     |    eWeferences    | wefw | Wefewences     |  Previous message ID's for conversation threading.  When
-|       |                   |      |                |  converting from RFC822 we use References: if present, or
-|       |                   |      |                |  In-Reply-To: otherwise.
-|       |                   |      |                |  (Who in extnotify spool messages which don't need to know
-|       |                   |      |                |  other message ids)
-| Y     |    eCarbonCopY    | cccc | carbon copY    |  Carbon copy (CC) recipients.
-|       |                   |      |                |  Optional, and only in Mail messages.
-| %     |    eHeaderOnly    | nhdr | oNlyHeader     |  we will just be sending headers. for the Wire protocol only.
-| %     |    eFormatType    | type | type           |  type of citadel message: (Wire protocol only)
-|       |                   |      |                |     FMT\_CITADEL     0   Citadel vari-format (proprietary) 
-|       |                   |      |                |     FMT\_FIXED       1   Fixed format (proprietary)
-|       |                   |      |                |     FMT\_RFC822      4   Standard (headers are in M field)
-| %     |    eMessagePart   | part | emessagePart   |  eMessagePart is the id of this part in the mime hierachy
-| %     |	 eSubFolder     | suff | eSubFolder     |  descend into a mime sub container
-| %     | 	 ePevious       | pref | ePevious       |  exit a mime sub container
-| 0     |    eErrorMsg      |      | Error          |  This field is typically never found in a message on
-|       |                   |      |                |  disk or in transit.  Message scanning modules are
-|       |                   |      |                |  expected to fill in this field when rejecting a message
-|       |                   |      |                |  with an explanation as to what happened (virus found,
-|       |                   |      |                |  message looks like spam, etc.)
-| 1     |    eSuppressIdx   |      | suppress index |  The presence of this field indicates that the message is
-|       |                   |      |                |  disqualified from being added to the full text index.
-| 2     |    eExtnotify     |      | extnotify      |  Used internally by the serv_extnotify module.
-| 3     |    eVltMsgNum     |      | msgnum         |  Used internally to pass the local message number in the
-|       |                   |      |                |  database to after-save hooks.  Discarded afterwards.
-|       |                   | locl |                |  The presence of this field indicates that the message
-|       |                   |      |                |  is believed to have originated on the local Citadel node,
-|       |                   |      |                |  not as an inbound email or some other outside source.
+    | BYTE  |       Enum        | NW   | Mnemonic       |  Enum / Comments
+    |-------|-------------------|------|----------------|---------------------------------------------------------
+    | A     |    eAuthor        | from | Author         |  The display name of the Author of the message.
+    | B     |    eBig_message   |      | Big message    |  This is a flag which indicates that the message is
+    |       |                   |      |                |  big, and Citadel is storing the body in a separate
+    |       |                   |      |                |  record.  You will never see this field because the
+    |       |                   |      |                |  internal API handles it.
+    | E     |    eExclusiveID   | exti | Exclusive ID   |  A persistent alphanumeric Message ID used for
+    |       |                   |      |                |  replication control.  When a message arrives that
+    |       |                   |      |                |  contains an Exclusive ID, any existing messages which
+    |       |                   |      |                |  contain the same Exclusive ID and are *older* than this
+    |       |                   |      |                |  message should be deleted.  If there exist any messages
+    |       |                   |      |                |  with the same Exclusive ID that are *newer*, then this
+    |       |                   |      |                |  message should be dropped.
+    | F     |    erFc822Addr    | rfca | rFc822 address |  email address or user principal name of the message
+    |       |                   |      |                |  author.
+    | I     |    emessageId     | msgn | Message ID     |  An RFC822-compatible message ID for this message.
+    |       |                   |      |                |  
+    | J     |    eJournal       | jrnl | Journal        |  The presence of this field indicates that the message
+    |       |                   |      |                |  is disqualified from being journaled, perhaps because
+    |       |                   |      |                |  it is itself a journalized message and we wish to
+    |       |                   |      |                |  avoid double journaling.
+    | K     |    eReplyTo       | rep2 | Reply-To       |  the Reply-To header for mailinglist outbound messages
+    | L     |    eListID        | list | List-ID        |  Mailing list identification, as per RFC 2919
+    | M     |    eMesageText    | text | Message Text   |  Normal ASCII, newlines seperated by CR's or LF's,
+    |       |                   |      |                |  null terminated as always.
+    | O     |    eOriginalRoom  | room | Room           |  Room of origin.
+    | P     |    eMessagePath   | path | Path           |  Complete path of message, as in the UseNet news
+    |       |                   |      |                |  standard.  A user should be able to send Internet mail
+    |       |                   |      |                |  to this path. (Note that your system name will not be
+    |       |                   |      |                |  tacked onto this until you're sending the message to
+    |       |                   |      |                |  someone else)
+    | R     |    eRecipient     | rcpt | Recipient      |  Only present in Mail messages.
+    | T     |    eTimestamp     | time | date/Time      |  Unix timestamp containing the creation date/time of
+    |       |                   |      |                |  the message.
+    | U     |    eMsgSubject    | subj | sUbject        |  Message subject.  Optional.
+    |       |                   |      |                |  Developers may choose whether they wish to
+    |       |                   |      |                |  generate or display subject fields.
+    | V     |    eenVelopeTo    | nvto | enVelope-to    |  The recipient specified in incoming SMTP messages.
+    | W     |    eWeferences    | wefw | Wefewences     |  Previous message ID's for conversation threading.  When
+    |       |                   |      |                |  converting from RFC822 we use References: if present, or
+    |       |                   |      |                |  In-Reply-To: otherwise.
+    |       |                   |      |                |  (Who in extnotify spool messages which don't need to know
+    |       |                   |      |                |  other message ids)
+    | Y     |    eCarbonCopY    | cccc | carbon copY    |  Carbon copy (CC) recipients.
+    |       |                   |      |                |  Optional, and only in Mail messages.
+    | %     |    eHeaderOnly    | nhdr | oNlyHeader     |  we will just be sending headers. for the Wire protocol only.
+    | %     |    eFormatType    | type | type           |  type of citadel message: (Wire protocol only)
+    |       |                   |      |                |     FMT\_CITADEL     0   Citadel vari-format (proprietary) 
+    |       |                   |      |                |     FMT\_FIXED       1   Fixed format (proprietary)
+    |       |                   |      |                |     FMT\_RFC822      4   Standard (headers are in M field)
+    | %     |    eMessagePart   | part | emessagePart   |  eMessagePart is the id of this part in the mime hierachy
+    | %     |	 eSubFolder     | suff | eSubFolder     |  descend into a mime sub container
+    | %     | 	 ePevious       | pref | ePevious       |  exit a mime sub container
+    | 0     |    eErrorMsg      |      | Error          |  This field is typically never found in a message on
+    |       |                   |      |                |  disk or in transit.  Message scanning modules are
+    |       |                   |      |                |  expected to fill in this field when rejecting a message
+    |       |                   |      |                |  with an explanation as to what happened (virus found,
+    |       |                   |      |                |  message looks like spam, etc.)
+    | 1     |    eSuppressIdx   |      | suppress index |  The presence of this field indicates that the message is
+    |       |                   |      |                |  disqualified from being added to the full text index.
+    | 2     |    eExtnotify     |      | extnotify      |  Used internally by the serv_extnotify module.
+    | 3     |    eVltMsgNum     |      | msgnum         |  Used internally to pass the local message number in the
+    |       |                   |      |                |  database to after-save hooks.  Discarded afterwards.
+    |       |                   | locl |                |  The presence of this field indicates that the message
+    |       |                   |      |                |  is believed to have originated on the local Citadel node,
+    |       |                   |      |                |  not as an inbound email or some other outside source.
 
 EXAMPLE
 -------
-Let *<FF>* be a *0xFF* byte, and *<0>* be a null *(0x00)* byte.  Then a message
+Let `<FF>` be a `0xFF` byte, and `<0>` be a null `(0x00)` byte.  Then a message
 which prints as...
 
     Apr 12, 1988 23:16 From Test User In Network Test> @lifesys (Life Central)
@@ -314,7 +314,7 @@ EUID (EXCLUSIVE MESSAGE ID'S)
 -----------------------------
 This is where the groupware magic happens.  Any message in any room may have
 a field called the Exclusive message *ID*, or *EUID*.  We keep an index in the
-table *CDB_EUIDINDEX* which knows the message number of any item that has an
+table `CDB_EUIDINDEX` which knows the message number of any item that has an
 *EUID*.  This allows us to do two things:
  
  - If a subsequent message arrives with the same *EUID*, it automatically
@@ -376,7 +376,7 @@ please see network.txt on its operation and functionality (if any).
 
 PORTABILITY ISSUES
 ------------------
-Citadel is 64-bit clean and architecture-independent.  The software is
+Citadel is 32/64 bit clean and architecture-independent.  The software is
 developed and primarily run on the Linux operating system (which uses the
 Linux kernel) but it should compile and run on any reasonably POSIX
 compliant system.
@@ -389,18 +389,18 @@ SUPPORTING PRIVATE MAIL
 -----------------------
 Can one have an elegant kludge?  This must come pretty close.
 
-Private mail is sent and recieved in the *Mail>* room, which otherwise
+Private mail is sent and recieved in the `Mail>` room, which otherwise
 behaves pretty much as any other room.        To make this work, we have a
 separate Mail> room for each user behind the scenes.  The actual room name
-in the database looks like *"0000001234.Mail"* (where *'1234'* is the user
-number) and it's flagged with the *QR_MAILBOX* flag.  The user number is
+in the database looks like `0000001234.Mail` (where `1234` is the user
+number) and it's flagged with the `QR_MAILBOX` flag.  The user number is
 stripped off by the server before the name is presented to the client.  This
 provides the ability to give each user a separate namespace for mailboxes
 and personal rooms.
 
 This requires a little fiddling to get things just right. For example,
-*make_message()* has to be kludged to ask for the name of the recipient
-of the message whenever a message is entered in *Mail>*. But basically
+`make_message()` has to be kludged to ask for the name of the recipient
+of the message whenever a message is entered in `Mail>`. But basically
 it works pretty well, keeping the code and user interface simple and
 regular.
 

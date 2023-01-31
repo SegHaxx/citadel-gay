@@ -1,5 +1,4 @@
 
-
 Welcome to the Citadel system!
 
 Documentation is no longer included with the source code distribution;
