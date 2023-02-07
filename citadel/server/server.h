@@ -1,7 +1,7 @@
 /* 
  * Main declarations file for the Citadel server
  *
- * Copyright (c) 1987-2022 by the citadel.org team
+ * Copyright (c) 1987-2023 by the citadel.org team
  *
  * This program is open source software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 3.
@@ -137,22 +137,16 @@ enum {
 	S_FLOORTAB,
 	S_CHATQUEUE,
 	S_CONTROL,
-	S_NETDB,
 	S_SUPPMSGMAIN,
 	S_CONFIG,
 	S_HOUSEKEEPING,
-	S_DIRECTORY,
 	S_NETCONFIGS,
 	S_FLOORCACHE,
 	S_ATBF,
 	S_JOURNAL_QUEUE,
 	S_CHKPWD,
-	S_LOG,
-	S_NETSPOOL,
 	S_XMPP_QUEUE,
-	S_SCHEDULE_LIST,
 	S_SINGLE_USER,
-	S_LDAP,
 	S_IM_LOGS,
 	S_OPENSSL,
 	MAX_SEMAPHORES
