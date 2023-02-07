@@ -407,8 +407,7 @@ void smtp_process_one_msg(long qmsgnum) {
 			if (!strncasecmp(cfgline, HKEY("remote|"))) {
 				char recp[SIZ];
 				int previous_result = extract_int(cfgline, 2);
-				if ((previous_result == 0)
-				    || (previous_result == 4)) {
+				if ((previous_result == 0) || (previous_result == 4)) {
 					int new_result = 421;
 					extract_token(recp, cfgline, 1, '|', sizeof recp);
 					new_result = smtp_attempt_delivery(msgid, recp, envelope_from, source_room, server_response);
@@ -423,10 +422,7 @@ void smtp_process_one_msg(long qmsgnum) {
 						else {
 							++num_delayed;
 						}
-						StrBufAppendPrintf
-						    (NewInstr,
-						     "remote|%s|%ld|%ld (%s)\n",
-						     recp, (new_result / 100), new_result, server_response);
+						StrBufAppendPrintf(NewInstr, "remote|%s|%ld|%ld (%s)\n", recp, (new_result / 100), new_result, server_response);
 					}
 				}
 			}
@@ -457,8 +453,7 @@ void smtp_process_one_msg(long qmsgnum) {
 			delete_this_queue = 1;
 		}
 		// If it's been more than four hours but less than five days, warn the sender that delivery is delayed
-		else if (((attempted - submitted) < SMTP_DELIVER_WARN)
-			 && ((time(NULL) - submitted) >= SMTP_DELIVER_WARN)) {
+		else if (((attempted - submitted) < SMTP_DELIVER_WARN) && ((time(NULL) - submitted) >= SMTP_DELIVER_WARN)) {
 			smtp_do_bounce(ChrPtr(NewInstr), SDB_WARN);
 		}
 
