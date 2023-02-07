@@ -38,8 +38,6 @@ struct smtpmsgsrc {		// Data passed in and out of libcurl for message upload
 	int bytes_sent;
 };
 
-static int doing_smtpclient = 0;
-
 // Initialize the SMTP outbound queue
 void smtp_init_spoolout(void) {
 	struct ctdlroom qrbuf;
@@ -499,16 +497,17 @@ void smtp_add_msg(long msgnum, void *userdata) {
 
 // Run through the queue sending out messages.
 void smtp_do_queue(void) {
+	static int doing_smtpclient = 0;
 	int i = 0;
 
-	// This is a simple concurrency check to make sure only one smtpclient
-	// run is done at a time.  We could do this with a mutex, but since we
-	// don't really require extremely fine granularity here, we'll do it
-	// with a static variable instead.
+	// This is a concurrency check to make sure only one smtpclient run is done at a time.
+	begin_critical_section(S_SMTPQUEUE);
 	if (doing_smtpclient) {
+		end_critical_section(S_SMTPQUEUE);
 		return;
 	}
 	doing_smtpclient = 1;
+	end_critical_section(S_SMTPQUEUE);
 
 	syslog(LOG_DEBUG, "smtpclient: start queue run");
 
