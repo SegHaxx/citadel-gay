@@ -1,16 +1,9 @@
-/* 
- * Main declarations file for the Citadel server
- *
- * Copyright (c) 1987-2023 by the citadel.org team
- *
- * This program is open source software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License, version 3.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- */
+// Main declarations file for the Citadel server
+//
+// Copyright (c) 1987-2023 by the citadel.org team
+//
+// This program is open source software.  Use, duplication, or disclosure
+// is subject to the terms of the GNU General Public License, version 3.
 
 #ifndef SERVER_H
 #define SERVER_H
@@ -23,27 +16,25 @@
 
 #include "citadel.h"
 #ifdef HAVE_OPENSSL
-#define OPENSSL_NO_KRB5		/* work around redhat b0rken ssl headers */
+#define OPENSSL_NO_KRB5			// work around redhat b0rken ssl headers
 #include <openssl/ssl.h>
 #endif
 
-/*
- * New format for a message in memory
- */
+// New format for a message in memory
 struct CtdlMessage {
-	int cm_magic;			/* Self-check (NOT SAVED TO DISK) */
-	char cm_anon_type;		/* Anonymous or author-visible */
-	char cm_format_type;		/* Format type */
-	char *cm_fields[256];		/* Data fields */
-	long cm_lengths[256];		/* size of datafields */
-	unsigned int cm_flags;		/* How to handle (NOT SAVED TO DISK) */
+	int cm_magic;			// Self-check (NOT SAVED TO DISK)
+	char cm_anon_type;		// Anonymous or author-visible
+	char cm_format_type;		// Format type
+	char *cm_fields[256];		// Data fields
+	long cm_lengths[256];		// size of datafields
+	unsigned int cm_flags;		// How to handle (NOT SAVED TO DISK)
 };
 
 #define	CTDLMESSAGE_MAGIC		0x159d
-#define	CM_SKIP_HOOKS	0x01		/* Don't run server-side handlers */
+#define	CM_SKIP_HOOKS	0x01		// Don't run server-side handlers
 
 
-/* Data structure returned by validate_recipients() */
+// Data structure returned by validate_recipients()
 struct recptypes {
 	int recptypes_magic;
         int num_local;
@@ -65,11 +56,9 @@ struct recptypes {
 
 #define CTDLEXIT_SHUTDOWN	0	// Normal shutdown; do NOT auto-restart
 
-/*
- * Exit codes 101 through 109 are used for conditions in which
- * we deliberately do NOT want the service to automatically
- * restart.
- */
+// Exit codes 101 through 109 are used for conditions in which
+// we deliberately do NOT want the service to automatically
+// restart.
 #define CTDLEXIT_CONFIG		101	// Could not read system configuration
 #define CTDLEXIT_HOME		103	// Citadel home directory not found
 #define CTDLEXIT_DB		105	// Unable to initialize database
@@ -78,9 +67,7 @@ struct recptypes {
 #define CTDLEXIT_UNUSER		108	// Could not determine uid to run as
 #define CTDLEXIT_CRYPTO		109	// Problem initializing SSL or TLS
 
-/*
- * Reasons why a session would be terminated (set CC->kill_me to these values)
- */
+// Reasons why a session would be terminated (set CC->kill_me to these values)
 enum {
 	KILLME_NOT,
 	KILLME_UNKNOWN,
@@ -106,9 +93,9 @@ enum {
 };
 
 
-#define CS_STEALTH	1	/* stealth mode */
-#define CS_CHAT		2	/* chat mode */
-#define CS_POSTING	4	/* Posting */
+#define CS_STEALTH	1	// stealth mode
+#define CS_CHAT		2	// chat mode
+#define CS_POSTING	4	// posting
 
 extern int ScheduledShutdown;
 extern uid_t ctdluid;
@@ -116,20 +103,18 @@ extern int sanity_diag_mode;
 
 struct ExpressMessage {
 	struct ExpressMessage *next;
-	time_t timestamp;	/* When this message was sent */
-	unsigned flags;		/* Special instructions */
-	char sender[256];	/* Name of sending user */
-	char sender_email[256];	/* Email or JID of sending user */
-	char *text;		/* Message text (if applicable) */
+	time_t timestamp;	// When this message was sent
+	unsigned flags;		// Special instructions
+	char sender[256];	// Name of sending user
+	char sender_email[256];	// Email or JID of sending user
+	char *text;		// Message text (if applicable)
 };
 
-#define EM_BROADCAST	1	/* Broadcast message */
-#define EM_GO_AWAY	2	/* Server requests client log off */
-#define EM_CHAT		4	/* Server requests client enter chat */
+#define EM_BROADCAST	1	// Broadcast message
+#define EM_GO_AWAY	2	// Server requests client log off
+#define EM_CHAT		4	// Server requests client enter chat
 
-/*
- * Various things we need to lock and unlock
- */
+// Various things we need to lock and unlock
 enum {
 	S_USERS,
 	S_ROOMS,
@@ -154,44 +139,38 @@ enum {
 };
 
 
-/*
- * message transfer formats
- */
+// message transfer formats
 enum {
-	MT_CITADEL,		/* Citadel proprietary */
-	MT_RFC822,		/* RFC822 */
-	MT_MIME,		/* MIME-formatted message */
-	MT_DOWNLOAD,		/* Download a component */
-	MT_SPEW_SECTION		/* Download a component in a single operation */
+	MT_CITADEL,		// Citadel proprietary
+	MT_RFC822,		// RFC822
+	MT_MIME,		// MIME-formatted message
+	MT_DOWNLOAD,		// Download a component
+	MT_SPEW_SECTION		// Download a component in a single operation
 };
 
-/*
- * Message format types in the database
- */
-#define FMT_CITADEL	0	/* Citadel vari-format (proprietary) */
-#define FMT_FIXED	1	/* Fixed format (proprietary)        */
-#define FMT_RFC822	4	/* Standard (headers are in M field) */
+// Message format types in the database
+#define FMT_CITADEL	0	// Citadel vari-format (proprietary)
+#define FMT_FIXED	1	// Fixed format (proprietary)
+#define FMT_RFC822	4	// Standard (headers are in M field)
 
 
-/*
- * Citadel DataBases (define one for each cdb we need to open)
- */
+// citadel database tables (define one for each cdb we need to open)
 enum {
-	CDB_MSGMAIN,		/* message base                  */
-	CDB_USERS,		/* user file                     */
-	CDB_ROOMS,		/* room index                    */
-	CDB_FLOORTAB,		/* floor index                   */
-	CDB_MSGLISTS,		/* room message lists            */
-	CDB_VISIT,		/* user/room relationships       */
-	CDB_DIRECTORY,		/* address book directory        */
-	CDB_USETABLE,		/* network use table             */
-	CDB_BIGMSGS,		/* larger message bodies         */
-	CDB_FULLTEXT,		/* full text search index        */
-	CDB_EUIDINDEX,		/* locate msgs by EUID           */
-	CDB_USERSBYNUMBER,	/* index of users by number      */
-	CDB_EXTAUTH,		/* associates OpenIDs with users */
-	CDB_CONFIG,		/* system configuration database */
-	MAXCDB			/* total number of CDB's defined */
+	CDB_MSGMAIN,		// message base
+	CDB_USERS,		// user file
+	CDB_ROOMS,		// room index
+	CDB_FLOORTAB,		// floor index
+	CDB_MSGLISTS,		// room message lists
+	CDB_VISIT,		// user/room relationships
+	CDB_DIRECTORY,		// address book directory
+	CDB_USETABLE,		// network use table
+	CDB_BIGMSGS,		// larger message bodies
+	CDB_FULLTEXT,		// full text search index
+	CDB_EUIDINDEX,		// locate msgs by EUID
+	CDB_USERSBYNUMBER,	// index of users by number
+	CDB_EXTAUTH,		// associates OpenIDs with users
+	CDB_CONFIG,		// system configuration database
+	MAXCDB			// total number of CDB's defined
 };
 
 struct cdbdata {
@@ -237,7 +216,7 @@ enum {
 };
 
 
-/* Defines the relationship of a user to a particular room */
+// Defines the relationship of a user to a particular room
 typedef struct __visit {
 	long v_roomnum;
 	long v_roomgen;
@@ -249,9 +228,9 @@ typedef struct __visit {
 	int v_view;
 } visit;
 
-#define V_FORGET	1	/* User has zapped this room        */
-#define V_LOCKOUT	2	/* User is locked out of this room  */
-#define V_ACCESS	4	/* Access is granted to this room   */
+#define V_FORGET	1	// User has zapped this room
+#define V_LOCKOUT	2	// User is locked out of this room
+#define V_ACCESS	4	// Access is granted to this room
 
 
 /* Supplementary data for a message on disk
@@ -268,37 +247,30 @@ struct MetaData {
 };
 
 
-/* Calls to AdjRefCount() are queued and deferred, so the user doesn't
- * have to wait for various disk-intensive operations to complete synchronously.
- * This is the record format.
- */
+// Calls to AdjRefCount() are queued and deferred, so the user doesn't
+// have to wait for various disk-intensive operations to complete synchronously.
+// This is the record format.
 struct arcq {
-	long arcq_msgnum;		/* Message number being adjusted */
-	int arcq_delta;			/* Adjustment ( usually 1 or -1 ) */
+	long arcq_msgnum;		// Message number being adjusted
+	int arcq_delta;			// Adjustment ( usually 1 or -1 )
 };
 
 
-/*
- * Serialization routines use this struct to return a pointer and a length
- */
+// Serialization routines use this struct to return a pointer and a length
 struct ser_ret {
 	size_t len;
 	unsigned char *ser;
 };
 
 
-/*
- * The S_USETABLE database is used in several modules now, so we define its format here.
- */
+// The S_USETABLE database is used in several modules now, so we define its format here.
 struct UseTable {
 	char ut_msgid[SIZ];
 	time_t ut_timestamp;
 };
 
 
-/*
- * These one-byte field headers are found in the Citadel message store.
- */
+// These one-byte field headers are found in the Citadel message store.
 typedef enum _MsgField {
 	eAuthor       = 'A',
 	eBig_message  = 'B',
@@ -323,4 +295,4 @@ typedef enum _MsgField {
 	eVltMsgNum    = '3'
 } eMsgField;
 
-#endif /* SERVER_H */
+#endif // SERVER_H
