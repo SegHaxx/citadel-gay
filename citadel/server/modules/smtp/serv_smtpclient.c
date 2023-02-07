@@ -526,6 +526,7 @@ void smtp_do_queue(void) {
 	}
 
 	// Put the queue in memory so we can close the db cursor
+	// Searching for messages with a top level Content-type of SPOOLIME will give us only queue instruction messages.
 	CtdlForEachMessage(MSGS_ALL, 0L, NULL, SPOOLMIME, NULL, smtp_add_msg, (void *)smtp_queue);
 
 	// We are ready to run through the queue now.
