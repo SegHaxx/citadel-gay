@@ -179,34 +179,31 @@ struct cdbdata {
 };
 
 
-/*
- * Event types can't be enum'ed, because they must remain consistent between
- * builds (to allow for binary modules built somewhere else)
- */
-#define EVT_STOP	0	/* Session is terminating */
-#define EVT_START	1	/* Session is starting */
-#define EVT_LOGIN	2	/* A user is logging in */
-#define EVT_NEWROOM	3	/* Changing rooms */
-#define EVT_LOGOUT	4	/* A user is logging out */
-#define EVT_SETPASS	5	/* Setting or changing password */
-#define EVT_CMD		6	/* Called after each server command */
-#define EVT_RWHO	7	/* An RWHO command is being executed */
-#define EVT_ASYNC	8	/* Doing asynchronous messages */
-#define EVT_STEALTH	9	/* Entering stealth mode */
-#define EVT_UNSTEALTH	10	/* Exiting stealth mode */
+// Event types for hooks
+enum {
+	EVT_STOP	,	// Session is terminating
+	EVT_START	,	// Session is starting
+	EVT_LOGIN	,	// A user is logging in
+	EVT_NEWROOM	,	// Changing rooms
+	EVT_LOGOUT	,	// A user is logging out
+	EVT_SETPASS	,	// Setting or changing password
+	EVT_CMD		,	// Called after each server command
+	EVT_RWHO	,	// An RWHO command is being executed
+	EVT_ASYNC	,	// Doing asynchronous messages
+	EVT_STEALTH	,	// Entering stealth mode
+	EVT_UNSTEALTH	,	// Exiting stealth mode
+	EVT_TIMER	,	// Timer events are called once per minute and are not tied to any session
+	EVT_HOUSE	,	// as needed houskeeping stuff
+	EVT_SHUTDOWN	,	// Server is shutting down
+	EVT_PURGEUSER	,	// Deleting a user
+	EVT_NEWUSER	,	// Creating a user
+	EVT_BEFORESAVE	,
+	EVT_AFTERSAVE	,
+	EVT_SMTPSCAN	,	// called before submitting a msg from SMTP
+	EVT_AFTERUSRMBOXSAVE	// called afte a message was saved into a users inbox
+};
 
-#define EVT_TIMER	50	/* Timer events are called once per minute
-				   and are not tied to any session */
-#define EVT_HOUSE	51	/* as needed houskeeping stuff */
-#define EVT_SHUTDOWN	52	/* Server is shutting down */
 
-#define EVT_PURGEUSER	100	/* Deleting a user */
-#define EVT_NEWUSER	102	/* Creating a user */
-
-#define EVT_BEFORESAVE	201
-#define EVT_AFTERSAVE	202
-#define EVT_SMTPSCAN	203	/* called before submitting a msg from SMTP */
-#define EVT_AFTERUSRMBOXSAVE 204 /* called afte a message was saved into a users inbox */
 /* Priority levels for paging functions (lower is better) */
 enum {
 	XMSG_PRI_LOCAL,		/* Other users on -this- server */
