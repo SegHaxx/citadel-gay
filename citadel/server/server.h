@@ -67,6 +67,11 @@ struct recptypes {
 #define CTDLEXIT_UNUSER		108	// Could not determine uid to run as
 #define CTDLEXIT_CRYPTO		109	// Problem initializing SSL or TLS
 
+// Any other exit is likely to be from an unexpected abort (segfault etc)
+// and we want to try restarting.
+
+
+
 // Reasons why a session would be terminated (set CC->kill_me to these values)
 enum {
 	KILLME_NOT,
@@ -181,34 +186,34 @@ struct cdbdata {
 
 // Event types for hooks
 enum {
-	EVT_STOP	,	// Session is terminating
-	EVT_START	,	// Session is starting
-	EVT_LOGIN	,	// A user is logging in
-	EVT_NEWROOM	,	// Changing rooms
-	EVT_LOGOUT	,	// A user is logging out
-	EVT_SETPASS	,	// Setting or changing password
-	EVT_CMD		,	// Called after each server command
-	EVT_RWHO	,	// An RWHO command is being executed
-	EVT_ASYNC	,	// Doing asynchronous messages
-	EVT_STEALTH	,	// Entering stealth mode
-	EVT_UNSTEALTH	,	// Exiting stealth mode
-	EVT_TIMER	,	// Timer events are called once per minute and are not tied to any session
-	EVT_HOUSE	,	// as needed houskeeping stuff
-	EVT_SHUTDOWN	,	// Server is shutting down
-	EVT_PURGEUSER	,	// Deleting a user
-	EVT_NEWUSER	,	// Creating a user
-	EVT_BEFORESAVE	,
-	EVT_AFTERSAVE	,
-	EVT_SMTPSCAN	,	// called before submitting a msg from SMTP
+	EVT_STOP,		// Session is terminating
+	EVT_START,		// Session is starting
+	EVT_LOGIN,		// A user is logging in
+	EVT_NEWROOM,		// Changing rooms
+	EVT_LOGOUT,		// A user is logging out
+	EVT_SETPASS,		// Setting or changing password
+	EVT_CMD,		// Called after each server command
+	EVT_RWHO,		// An RWHO command is being executed
+	EVT_ASYNC,		// Doing asynchronous messages
+	EVT_STEALTH,		// Entering stealth mode
+	EVT_UNSTEALTH,		// Exiting stealth mode
+	EVT_TIMER,		// Timer events are called once per minute and are not tied to any session
+	EVT_HOUSE,		// as needed houskeeping stuff
+	EVT_SHUTDOWN,		// Server is shutting down
+	EVT_PURGEUSER,		// Deleting a user
+	EVT_NEWUSER,		// Creating a user
+	EVT_BEFORESAVE,
+	EVT_AFTERSAVE,
+	EVT_SMTPSCAN,		// called before submitting a msg from SMTP
 	EVT_AFTERUSRMBOXSAVE	// called afte a message was saved into a users inbox
 };
 
 
 /* Priority levels for paging functions (lower is better) */
 enum {
-	XMSG_PRI_LOCAL,		/* Other users on -this- server */
-	XMSG_PRI_REMOTE,	/* Other users on a Citadel network (future) */
-	XMSG_PRI_FOREIGN,	/* Contacts on foreign instant message hosts */
+	XMSG_PRI_LOCAL,		// Other users on -this- server
+	XMSG_PRI_REMOTE,	// Other users on a Citadel network
+	XMSG_PRI_FOREIGN,	// Contacts on foreign instant message hosts
 	MAX_XMSG_PRI
 };
 
@@ -230,17 +235,16 @@ typedef struct __visit {
 #define V_ACCESS	4	// Access is granted to this room
 
 
-/* Supplementary data for a message on disk
- * These are kept separate from the message itself for one of two reasons:
- * 1. Either their values may change at some point after initial save, or
- * 2. They are merely caches of data which exist somewhere else, for speed.
- * DO NOT PUT BIG DATA IN HERE ... we need this struct to be tiny for lots of quick r/w
- */
+// Supplementary data for a message on disk
+// These are kept separate from the message itself for one of two reasons:
+// 1. Either their values may change at some point after initial save, or
+// 2. They are merely caches of data which exist somewhere else, for speed.
+// DO NOT PUT BIG DATA IN HERE ... we need this struct to be tiny for lots of quick r/w
 struct MetaData {
-	long meta_msgnum;		/* Message number in *local* message base */
-	int meta_refcount;		/* Number of rooms pointing to this msg */
-	char meta_content_type[64];	/* Cached MIME content-type */
-	long meta_rfc822_length;	/* Cache of RFC822-translated msg length */
+	long meta_msgnum;		// Message number in *local* message base
+	int meta_refcount;		// Number of rooms pointing to this msg
+	char meta_content_type[64];	// Cached MIME content-type
+	long meta_rfc822_length;	// Cache of RFC822-translated msg length
 };
 
 
