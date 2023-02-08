@@ -33,6 +33,7 @@
 #include "../smtp/smtp_util.h"
 
 long last_queue_job_submitted = 0;
+long last_queue_job_processed = 0;
 
 struct smtpmsgsrc {		// Data passed in and out of libcurl for message upload
 	StrBuf *TheMessage;
@@ -57,10 +58,10 @@ void smtp_init_spoolout(void) {
 }
 
 
-// For internet mail, generate delivery instructions.
+// For internet mail, generate a delivery job.
 // Yes, this is recursive.  Deal with it.  Infinite recursion does
-// not happen because the delivery instructions message does not
-// contain a recipient.
+// not happen because the message containing the delivery job does not
+// have a recipient.
 int smtp_aftersave(struct CtdlMessage *msg, struct recptypes *recps) {
 	if ((recps != NULL) && (recps->num_internet > 0)) {
 		struct CtdlMessage *imsg = NULL;
@@ -69,7 +70,7 @@ int smtp_aftersave(struct CtdlMessage *msg, struct recptypes *recps) {
 		long nTokens;
 		int i;
 
-		syslog(LOG_DEBUG, "smtpclient: generating delivery instructions");
+		syslog(LOG_DEBUG, "smtpclient: generating delivery job");
 
 		StrBufPrintf(SpoolMsg,
 			     "Content-type: " SPOOLMIME "\n"
@@ -336,7 +337,7 @@ void smtp_process_one_msg(long qmsgnum) {
 	msg->cm_fields[eMesageText] = NULL;
 	CM_Free(msg);
 
-	// if the queue message has any CRLF's convert them to LF's
+	// if the queue job message has any CRLF's convert them to LF's
 	char *crlf = NULL;
 	while (crlf = strstr(instr, "\r\n"), crlf != NULL) {
 		strcpy(crlf, crlf + 1);
@@ -506,7 +507,6 @@ enum {
 // Run through the queue sending out messages.
 void smtp_do_queue(int type_of_queue_run) {
 	static int doing_smtpclient = 0;
-	static long last_queue_msg_processed = 0;
 	int i = 0;
 
 	// This is a concurrency check to make sure only one smtpclient run is done at a time.
@@ -518,7 +518,7 @@ void smtp_do_queue(int type_of_queue_run) {
 	doing_smtpclient = 1;
 	end_critical_section(S_SMTPQUEUE);
 
-	syslog(LOG_DEBUG, "smtpclient: start queue run , last_queue_msg_processed=%ld , last_queue_job_submitted=%ld", last_queue_msg_processed, last_queue_job_submitted);
+	syslog(LOG_DEBUG, "smtpclient: start queue run , last_queue_job_processed=%ld , last_queue_job_submitted=%ld", last_queue_job_processed, last_queue_job_submitted);
 
 	if (CtdlGetRoom(&CC->room, SMTP_SPOOLOUT_ROOM) != 0) {
 		syslog(LOG_WARNING, "smtpclient: cannot find room <%s>", SMTP_SPOOLOUT_ROOM);
@@ -526,7 +526,7 @@ void smtp_do_queue(int type_of_queue_run) {
 		return;
 	}
 
-	// This array will hold the list of queue instruction messages
+	// This array will hold the list of queue job messages
 	Array *smtp_queue = array_new(sizeof(long));
 	if (smtp_queue == NULL) {
 		syslog(LOG_WARNING, "smtpclient: cannot allocate queue array");
@@ -537,7 +537,7 @@ void smtp_do_queue(int type_of_queue_run) {
 	// Put the queue in memory so we can close the db cursor
 	CtdlForEachMessage(
 		(type_of_queue_run == QUICK_QUEUE_RUN ? MSGS_GT : MSGS_ALL),			// quick = new jobs; full = all jobs
-		(type_of_queue_run == QUICK_QUEUE_RUN ? last_queue_msg_processed : 0),		// quick = new jobs; full = all jobs
+		(type_of_queue_run == QUICK_QUEUE_RUN ? last_queue_job_processed : 0),		// quick = new jobs; full = all jobs
 		NULL,
 		SPOOLMIME,		// Searching for Content-type of SPOOLIME will give us only queue instruction messages
 		NULL,
@@ -550,12 +550,12 @@ void smtp_do_queue(int type_of_queue_run) {
 		long m;
 		memcpy(&m, array_get_element_at(smtp_queue, i), sizeof(long));
 		smtp_process_one_msg(m);
-		last_queue_msg_processed = m;
+		last_queue_job_processed = m;
 	}
 
 	array_free(smtp_queue);
 	doing_smtpclient = 0;
-	syslog(LOG_DEBUG, "smtpclient: end queue run , last_queue_msg_processed=%ld , last_queue_job_submitted=%ld", last_queue_msg_processed, last_queue_job_submitted);
+	syslog(LOG_DEBUG, "smtpclient: end queue run , last_queue_job_processed=%ld , last_queue_job_submitted=%ld", last_queue_job_processed, last_queue_job_submitted);
 }
 
 
@@ -565,7 +565,9 @@ void smtp_do_queue_full(void) {
 
 
 void smtp_do_queue_quick(void) {
-	smtp_do_queue(QUICK_QUEUE_RUN);
+	if (last_queue_job_submitted > last_queue_job_processed) {
+		smtp_do_queue(QUICK_QUEUE_RUN);
+	}
 }
 
 
@@ -573,6 +575,7 @@ void smtp_do_queue_quick(void) {
 char *ctdl_module_init_smtpclient(void) {
 	if (!threading) {
 		CtdlRegisterMessageHook(smtp_aftersave, EVT_AFTERSAVE);
+		CtdlRegisterSessionHook(smtp_do_queue_quick, EVT_HOUSE, PRIO_AGGR + 51);
 		CtdlRegisterSessionHook(smtp_do_queue_full, EVT_TIMER, PRIO_AGGR + 51);
 		smtp_init_spoolout();
 	}
