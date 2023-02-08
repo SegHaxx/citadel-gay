@@ -30,8 +30,8 @@ struct CtdlMessage {
 	unsigned int cm_flags;		// How to handle (NOT SAVED TO DISK)
 };
 
-#define	CTDLMESSAGE_MAGIC		0x159d
-#define	CM_SKIP_HOOKS	0x01		// Don't run server-side handlers
+#define	CTDLMESSAGE_MAGIC	0x159d
+#define	CM_SKIP_HOOKS		0x01	// Don't run server-side handlers
 
 
 // Data structure returned by validate_recipients()
