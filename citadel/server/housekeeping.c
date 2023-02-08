@@ -71,7 +71,7 @@ void check_ref_counts(void) {
 void keep_an_eye_on_memory_usage(void) {
 	static void *original_brk = NULL;
 	if (!original_brk) original_brk = sbrk(0);	// Remember the original program break so we can test for leaks
-	syslog(LOG_DEBUG, "original_brk=%lx, current_brk=%lx, addl=%ld", (long)original_brk, (long)sbrk(0), (long)(sbrk(0)-original_brk));	// FIXME not so noisy please
+	syslog(LOG_DEBUG, "original_brk=%lx, current_brk=%lx, addl=%ld", (long)original_brk, (long)sbrk(0), (long)(sbrk(0)-original_brk));
 }
 
 
@@ -103,8 +103,8 @@ void do_housekeeping(void) {
 	end_critical_section(S_HOUSEKEEPING);
 
 	now = time(NULL);
-	if ( (do_housekeeping_now == 0) && (!CtdlIsSingleUser()) ) {
-		if ( (now - last_timer) > (time_t)300 ) {
+	if ( (do_housekeeping_now == 0) && (!CtdlIsSingleUser()) && ((now - last_timer) > (time_t)3600) ) {
+		if ( (now - last_timer) > (time_t)3600 ) {
 			syslog(LOG_WARNING,
 				"housekeeping: WARNING: housekeeping loop has not run for %ld minutes.  Is something stuck?",
 				((now - last_timer) / 60)
