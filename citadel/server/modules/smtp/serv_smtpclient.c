@@ -32,6 +32,8 @@
 #include "../../citadel_dirs.h"
 #include "../smtp/smtp_util.h"
 
+long last_queue_job_submitted = 0;
+
 struct smtpmsgsrc {		// Data passed in and out of libcurl for message upload
 	StrBuf *TheMessage;
 	int bytes_total;
@@ -106,7 +108,7 @@ int smtp_aftersave(struct CtdlMessage *msg, struct recptypes *recps) {
 		CM_SetField(imsg, eAuthor, HKEY("Citadel"));
 		CM_SetField(imsg, eJournal, HKEY("do not journal"));
 		CM_SetAsFieldSB(imsg, eMesageText, &SpoolMsg);
-		CtdlSubmitMsg(imsg, NULL, SMTP_SPOOLOUT_ROOM);
+		last_queue_job_submitted = CtdlSubmitMsg(imsg, NULL, SMTP_SPOOLOUT_ROOM);
 		CM_Free(imsg);
 	}
 	return 0;
@@ -500,12 +502,12 @@ enum {
 	QUICK_QUEUE_RUN		// only process jobs in the queue that have not been tried yet
 };
 
+
 // Run through the queue sending out messages.
-void smtp_do_queue(void) {
+void smtp_do_queue(int type_of_queue_run) {
 	static int doing_smtpclient = 0;
 	static long last_queue_msg_processed = 0;
 	int i = 0;
-	int type_of_queue_run = FULL_QUEUE_RUN;
 
 	// This is a concurrency check to make sure only one smtpclient run is done at a time.
 	begin_critical_section(S_SMTPQUEUE);
@@ -516,7 +518,7 @@ void smtp_do_queue(void) {
 	doing_smtpclient = 1;
 	end_critical_section(S_SMTPQUEUE);
 
-	syslog(LOG_DEBUG, "smtpclient: start queue run - last_queue_msg_processed=%ld", last_queue_msg_processed);
+	syslog(LOG_DEBUG, "smtpclient: start queue run , last_queue_msg_processed=%ld , last_queue_job_submitted=%ld", last_queue_msg_processed, last_queue_job_submitted);
 
 	if (CtdlGetRoom(&CC->room, SMTP_SPOOLOUT_ROOM) != 0) {
 		syslog(LOG_WARNING, "smtpclient: cannot find room <%s>", SMTP_SPOOLOUT_ROOM);
@@ -553,7 +555,17 @@ void smtp_do_queue(void) {
 
 	array_free(smtp_queue);
 	doing_smtpclient = 0;
-	syslog(LOG_DEBUG, "smtpclient: end queue run - last_queue_msg_processed=%ld", last_queue_msg_processed);
+	syslog(LOG_DEBUG, "smtpclient: end queue run , last_queue_msg_processed=%ld , last_queue_job_submitted=%ld", last_queue_msg_processed, last_queue_job_submitted);
+}
+
+
+void smtp_do_queue_full(void) {
+	smtp_do_queue(FULL_QUEUE_RUN);
+}
+
+
+void smtp_do_queue_quick(void) {
+	smtp_do_queue(QUICK_QUEUE_RUN);
 }
 
 
@@ -561,7 +573,7 @@ void smtp_do_queue(void) {
 char *ctdl_module_init_smtpclient(void) {
 	if (!threading) {
 		CtdlRegisterMessageHook(smtp_aftersave, EVT_AFTERSAVE);
-		CtdlRegisterSessionHook(smtp_do_queue, EVT_TIMER, PRIO_AGGR + 51);
+		CtdlRegisterSessionHook(smtp_do_queue_full, EVT_TIMER, PRIO_AGGR + 51);
 		smtp_init_spoolout();
 	}
 
