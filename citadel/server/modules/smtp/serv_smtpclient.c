@@ -495,11 +495,17 @@ void smtp_add_msg(long msgnum, void *userdata) {
 }
 
 
+enum {
+	FULL_QUEUE_RUN,		// try to process the entire queue, including messages that have already been attempted
+	QUICK_QUEUE_RUN		// only process jobs in the queue that have not been tried yet
+};
+
 // Run through the queue sending out messages.
 void smtp_do_queue(void) {
 	static int doing_smtpclient = 0;
 	static long last_queue_msg_processed = 0;
 	int i = 0;
+	int type_of_queue_run = FULL_QUEUE_RUN;
 
 	// This is a concurrency check to make sure only one smtpclient run is done at a time.
 	begin_critical_section(S_SMTPQUEUE);
@@ -527,8 +533,15 @@ void smtp_do_queue(void) {
 	}
 
 	// Put the queue in memory so we can close the db cursor
-	// Searching for messages with a top level Content-type of SPOOLIME will give us only queue instruction messages.
-	CtdlForEachMessage(MSGS_ALL, 0L, NULL, SPOOLMIME, NULL, smtp_add_msg, (void *)smtp_queue);
+	CtdlForEachMessage(
+		(type_of_queue_run == QUICK_QUEUE_RUN ? MSGS_GT : MSGS_ALL),			// quick = new jobs; full = all jobs
+		(type_of_queue_run == QUICK_QUEUE_RUN ? last_queue_msg_processed : 0),		// quick = new jobs; full = all jobs
+		NULL,
+		SPOOLMIME,		// Searching for Content-type of SPOOLIME will give us only queue instruction messages
+		NULL,
+		smtp_add_msg,		// That's our callback function to add a job to the queue
+		(void *)smtp_queue
+	);
 
 	// We are ready to run through the queue now.
 	for (i = 0; i < array_len(smtp_queue); ++i) {
