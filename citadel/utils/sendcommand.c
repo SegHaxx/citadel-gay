@@ -1,6 +1,6 @@
 // Command-line utility to transmit a server command.
 //
-// Copyright (c) 1987-2022 by the citadel.org team
+// Copyright (c) 1987-2023 by the citadel.org team
 //
 // This program is open source software.  Use, duplication, or disclosure
 // is subject to the terms of the GNU General Public License, version 3.
@@ -20,6 +20,7 @@
 #include <sys/socket.h>
 #include <sys/un.h>
 #include "../server/citadel.h"
+#include "../server/server.h"
 #include "../server/citadel_dirs.h"
 #include <libcitadel.h>
 

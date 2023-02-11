@@ -67,31 +67,6 @@ struct ExpirePolicy {
 // Bits which may appear in MMflags.
 #define MM_VALID	4		// New users need validating
 
-// Room records.
-struct ctdlroom {
- 	char QRname[ROOMNAMELEN];	// Name of room
- 	char QRpasswd[10];		// Only valid if it's a private rm
- 	long QRroomaide;		// User number of room aide
- 	long QRhighest;			// Highest message NUMBER in room
- 	time_t QRgen;			// Generation number of room
- 	unsigned QRflags;		// See flag values below
- 	char QRdirname[15];		// Directory name, if applicable
- 	long msgnum_info;		// msgnum of room banner (info file)
- 	char QRfloor;			// Which floor this room is on
- 	time_t QRmtime;			// Date/time of last post
- 	struct ExpirePolicy QRep;	// Message expiration policy
- 	long QRnumber;			// Globally unique room number
- 	char QRorder;			// Sort key for room listing order
- 	unsigned QRflags2;		// Additional flags
- 	int QRdefaultview;		// How to display the contents
-	long msgnum_pic;		// msgnum of room picture or icon
-};
-
-// Private rooms are always flagged with QR_PRIVATE.  If neither QR_PASSWORDED
-// or QR_GUESSNAME is set, then it is invitation-only.  Passworded rooms are
-// flagged with both QR_PRIVATE and QR_PASSWORDED while guess-name rooms are
-// flagged with both QR_PRIVATE and QR_GUESSNAME.  NEVER set all three flags.
-
 // Miscellaneous
 #define MES_NORMAL	65		// Normal message
 #define MES_ANONONLY	66		// "****" header

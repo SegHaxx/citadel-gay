@@ -16,6 +16,7 @@
 #include <syslog.h>
 #include <libcitadel.h>
 #include "citadel.h"
+#include "server.h"
 #include "citadel_dirs.h"
 
 // Generate an associated file name for a room
