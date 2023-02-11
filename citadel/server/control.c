@@ -1,7 +1,7 @@
 //
 // This module handles states which are global to the entire server.
 //
-// Copyright (c) 1987-2022 by the citadel.org team
+// Copyright (c) 1987-2023 by the citadel.org team
 //
 // This program is open source software.  Use, duplication, or disclosure
 // is subject to the terms of the GNU General Public License, version 3.
@@ -17,40 +17,34 @@
 
 long control_highest_user = 0;
 
-/*
- * This is the legacy "control record" format for the message base.  If found
- * on disk, its contents will be migrated into the system configuration.  Never
- * change this.
- */
+// This is the legacy "control record" format for the message base.  If found
+// on disk, its contents will be migrated into the system configuration.  Never
+// change this.
 struct legacy_ctrl_format {
-	long MMhighest;			/* highest message number in file   */
-	unsigned MMflags;		/* Global system flags              */
-	long MMnextuser;		/* highest user number on system    */
-	long MMnextroom;		/* highest room number on system    */
-	int MM_hosted_upgrade_level;	/* Server-hosted upgrade level      */
-	int MM_fulltext_wordbreaker;	/* ID of wordbreaker in use         */
-	long MMfulltext;		/* highest message number indexed   */
-	int MMdbversion;		/* Version of Berkeley DB used on previous server run */
+	long MMhighest;			// highest message number in file
+	unsigned MMflags;		// Global system flags
+	long MMnextuser;		// highest user number on system
+	long MMnextroom;		// highest room number on system
+	int MM_hosted_upgrade_level;	// Server-hosted upgrade level
+	int MM_fulltext_wordbreaker;	// ID of wordbreaker in use
+	long MMfulltext;		// highest message number indexed
+	int MMdbversion;		// Version of Berkeley DB used on previous server run
 };
 
 
-/*
- * data that gets passed back and forth between control_find_highest() and its caller
- */
+// data that gets passed back and forth between control_find_highest() and its caller
 struct cfh {
 	long highest_roomnum_found;
 	long highest_msgnum_found;
 };
 
 
-/*
- * Callback to get highest room number when rebuilding message base metadata
- *
- * sanity_diag_mode (can be set by -s flag at startup) may be:
- * 0 = attempt to fix inconsistencies
- * 1 = show inconsistencies but don't repair them, exit after complete
- * 2 = show inconsistencies but don't repair them, continue execution
- */
+// Callback to get highest room number when rebuilding message base metadata
+//
+// sanity_diag_mode (can be set by -s flag at startup) may be:
+// 0 = attempt to fix inconsistencies
+// 1 = show inconsistencies but don't repair them, exit after complete
+// 2 = show inconsistencies but don't repair them, continue execution
 void control_find_highest(struct ctdlroom *qrbuf, void *data) {
 	struct cfh *cfh = (struct cfh *)data;
 	struct cdbdata *cdbfr;
@@ -62,14 +56,14 @@ void control_find_highest(struct ctdlroom *qrbuf, void *data) {
 		cfh->highest_roomnum_found = qrbuf->QRnumber;
 	}
 
-	/* Load the message list */
+	// Load the message list
 	cdbfr = cdb_fetch(CDB_MSGLISTS, &qrbuf->QRnumber, sizeof(long));
 	if (cdbfr != NULL) {
 		msglist = (long *) cdbfr->ptr;
 		num_msgs = cdbfr->len / sizeof(long);
 	}
 	else {
-		return;	/* No messages at all?  No further action. */
+		return;	// No messages at all?  No further action.
 	}
 
 	if (num_msgs > 0) {
@@ -84,9 +78,7 @@ void control_find_highest(struct ctdlroom *qrbuf, void *data) {
 }
 
 
-/*
- * Callback to get highest user number.
- */
+// Callback to get highest user number.
 void control_find_user(char *username, void *out_data) {
 	struct ctdluser EachUser;
 
@@ -105,9 +97,7 @@ void control_find_user(char *username, void *out_data) {
 }
 
 
-/*
- * If we have a legacy format control record on disk, import it.
- */
+// If we have a legacy format control record on disk, import it.
 void migrate_legacy_control_record(void) {
 	FILE *fp = NULL;
 	struct legacy_ctrl_format c;
@@ -136,9 +126,7 @@ void migrate_legacy_control_record(void) {
 }
 
 
-/*
- * check_control   -  check the control record has sensible values for message, user and room numbers
- */
+// check_control   -  check the control record has sensible values for message, user and room numbers
 void check_control(void) {
 
 	syslog(LOG_INFO, "control: sanity checking the recorded highest message and room numbers");
@@ -172,11 +160,8 @@ void check_control(void) {
 }
 
 
-/*
- * get_new_message_number()  -  Obtain a new, unique ID to be used for a message.
- */
-long get_new_message_number(void)
-{
+// get_new_message_number()  -  Obtain a new, unique ID to be used for a message.
+long get_new_message_number(void) {
 	long retval = 0L;
 	begin_critical_section(S_CONTROL);
 	retval = CtdlGetConfigLong("MMhighest");
@@ -187,25 +172,19 @@ long get_new_message_number(void)
 }
 
 
-/*
- * CtdlGetCurrentMessageNumber()  -  Obtain the current highest message number in the system
- * This provides a quick way to initialize a variable that might be used to indicate
- * messages that should not be processed.   For example, an inbox rules script will use this
- * to record determine that messages older than this should not be processed.
- *
- * (Why is this function here?  Can't we just go straight to the config variable it fetches?)
- */
-long CtdlGetCurrentMessageNumber(void)
-{
+// CtdlGetCurrentMessageNumber()  -  Obtain the current highest message number in the system
+// This provides a quick way to initialize a variable that might be used to indicate
+// messages that should not be processed.   For example, an inbox rules script will use this
+// to record determine that messages older than this should not be processed.
+//
+// (Why is this function here?  Can't we just go straight to the config variable it fetches?)
+long CtdlGetCurrentMessageNumber(void) {
 	return CtdlGetConfigLong("MMhighest");
 }
 
 
-/*
- * get_new_user_number()  -  Obtain a new, unique ID to be used for a user.
- */
-long get_new_user_number(void)
-{
+// get_new_user_number()  -  Obtain a new, unique ID to be used for a user.
+long get_new_user_number(void) {
 	long retval = 0L;
 	begin_critical_section(S_CONTROL);
 	retval = CtdlGetConfigLong("MMnextuser");
@@ -216,11 +195,8 @@ long get_new_user_number(void)
 }
 
 
-/*
- * get_new_room_number()  -  Obtain a new, unique ID to be used for a room.
- */
-long get_new_room_number(void)
-{
+// get_new_room_number()  -  Obtain a new, unique ID to be used for a room.
+long get_new_room_number(void) {
 	long retval = 0L;
 	begin_critical_section(S_CONTROL);
 	retval = CtdlGetConfigLong("MMnextroom");
@@ -231,22 +207,16 @@ long get_new_room_number(void)
 }
 
 
-/*
- * Helper function for cmd_conf() to handle boolean values
- */
-int confbool(char *v)
-{
+// Helper function for cmd_conf() to handle boolean values
+int confbool(char *v) {
 	if (IsEmptyStr(v)) return(0);
 	if (atoi(v) != 0) return(1);
 	return(0);
 }
 
 
-/* 
- * Get or set global configuration options
- */
-void cmd_conf(char *argbuf)
-{
+// Get or set global configuration options
+void cmd_conf(char *argbuf) {
 	char cmd[16];
 	char buf[1024];
 	int a, i;
@@ -265,7 +235,7 @@ void cmd_conf(char *argbuf)
 		cprintf("%s\n",		CtdlGetConfigStr("c_nodename"));
 		cprintf("%s\n",		CtdlGetConfigStr("c_fqdn"));
 		cprintf("%s\n",		CtdlGetConfigStr("c_humannode"));
-		cprintf("xxx\n"); /* placeholder -- field no longer in use */
+		cprintf("xxx\n");	// placeholder -- field no longer in use
 		cprintf("%d\n",		CtdlGetConfigInt("c_creataide"));
 		cprintf("%d\n",		CtdlGetConfigInt("c_sleeping"));
 		cprintf("%d\n",		CtdlGetConfigInt("c_initax"));
@@ -277,7 +247,7 @@ void cmd_conf(char *argbuf)
 		cprintf("%s\n",		CtdlGetConfigStr("c_site_location"));
 		cprintf("%s\n",		CtdlGetConfigStr("c_sysadm"));
 		cprintf("%d\n",		CtdlGetConfigInt("c_maxsessions"));
-		cprintf("xxx\n"); /* placeholder -- field no longer in use */
+		cprintf("xxx\n");	// placeholder -- field no longer in use
 		cprintf("%d\n",		CtdlGetConfigInt("c_userpurge"));
 		cprintf("%d\n",		CtdlGetConfigInt("c_roompurge"));
 		cprintf("%s\n",		CtdlGetConfigStr("c_logpages"));
@@ -292,7 +262,7 @@ void cmd_conf(char *argbuf)
 		cprintf("%d\n",		CtdlGetConfigInt("c_imap_port"));
 		cprintf("%ld\n",	CtdlGetConfigLong("c_net_freq"));
 		cprintf("%d\n",		CtdlGetConfigInt("c_disable_newu"));
-		cprintf("1\n");	/* niu */
+		cprintf("1\n");		// niu
 		cprintf("%d\n",		CtdlGetConfigInt("c_purge_hour"));
 		cprintf("%s\n",		CtdlGetConfigStr("c_ldap_host"));
 		cprintf("%d\n",		CtdlGetConfigInt("c_ldap_port"));
@@ -355,7 +325,7 @@ void cmd_conf(char *argbuf)
 				CtdlSetConfigStr("c_humannode", buf);
 				break;
 			case 3:
-				/* placeholder -- field no longer in use */
+				// placeholder -- field no longer in use
 				break;
 			case 4:
 				CtdlSetConfigInt("c_creataide", confbool(buf));
@@ -396,7 +366,7 @@ void cmd_conf(char *argbuf)
 				CtdlSetConfigInt("c_maxsessions", i);
 				break;
 			case 15:
-				/* placeholder -- field no longer in use */
+				// placeholder -- field no longer in use
 				break;
 			case 16:
 				CtdlSetConfigInt("c_userpurge", atoi(buf));
@@ -453,7 +423,7 @@ void cmd_conf(char *argbuf)
 				CtdlSetConfigInt("c_disable_newu", confbool(buf));
 				break;
 			case 30:
-				/* niu */
+				// niu
 				break;
 			case 31:
 				i = atoi(buf);
@@ -498,7 +468,7 @@ void cmd_conf(char *argbuf)
 				CtdlSetConfigInt("c_auto_cull", confbool(buf));
 				break;
 			case 44:
-				/* niu */
+				// niu
 				break;
 			case 45:
 				CtdlSetConfigInt("c_allow_spoofing", confbool(buf));
@@ -519,31 +489,31 @@ void cmd_conf(char *argbuf)
 				CtdlSetConfigInt("c_pftcpdict_port", atoi(buf));
 				break;
 			case 51:
-				/* niu */
+				// niu
 				break;
 			case 52:
 				CtdlSetConfigInt("c_auth_mode", atoi(buf));
 				break;
 			case 53:
-				/* niu */
+				// niu
 				break;
 			case 54:
-				/* niu */
+				// niu
 				break;
 			case 55:
-				/* niu */
+				// niu
 				break;
 			case 56:
-				/* niu */
+				// niu
 				break;
 			case 57:
 				CtdlSetConfigInt("c_rbl_at_greeting", confbool(buf));
 				break;
 			case 58:
-				/* niu */
+				// niu
 				break;
 			case 59:
-				/* niu */
+				// niu
 				break;
 			case 60:
 				CtdlSetConfigStr("c_pager_program", buf);
@@ -573,7 +543,7 @@ void cmd_conf(char *argbuf)
 				CtdlSetConfigInt("c_port_number", atoi(buf));
 				break;
 			case 69:
-				/* niu */
+				// niu
 				break;
 			case 70:
 				CtdlSetConfigInt("c_nntp_port", atoi(buf));
@@ -593,9 +563,7 @@ void cmd_conf(char *argbuf)
 		if (!IsEmptyStr(CtdlGetConfigStr("c_logpages")))
 			CtdlCreateRoom(CtdlGetConfigStr("c_logpages"), 3, "", 0, 1, 1, VIEW_BBS);
 
-		/* If full text indexing has been disabled, invalidate the
-		 * index so it doesn't try to use it later.
-		 */
+		// If full text indexing has been disabled, invalidate the index so it doesn't try to use it later.
 		if (CtdlGetConfigInt("c_enable_fulltext") == 0) {
 			CtdlSetConfigInt("MM_fulltext_wordbreaker", 0);
 		}
@@ -708,7 +676,7 @@ void cmd_conf(char *argbuf)
 typedef struct __ConfType {
 	ConstStr Name;
 	long Type;
-}ConfType;
+} ConfType;
 
 ConfType CfgNames[] = {
 	{ {HKEY("localhost") },    0},
@@ -724,8 +692,7 @@ ConfType CfgNames[] = {
 };
 
 HashList *CfgNameHash = NULL;
-void cmd_gvdn(char *argbuf)
-{
+void cmd_gvdn(char *argbuf) {
 	const ConfType *pCfg;
 	char *confptr;
 	long min = atol(argbuf);
@@ -752,16 +719,13 @@ void cmd_gvdn(char *argbuf)
 
 	Line = NewStrBufPlain(NULL, StrLength(Config));
 	CfgToken = NewStrBufPlain(NULL, StrLength(Config));
-	while (StrBufSipLine(Line, Config, &Pos))
-	{
+	while (StrBufSipLine(Line, Config, &Pos)) {
 		if (Cfg == NULL)
 			Cfg = NewStrBufPlain(NULL, StrLength(Line));
 		PPos = NULL;
 		StrBufExtract_NextToken(Cfg, Line, &PPos, '|');
 		StrBufExtract_NextToken(CfgToken, Line, &PPos, '|');
-		if (GetHash(CfgNameHash, SKEY(CfgToken), &vptr) &&
-		    (vptr != NULL))
-		{
+		if (GetHash(CfgNameHash, SKEY(CfgToken), &vptr) && (vptr != NULL)) {
 			pCfg = (ConfType *) vptr;
 			if (pCfg->Type <= min)
 			{
@@ -773,8 +737,7 @@ void cmd_gvdn(char *argbuf)
 
 	cprintf("%d Valid Domains\n", LISTING_FOLLOWS);
 	It = GetNewHashPos(List, 1);
-	while (GetNextHashPos(List, It, &HKLen, &HKey, &vptr))
-	{
+	while (GetNextHashPos(List, It, &HKLen, &HKey, &vptr)) {
 		cputbuf(vptr);
 		cprintf("\n");
 	}
@@ -788,10 +751,8 @@ void cmd_gvdn(char *argbuf)
 	FreeStrBuf(&Config);
 }
 
-/*****************************************************************************/
-/*                      MODULE INITIALIZATION STUFF                          */
-/*****************************************************************************/
 
+// MODULE INITIALIZATION STUFF
 char *ctdl_module_init_control(void) {
 	if (!threading) {
 		int i;
@@ -803,6 +764,6 @@ char *ctdl_module_init_control(void) {
 		CtdlRegisterProtoHook(cmd_gvdn, "GVDN", "get valid domain names");
 		CtdlRegisterProtoHook(cmd_conf, "CONF", "get/set system configuration");
 	}
-	/* return our id for the log */
+	// return our id for the log
 	return "control";
 }
