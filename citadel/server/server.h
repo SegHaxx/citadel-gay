@@ -344,5 +344,15 @@ struct ctdlroom {
 // flagged with both QR_PRIVATE and QR_PASSWORDED while guess-name rooms are
 // flagged with both QR_PRIVATE and QR_GUESSNAME.  NEVER set all three flags.
 
+// Floor record.  The floor number is implicit in its location in the file.
+struct floor {
+	unsigned short f_flags;		// flags
+	char f_name[256];		// name of floor
+	int f_ref_count;		// reference count
+	struct ExpirePolicy f_ep;	// default expiration policy
+};
+
+#define F_INUSE		1		// floor is in use
+
 
 #endif // SERVER_H
