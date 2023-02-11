@@ -68,7 +68,6 @@ struct ExpirePolicy {
 #define MM_VALID	4		// New users need validating
 
 // Room records.
-typedef struct ctdlroom ctdlroom;
 struct ctdlroom {
  	char QRname[ROOMNAMELEN];	// Name of room
  	char QRpasswd[10];		// Only valid if it's a private rm
