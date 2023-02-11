@@ -98,7 +98,6 @@ struct ctdlroom {
 #define MES_ANONOPT	67		// "Anonymous" header
 
 // Floor record.  The floor number is implicit in its location in the file.
-typedef struct floor floor;
 struct floor {
 	unsigned short f_flags;		// flags
 	char f_name[256];		// name of floor
