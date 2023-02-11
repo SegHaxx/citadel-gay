@@ -64,27 +64,6 @@ struct ExpirePolicy {
 #define EXPIRE_NUMMSGS		2	// Keep only latest n messages
 #define EXPIRE_AGE		3	// Expire messages after n days
 
-// User records.
-typedef struct ctdluser ctdluser;
-struct ctdluser {			// User record
-	int version;			// Citadel version which created this record
-	uid_t uid;			// Associate with a unix account?
-	char password[32];		// password
-	unsigned flags;			// See US_ flags below
-	long timescalled;		// Total number of logins
-	long posted;			// Number of messages ever submitted
-	cit_uint8_t axlevel;		// Access level
-	long usernum;			// User number (never recycled)
-	time_t lastcall;		// Date/time of most recent login
-	int USuserpurge;		// Purge time (in days) for user
-	char fullname[64];		// Display name (primary identifier)
-	long msgnum_bio;		// msgnum of user's profile (bio)
-	long msgnum_pic;		// msgnum of user's avatar (photo)
-	char emailaddrs[512];		// Internet email addresses
-	long msgnum_inboxrules;		// msgnum of user's inbox filtering rules
-	long lastproc_inboxrules;	// msgnum of last message filtered
-};
-
 // Bits which may appear in MMflags.
 #define MM_VALID	4		// New users need validating
 

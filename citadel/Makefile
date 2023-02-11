@@ -18,6 +18,7 @@ citserver: server/*.c server/modules/*/*.c config.mk server/*.h
 	cc ${CFLAGS} \
 		server/*.c server/modules/*/*.c \
 		${LDFLAGS} -lresolv -lcitadel -lpthread -lz -lical -lldap -lcrypt -lexpat -lcurl -ldb \
+		-Wno-deprecated-declarations \
 		-o citserver
 
 setup: utils/setup.c server/citadel_dirs.c utils/*.h server/*.h
