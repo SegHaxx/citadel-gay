@@ -20,7 +20,7 @@
 #endif
 #include <libcitadel.h>
 #include "sysdep_decls.h"
-#include "citadel.h"
+#include "citadel_defs.h"
 #include "domain.h"
 #include "internet_addressing.h"
 

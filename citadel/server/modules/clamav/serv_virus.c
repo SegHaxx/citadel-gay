@@ -32,7 +32,7 @@
 #include <limits.h>
 #include <sys/socket.h>
 #include <libcitadel.h>
-#include "../../citadel.h"
+#include "../../citadel_defs.h"
 #include "../../server.h"
 #include "../../citserver.h"
 #include "../../support.h"

@@ -27,7 +27,7 @@
 #include <string.h>
 #include <stdarg.h>
 #include <libcitadel.h>
-#include "../../citadel.h"
+#include "../../citadel_defs.h"
 #include "../../sysdep_decls.h"
 #include "../../internet_addressing.h"
 #include "serv_imap.h"

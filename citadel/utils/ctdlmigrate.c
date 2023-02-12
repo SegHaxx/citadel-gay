@@ -25,7 +25,7 @@
 #include <sys/socket.h>
 #include <sys/un.h>
 #include <libcitadel.h>
-#include "../server/citadel.h"
+#include "../server/citadel_defs.h"
 #include "axdefs.h"
 #include "../server/sysdep.h"
 #include "../server/config.h"

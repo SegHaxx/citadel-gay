@@ -21,7 +21,7 @@
 #include <time.h>
 #include <limits.h>
 #include <libcitadel.h>
-#include "../../citadel.h"
+#include "../../citadel_defs.h"
 #include "../../server.h"
 #include "../../database.h"
 #include "../../config.h"

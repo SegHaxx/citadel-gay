@@ -1,5 +1,5 @@
 # Makefile for Citadel Server
-# Copyright (c) 1987-2022 by Art Cancro and the citadel.org team
+# Copyright (c) 1987-2023 by Art Cancro and the citadel.org team
 #
 # No, we are NOT using the obsolete GNU Autotools.  This configure script works
 # well on the Linux operating system (which uses the Linux kernel) and on BSD.
@@ -18,7 +18,6 @@ citserver: server/*.c server/modules/*/*.c config.mk server/*.h
 	cc ${CFLAGS} \
 		server/*.c server/modules/*/*.c \
 		${LDFLAGS} -lresolv -lcitadel -lpthread -lz -lical -lldap -lcrypt -lexpat -lcurl -ldb \
-		-Wno-deprecated-declarations \
 		-o citserver
 
 setup: utils/setup.c server/citadel_dirs.c utils/*.h server/*.h

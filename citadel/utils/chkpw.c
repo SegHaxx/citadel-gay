@@ -18,7 +18,7 @@
 #include <string.h>
 #include <limits.h>
 #include <dirent.h>
-#include "../server/citadel.h"
+#include "../server/citadel_defs.h"
 #include "../server/server.h"
 #include "../server/sysdep.h"
 #include "../server/citadel_dirs.h"

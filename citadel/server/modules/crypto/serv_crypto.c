@@ -35,7 +35,7 @@
 #include "../../server.h"
 #include "serv_crypto.h"
 #include "../../sysdep_decls.h"
-#include "../../citadel.h"
+#include "../../citadel_defs.h"
 #include "../../config.h"
 #include "../../ctdl_module.h"
 

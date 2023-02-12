@@ -17,7 +17,7 @@
 #include "auth.h"
 #include "../server/config.h"
 #include "../server/citadel_dirs.h"
-#include "../server/citadel.h"
+#include "../server/citadel_defs.h"
 
 
 int main(void) {

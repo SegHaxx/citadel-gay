@@ -25,7 +25,7 @@
 #include <sys/un.h>
 #include <assert.h>
 #include <libcitadel.h>
-#include "../server/citadel.h"
+#include "../server/citadel_defs.h"
 #include "../server/server.h"
 #include "axdefs.h"
 #include "../server/sysdep.h"

@@ -9,7 +9,7 @@
 #include <sys/stat.h>
 #include <libcitadel.h>
 
-#include "citadel.h"
+#include "citadel_defs.h"
 #include "support.h"
 
 // strproc()  -  make a string 'nice'

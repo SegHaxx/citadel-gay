@@ -19,7 +19,7 @@
 #include <limits.h>
 #include <sys/socket.h>
 #include <sys/un.h>
-#include "../server/citadel.h"
+#include "../server/citadel_defs.h"
 #include "../server/server.h"
 #include "../server/citadel_dirs.h"
 #include <libcitadel.h>

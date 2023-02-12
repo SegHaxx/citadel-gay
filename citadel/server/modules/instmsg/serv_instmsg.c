@@ -26,7 +26,7 @@
 #include <limits.h>
 #include <libcitadel.h>
 #include "../../sysdep.h"
-#include "../../citadel.h"
+#include "../../citadel_defs.h"
 #include "../../server.h"
 #include "../../context.h"
 #include "../../citserver.h"

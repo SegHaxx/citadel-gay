@@ -1,6 +1,6 @@
-// Main Citadel header file
+// Definitions for the Citadel Server
 //
-// Copyright (c) 1987-2022 by the citadel.org team
+// Copyright (c) 1987-2023 by the citadel.org team
 //
 // This program is open source software.  Use, duplication, or disclosure
 // is subject to the terms of the GNU General Public License, version 3.
@@ -13,16 +13,13 @@
 #pragma GCC diagnostic ignored "-Wcast-qual"
 #pragma GCC diagnostic ignored "-Wdiscarded-qualifiers"
 #pragma GCC diagnostic ignored "-Wformat-truncation"
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 
 #include "sysdep.h"
 #include <limits.h>
 #include "sysconfig.h"
 #include "typesize.h"
 #include "ipcdef.h"
-
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 
 #define REV_LEVEL 972		// This version
@@ -52,18 +49,6 @@ extern "C" {
 #define USERNAME_SIZE	64		// The size of a username string
 #define MAX_EDITORS	5		// number of external editors supported ; must be at least 1
 
-// Message expiration policy stuff
-typedef struct ExpirePolicy ExpirePolicy;
-struct ExpirePolicy {
-	int expire_mode;
-	int expire_value;
-};
-
-#define EXPIRE_NEXTLEVEL	0	// Inherit expiration policy
-#define EXPIRE_MANUAL		1	// Don't expire messages at all
-#define EXPIRE_NUMMSGS		2	// Keep only latest n messages
-#define EXPIRE_AGE		3	// Expire messages after n days
-
 // Bits which may appear in MMflags.
 #define MM_VALID	4		// New users need validating
 
@@ -90,9 +75,5 @@ struct ExpirePolicy {
 #define AUTHMODE_HOST		1	// Authenticate against the host OS user database
 #define AUTHMODE_LDAP		2	// Authenticate using LDAP server with POSIX schema
 #define AUTHMODE_LDAP_AD	3	// Authenticate using LDAP server with Active Directory schema
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif // CITADEL_H

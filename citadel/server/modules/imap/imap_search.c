@@ -30,7 +30,7 @@
 #include <string.h>
 #include <limits.h>
 #include <libcitadel.h>
-#include "../../citadel.h"
+#include "../../citadel_defs.h"
 #include "../../server.h"
 #include "../../sysdep_decls.h"
 #include "../../citserver.h"

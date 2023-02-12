@@ -1,4 +1,4 @@
-// Main declarations file for the Citadel server
+// Data types for the Citadel Server
 //
 // Copyright (c) 1987-2023 by the citadel.org team
 //
@@ -14,7 +14,7 @@
 #define INLINE
 #endif
 
-#include "citadel.h"
+#include "citadel_defs.h"
 #ifdef HAVE_OPENSSL
 #define OPENSSL_NO_KRB5			// work around redhat b0rken ssl headers
 #include <openssl/ssl.h>
@@ -318,6 +318,18 @@ struct ctdluser {			// User record
 	long lastproc_inboxrules;	// msgnum of last message filtered
 };
 
+
+// Message expiration policy stuff
+typedef struct ExpirePolicy ExpirePolicy;
+struct ExpirePolicy {
+	int expire_mode;
+	int expire_value;
+};
+
+#define EXPIRE_NEXTLEVEL	0	// Inherit expiration policy
+#define EXPIRE_MANUAL		1	// Don't expire messages at all
+#define EXPIRE_NUMMSGS		2	// Keep only latest n messages
+#define EXPIRE_AGE		3	// Expire messages after n days
 
 // Room records.
 struct ctdlroom {
