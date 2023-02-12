@@ -20,6 +20,7 @@
 #include <openssl/ssl.h>
 #endif
 
+
 // New format for a message in memory
 struct CtdlMessage {
 	int cm_magic;			// Self-check (NOT SAVED TO DISK)
@@ -49,60 +50,12 @@ struct recptypes {
 	char *sending_room;
 };
 
-#define RECPTYPES_MAGIC 0xfeeb
-
-#define CTDLEXIT_SHUTDOWN	0	// Normal shutdown; do NOT auto-restart
-
-// Exit codes 101 through 109 are used for conditions in which
-// we deliberately do NOT want the service to automatically
-// restart.
-#define CTDLEXIT_CONFIG		101	// Could not read system configuration
-#define CTDLEXIT_HOME		103	// Citadel home directory not found
-#define CTDLEXIT_DB		105	// Unable to initialize database
-#define CTDLEXIT_LIBCITADEL	106	// Incorrect version of libcitadel
-#define CTDL_EXIT_UNSUP_AUTH	107	// Unsupported auth mode configured
-#define CTDLEXIT_UNUSER		108	// Could not determine uid to run as
-#define CTDLEXIT_CRYPTO		109	// Problem initializing SSL or TLS
-
-// Any other exit is likely to be from an unexpected abort (segfault etc)
-// and we want to try restarting.
-
-
-
-// Reasons why a session would be terminated (set CC->kill_me to these values)
-enum {
-	KILLME_NOT,
-	KILLME_UNKNOWN,
-	KILLME_CLIENT_LOGGED_OUT,
-	KILLME_IDLE,
-	KILLME_CLIENT_DISCONNECTED,
-	KILLME_AUTHFAILED,
-	KILLME_SERVER_SHUTTING_DOWN,
-	KILLME_MAX_SESSIONS_EXCEEDED,
-	KILLME_ADMIN_TERMINATE,
-	KILLME_SELECT_INTERRUPTED,
-	KILLME_SELECT_FAILED,
-	KILLME_WRITE_FAILED,
-	KILLME_SIMULATION_WORKER,
-	KILLME_NOLOGIN,
-	KILLME_NO_CRYPTO,
-	KILLME_READSTRING_FAILED,
-	KILLME_MALLOC_FAILED,
-	KILLME_QUOTA,
-	KILLME_READ_FAILED,
-	KILLME_SPAMMER,
-	KILLME_XML_PARSER
-};
-
-
-#define CS_STEALTH	1	// stealth mode
-#define CS_CHAT		2	// chat mode
-#define CS_POSTING	4	// posting
-
 extern int ScheduledShutdown;
 extern uid_t ctdluid;
 extern int sanity_diag_mode;
 
+
+// Instant message in transit on the system (not used in the database)
 struct ExpressMessage {
 	struct ExpressMessage *next;
 	time_t timestamp;	// When this message was sent
@@ -112,106 +65,11 @@ struct ExpressMessage {
 	char *text;		// Message text (if applicable)
 };
 
-#define EM_BROADCAST	1	// Broadcast message
-#define EM_GO_AWAY	2	// Server requests client log off
-#define EM_CHAT		4	// Server requests client enter chat
 
-// Various things we need to lock and unlock
-enum {
-	S_USERS,
-	S_ROOMS,
-	S_SESSION_TABLE,
-	S_FLOORTAB,
-	S_CHATQUEUE,
-	S_CONTROL,
-	S_SUPPMSGMAIN,
-	S_CONFIG,
-	S_HOUSEKEEPING,
-	S_NETCONFIGS,
-	S_FLOORCACHE,
-	S_ATBF,
-	S_JOURNAL_QUEUE,
-	S_CHKPWD,
-	S_XMPP_QUEUE,
-	S_SINGLE_USER,
-	S_IM_LOGS,
-	S_OPENSSL,
-	S_SMTPQUEUE,
-	MAX_SEMAPHORES
-};
-
-
-// message transfer formats
-enum {
-	MT_CITADEL,		// Citadel proprietary
-	MT_RFC822,		// RFC822
-	MT_MIME,		// MIME-formatted message
-	MT_DOWNLOAD,		// Download a component
-	MT_SPEW_SECTION		// Download a component in a single operation
-};
-
-// Message format types in the database
-#define FMT_CITADEL	0	// Citadel vari-format (proprietary)
-#define FMT_FIXED	1	// Fixed format (proprietary)
-#define FMT_RFC822	4	// Standard (headers are in M field)
-
-
-// citadel database tables (define one for each cdb we need to open)
-enum {
-	CDB_MSGMAIN,		// message base
-	CDB_USERS,		// user file
-	CDB_ROOMS,		// room index
-	CDB_FLOORTAB,		// floor index
-	CDB_MSGLISTS,		// room message lists
-	CDB_VISIT,		// user/room relationships
-	CDB_DIRECTORY,		// address book directory
-	CDB_USETABLE,		// network use table
-	CDB_BIGMSGS,		// larger message bodies
-	CDB_FULLTEXT,		// full text search index
-	CDB_EUIDINDEX,		// locate msgs by EUID
-	CDB_USERSBYNUMBER,	// index of users by number
-	CDB_EXTAUTH,		// associates OpenIDs with users
-	CDB_CONFIG,		// system configuration database
-	MAXCDB			// total number of CDB's defined
-};
-
+// Row being stored or fetched in the database
 struct cdbdata {
 	size_t len;
 	char *ptr;
-};
-
-
-// Event types for hooks
-enum {
-	EVT_STOP,		// Session is terminating
-	EVT_START,		// Session is starting
-	EVT_LOGIN,		// A user is logging in
-	EVT_NEWROOM,		// Changing rooms
-	EVT_LOGOUT,		// A user is logging out
-	EVT_SETPASS,		// Setting or changing password
-	EVT_CMD,		// Called after each server command
-	EVT_RWHO,		// An RWHO command is being executed
-	EVT_ASYNC,		// Doing asynchronous messages
-	EVT_STEALTH,		// Entering stealth mode
-	EVT_UNSTEALTH,		// Exiting stealth mode
-	EVT_TIMER,		// Timer events are called once per minute and are not tied to any session
-	EVT_HOUSE,		// as needed houskeeping stuff
-	EVT_SHUTDOWN,		// Server is shutting down
-	EVT_PURGEUSER,		// Deleting a user
-	EVT_NEWUSER,		// Creating a user
-	EVT_BEFORESAVE,
-	EVT_AFTERSAVE,
-	EVT_SMTPSCAN,		// called before submitting a msg from SMTP
-	EVT_AFTERUSRMBOXSAVE	// called afte a message was saved into a users inbox
-};
-
-
-/* Priority levels for paging functions (lower is better) */
-enum {
-	XMSG_PRI_LOCAL,		// Other users on -this- server
-	XMSG_PRI_REMOTE,	// Other users on a Citadel network
-	XMSG_PRI_FOREIGN,	// Contacts on foreign instant message hosts
-	MAX_XMSG_PRI
 };
 
 
@@ -226,10 +84,6 @@ typedef struct __visit {
 	char v_answered[SIZ];
 	int v_view;
 } visit;
-
-#define V_FORGET	1	// User has zapped this room
-#define V_LOCKOUT	2	// User is locked out of this room
-#define V_ACCESS	4	// Access is granted to this room
 
 
 // Supplementary data for a message on disk
@@ -268,32 +122,6 @@ struct UseTable {
 };
 
 
-// These one-byte field headers are found in the Citadel message store.
-typedef enum _MsgField {
-	eAuthor       = 'A',
-	eBig_message  = 'B',
-	eExclusiveID  = 'E',
-	erFc822Addr   = 'F',
-	emessageId    = 'I',
-	eJournal      = 'J',
-	eReplyTo      = 'K',
-	eListID       = 'L',
-	eMesageText   = 'M',
-	eOriginalRoom = 'O',
-	eMessagePath  = 'P',
-	eRecipient    = 'R',
-	eTimestamp    = 'T',
-	eMsgSubject   = 'U',
-	eenVelopeTo   = 'V',
-	eWeferences   = 'W',
-	eCarbonCopY   = 'Y',
-	eErrorMsg     = '0',
-	eSuppressIdx  = '1',
-	eExtnotify    = '2',
-	eVltMsgNum    = '3'
-} eMsgField;
-
-
 // User records.
 typedef struct ctdluser ctdluser;
 struct ctdluser {			// User record
@@ -323,10 +151,6 @@ struct ExpirePolicy {
 	int expire_value;
 };
 
-#define EXPIRE_NEXTLEVEL	0	// Inherit expiration policy
-#define EXPIRE_MANUAL		1	// Don't expire messages at all
-#define EXPIRE_NUMMSGS		2	// Keep only latest n messages
-#define EXPIRE_AGE		3	// Expire messages after n days
 
 // Room records.
 struct ctdlroom {
@@ -348,10 +172,6 @@ struct ctdlroom {
 	long msgnum_pic;		// msgnum of room picture or icon
 };
 
-// Private rooms are always flagged with QR_PRIVATE.  If neither QR_PASSWORDED
-// or QR_GUESSNAME is set, then it is invitation-only.  Passworded rooms are
-// flagged with both QR_PRIVATE and QR_PASSWORDED while guess-name rooms are
-// flagged with both QR_PRIVATE and QR_GUESSNAME.  NEVER set all three flags.
 
 // Floor record.  The floor number is implicit in its location in the file.
 struct floor {
@@ -360,7 +180,6 @@ struct floor {
 	int f_ref_count;		// reference count
 	struct ExpirePolicy f_ep;	// default expiration policy
 };
-
 
 
 #endif // SERVER_H
