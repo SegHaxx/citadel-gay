@@ -1,4 +1,4 @@
-// Definitions for the Citadel Server
+// Preprocessor definitions for the Citadel Server
 //
 // Copyright (c) 1987-2023 by the citadel.org team
 //
@@ -6,8 +6,8 @@
 // is subject to the terms of the GNU General Public License, version 3.
 // The program is distributed without any warranty, expressed or implied.
 
-#ifndef CITADEL_H
-#define CITADEL_H
+#ifndef CITADEL_DEFS_H
+#define CITADEL_DEFS_H
 
 // Suppress these compiler warnings
 #pragma GCC diagnostic ignored "-Wcast-qual"
@@ -20,7 +20,6 @@
 #include "sysconfig.h"
 #include "typesize.h"
 #include "ipcdef.h"
-
 
 #define REV_LEVEL 972		// This version
 #define REV_MIN		591		// Oldest compatible database
@@ -47,7 +46,6 @@
 // Various length constants
 #define ROOMNAMELEN	128		// The size of a roomname string
 #define USERNAME_SIZE	64		// The size of a username string
-#define MAX_EDITORS	5		// number of external editors supported ; must be at least 1
 
 // Bits which may appear in MMflags.
 #define MM_VALID	4		// New users need validating
@@ -76,4 +74,11 @@
 #define AUTHMODE_LDAP		2	// Authenticate using LDAP server with POSIX schema
 #define AUTHMODE_LDAP_AD	3	// Authenticate using LDAP server with Active Directory schema
 
-#endif // CITADEL_H
+// Found in struct CtdlMessage
+#define	CTDLMESSAGE_MAGIC	0x159d
+#define	CM_SKIP_HOOKS		0x01	// Don't run server-side handlers
+
+// Floors
+#define F_INUSE		1		// floor is in use
+
+#endif // CITADEL_DEFS_H

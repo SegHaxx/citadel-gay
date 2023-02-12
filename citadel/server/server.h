@@ -30,9 +30,6 @@ struct CtdlMessage {
 	unsigned int cm_flags;		// How to handle (NOT SAVED TO DISK)
 };
 
-#define	CTDLMESSAGE_MAGIC	0x159d
-#define	CM_SKIP_HOOKS		0x01	// Don't run server-side handlers
-
 
 // Data structure returned by validate_recipients()
 struct recptypes {
@@ -364,7 +361,6 @@ struct floor {
 	struct ExpirePolicy f_ep;	// default expiration policy
 };
 
-#define F_INUSE		1		// floor is in use
 
 
 #endif // SERVER_H
