@@ -252,16 +252,16 @@ int is_sequence_set(char *s) {
 
 // Traverse the visits file...
 void migr_export_visits(void) {
-	visit vbuf;
+	struct visit vbuf;
 	struct cdbdata *cdbv;
 
 	cdb_rewind(CDB_VISIT);
 
 	while (cdbv = cdb_next_item(CDB_VISIT), cdbv != NULL) {
-		memset(&vbuf, 0, sizeof(visit));
+		memset(&vbuf, 0, sizeof(struct visit));
 		memcpy(&vbuf, cdbv->ptr,
-		       ((cdbv->len > sizeof(visit)) ?
-			sizeof(visit) : cdbv->len));
+		       ((cdbv->len > sizeof(struct visit)) ?
+			sizeof(struct visit) : cdbv->len));
 		cdb_free(cdbv);
 
 		client_write(HKEY("<visit>\n"));
@@ -500,7 +500,7 @@ long openid_usernum = 0;
 char FRname[ROOMNAMELEN];
 struct floor flbuf;
 int floornum = 0;
-visit vbuf;
+struct visit vbuf;
 struct MetaData smi;
 long import_msgnum = 0;
 
@@ -540,12 +540,12 @@ void migr_xml_start(void *data, const char *el, const char **attr) {
 
 	// When we begin receiving XML for one of these record types, clear out the associated
 	// buffer so we don't accidentally carry over any data from a previous record.
-	if (!strcasecmp(el, "user"))			memset(&usbuf, 0, sizeof (struct ctdluser));
+	if (!strcasecmp(el, "user"))			memset(&usbuf, 0, sizeof(struct ctdluser));
 	else if (!strcasecmp(el, "openid"))		memset(openid_url, 0, sizeof openid_url);
-	else if (!strcasecmp(el, "room"))		memset(&qrbuf, 0, sizeof (struct ctdlroom));
+	else if (!strcasecmp(el, "room"))		memset(&qrbuf, 0, sizeof(struct ctdlroom));
 	else if (!strcasecmp(el, "room_messages"))	memset(FRname, 0, sizeof FRname);
-	else if (!strcasecmp(el, "floor"))		memset(&flbuf, 0, sizeof (struct floor));
-	else if (!strcasecmp(el, "visit"))		memset(&vbuf, 0, sizeof (visit));
+	else if (!strcasecmp(el, "floor"))		memset(&flbuf, 0, sizeof(struct floor));
+	else if (!strcasecmp(el, "visit"))		memset(&vbuf, 0, sizeof(struct visit));
 
 	else if (!strcasecmp(el, "message")) {
 		memset(&smi, 0, sizeof (struct MetaData));

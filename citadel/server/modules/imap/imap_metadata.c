@@ -69,7 +69,7 @@ void imap_setmetadata(int num_parms, ConstStr *Params) {
 	int setting_user_value = 0;
 	char set_value[32];
 	int set_view = VIEW_BBS;
-	visit vbuf;
+	struct visit vbuf;
 
 	if (num_parms != 6) {
 		IReply("BAD usage error");

@@ -1888,7 +1888,7 @@ void cmd_ical(char *argbuf)
 void ical_CtdlCreateRoom(void)
 {
 	struct ctdlroom qr;
-	visit vbuf;
+	struct visit vbuf;
 
 	/* Create the calendar room if it doesn't already exist */
 	CtdlCreateRoom(USERCALENDARROOM, 4, "", 0, 1, 0, VIEW_CALENDAR);

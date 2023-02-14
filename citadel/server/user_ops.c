@@ -246,7 +246,7 @@ int GenerateRelationshipIndex(char *IndexBuf,
 
 
 // Back end for CtdlSetRelationship()
-void put_visit(visit *newvisit) {
+void put_visit(struct visit *newvisit) {
 	char IndexBuf[32];
 	int IndexLen = 0;
 
@@ -256,13 +256,13 @@ void put_visit(visit *newvisit) {
 
 	// Store the record
 	cdb_store(CDB_VISIT, IndexBuf, IndexLen,
-		  newvisit, sizeof(visit)
+		  newvisit, sizeof(struct visit)
 	);
 }
 
 
 // Define a relationship between a user and a room
-void CtdlSetRelationship(visit *newvisit, struct ctdluser *rel_user, struct ctdlroom *rel_room) {
+void CtdlSetRelationship(struct visit *newvisit, struct ctdluser *rel_user, struct ctdlroom *rel_room) {
 	// We don't use these in Citadel because they're implicit by the
 	// index, but they must be present if the database is exported.
 	newvisit->v_roomnum = rel_room->QRnumber;
@@ -274,7 +274,7 @@ void CtdlSetRelationship(visit *newvisit, struct ctdluser *rel_user, struct ctdl
 
 
 // Locate a relationship between a user and a room
-void CtdlGetRelationship(visit *vbuf, struct ctdluser *rel_user, struct ctdlroom *rel_room) {
+void CtdlGetRelationship(struct visit *vbuf, struct ctdluser *rel_user, struct ctdlroom *rel_room) {
 	char IndexBuf[32];
 	int IndexLen;
 	struct cdbdata *cdbvisit;
@@ -283,11 +283,11 @@ void CtdlGetRelationship(visit *vbuf, struct ctdluser *rel_user, struct ctdlroom
 	IndexLen = GenerateRelationshipIndex(IndexBuf, rel_room->QRnumber, rel_room->QRgen, rel_user->usernum);
 
 	// Clear out the buffer
-	memset(vbuf, 0, sizeof(visit));
+	memset(vbuf, 0, sizeof(struct visit));
 
 	cdbvisit = cdb_fetch(CDB_VISIT, IndexBuf, IndexLen);
 	if (cdbvisit != NULL) {
-		memcpy(vbuf, cdbvisit->ptr, ((cdbvisit->len > sizeof(visit)) ?  sizeof(visit) : cdbvisit->len));
+		memcpy(vbuf, cdbvisit->ptr, ((cdbvisit->len > sizeof(struct visit)) ?  sizeof(struct visit) : cdbvisit->len));
 		cdb_free(cdbvisit);
 	}
 	else {
@@ -1016,7 +1016,7 @@ void CtdlSetPassword(char *new_pw) {
 // Set iuser to the name of the user, and op to 1=invite or 0=kick
 int CtdlInvtKick(char *iuser, int op) {
 	struct ctdluser USscratch;
-	visit vbuf;
+	struct visit vbuf;
 	char bbb[SIZ];
 
 	if (CtdlGetUser(&USscratch, iuser) != 0) {
@@ -1049,7 +1049,7 @@ int CtdlInvtKick(char *iuser, int op) {
 // Forget (Zap) the current room (API call)
 // Returns 0 on success
 int CtdlForgetThisRoom(void) {
-	visit vbuf;
+	struct visit vbuf;
 
 	// On some systems, Admins are not allowed to forget rooms
 	if (is_aide() && (CtdlGetConfigInt("c_aide_zap") == 0)
@@ -1134,7 +1134,7 @@ int InitialMailCheck() {
 	int a;
 	char mailboxname[ROOMNAMELEN];
 	struct ctdlroom mailbox;
-	visit vbuf;
+	struct visit vbuf;
 	struct cdbdata *cdbfr;
 	long *msglist = NULL;
 	int num_msgs = 0;

@@ -248,8 +248,8 @@ void cmd_setu(char *new_parms) {
 // set last read pointer (marks all messages in the current room as read, up to the specified point)
 void cmd_slrp(char *new_ptr) {
 	long newlr;
-	visit vbuf;
-	visit original_vbuf;
+	struct visit vbuf;
+	struct visit original_vbuf;
 
 	if (CtdlAccessCheck(ac_logged_in)) {
 		return;
@@ -265,7 +265,7 @@ void cmd_slrp(char *new_ptr) {
 	CtdlLockGetCurrentUser();
 
 	CtdlGetRelationship(&vbuf, &CC->user, &CC->room);
-	memcpy(&original_vbuf, &vbuf, sizeof(visit));
+	memcpy(&original_vbuf, &vbuf, sizeof(struct visit));
 	vbuf.v_lastseen = newlr;
 	snprintf(vbuf.v_seen, sizeof vbuf.v_seen, "*:%ld", newlr);
 
@@ -304,7 +304,7 @@ void cmd_seen(char *argbuf) {
 
 
 void cmd_gtsn(char *argbuf) {
-	visit vbuf;
+	struct visit vbuf;
 
 	if (CtdlAccessCheck(ac_logged_in)) {
 		return;
@@ -710,7 +710,7 @@ void cmd_asea(char *cmdbuf) {
 // Set the preferred view for the current user/room combination
 void cmd_view(char *cmdbuf) {
 	int requested_view;
-	visit vbuf;
+	struct visit vbuf;
 
 	if (CtdlAccessCheck(ac_logged_in)) {
 		return;

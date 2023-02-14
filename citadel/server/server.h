@@ -74,7 +74,7 @@ struct cdbdata {
 
 
 // Defines the relationship of a user to a particular room
-typedef struct __visit {
+struct visit {
 	long v_roomnum;
 	long v_roomgen;
 	long v_usernum;
@@ -83,7 +83,7 @@ typedef struct __visit {
 	char v_seen[SIZ];
 	char v_answered[SIZ];
 	int v_view;
-} visit;
+};
 
 
 // Supplementary data for a message on disk

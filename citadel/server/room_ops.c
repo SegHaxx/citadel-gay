@@ -97,7 +97,7 @@ int CtdlDoIHavePermissionToDeleteMessagesFromThisRoom(void) {
 // Yes, it has a couple of gotos.  If you don't like that, go die in a car fire.
 void CtdlRoomAccess(struct ctdlroom *roombuf, struct ctdluser *userbuf, int *result, int *view) {
 	int retval = 0;
-	visit vbuf;
+	struct visit vbuf;
 	int is_me = 0;
 	int is_guest = 0;
 
@@ -625,7 +625,7 @@ void CtdlUserGoto(char *where, int display_result, int transiently, int *retmsgs
 	int info = 0;
 	int rmailflag;
 	int raideflag;
-	visit vbuf;
+	struct visit vbuf;
 	char truncated_roomname[ROOMNAMELEN];
         struct cdbdata *cdbfr;
 	long *msglist = NULL;
@@ -1031,7 +1031,7 @@ unsigned CtdlCreateRoom(char *new_room_name,
 {
 	struct ctdlroom qrbuf;
 	struct floor flbuf;
-	visit vbuf;
+	struct visit vbuf;
 
 	syslog(LOG_DEBUG, "room_ops: CtdlCreateRoom(name=%s, type=%d, view=%d)", new_room_name, new_room_type, new_room_view);
 

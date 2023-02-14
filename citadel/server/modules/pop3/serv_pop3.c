@@ -144,7 +144,7 @@ void pop3_add_message(long msgnum, void *userdata) {
 // (This should be called only once, by pop3_pass(), and returns the number
 // of messages in the inbox, or -1 for error)
 int pop3_grab_mailbox(void) {
-        visit vbuf;
+        struct visit vbuf;
 	int i;
 
 	if (CtdlGetRoom(&CC->room, MAILROOM) != 0) return(-1);
@@ -360,7 +360,7 @@ void pop3_dele(char *argbuf) {
 // Perform "UPDATE state" stuff
 void pop3_update(void) {
 	int i;
-        visit vbuf;
+        struct visit vbuf;
 
 	long *deletemsgs = NULL;
 	int num_deletemsgs = 0;
