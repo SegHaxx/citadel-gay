@@ -79,7 +79,7 @@ struct visit {
 	long v_roomgen;
 	long v_usernum;
 	long v_lastseen;
-	unsigned int v_flags;
+	unsigned v_flags;
 	char v_seen[SIZ];
 	char v_answered[SIZ];
 	int v_view;
