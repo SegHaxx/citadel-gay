@@ -31,3 +31,5 @@ data
 package-version.txt
 core.*
 utils/ctdl3264_structs.h
+ctdl3264
+config.mk
