@@ -1,7 +1,13 @@
 #!/bin/bash
+# Copyright (c) 2023 by the citadel.org team
+# This program is open source software.  Use, duplication, or disclosure
+# is subject to the terms of the GNU General Public License, version 3.
 
+# Source our data structures from the real live working code
 SERVER_H=server/server.h
 
+# Generate the "32-bit" versions of these structures.
+# Note that this is specifically converting "32-bit to 64-bit" -- NOT "any-to-any"
 convert_struct() {
 	start_line=$(cat ${SERVER_H} | egrep -n "^struct $1 {" | cut -d: -f1)
 	tail +${start_line} ${SERVER_H} | sed '/};/q' \
@@ -12,6 +18,7 @@ convert_struct() {
 
 }
 
+# Here we go.  Let's make this thing happen.
 (
 	convert_struct "ctdluser"
 	convert_struct "ctdlroom"

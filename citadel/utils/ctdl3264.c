@@ -1,7 +1,7 @@
 // Attempt to convert your database from 32-bit to 64-bit.
 // Don't run this.  It doesn't work and if you try to run it you will immediately die.
 //
-// Copyright (c) 1987-2022 by the citadel.org team
+// Copyright (c) 2023 by the citadel.org team
 //
 // This program is open source software.  Use, duplication, or disclosure
 // is subject to the terms of the GNU General Public License, version 3.
