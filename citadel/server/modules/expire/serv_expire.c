@@ -593,6 +593,7 @@ int PurgeVisits(void) {
 // Purge the use table of old entries.
 int PurgeUseTable(StrBuf *ErrMsg) {
 	int purged = 0;
+	int total = 0;
 	struct cdbdata *cdbut;
 	struct UseTable ut;
 	struct UPurgeList *ul = NULL;
@@ -603,6 +604,7 @@ int PurgeUseTable(StrBuf *ErrMsg) {
 	syslog(LOG_DEBUG, "Purge use table: phase 1");
 	cdb_rewind(CDB_USETABLE);
 	while(cdbut = cdb_next_item(CDB_USETABLE), cdbut != NULL) {
+		++total;
 		if (cdbut->len > sizeof(struct UseTable))
 			memcpy(&ut, cdbut->ptr, sizeof(struct UseTable));
 		else {
@@ -632,7 +634,7 @@ int PurgeUseTable(StrBuf *ErrMsg) {
 		ul = uptr;
 	}
 
-	syslog(LOG_DEBUG, "Purge use table: finished (purged %d records)", purged);
+	syslog(LOG_DEBUG, "Purge use table: finished (purged %d of %d records)", purged, total);
 	return(purged);
 }
 

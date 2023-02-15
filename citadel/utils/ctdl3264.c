@@ -29,13 +29,29 @@
 
 
 int main(int argc, char **argv) {
+	char ctdldir[PATH_MAX]=CTDLDIR;
 
+	// Check to make sure we're running on the target 64-bit system
 	if (sizeof(void *) != 8) {
 		fprintf(stderr, "%s: this is a %ld-bit system.\n", argv[0], sizeof(void *)*8);
 		fprintf(stderr, "%s: you must run this on a 64-bit system, onto which a 32-bit database has been copied.\n", argv[0]);
 		exit(1);
 	}
 
+	// Parse command line
+	while ((int a = getopt(argc, argv, "h:w:")) != EOF) {
+		switch (a) {
+		case 'h':
+			strncpy(ctdldir, optarg, sizeof ctdldir);
+			break;
+		case 'w':
+			watchdog = atoi(optarg);
+			break;
+		default:
+			fprintf(stderr, "%s: usage: %s [-h server_dir]\n", argv[0], argv[0]);
+			exit(2);
+		}
+	}
 
 	exit(0);
 }
