@@ -39,13 +39,11 @@ int main(int argc, char **argv) {
 	}
 
 	// Parse command line
-	while ((int a = getopt(argc, argv, "h:w:")) != EOF) {
+	int a;
+	while ((a = getopt(argc, argv, "h:")) != EOF) {
 		switch (a) {
 		case 'h':
 			strncpy(ctdldir, optarg, sizeof ctdldir);
-			break;
-		case 'w':
-			watchdog = atoi(optarg);
 			break;
 		default:
 			fprintf(stderr, "%s: usage: %s [-h server_dir]\n", argv[0], argv[0]);

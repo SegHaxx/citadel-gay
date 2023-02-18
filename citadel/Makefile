@@ -39,7 +39,7 @@ chkpwd: utils/chkpwd.c utils/auth.c utils/*.h server/*.h
 	cc ${CFLAGS} ${LDFLAGS} utils/chkpwd.c utils/auth.c -lcrypt -o chkpwd
 
 ctdl3264: utils/ctdl3264.c utils/*.h server/*.h utils/ctdl3264_structs.h
-	cc ${CFLAGS} ${LDFLAGS} utils/ctdl3264.c -ldb -o ctdl3264
+	cc ${CFLAGS} ${LDFLAGS} utils/ctdl3264.c -o ctdl3264
 
 utils/ctdl3264_structs.h: server/server.h utils/ctdl3264_prep.sh
 	utils/ctdl3264_prep.sh
