@@ -1,31 +1,20 @@
-/*
- * A server-side module for Citadel which supports address book information
- * using the standard vCard format.
- * 
- * Copyright (c) 1999-2022 by the citadel.org team
- *
- * This program is open source software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 3.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- */
+// A server-side module for Citadel which supports address book information
+// using the standard vCard format.
+// 
+// Copyright (c) 1999-2023 by the citadel.org team
+//
+// This program is open source software.  Use, duplication, or disclosure
+// is subject to the terms of the GNU General Public License, version 3.
 
-/*
- * Format of the "Exclusive ID" field of the message containing a user's
- * vCard.  Doesn't matter what it really looks like as long as it's both
- * unique and consistent (because we use it for replication checking to
- * delete the old vCard network-wide when the user enters a new one).
- */
+// Format of the "Exclusive ID" field of the message containing a user's
+// vCard.  Doesn't matter what it really looks like as long as it's both
+// unique and consistent (because we use it for replication checking to
+// delete the old vCard network-wide when the user enters a new one).
 #define VCARD_EXT_FORMAT	"Citadel vCard: personal card for %s at %s"
 
-/*
- * Citadel will accept either text/vcard or text/x-vcard as the MIME type
- * for a vCard.  The following definition determines which one it *generates*
- * when serializing.
- */
+// Citadel will accept either text/vcard or text/x-vcard as the MIME type
+// for a vCard.  The following definition determines which one it *generates*
+// when serializing.
 #define VCARD_MIME_TYPE		"text/x-vcard"
 
 #include "../../sysdep.h"
@@ -58,9 +47,7 @@
 #include "../../citadel_ldap.h"
 #include "../../ctdl_module.h"
 
-/*
- * set global flag calling for an aide to validate new users
- */
+// set global flag calling for an aide to validate new users
 void set_mm_valid(void) {
 	int flags = 0;
 
@@ -75,10 +62,8 @@ void set_mm_valid(void) {
 ///TODO: gettext!
 #define _(a) a
 
-/*
- * See if there is a valid Internet address in a vCard to use for outbound
- * Internet messages.  If there is, stick it in the buffer.
- */
+// See if there is a valid Internet address in a vCard to use for outbound
+// Internet messages.  If there is, stick it in the buffer.
 void extract_inet_email_addrs(char *emailaddrbuf, size_t emailaddrbuf_len,
 			      char *secemailaddrbuf, size_t secemailaddrbuf_len,
 			      struct vCard *v,
@@ -89,8 +74,7 @@ void extract_inet_email_addrs(char *emailaddrbuf, size_t emailaddrbuf_len,
 	int IsDirectoryAddress;
 	int saved_instance = 0;
 
-	/* Go through the vCard searching for *all* Internet email addresses
-	 */
+	// Go through the vCard searching for *all* Internet email addresses
 	while (s = vcard_get_prop(v, "email", 1, instance, 0),  s != NULL) {
 		k = vcard_get_prop(v, "email", 1, instance, 1);
 		if ( (s != NULL) && (k != NULL) && (bmstrcasestr(k, "internet")) ) {
@@ -101,8 +85,7 @@ void extract_inet_email_addrs(char *emailaddrbuf, size_t emailaddrbuf_len,
 
 				syslog(LOG_DEBUG, "EVQ: addr=<%s> IsDirectoryAddress=<%d> local_addrs_only=<%d>", addr, IsDirectoryAddress, local_addrs_only);
 
-				if ( IsDirectoryAddress || !local_addrs_only)
-				{
+				if ( IsDirectoryAddress || !local_addrs_only) {
 					++saved_instance;
 					if ((saved_instance == 1) && (emailaddrbuf != NULL)) {
 						safestrncpy(emailaddrbuf, addr, emailaddrbuf_len);
@@ -118,8 +101,7 @@ void extract_inet_email_addrs(char *emailaddrbuf, size_t emailaddrbuf_len,
 						}
 					}
 				}
-				if (!IsDirectoryAddress && local_addrs_only)
-				{
+				if (!IsDirectoryAddress && local_addrs_only) {
 					StrBufAppendPrintf(CC->StatusMessage, "\n%d|", ERROR+ ILLEGAL_VALUE);
 					StrBufAppendBufPlain(CC->StatusMessage, addr, -1, 0);
 					StrBufAppendBufPlain(CC->StatusMessage, HKEY("|"), 0);
@@ -133,12 +115,9 @@ void extract_inet_email_addrs(char *emailaddrbuf, size_t emailaddrbuf_len,
 }
 
 
-/*
- * See if there is a name / screen name / friendly name  in a vCard to use for outbound
- * Internet messages.  If there is, stick it in the buffer.
- */
-void extract_friendly_name(char *namebuf, size_t namebuf_len, struct vCard *v)
-{
+// See if there is a name / screen name / friendly name  in a vCard to use for outbound
+// Internet messages.  If there is, stick it in the buffer.
+void extract_friendly_name(char *namebuf, size_t namebuf_len, struct vCard *v) {
 	char *s;
 
 	s = vcard_get_prop(v, "fn", 1, 0, 0);
@@ -152,9 +131,7 @@ void extract_friendly_name(char *namebuf, size_t namebuf_len, struct vCard *v)
 }
 
 
-/*
- * Callback function for vcard_upload_beforesave() hunts for the real vcard in the MIME structure
- */
+// Callback function for vcard_upload_beforesave() hunts for the real vcard in the MIME structure
 void vcard_extract_vcard(char *name, char *filename, char *partnum, char *disp,
 		   void *content, char *cbtype, char *cbcharset, size_t length,
 		   char *encoding, char *cbid, void *cbuserdata)
@@ -173,12 +150,10 @@ void vcard_extract_vcard(char *name, char *filename, char *partnum, char *disp,
 }
 
 
-/*
- * This handler detects whether the user is attempting to save a new
- * vCard as part of his/her personal configuration, and handles the replace
- * function accordingly (delete the user's existing vCard in the config room
- * and in the global address book).
- */
+// This handler detects whether the user is attempting to save a new
+// vCard as part of his/her personal configuration, and handles the replace
+// function accordingly (delete the user's existing vCard in the config room
+// and in the global address book).
 int vcard_upload_beforesave(struct CtdlMessage *msg, struct recptypes *recp) {
 	char *s;
 	char buf[SIZ];
@@ -190,15 +165,14 @@ int vcard_upload_beforesave(struct CtdlMessage *msg, struct recptypes *recp) {
 	int yes_my_citadel_config = 0;
 	int yes_any_vcard_room = 0;
 
-	if ((!CC->logged_in) && (CC->vcard_updated_by_ldap==0)) return(0);	/* Only do this if logged in, or if ldap changed the vcard. */
+	if ((!CC->logged_in) && (CC->vcard_updated_by_ldap==0)) return(0);	// Only do this if logged in, or if ldap changed the vcard.
 
-	/* Is this some user's "My Citadel Config" room? */
-	if (((CC->room.QRflags & QR_MAILBOX) != 0) &&
-	      (!strcasecmp(&CC->room.QRname[11], USERCONFIGROOM)) ) {
-		/* Yes, we want to do this */
+	// Is this some user's "My Citadel Config" room?
+	if (((CC->room.QRflags & QR_MAILBOX) != 0) && (!strcasecmp(&CC->room.QRname[11], USERCONFIGROOM)) ) {
+		// Yes, we want to do this
 		yes_my_citadel_config = 1;
 #ifdef VCARD_SAVES_BY_AIDES_ONLY
-		/* Prevent non-aides from performing registration changes, but ldap is ok. */
+		// Prevent non-aides from performing registration changes, but ldap is ok.
 		if ((CC->user.axlevel < AxAideU) && (CC->vcard_updated_by_ldap==0)) {
 			return(1);
 		}
@@ -206,33 +180,33 @@ int vcard_upload_beforesave(struct CtdlMessage *msg, struct recptypes *recp) {
 
 	}
 
-	/* Is this a room with an address book in it? */
+	// Is this a room with an address book in it?
 	if (CC->room.QRdefaultview == VIEW_ADDRESSBOOK) {
 		yes_any_vcard_room = 1;
 	}
 
-	/* If neither condition exists, don't run this hook. */
+	// If neither condition exists, don't run this hook.
 	if ( (!yes_my_citadel_config) && (!yes_any_vcard_room) ) {
 		return(0);
 	}
 
-	/* If this isn't a MIME message, don't bother. */
+	// If this isn't a MIME message, don't bother.
 	if (msg->cm_format_type != 4) return(0);
 
-	/* Ok, if we got this far, look into the situation further... */
+	// Ok, if we got this far, look into the situation further...
 
 	if (CM_IsEmpty(msg, eMesageText)) return(0);
 
 	mime_parser(CM_RANGE(msg, eMesageText),
 		    *vcard_extract_vcard,
 		    NULL, NULL,
-		    &v,		/* user data ptr - put the vcard here */
+		    &v,		// user data ptr - put the vcard here
 		    0
 	);
 
-	if (v == NULL) return(0);	/* no vCards were found in this message */
+	if (v == NULL) return(0);	// no vCards were found in this message
 
-	/* If users cannot create their own accounts, they cannot re-register either. */
+	// If users cannot create their own accounts, they cannot re-register either.
 	if ( (yes_my_citadel_config) &&
 	     (CtdlGetConfigInt("c_disable_newu")) &&
 	     (CC->user.axlevel < AxAideU) &&
@@ -245,43 +219,37 @@ int vcard_upload_beforesave(struct CtdlMessage *msg, struct recptypes *recp) {
 
 
 	if (yes_my_citadel_config) {
-		/* Bingo!  The user is uploading a new vCard, so
-		 * delete the old one.  First, figure out which user
-		 * is being re-registered...
-		 */
+		// Bingo!  The user is uploading a new vCard, so delete the old one.
+		// First, figure out which user is being re-registered...
 		what_user = atol(CC->room.QRname);
 
 		if (what_user == CC->user.usernum) {
-			/* It's the logged in user.  That was easy. */
+			// It's the logged in user.  That was easy.
 			memcpy(&usbuf, &CC->user, sizeof(struct ctdluser));
 		}
 		
 		else if (CtdlGetUserByNumber(&usbuf, what_user) == 0) {
-			/* We fetched a valid user record */
+			// We fetched a valid user record
 		}
 
 		else {
-			/* somebody set up us the bomb! */
+			// somebody set up us the bomb!
 			yes_my_citadel_config = 0;
 		}
 	}
 	
 	if (yes_my_citadel_config) {
-		/* Delete the user's old vCard.  This would probably
-		 * get taken care of by the replication check, but we
-		 * want to make sure there is absolutely only one
-		 * vCard in the user's config room at all times.
-		 *
-		 */
+		// Delete the user's old vCard.  This would probably get taken care of by the replication check, but we
+		// want to make sure there is absolutely only one vCard in the user's config room at all times.
 		CtdlDeleteMessages(CC->room.QRname, NULL, 0, "[Tt][Ee][Xx][Tt]/.*[Vv][Cc][Aa][Rr][Dd]$");
 
-		/* Make the author of the message the name of the user. */
+		// Make the author of the message the name of the user.
 		if (!IsEmptyStr(usbuf.fullname)) {
 			CM_SetField(msg, eAuthor, usbuf.fullname, strlen(usbuf.fullname));
 		}
 	}
 
-	/* Insert or replace RFC2739-compliant free/busy URL */
+	// Insert or replace RFC2739-compliant free/busy URL
 	if (yes_my_citadel_config) {
 		sprintf(buf, "http://%s/%s.vfb",
 			CtdlGetConfigStr("c_fqdn"),
@@ -294,16 +262,17 @@ int vcard_upload_beforesave(struct CtdlMessage *msg, struct recptypes *recp) {
 
 
 	s = vcard_get_prop(v, "UID", 1, 0, 0);
-	if (s == NULL) { /* Note LDAP auth sets UID from the LDAP UUID, use that if it exists. */
-	  /* Enforce local UID policy if applicable */
-	  if (yes_my_citadel_config) {
-		snprintf(buf, sizeof buf, VCARD_EXT_FORMAT, msg->cm_fields[eAuthor], NODENAME);
-	  } else {
-		/* If the vCard has no UID, then give it one. */
-		generate_uuid(buf);
-	  }
- 	  vcard_set_prop(v, "UID", buf, 0);
-    }
+	if (s == NULL) { // Note LDAP auth sets UID from the LDAP UUID, use that if it exists.
+		if (yes_my_citadel_config) {
+			// Enforce local UID policy if applicable
+			snprintf(buf, sizeof buf, VCARD_EXT_FORMAT, msg->cm_fields[eAuthor], NODENAME);
+		}
+		else {
+			// If the vCard has no UID, then give it one. */
+			generate_uuid(buf);
+	  	}
+ 		vcard_set_prop(v, "UID", buf, 0);
+	}
 
 
 	/* 
@@ -861,11 +830,8 @@ void dvca_callback(long msgnum, void *userdata) {
 }
 
 
-/*
- * Dump VCard Addresses
- */
-void cmd_dvca(char *argbuf)
-{
+// Dump VCard Addresses
+void cmd_dvca(char *argbuf) {
 	if (CtdlAccessCheck(ac_logged_in)) return;
 
 	cprintf("%d addresses:\n", LISTING_FOLLOWS);
@@ -874,9 +840,15 @@ void cmd_dvca(char *argbuf)
 }
 
 
-/*
- * Query Directory
- */
+// ReBuild Directory Index (this isn't really vcard-related anymore)
+void cmd_rbdi(char *argbuf) {
+	if (CtdlAccessCheck(ac_aide)) return;
+	CtdlRebuildDirectoryIndex();
+	cprintf("%d Directory index has been rebuilt.\n", CIT_OK);
+}
+
+
+// Query Directory (this isn't really vcard-related anymore)
 void cmd_qdir(char *argbuf) {
 	char citadel_addr[256];
 	char internet_addr[256];
@@ -886,8 +858,7 @@ void cmd_qdir(char *argbuf) {
 	extract_token(internet_addr, argbuf, 0, '|', sizeof internet_addr);
 
 	if (CtdlDirectoryLookup(citadel_addr, internet_addr, sizeof citadel_addr) != 0) {
-		cprintf("%d %s was not found.\n",
-			ERROR + NO_SUCH_USER, internet_addr);
+		cprintf("%d %s was not found.\n", ERROR + NO_SUCH_USER, internet_addr);
 		return;
 	}
 
@@ -895,9 +866,7 @@ void cmd_qdir(char *argbuf) {
 }
 
 
-/*
- * Query Directory, in fact an alias to match postfix tcp auth.
- */
+// Query Directory, in fact an alias to match postfix tcp auth.
 void check_get(void) {
 	char internet_addr[256];
 
@@ -947,51 +916,42 @@ void check_get(void) {
 
 
 void check_get_greeting(void) {
-/* dummy function, we have no greeting in this very simple protocol. */
+	// dummy function, we have no greeting in this very simple protocol.
 }
 
 
-/*
- * We don't know if the Contacts room exists so we just create it at login
- */
-void vcard_CtdlCreateRoom(void)
-{
+// We don't know if the Contacts room exists so we just create it at login
+void vcard_CtdlCreateRoom(void) {
 	struct ctdlroom qr;
 	struct visit vbuf;
 
-	/* Create the calendar room if it doesn't already exist */
+	// Create the calendar room if it doesn't already exist
 	CtdlCreateRoom(USERCONTACTSROOM, 4, "", 0, 1, 0, VIEW_ADDRESSBOOK);
 
-	/* Set expiration policy to manual; otherwise objects will be lost! */
+	// Set expiration policy to manual; otherwise objects will be lost!
 	if (CtdlGetRoomLock(&qr, USERCONTACTSROOM)) {
 		syslog(LOG_ERR, "vcard: couldn't get the user CONTACTS room!");
 		return;
 	}
 	qr.QRep.expire_mode = EXPIRE_MANUAL;
-	qr.QRdefaultview = VIEW_ADDRESSBOOK;	/* 2 = address book view */
+	qr.QRdefaultview = VIEW_ADDRESSBOOK;	// 2 = address book view
 	CtdlPutRoomLock(&qr);
 
-	/* Set the view to a calendar view */
+	// Set the view to a calendar view
 	CtdlGetRelationship(&vbuf, &CC->user, &qr);
-	vbuf.v_view = 2;	/* 2 = address book view */
+	vbuf.v_view = 2;			// 2 = address book view
 	CtdlSetRelationship(&vbuf, &CC->user, &qr);
 
 	return;
 }
 
 
-
-
-/*
- * When a user logs in...
- */
+// When a user logs in...
 void vcard_session_login_hook(void) {
 	struct vCard *v = NULL;
 
-	/*
-	 * Is this an LDAP session?  If so, copy various LDAP attributes from the directory entry
-	 * into the user's vCard.
-	 */
+	// Is this an LDAP session?  If so, copy various LDAP attributes from the directory entry
+	// into the user's vCard.
 	if ((CtdlGetConfigInt("c_auth_mode") == AUTHMODE_LDAP) || (CtdlGetConfigInt("c_auth_mode") == AUTHMODE_LDAP_AD)) {
 		v = vcard_get_user(&CC->user);
 		if (v) {
@@ -1003,27 +963,21 @@ void vcard_session_login_hook(void) {
 		}
 	}
 
-	/*
-	 * Extract the user's friendly/screen name
-	 * These are inserted into the session data for various message entry commands to use.
-	 */
+	// Extract the user's friendly/screen name
+	// These are inserted into the session data for various message entry commands to use.
 	v = vcard_get_user(&CC->user);
 	if (v) {
 		extract_friendly_name(CC->cs_inet_fn, sizeof CC->cs_inet_fn, v);
 		vcard_free(v);
 	}
 
-	/*
-	 * Create the user's 'Contacts' room (personal address book) if it doesn't already exist.
-	 */
+	// Create the user's 'Contacts' room (personal address book) if it doesn't already exist.
 	vcard_CtdlCreateRoom();
 }
 
 
-/* 
- * Turn an arbitrary RFC822 address into a struct vCard for possible
- * inclusion into an address book.
- */
+// Turn an arbitrary RFC822 address into a struct vCard for possible
+// inclusion into an address book.
 struct vCard *vcard_new_from_rfc822_addr(char *addr) {
 	struct vCard *v;
 	char user[256], node[256], name[256], email[256], n[256], uid[256];
@@ -1052,10 +1006,8 @@ struct vCard *vcard_new_from_rfc822_addr(char *addr) {
 }
 
 
-/*
- * This is called by store_harvested_addresses() to remove from the
- * list any addresses we already have in our address book.
- */
+// This is called by store_harvested_addresses() to remove from the
+// list any addresses we already have in our address book.
 void strip_addresses_already_have(long msgnum, void *userdata) {
 	char *collected_addresses;
 	struct CtdlMessage *msg = NULL;
@@ -1077,7 +1029,7 @@ void strip_addresses_already_have(long msgnum, void *userdata) {
 		for (j=0; j<num_tokens(collected_addresses, ','); ++j) {
 			extract_token(addr, collected_addresses, j, ',', sizeof addr);
 
-			/* Remove the address if we already have it! */
+			// Remove the address if we already have it!
 			process_rfc822_addr(addr, user, node, name);
 			snprintf(addr, sizeof addr, "%s@%s", user, node);
 			if (!strcasecmp(value, addr)) {
@@ -1092,9 +1044,7 @@ void strip_addresses_already_have(long msgnum, void *userdata) {
 
 
 
-/*
- * Back end function for store_harvested_addresses()
- */
+// Back end function for store_harvested_addresses()
 void store_this_ha(struct addresses_to_be_filed *aptr) {
 	struct CtdlMessage *vmsg = NULL;
 	char *ser = NULL;
@@ -1102,7 +1052,7 @@ void store_this_ha(struct addresses_to_be_filed *aptr) {
 	char recipient[256];
 	int i;
 
-	/* First remove any addresses we already have in the address book */
+	// First remove any addresses we already have in the address book
 	CtdlUserGoto(aptr->roomname, 0, 0, NULL, NULL, NULL, NULL);
 	CtdlForEachMessage(MSGS_ALL, 0, NULL, "[Tt][Ee][Xx][Tt]/.*[Vv][Cc][Aa][Rr][Dd]$", NULL,
 		strip_addresses_already_have, aptr->collected_addresses);
@@ -1215,6 +1165,7 @@ char *ctdl_module_init_vcard(void) {
 		CtdlRegisterProtoHook(cmd_regi, "REGI", "Enter registration info");
 		CtdlRegisterProtoHook(cmd_greg, "GREG", "Get registration info");
 		CtdlRegisterProtoHook(cmd_qdir, "QDIR", "Query Directory");
+		CtdlRegisterProtoHook(cmd_rbdi, "RBDI", "ReBuild Directory Index");
 		CtdlRegisterProtoHook(cmd_gvsn, "GVSN", "Get Valid Screen Names");
 		CtdlRegisterProtoHook(cmd_gvea, "GVEA", "Get Valid Email Addresses");
 		CtdlRegisterProtoHook(cmd_dvca, "DVCA", "Dump VCard Addresses");

@@ -49,6 +49,7 @@
 #include "../../msgbase.h"
 #include "../../user_ops.h"
 #include "../../euidindex.h"
+#include "../../internet_addressing.h"
 #include "../../ctdl_module.h"
 
 char migr_tempfilename1[PATH_MAX];
@@ -868,6 +869,7 @@ void migr_do_import(void) {
 	rebuild_euid_index();
 	rebuild_usersbynumber();
 	CtdlSetConfigInt("MM_fulltext_wordbreaker", -1);	// Set an invalid wordbreaker to force re-indexing
+	CtdlRebuildDirectoryIndex();				// Force a rebuild of the directory index
 	CC->dont_term = 0;
 }
 
