@@ -106,6 +106,7 @@ void inetcfg_init_backend(long msgnum, void *userdata) {
 	struct CtdlMessage *msg;
 
        	msg = CtdlFetchMessage(msgnum, 1);
+	syslog(LOG_DEBUG, "inetcfg: config msg %ld is %s", msgnum, msg ? "not null" : "null");
        	if (msg != NULL) {
 		inetcfg_setTo(msg);
                	CM_Free(msg);
@@ -114,11 +115,13 @@ void inetcfg_init_backend(long msgnum, void *userdata) {
 
 
 void inetcfg_init(void) {
-	syslog(LOG_DEBUG, "EVQ: called inetcfg_init()");
+	syslog(LOG_DEBUG, "inetcfg: inetcfg_init() started");
 	if (CtdlGetRoom(&CC->room, SYSCONFIGROOM) != 0) {
+		syslog(LOG_WARNING, "inetcfg: could not find <%s>", SYSCONFIGROOM);
 		return;
 	}
 	CtdlForEachMessage(MSGS_LAST, 1, NULL, INTERNETCFG, NULL, inetcfg_init_backend, NULL);
+	syslog(LOG_DEBUG, "inetcfg: inetcfg_init() completed");
 }
 
 
