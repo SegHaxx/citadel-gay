@@ -250,14 +250,12 @@ void put_visit(struct visit *newvisit) {
 	char IndexBuf[32];
 	int IndexLen = 0;
 
-	memset (IndexBuf, 0, sizeof (IndexBuf));
+	memset(IndexBuf, 0, sizeof (IndexBuf));
 	// Generate an index
 	IndexLen = GenerateRelationshipIndex(IndexBuf, newvisit->v_roomnum, newvisit->v_roomgen, newvisit->v_usernum);
 
 	// Store the record
-	cdb_store(CDB_VISIT, IndexBuf, IndexLen,
-		  newvisit, sizeof(struct visit)
-	);
+	cdb_store(CDB_VISIT, IndexBuf, IndexLen, newvisit, sizeof(struct visit));
 }
 
 

@@ -599,12 +599,14 @@ void CtdlSetSeen(long *target_msgnums, int num_target_msgnums,
 		vset = new_set;
 	}
 
-	// Decide which message set we're manipulating
+	// Decide which message set we're manipulating.  Zero the buffers so they compress well.
 	switch (which_set) {
 		case ctdlsetseen_seen:
+			memset(vbuf.v_seen, 0, sizeof vbuf.v_seen);
 			safestrncpy(vbuf.v_seen, ChrPtr(vset), sizeof vbuf.v_seen);
 			break;
 		case ctdlsetseen_answered:
+			memset(vbuf.v_answered, 0, sizeof vbuf.v_seen);
 			safestrncpy(vbuf.v_answered, ChrPtr(vset), sizeof vbuf.v_answered);
 			break;
 	}
