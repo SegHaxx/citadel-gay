@@ -1,4 +1,4 @@
-// Copyright (c) 1987-2022 by the citadel.org team
+// Copyright (c) 1987-2023 by the citadel.org team
 //
 // This program is open source software.  Use, duplication, or disclosure
 // is subject to the terms of the GNU General Public License, version 3.
@@ -68,21 +68,21 @@ void start_chkpwd_daemon(void) {
 
 	if ((stat(file_chkpwd, &filestats)==-1) || (filestats.st_size==0)){
 		printf("didn't find chkpwd daemon in %s: %s\n", file_chkpwd, strerror(errno));
-		abort();
+		exit(1);
 	}
 	if (pipe(chkpwd_write_pipe) != 0) {
 		printf("Unable to create pipe for chkpwd daemon: %s\n", strerror(errno));
-		abort();
+		exit(2);
 	}
 	if (pipe(chkpwd_read_pipe) != 0) {
 		printf("Unable to create pipe for chkpwd daemon: %s\n", strerror(errno));
-		abort();
+		exit(3);
 	}
 
 	chkpwd_pid = fork();
 	if (chkpwd_pid < 0) {
 		printf("Unable to fork chkpwd daemon: %s\n", strerror(errno));
-		abort();
+		exit(4);
 	}
 	if (chkpwd_pid == 0) {
 		dup2(chkpwd_write_pipe[0], 0);
@@ -90,7 +90,6 @@ void start_chkpwd_daemon(void) {
 		for (i=2; i<256; ++i) close(i);
 		execl(file_chkpwd, file_chkpwd, NULL);
 		printf("Unable to exec chkpwd daemon: %s\n", strerror(errno));
-		abort();
 		exit(errno);
 	}
 }

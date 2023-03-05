@@ -91,18 +91,24 @@
 
 #define CTDLEXIT_SHUTDOWN	0	// Normal shutdown; do NOT auto-restart
 
-// Exit codes 101 through 109 are used for conditions in which
-// we deliberately do NOT want the service to automatically
-// restart.
+// Exit codes 101-109  are used for conditions in which we
+// deliberately do NOT want the service to automatically restart.
 #define CTDLEXIT_CONFIG		101	// Could not read system configuration
+#define CTDLEXIT_SANITY		102	// Internal sanity check failed
 #define CTDLEXIT_HOME		103	// Citadel home directory not found
 #define CTDLEXIT_DB		105	// Unable to initialize database
 #define CTDLEXIT_LIBCITADEL	106	// Incorrect version of libcitadel
 #define CTDL_EXIT_UNSUP_AUTH	107	// Unsupported auth mode configured
 #define CTDLEXIT_UNUSER		108	// Could not determine uid to run as
 #define CTDLEXIT_CRYPTO		109	// Problem initializing SSL or TLS
-// Any other exit is likely to be from an unexpected abort (segfault etc)
-// and we want to try restarting.
+
+// Other exit codes are probably ok to try starting the server again.
+#define CTDLEXIT_REDIRECT	110	// Redirect buffer failure
+#define CTDLEXIT_CHKPWD		111	// chkpwd daemon failed
+#define CTDLEXIT_THREAD		112	// Problem setting up multithreading
+#define CTDLEXIT_BAD_MAGIC	113	// internet_addressing() magic number is wrong
+
+// Any other exit is likely to be from an unexpected abort (segfault etc) and we want to try restarting.
 
 
 // Reasons why a session would be terminated (set CC->kill_me to these values)

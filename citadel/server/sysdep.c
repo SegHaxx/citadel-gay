@@ -3,7 +3,7 @@
 // Here's where we (hopefully) have most parts of the Citadel server that
 // might need tweaking when run on different operating system variants.
 //
-// Copyright (c) 1987-2022 by the citadel.org team
+// Copyright (c) 1987-2023 by the citadel.org team
 //
 // This program is open source software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License, version 3.
@@ -72,12 +72,12 @@ void init_sysdep(void) {
 
 	if (pthread_key_create(&ThreadKey, NULL) != 0) {			// TSD for threads
 		syslog(LOG_ERR, "pthread_key_create() : %m");
-		abort();
+		exit(CTDLEXIT_THREAD);
 	}
 	
 	if (pthread_key_create(&MyConKey, NULL) != 0) {				// TSD for sessions
 		syslog(LOG_CRIT, "sysdep: can't create TSD key: %m");
-		abort();
+		exit(CTDLEXIT_THREAD);
 	}
 
 	// Interript, hangup, and terminate signals should cause the server to shut down.

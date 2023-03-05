@@ -155,7 +155,7 @@ void check_control(void) {
 
 	if (sanity_diag_mode == 1) {
 		syslog(LOG_INFO, "control: sanity check diagnostic mode is active - exiting now");
-		abort();
+		exit(CTDLEXIT_SANITY);
 	}
 }
 

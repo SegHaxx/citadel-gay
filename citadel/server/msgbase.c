@@ -2748,7 +2748,7 @@ long CtdlSubmitMsg(struct CtdlMessage *msg,	/* message to save */
 	 */
 	if (CC->redirect_buffer != NULL) {
 		syslog(LOG_ALERT, "msgbase: CC->redirect_buffer is not NULL during message submission!");
-		abort();
+		exit(CTDLEXIT_REDIRECT);
 	}
 	CC->redirect_buffer = NewStrBufPlain(NULL, SIZ);
 	CtdlOutputPreLoadedMsg(msg, MT_RFC822, HEADERS_ALL, 0, 1, QP_EADDR);

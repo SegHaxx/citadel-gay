@@ -1,7 +1,7 @@
 // This file contains functions which handle the mapping of Internet addresses
 // to users on the Citadel system.
 //
-// Copyright (c) 1987-2022 by the citadel.org team
+// Copyright (c) 1987-2023 by the citadel.org team
 //
 // This program is open source software.  Use, duplication, or disclosure
 // is subject to the terms of the GNU General Public License, version 3.
@@ -527,7 +527,7 @@ void free_recipients(struct recptypes *valid) {
 
 	if (valid->recptypes_magic != RECPTYPES_MAGIC) {
 		syslog(LOG_ERR, "internet_addressing: attempt to call free_recipients() on some other data type!");
-		abort();
+		exit(CTDLEXIT_BAD_MAGIC);
 	}
 
 	if (valid->errormsg != NULL)		free(valid->errormsg);
