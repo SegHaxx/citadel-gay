@@ -55,7 +55,7 @@ ctdl_startup = async() => {
 	}
 	else {
 		document.getElementById("ctdl-main").innerHTML =
-			"<div class=\"w3-panel w3-red\"><p>"
+			"<div class=\"ctdl-fatal-error\"><p>"
 			+ _("This program was unable to connect or stay connected to the Citadel server.  Please report this problem to your system administrator.")
 			+ "</div>";
 	}

@@ -629,3 +629,12 @@ blockquote pre {
 	border: none;
 	font-size: 1.25em;
 }
+
+.ctdl-fatal-error {
+	background-color: DarkRed;
+	margin-left: 1em;
+	margin-right: 1em;
+	padding: 1em;
+	font-size: 2em;
+	color: White;
+}
