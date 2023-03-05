@@ -1,6 +1,6 @@
 // Room functions
 //
-// Copyright (c) 1996-2022 by the citadel.org team
+// Copyright (c) 1996-2023 by the citadel.org team
 //
 // This program is open source software.  Use, duplication, or
 // disclosure are subject to the GNU General Public License v3.
@@ -299,6 +299,12 @@ void object_in_room(struct http_transaction *h, struct ctdlsession *c) {
 	else if (!strcasecmp(h->method, "PUT")) {
 		dav_put_message(h, c, unescaped_euid, msgnum);
 	}
+	else if (!strcasecmp(h->method, "MOVE")) {
+		do_404(h);	// FIXME write this
+	}
+	else if (!strcasecmp(h->method, "COPY")) {
+		do_404(h);	// FIXME write this
+	}
 	else {
 		do_404(h);	// Got this far but the method made no sense?  Bummer.
 	}
@@ -330,7 +336,7 @@ void options_the_room_itself(struct http_transaction *h, struct ctdlsession *c) 
 	else {
 		add_response_header(h, strdup("DAV"), strdup("1"));	// ordinary WebDAV for all other room types
 	}
-	add_response_header(h, strdup("Allow"), strdup("OPTIONS, PROPFIND, GET, PUT, REPORT, DELETE"));
+	add_response_header(h, strdup("Allow"), strdup("OPTIONS, PROPFIND, GET, PUT, REPORT, DELETE, MOVE, COPY"));
 }
 
 

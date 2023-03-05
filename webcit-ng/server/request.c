@@ -4,7 +4,7 @@
 // and pass control back down to the HTTP layer to output the response back to
 // the client.
 //
-// Copyright (c) 1996-2022 by the citadel.org team
+// Copyright (c) 1996-2023 by the citadel.org team
 //
 // This program is open source software.  Use, duplication, or
 // disclosure are subject to the GNU General Public License v3.
@@ -132,10 +132,12 @@ void perform_request(struct http_transaction *h) {
 	// WebDAV methods like OPTIONS and PROPFIND *require* a logged-in session,
 	// even if the Citadel server allows anonymous access.
 	if (IsEmptyStr(c->auth)) {
-		if (	(!strcasecmp(h->method, "OPTIONS"))
+		if (	   (!strcasecmp(h->method, "OPTIONS"))
 			|| (!strcasecmp(h->method, "PROPFIND"))
 			|| (!strcasecmp(h->method, "REPORT"))
 			|| (!strcasecmp(h->method, "DELETE"))
+			|| (!strcasecmp(h->method, "MOVE"))
+			|| (!strcasecmp(h->method, "COPY"))
 		) {
 			request_http_authenticate(h);
 			disconnect_from_citadel(c);
