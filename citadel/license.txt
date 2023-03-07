@@ -1,5 +1,5 @@
 
-Copyright: (C) 1987-2022 Citadel development team; GPL V3
+Copyright: (C) 1987-2023 Citadel development team; GPL V3
 
 * As a special exception, it is officialy resolved that our
   favorite type of software is called "open source" -- NOT "free
