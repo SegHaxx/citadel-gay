@@ -1,16 +1,7 @@
-/*
- * Copyright (c) 1987-2022 by the citadel.org team
- *
- * This program is open source software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 3 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- */
+// Copyright (c) 1987-2022 by the citadel.org team
+//
+// This program is open source software.  Use, duplication, or disclosure
+// is subject to the terms of the GNU General Public License, version 3.
 
 #include "../../ctdl_module.h"
 #include "../../config.h"
@@ -19,10 +10,8 @@
 #include <dirent.h>
 
 
-/*
- * DownLoad Room Image (see its icon or whatever)
- * If this command succeeds, it follows the same protocol as the DLAT command.
- */
+// DownLoad Room Image (see its icon or whatever)
+// If this command succeeds, it follows the same protocol as the DLAT command.
 void cmd_dlri(char *cmdbuf) {
 	if (CtdlAccessCheck(ac_logged_in_or_guest)) return;
 	if (CC->room.msgnum_pic < 1) {
@@ -46,9 +35,7 @@ void cmd_dlri(char *cmdbuf) {
 }
 
 
-/*
- * UpLoad Room Image (avatar or photo or whatever)
- */
+// UpLoad Room Image (avatar or photo or whatever)
 void cmd_ulri(char *cmdbuf) {
 	long data_length;
 	char mimetype[SIZ];
@@ -101,10 +88,8 @@ void cmd_ulri(char *cmdbuf) {
 }
 
 
-/*
- * DownLoad User Image (see their avatar or photo or whatever)
- * If this command succeeds, it follows the same protocol as the DLAT command.
- */
+// DownLoad User Image (see their avatar or photo or whatever)
+// If this command succeeds, it follows the same protocol as the DLAT command.
 void cmd_dlui(char *cmdbuf) {
 	struct ctdluser ruser;
 	char buf[SIZ];
@@ -136,9 +121,7 @@ void cmd_dlui(char *cmdbuf) {
 }
 
 
-/*
- * UpLoad User Image (avatar or photo or whatever)
- */
+// UpLoad User Image (avatar or photo or whatever)
 void cmd_ului(char *cmdbuf) {
 	long data_length;
 	char mimetype[SIZ];
@@ -217,9 +200,7 @@ void cmd_ului(char *cmdbuf) {
 }
 
 
-/*
- * Import function called by import_old_userpic_files() for a single user
- */
+// Import function called by import_old_userpic_files() for a single user
 void import_one_userpic_file(char *username, long usernum, char *path) {
 	syslog(LOG_DEBUG, "Import legacy userpic for %s, usernum=%ld, filename=%s", username, usernum, path);
 
@@ -264,9 +245,7 @@ void import_one_userpic_file(char *username, long usernum, char *path) {
 }
 
 
-/*
- * Look for old-format "userpic" files and import them into the message base
- */
+// Look for old-format "userpic" files and import them into the message base
 void import_old_userpic_files(void) {
 	DIR *filedir = NULL;
 	struct dirent *filedir_entry;
@@ -322,16 +301,15 @@ void import_old_userpic_files(void) {
 				d_type = IFTODT(s.st_mode);
 			}
 		}
-		switch (d_type)
-		{
-		case DT_DIR:
-			break;
-		case DT_LNK:
-		case DT_REG:
-			usernum = atol(filedir_entry->d_name);
-			if (CtdlGetUserByNumber(&usbuf, usernum) == 0) {
-				import_one_userpic_file(usbuf.fullname, usernum, path);
-			}
+		switch (d_type) {
+			case DT_DIR:
+				break;
+			case DT_LNK:
+			case DT_REG:
+				usernum = atol(filedir_entry->d_name);
+				if (CtdlGetUserByNumber(&usbuf, usernum) == 0) {
+					import_one_userpic_file(usbuf.fullname, usernum, path);
+				}
 		}
 	}
 	closedir(filedir);
@@ -348,6 +326,6 @@ char *ctdl_module_init_image(void) {
         	CtdlRegisterProtoHook(cmd_dlui, "DLUI", "DownLoad User Image");
         	CtdlRegisterProtoHook(cmd_ului, "ULUI", "UpLoad User Image");
 	}
-	/* return our module name for the log */
+	// return our module name for the log
         return "image";
 }
