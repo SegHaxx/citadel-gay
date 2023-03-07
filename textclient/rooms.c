@@ -1,19 +1,13 @@
 // Client-side functions which perform room operations
 //
-// Copyright (c) 1987-2022 by the citadel.org team
+// Copyright (c) 1987-2023 by the citadel.org team
 //
-// This program is open source software.  Use, duplication, and/or
-// disclosure are subject to the GNU General Purpose License version 3.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License for more details.
+// This program is open source software.  Use, duplication, or disclosure
+// is subject to the terms of the GNU General Public License, version 3.
 
 #include "textclient.h"
 
 #define IFNEXPERT if ((userflags&US_EXPERT)==0)
-
 
 void stty_ctdl(int cmd);
 void dotgoto(CtdlIPC * ipc, char *towhere, int display_name, int fromungoto);
@@ -48,7 +42,7 @@ void load_floorlist(CtdlIPC * ipc) {
 	int a;
 	char buf[SIZ];
 	char *listing = NULL;
-	int r;			/* IPC response code */
+	int r;			// IPC response code
 
 	for (a = 0; a < 128; ++a)
 		floorlist[a][0] = 0;
@@ -86,7 +80,7 @@ void room_tree_list(struct ctdlroomlisting *rp) {
 		f = rp->rlflags;
 		if ((c + strlen(rmname) + 4) > screenwidth) {
 
-			/* line break, check the paginator */
+			// line break, check the paginator
 			scr_printf("\n");
 			c = 1;
 		}
@@ -117,9 +111,7 @@ void room_tree_list(struct ctdlroomlisting *rp) {
 }
 
 
-/* 
- * Room ordering stuff (compare first by floor, then by order)
- */
+// Room ordering stuff (compare first by floor, then by order)
 int rordercmp(struct ctdlroomlisting *r1, struct ctdlroomlisting *r2) {
 	if ((r1 == NULL) && (r2 == NULL))
 		return (0);
@@ -139,9 +131,7 @@ int rordercmp(struct ctdlroomlisting *r1, struct ctdlroomlisting *r2) {
 }
 
 
-/*
- * Common code for all room listings
- */
+// Common code for all room listings
 static void listrms(struct march *listing, int new_only, int floor_only, unsigned int flags, char *match) {
 	struct march *mptr;
 	struct ctdlroomlisting *rl = NULL;
@@ -152,16 +142,13 @@ static void listrms(struct march *listing, int new_only, int floor_only, unsigne
 	for (mptr = listing; mptr != NULL; mptr = mptr->next) {
 		list_it = 1;
 
-		if ((new_only == LISTRMS_NEW_ONLY)
-		    && ((mptr->march_access & UA_HASNEWMSGS) == 0))
+		if ((new_only == LISTRMS_NEW_ONLY) && ((mptr->march_access & UA_HASNEWMSGS) == 0))
 			list_it = 0;
 
-		if ((new_only == LISTRMS_OLD_ONLY)
-		    && ((mptr->march_access & UA_HASNEWMSGS) != 0))
+		if ((new_only == LISTRMS_OLD_ONLY) && ((mptr->march_access & UA_HASNEWMSGS) != 0))
 			list_it = 0;
 
-		if ((floor_only >= 0)
-		    && (mptr->march_floor != floor_only))
+		if ((floor_only >= 0) && (mptr->march_floor != floor_only))
 			list_it = 0;
 
 		if (flags && (mptr->march_flags & flags) == 0)
@@ -231,19 +218,17 @@ void list_other_floors(void) {
 }
 
 
-/*
- * List known rooms.  kn_floor_mode should be set to 0 for a 'flat' listing,
- * 1 to list rooms on the current floor, or 2 to list rooms on all floors.
- */
+// List known rooms.  kn_floor_mode should be set to 0 for a 'flat' listing,
+// 1 to list rooms on the current floor, or 2 to list rooms on all floors.
 void knrooms(CtdlIPC * ipc, int kn_floor_mode) {
 	int a;
 	struct march *listing = NULL;
 	struct march *mptr;
-	int r;			/* IPC response code */
+	int r;			// IPC response code
 	char buf[SIZ];
 
 
-	/* Ask the server for a room list */
+	// Ask the server for a room list
 	r = CtdlIPCKnownRooms(ipc, SubscribedRooms, (-1), &listing, buf);
 	if (r / 100 != 1) {
 		listing = NULL;
@@ -286,7 +271,7 @@ void knrooms(CtdlIPC * ipc, int kn_floor_mode) {
 		}
 	}
 
-	/* Free the room list */
+	// Free the room list
 	while (listing) {
 		mptr = listing->next;
 		free(listing);
@@ -297,14 +282,14 @@ void knrooms(CtdlIPC * ipc, int kn_floor_mode) {
 }
 
 
-void listzrooms(CtdlIPC * ipc) {	/* list public forgotten rooms */
+void listzrooms(CtdlIPC * ipc) {	// list public forgotten rooms
 	struct march *listing = NULL;
 	struct march *mptr;
-	int r;			/* IPC response code */
+	int r;				// IPC response code
 	char buf[SIZ];
 
 
-	/* Ask the server for a room list */
+	// Ask the server for a room list
 	r = CtdlIPCKnownRooms(ipc, UnsubscribedRooms, (-1), &listing, buf);
 	if (r / 100 != 1) {
 		listing = NULL;
@@ -315,7 +300,7 @@ void listzrooms(CtdlIPC * ipc) {	/* list public forgotten rooms */
 	listrms(listing, LISTRMS_ALL, -1, 0, NULL);
 	scr_printf("\n");
 
-	/* Free the room list */
+	// Free the room list
 	while (listing) {
 		mptr = listing->next;
 		free(listing);
@@ -325,13 +310,15 @@ void listzrooms(CtdlIPC * ipc) {	/* list public forgotten rooms */
 	color(DIM_WHITE);
 }
 
-void dotknown(CtdlIPC * ipc, int what, char *match) {	/* list rooms according to attribute */
+
+// list rooms according to attribute
+void dotknown(CtdlIPC * ipc, int what, char *match) {
 	struct march *listing = NULL;
 	struct march *mptr;
-	int r;			/* IPC response code */
+	int r;			// IPC response code
 	char buf[SIZ];
 
-	/* Ask the server for a room list */
+	// Ask the server for a room list
 	r = CtdlIPCKnownRooms(ipc, AllAccessibleRooms, (-1), &listing, buf);
 	if (r / 100 != 1) {
 		listing = NULL;
@@ -372,7 +359,7 @@ void dotknown(CtdlIPC * ipc, int what, char *match) {	/* list rooms according to
 		break;
 	}
 
-	/* Free the room list */
+	// Free the room list
 	while (listing) {
 		mptr = listing->next;
 		free(listing);
@@ -395,12 +382,9 @@ int set_room_attr(CtdlIPC * ipc, unsigned int ibuf, char *prompt, unsigned int s
 }
 
 
-
-/*
- * Select a floor (used in several commands)
- * The supplied argument is the 'default' floor number.
- * This function returns the selected floor number.
- */
+// Select a floor (used in several commands)
+// The supplied argument is the 'default' floor number.
+// This function returns the selected floor number.
 int select_floor(CtdlIPC * ipc, int rfloor) {
 	int a, newfloor;
 	char floorstr[SIZ];
@@ -438,27 +422,23 @@ int select_floor(CtdlIPC * ipc, int rfloor) {
 	}
 
 	else {
-		scr_printf("Floor selection bypassed because you have " "floor mode disabled.\n");
+		scr_printf("Floor selection bypassed because you have floor mode disabled.\n");
 	}
 
 	return (rfloor);
 }
 
 
-
-
-/*
- * .<A>ide <E>dit room
- */
+// .<A>ide <E>dit room
 void editthisroom(CtdlIPC * ipc) {
 	int rbump = 0;
 	char room_admin_name[USERNAME_SIZE];
 	char buf[SIZ];
 	struct ctdlroom *attr = NULL;
 	struct ExpirePolicy *eptr = NULL;
-	int r;			/* IPC response code */
+	int r;			// IPC response code
 
-	/* Fetch the existing room config */
+	// Fetch the existing room config
 	r = CtdlIPCGetRoomAttributes(ipc, &attr, buf);
 	if (r / 100 != 2) {
 		scr_printf("%s\n", buf);
@@ -466,7 +446,7 @@ void editthisroom(CtdlIPC * ipc) {
 	}
 	eptr = &(attr->QRep);
 
-	/* Fetch the name of the current room admin */
+	// Fetch the name of the current room admin
 	r = CtdlIPCGetRoomAide(ipc, buf);
 	if (r / 100 == 2) {
 		strncpy(room_admin_name, buf, sizeof room_admin_name);
@@ -478,22 +458,19 @@ void editthisroom(CtdlIPC * ipc) {
 		strcpy(room_admin_name, "none");
 	}
 
-	/* Fetch the expire policy (this will silently fail on old servers,
-	 * resulting in "default" policy)
-	 */
+	// Fetch the expire policy (this will silently fail on old servers, resulting in "default" policy)
 	r = CtdlIPCGetMessageExpirationPolicy(ipc, 0, &eptr, buf);
 
-	/* Now interact with the user. */
+	// Now interact with the user.
 
 	strprompt("Room name", attr->QRname, ROOMNAMELEN - 1);
 	attr->QRfloor = select_floor(ipc, attr->QRfloor);
 	attr->QRflags = set_room_attr(ipc, attr->QRflags, "Private room", QR_PRIVATE);
 	if (attr->QRflags & QR_PRIVATE) {
-		attr->QRflags = set_room_attr(ipc, attr->QRflags,
-					      "Hidden room (accessible to anyone who knows the room name)", QR_GUESSNAME);
+		attr->QRflags = set_room_attr(ipc, attr->QRflags, "Hidden room (accessible to anyone who knows the room name)", QR_GUESSNAME);
 	}
 
-	/* if it's public, clear the privacy classes */
+	// if it's public, clear the privacy classes
 	if ((attr->QRflags & QR_PRIVATE) == 0) {
 		if (attr->QRflags & QR_GUESSNAME) {
 			attr->QRflags = attr->QRflags - QR_GUESSNAME;
@@ -503,7 +480,7 @@ void editthisroom(CtdlIPC * ipc) {
 		}
 	}
 
-	/* if it's private, choose the privacy classes */
+	// if it's private, choose the privacy classes
 	if ((attr->QRflags & QR_PRIVATE)
 	    && ((attr->QRflags & QR_GUESSNAME) == 0)) {
 		attr->QRflags = set_room_attr(ipc, attr->QRflags, "Accessible by entering a password", QR_PASSWORDED);
@@ -521,8 +498,7 @@ void editthisroom(CtdlIPC * ipc) {
 	attr->QRflags = set_room_attr(ipc, attr->QRflags, "Read-only room", QR_READONLY);
 	attr->QRflags2 = set_room_attr(ipc, attr->QRflags2, "Allow message deletion by anyone who can post", QR2_COLLABDEL);
 	attr->QRflags = set_room_attr(ipc, attr->QRflags, "Permanent room", QR_PERMANENT);
-	attr->QRflags2 =
-	    set_room_attr(ipc, attr->QRflags2, "Subject Required (Force users to specify a message subject)", QR2_SUBJECTREQ);
+	attr->QRflags2 = set_room_attr(ipc, attr->QRflags2, "Subject Required (Force users to specify a message subject)", QR2_SUBJECTREQ);
 	attr->QRflags = set_room_attr(ipc, attr->QRflags, "Directory room", QR_DIRECTORY);
 	if (attr->QRflags & QR_DIRECTORY) {
 		strprompt("Directory name", attr->QRdirname, 14);
@@ -539,7 +515,7 @@ void editthisroom(CtdlIPC * ipc) {
 	}
 	attr->QRorder = intprompt("Listing order", attr->QRorder, 0, 127);
 
-	/* Ask about the room admin */
+	// Ask about the room admin
 	do {
 		strprompt("Room admin (or 'none')", room_admin_name, 29);
 		if (!strcasecmp(room_admin_name, "none")) {
@@ -554,7 +530,7 @@ void editthisroom(CtdlIPC * ipc) {
 		}
 	} while (r / 100 != 2);
 
-	/* Angels and demons dancing in my head... */
+	// Angels and demons dancing in my head...
 	do {
 		snprintf(buf, sizeof buf, "%d", attr->QRep.expire_mode);
 		strprompt("Message expire policy (? for list)", buf, 1);
@@ -567,7 +543,7 @@ void editthisroom(CtdlIPC * ipc) {
 	} while ((buf[0] < 48) || (buf[0] > 51));
 	attr->QRep.expire_mode = buf[0] - 48;
 
-	/* ...lunatics and monsters underneath my bed */
+	// ...lunatics and monsters underneath my bed
 	if (attr->QRep.expire_mode == 2) {
 		snprintf(buf, sizeof buf, "%d", attr->QRep.expire_value);
 		strprompt("Keep how many messages online?", buf, 10);
@@ -580,7 +556,7 @@ void editthisroom(CtdlIPC * ipc) {
 		attr->QRep.expire_value = atol(buf);
 	}
 
-	/* Give 'em a chance to change their minds */
+	// Give 'em a chance to change their minds
 	scr_printf("Save changes (y/n)? ");
 
 	if (yesno() == 1) {
@@ -608,9 +584,7 @@ void editthisroom(CtdlIPC * ipc) {
 }
 
 
-/*
- * un-goto the previous room, or a specified room
- */
+// un-goto the previous room, or a specified room
 void dotungoto(CtdlIPC * ipc, char *towhere) {
 	// Find this 'towhere' room in the list ungoto from this room to
 	// that at the messagepointer position in that room in our ungoto list.
@@ -693,9 +667,7 @@ void ungoto(CtdlIPC * ipc) {
 }
 
 
-/*
- * saves filelen bytes from file at pathname
- */
+// saves filelen bytes from file at pathname
 int save_buffer(void *file, size_t filelen, const char *pathname) {
 	size_t block = 0;
 	size_t bytes_written = 0;
@@ -720,9 +692,7 @@ int save_buffer(void *file, size_t filelen, const char *pathname) {
 }
 
 
-/*
- * Save supplied_filename in dest directory; gets the name only
- */
+// Save supplied_filename in dest directory; gets the name only
 void destination_directory(char *dest, const char *supplied_filename) {
 	static char save_dir[SIZ] = { 0 };
 
@@ -744,7 +714,7 @@ void destination_directory(char *dest, const char *supplied_filename) {
 	sprintf(dest, "%s/%s", save_dir, supplied_filename);
 	strprompt("Save as", dest, PATH_MAX);
 
-	/* Remember the directory for next time */
+	// Remember the directory for next time
 	strcpy(save_dir, dest);
 	if (strrchr(save_dir, '/') != NULL) {
 		strcpy(strrchr(save_dir, '/'), "");
@@ -755,11 +725,9 @@ void destination_directory(char *dest, const char *supplied_filename) {
 }
 
 
-/*
- * download()  -  download a file or files.  The argument passed to this
- *                function determines which protocol to use.
- *  proto - 0 = paginate, 1 = xmodem, 2 = raw, 3 = ymodem, 4 = zmodem, 5 = save
- */
+// download()  -  download a file or files.  The argument passed to this
+//                function determines which protocol to use.
+//  proto - 0 = paginate, 1 = xmodem, 2 = raw, 3 = ymodem, 4 = zmodem, 5 = save
 void download(CtdlIPC * ipc, int proto) {
 	char buf[SIZ];
 	char filename[PATH_MAX];
@@ -767,11 +735,10 @@ void download(CtdlIPC * ipc, int proto) {
 	char transmit_cmd[SIZ];
 	FILE *tpipe = NULL;
 
-/*	int broken = 0;*/
 	int r;
 	int rv = 0;
-	void *file = NULL;	/* The downloaded file */
-	size_t filelen = 0L;	/* The downloaded file length */
+	void *file = NULL;	// The downloaded file
+	size_t filelen = 0L;	// The downloaded file length
 
 	if ((room_flags & QR_DOWNLOAD) == 0) {
 		scr_printf("*** You cannot download from this room.\n");
@@ -780,7 +747,7 @@ void download(CtdlIPC * ipc, int proto) {
 
 	newprompt("Enter filename: ", filename, PATH_MAX);
 
-	/* Save to local disk, for folks with their own copy of the client */
+	// Save to local disk, for folks with their own copy of the client
 	if (proto == 5) {
 		destination_directory(tempname, filename);
 		r = CtdlIPCFileDownload(ipc, filename, &file, 0, progress, buf);
@@ -800,21 +767,21 @@ void download(CtdlIPC * ipc, int proto) {
 	}
 	filelen = extract_unsigned_long(buf, 0);
 
-	/* Meta-download for public clients */
-	/* scr_printf("Fetching file from Citadel server...\n"); */
+	// Meta-download for public clients
+	// scr_printf("Fetching file from Citadel server...\n");
 	mkdir(tempdir, 0700);
 	snprintf(tempname, sizeof tempname, "%s/%s", tempdir, filename);
 	tpipe = fopen(tempname, "wb");
 	if (fwrite(file, filelen, 1, tpipe) < filelen) {
-		/* FIXME: restart syscall on EINTR 
-		   broken = 1; */
+		// FIXME: restart syscall on EINTR 
+		   // broken = 1;
 	}
 	fclose(tpipe);
 	if (file)
 		free(file);
 
 	if (proto == 0) {
-		/* FIXME: display internally instead */
+		// FIXME: display internally instead
 		snprintf(transmit_cmd, sizeof transmit_cmd,
 			 "SHELL=/dev/null; export SHELL; TERM=dumb; export TERM; exec more -d <%s", tempname);
 	}
@@ -825,7 +792,7 @@ void download(CtdlIPC * ipc, int proto) {
 	else if (proto == 4)
 		snprintf(transmit_cmd, sizeof transmit_cmd, "exec sz %s", tempname);
 	else
-		/* FIXME: display internally instead */
+		// FIXME: display internally instead
 		snprintf(transmit_cmd, sizeof transmit_cmd, "exec cat %s", tempname);
 
 	stty_ctdl(SB_RESTORE);
@@ -834,22 +801,20 @@ void download(CtdlIPC * ipc, int proto) {
 		scr_printf("failed to download '%s': %d\n", transmit_cmd, rv);
 	stty_ctdl(SB_NO_INTR);
 
-	/* clean up the temporary directory */
+	// clean up the temporary directory
 	nukedir(tempdir);
-	ctdl_beep();		/* Beep beep! */
+	ctdl_beep();		// Beep beep!
 }
 
 
-/*
- * read directory of this room
- */
+// read directory of this room
 void roomdir(CtdlIPC * ipc) {
 	char flnm[256];
 	char flsz[32];
 	char comment[256];
 	char mimetype[256];
 	char buf[256];
-	char *listing = NULL;	/* Returned directory listing */
+	char *listing = NULL;	// Returned directory listing
 	int r;
 
 	r = CtdlIPCReadDirectory(ipc, &listing, buf);
@@ -880,9 +845,7 @@ void roomdir(CtdlIPC * ipc) {
 }
 
 
-/*
- * add a user to a private room
- */
+// add a user to a private room
 void invite(CtdlIPC * ipc) {
 	char username[USERNAME_SIZE];
 	char buf[SIZ];
@@ -896,9 +859,7 @@ void invite(CtdlIPC * ipc) {
 }
 
 
-/*
- * kick a user out of a room
- */
+// kick a user out of a room
 void kickout(CtdlIPC * ipc) {
 	char username[USERNAME_SIZE];
 	char buf[SIZ];
@@ -912,9 +873,7 @@ void kickout(CtdlIPC * ipc) {
 }
 
 
-/*
- * aide command: kill the current room
- */
+// aide command: kill the current room
 void killroom(CtdlIPC * ipc) {
 	char aaa[100];
 	int r;
@@ -936,7 +895,8 @@ void killroom(CtdlIPC * ipc) {
 	dotgoto(ipc, "_BASEROOM_", 0, 0);
 }
 
-void forget(CtdlIPC * ipc) {	/* forget the current room */
+
+void forget(CtdlIPC * ipc) {	// forget the current room
 	char buf[SIZ];
 
 	scr_printf("Are you sure you want to forget this room? ");
@@ -949,14 +909,12 @@ void forget(CtdlIPC * ipc) {	/* forget the current room */
 		return;
 	}
 
-	/* now return to the lobby */
+	// now return to the lobby
 	dotgoto(ipc, "_BASEROOM_", 0, 0);
 }
 
 
-/*
- * create a new room
- */
+// create a new room
 void entroom(CtdlIPC * ipc) {
 	char buf[SIZ];
 	char new_room_name[ROOMNAMELEN];
@@ -964,9 +922,9 @@ void entroom(CtdlIPC * ipc) {
 	char new_room_pass[10];
 	int new_room_floor;
 	int a, b;
-	int r;			/* IPC response code */
+	int r;			// IPC response code
 
-	/* Check permission to create room */
+	// Check permission to create room
 	r = CtdlIPCCreateRoom(ipc, 0, "", 1, "", 0, buf);
 	if (r / 100 != 2) {
 		scr_printf("%s\n", buf);
@@ -1001,7 +959,7 @@ void entroom(CtdlIPC * ipc) {
 			formout(ipc, "roomaccess");
 		}
 	} while ((b < '1') || (b > '5'));
-	b -= '0';		/* Portable */
+	b -= '0';		// Portable
 	scr_printf("%d\n", b);
 	new_room_type = b - 1;
 	if (new_room_type == 2) {
@@ -1036,19 +994,19 @@ void entroom(CtdlIPC * ipc) {
 		return;
 	}
 
-	/* command succeeded... now GO to the new room! */
+	// command succeeded... now GO to the new room!
 	dotgoto(ipc, new_room_name, 0, 0);
 }
 
 
 
-void readinfo(CtdlIPC * ipc) {	/* read info file for current room */
+void readinfo(CtdlIPC * ipc) {	// read info file for current room
 	char buf[SIZ];
 	char room_admin_name[64];
-	int r;			/* IPC response code */
+	int r;			// IPC response code
 	char *text = NULL;
 
-	/* Name of currernt room admin */
+	// Name of currernt room admin
 	r = CtdlIPCGetRoomAide(ipc, buf);
 	if (r / 100 == 2)
 		strncpy(room_admin_name, buf, sizeof room_admin_name);
@@ -1069,9 +1027,7 @@ void readinfo(CtdlIPC * ipc) {	/* read info file for current room */
 }
 
 
-/*
- * <W>ho knows room...
- */
+// <W>ho knows room...
 void whoknows(CtdlIPC * ipc) {
 	char buf[256];
 	char *listing = NULL;
@@ -1180,9 +1136,11 @@ void do_edit(CtdlIPC * ipc, char *desc, char *read_cmd, char *check_cmd, char *w
 }
 
 
-void enterinfo(CtdlIPC * ipc) {	/* edit info file for current room */
+// edit info file for current room
+void enterinfo(CtdlIPC * ipc) {
 	do_edit(ipc, "the Info file for this room", "RINF", "EINF 0", "EINF 1");
 }
+
 
 void enter_bio(CtdlIPC * ipc) {
 	char cmd[SIZ];
@@ -1190,13 +1148,12 @@ void enter_bio(CtdlIPC * ipc) {
 	do_edit(ipc, "your Bio", cmd, "NOOP", "EBIO");
 }
 
-/*
- * create a new floor
- */
+
+// create a new floor
 void create_floor(CtdlIPC * ipc) {
 	char buf[SIZ];
 	char newfloorname[SIZ];
-	int r;			/* IPC response code */
+	int r;			// IPC response code
 
 	load_floorlist(ipc);
 
@@ -1220,25 +1177,22 @@ void create_floor(CtdlIPC * ipc) {
 	load_floorlist(ipc);
 }
 
-/*
- * edit the current floor
- */
+
+// edit the current floor
 void edit_floor(CtdlIPC * ipc) {
 	char buf[SIZ];
 	struct ExpirePolicy *ep = NULL;
 
 	load_floorlist(ipc);
 
-	/* Fetch the expire policy (this will silently fail on old servers,
-	 * resulting in "default" policy)
-	 */
+	// Fetch the expire policy (this will silently fail on old servers, resulting in "default" policy)
 	CtdlIPCGetMessageExpirationPolicy(ipc, 1, &ep, buf);
 
-	/* Interact with the user */
+	// Interact with the user
 	scr_printf("You are editing the floor called \"%s\"\n", &floorlist[(int) curr_floor][0]);
 	strprompt("Floor name", &floorlist[(int) curr_floor][0], 255);
 
-	/* Angels and demons dancing in my head... */
+	// Angels and demons dancing in my head...
 	do {
 		snprintf(buf, sizeof buf, "%d", ep->expire_mode);
 		strprompt("Floor default message expire policy (? for list)", buf, 1);
@@ -1251,7 +1205,7 @@ void edit_floor(CtdlIPC * ipc) {
 	} while ((buf[0] < '0') || (buf[0] > '3'));
 	ep->expire_mode = buf[0] - '0';
 
-	/* ...lunatics and monsters underneath my bed */
+	// ...lunatics and monsters underneath my bed
 	if (ep->expire_mode == 2) {
 		snprintf(buf, sizeof buf, "%d", ep->expire_value);
 		strprompt("Keep how many messages online?", buf, 10);
@@ -1264,7 +1218,7 @@ void edit_floor(CtdlIPC * ipc) {
 		ep->expire_value = atol(buf);
 	}
 
-	/* Save it */
+	// Save it
 	CtdlIPCSetMessageExpirationPolicy(ipc, 1, ep, buf);
 	CtdlIPCEditFloor(ipc, curr_floor, &floorlist[(int) curr_floor][0], buf);
 	scr_printf("%s\n", buf);
@@ -1272,11 +1226,7 @@ void edit_floor(CtdlIPC * ipc) {
 }
 
 
-
-
-/*
- * kill the current floor 
- */
+// kill the current floor 
 void kill_floor(CtdlIPC * ipc) {
 	int floornum_to_delete, a;
 	char buf[SIZ];
