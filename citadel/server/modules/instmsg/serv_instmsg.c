@@ -1,16 +1,9 @@
-/*
- * This module handles instant messaging between users.
- * 
- * Copyright (c) 1987-2022 by the citadel.org team
- *
- * This program is open source software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 3.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- */
+// This module handles instant messaging between users.
+// 
+// Copyright (c) 1987-2022 by the citadel.org team
+//
+// This program is open source software.  Use, duplication, or disclosure
+// is subject to the terms of the GNU General Public License, version 3.
 
 #include <stdlib.h>
 #include <unistd.h>
@@ -48,11 +41,8 @@ struct imlog {
 
 struct imlog *imlist = NULL;
 
-/*
- * This function handles the logging of instant messages to disk.
- */
-void log_instant_message(struct CitContext *me, struct CitContext *them, char *msgtext, int serial_number)
-{
+// This function handles the logging of instant messages to disk.
+void log_instant_message(struct CitContext *me, struct CitContext *them, char *msgtext, int serial_number) {
 	long usernums[2];
 	long t;
 	struct imlog *iptr = NULL;
@@ -62,9 +52,8 @@ void log_instant_message(struct CitContext *me, struct CitContext *them, char *m
 	usernums[0] = me->user.usernum;
 	usernums[1] = them->user.usernum;
 
-	/* Always put the lower user number first, so we can use the array as a hash value which
-	 * represents a pair of users.  For a broadcast message one of the users will be 0.
-	 */
+	// Always put the lower user number first, so we can use the array as a hash value which
+	// represents a pair of users.  For a broadcast message one of the users will be 0.
 	if (usernums[0] > usernums[1]) {
 		t = usernums[0];
 		usernums[0] = usernums[1];
@@ -73,9 +62,8 @@ void log_instant_message(struct CitContext *me, struct CitContext *them, char *m
 
 	begin_critical_section(S_IM_LOGS);
 
-	/* Look for an existing conversation in the hash table.
-	 * If not found, create a new one.
-	 */
+	// Look for an existing conversation in the hash table.
+	// If not found, create a new one.
 
 	this_im = NULL;
 	for (iptr = imlist; iptr != NULL; iptr = iptr->next) {
@@ -85,12 +73,12 @@ void log_instant_message(struct CitContext *me, struct CitContext *them, char *m
 		}
 	}
 	if (this_im == NULL) {
-		/* New conversation */
+		// New conversation
 		this_im = malloc(sizeof(struct imlog));
 		memset(this_im, 0, sizeof (struct imlog));
 		this_im->usernums[0] = usernums[0];
 		this_im->usernums[1] = usernums[1];
-		/* usernames[] and usernums[] might not be in the same order.  This is not an error. */
+		// usernames[] and usernums[] might not be in the same order.  This is not an error.
 		if (me) {
 			safestrncpy(this_im->usernames[0], me->user.fullname, sizeof this_im->usernames[0]);
 		}
@@ -103,13 +91,11 @@ void log_instant_message(struct CitContext *me, struct CitContext *them, char *m
 		StrBufAppendBufPlain(this_im->conversation, HKEY("<html><body>\r\n"), 0);
 	}
 
-	/* Since it's possible for this function to get called more than once if a user is logged
-	 * in on multiple sessions, we use the message's serial number to keep track of whether
-	 * we've already logged it.
-	 */
-	if (this_im->last_serial != serial_number)
-	{
-		this_im->lastmsg = time(NULL);		/* Touch the timestamp so we know when to flush */
+	// Since it's possible for this function to get called more than once if a user is logged
+	// in on multiple sessions, we use the message's serial number to keep track of whether
+	// we've already logged it.
+	if (this_im->last_serial != serial_number) {
+		this_im->lastmsg = time(NULL);		// Touch the timestamp so we know when to flush
 		this_im->last_serial = serial_number;
 		StrBufAppendBufPlain(this_im->conversation, HKEY("<p><b>"), 0);
 		StrBufAppendBufPlain(this_im->conversation, me->user.fullname, -1, 0);
@@ -121,9 +107,7 @@ void log_instant_message(struct CitContext *me, struct CitContext *them, char *m
 }
 
 
-/*
- * Delete any remaining instant messages
- */
+// Delete any remaining instant messages
 void delete_instant_messages(void) {
 	struct ExpressMessage *ptr;
 
@@ -139,9 +123,7 @@ void delete_instant_messages(void) {
 }
 
 
-/*
- * Retrieve instant messages
- */
+// Retrieve instant messages
 void cmd_gexp(char *argbuf) {
 	struct ExpressMessage *ptr;
 
@@ -157,12 +139,12 @@ void cmd_gexp(char *argbuf) {
 
 	cprintf("%d %d|%ld|%d|%s|%s|%s\n",
 		LISTING_FOLLOWS,
-		((ptr->next != NULL) ? 1 : 0),		/* more msgs? */
-		(long)ptr->timestamp,			/* time sent */
-		ptr->flags,				/* flags */
-		ptr->sender,				/* sender of msg */
-		CtdlGetConfigStr("c_nodename"),		/* static for now (and possibly deprecated) */
-		ptr->sender_email			/* email or jid of sender */
+		((ptr->next != NULL) ? 1 : 0),		// more msgs?
+		(long)ptr->timestamp,			// time sent
+		ptr->flags,				// flags
+		ptr->sender,				// sender of msg
+		CtdlGetConfigStr("c_nodename"),		// static for now (and possibly deprecated)
+		ptr->sender_email			// email or jid of sender
 	);
 
 	if (ptr->text != NULL) {
@@ -175,26 +157,21 @@ void cmd_gexp(char *argbuf) {
 }
 
 
-/*
- * Asynchronously deliver instant messages
- */
+// Asynchronously deliver instant messages
 void cmd_gexp_async(void) {
 
-	/* Only do this if the session can handle asynchronous protocol */
+	// Only do this if the session can handle asynchronous protocol
 	if (CC->is_async == 0) return;
 
-	/* And don't do it if there's nothing to send. */
+	// And don't do it if there's nothing to send.
 	if (CC->FirstExpressMessage == NULL) return;
 
 	cprintf("%d instant msg\n", ASYNC_MSG + ASYNC_GEXP);
 }
 
 
-/*
- * Back end support function for send_instant_message() and company
- */
-void add_xmsg_to_context(struct CitContext *ccptr, struct ExpressMessage *newmsg) 
-{
+// Back end support function for send_instant_message() and company
+void add_xmsg_to_context(struct CitContext *ccptr, struct ExpressMessage *newmsg) {
 	struct ExpressMessage *findend;
 
 	if (ccptr->FirstExpressMessage == NULL) {
@@ -208,31 +185,27 @@ void add_xmsg_to_context(struct CitContext *ccptr, struct ExpressMessage *newmsg
 		findend->next = newmsg;
 	}
 
-	/* If the target context is a session which can handle asynchronous
-	 * messages, go ahead and set the flag for that.
-	 */
+	// If the target context is a session which can handle asynchronous
+	// messages, go ahead and set the flag for that.
 	set_async_waiting(ccptr);
 }
 
 
-/* 
- * This is the back end to the instant message sending function.  
- * Returns the number of users to which the message was sent.
- * Sending a zero-length message tests for recipients without sending messages.
- */
-int send_instant_message(char *lun, char *lem, char *x_user, char *x_msg)
-{
-	int message_sent = 0;		/* number of successful sends */
+// This is the back end to the instant message sending function.  
+// Returns the number of users to which the message was sent.
+// Sending a zero-length message tests for recipients without sending messages.
+int send_instant_message(char *lun, char *lem, char *x_user, char *x_msg) {
+	int message_sent = 0;		// number of successful sends
 	struct CitContext *ccptr;
 	struct ExpressMessage *newmsg = NULL;
-	int do_send = 0;		/* 1 = send message; 0 = only check for valid recipient */
-	static int serial_number = 0;	/* this keeps messages from getting logged twice */
+	int do_send = 0;		// 1 = send message; 0 = only check for valid recipient
+	static int serial_number = 0;	// this keeps messages from getting logged twice
 
 	if (!IsEmptyStr(x_msg)) {
 		do_send = 1;
 	}
 
-	/* find the target user's context and append the message */
+	// find the target user's context and append the message
 	begin_critical_section(S_SESSION_TABLE);
 	++serial_number;
 	for (ccptr = ContextList; ccptr != NULL; ccptr = ccptr->next) {
@@ -255,7 +228,7 @@ int send_instant_message(char *lun, char *lem, char *x_user, char *x_msg)
 
 				add_xmsg_to_context(ccptr, newmsg);
 
-				/* and log it ... */
+				// and log it ...
 				if (ccptr != CC) {
 					log_instant_message(CC, ccptr, newmsg->text, serial_number);
 				}
@@ -268,11 +241,8 @@ int send_instant_message(char *lun, char *lem, char *x_user, char *x_msg)
 }
 
 
-/*
- * send instant messages
- */
-void cmd_sexp(char *argbuf)
-{
+// send instant messages
+void cmd_sexp(char *argbuf) {
 	int message_sent = 0;
 	char x_user[USERNAME_SIZE];
 	char x_msg[1024];
@@ -298,27 +268,22 @@ void cmd_sexp(char *argbuf)
 			ERROR + HIGHER_ACCESS_REQUIRED);
 		return;
 	}
-	/* This loop handles text-transfer pages */
+	// This loop handles text-transfer pages
 	if (!strcmp(x_msg, "-")) {
 		message_sent = PerformXmsgHooks(CC->user.fullname, lem, x_user, "");
 		if (message_sent == 0) {
 			if (CtdlGetUser(NULL, x_user))
-				cprintf("%d '%s' does not exist.\n",
-						ERROR + NO_SUCH_USER, x_user);
+				cprintf("%d '%s' does not exist.\n", ERROR + NO_SUCH_USER, x_user);
 			else
-				cprintf("%d '%s' is not logged in "
-						"or is not accepting pages.\n",
-						ERROR + RESOURCE_NOT_OPEN, x_user);
+				cprintf("%d '%s' is not logged in or is not accepting messages.\n", ERROR + RESOURCE_NOT_OPEN, x_user);
 			return;
 		}
 		unbuffer_output();
-		cprintf("%d Transmit message (will deliver to %d users)\n",
-			SEND_LISTING, message_sent);
+		cprintf("%d Transmit message (will deliver to %d users)\n", SEND_LISTING, message_sent);
 		x_big_msgbuf = malloc(SIZ);
 		memset(x_big_msgbuf, 0, SIZ);
 		while (client_getln(x_msg, sizeof x_msg) >= 0 && strcmp(x_msg, "000")) {
-			x_big_msgbuf = realloc(x_big_msgbuf,
-			       strlen(x_big_msgbuf) + strlen(x_msg) + 4);
+			x_big_msgbuf = realloc(x_big_msgbuf, strlen(x_big_msgbuf) + strlen(x_msg) + 4);
 			if (!IsEmptyStr(x_big_msgbuf))
 			   if (x_big_msgbuf[strlen(x_big_msgbuf)] != '\n')
 				strcat(x_big_msgbuf, "\n");
@@ -327,8 +292,9 @@ void cmd_sexp(char *argbuf)
 		PerformXmsgHooks(CC->user.fullname, lem, x_user, x_big_msgbuf);
 		free(x_big_msgbuf);
 
-		/* This loop handles inline pages */
-	} else {
+		// This loop handles inline pages
+	}
+	else {
 		message_sent = PerformXmsgHooks(CC->user.fullname, lem, x_user, x_msg);
 
 		if (message_sent > 0) {
@@ -342,26 +308,21 @@ void cmd_sexp(char *argbuf)
 				cprintf(" to %d users", message_sent);
 			}
 			cprintf(".\n");
-		} else {
+		}
+		else {
 			if (CtdlGetUser(NULL, x_user)) {
 				cprintf("%d '%s' does not exist.\n", ERROR + NO_SUCH_USER, x_user);
 			}
 			else {
-				cprintf("%d '%s' is not logged in or is not accepting instant messages.\n",
-						ERROR + RESOURCE_NOT_OPEN, x_user);
+				cprintf("%d '%s' is not logged in or is not accepting messages.\n", ERROR + RESOURCE_NOT_OPEN, x_user);
 			}
 		}
-
-
 	}
 }
 
 
-/*
- * Enter or exit paging-disabled mode
- */
-void cmd_dexp(char *argbuf)
-{
+// Enter or exit paging-disabled mode
+void cmd_dexp(char *argbuf) {
 	int new_state;
 
 	if (CtdlAccessCheck(ac_logged_in)) return;
@@ -375,9 +336,7 @@ void cmd_dexp(char *argbuf)
 }
 
 
-/*
- * Request client termination
- */
+// Request client termination
 void cmd_reqt(char *argbuf) {
 	struct CitContext *ccptr;
 	int sessions = 0;
@@ -411,11 +370,9 @@ void cmd_reqt(char *argbuf) {
 }
 
 
-/*
- * This is the back end for flush_conversations_to_disk()
- * At this point we've isolated a single conversation (struct imlog)
- * and are ready to write it to disk.
- */
+// This is the back end for flush_conversations_to_disk()
+// At this point we've isolated a single conversation (struct imlog)
+// and are ready to write it to disk.
 void flush_individual_conversation(struct imlog *im) {
 	struct CtdlMessage *msg;
 	long msgnum = 0;
@@ -448,7 +405,8 @@ void flush_individual_conversation(struct imlog *im) {
 	msg->cm_format_type = FMT_RFC822;
 	if (!IsEmptyStr(im->usernames[0])) {
 		CM_SetField(msg, eAuthor, im->usernames[0], strlen(im->usernames[0]));
-	} else {
+	}
+	else {
 		CM_SetField(msg, eAuthor, HKEY("Citadel"));
 	}
 	if (!IsEmptyStr(im->usernames[1])) {
@@ -458,28 +416,28 @@ void flush_individual_conversation(struct imlog *im) {
 	CM_SetField(msg, eOriginalRoom, HKEY(PAGELOGROOM));
 	CM_SetAsFieldSB(msg, eMesageText, &FullMsgBuf);	/* we own this memory now */
 
-	/* Start with usernums[1] because it's guaranteed to be higher than usernums[0],
-	 * so if there's only one party, usernums[0] will be zero but usernums[1] won't.
-	 * Create the room if necessary.  Note that we create as a type 5 room rather
-	 * than 4, which indicates that it's a personal room but we've already supplied
-	 * the namespace prefix.
-	 *
-	 * In the unlikely event that usernums[1] is zero, a room with an invalid namespace
-	 * prefix will be created.  That's ok because the auto-purger will clean it up later.
-	 */
+	// Start with usernums[1] because it's guaranteed to be higher than usernums[0],
+	// so if there's only one party, usernums[0] will be zero but usernums[1] won't.
+	// Create the room if necessary.  Note that we create as a type 5 room rather
+	// than 4, which indicates that it's a personal room but we've already supplied
+	// the namespace prefix.
+	//
+	// In the unlikely event that usernums[1] is zero, a room with an invalid namespace
+	// prefix will be created.  That's ok because the auto-purger will clean it up later.
+	//
 	snprintf(roomname, sizeof roomname, "%010ld.%s", im->usernums[1], PAGELOGROOM);
 	CtdlCreateRoom(roomname, 5, "", 0, 1, 1, VIEW_BBS);
 	msgnum = CtdlSubmitMsg(msg, NULL, roomname);
 	CM_Free(msg);
 
-	/* If there is a valid user number in usernums[0], save a copy for them too. */
+	// If there is a valid user number in usernums[0], save a copy for them too.
 	if (im->usernums[0] > 0) {
 		snprintf(roomname, sizeof roomname, "%010ld.%s", im->usernums[0], PAGELOGROOM);
 		CtdlCreateRoom(roomname, 5, "", 0, 1, 1, VIEW_BBS);
 		CtdlSaveMsgPointerInRoom(roomname, msgnum, 0, NULL);
 	}
 
-	/* Finally, if we're logging instant messages globally, do that now. */
+	// Finally, if we're logging instant messages globally, do that now.
 	if (!IsEmptyStr(CtdlGetConfigStr("c_logpages"))) {
 		CtdlCreateRoom(CtdlGetConfigStr("c_logpages"), 3, "", 0, 1, 1, VIEW_BBS);
 		CtdlSaveMsgPointerInRoom(CtdlGetConfigStr("c_logpages"), msgnum, 0, NULL);
@@ -487,11 +445,9 @@ void flush_individual_conversation(struct imlog *im) {
 
 }
 
-/*
- * Locate instant message conversations which have gone idle
- * (or, if the server is shutting down, locate *all* conversations)
- * and flush them to disk (in the participants' log rooms, etc.)
- */
+// Locate instant message conversations which have gone idle
+// (or, if the server is shutting down, locate *all* conversations)
+// and flush them to disk (in the participants' log rooms, etc.)
 void flush_conversations_to_disk(time_t if_older_than) {
 
 	struct imlog *flush_these = NULL;
@@ -500,15 +456,14 @@ void flush_conversations_to_disk(time_t if_older_than) {
 	struct CitContext *nptr;
 	int nContexts, i;
 
-	nptr = CtdlGetContextArray(&nContexts) ;	/* Make a copy of the current wholist */
+	nptr = CtdlGetContextArray(&nContexts) ;	// Make a copy of the current wholist
 
 	begin_critical_section(S_IM_LOGS);
-	while (imlist)
-	{
+	while (imlist) {
 		imptr = imlist;
 		imlist = imlist->next;
 
-		/* For a two party conversation, if one party has logged out, force flush. */
+		// For a two party conversation, if one party has logged out, force flush.
 		if (nptr) {
 			int user0_is_still_online = 0;
 			int user1_is_still_online = 0;
@@ -516,27 +471,26 @@ void flush_conversations_to_disk(time_t if_older_than) {
 				if (nptr[i].user.usernum == imptr->usernums[0]) ++user0_is_still_online;
 				if (nptr[i].user.usernum == imptr->usernums[1]) ++user1_is_still_online;
 			}
-			if (imptr->usernums[0] != imptr->usernums[1]) {		/* two party conversation */
+			if (imptr->usernums[0] != imptr->usernums[1]) {		// two party conversation
 				if ((!user0_is_still_online) || (!user1_is_still_online)) {
-					imptr->lastmsg = 0L;	/* force flush */
+					imptr->lastmsg = 0L;			// force flush
 				}
 			}
-			else {		/* one party conversation (yes, people do IM themselves) */
+			else {		// one party conversation (yes, people do IM themselves)
 				if (!user0_is_still_online) {
-					imptr->lastmsg = 0L;	/* force flush */
+					imptr->lastmsg = 0L;	// force flush
 				}
 			}
 		}
 
-		/* Now test this conversation to see if it qualifies for flushing. */
-		if ((time(NULL) - imptr->lastmsg) > if_older_than)
-		{
-			/* This conversation qualifies.  Move it to the list of ones to flush. */
+		// Now test this conversation to see if it qualifies for flushing.
+		if ((time(NULL) - imptr->lastmsg) > if_older_than) {
+			// This conversation qualifies.  Move it to the list of ones to flush.
 			imptr->next = flush_these;
 			flush_these = imptr;
 		}
 		else  {
-			/* Move it to the list of ones not to flush. */
+			// Move it to the list of ones not to flush.
 			imptr->next = dont_flush_these;
 			dont_flush_these = imptr;
 		}
@@ -545,12 +499,11 @@ void flush_conversations_to_disk(time_t if_older_than) {
 	end_critical_section(S_IM_LOGS);
 	free(nptr);
 
-	/* We are now outside of the critical section, and we are the only thread holding a
-	 * pointer to a linked list of conversations to be flushed to disk.
-	 */
+	// We are now outside of the critical section, and we are the only thread holding a
+	// pointer to a linked list of conversations to be flushed to disk.
 	while (flush_these) {
 
-		flush_individual_conversation(flush_these);	/* This will free the string buffer */
+		flush_individual_conversation(flush_these);	// This will free the string buffer
 		imptr = flush_these;
 		flush_these = flush_these->next;
 		free(imptr);
@@ -559,12 +512,12 @@ void flush_conversations_to_disk(time_t if_older_than) {
 
 
 void instmsg_timer(void) {
-	flush_conversations_to_disk(300);	/* Anything that hasn't peeped in more than 5 minutes */
+	flush_conversations_to_disk(300);	// Anything that hasn't peeped in more than 5 minutes
 }
 
 
 void instmsg_shutdown(void) {
-	flush_conversations_to_disk(0);		/* Get it ALL onto disk NOW. */
+	flush_conversations_to_disk(0);		// Get it ALL onto disk NOW.
 }
 
 
@@ -582,6 +535,6 @@ char *ctdl_module_init_instmsg(void) {
 		CtdlRegisterSessionHook(instmsg_shutdown, EVT_SHUTDOWN, PRIO_SHUTDOWN + 10);
 	}
 	
-	/* return our module name for the log */
+	// return our module name for the log
 	return "instmsg";
 }
