@@ -23,6 +23,7 @@
 #include <sys/wait.h>
 #include <string.h>
 #include <limits.h>
+#include <regex.h>
 #include <libcitadel.h>
 #include "../../citadel_defs.h"
 #include "../../server.h"
@@ -493,7 +494,7 @@ void inbox_do_msg(long msgnum, void *userdata) {
 	}
 
 	for (i=0; i<ii->num_rules; ++i) {
-		syslog(LOG_DEBUG, "inboxrules: processing rule %d is %s", i, field_keys[ ii->rules[i].compared_field ]);
+		syslog(LOG_DEBUG, "inboxrules: processing rule: %d , field: %s", i, field_keys[ ii->rules[i].compared_field ]);
 		rule_activated = 0;
 
 		// Before doing a field compare, check to see if we have the correct parts of the message in memory.
@@ -635,31 +636,43 @@ void inbox_do_msg(long msgnum, void *userdata) {
 
 				// For all of the above fields, we can compare the field we've loaded into the buffer.
 				syslog(LOG_DEBUG, "Value of field to compare is: <%s>", compare_me);
-				int substring_match = (bmstrcasestr(compare_me, ii->rules[i].compared_value) ? 1 : 0);
+				int substring_match = 0;
+				int regex_match = 0;
 				int exact_match = 0;
 				if (compare_compound) {
 					char *sep = strchr(compare_me, '|');
 					if (sep) {
 						*sep = 0;
+						++sep;
 						exact_match =
 							(strcasecmp(compare_me, ii->rules[i].compared_value) ? 0 : 1)
-							+ (strcasecmp(++sep, ii->rules[i].compared_value) ? 0 : 1)
+							+ (strcasecmp(sep, ii->rules[i].compared_value) ? 0 : 1)
+						;
+						substring_match =
+							(bmstrcasestr(compare_me, ii->rules[i].compared_value) ? 1 : 0)
+							+ (bmstrcasestr(sep, ii->rules[i].compared_value) ? 1 : 0)
 						;
 					}
 				}
 				else {
 					exact_match = (strcasecmp(compare_me, ii->rules[i].compared_value) ? 0 : 1);
+					substring_match = (bmstrcasestr(compare_me, ii->rules[i].compared_value) ? 1 : 0);
 				}
 				syslog(LOG_DEBUG, "substring match: %d", substring_match);
-				syslog(LOG_DEBUG, "exact match: %d", exact_match);
+				syslog(LOG_DEBUG, "    regex match: %d", regex_match);
+				syslog(LOG_DEBUG, "    exact match: %d", exact_match);
 				switch(ii->rules[i].field_compare_op) {
 					case fcomp_contains:
-					case fcomp_matches:
 						rule_activated = substring_match;
 						break;
+					case fcomp_matches:
+						rule_activated = regex_match;
+						break;
 					case fcomp_notcontains:
-					case fcomp_notmatches:
 						rule_activated = !substring_match;
+						break;
+					case fcomp_notmatches:
+						rule_activated = !regex_match;
 						break;
 					case fcomp_is:
 						rule_activated = exact_match;
