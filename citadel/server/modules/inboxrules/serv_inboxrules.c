@@ -1,6 +1,6 @@
 // Inbox handling rules
 //
-// Copyright (c) 1987-2022 by the citadel.org team
+// Copyright (c) 1987-2023 by the citadel.org team
 //
 // This program is open source software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License version 3.
@@ -471,9 +471,7 @@ void inbox_do_vacation(struct irule *rule, struct CtdlMessage *msg) {
 }
 
 
-/*
- * Process a single message.  We know the room, the user, the rules, the message number, etc.
- */
+// Process a single message.  We know the room, the user, the rules, the message number, etc.
 void inbox_do_msg(long msgnum, void *userdata) {
 	struct inboxrules *ii = (struct inboxrules *) userdata;
 	struct CtdlMessage *msg = NULL;		// If we are loading a message to process, put it here.
@@ -746,10 +744,7 @@ void inbox_do_msg(long msgnum, void *userdata) {
 }
 
 
-/*
- * A user account is identified as requring inbox processing.
- * Do it.
- */
+// A user account is identified as requring inbox processing.  Go ahead and do it.
 void do_inbox_processing_for_user(long usernum) {
 	struct CtdlMessage *msg;
 	struct inboxrules *ii;
@@ -806,17 +801,13 @@ void do_inbox_processing_for_user(long usernum) {
 }
 
 
-/*
- * Here is an array of users (by number) who have received messages in their inbox and may require processing.
- */
+// Here is an array of users (by number) who have received messages in their inbox and may require processing.
 long *users_requiring_inbox_processing = NULL;
 int num_urip = 0;
 int num_urip_alloc = 0;
 
 
-/*
- * Perform inbox processing for all rooms which require it
- */
+// Perform inbox processing for all rooms which require it
 void perform_inbox_processing(void) {
 	int i = 0;
 
@@ -835,10 +826,7 @@ void perform_inbox_processing(void) {
 }
 
 
-/*
- * This function is called after a message is saved to a room.
- * If it's someone's inbox, we have to check for inbox rules
- */
+// This function is called after a message is saved to a room.  If it's someone's inbox, we have to check for inbox rules
 int serv_inboxrules_roomhook(struct ctdlroom *room) {
 	int i = 0;
 
@@ -877,13 +865,11 @@ int serv_inboxrules_roomhook(struct ctdlroom *room) {
 
 
 
-/*
- * Get InBox Rules
- *
- * This is a client-facing function which fetches the user's inbox rules -- it omits all lines containing anything other than a rule.
- * 
- * hmmmmm ... should we try to rebuild this in terms of deserialize_inbox_rules() instread?
- */
+// Get InBox Rules
+//
+// This is a client-facing function which fetches the user's inbox rules -- it omits all lines containing anything other than a rule.
+// 
+// hmmmmm ... should we try to rebuild this in terms of deserialize_inbox_rules() instread?
 void cmd_gibr(char *argbuf) {
 
 	if (CtdlAccessCheck(ac_logged_in)) return;
@@ -918,11 +904,9 @@ void cmd_gibr(char *argbuf) {
 }
 
 
-/*
- * Rewrite the rule set to disk after it has been modified
- * Called by cmd_pibr()
- * Returns the msgnum of the new rules message
- */
+// Rewrite the rule set to disk after it has been modified
+// Called by cmd_pibr()
+// Returns the msgnum of the new rules message
 void rewrite_rules_to_disk(const char *new_config) {
 	long old_msgnum = CC->user.msgnum_inboxrules;
 	char userconfigroomname[ROOMNAMELEN];
@@ -939,11 +923,8 @@ void rewrite_rules_to_disk(const char *new_config) {
 }
 
 
-/*
- * Put InBox Rules
- *
- * User transmits the new inbox rules for the account.  They are inserted into the account, replacing the ones already there.
- */
+// Put InBox Rules
+// User transmits the new inbox rules for the account.  They are inserted into the account, replacing the ones already there.
 void cmd_pibr(char *argbuf) {
 	if (CtdlAccessCheck(ac_logged_in)) return;
 
@@ -976,6 +957,6 @@ char *ctdl_module_init_sieve(void) {
 		CtdlRegisterSessionHook(perform_inbox_processing, EVT_HOUSE, PRIO_HOUSE + 10);
 	}
 	
-        /* return our module name for the log */
+        // return our module name for the log
 	return "inboxrules";
 }
