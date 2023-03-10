@@ -635,11 +635,22 @@ void inbox_do_msg(long msgnum, void *userdata) {
 			case field_xspamstatus:
 
 				// For all of the above fields, we can compare the field we've loaded into the buffer.
-				syslog(LOG_DEBUG, "Value of field to compare is: <%s>", compare_me);
+				syslog(LOG_DEBUG, "inboxrules: rule %d: field \"%s\" is \"%s\", looking for \"%s\"",
+					i,
+					field_keys[ii->rules[i].compared_field],
+					compare_me,
+					ii->rules[i].compared_value
+				);
 				int substring_match = 0;
 				int regex_match = 0;
 				int exact_match = 0;
-				if (compare_compound) {
+
+				regex_t regex;
+				if (regcomp(&regex, ii->rules[i].compared_value, (REG_EXTENDED | REG_ICASE | REG_NOSUB | REG_NEWLINE))) {
+					syslog(LOG_ERR, "inboxrules: regcomp: %m");
+				}
+
+				if (compare_compound) {					// comparing a compound field such as name+address
 					char *sep = strchr(compare_me, '|');
 					if (sep) {
 						*sep = 0;
@@ -652,12 +663,18 @@ void inbox_do_msg(long msgnum, void *userdata) {
 							(bmstrcasestr(compare_me, ii->rules[i].compared_value) ? 1 : 0)
 							+ (bmstrcasestr(sep, ii->rules[i].compared_value) ? 1 : 0)
 						;
+						regex_match =
+							(regexec(&regex, compare_me, 0, 0, 0) ? 0 : 1)
+							+ (regexec(&regex, sep, 0, 0, 0) ? 0 : 1)
+						;
 					}
 				}
-				else {
+				else {							// comparing a single field only
 					exact_match = (strcasecmp(compare_me, ii->rules[i].compared_value) ? 0 : 1);
 					substring_match = (bmstrcasestr(compare_me, ii->rules[i].compared_value) ? 1 : 0);
+					regex_match = (regexec(&regex, compare_me, 0, 0, 0) ? 1 : 0);
 				}
+				regfree(&regex);
 				syslog(LOG_DEBUG, "substring match: %d", substring_match);
 				syslog(LOG_DEBUG, "    regex match: %d", regex_match);
 				syslog(LOG_DEBUG, "    exact match: %d", exact_match);
