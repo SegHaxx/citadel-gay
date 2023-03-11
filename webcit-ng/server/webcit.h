@@ -108,6 +108,11 @@ enum {
 	WEBSERVER_UDS
 };
 
+enum {
+	DAV_MOVE,
+	DAV_COPY
+};
+
 #define TRACE syslog(LOG_DEBUG, "\033[3%dmCHECKPOINT: %s:%d\033[0m", ((__LINE__%6)+1), __FILE__, __LINE__)
 #define SLEEPING		180		// TCP connection timeout
 #define MAX_WORKER_THREADS	32		// Maximum number of worker threads permitted to exist
@@ -147,6 +152,7 @@ void ctdl_delete_msgs(struct ctdlsession *c, long *msgnums, int num_msgs);
 void dav_delete_message(struct http_transaction *h, struct ctdlsession *c, long msgnum);
 void dav_get_message(struct http_transaction *h, struct ctdlsession *c, long msgnum);
 void dav_put_message(struct http_transaction *h, struct ctdlsession *c, char *euid, long old_msgnum);
+void dav_move_or_copy_message(struct http_transaction *h, struct ctdlsession *c, long msgnum, int move_or_copy);
 ssize_t ctdl_write(struct ctdlsession *ctdl, const void *buf, size_t count);
 int login_to_citadel(struct ctdlsession *c, char *auth, char *resultbuf);
 StrBuf *ctdl_readtextmsg(struct ctdlsession *ctdl);

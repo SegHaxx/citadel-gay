@@ -300,10 +300,10 @@ void object_in_room(struct http_transaction *h, struct ctdlsession *c) {
 		dav_put_message(h, c, unescaped_euid, msgnum);
 	}
 	else if (!strcasecmp(h->method, "MOVE")) {
-		do_404(h);	// FIXME write this
+		dav_move_or_copy_message(h, c, msgnum, DAV_MOVE);
 	}
 	else if (!strcasecmp(h->method, "COPY")) {
-		do_404(h);	// FIXME write this
+		dav_move_or_copy_message(h, c, msgnum, DAV_COPY);
 	}
 	else {
 		do_404(h);	// Got this far but the method made no sense?  Bummer.

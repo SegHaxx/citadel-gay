@@ -46,6 +46,12 @@ void dav_delete_message(struct http_transaction *h, struct ctdlsession *c, long 
 }
 
 
+// DAV move or copy an object in a room.
+void dav_move_or_copy_message(struct http_transaction *h, struct ctdlsession *c, long msgnum, int move_or_copy) {
+	do_404(h);
+}
+
+
 // GET method directly on a message in a room
 void dav_get_message(struct http_transaction *h, struct ctdlsession *c, long msgnum) {
 	char buf[1024];
