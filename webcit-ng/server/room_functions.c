@@ -288,8 +288,7 @@ void object_in_room(struct http_transaction *h, struct ctdlsession *c) {
 		return;
 	}
 
-	// DOOOOOO ITTTTT!!!
-
+	// Now perform the requested operation.
 	if (!strcasecmp(h->method, "DELETE")) {
 		dav_delete_message(h, c, msgnum);
 	}
@@ -306,9 +305,8 @@ void object_in_room(struct http_transaction *h, struct ctdlsession *c) {
 		dav_move_or_copy_message(h, c, msgnum, DAV_COPY);
 	}
 	else {
-		do_404(h);	// Got this far but the method made no sense?  Bummer.
+		do_404(h);		// We should never get here, but if we do, a 404 error is clean.
 	}
-
 }
 
 
@@ -319,7 +317,7 @@ void report_the_room_itself(struct http_transaction *h, struct ctdlsession *c) {
 		return;
 	}
 
-	do_404(h);		// future implementations like CardDAV will require code paths here
+	do_404(h);			// future implementations like CardDAV will require code paths here
 }
 
 
@@ -348,8 +346,13 @@ void propfind_the_room_itself(struct http_transaction *h, struct ctdlsession *c)
 	syslog(LOG_DEBUG, "Client PROPFIND requested depth: %d", dav_depth);
 	StrBuf *Buf = NewStrBuf();
 
-	StrBufAppendPrintf(Buf, "<?xml version=\"1.0\" encoding=\"utf-8\"?>"
-			   "<D:multistatus " "xmlns:D=\"DAV:\" " "xmlns:C=\"urn:ietf:params:xml:ns:caldav\"" ">");
+	StrBufAppendPrintf(Buf,
+		"<?xml version=\"1.0\" encoding=\"utf-8\"?>"
+		"<D:multistatus "
+		"xmlns:D=\"DAV:\" "
+		"xmlns:C=\"urn:ietf:params:xml:ns:caldav\""
+		">"
+	);
 
 	// Transmit the collection resource
 	StrBufAppendPrintf(Buf, "<D:response>");
