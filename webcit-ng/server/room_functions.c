@@ -512,6 +512,7 @@ void get_the_room_itself(struct http_transaction *h, struct ctdlsession *c) {
 	JsonObjectAppend(j, NewJsonNumber(HKEY("current_view"), c->room_current_view));
 	JsonObjectAppend(j, NewJsonNumber(HKEY("default_view"), c->room_default_view));
 	JsonObjectAppend(j, NewJsonNumber(HKEY("is_room_aide"), c->is_room_aide));
+	JsonObjectAppend(j, NewJsonNumber(HKEY("is_trash_folder"), c->is_trash_folder));
 	JsonObjectAppend(j, NewJsonNumber(HKEY("can_delete_messages"), c->can_delete_messages));
 	JsonObjectAppend(j, NewJsonNumber(HKEY("new_messages"), c->new_messages));
 	JsonObjectAppend(j, NewJsonNumber(HKEY("total_messages"), c->total_messages));
@@ -644,7 +645,7 @@ void ctdl_r(struct http_transaction *h, struct ctdlsession *c) {
 			//      10      (int)CC->room.QRfloor           The floor number this room resides on
 			c->room_current_view = extract_int(&buf[4], 11);
 			c->room_default_view = extract_int(&buf[4], 12);
-			//      13      (int)is_trash                   Boolean flag: 1 if this is the user's Trash folder, 0 otherwise.
+			c->is_trash_folder  = extract_int(&buf[4], 13); // Boolean flag: 1 if this is the user's Trash folder, 0 otherwise.
 			room_flags2 = extract_long(&buf[4], 14);	// More flags associated with this room.
 			c->room_mtime = extract_long(&buf[4], 15);	// Timestamp of the last write activity in this room
 

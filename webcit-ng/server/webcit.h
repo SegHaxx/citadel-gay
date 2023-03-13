@@ -83,6 +83,7 @@ struct ctdlsession {
 	char room[128];				// What room we are currently in
 	int room_current_view;
 	int room_default_view;
+	int is_trash_folder;			// Nonzero if this room is the user's Trash folder
 	int is_room_aide;			// nonzero if the user has aide rights to THIS room
 	int can_delete_messages;		// nonzeri if the user is permitted to delete messages in THIS room
 	long last_seen;
