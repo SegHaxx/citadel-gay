@@ -108,11 +108,6 @@ enum {
 	WEBSERVER_UDS
 };
 
-enum {
-	DAV_MOVE,
-	DAV_COPY
-};
-
 #define TRACE syslog(LOG_DEBUG, "\033[3%dmCHECKPOINT: %s:%d\033[0m", ((__LINE__%6)+1), __FILE__, __LINE__)
 #define SLEEPING		180		// TCP connection timeout
 #define MAX_WORKER_THREADS	32		// Maximum number of worker threads permitted to exist
@@ -123,6 +118,9 @@ enum {
 #define DEVELOPER_ID		0
 #define CLIENT_ID		4
 #define TARGET			"webcit02"	/* Window target for inline URL's */
+#define ROOMNAMELEN		128		// The size of a roomname string
+#define	DAV_MOVE		0		// MOVE=0 COPY=1 don't change these!
+#define DAV_COPY		1		// they are the values used in the Citadel Server MOVE command
 
 void worker_entry(int *);
 void perform_one_http_transaction(struct client_handle *ch);

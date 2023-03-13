@@ -48,7 +48,37 @@ void dav_delete_message(struct http_transaction *h, struct ctdlsession *c, long 
 
 // DAV move or copy an object in a room.
 void dav_move_or_copy_message(struct http_transaction *h, struct ctdlsession *c, long msgnum, int move_or_copy) {
-	do_404(h);
+	char target_room[ROOMNAMELEN];
+	char buf[1024];
+
+	// HTTP "Destination" header will tell us the target collection
+	char *target_collection = header_val(h, "Destination");
+	syslog(LOG_DEBUG, "dest coll: \"%s\"", target_collection);
+
+	// Translate the target WebDAV Collection name to a Citadel Room name.
+	// Note that some clients will supply a fully-qualified URL such as "http://example.com/ctdl/r/roomname/999"
+	// so we're just going to search for "/ctdl/r/" and work from there.
+	char *ctdlr = strstr(target_collection, "/ctdl/r/");
+	if (ctdlr == NULL) {	
+		do_412(h);		// badly formed target collection; fail out.
+		return;
+	}
+	safestrncpy(target_room, ctdlr+8, sizeof target_room);
+	char *slash = strchr(target_room, '/');
+	if (slash) {
+		*slash = 0;		// lop off the "filename" we don't need it
+	}
+	unescape_input(target_room);
+	syslog(LOG_DEBUG, "dest room: \"%s\"", target_room);
+
+	// Perform the move or copy operation
+	ctdl_printf(c, "MOVE %ld|%s|%d", msgnum, target_room, move_or_copy);	// Citadel Server: 0=move, 1=copy
+	ctdl_readline(c, buf, sizeof buf);
+	if (buf[0] == '2') {
+		do_204(h);		// succeed (no content)
+		return;
+	}
+	do_412(h);			// fail (precondition failed)
 }
 
 
