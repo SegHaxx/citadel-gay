@@ -20,7 +20,10 @@ mail_delete_func = async(table, row) => {
 	let m = parseInt(row["id"].substring(12));	// derive msgnum from row id
 	response = await fetch(
 		"/ctdl/r/" + escapeHTMLURI(current_room) + "/" + m,
-		{ method: "DELETE" }
+		{
+			method: "MOVE",
+			headers: { "Destination" : "/ctdl/r/_TRASH_" }
+		},
 	);
 	if (response.ok) {				// If the server accepted the delete, blank out the message div.
 		table.deleteRow(row.rowIndex);
