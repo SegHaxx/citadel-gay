@@ -1,6 +1,6 @@
 // Display the mail folder list
 //
-// Copyright (c) 2016-2022 by the citadel.org team
+// Copyright (c) 2016-2023 by the citadel.org team
 //
 // This program is open source software.  Use, duplication, or
 // disclosure are subject to the GNU General Public License v3.
@@ -50,9 +50,12 @@ function render_mail_folder_list(roomlist_json) {
 	rendered_list += "<ul class=\"ctdl_mail_folders\">\n";
 	for (let i=0; i<roomlist_json.length; ++i) {
 		if (roomlist_json[i].current_view == views.VIEW_MAILBOX) {
-			rendered_list += "<li onClick=\"gotoroom('" + roomlist_json[i].name + "');\">";
-			rendered_list += ((roomlist_json[i].name == "Mail") ? _("INBOX") : escapeHTML(roomlist_json[i].name));
-			rendered_list += "</li>\n";
+			rendered_list += "<li "
+					+ "onmouseup=\"mail_mouseup('" + roomlist_json[i].name + "');\" "
+					+ "onClick=\"gotoroom('" + roomlist_json[i].name + "');\">"
+					+ ((roomlist_json[i].name == "Mail") ? _("INBOX") : escapeHTML(roomlist_json[i].name))
+					+ "</li>\n"
+			;
 		}
 	}
 	rendered_list += "</ul>";
@@ -60,3 +63,15 @@ function render_mail_folder_list(roomlist_json) {
 
 	return rendered_list;
 }
+
+
+// The user released the mouse button over a folder name -- this is probably a drop event
+function mail_mouseup(roomname) {
+	console.log("mail_mouseup " + roomname);
+
+	// todo:
+	// 1. First check to see if a drag operation is in progress.  Exit if there is no such case.
+	// 2. Perform the MOVE operation on the selected rows.
+
+}
+

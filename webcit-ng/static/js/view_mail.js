@@ -17,7 +17,7 @@ var newmail_notify = {
 
 // This is the async back end for mail_delete_selected()
 mail_delete_func = async(table, row) => {
-	let m = parseInt(row["id"].substring(12));	// derive msgnum from row id
+	let m = parseInt(row["id"].substring(12));				// derive msgnum from row id
 
 	if (is_trash_folder) {
 		response = await fetch(
@@ -37,7 +37,7 @@ mail_delete_func = async(table, row) => {
 		);
 	}
 
-	if (response.ok) {				// If the server accepted the delete, blank out the message div.
+	if (response.ok) {				// If the server accepted the delete, blank out the message div
 		table.deleteRow(row.rowIndex);
 		if (m == displayed_message) {
 			document.getElementById("ctdl-mailbox-reading-pane").innerHTML = "";

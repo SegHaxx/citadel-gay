@@ -1,8 +1,7 @@
-// Copyright (c) 2016-2022 by the citadel.org team
+// Copyright (c) 2016-2023 by the citadel.org team
 //
 // This program is open source software.  Use, duplication, or
 // disclosure are subject to the GNU General Public License v3.
-
 
 
 // Clear the sidebar buttons of any style indicating that one is selected
