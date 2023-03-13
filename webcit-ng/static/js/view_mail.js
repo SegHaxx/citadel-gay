@@ -1,6 +1,6 @@
 // This module handles the view for "mailbox" rooms.
 //
-// Copyright (c) 2016-2022 by the citadel.org team
+// Copyright (c) 2016-2023 by the citadel.org team
 //
 // This program is open source software.  Use, duplication, or
 // disclosure are subject to the GNU General Public License v3.
@@ -18,13 +18,25 @@ var newmail_notify = {
 // This is the async back end for mail_delete_selected()
 mail_delete_func = async(table, row) => {
 	let m = parseInt(row["id"].substring(12));	// derive msgnum from row id
-	response = await fetch(
-		"/ctdl/r/" + escapeHTMLURI(current_room) + "/" + m,
-		{
-			method: "MOVE",
-			headers: { "Destination" : "/ctdl/r/_TRASH_" }
-		},
-	);
+
+	if (is_trash_folder) {
+		response = await fetch(
+			"/ctdl/r/" + escapeHTMLURI(current_room) + "/" + m,
+			{
+				method: "DELETE"				// If this is the Trash folder, delete permanently
+			},
+		);
+	}
+	else {
+		response = await fetch(
+			"/ctdl/r/" + escapeHTMLURI(current_room) + "/" + m,
+			{
+				method: "MOVE",					// Otherwise, move to the Trash folder
+				headers: { "Destination" : "/ctdl/r/_TRASH_" }
+			},
+		);
+	}
+
 	if (response.ok) {				// If the server accepted the delete, blank out the message div.
 		table.deleteRow(row.rowIndex);
 		if (m == displayed_message) {
