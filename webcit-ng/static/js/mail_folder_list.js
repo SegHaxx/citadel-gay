@@ -59,8 +59,6 @@ function render_mail_folder_list(roomlist_json) {
 		}
 	}
 	rendered_list += "</ul>";
-	console.log(rendered_list);
-
 	return rendered_list;
 }
 
