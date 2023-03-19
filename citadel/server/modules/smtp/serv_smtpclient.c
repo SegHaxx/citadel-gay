@@ -518,7 +518,10 @@ void smtp_do_queue(int type_of_queue_run) {
 	doing_smtpclient = 1;
 	end_critical_section(S_SMTPQUEUE);
 
-	syslog(LOG_DEBUG, "smtpclient: start queue run , last_queue_job_processed=%ld , last_queue_job_submitted=%ld", last_queue_job_processed, last_queue_job_submitted);
+	syslog(LOG_DEBUG, "smtpclient: start %s queue run , last_queue_job_processed=%ld , last_queue_job_submitted=%ld",
+		(type_of_queue_run == QUICK_QUEUE_RUN ? "quick" : "full"),
+		last_queue_job_processed, last_queue_job_submitted
+	);
 
 	if (CtdlGetRoom(&CC->room, SMTP_SPOOLOUT_ROOM) != 0) {
 		syslog(LOG_WARNING, "smtpclient: cannot find room <%s>", SMTP_SPOOLOUT_ROOM);
@@ -546,16 +549,20 @@ void smtp_do_queue(int type_of_queue_run) {
 	);
 
 	// We are ready to run through the queue now.
+	syslog(LOG_DEBUG, "smtpclient: %d messages to be processed", array_len(smtp_queue));
 	for (i = 0; i < array_len(smtp_queue); ++i) {
 		long m;
 		memcpy(&m, array_get_element_at(smtp_queue, i), sizeof(long));
 		smtp_process_one_msg(m);
-		last_queue_job_processed = m;
 	}
 
 	array_free(smtp_queue);
+	last_queue_job_processed = last_queue_job_submitted;
 	doing_smtpclient = 0;
-	syslog(LOG_DEBUG, "smtpclient: end queue run , last_queue_job_processed=%ld , last_queue_job_submitted=%ld", last_queue_job_processed, last_queue_job_submitted);
+	syslog(LOG_DEBUG, "smtpclient: end %s queue run , last_queue_job_processed=%ld , last_queue_job_submitted=%ld",
+		(type_of_queue_run == QUICK_QUEUE_RUN ? "quick" : "full"),
+		last_queue_job_processed, last_queue_job_submitted
+	);
 }
 
 
