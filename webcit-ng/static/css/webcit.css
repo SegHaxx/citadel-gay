@@ -171,7 +171,7 @@ html,body,h1,h2,h3,h4,h5 {
 }
 
 .ctdl-forum-reading-pane {
-	background-color: DarkSlateGrey;	/* Background behind the message boxes */
+	background-color: White;	/* Background behind the message boxes */
 }
 
 .ctdl-fmsg-wrapper {				/* message wrapper for forum view */
@@ -180,6 +180,9 @@ html,body,h1,h2,h3,h4,h5 {
 	background-color: White;
 	margin: 1vw;
 	padding: 5px;				/* inside the box */
+	border-radius: 10px;
+	border-style: outset;
+	border-width: thin;
 }
 
 .ctdl-mmsg-wrapper {				/* message wrapper for mailbox view */
@@ -381,10 +384,11 @@ blockquote pre {
 	overflow: hidden;
 	border-radius: 10px;
 	border-style: outset;
+	border-width: thin;
 	background-color: White;
 	padding: 0.3vw;
 	margin-top: 0;
-	margin-bottom: 0.25vw;
+	margin-bottom: 0.1vw;
 	margin-left: 1vw;
 	margin-right: 1vw;
 }
