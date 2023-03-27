@@ -21,9 +21,9 @@
 	grid-template-areas:
 		'ctdl-mg-banner ctdl-mg-banner'
 		'ctdl-mg-menu ctdl-mg-main';
-	gap: 1px;
-	background-color: DarkSlateGrey;	/* This is the color of the lines between the boxes, and also the boxes themselves if not overridden */
-	padding: 0;				/* This is the border around the edges of the screen */
+	gap: 1px;				/* This is the thickness of the lines between the boxes */
+	background-color: DarkSlateGrey;	/* This is the color of the lines between the boxes */
+	padding: 0;				/* This is the border around the edges of the screen (0 for no border) */
 	width: 100vw;
 	height: 100vh;
 }
@@ -42,6 +42,7 @@
 	grid-area: ctdl-mg-main;
 	overflow-x: hidden;
 	overflow-y: auto;
+	background-color: GhostWhite;
 }
 
 .ctdl-main-grid-container > div {
