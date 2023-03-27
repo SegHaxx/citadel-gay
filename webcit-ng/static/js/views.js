@@ -46,48 +46,48 @@ function render_room_view() {
 		// The "contacts" module displays rooms with the VIEW_ADDRESSBOOK view as a contacts manager.
 		case views.VIEW_ADDRESSBOOK:
 			document.getElementById("ctdl-main").innerHTML =
-				"<center>'" + current_room + "' is an address book but there is no renderer.</center>";
+				"<div class=\"ctdl-middle\">'" + current_room + "' is an address book but there is no renderer.</div>";
 			break;
 
 		case views.VIEW_CALENDAR:
 		case views.VIEW_CALBRIEF:
 			document.getElementById("ctdl-main").innerHTML =
-				"<center>'" + current_room + "' is a calendar but there is no renderer.</center>";
+				"<div class=\"ctdl-middle\">'" + current_room + "' is a calendar but there is no renderer.</div>";
 			break;
 
 		case views.VIEW_TASKS:
 			document.getElementById("ctdl-main").innerHTML =
-				"<center>'" + current_room + "' is a task list but there is no renderer.</center>";
+				"<div class=\"ctdl-middle\">'" + current_room + "' is a task list but there is no renderer.</div>";
 			break;
 
 		case views.VIEW_NOTES:
 			document.getElementById("ctdl-main").innerHTML =
-				"<center>'" + current_room + "' is a notes list but there is no renderer.</center>";
+				"<div class=\"ctdl-middle\">'" + current_room + "' is a notes list but there is no renderer.</div>";
 			break;
 
 		case views.VIEW_WIKI:
 			document.getElementById("ctdl-main").innerHTML =
-				"<center>'" + current_room + "' is a wiki but there is no renderer.</center>";
+				"<div class=\"ctdl-middle\">'" + current_room + "' is a wiki but there is no renderer.</div>";
 			break;
 
 		case views.VIEW_JOURNAL:
 			document.getElementById("ctdl-main").innerHTML =
-				"<center>'" + current_room + "' is a journal but there is no renderer.</center>";
+				"<div class=\"ctdl-middle\">'" + current_room + "' is a journal but there is no renderer.</div>";
 			break;
 
 		case views.VIEW_BLOG:
 			document.getElementById("ctdl-main").innerHTML =
-				"<center>'" + current_room + "' is a blog but there is no renderer.</center>";
+				"<div class=\"ctdl-middle\">'" + current_room + "' is a blog but there is no renderer.</div>";
 			break;
 
 		case views.VIEW_QUEUE:
 			document.getElementById("ctdl-main").innerHTML =
-				"<center>We ought to be displaying the email queue here.</center>";
+				"<div class=\"ctdl-middle\">We ought to be displaying the email queue here.</div>";
 			break;
 
 		default:
 			document.getElementById("ctdl-main").innerHTML =
-				"<center>The view for " + current_room + " is " + current_view + " but there is no renderer.</center>";
+				"<div class=\"ctdl-middle\">The view for " + current_room + " is " + current_view + " but there is no renderer.</div>";
 			break;
 	}
 

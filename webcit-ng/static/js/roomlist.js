@@ -7,7 +7,7 @@
 function render_room_list() {
 
 	document.getElementById("ctdl-newmsg-button").style.display = "none";		// There is no "enter" button on this screen
-	document.getElementById("ctdl-main").innerHTML = "<img src=\"/ctdl/s/images/throbber.gif\" />";	// show throbber while loading
+	document.getElementById("ctdl-main").innerHTML = "<div class=\"ctdl-middle\"><img src=\"/ctdl/s/images/throbber.gif\" /></div>";	// show throbber while loading
 	clear_sidebar_selection();
 	document.getElementById("ctdl-sidebar-button-forums").classList.add("ctdl-sidebar-button-selected");
 

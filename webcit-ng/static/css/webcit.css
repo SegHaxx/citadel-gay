@@ -21,7 +21,7 @@
 	grid-template-areas:
 		'ctdl-mg-banner ctdl-mg-banner'
 		'ctdl-mg-menu ctdl-mg-main';
-	gap: 3px;
+	gap: 1px;
 	background-color: DarkSlateGrey;	/* This is the color of the lines between the boxes, and also the boxes themselves if not overridden */
 	padding: 0;				/* This is the border around the edges of the screen */
 	width: 100vw;
@@ -353,6 +353,19 @@ blockquote pre {
 
 .ctdl-forum-urlmodal {
 	width: 75%;
+}
+
+/* use this class for any small item that needs to be centered on the screen in the main div */
+.ctdl-middle {
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	align-items: center;
+	text-align: center;
+	min-height: 100vh;
+	background-color: GhostWhite;
+	overflow: none;
+	border: none;
 }
 
 .ctdl-roomlist-top {
