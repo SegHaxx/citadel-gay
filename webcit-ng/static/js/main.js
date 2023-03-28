@@ -1,4 +1,4 @@
-// Copyright (c) 2016-2022 by the citadel.org team
+// Copyright (c) 2016-2023 by the citadel.org team
 //
 // This program is open source software.  Use, duplication, or
 // disclosure are subject to the GNU General Public License v3.
@@ -179,14 +179,8 @@ function load_new_march_list(which_oper) {
 // Activate the "Loading..." modal
 function activate_loading_modal() {
 	document.getElementById("ctdl_big_modal").innerHTML =
-		  "<div class=\"w3-modal-content\">"
-		+ "  <div class=\"w3-container\">"
-
-		+ "<i class=\"fas fa-spinner fa-spin\"></i>&nbsp;&nbsp;"
-		+ _("Loading messages from server, please wait")
-
-		+ "  </div>"
-		+ "</div>";
+		"<i class=\"fas fa-spinner fa-spin\"></i>&nbsp;&nbsp;"
+		+ _("Loading messages from server, please wait");
 	document.getElementById("ctdl_big_modal").style.display = "block";
 }
 

@@ -25,7 +25,10 @@ function render_room_view() {
 	}
 
 	clear_sidebar_selection();
-	document.getElementById("ctdl-main").innerHTML = _("Loading messages from server, please wait");
+	document.getElementById("ctdl-main").innerHTML = 
+		"<div class=\"ctdl-middle\">"
+		+ _("Loading messages from server, please wait")
+		+ "</div>";
 
 	switch(current_view) {
 
