@@ -38,6 +38,13 @@ chkpw: utils/chkpw.c utils/*.h server/*.h
 chkpwd: utils/chkpwd.c utils/auth.c utils/*.h server/*.h
 	cc ${CFLAGS} ${LDFLAGS} utils/chkpwd.c utils/auth.c -lcrypt -o chkpwd
 
+# The `ctdl3264` utility is being kept on hold for now, as it may be resurrected someday.
+# Add `ctdl3264` to the `all` target if we do that.
+#ctdl3264: utils/ctdl3264.c utils/*.h server/*.h utils/ctdl3264_structs.h
+#	cc ${CFLAGS} ${LDFLAGS} utils/ctdl3264.c -lcitadel -lz -ldb -o ctdl3264
+#utils/ctdl3264_structs.h: server/server.h utils/ctdl3264_prep.sh
+#	utils/ctdl3264_prep.sh
+
 config.mk: configure
 	./configure
 
