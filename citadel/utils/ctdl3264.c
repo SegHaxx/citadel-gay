@@ -29,7 +29,6 @@
 #include "../server/citadel_dirs.h"
 #include "ctdl3264_structs.h"
 
-static DB *dbp[MAXCDB];		// One DB handle for each Citadel database
 static DB_ENV *dbenv;		// The DB environment (global)
 
 // Open the various databases we'll be using.  Any database which
@@ -39,7 +38,6 @@ static DB_ENV *dbenv;		// The DB environment (global)
 void open_databases(void) {
 	int ret;
 	int i;
-	char dbfilename[32];
 	u_int32_t flags = 0;
 	int dbversion_major, dbversion_minor, dbversion_patch;
 
@@ -108,28 +106,10 @@ void open_databases(void) {
 		printf("db: exit code %d\n", ret);
 		exit(CTDLEXIT_DB);
 	}
-
-	for (i = 0; i < MAXCDB; ++i) {
-		printf("db: mounting database %d\n", i);
-		ret = db_create(&dbp[i], dbenv, 0);					// Create a database handle
-		if (ret) {
-			printf("db: db_create: %s\n", db_strerror(ret));
-			printf("db: exit code %d\n", ret);
-			exit(CTDLEXIT_DB);
-		}
-
-		snprintf(dbfilename, sizeof dbfilename, "cdb.%02x", i);			// table names by number
-		ret = dbp[i]->open(dbp[i], NULL, dbfilename, NULL, DB_BTREE, DB_AUTO_COMMIT, 0600);
-		if (ret) {
-			printf("db: db_open[%02x]: %s\n", i, db_strerror(ret));
-			if (ret == ENOMEM) {
-				printf("db: You may need to tune your database; please check http://www.citadel.org for more information.\n");
-			}
-			printf("db: exit code %d\n", ret);
-			exit(CTDLEXIT_DB);
-		}
-	}
 }
+
+ 
+
 
 
 // Close all of the db database files we've opened.  This can be done in a loop, since it's just a bunch of closes.
@@ -141,22 +121,6 @@ void close_databases(void) {
 	//if ((ret = dbenv->txn_checkpoint(dbenv, 0, 0, 0))) {
 		//syslog(LOG_ERR, "db: txn_checkpoint: %s", db_strerror(ret));
 	//}
-
-	printf("db: flushing the database logs\n");
-	if ((ret = dbenv->log_flush(dbenv, NULL))) {
-		printf("db: log_flush: %s\n", db_strerror(ret));
-	}
-
-	// close the tables
-	printf("db: closing databases\n");
-	for (i = 0; i < MAXCDB; ++i) {
-		printf("db: closing database %02x\n", i);
-		ret = dbp[i]->close(dbp[i], 0);
-		if (ret) {
-			printf("db: db_close: %s\n", db_strerror(ret));
-		}
-
-	}
 
 	// Close the handle.
 	ret = dbenv->close(dbenv, 0);
@@ -190,8 +154,48 @@ void (*convert_functions[])(void) = {
 
 
 void convert_table(int which_cdb) {
+	int ret;
+	char dbfilename[32];
+
 	printf("Converting table %d\n", which_cdb);
+
+	// Begin by opening the database (table)
+
+	DB *dbp;								// One DB handle for one Citadel database
+	printf("\033[33m\033[1mdb: opening database %02x\033[0m\n", which_cdb);
+	ret = db_create(&dbp, dbenv, 0);					// Create a database handle
+	if (ret) {
+		printf("db: db_create: %s\n", db_strerror(ret));
+		printf("db: exit code %d\n", ret);
+		exit(CTDLEXIT_DB);
+	}
+
+	snprintf(dbfilename, sizeof dbfilename, "cdb.%02x", which_cdb);			// table names by number
+	ret = dbp->open(dbp, NULL, dbfilename, NULL, DB_BTREE, DB_AUTO_COMMIT, 0600);
+	if (ret) {
+		printf("db: db_open[%02x]: %s\n", which_cdb, db_strerror(ret));
+		if (ret == ENOMEM) {
+			printf("db: You may need to tune your database; please check http://www.citadel.org for more information.\n");
+		}
+		printf("db: exit code %d\n", ret);
+		exit(CTDLEXIT_DB);
+	}
+	
+	// Call the convert function (this will need some parameters later)
 	convert_functions[which_cdb]();
+
+	// Flush the logs...
+	printf("\033[33m\033[1mdb: flushing the database logs\033[0m\n");
+	if ((ret = dbenv->log_flush(dbenv, NULL))) {
+		printf("db: log_flush: %s\n", db_strerror(ret));
+	}
+
+	// ...and close the database (table)
+	printf("\033[33m\033[1mdb: closing database %02x\033[0m\n", which_cdb);
+	ret = dbp->close(dbp, 0);
+	if (ret) {
+		printf("db: db_close: %s\n", db_strerror(ret));
+	}
 
 }
 
