@@ -165,6 +165,37 @@ void close_databases(void) {
 	}
 }
 
+
+void null_function(void) {
+	printf("FIXME null_function() called which means we have more work to do!\n");
+}
+
+
+void (*convert_functions[])(void) = {
+	null_function,		// CDB_MSGMAIN
+	null_function,		// CDB_USERS
+	null_function,		// CDB_ROOMS
+	null_function,		// CDB_FLOORTAB
+	null_function,		// CDB_MSGLISTS
+	null_function,		// CDB_VISIT
+	null_function,		// CDB_DIRECTORY
+	null_function,		// CDB_USETABLE
+	null_function,		// CDB_BIGMSGS
+	null_function,		// CDB_FULLTEXT
+	null_function,		// CDB_EUIDINDEX
+	null_function,		// CDB_USERSBYNUMBER
+	null_function,		// CDB_EXTAUTH
+	null_function		// CDB_CONFIG
+};
+
+
+void convert_table(int which_cdb) {
+	printf("Converting table %d\n", which_cdb);
+	convert_functions[which_cdb]();
+
+}
+
+
 int main(int argc, char **argv) {
 	char ctdldir[PATH_MAX]=CTDLDIR;
 
@@ -189,6 +220,9 @@ int main(int argc, char **argv) {
 	}
 
 	open_databases();
+	for (int i = 0; i < MAXCDB; ++i) {
+		convert_table(i);
+	}
 	close_databases();
 
 	exit(0);
