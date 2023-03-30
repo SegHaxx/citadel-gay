@@ -159,9 +159,12 @@ void convert_table(int which_cdb) {
 
 	printf("Converting table %d\n", which_cdb);
 
-	// Begin by opening the database (table)
+	// shamelessly swiped from https://docs.oracle.com/database/bdb181/html/programmer_reference/am_cursor.html
+	DB *dbp;
+	DBC *dbcp;
+	DBT key, data;
 
-	DB *dbp;								// One DB handle for one Citadel database
+	// Begin by opening the database (table)
 	printf("\033[33m\033[1mdb: opening database %02x\033[0m\n", which_cdb);
 	ret = db_create(&dbp, dbenv, 0);					// Create a database handle
 	if (ret) {
@@ -180,7 +183,33 @@ void convert_table(int which_cdb) {
 		printf("db: exit code %d\n", ret);
 		exit(CTDLEXIT_DB);
 	}
-	
+
+	// Acquire a cursor
+	if ((ret = dbp->cursor(dbp, NULL, &dbcp, 0)) != 0) {
+		printf("db: db_cursor: %s\n", db_strerror(ret));
+		printf("db: exit code %d\n", ret);
+		exit(CTDLEXIT_DB);
+	}
+
+	/* Initialize the key/data return pair. */
+	memset(&key, 0, sizeof(key));
+	memset(&data, 0, sizeof(data));
+
+	/* Walk through the database and print out the key/data pairs. */
+	while ((ret = dbcp->get(dbcp, &key, &data, DB_NEXT)) == 0) {
+		printf("DB: %02x , keylen: %3d , datalen: %d\n", which_cdb, (int)key.size, (int)data.size);
+		//printf("%.*s : %.*s\n",
+			//(int)key.size, (char *)key.data,
+			//(int)data.size, (char *)data.data);
+			// do we have to free the key and data?
+	}
+
+	if (ret != DB_NOTFOUND) {
+		printf("db: db_get: %s\n", db_strerror(ret));
+		printf("db: exit code %d\n", ret);
+		exit(CTDLEXIT_DB);
+	}
+
 	// Call the convert function (this will need some parameters later)
 	convert_functions[which_cdb]();
 
