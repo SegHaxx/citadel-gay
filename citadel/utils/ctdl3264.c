@@ -102,14 +102,32 @@ void close_dbenv(void) {
 }
 
 
+// placeholder convert function for the data types not yet implemented
 void null_function(int which_cdb, DBT *key, DBT *data) {
 	//printf("DB: %02x , keylen: %3d , datalen: %d , dataptr: %x\n", which_cdb, (int)key->size, (int)data->size, data->data);
 }
 
 
+// convert function for a message in msgmain
+void convert_msgmain(int which_cdb, DBT *key, DBT *data) {
+	long msgnum;
+	memcpy(&msgnum, key->data, sizeof(msgnum));
+	printf("msgmain: len is %d , key is %ld\n", key->size, msgnum);
+}
+
+
+// convert function for a message in msgmain
+void convert_users(int which_cdb, DBT *key, DBT *data) {
+	char userkey[64];
+	memcpy(userkey, key->data, key->size);
+	userkey[key->size] = 0;
+	printf("users: len is %d , key is %s\n", key->size, userkey);
+}
+
+
 void (*convert_functions[])(int which_cdb, DBT *key, DBT *data) = {
-	null_function,		// CDB_MSGMAIN
-	null_function,		// CDB_USERS
+	convert_msgmain,	// CDB_MSGMAIN
+	convert_users,		// CDB_USERS
 	null_function,		// CDB_ROOMS
 	null_function,		// CDB_FLOORTAB
 	null_function,		// CDB_MSGLISTS
