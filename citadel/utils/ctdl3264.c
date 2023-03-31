@@ -32,7 +32,7 @@
 static DB_ENV *dbenv;		// The DB environment (global)
 
 // Open the database environment
-void open_dbenv(void) {
+void open_dbenv(char *src_dir) {
 	int ret;
 	int i;
 	u_int32_t flags = 0;
@@ -82,8 +82,8 @@ void open_dbenv(void) {
 	}
 
 	flags = DB_CREATE | DB_INIT_MPOOL | DB_PRIVATE | DB_INIT_LOG;
-	printf("db: dbenv open(dir=%s, flags=%d)\n", ctdl_db_dir, flags);
-	ret = dbenv->open(dbenv, ctdl_db_dir, flags, 0);
+	printf("db: dbenv open(dir=%s, flags=%d)\n", src_dir, flags);
+	ret = dbenv->open(dbenv, src_dir, flags, 0);
 	if (ret) {
 		printf("db: dbenv->open: %s\n", db_strerror(ret));
 		dbenv->close(dbenv, 0);
@@ -162,11 +162,11 @@ void convert_table(int which_cdb) {
 		exit(CTDLEXIT_DB);
 	}
 
-	/* Initialize the key/data return pair. */
+	// Initialize the key/data return pair.
 	memset(&key, 0, sizeof(key));
 	memset(&data, 0, sizeof(data));
 
-	/* Walk through the database and print out the key/data pairs. */
+	// Walk through the database and print out the key/data pairs.
 	while ((ret = dbcp->get(dbcp, &key, &data, DB_NEXT)) == 0) {
 
 		++num_rows;
@@ -184,10 +184,10 @@ void convert_table(int which_cdb) {
 	printf("%d rows\n", num_rows);
 
 	// Flush the logs...
-	printf("\033[33m\033[1mdb: flushing the database logs\033[0m\n");
-	if ((ret = dbenv->log_flush(dbenv, NULL))) {
-		printf("db: log_flush: %s\n", db_strerror(ret));
-	}
+	//printf("\033[33m\033[1mdb: flushing the database logs\033[0m\n");
+	//if ((ret = dbenv->log_flush(dbenv, NULL))) {
+		//printf("db: log_flush: %s\n", db_strerror(ret));
+	//}
 
 	// ...and close the database (table)
 	printf("\033[33m\033[1mdb: closing database %02x\033[0m\n", which_cdb);
@@ -200,7 +200,7 @@ void convert_table(int which_cdb) {
 
 
 int main(int argc, char **argv) {
-	char ctdldir[PATH_MAX]=CTDLDIR;
+	char *src_dir = NULL;
 
 	// Check to make sure we're running on the target 64-bit system
 	if (sizeof(void *) != 8) {
@@ -211,18 +211,18 @@ int main(int argc, char **argv) {
 
 	// Parse command line
 	int a;
-	while ((a = getopt(argc, argv, "h:")) != EOF) {
+	while ((a = getopt(argc, argv, "s:d:")) != EOF) {
 		switch (a) {
-		case 'h':
-			strncpy(ctdldir, optarg, sizeof ctdldir);
+		case 's':
+			src_dir = optarg;
 			break;
 		default:
-			fprintf(stderr, "%s: usage: %s [-h server_dir]\n", argv[0], argv[0]);
+			fprintf(stderr, "%s: usage: %s -s source_dir -d dest_dir\n", argv[0], argv[0]);
 			exit(2);
 		}
 	}
 
-	open_dbenv();
+	open_dbenv(src_dir);
 	for (int i = 0; i < MAXCDB; ++i) {
 		convert_table(i);
 	}
