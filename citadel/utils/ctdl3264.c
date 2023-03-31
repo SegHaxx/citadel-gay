@@ -31,17 +31,14 @@
 
 static DB_ENV *dbenv;		// The DB environment (global)
 
-// Open the various databases we'll be using.  Any database which
-// does not exist should be created.  Note that we don't need a
-// critical section here, because there aren't any active threads
-// manipulating the database yet.
-void open_databases(void) {
+// Open the database environment
+void open_dbenv(void) {
 	int ret;
 	int i;
 	u_int32_t flags = 0;
 	int dbversion_major, dbversion_minor, dbversion_patch;
 
-	printf(	"db: open_databases() starting\n"
+	printf(	"db: open_dbenv() starting\n"
 		"db:    Linked zlib: %s\n"
 		"db: Compiled libdb: %s\n"
 		"db:   Linked libdb: %s\n",
@@ -55,8 +52,8 @@ void open_databases(void) {
 	int compiled_db_version = ( (DB_VERSION_MAJOR * 1000000) + (DB_VERSION_MINOR * 1000) + (DB_VERSION_PATCH) );
 	int linked_db_version = ( (dbversion_major * 1000000) + (dbversion_minor * 1000) + (dbversion_patch) );
 	if (compiled_db_version > linked_db_version) {
-		printf(	"db: citserver is running with a version of libdb older than the one with which it was compiled.\n"
-			"db: This is an invalid configuration.  citserver will now exit to prevent data loss.");
+		printf(	"db: ctdl3264 is running with a version of libdb older than the one with which it was compiled.\n"
+			"db: This is an invalid configuration.  ctdl3264 will now exit to prevent data loss.");
 		exit(CTDLEXIT_DB);
 	}
 
@@ -84,22 +81,9 @@ void open_databases(void) {
 		exit(CTDLEXIT_DB);
 	}
 
-	flags = DB_CREATE | DB_INIT_MPOOL | DB_PRIVATE | DB_INIT_TXN | DB_INIT_LOCK | DB_THREAD | DB_INIT_LOG;
-	printf("db: dbenv->open(dbenv, %s, %d, 0)\n", ctdl_db_dir, flags);
-	ret = dbenv->open(dbenv, ctdl_db_dir, flags, 0);				// try opening the database cleanly
-	if (ret == DB_RUNRECOVERY) {
-		printf("db: dbenv->open: %s\n", db_strerror(ret));
-		printf("db: attempting recovery...\n");
-		flags |= DB_RECOVER;
-		ret = dbenv->open(dbenv, ctdl_db_dir, flags, 0);			// try recovery
-	}
-	if (ret == DB_RUNRECOVERY) {
-		printf("db: dbenv->open: %s\n", db_strerror(ret));
-		printf("db: attempting catastrophic recovery...\n");
-		flags &= ~DB_RECOVER;
-		flags |= DB_RECOVER_FATAL;
-		ret = dbenv->open(dbenv, ctdl_db_dir, flags, 0);			// try catastrophic recovery
-	}
+	flags = DB_CREATE | DB_INIT_MPOOL | DB_PRIVATE | DB_INIT_LOG;
+	printf("db: dbenv open(dir=%s, flags=%d)\n", ctdl_db_dir, flags);
+	ret = dbenv->open(dbenv, ctdl_db_dir, flags, 0);
 	if (ret) {
 		printf("db: dbenv->open: %s\n", db_strerror(ret));
 		dbenv->close(dbenv, 0);
@@ -108,34 +92,22 @@ void open_databases(void) {
 	}
 }
 
- 
 
-
-
-// Close all of the db database files we've opened.  This can be done in a loop, since it's just a bunch of closes.
-void close_databases(void) {
-	int i;
-	int ret;
-
-	//syslog(LOG_INFO, "db: performing final checkpoint");
-	//if ((ret = dbenv->txn_checkpoint(dbenv, 0, 0, 0))) {
-		//syslog(LOG_ERR, "db: txn_checkpoint: %s", db_strerror(ret));
-	//}
-
-	// Close the handle.
-	ret = dbenv->close(dbenv, 0);
+void close_dbenv(void) {
+	printf("db: closing dbenv\n");
+	int ret = dbenv->close(dbenv, 0);
 	if (ret) {
 		printf("db: DBENV->close: %s\n", db_strerror(ret));
 	}
 }
 
 
-void null_function(void) {
-	printf("FIXME null_function() called which means we have more work to do!\n");
+void null_function(int which_cdb, DBT *key, DBT *data) {
+	//printf("DB: %02x , keylen: %3d , datalen: %d , dataptr: %x\n", which_cdb, (int)key->size, (int)data->size, data->data);
 }
 
 
-void (*convert_functions[])(void) = {
+void (*convert_functions[])(int which_cdb, DBT *key, DBT *data) = {
 	null_function,		// CDB_MSGMAIN
 	null_function,		// CDB_USERS
 	null_function,		// CDB_ROOMS
@@ -163,23 +135,22 @@ void convert_table(int which_cdb) {
 	DB *dbp;
 	DBC *dbcp;
 	DBT key, data;
+	int num_rows = 0;
 
-	// Begin by opening the database (table)
-	printf("\033[33m\033[1mdb: opening database %02x\033[0m\n", which_cdb);
-	ret = db_create(&dbp, dbenv, 0);					// Create a database handle
+	// create a database handle
+	ret = db_create(&dbp, dbenv, 0);
 	if (ret) {
 		printf("db: db_create: %s\n", db_strerror(ret));
 		printf("db: exit code %d\n", ret);
 		exit(CTDLEXIT_DB);
 	}
 
-	snprintf(dbfilename, sizeof dbfilename, "cdb.%02x", which_cdb);			// table names by number
-	ret = dbp->open(dbp, NULL, dbfilename, NULL, DB_BTREE, DB_AUTO_COMMIT, 0600);
+	// open the file
+	snprintf(dbfilename, sizeof dbfilename, "cdb.%02x", which_cdb);
+	printf("\033[33m\033[1mdb: opening %s\033[0m\n", dbfilename);
+	ret = dbp->open(dbp, NULL, dbfilename, NULL, DB_BTREE, 0, 0600);
 	if (ret) {
-		printf("db: db_open[%02x]: %s\n", which_cdb, db_strerror(ret));
-		if (ret == ENOMEM) {
-			printf("db: You may need to tune your database; please check http://www.citadel.org for more information.\n");
-		}
+		printf("db: db_open: %s\n", db_strerror(ret));
 		printf("db: exit code %d\n", ret);
 		exit(CTDLEXIT_DB);
 	}
@@ -197,11 +168,11 @@ void convert_table(int which_cdb) {
 
 	/* Walk through the database and print out the key/data pairs. */
 	while ((ret = dbcp->get(dbcp, &key, &data, DB_NEXT)) == 0) {
-		printf("DB: %02x , keylen: %3d , datalen: %d\n", which_cdb, (int)key.size, (int)data.size);
-		//printf("%.*s : %.*s\n",
-			//(int)key.size, (char *)key.data,
-			//(int)data.size, (char *)data.data);
-			// do we have to free the key and data?
+
+		++num_rows;
+
+		// Call the convert function (this will need some parameters later)
+		convert_functions[which_cdb](which_cdb, &key, &data);
 	}
 
 	if (ret != DB_NOTFOUND) {
@@ -210,8 +181,7 @@ void convert_table(int which_cdb) {
 		exit(CTDLEXIT_DB);
 	}
 
-	// Call the convert function (this will need some parameters later)
-	convert_functions[which_cdb]();
+	printf("%d rows\n", num_rows);
 
 	// Flush the logs...
 	printf("\033[33m\033[1mdb: flushing the database logs\033[0m\n");
@@ -252,11 +222,11 @@ int main(int argc, char **argv) {
 		}
 	}
 
-	open_databases();
+	open_dbenv();
 	for (int i = 0; i < MAXCDB; ++i) {
 		convert_table(i);
 	}
-	close_databases();
+	close_dbenv();
 
 	exit(0);
 }
