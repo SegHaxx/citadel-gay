@@ -201,6 +201,7 @@ void convert_table(int which_cdb) {
 
 int main(int argc, char **argv) {
 	char *src_dir = NULL;
+	int confirmed = 0;
 
 	// Check to make sure we're running on the target 64-bit system
 	if (sizeof(void *) != 8) {
@@ -211,15 +212,40 @@ int main(int argc, char **argv) {
 
 	// Parse command line
 	int a;
-	while ((a = getopt(argc, argv, "s:d:")) != EOF) {
+	while ((a = getopt(argc, argv, "s:d:y")) != EOF) {
 		switch (a) {
 		case 's':
 			src_dir = optarg;
+			break;
+		case 'y':
+			confirmed = 1;
 			break;
 		default:
 			fprintf(stderr, "%s: usage: %s -s source_dir -d dest_dir\n", argv[0], argv[0]);
 			exit(2);
 		}
+	}
+
+	// Warn the user
+	printf("------------------------------------------------------------------------\n");
+	printf("ctdl3264 converts a Citadel database written on a 32-bit system to one  \n");
+	printf("that can be run on a 64-bit system.  It is intended to be run OFFLINE.  \n");
+	printf("Neither the source nor the target data directories should be mounted by \n");
+	printf("a running Citadel server.  We guarantee data corruption if you do not   \n");
+	printf("observe this warning!  The source [-s] directory should contain a copy  \n");
+	printf("of the database from your 32-bit system.  The destination [-d] directory\n");
+	printf("should be empty and will receive your 64-bit database.                  \n");
+	printf("------------------------------------------------------------------------\n");
+	printf("     Source 32-bit directory: %s\n", src_dir);
+	printf("Destination 64-bit directory: %s\n", "FIXME");
+	printf("------------------------------------------------------------------------\n");
+
+	if (confirmed == 1) {
+		printf("You have specified the [-y] flag, so processing will continue.\n");
+	}
+	else {
+		printf("Please consult the documentation to learn how to proceed.\n");
+		exit(0);
 	}
 
 	open_dbenv(src_dir);
