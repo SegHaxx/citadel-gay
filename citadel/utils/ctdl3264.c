@@ -113,6 +113,9 @@ void convert_msgmain(int which_cdb, DBT *key, DBT *data) {
 	long msgnum;
 	memcpy(&msgnum, key->data, sizeof(msgnum));
 	printf("msgmain: len is %d , key is %ld\n", key->size, msgnum);
+
+	// If the msgnum is positive, we are looking at a MESSAGE
+	// If the msgnum is negative, we are looking at METADATA
 }
 
 
