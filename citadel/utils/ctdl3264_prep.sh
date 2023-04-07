@@ -31,5 +31,6 @@ convert_struct() {
 	convert_struct "ctdlroom"
 	convert_struct "floor"
 	convert_struct "visit"
+	convert_struct "MetaData"
 
 ) >utils/ctdl3264_structs.h

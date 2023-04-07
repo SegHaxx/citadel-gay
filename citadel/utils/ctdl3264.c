@@ -110,9 +110,9 @@ void null_function(int which_cdb, DBT *key, DBT *data) {
 
 // convert function for a message in msgmain
 void convert_msgmain(int which_cdb, DBT *key, DBT *data) {
-	long msgnum;
+	int32_t msgnum;
 	memcpy(&msgnum, key->data, sizeof(msgnum));
-	printf("msgmain: len is %d , key is %ld\n", key->size, msgnum);
+	printf("msgmain: len is %d , key is %d\n", key->size, msgnum);
 
 	if (key->size != 4) {
 		printf("\033[31m\033[1m *** SOURCE DATABASE IS NOT 32-BIT *** ABORTING *** \033[0m\n");
@@ -120,6 +120,12 @@ void convert_msgmain(int which_cdb, DBT *key, DBT *data) {
 	}
 
 
+	if (msgnum < 0) {
+		struct MetaData_32 meta;
+		printf("metadata: db says %d bytes , struct says %ld bytes\n", data->size, sizeof meta);
+		memset(&meta, 0, sizeof meta);
+		memcpy(&meta, data->data, data->size);
+	}
 
 	// If the msgnum is positive, we are looking at a MESSAGE
 	// If the msgnum is negative, we are looking at METADATA
