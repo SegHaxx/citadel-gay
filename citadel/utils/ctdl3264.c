@@ -122,9 +122,21 @@ void convert_msgmain(int which_cdb, DBT *key, DBT *data) {
 
 	if (msgnum < 0) {
 		struct MetaData_32 meta;
-		printf("metadata: db says %d bytes , struct says %ld bytes\n", data->size, sizeof meta);
+		if (data->size != sizeof meta) {
+			printf("\033[31mmetadata: db says %d bytes , struct says %ld bytes\033[0m\n", data->size, sizeof meta);
+			abort();
+		}
 		memset(&meta, 0, sizeof meta);
 		memcpy(&meta, data->data, data->size);
+
+		printf("metadata: msgnum=%d , refcount=%d , content_type=\"%s\" , rfc822len=%d\n",
+        meta.meta_msgnum,
+        meta.meta_refcount,
+        meta.meta_content_type,
+        meta.meta_rfc822_length);
+
+
+
 	}
 
 	// If the msgnum is positive, we are looking at a MESSAGE
