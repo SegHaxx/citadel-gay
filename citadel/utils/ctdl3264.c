@@ -222,9 +222,13 @@ void convert_table(int which_cdb) {
 
 	// Walk through the database, calling convert functions as we go and clearing buffers before each call.
 	while ((ret = dbcp->get(dbcp, &in_key, &in_data, DB_NEXT)) == 0) {
+
+		// FIXME handle compressed records here
+
 		// Call the convert function registered to this table
 		convert_functions[which_cdb](which_cdb, &in_key, &in_data, &out_key, &out_data);
 
+		// Knowing the total number of rows isn't critical to the program.  It's just for the user to know.
 		++num_rows;
 	}
 
