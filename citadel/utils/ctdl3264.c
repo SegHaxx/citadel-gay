@@ -214,16 +214,17 @@ void convert_table(int which_cdb) {
 		exit(CTDLEXIT_DB);
 	}
 
+	// Zero out these database keys
+	memset(&in_key, 0, sizeof(in_key));
+	memset(&in_data, 0, sizeof(in_data));
+	memset(&out_key, 0, sizeof(out_key));
+	memset(&out_data, 0, sizeof(out_data));
+
 	// Walk through the database, calling convert functions as we go and clearing buffers before each call.
-	while (
-		memset(&in_key, 0, sizeof(in_key)),
-		memset(&in_data, 0, sizeof(in_data)),
-		memset(&out_key, 0, sizeof(out_key)),
-		memset(&out_data, 0, sizeof(out_data)),
-		(ret = dbcp->get(dbcp, &in_key, &in_data, DB_NEXT)) == 0)
-	{
+	while ((ret = dbcp->get(dbcp, &in_key, &in_data, DB_NEXT)) == 0) {
 		// Call the convert function registered to this table
 		convert_functions[which_cdb](which_cdb, &in_key, &in_data, &out_key, &out_data);
+
 		++num_rows;
 	}
 
