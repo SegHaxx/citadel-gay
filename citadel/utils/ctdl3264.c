@@ -122,16 +122,10 @@ void convert_msgmain(int which_cdb, DBT *in_key, DBT *in_data, DBT *out_key, DBT
 
 	// If the msgnum is negative, we are looking at METADATA
 	if (in_msgnum < 0) {
-		struct MetaData_32 meta32;
-		if (in_data->size != sizeof meta32) {
-			printf("\033[31mmetadata: db says %d bytes , struct says %ld bytes\033[0m\n", in_data->size, sizeof meta32);
-			abort();
-		}
-		memset(&meta32, 0, sizeof meta32);
-		memcpy(&meta32, in_data->data, in_data->size);
+		struct MetaData_32 *meta32 = (struct MetaData_32 *)in_data->data;
 
-		//printf("metadata: msgnum=%d , refcount=%d , content_type=\"%s\" , rfc822len=%d\n",
-        		//meta32.meta_msgnum, meta32.meta_refcount, meta32.meta_content_type, meta32.meta_rfc822_length);
+		printf("metadata: msgnum=%d , refcount=%d , content_type=\"%s\" , rfc822len=%d\n",
+        		meta32->meta_msgnum, meta32->meta_refcount, meta32->meta_content_type, meta32->meta_rfc822_length);
 
 		out_key->size = sizeof(long);
 		out_key->data = realloc(out_key->data, out_key->size);
@@ -142,10 +136,10 @@ void convert_msgmain(int which_cdb, DBT *in_key, DBT *in_data, DBT *out_key, DBT
 		out_data->data = realloc(out_data->data, out_data->size);
 		struct MetaData *meta64 = (struct MetaData *)out_data->data;
 		memset(meta64, 0, sizeof(struct MetaData));
-		meta64->meta_msgnum		= (long)	meta32.meta_msgnum;
-		meta64->meta_refcount		= (int)		meta32.meta_refcount;
-		strcpy(meta64->meta_content_type,		meta32.meta_content_type);
-		meta64->meta_rfc822_length	= (long)	meta32.meta_rfc822_length;
+		meta64->meta_msgnum		= (long)	meta32->meta_msgnum;
+		meta64->meta_refcount		= (int)		meta32->meta_refcount;
+		strcpy(meta64->meta_content_type,		meta32->meta_content_type);
+		meta64->meta_rfc822_length	= (long)	meta32->meta_rfc822_length;
 
 	}
 
@@ -169,12 +163,36 @@ void convert_msgmain(int which_cdb, DBT *in_key, DBT *in_data, DBT *out_key, DBT
 }
 
 
-// convert function for a message in msgmain
+// convert function for a user record
 void convert_users(int which_cdb, DBT *in_key, DBT *in_data, DBT *out_key, DBT *out_data) {
-	char userkey[64];
-	memcpy(userkey, in_key->data, in_key->size);
-	userkey[in_key->size] = 0;
-	//printf("users: len is %d , key is %s\n", in_key->size, userkey);
+
+	// The key is a string so we can just copy it over
+	out_key->size = in_key->size;
+	out_key->data = realloc(out_key->data, out_key->size);
+	memcpy(out_key->data, in_key->data, in_key->size);
+
+	struct ctdluser_32 *user32 = (struct ctdluser_32 *)in_data->data;
+
+	out_data->size = sizeof(struct ctdluser);
+	out_data->data = realloc(out_data->data, out_data->size);
+	struct ctdluser *user64 = (struct ctdluser *)out_data->data;
+
+	user64->version			= (int)		user32->version;
+	user64->uid			= (uid_t)	user32->uid;
+	strcpy(user64->password,			user32->password);
+	user64->flags			= (unsigned)	user32->flags;
+	user64->timescalled		= (long)	user32->timescalled;
+	user64->posted			= (long)	user32->posted;
+	user64->axlevel			= (cit_uint8_t)	user32->axlevel;
+	user64->usernum			= (long)	user32->usernum;
+	user64->lastcall		= (time_t)	user32->lastcall;
+	user64->USuserpurge		= (int)		user32->USuserpurge;
+	strcpy(user64->fullname,			user32->fullname);
+	user64->msgnum_bio		= (long)	user32->msgnum_bio;
+	user64->msgnum_pic		= (long)	user32->msgnum_pic;
+	strcpy(user64->emailaddrs,			user32->emailaddrs);
+	user64->msgnum_inboxrules	= (long)	user32->msgnum_inboxrules;
+	user64->lastproc_inboxrules	= (long)	user32->lastproc_inboxrules;
 }
 
 

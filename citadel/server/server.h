@@ -74,6 +74,8 @@ struct cdbdata {
 
 
 // Defines the relationship of a user to a particular room
+// NOTE: if you add fields to this, you have to also write export/import code in server/modules/migrate/serv_migrate.c
+// NOTE: if you add fields to this, you have to also write conversion code in utils/ctdl3264/*
 struct visit {
 	long v_roomnum;
 	long v_roomgen;
@@ -92,6 +94,8 @@ struct visit {
 // 2. They are merely caches of data which exist somewhere else, for speed.
 // DO NOT PUT BIG DATA IN HERE ... we need this struct to be tiny for lots of quick r/w
 struct MetaData {
+// NOTE: if you add fields to this, you have to also write export/import code in server/modules/migrate/serv_migrate.c
+// NOTE: if you add fields to this, you have to also write conversion code in utils/ctdl3264/*
 	long meta_msgnum;		// Message number in *local* message base
 	int meta_refcount;		// Number of rooms pointing to this msg
 	char meta_content_type[64];	// Cached MIME content-type
@@ -123,6 +127,8 @@ struct UseTable {
 
 
 // User records.
+// NOTE: if you add fields to this, you have to also write export/import code in server/modules/migrate/serv_migrate.c
+// NOTE: if you add fields to this, you have to also write conversion code in utils/ctdl3264/*
 typedef struct ctdluser ctdluser;
 struct ctdluser {			// User record
 	int version;			// Citadel version which created this record
@@ -145,6 +151,8 @@ struct ctdluser {			// User record
 
 
 // Message expiration policy stuff
+// NOTE: if you add fields to this, you have to also write export/import code in server/modules/migrate/serv_migrate.c
+// NOTE: if you add fields to this, you have to also write conversion code in utils/ctdl3264/*
 typedef struct ExpirePolicy ExpirePolicy;
 struct ExpirePolicy {
 	int expire_mode;
@@ -153,6 +161,8 @@ struct ExpirePolicy {
 
 
 // Room records.
+// NOTE: if you add fields to this, you have to also write export/import code in server/modules/migrate/serv_migrate.c
+// NOTE: if you add fields to this, you have to also write conversion code in utils/ctdl3264/*
 struct ctdlroom {
  	char QRname[ROOMNAMELEN];	// Name of room
  	char QRpasswd[10];		// Only valid if it's a private rm
@@ -174,6 +184,8 @@ struct ctdlroom {
 
 
 // Floor record.  The floor number is implicit in its location in the file.
+// NOTE: if you add fields to this, you have to also write export/import code in server/modules/migrate/serv_migrate.c
+// NOTE: if you add fields to this, you have to also write conversion code in utils/ctdl3264/*
 struct floor {
 	unsigned short f_flags;		// flags
 	char f_name[256];		// name of floor
