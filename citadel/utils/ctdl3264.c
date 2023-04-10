@@ -104,15 +104,15 @@ void close_dbenv(void) {
 
 // placeholder convert function for the data types not yet implemented
 void null_function(int which_cdb, DBT *in_key, DBT *in_data, DBT *out_key, DBT *out_data) {
-	printf("DB: %02x , keylen: %3d , datalen: %d , dataptr: %lx\n", which_cdb, (int)in_key->size, (int)in_data->size, (long unsigned int)in_data->data);
 }
 
 
 // convert function for a message in msgmain
 void convert_msgmain(int which_cdb, DBT *in_key, DBT *in_data, DBT *out_key, DBT *out_data) {
-	int32_t msgnum;
-	memcpy(&msgnum, in_key->data, sizeof(msgnum));
-	printf("msgmain: len is %d , key is %d\n", in_key->size, msgnum);
+	int32_t in_msgnum;
+	long out_msgnum;
+	memcpy(&in_msgnum, in_key->data, sizeof(in_msgnum));
+	printf("msgmain: len is %d , key is %d\n", in_key->size, in_msgnum);
 
 	if (in_key->size != 4) {
 		printf("\033[31m\033[1m *** SOURCE DATABASE IS NOT 32-BIT *** ABORTING *** \033[0m\n");
@@ -121,7 +121,7 @@ void convert_msgmain(int which_cdb, DBT *in_key, DBT *in_data, DBT *out_key, DBT
 
 
 	// If the msgnum is negative, we are looking at METADATA
-	if (msgnum < 0) {
+	if (in_msgnum < 0) {
 		struct MetaData_32 meta32;
 		if (in_data->size != sizeof meta32) {
 			printf("\033[31mmetadata: db says %d bytes , struct says %ld bytes\033[0m\n", in_data->size, sizeof meta32);
@@ -130,23 +130,33 @@ void convert_msgmain(int which_cdb, DBT *in_key, DBT *in_data, DBT *out_key, DBT
 		memset(&meta32, 0, sizeof meta32);
 		memcpy(&meta32, in_data->data, in_data->size);
 
-		printf("metadata: msgnum=%d , refcount=%d , content_type=\"%s\" , rfc822len=%d\n",
-        		meta32.meta_msgnum, meta32.meta_refcount, meta32.meta_content_type, meta32.meta_rfc822_length);
+		//printf("metadata: msgnum=%d , refcount=%d , content_type=\"%s\" , rfc822len=%d\n",
+        		//meta32.meta_msgnum, meta32.meta_refcount, meta32.meta_content_type, meta32.meta_rfc822_length);
 
-		//struct MetaData *meta64 = malloc(sizeof(struct MetaData));
-		//memset(meta64, 0, sizeof(struct MetaData));
-		//meta64->meta_msgnum		= (long)	meta32.meta_msgnum;
-		//meta64->meta_refcount		= (int)		meta32.meta_refcount;
-		//strcpy(meta64->meta_content_type,		meta32.meta_content_type);
-		//meta64->meta_rfc822_length	= (long)	meta32.meta_rfc822_length;
+		out_key->size = sizeof(long);
+		out_key->data = realloc(out_key->data, out_key->size);
+		out_msgnum = (long)in_msgnum;
+		memcpy(out_key->data, &out_msgnum, sizeof(long));
+
+		out_data->size = sizeof(struct MetaData);
+		out_data->data = realloc(out_data->data, out_data->size);
+		struct MetaData *meta64 = (struct MetaData *)out_data->data;
+		memset(meta64, 0, sizeof(struct MetaData));
+		meta64->meta_msgnum		= (long)	meta32.meta_msgnum;
+		meta64->meta_refcount		= (int)		meta32.meta_refcount;
+		strcpy(meta64->meta_content_type,		meta32.meta_content_type);
+		meta64->meta_rfc822_length	= (long)	meta32.meta_rfc822_length;
 
 	}
 
 	// If the msgnum is positive, we are looking at a MESSAGE
-	else if (msgnum > 0) {
+	else if (in_msgnum > 0) {
 	}
 
 	// If the msgnum is 0 it's probably not a valid record.
+	else {
+		printf("msgmain: record 0 is impossible\n");
+	}
 }
 
 
@@ -155,7 +165,7 @@ void convert_users(int which_cdb, DBT *in_key, DBT *in_data, DBT *out_key, DBT *
 	char userkey[64];
 	memcpy(userkey, in_key->data, in_key->size);
 	userkey[in_key->size] = 0;
-	printf("users: len is %d , key is %s\n", in_key->size, userkey);
+	//printf("users: len is %d , key is %s\n", in_key->size, userkey);
 }
 
 
@@ -221,12 +231,16 @@ void convert_table(int which_cdb) {
 	memset(&out_data, 0, sizeof(out_data));
 
 	// Walk through the database, calling convert functions as we go and clearing buffers before each call.
-	while ((ret = dbcp->get(dbcp, &in_key, &in_data, DB_NEXT)) == 0) {
+	while (out_key.size = 0, out_data.size = 0, (ret = dbcp->get(dbcp, &in_key, &in_data, DB_NEXT)) == 0) {
 
 		// FIXME handle compressed records here
 
 		// Call the convert function registered to this table
 		convert_functions[which_cdb](which_cdb, &in_key, &in_data, &out_key, &out_data);
+
+		// write the converted record to the new database
+		printf("DB: %02x ,  in_keylen: %3d ,  in_datalen: %d , dataptr: %lx\n", which_cdb, (int)in_key.size, (int)in_data.size, (long unsigned int)in_data.data);
+		printf("DB: %02x , out_keylen: %3d , out_datalen: %d , dataptr: %lx\n", which_cdb, (int)out_key.size, (int)out_data.size, (long unsigned int)out_data.data);
 
 		// Knowing the total number of rows isn't critical to the program.  It's just for the user to know.
 		++num_rows;
@@ -239,6 +253,10 @@ void convert_table(int which_cdb) {
 	}
 
 	printf("%d rows\n", num_rows);
+
+	// free any leftover out_data pointers
+	free(out_key.data);
+	free(out_data.data);
 
 	// Flush the logs...
 	//printf("\033[33m\033[1mdb: flushing the database logs\033[0m\n");
