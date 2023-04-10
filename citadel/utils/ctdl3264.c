@@ -103,13 +103,13 @@ void close_dbenv(void) {
 
 
 // placeholder convert function for the data types not yet implemented
-void null_function(int which_cdb, DBT *in_key, DBT *in_data) {
+void null_function(int which_cdb, DBT *in_key, DBT *in_data, DBT *out_key, DBT *out_data) {
 	printf("DB: %02x , keylen: %3d , datalen: %d , dataptr: %lx\n", which_cdb, (int)in_key->size, (int)in_data->size, (long unsigned int)in_data->data);
 }
 
 
 // convert function for a message in msgmain
-void convert_msgmain(int which_cdb, DBT *in_key, DBT *in_data) {
+void convert_msgmain(int which_cdb, DBT *in_key, DBT *in_data, DBT *out_key, DBT *out_data) {
 	int32_t msgnum;
 	memcpy(&msgnum, in_key->data, sizeof(msgnum));
 	printf("msgmain: len is %d , key is %d\n", in_key->size, msgnum);
@@ -151,7 +151,7 @@ void convert_msgmain(int which_cdb, DBT *in_key, DBT *in_data) {
 
 
 // convert function for a message in msgmain
-void convert_users(int which_cdb, DBT *in_key, DBT *in_data) {
+void convert_users(int which_cdb, DBT *in_key, DBT *in_data, DBT *out_key, DBT *out_data) {
 	char userkey[64];
 	memcpy(userkey, in_key->data, in_key->size);
 	userkey[in_key->size] = 0;
@@ -159,7 +159,7 @@ void convert_users(int which_cdb, DBT *in_key, DBT *in_data) {
 }
 
 
-void (*convert_functions[])(int which_cdb, DBT *in_key, DBT *in_data) = {
+void (*convert_functions[])(int which_cdb, DBT *in_key, DBT *in_data, DBT *out_key, DBT *out_data) = {
 	convert_msgmain,	// CDB_MSGMAIN
 	convert_users,		// CDB_USERS
 	null_function,		// CDB_ROOMS
@@ -223,7 +223,7 @@ void convert_table(int which_cdb) {
 		(ret = dbcp->get(dbcp, &in_key, &in_data, DB_NEXT)) == 0)
 	{
 		// Call the convert function registered to this table
-		convert_functions[which_cdb](which_cdb, &in_key, &in_data);
+		convert_functions[which_cdb](which_cdb, &in_key, &in_data, &out_key, &out_data);
 		++num_rows;
 	}
 
