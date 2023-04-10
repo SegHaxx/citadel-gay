@@ -151,6 +151,15 @@ void convert_msgmain(int which_cdb, DBT *in_key, DBT *in_data, DBT *out_key, DBT
 
 	// If the msgnum is positive, we are looking at a MESSAGE
 	else if (in_msgnum > 0) {
+		out_key->size = sizeof(long);
+		out_key->data = realloc(out_key->data, out_key->size);
+		out_msgnum = (long)in_msgnum;
+		memcpy(out_key->data, &out_msgnum, sizeof(long));
+
+		// copy the message verbatim
+		out_data->size = in_data->size;
+		out_data->data = realloc(out_data->data, out_data->size);
+		memcpy(out_data->data, in_data->data, out_data->size);
 	}
 
 	// If the msgnum is 0 it's probably not a valid record.
