@@ -1,7 +1,7 @@
 // Attempt to convert your database from 32-bit to 64-bit.
 // Don't run this.  It doesn't work and if you try to run it you will immediately die.
 //
-// Copyright (c) 2023 by the citadel.org team
+// Copyright (c) 2023 by Art Cancro citadel.org
 //
 // This program is open source software.  Use, duplication, or disclosure
 // is subject to the terms of the GNU General Public License, version 3.
@@ -103,57 +103,63 @@ void close_dbenv(void) {
 
 
 // placeholder convert function for the data types not yet implemented
-void null_function(int which_cdb, DBT *key, DBT *data) {
-	//printf("DB: %02x , keylen: %3d , datalen: %d , dataptr: %x\n", which_cdb, (int)key->size, (int)data->size, data->data);
+void null_function(int which_cdb, DBT *in_key, DBT *in_data) {
+	printf("DB: %02x , keylen: %3d , datalen: %d , dataptr: %lx\n", which_cdb, (int)in_key->size, (int)in_data->size, (long unsigned int)in_data->data);
 }
 
 
 // convert function for a message in msgmain
-void convert_msgmain(int which_cdb, DBT *key, DBT *data) {
+void convert_msgmain(int which_cdb, DBT *in_key, DBT *in_data) {
 	int32_t msgnum;
-	memcpy(&msgnum, key->data, sizeof(msgnum));
-	printf("msgmain: len is %d , key is %d\n", key->size, msgnum);
+	memcpy(&msgnum, in_key->data, sizeof(msgnum));
+	printf("msgmain: len is %d , key is %d\n", in_key->size, msgnum);
 
-	if (key->size != 4) {
+	if (in_key->size != 4) {
 		printf("\033[31m\033[1m *** SOURCE DATABASE IS NOT 32-BIT *** ABORTING *** \033[0m\n");
 		abort();
 	}
 
 
+	// If the msgnum is negative, we are looking at METADATA
 	if (msgnum < 0) {
-		struct MetaData_32 meta;
-		if (data->size != sizeof meta) {
-			printf("\033[31mmetadata: db says %d bytes , struct says %ld bytes\033[0m\n", data->size, sizeof meta);
+		struct MetaData_32 meta32;
+		if (in_data->size != sizeof meta32) {
+			printf("\033[31mmetadata: db says %d bytes , struct says %ld bytes\033[0m\n", in_data->size, sizeof meta32);
 			abort();
 		}
-		memset(&meta, 0, sizeof meta);
-		memcpy(&meta, data->data, data->size);
+		memset(&meta32, 0, sizeof meta32);
+		memcpy(&meta32, in_data->data, in_data->size);
 
 		printf("metadata: msgnum=%d , refcount=%d , content_type=\"%s\" , rfc822len=%d\n",
-        meta.meta_msgnum,
-        meta.meta_refcount,
-        meta.meta_content_type,
-        meta.meta_rfc822_length);
+        		meta32.meta_msgnum, meta32.meta_refcount, meta32.meta_content_type, meta32.meta_rfc822_length);
 
-
+		//struct MetaData *meta64 = malloc(sizeof(struct MetaData));
+		//memset(meta64, 0, sizeof(struct MetaData));
+		//meta64->meta_msgnum		= (long)	meta32.meta_msgnum;
+		//meta64->meta_refcount		= (int)		meta32.meta_refcount;
+		//strcpy(meta64->meta_content_type,		meta32.meta_content_type);
+		//meta64->meta_rfc822_length	= (long)	meta32.meta_rfc822_length;
 
 	}
 
 	// If the msgnum is positive, we are looking at a MESSAGE
-	// If the msgnum is negative, we are looking at METADATA
+	else if (msgnum > 0) {
+	}
+
+	// If the msgnum is 0 it's probably not a valid record.
 }
 
 
 // convert function for a message in msgmain
-void convert_users(int which_cdb, DBT *key, DBT *data) {
+void convert_users(int which_cdb, DBT *in_key, DBT *in_data) {
 	char userkey[64];
-	memcpy(userkey, key->data, key->size);
-	userkey[key->size] = 0;
-	printf("users: len is %d , key is %s\n", key->size, userkey);
+	memcpy(userkey, in_key->data, in_key->size);
+	userkey[in_key->size] = 0;
+	printf("users: len is %d , key is %s\n", in_key->size, userkey);
 }
 
 
-void (*convert_functions[])(int which_cdb, DBT *key, DBT *data) = {
+void (*convert_functions[])(int which_cdb, DBT *in_key, DBT *in_data) = {
 	convert_msgmain,	// CDB_MSGMAIN
 	convert_users,		// CDB_USERS
 	null_function,		// CDB_ROOMS
@@ -180,7 +186,7 @@ void convert_table(int which_cdb) {
 	// shamelessly swiped from https://docs.oracle.com/database/bdb181/html/programmer_reference/am_cursor.html
 	DB *dbp;
 	DBC *dbcp;
-	DBT key, data;
+	DBT in_key, in_data, out_key, out_data;
 	int num_rows = 0;
 
 	// create a database handle
@@ -208,17 +214,17 @@ void convert_table(int which_cdb) {
 		exit(CTDLEXIT_DB);
 	}
 
-	// Initialize the key/data return pair.
-	memset(&key, 0, sizeof(key));
-	memset(&data, 0, sizeof(data));
-
-	// Walk through the database and print out the key/data pairs.
-	while ((ret = dbcp->get(dbcp, &key, &data, DB_NEXT)) == 0) {
-
+	// Walk through the database, calling convert functions as we go and clearing buffers before each call.
+	while (
+		memset(&in_key, 0, sizeof(in_key)),
+		memset(&in_data, 0, sizeof(in_data)),
+		memset(&out_key, 0, sizeof(out_key)),
+		memset(&out_data, 0, sizeof(out_data)),
+		(ret = dbcp->get(dbcp, &in_key, &in_data, DB_NEXT)) == 0)
+	{
+		// Call the convert function registered to this table
+		convert_functions[which_cdb](which_cdb, &in_key, &in_data);
 		++num_rows;
-
-		// Call the convert function (this will need some parameters later)
-		convert_functions[which_cdb](which_cdb, &key, &data);
 	}
 
 	if (ret != DB_NOTFOUND) {
