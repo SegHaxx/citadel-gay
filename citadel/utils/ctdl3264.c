@@ -112,7 +112,6 @@ void convert_msgmain(int which_cdb, DBT *in_key, DBT *in_data, DBT *out_key, DBT
 	int32_t in_msgnum;
 	long out_msgnum;
 	memcpy(&in_msgnum, in_key->data, sizeof(in_msgnum));
-	printf("msgmain: len is %d , key is %d\n", in_key->size, in_msgnum);
 
 	if (in_key->size != 4) {
 		printf("\033[31m\033[1m *** SOURCE DATABASE IS NOT 32-BIT *** ABORTING *** \033[0m\n");
@@ -124,8 +123,8 @@ void convert_msgmain(int which_cdb, DBT *in_key, DBT *in_data, DBT *out_key, DBT
 	if (in_msgnum < 0) {
 		struct MetaData_32 *meta32 = (struct MetaData_32 *)in_data->data;
 
-		printf("metadata: msgnum=%d , refcount=%d , content_type=\"%s\" , rfc822len=%d\n",
-        		meta32->meta_msgnum, meta32->meta_refcount, meta32->meta_content_type, meta32->meta_rfc822_length);
+		//printf("metadata: msgnum=%d , refcount=%d , content_type=\"%s\" , rfc822len=%d\n",
+        		//meta32->meta_msgnum, meta32->meta_refcount, meta32->meta_content_type, meta32->meta_rfc822_length);
 
 		out_key->size = sizeof(long);
 		out_key->data = realloc(out_key->data, out_key->size);
@@ -204,8 +203,8 @@ void convert_rooms(int which_cdb, DBT *in_key, DBT *in_data, DBT *out_key, DBT *
 	out_key->data = realloc(out_key->data, out_key->size);
 	memcpy(out_key->data, in_key->data, in_key->size);
 
+	// data
 	struct ctdlroom_32 *room32 = (struct ctdlroom_32 *)in_data->data;
-
 	out_data->size = sizeof(struct ctdlroom);
 	out_data->data = realloc(out_data->data, out_data->size);
 	struct ctdlroom *room64 = (struct ctdlroom *)out_data->data;
@@ -230,11 +229,34 @@ void convert_rooms(int which_cdb, DBT *in_key, DBT *in_data, DBT *out_key, DBT *
 }
 
 
+// convert function for a floor record
+void convert_floors(int which_cdb, DBT *in_key, DBT *in_data, DBT *out_key, DBT *out_data) {
+
+	// the key is an "int", and "int" is 32-bits on both 32 and 64 bit platforms.
+	out_key->size = in_key->size;
+	out_key->data = realloc(out_key->data, out_key->size);
+	memcpy(out_key->data, in_key->data, in_key->size);
+
+	// data
+	struct floor_32 *floor32 = (struct floor_32 *)in_data->data;
+	out_data->size = sizeof(struct floor);
+	out_data->data = realloc(out_data->data, out_data->size);
+	struct floor *floor64 = (struct floor *)out_data->data;
+
+	// these are probably bit-for-bit identical, actually ... but we do it the "right" way anyway
+	floor64->f_flags		= (unsigned short)	floor32->f_flags;
+	strcpy(floor64->f_name,					floor32->f_name);
+	floor64->f_ref_count		= (int)			floor32->f_ref_count;
+	floor64->f_ep.expire_mode	= (int)			floor32->f_ep.expire_mode;
+	floor64->f_ep.expire_value	= (int)			floor32->f_ep.expire_value;
+}
+
+
 void (*convert_functions[])(int which_cdb, DBT *in_key, DBT *in_data, DBT *out_key, DBT *out_data) = {
 	convert_msgmain,	// CDB_MSGMAIN
 	convert_users,		// CDB_USERS
 	convert_rooms,		// CDB_ROOMS
-	null_function,		// CDB_FLOORTAB
+	convert_floors,		// CDB_FLOORTAB
 	null_function,		// CDB_MSGLISTS
 	null_function,		// CDB_VISIT
 	null_function,		// CDB_DIRECTORY
