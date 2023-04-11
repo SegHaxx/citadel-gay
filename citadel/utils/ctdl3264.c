@@ -196,10 +196,44 @@ void convert_users(int which_cdb, DBT *in_key, DBT *in_data, DBT *out_key, DBT *
 }
 
 
+// convert function for a room record
+void convert_rooms(int which_cdb, DBT *in_key, DBT *in_data, DBT *out_key, DBT *out_data) {
+
+	// The key is a string so we can just copy it over
+	out_key->size = in_key->size;
+	out_key->data = realloc(out_key->data, out_key->size);
+	memcpy(out_key->data, in_key->data, in_key->size);
+
+	struct ctdlroom_32 *room32 = (struct ctdlroom_32 *)in_data->data;
+
+	out_data->size = sizeof(struct ctdlroom);
+	out_data->data = realloc(out_data->data, out_data->size);
+	struct ctdlroom *room64 = (struct ctdlroom *)out_data->data;
+
+	strcpy(room64->QRname,				room32->QRname);
+	strcpy(room64->QRpasswd,			room32->QRpasswd);
+	room64->QRroomaide		= (long)	room32->QRroomaide;
+	room64->QRhighest		= (long)	room32->QRhighest;
+	room64->QRgen			= (time_t)	room32->QRgen;
+	room64->QRflags			= (unsigned)	room32->QRflags;
+	strcpy(room64->QRdirname,			room32->QRdirname);
+	room64->msgnum_info		= (long)	room32->msgnum_info;
+	room64->QRfloor			= (char)	room32->QRfloor;
+	room64->QRmtime			= (time_t)	room32->QRmtime;
+	room64->QRep.expire_mode	= (int)		room32->QRep.expire_mode;
+	room64->QRep.expire_value	= (int)		room32->QRep.expire_value;
+	room64->QRnumber		= (long)	room32->QRnumber;
+	room64->QRorder			= (char)	room32->QRorder;
+	room64->QRflags2		= (unsigned)	room32->QRflags2;
+	room64->QRdefaultview		= (int)		room32->QRdefaultview;
+	room64->msgnum_pic		= (long)	room32->msgnum_pic;
+}
+
+
 void (*convert_functions[])(int which_cdb, DBT *in_key, DBT *in_data, DBT *out_key, DBT *out_data) = {
 	convert_msgmain,	// CDB_MSGMAIN
 	convert_users,		// CDB_USERS
-	null_function,		// CDB_ROOMS
+	convert_rooms,		// CDB_ROOMS
 	null_function,		// CDB_FLOORTAB
 	null_function,		// CDB_MSGLISTS
 	null_function,		// CDB_VISIT
