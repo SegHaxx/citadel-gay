@@ -313,6 +313,7 @@ void (*convert_functions[])(int which_cdb, DBT *in_key, DBT *in_data, DBT *out_k
 
 void convert_table(int which_cdb) {
 	int ret;
+	int compressed;
 	char dbfilename[32];
 
 	printf("\033[32m\033[1mConverting table %d\033[0m\n", which_cdb);
@@ -320,7 +321,7 @@ void convert_table(int which_cdb) {
 	// shamelessly swiped from https://docs.oracle.com/database/bdb181/html/programmer_reference/am_cursor.html
 	DB *dbp;
 	DBC *dbcp;
-	DBT in_key, in_data, out_key, out_data;
+	DBT in_key, in_data, out_key, out_data, uncomp_data;
 	int num_rows = 0;
 
 	// create a database handle
@@ -349,23 +350,38 @@ void convert_table(int which_cdb) {
 	}
 
 	// Zero out these database keys
-	memset(&in_key, 0, sizeof(in_key));
+	memset(&in_key, 0, sizeof(in_key));		// input
 	memset(&in_data, 0, sizeof(in_data));
-	memset(&out_key, 0, sizeof(out_key));
+	memset(&out_key, 0, sizeof(out_key));		// output
 	memset(&out_data, 0, sizeof(out_data));
+	memset(&uncomp_data, 0, sizeof(uncomp_data));	// decompressed input (the key doesn't change)
 
 	// Walk through the database, calling convert functions as we go and clearing buffers before each call.
 	while (out_key.size = 0, out_data.size = 0, (ret = dbcp->get(dbcp, &in_key, &in_data, DB_NEXT)) == 0) {
+		compressed = 0;
 
 		// Do we need to decompress?
 		static int32_t magic = COMPRESS_MAGIC;
-		if ( (in_data.size >= sizeof(magic)) && (!memcmp(in_data.data, &magic, sizeof(magic))) ) {
-			printf("\033[31m\033[1m COMPRESSED \033[0m\n");
-			// FIXME do the decompression
+		if ( (in_data.size >= sizeof(struct CtdlCompressHeader_32)) && (!memcmp(in_data.data, &magic, sizeof(magic))) ) {
+
+			// yes, we need to decompress
+			compressed = 1;
+			struct CtdlCompressHeader_32 comp;
+			memcpy(&comp, in_data.data, sizeof(struct CtdlCompressHeader_32));
+			printf("\033[31m\033[1mCOMPRESSED , uncompressed_len=%d , compressed_len=%d\033[0m\n", comp.uncompressed_len, comp.compressed_len);
+
+			uncomp_data.size = comp.uncompressed_len - sizeof(struct CtdlCompressHeader_32);
+			uncomp_data.data = realloc(uncomp_data.data, uncomp_data.size);
+
+			uLongf destLen;
+			if (uncompress((Bytef *)uncomp_data.data, (uLongf *)&destLen, (const Bytef *)in_data.data+sizeof(struct CtdlCompressHeader_32), (uLong)in_data.size) != Z_OK) {
+				printf("db: uncompress() error\n");
+				exit(CTDLEXIT_DB);
+			}
 		}
 
 		// Call the convert function registered to this table
-		convert_functions[which_cdb](which_cdb, &in_key, &in_data, &out_key, &out_data);
+		convert_functions[which_cdb](which_cdb, &in_key, (compressed ? &uncomp_data : &in_data), &out_key, &out_data);
 
 		// write the converted record to the new database
 		if (out_key.size > 0) {
@@ -388,6 +404,7 @@ void convert_table(int which_cdb) {
 	// free any leftover out_data pointers
 	free(out_key.data);
 	free(out_data.data);
+	free(uncomp_data.data);
 
 	// Flush the logs...
 	//printf("\033[33m\033[1mdb: flushing the database logs\033[0m\n");
