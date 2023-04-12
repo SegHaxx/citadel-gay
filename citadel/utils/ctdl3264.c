@@ -112,23 +112,23 @@ void convert_msgmain(int which_cdb, DBT *in_key, DBT *in_data, DBT *out_key, DBT
 	int32_t in_msgnum;
 	long out_msgnum;
 	memcpy(&in_msgnum, in_key->data, sizeof(in_msgnum));
+	out_msgnum = (long)in_msgnum;
 
 	if (in_key->size != 4) {
 		printf("\033[31m\033[1m *** SOURCE DATABASE IS NOT 32-BIT *** ABORTING *** \033[0m\n");
 		abort();
 	}
 
+	printf("Message %ld\n", out_msgnum);
 
 	// If the msgnum is negative, we are looking at METADATA
 	if (in_msgnum < 0) {
 		struct MetaData_32 *meta32 = (struct MetaData_32 *)in_data->data;
 
-		//printf("metadata: msgnum=%d , refcount=%d , content_type=\"%s\" , rfc822len=%d\n",
-        		//meta32->meta_msgnum, meta32->meta_refcount, meta32->meta_content_type, meta32->meta_rfc822_length);
+		//printf("metadata: msgnum=%d , refcount=%d , content_type=\"%s\" , rfc822len=%d\n", meta32->meta_msgnum, meta32->meta_refcount, meta32->meta_content_type, meta32->meta_rfc822_length);
 
 		out_key->size = sizeof(long);
 		out_key->data = realloc(out_key->data, out_key->size);
-		out_msgnum = (long)in_msgnum;
 		memcpy(out_key->data, &out_msgnum, sizeof(long));
 
 		out_data->size = sizeof(struct MetaData);
@@ -139,14 +139,12 @@ void convert_msgmain(int which_cdb, DBT *in_key, DBT *in_data, DBT *out_key, DBT
 		meta64->meta_refcount		= (int)		meta32->meta_refcount;
 		strcpy(meta64->meta_content_type,		meta32->meta_content_type);
 		meta64->meta_rfc822_length	= (long)	meta32->meta_rfc822_length;
-
 	}
 
 	// If the msgnum is positive, we are looking at a MESSAGE
 	else if (in_msgnum > 0) {
 		out_key->size = sizeof(long);
 		out_key->data = realloc(out_key->data, out_key->size);
-		out_msgnum = (long)in_msgnum;
 		memcpy(out_key->data, &out_msgnum, sizeof(long));
 
 		// copy the message verbatim
@@ -192,6 +190,8 @@ void convert_users(int which_cdb, DBT *in_key, DBT *in_data, DBT *out_key, DBT *
 	strcpy(user64->emailaddrs,			user32->emailaddrs);
 	user64->msgnum_inboxrules	= (long)	user32->msgnum_inboxrules;
 	user64->lastproc_inboxrules	= (long)	user32->lastproc_inboxrules;
+
+	printf("User: %s\n", user64->fullname);
 }
 
 
@@ -226,6 +226,8 @@ void convert_rooms(int which_cdb, DBT *in_key, DBT *in_data, DBT *out_key, DBT *
 	room64->QRflags2		= (unsigned)	room32->QRflags2;
 	room64->QRdefaultview		= (int)		room32->QRdefaultview;
 	room64->msgnum_pic		= (long)	room32->msgnum_pic;
+
+	printf("Room: %s\n", room64->QRname);
 }
 
 
@@ -252,12 +254,43 @@ void convert_floors(int which_cdb, DBT *in_key, DBT *in_data, DBT *out_key, DBT 
 }
 
 
+// convert function for a msglist
+void convert_msglists(int which_cdb, DBT *in_key, DBT *in_data, DBT *out_key, DBT *out_data) {
+	int i;
+
+	// msglist records are indexed by a single "long" and contains an array of zero or more "long"s
+	// and remember ... "long" is int32_t on the source system
+	int32_t in_roomnum;
+	long out_roomnum;
+	memcpy(&in_roomnum, in_key->data, sizeof(in_roomnum));
+	out_roomnum = (long) in_roomnum;
+
+	if (in_key->size != 4) {
+		printf("\033[31m\033[1m *** SOURCE DATABASE IS NOT 32-BIT *** ABORTING *** \033[0m\n");
+		abort();
+	}
+
+	int num_msgs = in_data->size / sizeof(int32_t);
+	printf("msglist for room %ld (%d messages)\n", out_roomnum, num_msgs);
+
+	int32_t in_msg = 0;
+	long out_msg = 0;
+	for (i=0; i<num_msgs; ++i) {
+		memcpy(&in_msg, (in_data->data + (i * sizeof(int32_t))), sizeof(int32_t));
+		printf("#%d\n", in_msg);
+	}
+
+
+
+}
+
+
 void (*convert_functions[])(int which_cdb, DBT *in_key, DBT *in_data, DBT *out_key, DBT *out_data) = {
 	convert_msgmain,	// CDB_MSGMAIN
 	convert_users,		// CDB_USERS
 	convert_rooms,		// CDB_ROOMS
 	convert_floors,		// CDB_FLOORTAB
-	null_function,		// CDB_MSGLISTS
+	convert_msglists,	// CDB_MSGLISTS
 	null_function,		// CDB_VISIT
 	null_function,		// CDB_DIRECTORY
 	null_function,		// CDB_USETABLE
@@ -322,11 +355,13 @@ void convert_table(int which_cdb) {
 		convert_functions[which_cdb](which_cdb, &in_key, &in_data, &out_key, &out_data);
 
 		// write the converted record to the new database
-		printf("DB: %02x ,  in_keylen: %3d ,  in_datalen: %d , dataptr: %lx\n", which_cdb, (int)in_key.size, (int)in_data.size, (long unsigned int)in_data.data);
-		printf("DB: %02x , out_keylen: %3d , out_datalen: %d , dataptr: %lx\n", which_cdb, (int)out_key.size, (int)out_data.size, (long unsigned int)out_data.data);
+		if (out_key.size > 0) {
+			printf("DB: %02x ,  in_keylen: %3d ,  in_datalen: %d , dataptr: %lx\n", which_cdb, (int)in_key.size, (int)in_data.size, (long unsigned int)in_data.data);
+			printf("DB: %02x , out_keylen: %3d , out_datalen: %d , dataptr: %lx\n", which_cdb, (int)out_key.size, (int)out_data.size, (long unsigned int)out_data.data);
 
-		// Knowing the total number of rows isn't critical to the program.  It's just for the user to know.
-		++num_rows;
+			// Knowing the total number of rows isn't critical to the program.  It's just for the user to know.
+			++num_rows;
+		}
 	}
 
 	if (ret != DB_NOTFOUND) {
