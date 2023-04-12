@@ -273,15 +273,23 @@ void convert_msglists(int which_cdb, DBT *in_key, DBT *in_data, DBT *out_key, DB
 	int num_msgs = in_data->size / sizeof(int32_t);
 	printf("msglist for room %ld (%d messages)\n", out_roomnum, num_msgs);
 
+	// the key is a "long"
+	out_key->size = sizeof(out_roomnum);
+	out_key->data = realloc(out_key->data, out_key->size);
+	memcpy(out_key->data, &out_roomnum, sizeof(out_roomnum));
+
+	// the data is another array, but a wider type
+	out_data->size = sizeof(long) * num_msgs;
+	out_data->data = realloc(out_data->data, out_data->size);
+
 	int32_t in_msg = 0;
 	long out_msg = 0;
 	for (i=0; i<num_msgs; ++i) {
 		memcpy(&in_msg, (in_data->data + (i * sizeof(int32_t))), sizeof(int32_t));
-		printf("#%d\n", in_msg);
+		out_msg = (long) in_msg;
+		memcpy((out_data->data + (i * sizeof(long))), &out_msg, sizeof(long));
+		printf("#%ld\n", out_msg);
 	}
-
-
-
 }
 
 
