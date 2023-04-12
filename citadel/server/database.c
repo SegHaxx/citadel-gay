@@ -1,22 +1,15 @@
 // This is a data store backend for the Citadel server which uses Berkeley DB.
 //
-// Copyright (c) 1987-2022 by the citadel.org team
+// Copyright (c) 1987-2023 by the citadel.org team
 //
 // This program is open source software.  Use, duplication, or disclosure
 // is subject to the terms of the GNU General Public License, version 3.
 
-/*****************************************************************************
-       Tunable configuration parameters for the Berkeley DB back end
- *****************************************************************************/
-
-/* Citadel will checkpoint the db at the end of every session, but only if
- * the specified number of kilobytes has been written, or if the specified
- * number of minutes has passed, since the last checkpoint.
- */
+// Citadel will checkpoint the db at the end of every session, but only if
+// the specified number of kilobytes has been written, or if the specified
+// number of minutes has passed, since the last checkpoint.
 #define MAX_CHECKPOINT_KBYTES	256
 #define MAX_CHECKPOINT_MINUTES	15
-
-/*****************************************************************************/
 
 #include "sysdep.h"
 #include <stdlib.h>
@@ -369,7 +362,7 @@ void cdb_decompress_if_necessary(struct cdbdata *cdb) {
 	uncompressed_data = malloc(zheader.uncompressed_len);
 
 	if (uncompress((Bytef *) uncompressed_data,
-		       (uLongf *) & destLen, (const Bytef *) compressed_data, (uLong) sourceLen) != Z_OK) {
+		       (uLongf *) &destLen, (const Bytef *) compressed_data, (uLong) sourceLen) != Z_OK) {
 		syslog(LOG_ERR, "db: uncompress() error");
 		cdb_abort();
 	}
@@ -380,10 +373,8 @@ void cdb_decompress_if_necessary(struct cdbdata *cdb) {
 }
 
 
-/*
- * Store a piece of data.  Returns 0 if the operation was successful.  If a
- * key already exists it should be overwritten.
- */
+// Store a piece of data.  Returns 0 if the operation was successful.  If a
+// key already exists it should be overwritten.
 int cdb_store(int cdb, const void *ckey, int ckeylen, void *cdata, int cdatalen) {
 
 	DBT dkey, ddata;
