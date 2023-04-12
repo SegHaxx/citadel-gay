@@ -93,9 +93,9 @@ struct visit {
 // 1. Either their values may change at some point after initial save, or
 // 2. They are merely caches of data which exist somewhere else, for speed.
 // DO NOT PUT BIG DATA IN HERE ... we need this struct to be tiny for lots of quick r/w
-struct MetaData {
 // NOTE: if you add fields to this, you have to also write export/import code in server/modules/migrate/serv_migrate.c
 // NOTE: if you add fields to this, you have to also write conversion code in utils/ctdl3264/*
+struct MetaData {
 	long meta_msgnum;		// Message number in *local* message base
 	int meta_refcount;		// Number of rooms pointing to this msg
 	char meta_content_type[64];	// Cached MIME content-type
@@ -192,6 +192,23 @@ struct floor {
 	int f_ref_count;		// reference count
 	struct ExpirePolicy f_ep;	// default expiration policy
 };
+
+
+// Database records beginning with this magic number are assumed to
+// be compressed.  In the event that a database record actually begins with
+// this magic number, we *must* compress it whether we want to or not,
+// because the fetch function will try to uncompress it anyway.
+// 
+// (No need to #ifdef this stuff; it compiles ok even if zlib is not present
+// and doesn't declare anything so it won't bloat the code)
+#define COMPRESS_MAGIC	0xc0ffeeee
+
+struct CtdlCompressHeader {
+	int magic;
+	size_t uncompressed_len;
+	size_t compressed_len;
+};
+
 
 
 #endif // SERVER_H

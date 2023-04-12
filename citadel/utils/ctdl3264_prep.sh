@@ -7,13 +7,14 @@
 SERVER_H=server/server.h
 
 # Generate the "32-bit" versions of these structures.
-# Note that this is specifically converting "32-bit to 64-bit" -- NOT "any-to-any"
+# Note that this is specifically for converting "32-bit to 64-bit" -- NOT "any-to-any"
 convert_struct() {
 	start_line=$(cat ${SERVER_H} | egrep -n "^struct $1 {" | cut -d: -f1)
 	tail +${start_line} ${SERVER_H} | sed '/};/q' \
 	| sed s/"^struct $1 {"/"struct ${1}_32 {"/g \
 	| sed s/"long "/"int32_t "/g \
 	| sed s/"time_t "/"int32_t "/g \
+	| sed s/"size_t "/"int32_t "/g \
 	| sed s/"struct ExpirePolicy "/"struct ExpirePolicy_32 "/g
 	echo ''
 
@@ -32,5 +33,6 @@ convert_struct() {
 	convert_struct "floor"
 	convert_struct "visit"
 	convert_struct "MetaData"
+	convert_struct "CtdlCompressHeader"
 
 ) >utils/ctdl3264_structs.h

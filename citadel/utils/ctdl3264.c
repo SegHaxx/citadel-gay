@@ -357,7 +357,12 @@ void convert_table(int which_cdb) {
 	// Walk through the database, calling convert functions as we go and clearing buffers before each call.
 	while (out_key.size = 0, out_data.size = 0, (ret = dbcp->get(dbcp, &in_key, &in_data, DB_NEXT)) == 0) {
 
-		// FIXME handle compressed records here
+		// Do we need to decompress?
+		static int32_t magic = COMPRESS_MAGIC;
+		if ( (in_data.size >= sizeof(magic)) && (!memcmp(in_data.data, &magic, sizeof(magic))) ) {
+			printf("\033[31m\033[1m COMPRESSED \033[0m\n");
+			// FIXME do the decompression
+		}
 
 		// Call the convert function registered to this table
 		convert_functions[which_cdb](which_cdb, &in_key, &in_data, &out_key, &out_data);
