@@ -119,7 +119,7 @@ void convert_msgmain(int which_cdb, DBT *in_key, DBT *in_data, DBT *out_key, DBT
 		abort();
 	}
 
-	printf("Message %ld\n", out_msgnum);
+	printf("\033[32m\033[1mMessage: %ld\033[0m\n", out_msgnum);
 
 	// If the msgnum is negative, we are looking at METADATA
 	if (in_msgnum < 0) {
@@ -191,7 +191,7 @@ void convert_users(int which_cdb, DBT *in_key, DBT *in_data, DBT *out_key, DBT *
 	user64->msgnum_inboxrules	= (long)	user32->msgnum_inboxrules;
 	user64->lastproc_inboxrules	= (long)	user32->lastproc_inboxrules;
 
-	printf("User: %s\n", user64->fullname);
+	printf("\033[32m\033[1mUser: %s\033[0m\n", user64->fullname);
 }
 
 
@@ -227,7 +227,7 @@ void convert_rooms(int which_cdb, DBT *in_key, DBT *in_data, DBT *out_key, DBT *
 	room64->QRdefaultview		= (int)		room32->QRdefaultview;
 	room64->msgnum_pic		= (long)	room32->msgnum_pic;
 
-	printf("Room: %s\n", room64->QRname);
+	printf("\033[32m\033[1mRoom: %s\033[0m\n", room64->QRname);
 }
 
 
@@ -251,6 +251,8 @@ void convert_floors(int which_cdb, DBT *in_key, DBT *in_data, DBT *out_key, DBT 
 	floor64->f_ref_count		= (int)			floor32->f_ref_count;
 	floor64->f_ep.expire_mode	= (int)			floor32->f_ep.expire_mode;
 	floor64->f_ep.expire_value	= (int)			floor32->f_ep.expire_value;
+
+	printf("\033[32m\033[1mFloor: %s\033[0m\n", floor64->f_name);
 }
 
 
@@ -271,7 +273,7 @@ void convert_msglists(int which_cdb, DBT *in_key, DBT *in_data, DBT *out_key, DB
 	}
 
 	int num_msgs = in_data->size / sizeof(int32_t);
-	printf("msglist for room %ld (%d messages)\n", out_roomnum, num_msgs);
+	printf("\033[32m\033[1mMsglist: for room %ld (%d messages)\033[0m\n", out_roomnum, num_msgs);
 
 	// the key is a "long"
 	out_key->size = sizeof(out_roomnum);
@@ -313,7 +315,9 @@ void convert_visits(int which_cdb, DBT *in_key, DBT *in_data, DBT *out_key, DBT 
 	strcpy(visit64->v_answered,			visit32->v_answered);
 	visit64->v_view			= (int)		visit32->v_view;
 
-	// create the key
+	printf("\033[32m\033[1mVisit: room %ld, gen %ld, user %ld\033[0m\n", visit64->v_roomnum, visit64->v_roomgen, visit64->v_usernum);
+
+	// create the key (which is based on the data, so there is no need to convert the old key)
 	out_key->size = sizeof(struct visit_index);
 	out_key->data = realloc(out_key->data, out_key->size);
 	struct visit_index *newvisitindex = (struct visit_index *) out_key->data;
@@ -321,7 +325,25 @@ void convert_visits(int which_cdb, DBT *in_key, DBT *in_data, DBT *out_key, DBT 
 	newvisitindex->iRoomGen		=		visit64->v_roomgen;
 	newvisitindex->iUserID		=		visit64->v_usernum;
 
-	// FIXME compress the data
+	// FIXME compress this record before sending it to the new database.  we are getting 100x space savings in some places!
+}
+
+
+// convert function for a directory record
+void convert_dir(int which_cdb, DBT *in_key, DBT *in_data, DBT *out_key, DBT *out_data) {
+
+	// the key is a string
+	out_key->size = in_key->size;
+	out_key->data = realloc(out_key->data, out_key->size);
+	memcpy(out_key->data, in_key->data, in_key->size);
+
+	// the data is also a string
+	out_data->size = in_data->size;
+	out_data->data = realloc(out_data->data, out_data->size);
+	memcpy(out_data->data, in_data->data, in_data->size);
+
+	// excuse my friend
+	printf("\033[32m\033[1mDirectory entry: %s -> %s\033[0m\n", (char *)out_key->data, (char *)out_data->data);
 }
 
 
@@ -332,7 +354,7 @@ void (*convert_functions[])(int which_cdb, DBT *in_key, DBT *in_data, DBT *out_k
 	convert_floors,		// CDB_FLOORTAB
 	convert_msglists,	// CDB_MSGLISTS
 	convert_visits,		// CDB_VISIT
-	null_function,		// CDB_DIRECTORY
+	convert_dir,		// CDB_DIRECTORY
 	null_function,		// CDB_USETABLE
 	null_function,		// CDB_BIGMSGS
 	null_function,		// CDB_FULLTEXT
