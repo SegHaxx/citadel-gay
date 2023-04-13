@@ -296,18 +296,32 @@ void convert_msglists(int which_cdb, DBT *in_key, DBT *in_data, DBT *out_key, DB
 // convert function for a visit record
 void convert_visits(int which_cdb, DBT *in_key, DBT *in_data, DBT *out_key, DBT *out_data) {
 
-	// the key is a... FIXME
-	out_key->size = in_key->size;
-	out_key->data = realloc(out_key->data, out_key->size);
-	memcpy(out_key->data, in_key->data, in_key->size);
-
 	// data
 	struct visit_32 *visit32 = (struct visit_32 *)in_data->data;
 	out_data->size = sizeof(struct visit);
 	out_data->data = realloc(out_data->data, out_data->size);
 	struct visit *visit64 = (struct visit *)out_data->data;
 
-	// FIXME do the conv
+	// convert the data (zero it out so it will compress well)
+	memset(visit64, 0, sizeof(struct visit));
+	visit64->v_roomnum		= (long)	visit32->v_roomnum;
+	visit64->v_roomgen		= (long)	visit32->v_roomgen;
+	visit64->v_usernum		= (long)	visit32->v_usernum;
+	visit64->v_lastseen		= (long)	visit32->v_lastseen;
+	visit64->v_flags		= (unsigned)	visit32->v_flags;
+	strcpy(visit64->v_seen,				visit32->v_seen);
+	strcpy(visit64->v_answered,			visit32->v_answered);
+	visit64->v_view			= (int)		visit32->v_view;
+
+	// create the key
+	out_key->size = sizeof(struct visit_index);
+	out_key->data = realloc(out_key->data, out_key->size);
+	struct visit_index *newvisitindex = (struct visit_index *) out_key->data;
+	newvisitindex->iRoomID		=		visit64->v_roomnum;
+	newvisitindex->iRoomGen		=		visit64->v_roomgen;
+	newvisitindex->iUserID		=		visit64->v_usernum;
+
+	// FIXME compress the data
 }
 
 
