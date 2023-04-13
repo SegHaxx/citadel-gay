@@ -293,13 +293,31 @@ void convert_msglists(int which_cdb, DBT *in_key, DBT *in_data, DBT *out_key, DB
 }
 
 
+// convert function for a visit record
+void convert_visits(int which_cdb, DBT *in_key, DBT *in_data, DBT *out_key, DBT *out_data) {
+
+	// the key is a... FIXME
+	out_key->size = in_key->size;
+	out_key->data = realloc(out_key->data, out_key->size);
+	memcpy(out_key->data, in_key->data, in_key->size);
+
+	// data
+	struct visit_32 *visit32 = (struct visit_32 *)in_data->data;
+	out_data->size = sizeof(struct visit);
+	out_data->data = realloc(out_data->data, out_data->size);
+	struct visit *visit64 = (struct visit *)out_data->data;
+
+	// FIXME do the conv
+}
+
+
 void (*convert_functions[])(int which_cdb, DBT *in_key, DBT *in_data, DBT *out_key, DBT *out_data) = {
 	convert_msgmain,	// CDB_MSGMAIN
 	convert_users,		// CDB_USERS
 	convert_rooms,		// CDB_ROOMS
 	convert_floors,		// CDB_FLOORTAB
 	convert_msglists,	// CDB_MSGLISTS
-	null_function,		// CDB_VISIT
+	convert_visits,		// CDB_VISIT
 	null_function,		// CDB_DIRECTORY
 	null_function,		// CDB_USETABLE
 	null_function,		// CDB_BIGMSGS

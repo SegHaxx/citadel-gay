@@ -210,5 +210,12 @@ struct CtdlCompressHeader {
 };
 
 
+// This is the db index format for "visit" records, which describe the relationship between one user and one room.
+struct visit_index {
+	long iRoomID;
+	long iRoomGen;
+	long iUserID;
+};
+
 
 #endif // SERVER_H

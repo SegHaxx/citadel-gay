@@ -225,17 +225,8 @@ void reindex_user_928(char *username, void *out_data) {
 
 
 // Index-generating function used by Ctdl[Get|Set]Relationship
-int GenerateRelationshipIndex(char *IndexBuf,
-			      long RoomID,
-			      long RoomGen,
-			      long UserID
-) {
-	struct {
-		long iRoomID;
-		long iRoomGen;
-		long iUserID;
-	} TheIndex;
-
+int GenerateRelationshipIndex(char *IndexBuf, long RoomID, long RoomGen, long UserID) {
+	struct visit_index TheIndex;
 	TheIndex.iRoomID = RoomID;
 	TheIndex.iRoomGen = RoomGen;
 	TheIndex.iUserID = UserID;

@@ -32,6 +32,7 @@ convert_struct() {
 	convert_struct "ctdlroom"
 	convert_struct "floor"
 	convert_struct "visit"
+	convert_struct "visit_index"
 	convert_struct "MetaData"
 	convert_struct "CtdlCompressHeader"
 
