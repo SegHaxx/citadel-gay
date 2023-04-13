@@ -390,6 +390,8 @@ void convert_table(int which_cdb) {
 
 	// Walk through the database, calling convert functions as we go and clearing buffers before each call.
 	while (out_key.size = 0, out_data.size = 0, (ret = dbcp->get(dbcp, &in_key, &in_data, DB_NEXT)) == 0) {
+
+		printf("DB: %02x ,  in_keylen: %3d ,  in_datalen: %d , dataptr: %lx\n", which_cdb, (int)in_key.size, (int)in_data.size, (long unsigned int)in_data.data);
 		compressed = 0;
 
 		// Do we need to decompress?
@@ -400,7 +402,7 @@ void convert_table(int which_cdb) {
 			compressed = 1;
 			struct CtdlCompressHeader_32 comp;
 			memcpy(&comp, in_data.data, sizeof(struct CtdlCompressHeader_32));
-			printf("\033[31m\033[1mCOMPRESSED , uncompressed_len=%d , compressed_len=%d\033[0m\n", comp.uncompressed_len, comp.compressed_len);
+			printf("\033[31m\033[1mDECOMPRESS: , decompressed_datalen=%d\033[0m\n", comp.uncompressed_len);
 
 			uncomp_data.size = comp.uncompressed_len - sizeof(struct CtdlCompressHeader_32);
 			uncomp_data.data = realloc(uncomp_data.data, uncomp_data.size);
@@ -417,7 +419,6 @@ void convert_table(int which_cdb) {
 
 		// write the converted record to the new database
 		if (out_key.size > 0) {
-			printf("DB: %02x ,  in_keylen: %3d ,  in_datalen: %d , dataptr: %lx\n", which_cdb, (int)in_key.size, (int)in_data.size, (long unsigned int)in_data.data);
 			printf("DB: %02x , out_keylen: %3d , out_datalen: %d , dataptr: %lx\n", which_cdb, (int)out_key.size, (int)out_data.size, (long unsigned int)out_data.data);
 
 			// Knowing the total number of rows isn't critical to the program.  It's just for the user to know.
