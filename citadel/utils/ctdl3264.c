@@ -119,7 +119,6 @@ void convert_msgmain(int which_cdb, DBT *in_key, DBT *in_data, DBT *out_key, DBT
 		abort();
 	}
 
-
 	// If the msgnum is negative, we are looking at METADATA
 	if (in_msgnum < 0) {
 		struct MetaData_32 *meta32 = (struct MetaData_32 *)in_data->data;
@@ -369,6 +368,28 @@ void convert_usetable(int which_cdb, DBT *in_key, DBT *in_data, DBT *out_key, DB
 }
 
 
+// convert function for large message texts
+void convert_bigmsgs(int which_cdb, DBT *in_key, DBT *in_data, DBT *out_key, DBT *out_data) {
+
+	// The key is a packed long
+	int32_t in_msgnum;
+	long out_msgnum;
+	memcpy(&in_msgnum, in_key->data, sizeof(in_msgnum));
+	out_msgnum = (long)in_msgnum;
+
+	if (in_key->size != 4) {
+		printf("\033[31m\033[1m *** SOURCE DATABASE IS NOT 32-BIT *** ABORTING *** \033[0m\n");
+		abort();
+	}
+
+	// the data is binary-ish but has no packed integers
+	out_data->size = in_data->size;
+	out_data->data = realloc(out_data->data, out_data->size);
+	memcpy(out_data->data, in_data->data, in_data->size);
+
+	printf("\033[32m\033[1mBigmsg %ld , length %d\033[0m\n", out_msgnum, out_data->size);
+}
+
 
 void (*convert_functions[])(int which_cdb, DBT *in_key, DBT *in_data, DBT *out_key, DBT *out_data) = {
 	convert_msgmain,	// CDB_MSGMAIN
@@ -379,7 +400,7 @@ void (*convert_functions[])(int which_cdb, DBT *in_key, DBT *in_data, DBT *out_k
 	convert_visits,		// CDB_VISIT
 	convert_dir,		// CDB_DIRECTORY
 	convert_usetable,	// CDB_USETABLE
-	null_function,		// CDB_BIGMSGS
+	convert_bigmsgs,	// CDB_BIGMSGS
 	null_function,		// CDB_FULLTEXT
 	null_function,		// CDB_EUIDINDEX
 	null_function,		// CDB_USERSBYNUMBER
