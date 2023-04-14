@@ -119,13 +119,12 @@ void convert_msgmain(int which_cdb, DBT *in_key, DBT *in_data, DBT *out_key, DBT
 		abort();
 	}
 
-	printf("\033[32m\033[1mMessage: %ld\033[0m\n", out_msgnum);
 
 	// If the msgnum is negative, we are looking at METADATA
 	if (in_msgnum < 0) {
 		struct MetaData_32 *meta32 = (struct MetaData_32 *)in_data->data;
 
-		//printf("metadata: msgnum=%d , refcount=%d , content_type=\"%s\" , rfc822len=%d\n", meta32->meta_msgnum, meta32->meta_refcount, meta32->meta_content_type, meta32->meta_rfc822_length);
+		printf("\033[32m\033[1mMetadata: msgnum=%d , refcount=%d , content_type=\"%s\" , rfc822len=%d\033[0m\n", meta32->meta_msgnum, meta32->meta_refcount, meta32->meta_content_type, meta32->meta_rfc822_length);
 
 		out_key->size = sizeof(long);
 		out_key->data = realloc(out_key->data, out_key->size);
@@ -151,6 +150,7 @@ void convert_msgmain(int which_cdb, DBT *in_key, DBT *in_data, DBT *out_key, DBT
 		out_data->size = in_data->size;
 		out_data->data = realloc(out_data->data, out_data->size);
 		memcpy(out_data->data, in_data->data, out_data->size);
+		printf("\033[32m\033[1mMessage: %ld\033[0m\n", out_msgnum);
 	}
 
 	// If the msgnum is 0 it's probably not a valid record.
@@ -342,9 +342,32 @@ void convert_dir(int which_cdb, DBT *in_key, DBT *in_data, DBT *out_key, DBT *ou
 	out_data->data = realloc(out_data->data, out_data->size);
 	memcpy(out_data->data, in_data->data, in_data->size);
 
-	// excuse my friend
+	// please excuse my friend, he isn't null terminated
 	printf("\033[32m\033[1mDirectory entry: %s -> %s\033[0m\n", (char *)out_key->data, (char *)out_data->data);
 }
+
+
+// convert function for a use table record
+void convert_usetable(int which_cdb, DBT *in_key, DBT *in_data, DBT *out_key, DBT *out_data) {
+
+	// the key is a string
+	out_key->size = in_key->size;
+	out_key->data = realloc(out_key->data, out_key->size);
+	memcpy(out_key->data, in_key->data, in_key->size);
+
+	// the data is a "struct UseTable"
+	struct UseTable_32 *use32 = (struct UseTable_32 *)in_data->data;
+	out_data->size = sizeof(struct UseTable);
+	out_data->data = realloc(out_data->data, out_data->size);
+	struct UseTable *use64 = (struct UseTable *)out_data->data;
+
+	// convert the data
+	strcpy(use64->ut_msgid,				use32->ut_msgid);
+	use64->ut_timestamp		= (time_t)	use32->ut_timestamp;
+
+	// FIXME compress this record before sending it to the new database.  we are getting 100x space savings in some places!
+}
+
 
 
 void (*convert_functions[])(int which_cdb, DBT *in_key, DBT *in_data, DBT *out_key, DBT *out_data) = {
@@ -355,7 +378,7 @@ void (*convert_functions[])(int which_cdb, DBT *in_key, DBT *in_data, DBT *out_k
 	convert_msglists,	// CDB_MSGLISTS
 	convert_visits,		// CDB_VISIT
 	convert_dir,		// CDB_DIRECTORY
-	null_function,		// CDB_USETABLE
+	convert_usetable,	// CDB_USETABLE
 	null_function,		// CDB_BIGMSGS
 	null_function,		// CDB_FULLTEXT
 	null_function,		// CDB_EUIDINDEX

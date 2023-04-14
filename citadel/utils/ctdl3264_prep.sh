@@ -35,5 +35,6 @@ convert_struct() {
 	convert_struct "visit_index"
 	convert_struct "MetaData"
 	convert_struct "CtdlCompressHeader"
+	convert_struct "UseTable"
 
 ) >utils/ctdl3264_structs.h
