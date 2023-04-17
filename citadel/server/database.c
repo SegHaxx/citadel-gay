@@ -393,7 +393,8 @@ int cdb_store(int cdb, const void *ckey, int ckeylen, void *cdata, int cdatalen)
 	ddata.size = cdatalen;
 	ddata.data = cdata;
 
-	// Only compress Visit and UseTable records.  Everything else is uncompressed.
+	// "visit" and "usetable" records are numerous and have big, mostly-empty string buffers in them.
+	// If we compress these we can get them down to 1% of their size most of the time.
 	if ((cdb == CDB_VISIT) || (cdb == CDB_USETABLE)) {
 		compressing = 1;
 		zheader.magic = COMPRESS_MAGIC;
@@ -401,8 +402,7 @@ int cdb_store(int cdb, const void *ckey, int ckeylen, void *cdata, int cdatalen)
 		buffer_len = ((cdatalen * 101) / 100) + 100 + sizeof(struct CtdlCompressHeader);
 		destLen = (uLongf) buffer_len;
 		compressed_data = malloc(buffer_len);
-		if (compress2((Bytef *) (compressed_data + sizeof(struct CtdlCompressHeader)),
-			      &destLen, (Bytef *) cdata, (uLongf) cdatalen, 1) != Z_OK) {
+		if (compress2((Bytef *) (compressed_data + sizeof(struct CtdlCompressHeader)), &destLen, (Bytef *) cdata, (uLongf) cdatalen, 1) != Z_OK) {
 			syslog(LOG_ERR, "db: compress2() error");
 			cdb_abort();
 		}

@@ -323,8 +323,6 @@ void convert_visits(int which_cdb, DBT *in_key, DBT *in_data, DBT *out_key, DBT 
 	newvisitindex->iRoomID		=		visit64->v_roomnum;
 	newvisitindex->iRoomGen		=		visit64->v_roomgen;
 	newvisitindex->iUserID		=		visit64->v_usernum;
-
-	// FIXME compress this record before sending it to the new database.  we are getting 100x space savings in some places!
 }
 
 
@@ -358,13 +356,12 @@ void convert_usetable(int which_cdb, DBT *in_key, DBT *in_data, DBT *out_key, DB
 	struct UseTable_32 *use32 = (struct UseTable_32 *)in_data->data;
 	out_data->size = sizeof(struct UseTable);
 	out_data->data = realloc(out_data->data, out_data->size);
+	memset(out_data->data, 0, out_data->size);
 	struct UseTable *use64 = (struct UseTable *)out_data->data;
 
 	// convert the data
 	strcpy(use64->ut_msgid,				use32->ut_msgid);
 	use64->ut_timestamp		= (time_t)	use32->ut_timestamp;
-
-	// FIXME compress this record before sending it to the new database.  we are getting 100x space savings in some places!
 }
 
 
@@ -413,13 +410,14 @@ void convert_table(int which_cdb) {
 	int ret;
 	int compressed;
 	char dbfilename[32];
+	uLongf destLen = 0;
 
 	printf("\033[32m\033[1mConverting table %d\033[0m\n", which_cdb);
 
 	// shamelessly swiped from https://docs.oracle.com/database/bdb181/html/programmer_reference/am_cursor.html
 	DB *dbp;
 	DBC *dbcp;
-	DBT in_key, in_data, out_key, out_data, uncomp_data;
+	DBT in_key, in_data, out_key, out_data, uncomp_data, recomp_data;
 	int num_rows = 0;
 
 	// create a database handle
@@ -448,16 +446,17 @@ void convert_table(int which_cdb) {
 	}
 
 	// Zero out these database keys
-	memset(&in_key, 0, sizeof(in_key));		// input
-	memset(&in_data, 0, sizeof(in_data));
-	memset(&out_key, 0, sizeof(out_key));		// output
-	memset(&out_data, 0, sizeof(out_data));
-	memset(&uncomp_data, 0, sizeof(uncomp_data));	// decompressed input (the key doesn't change)
+	memset(&in_key,		0, sizeof(DBT));	// input
+	memset(&in_data,	0, sizeof(DBT));
+	memset(&out_key,	0, sizeof(DBT));	// output
+	memset(&out_data,	0, sizeof(DBT));
+	memset(&uncomp_data,	0, sizeof(DBT));	// decompressed input (the key doesn't change)
+	memset(&recomp_data,	0, sizeof(DBT));	// recompressed input (the key doesn't change)
 
 	// Walk through the database, calling convert functions as we go and clearing buffers before each call.
 	while (out_key.size = 0, out_data.size = 0, (ret = dbcp->get(dbcp, &in_key, &in_data, DB_NEXT)) == 0) {
 
-		printf("DB: %02x ,  in_keylen: %3d ,  in_datalen: %d , dataptr: %lx\n", which_cdb, (int)in_key.size, (int)in_data.size, (long unsigned int)in_data.data);
+		printf("DB: %02x ,  in_keylen: %-3d ,  in_datalen: %-10d , dataptr: %012lx\n", which_cdb, (int)in_key.size, (int)in_data.size, (long unsigned int)in_data.data);
 		compressed = 0;
 
 		// Do we need to decompress?
@@ -466,26 +465,50 @@ void convert_table(int which_cdb) {
 
 			// yes, we need to decompress
 			compressed = 1;
-			struct CtdlCompressHeader_32 comp;
-			memcpy(&comp, in_data.data, sizeof(struct CtdlCompressHeader_32));
-			printf("\033[31m\033[1mDECOMPRESS: , decompressed_datalen=%d\033[0m\n", comp.uncompressed_len);
-
-			uncomp_data.size = comp.uncompressed_len - sizeof(struct CtdlCompressHeader_32);
+			struct CtdlCompressHeader_32 comp32;
+			memcpy(&comp32, in_data.data, sizeof(struct CtdlCompressHeader_32));
+			uncomp_data.size = comp32.uncompressed_len;
 			uncomp_data.data = realloc(uncomp_data.data, uncomp_data.size);
+			destLen = (uLongf)comp32.uncompressed_len;
 
-			uLongf destLen;
-			if (uncompress((Bytef *)uncomp_data.data, (uLongf *)&destLen, (const Bytef *)in_data.data+sizeof(struct CtdlCompressHeader_32), (uLong)in_data.size) != Z_OK) {
-				printf("db: uncompress() error\n");
+			ret = uncompress((Bytef *)uncomp_data.data, (uLongf *)&destLen, (const Bytef *)in_data.data+sizeof(struct CtdlCompressHeader_32), (uLong)comp32.compressed_len);
+			if (ret != Z_OK) {
+				printf("db: uncompress() error %d\n", ret);
 				exit(CTDLEXIT_DB);
 			}
+			printf("\033[31m\033[1mDB: %02x ,  in_keylen: %-3d ,  in_datalen: %-10d , dataptr: %012lx (decompressed)\033[0m\n",
+				which_cdb, (int)in_key.size, comp32.uncompressed_len, (long unsigned int)uncomp_data.data);
+
 		}
 
 		// Call the convert function registered to this table
 		convert_functions[which_cdb](which_cdb, &in_key, (compressed ? &uncomp_data : &in_data), &out_key, &out_data);
 
+		// The logic here is that if the source data was compressed, we compress the output too
+		if (compressed) {
+			printf("\033[31m\033[1mCOMPRESSING\033[0m\n");
+
+			struct CtdlCompressHeader zheader;
+			memset(&zheader, 0, sizeof(struct CtdlCompressHeader));
+			zheader.magic = COMPRESS_MAGIC;
+			zheader.uncompressed_len = out_data.size;
+			recomp_data.data = realloc(recomp_data.data, ((out_data.size * 101) / 100) + 100 + sizeof(struct CtdlCompressHeader));
+
+			if (compress2((Bytef *)(recomp_data.data + sizeof(struct CtdlCompressHeader)), &destLen, (Bytef *)out_data.data, (uLongf) out_data.size, 1) != Z_OK) {
+				printf("db: compress() error\n");
+				exit(CTDLEXIT_DB);
+			}
+			recomp_data.size = destLen;
+		}
+
 		// write the converted record to the new database
 		if (out_key.size > 0) {
-			printf("DB: %02x , out_keylen: %3d , out_datalen: %d , dataptr: %lx\n", which_cdb, (int)out_key.size, (int)out_data.size, (long unsigned int)out_data.data);
+
+
+
+			// NOTE TO SELF: if we compressed the output, write recomp_data instead of out_data
+
+			printf("DB: %02x , out_keylen: %-3d , out_datalen: %-10d , dataptr: %012lx\n", which_cdb, (int)out_key.size, (int)out_data.size, (long unsigned int)out_data.data);
 
 			// Knowing the total number of rows isn't critical to the program.  It's just for the user to know.
 			++num_rows;
@@ -504,6 +527,7 @@ void convert_table(int which_cdb) {
 	free(out_key.data);
 	free(out_data.data);
 	free(uncomp_data.data);
+	free(recomp_data.data);
 
 	// Flush the logs...
 	//printf("\033[33m\033[1mdb: flushing the database logs\033[0m\n");
@@ -553,7 +577,7 @@ int main(int argc, char **argv) {
 	printf("ctdl3264 converts a Citadel database written on a 32-bit system to one  \n");
 	printf("that can be run on a 64-bit system.  It is intended to be run OFFLINE.  \n");
 	printf("Neither the source nor the target data directories should be mounted by \n");
-	printf("a running Citadel server.  We guarantee data corruption if you do not   \n");
+	printf("a running Citadel server.  We \033[1mguarantee\033[0m data corruption if you do not   \n");
 	printf("observe this warning!  The source [-s] directory should contain a copy  \n");
 	printf("of the database from your 32-bit system.  The destination [-d] directory\n");
 	printf("should be empty and will receive your 64-bit database.                  \n");
@@ -566,7 +590,7 @@ int main(int argc, char **argv) {
 		printf("You have specified the [-y] flag, so processing will continue.\n");
 	}
 	else {
-		printf("Please consult the documentation to learn how to proceed.\n");
+		printf("Please read [ https://www.citadel.org/ctdl3264.html ] to learn how to proceed.\n");
 		exit(0);
 	}
 
