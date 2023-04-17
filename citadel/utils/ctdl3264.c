@@ -334,13 +334,17 @@ void convert_dir(int which_cdb, DBT *in_key, DBT *in_data, DBT *out_key, DBT *ou
 
 	// the key is a string
 	out_key->size = in_key->size;
-	out_key->data = realloc(out_key->data, out_key->size);
+	out_key->data = realloc(out_key->data, out_key->size + 1);
 	memcpy(out_key->data, in_key->data, in_key->size);
+	char *k = (char *)out_key->data;
+	k[out_key->size] = 0;
 
 	// the data is also a string
 	out_data->size = in_data->size;
-	out_data->data = realloc(out_data->data, out_data->size);
+	out_data->data = realloc(out_data->data, out_data->size + 1);
 	memcpy(out_data->data, in_data->data, in_data->size);
+	char *d = (char *)out_data->data;
+	d[out_data->size] = 0;
 
 	// please excuse my friend, he isn't null terminated
 	printf("\033[32m\033[1mDirectory entry: %s -> %s\033[0m\n", (char *)out_key->data, (char *)out_data->data);
