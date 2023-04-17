@@ -456,11 +456,9 @@ void convert_table(int which_cdb) {
 	// Walk through the database, calling convert functions as we go and clearing buffers before each call.
 	while (out_key.size = 0, out_data.size = 0, (ret = dbcp->get(dbcp, &in_key, &in_data, DB_NEXT)) == 0) {
 
-		printf("DB: %02x ,  in_keylen: %-3d ,  in_datalen: %-10d , dataptr: %012lx\n", which_cdb, (int)in_key.size, (int)in_data.size, (long unsigned int)in_data.data);
-		compressed = 0;
-
 		// Do we need to decompress?
 		static int32_t magic = COMPRESS_MAGIC;
+		compressed = 0;
 		if ( (in_data.size >= sizeof(struct CtdlCompressHeader_32)) && (!memcmp(in_data.data, &magic, sizeof(magic))) ) {
 
 			// yes, we need to decompress
@@ -476,9 +474,10 @@ void convert_table(int which_cdb) {
 				printf("db: uncompress() error %d\n", ret);
 				exit(CTDLEXIT_DB);
 			}
-			printf("\033[31m\033[1mDB: %02x ,  in_keylen: %-3d ,  in_datalen: %-10d , dataptr: %012lx (decompressed)\033[0m\n",
-				which_cdb, (int)in_key.size, comp32.uncompressed_len, (long unsigned int)uncomp_data.data);
-
+			printf("DB: %02x ,  in_keylen: %-3d ,  in_datalen: %-10d , dataptr: %012lx \033[31m(decompressed)\033[0m\n", which_cdb, (int)in_key.size, comp32.uncompressed_len, (long unsigned int)uncomp_data.data);
+		}
+		else {
+			printf("DB: %02x ,  in_keylen: %-3d ,  in_datalen: %-10d , dataptr: %012lx\n", which_cdb, (int)in_key.size, (int)in_data.size, (long unsigned int)in_data.data);
 		}
 
 		// Call the convert function registered to this table
@@ -486,8 +485,6 @@ void convert_table(int which_cdb) {
 
 		// The logic here is that if the source data was compressed, we compress the output too
 		if (compressed) {
-			printf("\033[31m\033[1mCOMPRESSING\033[0m\n");
-
 			struct CtdlCompressHeader zheader;
 			memset(&zheader, 0, sizeof(struct CtdlCompressHeader));
 			zheader.magic = COMPRESS_MAGIC;
@@ -508,7 +505,12 @@ void convert_table(int which_cdb) {
 
 			// NOTE TO SELF: if we compressed the output, write recomp_data instead of out_data
 
-			printf("DB: %02x , out_keylen: %-3d , out_datalen: %-10d , dataptr: %012lx\n", which_cdb, (int)out_key.size, (int)out_data.size, (long unsigned int)out_data.data);
+			if (compressed) {
+				printf("DB: %02x , out_keylen: %-3d , out_datalen: %-10d , dataptr: %012lx \033[31m(compressed)\033[0m\n", which_cdb, (int)out_key.size, (int)recomp_data.size, (long unsigned int)recomp_data.data);
+			}
+			else {
+				printf("DB: %02x , out_keylen: %-3d , out_datalen: %-10d , dataptr: %012lx\n", which_cdb, (int)out_key.size, (int)out_data.size, (long unsigned int)out_data.data);
+			}
 
 			// Knowing the total number of rows isn't critical to the program.  It's just for the user to know.
 			++num_rows;
