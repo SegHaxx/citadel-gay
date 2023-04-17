@@ -102,13 +102,13 @@ void close_dbenv(void) {
 }
 
 
-// placeholder  function for the data types not yet implemented
+// placeholder convert function for the data types not yet implemented
 void null_function(int which_cdb, DBT *in_key, DBT *in_data, DBT *out_key, DBT *out_data) {
 }
 
 
-//  function for a message in msgmain
-void _msgmain(int which_cdb, DBT *in_key, DBT *in_data, DBT *out_key, DBT *out_data) {
+// convert function for a message in msgmain
+void convert_msgmain(int which_cdb, DBT *in_key, DBT *in_data, DBT *out_key, DBT *out_data) {
 	int32_t in_msgnum;
 	long out_msgnum;
 	memcpy(&in_msgnum, in_key->data, sizeof(in_msgnum));
@@ -159,8 +159,8 @@ void _msgmain(int which_cdb, DBT *in_key, DBT *in_data, DBT *out_key, DBT *out_d
 }
 
 
-//  function for a user record
-void _users(int which_cdb, DBT *in_key, DBT *in_data, DBT *out_key, DBT *out_data) {
+// convert function for a user record
+void convert_users(int which_cdb, DBT *in_key, DBT *in_data, DBT *out_key, DBT *out_data) {
 
 	// The key is a string so we can just copy it over
 	out_key->size = in_key->size;
@@ -194,8 +194,8 @@ void _users(int which_cdb, DBT *in_key, DBT *in_data, DBT *out_key, DBT *out_dat
 }
 
 
-//  function for a room record
-void _rooms(int which_cdb, DBT *in_key, DBT *in_data, DBT *out_key, DBT *out_data) {
+// convert function for a room record
+void convert_rooms(int which_cdb, DBT *in_key, DBT *in_data, DBT *out_key, DBT *out_data) {
 
 	// The key is a string so we can just copy it over
 	out_key->size = in_key->size;
@@ -230,8 +230,8 @@ void _rooms(int which_cdb, DBT *in_key, DBT *in_data, DBT *out_key, DBT *out_dat
 }
 
 
-//  function for a floor record
-void _floors(int which_cdb, DBT *in_key, DBT *in_data, DBT *out_key, DBT *out_data) {
+// convert function for a floor record
+void convert_floors(int which_cdb, DBT *in_key, DBT *in_data, DBT *out_key, DBT *out_data) {
 
 	// the key is an "int", and "int" is 32-bits on both 32 and 64 bit platforms.
 	out_key->size = in_key->size;
@@ -255,9 +255,9 @@ void _floors(int which_cdb, DBT *in_key, DBT *in_data, DBT *out_key, DBT *out_da
 }
 
 
-//  function for a msglist or a fulltext index record
+// convert function for a msglist or a fulltext index record
 // (both aare indexed by a long and the data is arrays of longs)
-void _msglists(int which_cdb, DBT *in_key, DBT *in_data, DBT *out_key, DBT *out_data) {
+void convert_msglists(int which_cdb, DBT *in_key, DBT *in_data, DBT *out_key, DBT *out_data) {
 	int i;
 
 	char *table = (which_cdb == CDB_FULLTEXT) ? "FullText" : "Msglist";
@@ -297,8 +297,8 @@ void _msglists(int which_cdb, DBT *in_key, DBT *in_data, DBT *out_key, DBT *out_
 }
 
 
-//  function for a visit record
-void _visits(int which_cdb, DBT *in_key, DBT *in_data, DBT *out_key, DBT *out_data) {
+// convert function for a visit record
+void convert_visits(int which_cdb, DBT *in_key, DBT *in_data, DBT *out_key, DBT *out_data) {
 
 	// data
 	struct visit_32 *visit32 = (struct visit_32 *)in_data->data;
@@ -329,8 +329,8 @@ void _visits(int which_cdb, DBT *in_key, DBT *in_data, DBT *out_key, DBT *out_da
 }
 
 
-//  function for a directory record
-void _dir(int which_cdb, DBT *in_key, DBT *in_data, DBT *out_key, DBT *out_data) {
+// convert function for a directory record
+void convert_dir(int which_cdb, DBT *in_key, DBT *in_data, DBT *out_key, DBT *out_data) {
 
 	// the key is a string
 	out_key->size = in_key->size;
@@ -347,8 +347,8 @@ void _dir(int which_cdb, DBT *in_key, DBT *in_data, DBT *out_key, DBT *out_data)
 }
 
 
-//  function for a use table record
-void _usetable(int which_cdb, DBT *in_key, DBT *in_data, DBT *out_key, DBT *out_data) {
+// convert function for a use table record
+void convert_usetable(int which_cdb, DBT *in_key, DBT *in_data, DBT *out_key, DBT *out_data) {
 
 	// the key is a string
 	out_key->size = in_key->size;
@@ -368,8 +368,8 @@ void _usetable(int which_cdb, DBT *in_key, DBT *in_data, DBT *out_key, DBT *out_
 }
 
 
-//  function for large message texts
-void _bigmsgs(int which_cdb, DBT *in_key, DBT *in_data, DBT *out_key, DBT *out_data) {
+// convert function for large message texts
+void convert_bigmsgs(int which_cdb, DBT *in_key, DBT *in_data, DBT *out_key, DBT *out_data) {
 
 	// The key is a packed long
 	int32_t in_msgnum;
@@ -391,17 +391,17 @@ void _bigmsgs(int which_cdb, DBT *in_key, DBT *in_data, DBT *out_key, DBT *out_d
 }
 
 
-void (*_functions[])(int which_cdb, DBT *in_key, DBT *in_data, DBT *out_key, DBT *out_data) = {
-	_msgmain,	// CDB_MSGMAIN
-	_users,		// CDB_USERS
-	_rooms,		// CDB_ROOMS
-	_floors,		// CDB_FLOORTAB
-	_msglists,	// CDB_MSGLISTS
-	_visits,		// CDB_VISIT
-	_dir,		// CDB_DIRECTORY
-	_usetable,	// CDB_USETABLE
-	_bigmsgs,	// CDB_BIGMSGS
-	_msglists,	// CDB_FULLTEXT
+void (*convert_functions[])(int which_cdb, DBT *in_key, DBT *in_data, DBT *out_key, DBT *out_data) = {
+	convert_msgmain,	// CDB_MSGMAIN
+	convert_users,		// CDB_USERS
+	convert_rooms,		// CDB_ROOMS
+	convert_floors,		// CDB_FLOORTAB
+	convert_msglists,	// CDB_MSGLISTS
+	convert_visits,		// CDB_VISIT
+	convert_dir,		// CDB_DIRECTORY
+	convert_usetable,	// CDB_USETABLE
+	convert_bigmsgs,	// CDB_BIGMSGS
+	convert_msglists,	// CDB_FULLTEXT
 	null_function,		// CDB_EUIDINDEX
 	null_function,		// CDB_USERSBYNUMBER
 	null_function,		// CDB_EXTAUTH
@@ -409,13 +409,15 @@ void (*_functions[])(int which_cdb, DBT *in_key, DBT *in_data, DBT *out_key, DBT
 };
 
 
-void _table(int which_cdb) {
+void convert_table(int which_cdb) {
 	int ret;
 	int compressed;
 	char dbfilename[32];
 	uLongf destLen = 0;
 
-	printf("\033[32m\033[1ming table %d\033[0m\n", which_cdb);
+	printf("\033[43m\033[K\033[0m\n");
+	printf("\033[43m\033[30m Converting table %d \033[K\033[0m\n", which_cdb);
+	printf("\033[43m\033[K\033[0m\n");
 
 	// shamelessly swiped from https://docs.oracle.com/database/bdb181/html/programmer_reference/am_cursor.html
 	DB *dbp;
@@ -456,7 +458,7 @@ void _table(int which_cdb) {
 	memset(&uncomp_data,	0, sizeof(DBT));	// decompressed input (the key doesn't change)
 	memset(&recomp_data,	0, sizeof(DBT));	// recompressed input (the key doesn't change)
 
-	// Walk through the database, calling  functions as we go and clearing buffers before each call.
+	// Walk through the database, calling convert functions as we go and clearing buffers before each call.
 	while (out_key.size = 0, out_data.size = 0, (ret = dbcp->get(dbcp, &in_key, &in_data, DB_NEXT)) == 0) {
 
 		// Do we need to decompress?
@@ -483,8 +485,8 @@ void _table(int which_cdb) {
 			printf("DB: %02x ,  in_keylen: %-3d ,  in_datalen: %-10d , dataptr: %012lx\n", which_cdb, (int)in_key.size, (int)in_data.size, (long unsigned int)in_data.data);
 		}
 
-		// Call the  function registered to this table
-		_functions[which_cdb](which_cdb, &in_key, (compressed ? &uncomp_data : &in_data), &out_key, &out_data);
+		// Call the convert function registered to this table
+		convert_functions[which_cdb](which_cdb, &in_key, (compressed ? &uncomp_data : &in_data), &out_key, &out_data);
 
 		// The logic here is that if the source data was compressed, we compress the output too
 		if (compressed) {
@@ -601,7 +603,7 @@ int main(int argc, char **argv) {
 
 	open_dbenv(src_dir);
 	for (int i = 0; i < MAXCDB; ++i) {
-		_table(i);
+		convert_table(i);
 	}
 	close_dbenv();
 
