@@ -1,21 +1,9 @@
-/*
- * This module handles fulltext indexing of the message base.
- * Copyright (c) 2005-2022 by the citadel.org team
- *
- * This program is open source software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License as published
- * by the Free Software Foundation; either version 3 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
- */
+// This module handles fulltext indexing of the message base.
+//
+// Copyright (c) 2005-2023 by the citadel.org team
+//
+// This program is open source software.  Use, duplication, or disclosure
+// is subject to the terms of the GNU General Public License, version 3.
 
 #include "../../sysdep.h"
 #include <stdlib.h>
@@ -54,9 +42,7 @@ int ftc_num_msgs[65536];
 long *ftc_msgs[65536];
 
 
-/*
- * Compare function
- */
+// Compare function
 int longcmp(const void *rec1, const void *rec2) {
 	long i1, i2;
 
@@ -69,24 +55,18 @@ int longcmp(const void *rec1, const void *rec2) {
 }
 
 
-/*
- * Flush our index cache out to disk.
- */
+// Flush our index cache out to disk.
 void ft_flush_cache(void) {
 	int i;
 	time_t last_update = 0;
 
 	for (i=0; i<65536; ++i) {
 		if ((time(NULL) - last_update) >= 10) {
-			syslog(LOG_INFO,
-				"fulltext: flushing index cache to disk (%d%% complete)",
-				(i * 100 / 65536)
-			);
+			syslog(LOG_INFO, "fulltext: flushing index cache to disk (%d%% complete)", (i * 100 / 65536));
 			last_update = time(NULL);
 		}
 		if (ftc_msgs[i] != NULL) {
-			cdb_store(CDB_FULLTEXT, &i, sizeof(int), ftc_msgs[i],
-				(ftc_num_msgs[i] * sizeof(long)));
+			cdb_store(CDB_FULLTEXT, &i, sizeof(int), ftc_msgs[i], (ftc_num_msgs[i] * sizeof(long)));
 			ftc_num_msgs[i] = 0;
 			free(ftc_msgs[i]);
 			ftc_msgs[i] = NULL;
@@ -96,9 +76,7 @@ void ft_flush_cache(void) {
 }
 
 
-/*
- * Index or de-index a message.  (op == 1 to index, 0 to de-index)
- */
+// Index or de-index a message.  (op == 1 to index, 0 to de-index)
 void ft_index_message(long msgnum, int op) {
 	int num_tokens = 0;
 	int *tokens = NULL;
@@ -123,9 +101,8 @@ void ft_index_message(long msgnum, int op) {
 
 	syslog(LOG_DEBUG, "fulltext: ft_index_message() %s msg %ld", (op ? "adding" : "removing") , msgnum);
 
-	/* Output the message as text before indexing it, so we don't end up
-	 * indexing a bunch of encoded base64, etc.
-	 */
+	// Output the message as text before indexing it, so we don't end up
+	// indexing a bunch of encoded base64, etc.
 	CC->redirect_buffer = NewStrBufPlain(NULL, SIZ);
 	CtdlOutputPreLoadedMsg(msg, MT_CITADEL, HEADERS_ALL, 0, 1, 0);
 	CM_Free(msg);
@@ -142,13 +119,13 @@ void ft_index_message(long msgnum, int op) {
 	if (num_tokens > 0) {
 		for (i=0; i<num_tokens; ++i) {
 
-			/* Add the message to the relevant token bucket */
+			// Add the message to the relevant token bucket
 
-			/* search for tokens[i] */
+			// search for tokens[i]
 			tok = tokens[i];
 
 			if ( (tok >= 0) && (tok <= 65535) ) {
-				/* fetch the bucket, Liza */
+				// fetch the bucket, Liza
 				if (ftc_msgs[tok] == NULL) {
 					cdb_bucket = cdb_fetch(CDB_FULLTEXT, &tok, sizeof(int));
 					if (cdb_bucket != NULL) {
@@ -164,14 +141,13 @@ void ft_index_message(long msgnum, int op) {
 				}
 	
 	
-				if (op == 1) {	/* add to index */
+				if (op == 1) {	// add to index
 					++ftc_num_msgs[tok];
-					ftc_msgs[tok] = realloc(ftc_msgs[tok],
-								ftc_num_msgs[tok]*sizeof(long));
+					ftc_msgs[tok] = realloc(ftc_msgs[tok], ftc_num_msgs[tok]*sizeof(long));
 					ftc_msgs[tok][ftc_num_msgs[tok] - 1] = msgnum;
 				}
 	
-				if (op == 0) {	/* remove from index */
+				if (op == 0) {	// remove from index
 					if (ftc_num_msgs[tok] >= 1) {
 						for (j=0; j<ftc_num_msgs[tok]; ++j) {
 							if (ftc_msgs[tok][j] == msgnum) {
@@ -193,9 +169,7 @@ void ft_index_message(long msgnum, int op) {
 }
 
 
-/*
- * Add a message to the list of those to be indexed.
- */
+// Add a message to the list of those to be indexed.
 void ft_index_msg(long msgnum, void *userdata) {
 
 	if ((msgnum > CtdlGetConfigLong("MMfulltext")) && (msgnum <= ft_newhighest)) {
@@ -210,11 +184,8 @@ void ft_index_msg(long msgnum, void *userdata) {
 }
 
 
-/*
- * Scan a room for messages to index.
- */
-void ft_index_room(struct ctdlroom *qrbuf, void *data)
-{
+// Scan a room for messages to index.
+void ft_index_room(struct ctdlroom *qrbuf, void *data) {
 	if (server_shutting_down)
 		return;
 		
@@ -223,26 +194,20 @@ void ft_index_room(struct ctdlroom *qrbuf, void *data)
 }
 
 
-/*
- * Begin the fulltext indexing process.
- */
+// Begin the fulltext indexing process.
 void do_fulltext_indexing(void) {
 	int i;
 	static time_t last_progress = 0L;
 	static int is_running = 0;
-	if (is_running) return;         /* Concurrency check - only one can run */
+	if (is_running) return;         // Concurrency check - only one can run 
 	is_running = 1;
 
-	/*
-	 * Don't do this if the site doesn't have it enabled.
-	 */
+	// Don't do this if the site doesn't have it enabled.
 	if (!CtdlGetConfigInt("c_enable_fulltext")) {
 		return;
 	}
 
-	/*
-	 * If we've switched wordbreaker modules, burn the index and start over.
-	 */
+	// If we've switched wordbreaker modules, burn the index and start over.
 	begin_critical_section(S_CONTROL);
 	if (CtdlGetConfigInt("MM_fulltext_wordbreaker") != FT_WORDBREAKER_ID) {
 		syslog(LOG_DEBUG, "fulltext: wb ver on disk = %d, code ver = %d",
@@ -254,50 +219,42 @@ void do_fulltext_indexing(void) {
 	}
 	end_critical_section(S_CONTROL);
 
-	/*
-	 * Silently return if our fulltext index is up to date with new messages.
-	 */
+	// Silently return if our fulltext index is up to date with new messages.
 	if ((CtdlGetConfigLong("MMfulltext") >= CtdlGetConfigLong("MMhighest"))) {
-		return;		/* nothing to do! */
+		return;		// nothing to do!
 	}
 
-	/*
-	 * Now go through each room and find messages to index.
-	 */
+	// Now go through each room and find messages to index.
 	ft_newhighest = CtdlGetConfigLong("MMhighest");
-	CtdlForEachRoom(ft_index_room, NULL);	/* load all msg pointers */
+	CtdlForEachRoom(ft_index_room, NULL);	// load all msg pointers
 
 	if (ft_num_msgs > 0) {
 		qsort(ft_newmsgs, ft_num_msgs, sizeof(long), longcmp);
-		for (i=0; i<(ft_num_msgs-1); ++i) { /* purge dups */
+		for (i=0; i<(ft_num_msgs-1); ++i) { // purge dups
 			if (ft_newmsgs[i] == ft_newmsgs[i+1]) {
-				memmove(&ft_newmsgs[i], &ft_newmsgs[i+1],
-					((ft_num_msgs - i - 1)*sizeof(long)));
+				memmove(&ft_newmsgs[i], &ft_newmsgs[i+1], ((ft_num_msgs - i - 1)*sizeof(long)));
 				--ft_num_msgs;
 				--i;
 			}
 		}
 
-		/* Here it is ... do each message! */
+		// Here it is ... do each message!
 		for (i=0; i<ft_num_msgs; ++i) {
 			if (time(NULL) != last_progress) {
 				syslog(LOG_DEBUG,
-					"fulltext: indexed %d of %d messages (%d%%)",
-						i, ft_num_msgs,
-						((i*100) / ft_num_msgs)
-				);
+					"fulltext: indexed %d of %d messages (%d%%)", i, ft_num_msgs, ((i*100) / ft_num_msgs));
 				last_progress = time(NULL);
 			}
 			ft_index_message(ft_newmsgs[i], 1);
 
-			/* Check to see if we need to quit early */
+			// Check to see if we need to quit early
 			if (server_shutting_down) {
 				syslog(LOG_DEBUG, "fulltext: indexer quitting early");
 				ft_newhighest = ft_newmsgs[i];
 				break;
 			}
 
-			/* Check to see if we have to maybe flush to disk */
+			// Check to see if we have to maybe flush to disk
 			if (i >= FT_MAX_CACHE) {
 				syslog(LOG_DEBUG, "fulltext: time to flush.");
 				ft_newhighest = ft_newmsgs[i];
@@ -317,7 +274,7 @@ void do_fulltext_indexing(void) {
 		return;
 	}
 	
-	/* Save our place so we don't have to do this again */
+	// Save our place so we don't have to do this again
 	ft_flush_cache();
 	begin_critical_section(S_CONTROL);
 	CtdlSetConfigLong("MMfulltext", ft_newhighest);
@@ -330,11 +287,9 @@ void do_fulltext_indexing(void) {
 }
 
 
-/*
- * API call to perform searches.
- * (This one does the "all of these words" search.)
- * Caller is responsible for freeing the message list.
- */
+// API call to perform searches.
+// (This one does the "all of these words" search.)
+// Caller is responsible for freeing the message list.
 void ft_search(int *fts_num_msgs, long **fts_msgs, const char *search_string) {
 	int num_tokens = 0;
 	int *tokens = NULL;
@@ -351,10 +306,10 @@ void ft_search(int *fts_num_msgs, long **fts_msgs, const char *search_string) {
 	if (num_tokens > 0) {
 		for (i=0; i<num_tokens; ++i) {
 
-			/* search for tokens[i] */
+			// search for tokens[i]
 			tok = tokens[i];
 
-			/* fetch the bucket, Liza */
+			// fetch the bucket, Liza
 			if (ftc_msgs[tok] == NULL) {
 				cdb_bucket = cdb_fetch(CDB_FULLTEXT, &tok, sizeof(int));
 				if (cdb_bucket != NULL) {
@@ -372,8 +327,7 @@ void ft_search(int *fts_num_msgs, long **fts_msgs, const char *search_string) {
 			num_all_msgs += ftc_num_msgs[tok];
 			if (num_all_msgs > 0) {
 				all_msgs = realloc(all_msgs, num_all_msgs*sizeof(long) );
-				memcpy(&all_msgs[num_all_msgs-ftc_num_msgs[tok]],
-					ftc_msgs[tok], ftc_num_msgs[tok]*sizeof(long) );
+				memcpy(&all_msgs[num_all_msgs-ftc_num_msgs[tok]], ftc_msgs[tok], ftc_num_msgs[tok]*sizeof(long) );
 			}
 
 		}
@@ -381,19 +335,15 @@ void ft_search(int *fts_num_msgs, long **fts_msgs, const char *search_string) {
 		if (all_msgs != NULL) {
 			qsort(all_msgs, num_all_msgs, sizeof(long), longcmp);
 
-			/*
-			 * At this point, if a message appears num_tokens times in the
-			 * list, then it contains all of the search tokens.
-			 */
+			// At this point, if a message appears num_tokens times in the
+			// list, then it contains all of the search tokens.
 			if (num_all_msgs >= num_tokens)
 				for (j=0; j<(num_all_msgs-num_tokens+1); ++j) {
 					if (all_msgs[j] == all_msgs[j+num_tokens-1]) {
-						
 						++num_ret_msgs;
 						if (num_ret_msgs > num_ret_alloc) {
 							num_ret_alloc += 64;
-							ret_msgs = realloc(ret_msgs,
-									   (num_ret_alloc*sizeof(long)) );
+							ret_msgs = realloc(ret_msgs, (num_ret_alloc*sizeof(long)) );
 						}
 						ret_msgs[num_ret_msgs - 1] = all_msgs[j];
 						
@@ -408,9 +358,7 @@ void ft_search(int *fts_num_msgs, long **fts_msgs, const char *search_string) {
 }
 
 
-/*
- * This search command is for diagnostic purposes and may be removed or replaced.
- */
+// This search command is for diagnostic purposes and may be removed or replaced.
 void cmd_srch(char *argbuf) {
 	int num_msgs = 0;
 	long *msgs = NULL;
@@ -420,8 +368,7 @@ void cmd_srch(char *argbuf) {
 	if (CtdlAccessCheck(ac_logged_in)) return;
 
 	if (!CtdlGetConfigInt("c_enable_fulltext")) {
-		cprintf("%d Full text index is not enabled on this server.\n",
-			ERROR + CMD_NOT_SUPPORTED);
+		cprintf("%d Full text index is not enabled on this server.\n", ERROR + CMD_NOT_SUPPORTED);
 		return;
 	}
 
@@ -440,20 +387,17 @@ void cmd_srch(char *argbuf) {
 }
 
 
-/*
- * Zero out our index cache.
- */
+// Zero out our index cache.
 void initialize_ft_cache(void) {
 	memset(ftc_num_msgs, 0, (65536 * sizeof(int)));
 	memset(ftc_msgs, 0, (65536 * sizeof(long *)));
 }
 
 
-void ft_delete_remove(char *room, long msgnum)
-{
+void ft_delete_remove(char *room, long msgnum) {
 	if (room) return;
 	
-	/* Remove from fulltext index */
+	// Remove from fulltext index
 	if (CtdlGetConfigInt("c_enable_fulltext")) {
 		ft_index_message(msgnum, 0);
 	}
@@ -469,6 +413,6 @@ char *ctdl_module_init_fulltext(void) {
 		CtdlRegisterSearchFuncHook(ft_search, "fulltext");
 		CtdlRegisterSessionHook(do_fulltext_indexing, EVT_TIMER, PRIO_CLEANUP + 300);
 	}
-	/* return our module name for the log */
+	// return our module name for the log
 	return "fulltext";
 }
