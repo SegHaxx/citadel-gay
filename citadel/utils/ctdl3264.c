@@ -256,7 +256,7 @@ void convert_floors(int which_cdb, DBT *in_key, DBT *in_data, DBT *out_key, DBT 
 
 
 // convert function for a msglist or a fulltext index record
-// (both aare indexed by a long and the data is arrays of longs)
+// (both are indexed by a long and the data is arrays of longs)
 void convert_msglists(int which_cdb, DBT *in_key, DBT *in_data, DBT *out_key, DBT *out_data) {
 	int i;
 
@@ -395,6 +395,82 @@ void convert_bigmsgs(int which_cdb, DBT *in_key, DBT *in_data, DBT *out_key, DBT
 }
 
 
+// convert function for EUID Index records
+void convert_euidindex(int which_cdb, DBT *in_key, DBT *in_data, DBT *out_key, DBT *out_data) {
+
+	// The structure of an euidindex record *key* is:
+	// |----room_number----|----------EUID-------------|
+	//    (sizeof long)       (actual length of euid)
+
+	// The structure of an euidindex record *value* is:
+	// |-----msg_number----|----room_number----|----------EUID-------------|
+	//    (sizeof long)       (sizeof long)       (actual length of euid)
+
+	int32_t in_msgnum = 0;
+	int32_t in_roomnum = 0;
+	char euid[SIZ];
+	long out_msgnum = 0;
+	long out_roomnum = 0;
+
+	memcpy(&in_msgnum, in_data->data, sizeof(in_msgnum));
+	memcpy(&in_roomnum, in_data->data+sizeof(int32_t), sizeof(in_msgnum));
+	strcpy(euid, in_data->data+(sizeof(int32_t)*2));
+
+	out_msgnum = (long) in_msgnum;
+	out_roomnum = (long) in_roomnum;
+	printf("euidindex: msgnum=%ld, roomnum=%ld, euid=\"%s\"\n", out_msgnum, out_roomnum, euid);
+
+	out_key->size = sizeof(long) + strlen(euid) + 1;
+	out_key->data = realloc(out_key->data, out_key->size);
+	memcpy(out_key->data, &out_roomnum, sizeof(out_roomnum));
+	strcpy(out_key->data+sizeof(out_roomnum), euid);
+
+	out_data->size = sizeof(long) + sizeof(long) + strlen(euid) + 1;
+	out_data->data = realloc(out_data->data, out_data->size);
+	memcpy(out_data->data, &out_msgnum, sizeof(out_msgnum));
+	memcpy(out_data->data+sizeof(out_msgnum), &out_roomnum, sizeof(out_roomnum));
+	strcpy(out_data->data+sizeof(out_msgnum)+sizeof(out_roomnum), euid);
+
+
+	int i;
+	char ch;
+
+	printf(" in_key:             ");
+	for (i=0; i<in_key->size; ++i) {
+		ch = 0;
+		memcpy(&ch, in_key->data+i, 1);
+		printf("%02X ", (int) ch);
+	}
+	printf("\n");
+
+	printf("out_key: ");
+	for (i=0; i<out_key->size; ++i) {
+		ch = 0;
+		memcpy(&ch, out_key->data+i, 1);
+		printf("%02X ", (int) ch);
+	}
+	printf("\n");
+
+	printf(" in_data:                         ");
+	for (i=0; i<in_data->size; ++i) {
+		ch = 0;
+		memcpy(&ch, in_data->data+i, 1);
+		printf("%02X ", (int) ch);
+	}
+	printf("\n");
+
+	printf("out_data: ");
+	for (i=0; i<out_data->size; ++i) {
+		ch = 0;
+		memcpy(&ch, out_data->data+i, 1);
+		printf("%02X ", (int) ch);
+	}
+	printf("\n");
+
+
+}
+
+
 void (*convert_functions[])(int which_cdb, DBT *in_key, DBT *in_data, DBT *out_key, DBT *out_data) = {
 	convert_msgmain,	// CDB_MSGMAIN
 	convert_users,		// CDB_USERS
@@ -406,7 +482,7 @@ void (*convert_functions[])(int which_cdb, DBT *in_key, DBT *in_data, DBT *out_k
 	convert_usetable,	// CDB_USETABLE
 	convert_bigmsgs,	// CDB_BIGMSGS
 	convert_msglists,	// CDB_FULLTEXT
-	null_function,		// CDB_EUIDINDEX
+	convert_euidindex,	// CDB_EUIDINDEX
 	null_function,		// CDB_USERSBYNUMBER
 	null_function,		// CDB_EXTAUTH
 	null_function		// CDB_CONFIG
