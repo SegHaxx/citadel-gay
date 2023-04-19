@@ -39,4 +39,3 @@ char CtdlCheckExpress(void);
 
 extern int panic_fd;
 extern time_t server_startup_time;
-extern int openid_level_supported;

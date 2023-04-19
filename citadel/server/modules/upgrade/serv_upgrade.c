@@ -83,12 +83,6 @@ void reindex_uids_backend(char *username, void *data) {
 			us.uid = NATIVE_AUTH_UID;
 		}
 		CtdlPutUserLock(&us);
-		if ((us.uid > 0) && (us.uid != NATIVE_AUTH_UID)) {		// if non-native auth , index by uid
-			StrBuf *claimed_id = NewStrBuf();
-			StrBufPrintf(claimed_id, "uid:%d", us.uid);
-			attach_extauth(&us, claimed_id);
-			FreeStrBuf(&claimed_id);
-		}
 	}
 }
 

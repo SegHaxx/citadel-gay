@@ -364,7 +364,6 @@ CitContext *CloneContext(CitContext *CloneMe) {
 	me->upload_fp = NULL;
 	/// TODO: what about the room/user?
 	me->ma = NULL;
-	me->openid_data = NULL;
 	me->ldap_dn = NULL;
 	me->session_specific_data = NULL;
 	

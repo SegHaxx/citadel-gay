@@ -916,14 +916,6 @@ int internal_create_user(char *username, struct ctdluser *usbuf, uid_t uid) {
 	CtdlPutUser(usbuf);
 	cdb_store(CDB_USERSBYNUMBER, &usbuf->usernum, sizeof(long), usbuf->fullname, strlen(usbuf->fullname)+1);
 
-	// If non-native auth, index by uid
-	if ((usbuf->uid > 0) && (usbuf->uid != NATIVE_AUTH_UID)) {
-		StrBuf *claimed_id = NewStrBuf();
-		StrBufPrintf(claimed_id, "uid:%d", usbuf->uid);
-		attach_extauth(usbuf, claimed_id);
-		FreeStrBuf(&claimed_id);
-	}
-
 	return(0);
 }
 

@@ -1,7 +1,7 @@
 /* 
  * Server functions which perform operations on user objects.
  *
- * Copyright (c) 1987-2022 by the citadel.org team
+ * Copyright (c) 1987-2023 by the citadel.org team
  *
  * This program is open source software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License, version 3.
@@ -85,12 +85,7 @@ void cmd_info(char *cmdbuf) {
 	cprintf("%d\n", CtdlGetConfigInt("c_enable_fulltext"));
 	cprintf("%s\n", BUILD_ID);
 
-	if (CtdlGetConfigInt("c_auth_mode") == AUTHMODE_NATIVE) {
-		cprintf("%d\n", openid_level_supported); /* OpenID is enabled when using native auth */
-	}
-	else {
-		cprintf("0\n");	/* OpenID is disabled when using non-native auth */
-	}
+	cprintf("0\n");	/* OpenID is no longer supported */
 
 	cprintf("%d\n", CtdlGetConfigInt("c_guest_logins"));
 	cprintf("000\n");
