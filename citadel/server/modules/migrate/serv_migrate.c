@@ -15,7 +15,7 @@
 // 0%		started
 // 2%		finished exporting configuration
 // 7%		finished exporting users
-// 12%		(openid is no longer supported)
+// 12%		finished exporting openids
 // 17%		finished exporting rooms
 // 18%		finished exporting floors
 // 25%		finished exporting visits
@@ -367,6 +367,28 @@ void migr_export_message(long msgnum) {
 }
 
 
+void migr_export_openids(void) {
+	struct cdbdata *cdboi;
+	long usernum;
+	char url[512];
+
+	cdb_rewind(CDB_EXTAUTH);
+	while (cdboi = cdb_next_item(CDB_EXTAUTH), cdboi != NULL) {
+		if (cdboi->len > sizeof(long)) {
+			client_write(HKEY("<openid>\n"));
+			memcpy(&usernum, cdboi->ptr, sizeof(long));
+			snprintf(url, sizeof url, "%s", (cdboi->ptr)+sizeof(long) );
+			client_write(HKEY("<oid_url>"));
+			xml_strout(url);
+			client_write(HKEY("</oid_url>\n"));
+			cprintf("<oid_usernum>%ld</oid_usernum>\n", usernum);
+			client_write(HKEY("</openid>\n"));
+		}
+		cdb_free(cdboi);
+	}
+}
+
+
 void migr_export_configs(void) {
 	struct cdbdata *cdbcfg;
 	int keylen = 0;
@@ -446,6 +468,8 @@ void migr_do_export(void) {
 	
 	if (Ctx->kill_me == 0)	migr_export_users();
 	cprintf("<progress>%d</progress>\n", 7);
+	if (Ctx->kill_me == 0)	migr_export_openids();
+	cprintf("<progress>%d</progress>\n", 12);
 	if (Ctx->kill_me == 0)	migr_export_rooms();
 	cprintf("<progress>%d</progress>\n", 17);
 	if (Ctx->kill_me == 0)	migr_export_floors();
@@ -472,6 +496,8 @@ StrBuf *migr_chardata = NULL;
 StrBuf *migr_MsgData = NULL;
 struct ctdluser usbuf;
 struct ctdlroom qrbuf;
+char openid_url[512];
+long openid_usernum = 0;
 char FRname[ROOMNAMELEN];
 struct floor flbuf;
 int floornum = 0;
@@ -516,6 +542,7 @@ void migr_xml_start(void *data, const char *el, const char **attr) {
 	// When we begin receiving XML for one of these record types, clear out the associated
 	// buffer so we don't accidentally carry over any data from a previous record.
 	if (!strcasecmp(el, "user"))			memset(&usbuf, 0, sizeof(struct ctdluser));
+	else if (!strcasecmp(el, "openid"))		memset(openid_url, 0, sizeof openid_url);
 	else if (!strcasecmp(el, "room"))		memset(&qrbuf, 0, sizeof(struct ctdlroom));
 	else if (!strcasecmp(el, "room_messages"))	memset(FRname, 0, sizeof FRname);
 	else if (!strcasecmp(el, "floor"))		memset(&flbuf, 0, sizeof(struct floor));
@@ -667,6 +694,23 @@ void migr_xml_end(void *data, const char *el) {
 	else if (!strcasecmp(el, "user")) {
 		CtdlPutUser(&usbuf);
 		syslog(LOG_INFO, "migrate: imported user: %s", usbuf.fullname);
+	}
+
+	// *** OPENID ***
+
+	else if (!strcasecmp(el, "oid_url"))			safestrncpy(openid_url, ChrPtr(migr_chardata), sizeof openid_url);
+	else if (!strcasecmp(el, "oid_usernum"))		openid_usernum = atol(ChrPtr(migr_chardata));
+
+	else if (!strcasecmp(el, "openid")) {			// see serv_openid_rp.c for a description of the record format
+		char *oid_data;
+		int oid_data_len;
+		oid_data_len = sizeof(long) + strlen(openid_url) + 1;
+		oid_data = malloc(oid_data_len);
+		memcpy(oid_data, &openid_usernum, sizeof(long));
+		memcpy(&oid_data[sizeof(long)], openid_url, strlen(openid_url) + 1);
+		cdb_store(CDB_EXTAUTH, openid_url, strlen(openid_url), oid_data, oid_data_len);
+		free(oid_data);
+		syslog(LOG_INFO, "migrate: imported OpenID: %s (%ld)", openid_url, openid_usernum);
 	}
 
 	// *** ROOM ***

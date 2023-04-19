@@ -46,6 +46,7 @@ char *ctdl_module_init_migrate(void);
 char *ctdl_module_init_newuser(void);
 char *ctdl_module_init_nntp(void);
 char *ctdl_module_init_notes(void);
+char *ctdl_module_init_openid_rp(void);
 char *ctdl_module_init_pop3(void);
 char *ctdl_module_init_pop3client(void);
 char *ctdl_module_init_roomchat(void);

@@ -25,6 +25,7 @@ char *unique_session_numbers;
 int ScheduledShutdown = 0;
 time_t server_startup_time;
 int panic_fd;
+int openid_level_supported = 0;
 
 
 // We need pseudo-random numbers for a few things.  Seed generously.
