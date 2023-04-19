@@ -435,7 +435,7 @@ void convert_euidindex(int which_cdb, DBT *in_key, DBT *in_data, DBT *out_key, D
 	int i;
 	char ch;
 
-	printf(" in_key:             ");
+	printf("  in_key:             ");
 	for (i=0; i<in_key->size; ++i) {
 		ch = 0;
 		memcpy(&ch, in_key->data+i, 1);
@@ -443,7 +443,7 @@ void convert_euidindex(int which_cdb, DBT *in_key, DBT *in_data, DBT *out_key, D
 	}
 	printf("\n");
 
-	printf("out_key: ");
+	printf(" out_key: ");
 	for (i=0; i<out_key->size; ++i) {
 		ch = 0;
 		memcpy(&ch, out_key->data+i, 1);
@@ -471,6 +471,34 @@ void convert_euidindex(int which_cdb, DBT *in_key, DBT *in_data, DBT *out_key, D
 }
 
 
+// convert users-by-number records
+void convert_usersbynumber(int which_cdb, DBT *in_key, DBT *in_data, DBT *out_key, DBT *out_data) {
+
+	// key is a long
+	// and remember ... "long" is int32_t on the source system
+	int32_t in_usernum;
+	long out_usernum;
+	memcpy(&in_usernum, in_key->data, sizeof(in_usernum));
+	out_usernum = (long) in_usernum;
+
+	if (in_key->size != 4) {
+		printf("\033[31m\033[1m *** SOURCE DATABASE IS NOT 32-BIT *** ABORTING *** \033[0m\n");
+		abort();
+	}
+
+	out_key->size = sizeof(out_usernum);
+	out_key->data = realloc(out_key->data, out_key->size);
+	memcpy(out_key->data, &out_usernum, sizeof(out_usernum));
+
+	// value is a string
+	out_data->size = in_data->size;
+	out_data->data = realloc(out_data->data, out_data->size);
+	memcpy(out_data->data, in_data->data, in_data->size);
+
+	printf("usersbynumber: %ld --> %s\n", out_usernum, (char *)out_data->data);
+}
+
+
 void (*convert_functions[])(int which_cdb, DBT *in_key, DBT *in_data, DBT *out_key, DBT *out_data) = {
 	convert_msgmain,	// CDB_MSGMAIN
 	convert_users,		// CDB_USERS
@@ -483,7 +511,7 @@ void (*convert_functions[])(int which_cdb, DBT *in_key, DBT *in_data, DBT *out_k
 	convert_bigmsgs,	// CDB_BIGMSGS
 	convert_msglists,	// CDB_FULLTEXT
 	convert_euidindex,	// CDB_EUIDINDEX
-	null_function,		// CDB_USERSBYNUMBER
+	convert_usersbynumber,	// CDB_USERSBYNUMBER
 	null_function,		// CDB_EXTAUTH
 	null_function		// CDB_CONFIG
 };
@@ -496,7 +524,7 @@ void convert_table(int which_cdb) {
 	uLongf destLen = 0;
 
 	printf("\033[43m\033[K\033[0m\n");
-	printf("\033[43m\033[30m Converting table %d \033[K\033[0m\n", which_cdb);
+	printf("\033[43m\033[30m Converting table %02x \033[K\033[0m\n", which_cdb);
 	printf("\033[43m\033[K\033[0m\n");
 
 	// shamelessly swiped from https://docs.oracle.com/database/bdb181/html/programmer_reference/am_cursor.html
