@@ -499,6 +499,28 @@ void convert_usersbynumber(int which_cdb, DBT *in_key, DBT *in_data, DBT *out_ke
 }
 
 
+// convert function for a config record
+void convert_config(int which_cdb, DBT *in_key, DBT *in_data, DBT *out_key, DBT *out_data) {
+
+	// the key is a string
+	out_key->size = in_key->size;
+	out_key->data = realloc(out_key->data, out_key->size + 1);
+	memcpy(out_key->data, in_key->data, in_key->size);
+	char *k = (char *)out_key->data;
+	k[out_key->size] = 0;
+
+	// the data is a pair of strings
+	out_data->size = in_data->size;
+	out_data->data = realloc(out_data->data, out_data->size + 1);
+	memcpy(out_data->data, in_data->data, in_data->size);
+	char *d = (char *)out_data->data;
+	d[out_data->size] = 0;
+
+	// please excuse my friend, he isn't null terminated
+	printf("\033[32m\033[1mConfig entry: %s -> %s\033[0m\n", (char *)out_key->data, (char *)out_data->data+strlen(out_data->data)+1);
+}
+
+
 void (*convert_functions[])(int which_cdb, DBT *in_key, DBT *in_data, DBT *out_key, DBT *out_data) = {
 	convert_msgmain,	// CDB_MSGMAIN
 	convert_users,		// CDB_USERS
@@ -513,7 +535,7 @@ void (*convert_functions[])(int which_cdb, DBT *in_key, DBT *in_data, DBT *out_k
 	convert_euidindex,	// CDB_EUIDINDEX
 	convert_usersbynumber,	// CDB_USERSBYNUMBER
 	null_function,		// CDB_EXTAUTH
-	null_function		// CDB_CONFIG
+	convert_config		// CDB_CONFIG
 };
 
 
