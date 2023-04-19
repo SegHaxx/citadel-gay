@@ -102,11 +102,6 @@ void close_dbenv(void) {
 }
 
 
-// placeholder convert function for the data types not yet implemented
-void null_function(int which_cdb, DBT *in_key, DBT *in_data, DBT *out_key, DBT *out_data) {
-}
-
-
 // convert function for a message in msgmain
 void convert_msgmain(int which_cdb, DBT *in_key, DBT *in_data, DBT *out_key, DBT *out_data) {
 	int32_t in_msgnum;
@@ -521,6 +516,13 @@ void convert_config(int which_cdb, DBT *in_key, DBT *in_data, DBT *out_key, DBT 
 }
 
 
+// For obsolete databases, zero all the output
+void zero_function(int which_cdb, DBT *in_key, DBT *in_data, DBT *out_key, DBT *out_data) {
+	out_key->size = 0;
+	out_data->size = 0;
+}
+
+
 void (*convert_functions[])(int which_cdb, DBT *in_key, DBT *in_data, DBT *out_key, DBT *out_data) = {
 	convert_msgmain,	// CDB_MSGMAIN
 	convert_users,		// CDB_USERS
@@ -534,7 +536,7 @@ void (*convert_functions[])(int which_cdb, DBT *in_key, DBT *in_data, DBT *out_k
 	convert_msglists,	// CDB_FULLTEXT
 	convert_euidindex,	// CDB_EUIDINDEX
 	convert_usersbynumber,	// CDB_USERSBYNUMBER
-	null_function,		// CDB_EXTAUTH
+	zero_function,		// CDB_EXTAUTH (obsolete)
 	convert_config		// CDB_CONFIG
 };
 
