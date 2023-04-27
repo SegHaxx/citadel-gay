@@ -419,22 +419,32 @@ void rebuild_usersbynumber(void) {
 }
 
 
-// Helper function for getuserbyuid()
-void getuserbyuid_backend(char *username, void *data) {
-	struct ctdluser u;
-	syslog(LOG_DEBUG, "user_ops: FIXME %s", username);
-}
-
-
 // getuserbyuid()	Get user by system uid (for PAM mode authentication)
 //			Returns 0 if user was found
-//                      TODO: make an index so we don't have to do this the long way
 int getuserbyuid(struct ctdluser *usbuf, uid_t number) {
 
-	ForEachUser(getuserbyuid_backend, NULL);
+	struct cdbdata *cdbus;
+	struct ctdluser *usptr;
+	int return_value = (-1);
 
-	//return(CtdlGetUser(usbuf, key));
-	return(-1);
+	// Yes, we do this the long way.
+	// No, we don't use CtdlForEachUser() because that requires multiple reads for each record
+	// TODO: make an index
+	cdb_rewind(CDB_USERS);
+	while (cdbus = cdb_next_item(CDB_USERS), cdbus != NULL) {
+		usptr = (struct ctdluser *) cdbus->ptr;
+
+		if (usptr->uid == number) {
+			syslog(LOG_DEBUG, "user_ops: found uid=%d username=%s", usptr->uid, usptr->fullname);
+			memcpy(usbuf, usptr, sizeof(struct ctdluser));
+			return_value = 0;	// success
+		}
+	}
+
+	if (return_value != 0) {
+		syslog(LOG_DEBUG, "user_ops: no user found with uid=%d", number);
+	}
+	return(return_value);
 }
 
 

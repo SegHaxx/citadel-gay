@@ -478,9 +478,11 @@ void pre_startup_upgrades(void) {
 			CtdlPutRoom(&QRoom);
 		}
 	}
-
 	if ((oldver > 000) && (oldver < 902)) {
 		ingest_old_roominfo_and_roompic_files();
+	}
+	if ((oldver > 000) && (oldver < 973)) {				// This was the old extauth table.
+		cdb_trunc(CDB_UNUSED1);					// We will do this better someday.
 	}
 
 	CtdlSetConfigInt("MM_hosted_upgrade_level", REV_LEVEL);
