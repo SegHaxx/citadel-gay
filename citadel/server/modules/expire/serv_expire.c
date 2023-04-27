@@ -2,17 +2,10 @@
 //
 // You might also see this module affectionately referred to as TDAP (The Dreaded Auto-Purger).
 //
-// Copyright (c) 1988-2022 by citadel.org (Art Cancro, Wilifried Goesgens, and others)
+// Copyright (c) 1988-2023 by citadel.org (Art Cancro, Wilifried Goesgens, and others)
 //
-// This program is open source software; you can redistribute it and/or
-// modify it under the terms of the GNU General Public License as published
-// by the Free Software Foundation; either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License for more details.
+// This program is open source software.  Use, duplication, or disclosure
+// is subject to the terms of the GNU General Public License, version 3.
 
 
 #include "../../sysdep.h"
@@ -690,49 +683,6 @@ int PurgeEuidIndexTable(void) {
 }
 
 
-// Purge external auth assocations for missing users (theoretically this will never delete anything)
-int PurgeStaleExtAuthAssociations(void) {
-	struct cdbdata *cdboi;
-	struct ctdluser usbuf;
-	HashList *keys = NULL;
-	HashPos *HashPos;
-	char *deleteme = NULL;
-	long len;
-	void *Value;
-	const char *Key;
-	int num_deleted = 0;
-	long usernum = 0L;
-
-	keys = NewHash(1, NULL);
-	if (!keys) return(0);
-
-	cdb_rewind(CDB_EXTAUTH);
-	while (cdboi = cdb_next_item(CDB_EXTAUTH), cdboi != NULL) {
-		if (cdboi->len > sizeof(long)) {
-			memcpy(&usernum, cdboi->ptr, sizeof(long));
-			if (CtdlGetUserByNumber(&usbuf, usernum) != 0) {
-				deleteme = strdup(cdboi->ptr + sizeof(long)),
-				Put(keys, deleteme, strlen(deleteme), deleteme, NULL);
-			}
-		}
-		cdb_free(cdboi);
-	}
-
-	// Go through the hash list, deleting keys we stored in it
-
-	HashPos = GetNewHashPos(keys, 0);
-	while (GetNextHashPos(keys, HashPos, &len, &Key, &Value)!=0) {
-		syslog(LOG_DEBUG, "Deleting associated external authenticator <%s>",  (char*)Value);
-		cdb_delete(CDB_EXTAUTH, Value, strlen(Value));
-		// note: don't free(Value) -- deleting the hash list will handle this for us
-		++num_deleted;
-	}
-	DeleteHashPos(&HashPos);
-	DeleteHash(&keys);
-	return num_deleted;
-}
-
-
 void purge_databases(void) {
 	int retval;
 	static time_t last_purge = 0;
@@ -781,11 +731,6 @@ void purge_databases(void) {
 	if (!server_shutting_down) {
        		retval = PurgeEuidIndexTable();
        		syslog(LOG_NOTICE, "Purged %d entries from the EUID index.", retval);
-	}
-
-	if (!server_shutting_down) {
-		retval = PurgeStaleExtAuthAssociations();
-	       	syslog(LOG_NOTICE, "Purged %d stale external auth associations.", retval);
 	}
 
 	//if (!server_shutting_down) {

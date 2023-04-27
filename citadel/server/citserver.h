@@ -1,4 +1,4 @@
-// Copyright (c) 1987-2019 by the citadel.org team
+// Copyright (c) 1987-2023 by the citadel.org team
 //
 // This program is open source software.  Use, duplication, or disclosure
 // is subject to the terms of the GNU General Public License, version 3.
@@ -39,4 +39,3 @@ char CtdlCheckExpress(void);
 
 extern int panic_fd;
 extern time_t server_startup_time;
-extern int openid_level_supported;

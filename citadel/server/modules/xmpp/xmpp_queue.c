@@ -107,7 +107,7 @@ void xmpp_process_events(void) {
 	int highest_event = 0;
 
 	for (xptr=xmpp_queue; xptr!=NULL; xptr=xptr->next) {
-		if (xptr->event_seq > XMPP->last_event_processed) {
+		if (xptr->event_seq > XMPP->last_event_processed) {		// we are getting crashes on this line?
 
 			switch(xptr->event_type) {
 

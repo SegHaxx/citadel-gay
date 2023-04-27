@@ -1,6 +1,6 @@
 // Module initialization hub
 //
-// Copyright (c) 1987-2022 by the citadel.org team
+// Copyright (c) 1987-2023 by the citadel.org team
 //
 // This program is open source software.  Use, duplication, or disclosure
 // is subject to the terms of the GNU General Public License, version 3.
@@ -55,7 +55,6 @@ void initialize_modules(int is_threading) {
 	syslog(LOG_DEBUG, "extensions: init %s", ctdl_module_init_newuser());
 	syslog(LOG_DEBUG, "extensions: init %s", ctdl_module_init_nntp());
 	syslog(LOG_DEBUG, "extensions: init %s", ctdl_module_init_notes());
-	syslog(LOG_DEBUG, "extensions: init %s", ctdl_module_init_openid_rp());
 	syslog(LOG_DEBUG, "extensions: init %s", ctdl_module_init_pop3());
 	syslog(LOG_DEBUG, "extensions: init %s", ctdl_module_init_pop3client());
 	syslog(LOG_DEBUG, "extensions: init %s", ctdl_module_init_roomchat());

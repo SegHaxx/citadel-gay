@@ -204,7 +204,7 @@ enum {
 	CDB_FULLTEXT,		// full text search index
 	CDB_EUIDINDEX,		// locate msgs by EUID
 	CDB_USERSBYNUMBER,	// index of users by number
-	CDB_EXTAUTH,		// associates OpenIDs with users
+	CDB_UNUSED1,		// this used to be the EXTAUTH table but is no longer used
 	CDB_CONFIG,		// system configuration database
 	MAXCDB			// total number of CDB's defined
 };

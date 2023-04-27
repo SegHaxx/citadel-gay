@@ -1,6 +1,6 @@
 // Main source module for the Citadel server
 //
-// Copyright (c) 1987-2022 by the citadel.org team
+// Copyright (c) 1987-2023 by the citadel.org team
 //
 // This program is open source software.  Use, duplication, or disclosure
 // is subject to the terms of the GNU General Public License, version 3.
@@ -25,7 +25,6 @@ char *unique_session_numbers;
 int ScheduledShutdown = 0;
 time_t server_startup_time;
 int panic_fd;
-int openid_level_supported = 0;
 
 
 // We need pseudo-random numbers for a few things.  Seed generously.

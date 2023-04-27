@@ -72,36 +72,6 @@ void fix_sys_user_name(void) {
 }
 
 
-// Back end processing function for reindex_uids()
-void reindex_uids_backend(char *username, void *data) {
-
-	struct ctdluser us;
-
-	if (CtdlGetUserLock(&us, username) == 0) {
-		syslog(LOG_DEBUG, "Processing <%s> (%d)", us.fullname, us.uid);
-		if (us.uid == CTDLUID) {
-			us.uid = NATIVE_AUTH_UID;
-		}
-		CtdlPutUserLock(&us);
-		if ((us.uid > 0) && (us.uid != NATIVE_AUTH_UID)) {		// if non-native auth , index by uid
-			StrBuf *claimed_id = NewStrBuf();
-			StrBufPrintf(claimed_id, "uid:%d", us.uid);
-			attach_extauth(&us, claimed_id);
-			FreeStrBuf(&claimed_id);
-		}
-	}
-}
-
-
-// Build extauth index of all users with uid-based join (system auth, LDAP auth)
-// Also changes all users with a uid of CTDLUID to NATIVE_AUTH_UID (-1)
-void reindex_uids(void) {
-	syslog(LOG_WARNING, "upgrade: reindexing and applying uid changes");
-	ForEachUser(reindex_uids_backend, NULL);
-	return;
-}
-
-
 // These accounts may have been created by code that ran between mid 2008 and early 2011.
 // If present they are no longer in use and may be deleted.
 void remove_thread_users(void) {
@@ -488,9 +458,6 @@ void pre_startup_upgrades(void) {
 	if ((oldver > 000) && (oldver < 591)) {
 		syslog(LOG_EMERG, "This database is too old to be upgraded.  Citadel server will exit.");
 		exit(EXIT_FAILURE);
-	}
-	if ((oldver > 000) && (oldver < 913)) {
-		reindex_uids();
 	}
 	if ((oldver > 000) && (oldver < 659)) {
 		rebuild_euid_index();

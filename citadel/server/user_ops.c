@@ -419,29 +419,21 @@ void rebuild_usersbynumber(void) {
 }
 
 
+// Helper function for getuserbyuid()
+void getuserbyuid_backend(char *username, void *data) {
+	struct ctdluser u;
+	syslog(LOG_DEBUG, "user_ops: FIXME %s", username);
+}
+
+
 // getuserbyuid()	Get user by system uid (for PAM mode authentication)
 //			Returns 0 if user was found
-//			This now uses an extauth index.
+//                      TODO: make an index so we don't have to do this the long way
 int getuserbyuid(struct ctdluser *usbuf, uid_t number) {
-	struct cdbdata *cdbextauth;
-	long usernum = 0;
-	StrBuf *claimed_id;
 
-	claimed_id = NewStrBuf();
-	StrBufPrintf(claimed_id, "uid:%d", number);
-	cdbextauth = cdb_fetch(CDB_EXTAUTH, ChrPtr(claimed_id), StrLength(claimed_id));
-	FreeStrBuf(&claimed_id);
-	if (cdbextauth == NULL) {
-		return(-1);
-	}
+	ForEachUser(getuserbyuid_backend, NULL);
 
-	memcpy(&usernum, cdbextauth->ptr, sizeof(long));
-	cdb_free(cdbextauth);
-
-	if (!CtdlGetUserByNumber(usbuf, usernum)) {
-		return(0);
-	}
-
+	//return(CtdlGetUser(usbuf, key));
 	return(-1);
 }
 
@@ -920,7 +912,6 @@ int internal_create_user(char *username, struct ctdluser *usbuf, uid_t uid) {
 	if ((usbuf->uid > 0) && (usbuf->uid != NATIVE_AUTH_UID)) {
 		StrBuf *claimed_id = NewStrBuf();
 		StrBufPrintf(claimed_id, "uid:%d", usbuf->uid);
-		attach_extauth(usbuf, claimed_id);
 		FreeStrBuf(&claimed_id);
 	}
 
