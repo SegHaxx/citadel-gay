@@ -555,31 +555,49 @@ void convert_table(int which_cdb, DB_ENV *src_dbenv, DB_ENV *dst_dbenv) {
 	printf("\033[43m\033[K\033[0m\n");
 
 	// shamelessly swiped from https://docs.oracle.com/database/bdb181/html/programmer_reference/am_cursor.html
-	DB *dbp;
-	DBC *dbcp;
+	DB *src_dbp, *dst_dbp;
+	DBC *src_dbcp;
 	DBT in_key, in_data, out_key, out_data, uncomp_data, recomp_data;
 	int num_rows = 0;
 
-	// create a database handle
-	ret = db_create(&dbp, src_dbenv, 0);
+	// create a database handle for the source table
+	ret = db_create(&src_dbp, src_dbenv, 0);
 	if (ret) {
 		printf("db: db_create: %s\n", db_strerror(ret));
 		printf("db: exit code %d\n", ret);
 		exit(CTDLEXIT_DB);
 	}
 
-	// open the file
+	// open the file containing the source table
 	snprintf(dbfilename, sizeof dbfilename, "cdb.%02x", which_cdb);
 	printf("\033[33m\033[1mdb: opening %s\033[0m\n", dbfilename);
-	ret = dbp->open(dbp, NULL, dbfilename, NULL, DB_BTREE, 0, 0600);
+	ret = src_dbp->open(src_dbp, NULL, dbfilename, NULL, DB_BTREE, 0, 0600);
 	if (ret) {
 		printf("db: db_open: %s\n", db_strerror(ret));
 		printf("db: exit code %d\n", ret);
 		exit(CTDLEXIT_DB);
 	}
 
-	// Acquire a cursor
-	if ((ret = dbp->cursor(dbp, NULL, &dbcp, 0)) != 0) {
+	// create a database handle for the destination table
+	ret = db_create(&dst_dbp, dst_dbenv, 0);
+	if (ret) {
+		printf("db: db_create: %s\n", db_strerror(ret));
+		printf("db: exit code %d\n", ret);
+		exit(CTDLEXIT_DB);
+	}
+
+	// open the file containing the destination table
+	snprintf(dbfilename, sizeof dbfilename, "cdb.%02x", which_cdb);
+	printf("\033[33m\033[1mdb: opening %s\033[0m\n", dbfilename);
+	ret = dst_dbp->open(dst_dbp, NULL, dbfilename, NULL, DB_BTREE, (DB_CREATE | DB_TRUNCATE), 0600);
+	if (ret) {
+		printf("db: db_open: %s\n", db_strerror(ret));
+		printf("db: exit code %d\n", ret);
+		exit(CTDLEXIT_DB);
+	}
+
+	// Acquire a cursor to read the source table
+	if ((ret = src_dbp->cursor(src_dbp, NULL, &src_dbcp, 0)) != 0) {
 		printf("db: db_cursor: %s\n", db_strerror(ret));
 		printf("db: exit code %d\n", ret);
 		exit(CTDLEXIT_DB);
@@ -594,7 +612,7 @@ void convert_table(int which_cdb, DB_ENV *src_dbenv, DB_ENV *dst_dbenv) {
 	memset(&recomp_data,	0, sizeof(DBT));	// recompressed input (the key doesn't change)
 
 	// Walk through the database, calling convert functions as we go and clearing buffers before each call.
-	while (out_key.size = 0, out_data.size = 0, (ret = dbcp->get(dbcp, &in_key, &in_data, DB_NEXT)) == 0) {
+	while (out_key.size = 0, out_data.size = 0, (ret = src_dbcp->get(src_dbcp, &in_key, &in_data, DB_NEXT)) == 0) {
 
 		// Do we need to decompress?
 		static int32_t magic = COMPRESS_MAGIC;
@@ -638,18 +656,24 @@ void convert_table(int which_cdb, DB_ENV *src_dbenv, DB_ENV *dst_dbenv) {
 			recomp_data.size = destLen;
 		}
 
-		// write the ed record to the new database
+		// write the converted record to the target database
 		if (out_key.size > 0) {
 
 
-
-			// NOTE TO SELF: if we compressed the output, write recomp_data instead of out_data
-
+			// If we compressed the output, write recomp_data instead of out_data
 			if (compressed) {
 				printf("DB: %02x , out_keylen: %-3d , out_datalen: %-10d , dataptr: %012lx \033[31m(compressed)\033[0m\n", which_cdb, (int)out_key.size, (int)recomp_data.size, (long unsigned int)recomp_data.data);
+				ret = dst_dbp->put(dst_dbp, NULL, &out_key, &recomp_data, 0);
 			}
 			else {
 				printf("DB: %02x , out_keylen: %-3d , out_datalen: %-10d , dataptr: %012lx\n", which_cdb, (int)out_key.size, (int)out_data.size, (long unsigned int)out_data.data);
+				ret = dst_dbp->put(dst_dbp, NULL, &out_key, &out_data, 0);
+			}
+
+
+                	if (ret) {
+                        	printf("db: cdb_put(%d): %s", which_cdb, db_strerror(ret));
+				exit(CTDLEXIT_DB);
 			}
 
 			// Knowing the total number of rows isn't critical to the program.  It's just for the user to know.
@@ -679,7 +703,7 @@ void convert_table(int which_cdb, DB_ENV *src_dbenv, DB_ENV *dst_dbenv) {
 
 	// ...and close the database (table)
 	printf("\033[33m\033[1mdb: closing database %02x\033[0m\n", which_cdb);
-	ret = dbp->close(dbp, 0);
+	ret = src_dbp->close(src_dbp, 0);
 	if (ret) {
 		printf("db: db_close: %s\n", db_strerror(ret));
 	}
@@ -743,10 +767,12 @@ int main(int argc, char **argv) {
 	}
 
 	src_dbenv = open_dbenv(src_dir);
+	dst_dbenv = open_dbenv(dst_dir);
 	for (int i = 0; i < MAXCDB; ++i) {
 		convert_table(i, src_dbenv, dst_dbenv);
 	}
 	close_dbenv(src_dbenv);
+	close_dbenv(dst_dbenv);
 
 	exit(0);
 }
