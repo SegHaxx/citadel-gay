@@ -29,9 +29,6 @@
 #include "../server/citadel_dirs.h"
 #include "ctdl3264_structs.h"
 
-static DB_ENV *src_dbenv;		// Source DB environment (global)
-static DB_ENV *dst_dbenv;		// Source DB environment (global)
-
 // Open a database environment
 DB_ENV *open_dbenv(char *src_dir) {
 
@@ -547,7 +544,7 @@ void (*convert_functions[])(int which_cdb, DBT *in_key, DBT *in_data, DBT *out_k
 };
 
 
-void convert_table(int which_cdb) {
+void convert_table(int which_cdb, DB_ENV *src_dbenv, DB_ENV *dst_dbenv) {
 	int ret;
 	int compressed;
 	char dbfilename[32];
@@ -694,6 +691,8 @@ int main(int argc, char **argv) {
 	char *src_dir = NULL;
 	char *dst_dir = NULL;
 	int confirmed = 0;
+	static DB_ENV *src_dbenv;		// Source DB environment (global)
+	static DB_ENV *dst_dbenv;		// Source DB environment (global)
 
 	// Check to make sure we're running on the target 64-bit system
 	if (sizeof(void *) != 8) {
@@ -745,7 +744,7 @@ int main(int argc, char **argv) {
 
 	src_dbenv = open_dbenv(src_dir);
 	for (int i = 0; i < MAXCDB; ++i) {
-		convert_table(i);
+		convert_table(i, src_dbenv, dst_dbenv);
 	}
 	close_dbenv(src_dbenv);
 
