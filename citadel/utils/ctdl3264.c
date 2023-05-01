@@ -29,10 +29,14 @@
 #include "../server/citadel_dirs.h"
 #include "ctdl3264_structs.h"
 
-static DB_ENV *dbenv;		// The DB environment (global)
+static DB_ENV *src_dbenv;		// Source DB environment (global)
+static DB_ENV *dst_dbenv;		// Source DB environment (global)
 
-// Open the database environment
-void open_dbenv(char *src_dir) {
+// Open a database environment
+DB_ENV *open_dbenv(char *src_dir) {
+
+	DB_ENV *dbenv = NULL;
+
 	int ret;
 	int i;
 	u_int32_t flags = 0;
@@ -48,7 +52,7 @@ void open_dbenv(char *src_dir) {
 	);
 
 	// Create synthetic integer version numbers and compare them.
-	// Never allow citserver to run with a libdb older then the one with which it was compiled.
+	// Never run with a libdb older than the one with which it was compiled.
 	int compiled_db_version = ( (DB_VERSION_MAJOR * 1000000) + (DB_VERSION_MINOR * 1000) + (DB_VERSION_PATCH) );
 	int linked_db_version = ( (dbversion_major * 1000000) + (dbversion_minor * 1000) + (dbversion_patch) );
 	if (compiled_db_version > linked_db_version) {
@@ -90,14 +94,16 @@ void open_dbenv(char *src_dir) {
 		printf("db: exit code %d\n", ret);
 		exit(CTDLEXIT_DB);
 	}
+
+	return(dbenv);
 }
 
 
-void close_dbenv(void) {
+void close_dbenv(DB_ENV *dbenv) {
 	printf("db: closing dbenv\n");
 	int ret = dbenv->close(dbenv, 0);
 	if (ret) {
-		printf("db: DBENV->close: %s\n", db_strerror(ret));
+		printf("db: dbenv->close: %s\n", db_strerror(ret));
 	}
 }
 
@@ -536,7 +542,7 @@ void (*convert_functions[])(int which_cdb, DBT *in_key, DBT *in_data, DBT *out_k
 	convert_msglists,	// CDB_FULLTEXT
 	convert_euidindex,	// CDB_EUIDINDEX
 	convert_usersbynumber,	// CDB_USERSBYNUMBER
-	zero_function,		// CDB_EXTAUTH (obsolete)
+	zero_function,		// CDB_UNUSED1 (obsolete)
 	convert_config		// CDB_CONFIG
 };
 
@@ -558,7 +564,7 @@ void convert_table(int which_cdb) {
 	int num_rows = 0;
 
 	// create a database handle
-	ret = db_create(&dbp, dbenv, 0);
+	ret = db_create(&dbp, src_dbenv, 0);
 	if (ret) {
 		printf("db: db_create: %s\n", db_strerror(ret));
 		printf("db: exit code %d\n", ret);
@@ -670,7 +676,7 @@ void convert_table(int which_cdb) {
 
 	// Flush the logs...
 	//printf("\033[33m\033[1mdb: flushing the database logs\033[0m\n");
-	//if ((ret = dbenv->log_flush(dbenv, NULL))) {
+	//if ((ret = src_dbenv->log_flush(src_dbenv, NULL))) {
 		//printf("db: log_flush: %s\n", db_strerror(ret));
 	//}
 
@@ -686,6 +692,7 @@ void convert_table(int which_cdb) {
 
 int main(int argc, char **argv) {
 	char *src_dir = NULL;
+	char *dst_dir = NULL;
 	int confirmed = 0;
 
 	// Check to make sure we're running on the target 64-bit system
@@ -701,6 +708,9 @@ int main(int argc, char **argv) {
 		switch (a) {
 		case 's':
 			src_dir = optarg;
+			break;
+		case 'd':
+			dst_dir = optarg;
 			break;
 		case 'y':
 			confirmed = 1;
@@ -722,7 +732,7 @@ int main(int argc, char **argv) {
 	printf("should be empty and will receive your 64-bit database.                  \n");
 	printf("------------------------------------------------------------------------\n");
 	printf("     Source 32-bit directory: %s\n", src_dir);
-	printf("Destination 64-bit directory: %s\n", "FIXME");
+	printf("Destination 64-bit directory: %s\n", dst_dir);
 	printf("------------------------------------------------------------------------\n");
 
 	if (confirmed == 1) {
@@ -733,11 +743,11 @@ int main(int argc, char **argv) {
 		exit(0);
 	}
 
-	open_dbenv(src_dir);
+	src_dbenv = open_dbenv(src_dir);
 	for (int i = 0; i < MAXCDB; ++i) {
 		convert_table(i);
 	}
-	close_dbenv();
+	close_dbenv(src_dbenv);
 
 	exit(0);
 }
