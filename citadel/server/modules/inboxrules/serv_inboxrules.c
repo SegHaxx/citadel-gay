@@ -485,6 +485,8 @@ void inbox_do_msg(long msgnum, void *userdata) {
 	int compare_compound = 0;		// Set to 1 when we are comparing both display name and email address
 	int keep_message = 1;			// Nonzero to keep the message in the inbox after processing, 0 to delete it.
 	int i;
+	const char *ptr,*ptr1;			// Temporary variables to get X-Spam-Status
+	int len;
 
 	syslog(LOG_DEBUG, "inboxrules: processing message #%ld which is higher than %ld, we are in %s", msgnum, ii->lastproc, CC->room.QRname);
 
@@ -607,12 +609,28 @@ void inbox_do_msg(long msgnum, void *userdata) {
 				}
 				break;
 
+			case field_xspamstatus:
+				if (!IsEmptyStr(msg->cm_fields[eMesageText])) {
+					if ((ptr=strstr(msg->cm_fields[eMesageText],"X-Spam-Status"))!=NULL) {
+						len=0;
+						ptr1=ptr;
+						while (*ptr1 && (*ptr1!='\r') && (*ptr1!='\n')) {
+							ptr1++;
+							len++;
+						}
+						if (len && (len<SIZ)) {
+							memcpy(compare_me, ptr, len);
+							compare_me[len]='\0';
+						}
+					}
+				}
+			break;
+
 			case field_sender:
 			case field_resentfrom:
 			case field_resentto:
 			case field_xmailer:
 			case field_xspamflag:
-			case field_xspamstatus:
 
 			default:
 				break;
