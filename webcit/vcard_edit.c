@@ -1027,7 +1027,6 @@ void do_addrbook_view(vcardview_struct* VS) {
 	UnStackContext(&SubTP);
 	DeleteHash(&headlines);
 	free(tablabels);
-	StrBufAppendBufPlain(WC->WBuf, HKEY("</div>"), 0);/* closes: id=global */
 }
 
 

@@ -8,7 +8,7 @@
 <?_("Edit Room info")>
 <?=("box_begin_2")>
 
-<?_("Enter your bio below."> <?_("The text is formatted to the reader's browser. A newline is forced by preceding the next line by a blank.")>
+<?_("Enter your bio below.")> <?_("The text is formatted to the reader's browser. A newline is forced by preceding the next line by a blank.")>
 <form method="post" action="editbio">
 <input type="hidden" name="nonce" value="<?NONCE()>">
 <textarea name="msgtext" wrap=soft rows=10 cols=80 width=80><?USER:BIO("", "X")></textarea>

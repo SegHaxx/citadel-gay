@@ -639,7 +639,12 @@ void StrBufAppendTemplate(StrBuf *Target,
 		StrEscAppend(Target, Source, NULL, 0, 2);
 		break;
 	case 'X':
-		StrEscAppend(Target, Source, NULL, 0, 0);
+		if (!IsEmptyStr(ChrPtr(Source))) {
+			StrEscAppend(Target, Source, NULL, 0, 0);
+			if (pFmt[1]) {
+				StrBufAppendBufPlain(Target, pFmt, -1, 1);
+			}
+		}
 		break;
 	case 'J':
 		StrECMAEscAppend(Target, Source, NULL);

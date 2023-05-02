@@ -30,7 +30,7 @@
 #include "ctdl3264_structs.h"
 
 // Open a database environment
-DB_ENV *open_dbenv(char *src_dir) {
+DB_ENV *open_dbenv(char *dirname) {
 
 	DB_ENV *dbenv = NULL;
 
@@ -83,8 +83,8 @@ DB_ENV *open_dbenv(char *src_dir) {
 	}
 
 	flags = DB_CREATE | DB_INIT_MPOOL | DB_PRIVATE | DB_INIT_LOG;
-	printf("db: dbenv open(dir=%s, flags=%d)\n", src_dir, flags);
-	ret = dbenv->open(dbenv, src_dir, flags, 0);
+	printf("db: dbenv open(dir=%s, flags=%d)\n", dirname, flags);
+	ret = dbenv->open(dbenv, dirname, flags, 0);
 	if (ret) {
 		printf("db: dbenv->open: %s\n", db_strerror(ret));
 		dbenv->close(dbenv, 0);
@@ -570,7 +570,7 @@ void convert_table(int which_cdb, DB_ENV *src_dbenv, DB_ENV *dst_dbenv) {
 
 	// open the file containing the source table
 	snprintf(dbfilename, sizeof dbfilename, "cdb.%02x", which_cdb);
-	printf("\033[33m\033[1mdb: opening %s\033[0m\n", dbfilename);
+	printf("\033[33m\033[1mdb: opening source %s\033[0m\n", dbfilename);
 	ret = src_dbp->open(src_dbp, NULL, dbfilename, NULL, DB_BTREE, 0, 0600);
 	if (ret) {
 		printf("db: db_open: %s\n", db_strerror(ret));
@@ -588,7 +588,7 @@ void convert_table(int which_cdb, DB_ENV *src_dbenv, DB_ENV *dst_dbenv) {
 
 	// open the file containing the destination table
 	snprintf(dbfilename, sizeof dbfilename, "cdb.%02x", which_cdb);
-	printf("\033[33m\033[1mdb: opening %s\033[0m\n", dbfilename);
+	printf("\033[33m\033[1mdb: opening destination %s\033[0m\n", dbfilename);
 	ret = dst_dbp->open(dst_dbp, NULL, dbfilename, NULL, DB_BTREE, (DB_CREATE | DB_TRUNCATE), 0600);
 	if (ret) {
 		printf("db: db_open: %s\n", db_strerror(ret));
@@ -659,7 +659,6 @@ void convert_table(int which_cdb, DB_ENV *src_dbenv, DB_ENV *dst_dbenv) {
 		// write the converted record to the target database
 		if (out_key.size > 0) {
 
-
 			// If we compressed the output, write recomp_data instead of out_data
 			if (compressed) {
 				printf("DB: %02x , out_keylen: %-3d , out_datalen: %-10d , dataptr: %012lx \033[31m(compressed)\033[0m\n", which_cdb, (int)out_key.size, (int)recomp_data.size, (long unsigned int)recomp_data.data);
@@ -669,7 +668,6 @@ void convert_table(int which_cdb, DB_ENV *src_dbenv, DB_ENV *dst_dbenv) {
 				printf("DB: %02x , out_keylen: %-3d , out_datalen: %-10d , dataptr: %012lx\n", which_cdb, (int)out_key.size, (int)out_data.size, (long unsigned int)out_data.data);
 				ret = dst_dbp->put(dst_dbp, NULL, &out_key, &out_data, 0);
 			}
-
 
                 	if (ret) {
                         	printf("db: cdb_put(%d): %s", which_cdb, db_strerror(ret));

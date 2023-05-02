@@ -1,6 +1,6 @@
 <div id="room_banner_override">
 <table border=0><tr>
-<td><img src="static/webcit_icons/essen/32x32/summary.png"></td>
+<td><img alt="" src="static/webcit_icons/essen/32x32/summary.png"></td>
 <td><h1><?_("Summary page for ")>
 	<??("COND:LOGGEDIN", 1)><?CURRENT_USER("X")><??("X", 1)>
 	<?!("COND:LOGGEDIN", 2)><?SERV:HUMANNODE("X")><??("X", 2)>
@@ -13,70 +13,67 @@
 * instead of the whole thing.
 ")>
 <div class="service">
-  <table width="98%" cellspacing="3" cellpadding="0">
-    <tr valign=top>
-      <td width="33%">
+	<table width="98%" cellspacing="3" cellpadding="0">
+		<tr valign=top>
+			<td width="33%">
 	<div class="box">	
-	  <div class="boxlabel">	
-	    <?_("Messages")>
-	  </div><div class="boxcontent">	
-	    <div id="msg_inner">
-		<img src="static/webcit_icons/throbber.gif">
+		<div class="boxlabel">	
+			<?_("Messages")>
+		</div><div class="boxcontent">	
+			<div id="msg_inner">
+		<img alt="" src="static/webcit_icons/throbber.gif">
 	</div></div></div>
-      </td>
-      <td width="33%">
+			</td>
+			<td width="33%">
 	<div class="box">	
-	  <div class="boxlabel">	
-	    <?_("Tasks")>
-	  </div><div class="boxcontent">	
-	    <div id="tasks_inner">	
-		<img src="static/webcit_icons/throbber.gif">
+		<div class="boxlabel">	
+			<?_("Tasks")>
+		</div><div class="boxcontent">	
+			<div id="tasks_inner">	
+		<img alt="" src="static/webcit_icons/throbber.gif">
 	</div></div></div>
-      </td>
-      <td width="33%">
+			</td>
+			<td width="33%">
 	<div class="box">	
-	  <div class="boxlabel">	
-	    <?_("Today&nbsp;on&nbsp;your&nbsp;calendar")>
-	  </div><div class="boxcontent">	
-	    <div id="calendar_inner">
-		<img src="static/webcit_icons/throbber.gif">
+		<div class="boxlabel">	
+			<?_("Today&nbsp;on&nbsp;your&nbsp;calendar")>
+		</div><div class="boxcontent">	
+			<div id="calendar_inner">
+		<img alt="" src="static/webcit_icons/throbber.gif">
 	</div></div></div>
-      </td>
-      
-    </tr><tr valign=top>
+			</td>
+			
+		</tr><tr valign=top>
 
-      <td colspan=2>
+			<td colspan=2>
 	<div class="box">	
-	  <div class="boxlabel">	
-	    <?_("Who‘s&nbsp;online&nbsp;now")>
-	  </div><div class="boxcontent">
-	    <div id="who_inner">
-		<img src="static/webcit_icons/throbber.gif">
-	    </div></div></div>
-      </td>
-      <td width="33%">
+		<div class="boxlabel">	
+			<?_("Who‘s&nbsp;online&nbsp;now")>
+		</div><div class="boxcontent">
+			<div id="who_inner">
+		<img alt="" src="static/webcit_icons/throbber.gif">
+			</div></div></div>
+			</td>
+			<td width="33%">
 	<div class="box">	
-	  <div class="boxlabel">	
-	    <?_("About&nbsp;this&nbsp;server")>
-	  </div><div class="boxcontent">	
-	    <div id="info_inner">	
-	      <?_("You are connected to")> <?SERV:HUMANNODE>,
-	      <?_("running")> <?SERV:SOFTWARE> 
-	      <?_("with")> <?PACKAGESTRING>, 
-	      <?_("server build")> <?SERV:REV_LEVEL>
-	      <?_("and located in")> <?SERV:BBS_CITY>.
-	      <?_("Your system administrator is")> <?SERV:ADMIN>
+		<div class="boxlabel">	
+			<?_("About&nbsp;this&nbsp;server")>
+		</div><div class="boxcontent">	
+			<div id="info_inner">	
+				<?_("You are connected to")> <?SERV:HUMANNODE><br>
+				<?_("Running:")> <?SERV:SOFTWARE> <?_("with")> <?PACKAGESTRING><br>
+				<?_("Server Build:")> <?SERV:REV_LEVEL><br>
+				<?_("Location:")> <?SERV:BBS_CITY><br>
+				<?_("System Administrator:")> <?SERV:ADMIN>
 	</div></div></div>
-      </td>
-  </tr></table>
-
-</div>
+			</td>
+	</tr></table>
 
 </div>
 
 <script type="text/javascript">
- new Ajax.PeriodicalUpdater('msg_inner', 'new_messages_html', { method: 'get', frequency: 60 }  );
- new Ajax.PeriodicalUpdater('tasks_inner', 'tasks_inner_html', { method: 'get', frequency: 120 }  );
- new Ajax.PeriodicalUpdater('calendar_inner', 'calendar_inner_html', { method: 'get', frequency: 90 }  );
- new Ajax.PeriodicalUpdater('who_inner', 'do_template?template=who_summary', { method: 'get', frequency: 30 }  );
+ new Ajax.PeriodicalUpdater('msg_inner', 'new_messages_html', { method: 'get', frequency: 60 }	);
+ new Ajax.PeriodicalUpdater('tasks_inner', 'tasks_inner_html', { method: 'get', frequency: 120 }	);
+ new Ajax.PeriodicalUpdater('calendar_inner', 'calendar_inner_html', { method: 'get', frequency: 90 }	);
+ new Ajax.PeriodicalUpdater('who_inner', 'do_template?template=who_summary', { method: 'get', frequency: 30 }	);
 </script>

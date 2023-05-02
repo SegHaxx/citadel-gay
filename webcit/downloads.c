@@ -414,10 +414,9 @@ void output_image(void)
 	
 	/*
 	 * Instead of an ugly 404, send a 1x1 transparent GIF
-	 * when there's no such image on the server.
+	 * when there's no such image on the server display blank
 	 */
-	StrBufPrintf (Buf, "%s%s", static_dirs[0], "/webcit_icons/blank.gif");
-	output_static(ChrPtr(Buf));
+	output_static(NULL);
 	FreeStrBuf(&Buf);
 }
 

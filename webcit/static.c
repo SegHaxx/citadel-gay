@@ -45,7 +45,12 @@ void output_static(char *prefix) {
 	int len;
 	const char *Err;
 	char what[SIZ];
-	snprintf(what, sizeof what, "./%s/%s", prefix, (char *)ChrPtr(WC->Hdr->HR.ReqLine));
+	if (prefix==NULL) {
+		// Force blank.gif  Overrides the request line.
+		strcpy(what,"./static/webcit_icons/blank.gif");
+	} else {
+		snprintf(what, sizeof what, "./%s/%s", prefix, (char *)ChrPtr(WC->Hdr->HR.ReqLine));
+	}
 
 	syslog(LOG_DEBUG, "output_static(%s)", what);
 	len = strlen (what);
