@@ -77,14 +77,22 @@ struct cdbdata {
 // NOTE: if you add fields to this, you have to also write export/import code in server/modules/migrate/serv_migrate.c
 // NOTE: if you add fields to this, you have to also write conversion code in utils/ctdl3264/*
 struct visit {
-	long v_roomnum;
-	long v_roomgen;
-	long v_usernum;
+	long v_roomnum;		//
+	long v_roomgen;		// The first three fields , sizeof(long)*3 , are the index format.
+	long v_usernum;		//
 	long v_lastseen;
 	unsigned v_flags;
 	char v_seen[SIZ];
 	char v_answered[SIZ];
 	int v_view;
+};
+
+
+// This is the db index format for "visit" records, which describe the relationship between one user and one room.
+struct visit_index {
+	long iRoomID;
+	long iRoomGen;
+	long iUserID;
 };
 
 
@@ -207,14 +215,6 @@ struct CtdlCompressHeader {
 	int magic;
 	size_t uncompressed_len;
 	size_t compressed_len;
-};
-
-
-// This is the db index format for "visit" records, which describe the relationship between one user and one room.
-struct visit_index {
-	long iRoomID;
-	long iRoomGen;
-	long iUserID;
 };
 
 

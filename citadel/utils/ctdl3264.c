@@ -317,7 +317,7 @@ void convert_visits(int which_cdb, DBT *in_key, DBT *in_data, DBT *out_key, DBT 
 
 	printf("\033[32m\033[1mVisit: room %ld, gen %ld, user %ld\033[0m\n", visit64->v_roomnum, visit64->v_roomgen, visit64->v_usernum);
 
-	// create the key (which is based on the data, so there is no need to  the old key)
+	// create the key (which is based on the data, so there is no need to convert the old key)
 	out_key->size = sizeof(struct visit_index);
 	out_key->data = realloc(out_key->data, out_key->size);
 	struct visit_index *newvisitindex = (struct visit_index *) out_key->data;
@@ -560,6 +560,8 @@ void convert_table(int which_cdb, DB_ENV *src_dbenv, DB_ENV *dst_dbenv) {
 	DBT in_key, in_data, out_key, out_data, uncomp_data, recomp_data;
 	int num_rows = 0;
 
+	snprintf(dbfilename, sizeof dbfilename, "cdb.%02x", which_cdb);
+
 	// create a database handle for the source table
 	ret = db_create(&src_dbp, src_dbenv, 0);
 	if (ret) {
@@ -569,8 +571,6 @@ void convert_table(int which_cdb, DB_ENV *src_dbenv, DB_ENV *dst_dbenv) {
 	}
 
 	// open the file containing the source table
-	snprintf(dbfilename, sizeof dbfilename, "cdb.%02x", which_cdb);
-	printf("\033[33m\033[1mdb: opening source %s\033[0m\n", dbfilename);
 	ret = src_dbp->open(src_dbp, NULL, dbfilename, NULL, DB_BTREE, 0, 0600);
 	if (ret) {
 		printf("db: db_open: %s\n", db_strerror(ret));
@@ -587,7 +587,6 @@ void convert_table(int which_cdb, DB_ENV *src_dbenv, DB_ENV *dst_dbenv) {
 	}
 
 	// open the file containing the destination table
-	snprintf(dbfilename, sizeof dbfilename, "cdb.%02x", which_cdb);
 	printf("\033[33m\033[1mdb: opening destination %s\033[0m\n", dbfilename);
 	ret = dst_dbp->open(dst_dbp, NULL, dbfilename, NULL, DB_BTREE, (DB_CREATE | DB_TRUNCATE), 0600);
 	if (ret) {

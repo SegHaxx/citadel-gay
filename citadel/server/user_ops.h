@@ -38,8 +38,8 @@ int CtdlInvtKick(char *iuser, int op);
 void ForEachUser(void (*CallBack) (char *, void *out_data), void *in_data);
 int NewMailCount(void);
 int InitialMailCheck(void);
-void put_visit(struct visit *newvisit);
 int GenerateRelationshipIndex(char *IndexBuf, long RoomID, long RoomGen, long UserID);
+void put_visit(struct visit *);
 int CtdlAssociateSystemUser(char *screenname, char *loginname);
 
 void CtdlSetPassword(char *new_pw);

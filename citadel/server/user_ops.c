@@ -235,18 +235,9 @@ int GenerateRelationshipIndex(char *IndexBuf, long RoomID, long RoomGen, long Us
 	return(sizeof(TheIndex));
 }
 
-
 // Back end for CtdlSetRelationship()
 void put_visit(struct visit *newvisit) {
-	char IndexBuf[32];
-	int IndexLen = 0;
-
-	memset(IndexBuf, 0, sizeof (IndexBuf));
-	// Generate an index
-	IndexLen = GenerateRelationshipIndex(IndexBuf, newvisit->v_roomnum, newvisit->v_roomgen, newvisit->v_usernum);
-
-	// Store the record
-	cdb_store(CDB_VISIT, IndexBuf, IndexLen, newvisit, sizeof(struct visit));
+	cdb_store(CDB_VISIT, newvisit, (sizeof(long)*3), newvisit, sizeof(struct visit));
 }
 
 
@@ -258,23 +249,24 @@ void CtdlSetRelationship(struct visit *newvisit, struct ctdluser *rel_user, stru
 	newvisit->v_roomgen = rel_room->QRgen;
 	newvisit->v_usernum = rel_user->usernum;
 
+	// Store the record
 	put_visit(newvisit);
 }
 
 
 // Locate a relationship between a user and a room
 void CtdlGetRelationship(struct visit *vbuf, struct ctdluser *rel_user, struct ctdlroom *rel_room) {
-	char IndexBuf[32];
-	int IndexLen;
 	struct cdbdata *cdbvisit;
-
-	// Generate an index
-	IndexLen = GenerateRelationshipIndex(IndexBuf, rel_room->QRnumber, rel_room->QRgen, rel_user->usernum);
 
 	// Clear out the buffer
 	memset(vbuf, 0, sizeof(struct visit));
 
-	cdbvisit = cdb_fetch(CDB_VISIT, IndexBuf, IndexLen);
+	// Fill out the first three fields; they are also the index
+	vbuf->v_roomnum = rel_room->QRnumber;
+	vbuf->v_roomgen = rel_room->QRgen;
+	vbuf->v_usernum = rel_user->usernum;
+
+	cdbvisit = cdb_fetch(CDB_VISIT, vbuf, (sizeof(long)*3));
 	if (cdbvisit != NULL) {
 		memcpy(vbuf, cdbvisit->ptr, ((cdbvisit->len > sizeof(struct visit)) ?  sizeof(struct visit) : cdbvisit->len));
 		cdb_free(cdbvisit);
