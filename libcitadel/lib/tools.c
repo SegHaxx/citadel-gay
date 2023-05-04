@@ -431,53 +431,60 @@ const char *cmemreadlinelen(const char *start, char *buf, int maxlen, int *retle
 
 // Strip a boundarized substring out of a string (for example, remove parentheses and anything inside them).
 int stripout(char *str, char leftboundary, char rightboundary) {
-	int a;
-        int lb = (-1);
-        int rb = (-1);
+	long lb = (-1);
+	long rb = (-1);
 
-        for (a = 0; a < strlen(str); ++a) {
-                if (str[a] == leftboundary) lb = a;
-                if (str[a] == rightboundary) rb = a;
-        }
+	if (!str) {
+		return 0;
+	}
 
-        if ( (lb > 0) && (rb > lb) ) {
-                strcpy(&str[lb - 1], &str[rb + 1]);
-		return 1;
-        }
+	for (int a = 0; str[a]; ++a) {
+		if ((lb==-1) && (str[a] == leftboundary)) {
+			lb = a;
+		} else if (str[a] == rightboundary) {
+			rb = a;
+		}
+	}
 
-        else if ( (lb == 0) && (rb > lb) ) {
-                strcpy(str, &str[rb + 1]);
-		return 1;
-        }
-	return 0;
+	if ((lb==-1) || (rb <= lb)) {
+		return 0;
+	}
+
+	strcpy(str + lb, str + rb + 1);
+	return 1;
 }
-
 
 // Reduce a string down to a boundarized substring (for example, remove
 // parentheses and anything outside them).
 long stripallbut(char *str, char leftboundary, char rightboundary) {
-	long len = 0;
+	long lb = (-1);
+	long rb = (-1);
+	long orig_len = 0;
 
-	char *lb = NULL;
-	char *rb = NULL;
-
-	lb = strrchr(str, leftboundary);
-	if (lb != NULL) {
-		++lb;
-		rb = strchr(str, rightboundary);
-		if ((rb != NULL) && (rb >= lb))  {
-			*rb = 0;
-			fflush(stderr);
-			len = (long)rb - (long)lb;
-			memmove(str, lb, len);
-			str[len] = 0;
-			return(len);
-		}
+	if (!str) {
+		return 0;
 	}
 
-	return (long)strlen(str);
-}
+	while (str[orig_len]) {
+		if ((lb==-1) && (str[orig_len] == leftboundary)) {
+			lb = orig_len;
+		} else if (str[orig_len] == rightboundary) {
+			rb = orig_len;
+		}
+		orig_len++;
+	}
 
+	if ((lb==-1) || (rb <= lb)) {
+		return orig_len;
+	}
+
+	fflush(stderr);
+
+	long new_len = rb - lb - 1;
+	memmove(str, str + lb + 1, new_len);
+	str[new_len] = 0;
+	return new_len;
+}
 
 char *myfgets(char *s, int size, FILE *stream) {
 	char *ret = fgets(s, size, stream);
@@ -805,27 +812,6 @@ int pattern2(char *search, char *patn) {
 			return (a);
 	}
 	return (-1);
-}
-
-
-/*
- * Strip leading and trailing spaces from a string; with premeasured and adjusted length.
- * buf - the string to modify
- * len - length of the string. 
- */
-void string_trimlen(char *buf, int *len) {
-	int delta = 0;
-	if (*len == 0) return;
-	while ((*len > delta) && (isspace(buf[delta]))){
-		delta ++;
-	}
-	memmove (buf, &buf[delta], *len - delta + 1);
-	(*len) -=delta;
-
-	if (*len == 0) return;
-	while (isspace(buf[(*len) - 1])){
-		buf[--(*len)] = '\0';
-	}
 }
 
 
