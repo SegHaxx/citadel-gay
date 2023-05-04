@@ -369,11 +369,21 @@ void cputbuf(const StrBuf *Buf) {
 void cprintf(const char *format, ...) {   
 	va_list arg_ptr;   
 	char buf[1024];
+	int rc;
    
 	va_start(arg_ptr, format);   
-	if (vsnprintf(buf, sizeof buf, format, arg_ptr) == -1)
-		buf[sizeof buf - 2] = '\n';
-	client_write(buf, strlen(buf)); 
+	rc = vsnprintf(buf, sizeof buf, format, arg_ptr);
+	if (rc < 0) {
+		syslog(LOG_ERR,"Console output error occured. Format: %s",format);
+	} else {
+		if (rc >= sizeof buf) {
+			// Output was truncated.
+			// Chop at the end of the buffer
+			buf[sizeof buf - 2] = '\n';
+			buf[sizeof buf - 1] = 0;
+		}
+		client_write(buf, strlen(buf)); 
+	}
 	va_end(arg_ptr);
 }
 
