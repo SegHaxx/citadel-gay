@@ -103,7 +103,7 @@ void dotgoto(void) {
 		readloop(readnew, eUseDefault);
 		return;
 	}
-	if (WC->CurRoom.view != VIEW_MAILBOX) {
+	if ((WC->CurRoom.view != VIEW_MAILBOX) && (WC->CurRoom.view != VIEW_JSON_LIST)) {
 		// dotgoto acts like dotskip when we're in a mailbox view
 		slrp_highest();
 	}

@@ -166,7 +166,7 @@ void imap_set_seen_flags(int first_msg) {
 	char setstr[64], lostr[64], histr[64];
 	long lo, hi;
 
-	if (Imap->num_msgs < 1) return;
+	if (Imap->num_msgs < 0) return;
 	CtdlGetRelationship(&vbuf, &CC->user, &CC->room);
 
 	for (i = first_msg; i < Imap->num_msgs; ++i) {
