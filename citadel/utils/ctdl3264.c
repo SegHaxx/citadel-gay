@@ -29,6 +29,19 @@
 #include "../server/citadel_dirs.h"
 #include "ctdl3264_structs.h"
 
+
+// Wrapper for realloc() that crashes and burns if the call fails.
+void *reallok(void *ptr, size_t size) {
+	void *p = realloc(ptr, size);
+	if (!p) {
+		fprintf(stderr, "realloc() failed to resize %p to %ld bytes, error: %m\n", ptr, size);
+		exit(1);
+	}
+	return p;
+}
+#define realloc reallok
+
+
 // Open a database environment
 DB_ENV *open_dbenv(char *dirname) {
 
@@ -113,7 +126,7 @@ void convert_msgmain(int which_cdb, DBT *in_key, DBT *in_data, DBT *out_key, DBT
 	out_msgnum = (long)in_msgnum;
 
 	if (in_key->size != 4) {
-		printf("\033[31m\033[1m *** SOURCE DATABASE IS NOT 32-BIT *** ABORTING *** \033[0m\n");
+		fprintf(stderr, "\033[31m\033[1m *** SOURCE DATABASE IS NOT 32-BIT *** ABORTING *** \033[0m\n");
 		abort();
 	}
 
@@ -121,7 +134,7 @@ void convert_msgmain(int which_cdb, DBT *in_key, DBT *in_data, DBT *out_key, DBT
 	if (in_msgnum < 0) {
 		struct MetaData_32 *meta32 = (struct MetaData_32 *)in_data->data;
 
-		printf("\033[32m\033[1mMetadata: msgnum=%d , refcount=%d , content_type=\"%s\" , rfc822len=%d\033[0m\n", meta32->meta_msgnum, meta32->meta_refcount, meta32->meta_content_type, meta32->meta_rfc822_length);
+		// printf("\033[32m\033[1mMetadata: msgnum=%d , refcount=%d , content_type=\"%s\" , rfc822len=%d\033[0m\n", meta32->meta_msgnum, meta32->meta_refcount, meta32->meta_content_type, meta32->meta_rfc822_length);
 
 		out_key->size = sizeof(long);
 		out_key->data = realloc(out_key->data, out_key->size);
@@ -147,12 +160,12 @@ void convert_msgmain(int which_cdb, DBT *in_key, DBT *in_data, DBT *out_key, DBT
 		out_data->size = in_data->size;
 		out_data->data = realloc(out_data->data, out_data->size);
 		memcpy(out_data->data, in_data->data, out_data->size);
-		printf("\033[32m\033[1mMessage: %ld\033[0m\n", out_msgnum);
+		// printf("\033[32m\033[1mMessage: %ld\033[0m\n", out_msgnum);
 	}
 
 	// If the msgnum is 0 it's probably not a valid record.
 	else {
-		printf("msgmain: record 0 is impossible\n");
+		printf("\033[31mmsgmain: message number 0 is impossible, skipping this record\033[0m\n");
 	}
 }
 
@@ -188,7 +201,7 @@ void convert_users(int which_cdb, DBT *in_key, DBT *in_data, DBT *out_key, DBT *
 	user64->msgnum_inboxrules	= (long)	user32->msgnum_inboxrules;
 	user64->lastproc_inboxrules	= (long)	user32->lastproc_inboxrules;
 
-	printf("\033[32m\033[1mUser: %s\033[0m\n", user64->fullname);
+	// printf("\033[32m\033[1mUser: %s\033[0m\n", user64->fullname);
 }
 
 
@@ -224,7 +237,7 @@ void convert_rooms(int which_cdb, DBT *in_key, DBT *in_data, DBT *out_key, DBT *
 	room64->QRdefaultview		= (int)		room32->QRdefaultview;
 	room64->msgnum_pic		= (long)	room32->msgnum_pic;
 
-	printf("\033[32m\033[1mRoom: %s\033[0m\n", room64->QRname);
+	// printf("\033[32m\033[1mRoom: %s\033[0m\n", room64->QRname);
 }
 
 
@@ -249,7 +262,7 @@ void convert_floors(int which_cdb, DBT *in_key, DBT *in_data, DBT *out_key, DBT 
 	floor64->f_ep.expire_mode	= (int)			floor32->f_ep.expire_mode;
 	floor64->f_ep.expire_value	= (int)			floor32->f_ep.expire_value;
 
-	printf("\033[32m\033[1mFloor: %s\033[0m\n", floor64->f_name);
+	// printf("\033[32m\033[1mFloor: %s\033[0m\n", floor64->f_name);
 }
 
 
@@ -268,12 +281,12 @@ void convert_msglists(int which_cdb, DBT *in_key, DBT *in_data, DBT *out_key, DB
 	out_roomnum = (long) in_roomnum;
 
 	if (in_key->size != 4) {
-		printf("\033[31m\033[1m *** SOURCE DATABASE IS NOT 32-BIT *** ABORTING *** \033[0m\n");
+		fprintf(stderr, "\033[31m\033[1m *** SOURCE DATABASE IS NOT 32-BIT *** ABORTING *** \033[0m\n");
 		abort();
 	}
 
 	int num_msgs = in_data->size / sizeof(int32_t);
-	printf("\033[32m\033[1m%s: key %ld (%d messages)\033[0m\n", table, out_roomnum, num_msgs);
+	// printf("\033[32m\033[1m%s: key %ld (%d messages)\033[0m\n", table, out_roomnum, num_msgs);
 
 	// the key is a "long"
 	out_key->size = sizeof(out_roomnum);
@@ -290,7 +303,7 @@ void convert_msglists(int which_cdb, DBT *in_key, DBT *in_data, DBT *out_key, DB
 		memcpy(&in_msg, (in_data->data + (i * sizeof(int32_t))), sizeof(int32_t));
 		out_msg = (long) in_msg;
 		memcpy((out_data->data + (i * sizeof(long))), &out_msg, sizeof(long));
-		printf("msg#%ld\n", out_msg);
+		// printf("msg#%ld\n", out_msg);
 	}
 }
 
@@ -315,7 +328,7 @@ void convert_visits(int which_cdb, DBT *in_key, DBT *in_data, DBT *out_key, DBT 
 	strcpy(visit64->v_answered,			visit32->v_answered);
 	visit64->v_view			= (int)		visit32->v_view;
 
-	printf("\033[32m\033[1mVisit: room %ld, gen %ld, user %ld\033[0m\n", visit64->v_roomnum, visit64->v_roomgen, visit64->v_usernum);
+	// printf("\033[32m\033[1mVisit: room %ld, gen %ld, user %ld\033[0m\n", visit64->v_roomnum, visit64->v_roomgen, visit64->v_usernum);
 
 	// create the key (which is based on the data, so there is no need to convert the old key)
 	out_key->size = sizeof(struct visit_index);
@@ -345,7 +358,7 @@ void convert_dir(int which_cdb, DBT *in_key, DBT *in_data, DBT *out_key, DBT *ou
 	d[out_data->size] = 0;
 
 	// please excuse my friend, he isn't null terminated
-	printf("\033[32m\033[1mDirectory entry: %s -> %s\033[0m\n", (char *)out_key->data, (char *)out_data->data);
+	// printf("\033[32m\033[1mDirectory entry: %s -> %s\033[0m\n", (char *)out_key->data, (char *)out_data->data);
 }
 
 
@@ -380,7 +393,7 @@ void convert_bigmsgs(int which_cdb, DBT *in_key, DBT *in_data, DBT *out_key, DBT
 	out_msgnum = (long)in_msgnum;
 
 	if (in_key->size != 4) {
-		printf("\033[31m\033[1m *** SOURCE DATABASE IS NOT 32-BIT *** ABORTING *** \033[0m\n");
+		fprintf(stderr, "\033[31m\033[1m *** SOURCE DATABASE IS NOT 32-BIT *** ABORTING *** \033[0m\n");
 		abort();
 	}
 
@@ -389,7 +402,7 @@ void convert_bigmsgs(int which_cdb, DBT *in_key, DBT *in_data, DBT *out_key, DBT
 	out_data->data = realloc(out_data->data, out_data->size);
 	memcpy(out_data->data, in_data->data, in_data->size);
 
-	printf("\033[32m\033[1mBigmsg %ld , length %d\033[0m\n", out_msgnum, out_data->size);
+	// printf("\033[32m\033[1mBigmsg %ld , length %d\033[0m\n", out_msgnum, out_data->size);
 }
 
 
@@ -416,7 +429,7 @@ void convert_euidindex(int which_cdb, DBT *in_key, DBT *in_data, DBT *out_key, D
 
 	out_msgnum = (long) in_msgnum;
 	out_roomnum = (long) in_roomnum;
-	printf("euidindex: msgnum=%ld, roomnum=%ld, euid=\"%s\"\n", out_msgnum, out_roomnum, euid);
+	// printf("euidindex: msgnum=%ld, roomnum=%ld, euid=\"%s\"\n", out_msgnum, out_roomnum, euid);
 
 	out_key->size = sizeof(long) + strlen(euid) + 1;
 	out_key->data = realloc(out_key->data, out_key->size);
@@ -430,40 +443,40 @@ void convert_euidindex(int which_cdb, DBT *in_key, DBT *in_data, DBT *out_key, D
 	strcpy(out_data->data+sizeof(out_msgnum)+sizeof(out_roomnum), euid);
 
 
-	int i;
-	char ch;
-
-	printf("  in_key:             ");
-	for (i=0; i<in_key->size; ++i) {
-		ch = 0;
-		memcpy(&ch, in_key->data+i, 1);
-		printf("%02X ", (int) ch);
-	}
-	printf("\n");
-
-	printf(" out_key: ");
-	for (i=0; i<out_key->size; ++i) {
-		ch = 0;
-		memcpy(&ch, out_key->data+i, 1);
-		printf("%02X ", (int) ch);
-	}
-	printf("\n");
-
-	printf(" in_data:                         ");
-	for (i=0; i<in_data->size; ++i) {
-		ch = 0;
-		memcpy(&ch, in_data->data+i, 1);
-		printf("%02X ", (int) ch);
-	}
-	printf("\n");
-
-	printf("out_data: ");
-	for (i=0; i<out_data->size; ++i) {
-		ch = 0;
-		memcpy(&ch, out_data->data+i, 1);
-		printf("%02X ", (int) ch);
-	}
-	printf("\n");
+	//int i;
+	//char ch;
+//
+	//printf("  in_key:             ");
+	//for (i=0; i<in_key->size; ++i) {
+		//ch = 0;
+		//memcpy(&ch, in_key->data+i, 1);
+		//printf("%02X ", (int) ch);
+	//}
+	//printf("\n");
+//
+	//printf(" out_key: ");
+	//for (i=0; i<out_key->size; ++i) {
+		//ch = 0;
+		//memcpy(&ch, out_key->data+i, 1);
+		//printf("%02X ", (int) ch);
+	//}
+	//printf("\n");
+//
+	//printf(" in_data:                         ");
+	//for (i=0; i<in_data->size; ++i) {
+		//ch = 0;
+		//memcpy(&ch, in_data->data+i, 1);
+	//	printf("%02X ", (int) ch);
+	//}
+	//printf("\n");
+//
+	//printf("out_data: ");
+	//for (i=0; i<out_data->size; ++i) {
+		//ch = 0;
+		//memcpy(&ch, out_data->data+i, 1);
+		//printf("%02X ", (int) ch);
+	//}
+	//printf("\n");
 
 
 }
@@ -480,7 +493,7 @@ void convert_usersbynumber(int which_cdb, DBT *in_key, DBT *in_data, DBT *out_ke
 	out_usernum = (long) in_usernum;
 
 	if (in_key->size != 4) {
-		printf("\033[31m\033[1m *** SOURCE DATABASE IS NOT 32-BIT *** ABORTING *** \033[0m\n");
+		fprintf(stderr, "\033[31m\033[1m *** SOURCE DATABASE IS NOT 32-BIT *** ABORTING *** \033[0m\n");
 		abort();
 	}
 
@@ -493,7 +506,7 @@ void convert_usersbynumber(int which_cdb, DBT *in_key, DBT *in_data, DBT *out_ke
 	out_data->data = realloc(out_data->data, out_data->size);
 	memcpy(out_data->data, in_data->data, in_data->size);
 
-	printf("usersbynumber: %ld --> %s\n", out_usernum, (char *)out_data->data);
+	// printf("usersbynumber: %ld --> %s\n", out_usernum, (char *)out_data->data);
 }
 
 
@@ -515,7 +528,7 @@ void convert_config(int which_cdb, DBT *in_key, DBT *in_data, DBT *out_key, DBT 
 	d[out_data->size] = 0;
 
 	// please excuse my friend, he isn't null terminated
-	printf("\033[32m\033[1mConfig entry: %s -> %s\033[0m\n", (char *)out_key->data, (char *)out_data->data+strlen(out_data->data)+1);
+	// printf("\033[32m\033[1mConfig entry: %s -> %s\033[0m\n", (char *)out_key->data, (char *)out_data->data+strlen(out_data->data)+1);
 }
 
 
@@ -571,6 +584,7 @@ void convert_table(int which_cdb, DB_ENV *src_dbenv, DB_ENV *dst_dbenv) {
 	}
 
 	// open the file containing the source table
+	printf("\033[33m\033[1mdb: opening source %s\033[0m\n", dbfilename);
 	ret = src_dbp->open(src_dbp, NULL, dbfilename, NULL, DB_BTREE, 0, 0600);
 	if (ret) {
 		printf("db: db_open: %s\n", db_strerror(ret));
@@ -596,6 +610,7 @@ void convert_table(int which_cdb, DB_ENV *src_dbenv, DB_ENV *dst_dbenv) {
 	}
 
 	// Acquire a cursor to read the source table
+	printf("\033[33m\033[1mdb: acquiring cursor\033[0m\n");
 	if ((ret = src_dbp->cursor(src_dbp, NULL, &src_dbcp, 0)) != 0) {
 		printf("db: db_cursor: %s\n", db_strerror(ret));
 		printf("db: exit code %d\n", ret);
@@ -613,68 +628,82 @@ void convert_table(int which_cdb, DB_ENV *src_dbenv, DB_ENV *dst_dbenv) {
 	// Walk through the database, calling convert functions as we go and clearing buffers before each call.
 	while (out_key.size = 0, out_data.size = 0, (ret = src_dbcp->get(src_dbcp, &in_key, &in_data, DB_NEXT)) == 0) {
 
-		// Do we need to decompress?
-		static int32_t magic = COMPRESS_MAGIC;
-		compressed = 0;
-		if ( (in_data.size >= sizeof(struct CtdlCompressHeader_32)) && (!memcmp(in_data.data, &magic, sizeof(magic))) ) {
 
-			// yes, we need to decompress
-			compressed = 1;
-			struct CtdlCompressHeader_32 comp32;
-			memcpy(&comp32, in_data.data, sizeof(struct CtdlCompressHeader_32));
-			uncomp_data.size = comp32.uncompressed_len;
-			uncomp_data.data = realloc(uncomp_data.data, uncomp_data.size);
-			destLen = (uLongf)comp32.uncompressed_len;
-
-			ret = uncompress((Bytef *)uncomp_data.data, (uLongf *)&destLen, (const Bytef *)in_data.data+sizeof(struct CtdlCompressHeader_32), (uLong)comp32.compressed_len);
-			if (ret != Z_OK) {
-				printf("db: uncompress() error %d\n", ret);
-				exit(CTDLEXIT_DB);
-			}
-			printf("DB: %02x ,  in_keylen: %-3d ,  in_datalen: %-10d , dataptr: %012lx \033[31m(decompressed)\033[0m\n", which_cdb, (int)in_key.size, comp32.uncompressed_len, (long unsigned int)uncomp_data.data);
-		}
-		else {
-			printf("DB: %02x ,  in_keylen: %-3d ,  in_datalen: %-10d , dataptr: %012lx\n", which_cdb, (int)in_key.size, (int)in_data.size, (long unsigned int)in_data.data);
+		if (in_key.size == 0) {
+			printf("\033[31mzero length key, skipping\033[0m\n");
 		}
 
-		// Call the convert function registered to this table
-		convert_functions[which_cdb](which_cdb, &in_key, (compressed ? &uncomp_data : &in_data), &out_key, &out_data);
-
-		// The logic here is that if the source data was compressed, we compress the output too
-		if (compressed) {
-			struct CtdlCompressHeader zheader;
-			memset(&zheader, 0, sizeof(struct CtdlCompressHeader));
-			zheader.magic = COMPRESS_MAGIC;
-			zheader.uncompressed_len = out_data.size;
-			recomp_data.data = realloc(recomp_data.data, ((out_data.size * 101) / 100) + 100 + sizeof(struct CtdlCompressHeader));
-
-			if (compress2((Bytef *)(recomp_data.data + sizeof(struct CtdlCompressHeader)), &destLen, (Bytef *)out_data.data, (uLongf) out_data.size, 1) != Z_OK) {
-				printf("db: compress() error\n");
-				exit(CTDLEXIT_DB);
-			}
-			recomp_data.size = destLen;
+		else if (in_data.size == 0) {
+			printf("\033[31mzero length data, skipping\033[0m\n");
 		}
 
-		// write the converted record to the target database
-		if (out_key.size > 0) {
+		else {	// Both key and data are >0 length so we're good to go
 
-			// If we compressed the output, write recomp_data instead of out_data
-			if (compressed) {
-				printf("DB: %02x , out_keylen: %-3d , out_datalen: %-10d , dataptr: %012lx \033[31m(compressed)\033[0m\n", which_cdb, (int)out_key.size, (int)recomp_data.size, (long unsigned int)recomp_data.data);
-				ret = dst_dbp->put(dst_dbp, NULL, &out_key, &recomp_data, 0);
+			// Do we need to decompress?
+			static int32_t magic = COMPRESS_MAGIC;
+			compressed = 0;
+			if ( (in_data.size >= sizeof(struct CtdlCompressHeader_32)) && (!memcmp(in_data.data, &magic, sizeof(magic))) ) {
+	
+				// yes, we need to decompress
+				compressed = 1;
+				struct CtdlCompressHeader_32 comp32;
+				memcpy(&comp32, in_data.data, sizeof(struct CtdlCompressHeader_32));
+				uncomp_data.size = comp32.uncompressed_len;
+				uncomp_data.data = realloc(uncomp_data.data, uncomp_data.size);
+				destLen = (uLongf)comp32.uncompressed_len;
+	
+				ret = uncompress((Bytef *)uncomp_data.data, (uLongf *)&destLen, (const Bytef *)in_data.data+sizeof(struct CtdlCompressHeader_32), (uLong)comp32.compressed_len);
+				if (ret != Z_OK) {
+					printf("db: uncompress() error %d\n", ret);
+					exit(CTDLEXIT_DB);
+				}
+				// printf("DB: %02x ,  in_keylen: %-3d ,  in_datalen: %-10d , dataptr: %012lx \033[31m(decompressed)\033[0m\n", which_cdb, (int)in_key.size, comp32.uncompressed_len, (long unsigned int)uncomp_data.data);
 			}
 			else {
-				printf("DB: %02x , out_keylen: %-3d , out_datalen: %-10d , dataptr: %012lx\n", which_cdb, (int)out_key.size, (int)out_data.size, (long unsigned int)out_data.data);
-				ret = dst_dbp->put(dst_dbp, NULL, &out_key, &out_data, 0);
+				// printf("DB: %02x ,  in_keylen: %-3d ,  in_datalen: %-10d , dataptr: %012lx\n", which_cdb, (int)in_key.size, (int)in_data.size, (long unsigned int)in_data.data);
 			}
-
-                	if (ret) {
-                        	printf("db: cdb_put(%d): %s", which_cdb, db_strerror(ret));
-				exit(CTDLEXIT_DB);
+	
+			// Call the convert function registered to this table
+			convert_functions[which_cdb](which_cdb, &in_key, (compressed ? &uncomp_data : &in_data), &out_key, &out_data);
+	
+			// The logic here is that if the source data was compressed, we compress the output too
+			if (compressed) {
+				struct CtdlCompressHeader zheader;
+				memset(&zheader, 0, sizeof(struct CtdlCompressHeader));
+				zheader.magic = COMPRESS_MAGIC;
+				zheader.uncompressed_len = out_data.size;
+				recomp_data.data = realloc(recomp_data.data, ((out_data.size * 101) / 100) + 100 + sizeof(struct CtdlCompressHeader));
+	
+				if (compress2((Bytef *)(recomp_data.data + sizeof(struct CtdlCompressHeader)), &destLen, (Bytef *)out_data.data, (uLongf) out_data.size, 1) != Z_OK) {
+					printf("db: compress() error\n");
+					exit(CTDLEXIT_DB);
+				}
+				recomp_data.size = destLen;
 			}
-
-			// Knowing the total number of rows isn't critical to the program.  It's just for the user to know.
-			++num_rows;
+	
+			// write the converted record to the target database
+			if (out_key.size > 0) {
+	
+				// If we compressed the output, write recomp_data instead of out_data
+				if (compressed) {
+					// printf("DB: %02x , out_keylen: %-3d , out_datalen: %-10d , dataptr: %012lx \033[31m(compressed)\033[0m\n", which_cdb, (int)out_key.size, (int)recomp_data.size, (long unsigned int)recomp_data.data);
+					ret = dst_dbp->put(dst_dbp, NULL, &out_key, &recomp_data, 0);
+				}
+				else {
+					// printf("DB: %02x , out_keylen: %-3d , out_datalen: %-10d , dataptr: %012lx\n", which_cdb, (int)out_key.size, (int)out_data.size, (long unsigned int)out_data.data);
+					ret = dst_dbp->put(dst_dbp, NULL, &out_key, &out_data, 0);
+				}
+	
+				if (ret) {
+					printf("db: cdb_put(%d): %s", which_cdb, db_strerror(ret));
+					exit(CTDLEXIT_DB);
+				}
+	
+				// Knowing the total number of rows isn't critical to the program.  It's just for the user to know.
+				++num_rows;
+				printf("   \033[32m%d\033[0m\r", num_rows);
+				fflush(stdout);
+			}
 		}
 	}
 
@@ -692,18 +721,20 @@ void convert_table(int which_cdb, DB_ENV *src_dbenv, DB_ENV *dst_dbenv) {
 	free(uncomp_data.data);
 	free(recomp_data.data);
 
-	// Flush the logs...
-	//printf("\033[33m\033[1mdb: flushing the database logs\033[0m\n");
-	//if ((ret = src_dbenv->log_flush(src_dbenv, NULL))) {
-		//printf("db: log_flush: %s\n", db_strerror(ret));
-	//}
-
 	// ...and close the database (table)
-	printf("\033[33m\033[1mdb: closing database %02x\033[0m\n", which_cdb);
+	printf("\033[33m\033[1mdb: closing source %02x\033[0m\n", which_cdb);
 	ret = src_dbp->close(src_dbp, 0);
 	if (ret) {
 		printf("db: db_close: %s\n", db_strerror(ret));
 	}
+
+	printf("\033[33m\033[1mdb: closing destination %02x\033[0m\n", which_cdb);
+	ret = dst_dbp->close(dst_dbp, 0);
+	if (ret) {
+		printf("db: db_close: %s\n", db_strerror(ret));
+	}
+
+	printf("\n");
 
 }
 
@@ -743,7 +774,7 @@ int main(int argc, char **argv) {
 
 	// Warn the user
 	printf("------------------------------------------------------------------------\n");
-	printf("ctdl3264 s a Citadel database written on a 32-bit system to one  \n");
+	printf("ctdl3264 converts a Citadel database written on a 32-bit system to one  \n");
 	printf("that can be run on a 64-bit system.  It is intended to be run OFFLINE.  \n");
 	printf("Neither the source nor the target data directories should be mounted by \n");
 	printf("a running Citadel server.  We \033[1mguarantee\033[0m data corruption if you do not   \n");
