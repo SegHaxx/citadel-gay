@@ -397,6 +397,10 @@ void convert_bigmsgs(int which_cdb, DBT *in_key, DBT *in_data, DBT *out_key, DBT
 		abort();
 	}
 
+	out_key->size = sizeof(long);
+	out_key->data = realloc(out_key->data, out_key->size);
+	memcpy(out_key->data, &out_msgnum, sizeof(long));
+
 	// the data is binary-ish but has no packed integers
 	out_data->size = in_data->size;
 	out_data->data = realloc(out_data->data, out_data->size);
@@ -627,14 +631,15 @@ void convert_table(int which_cdb, DB_ENV *src_dbenv, DB_ENV *dst_dbenv) {
 
 	// Walk through the database, calling convert functions as we go and clearing buffers before each call.
 	while (out_key.size = 0, out_data.size = 0, (ret = src_dbcp->get(src_dbcp, &in_key, &in_data, DB_NEXT)) == 0) {
+	
+		// Knowing the total number of rows isn't critical to the program.  It's just for the user to know.
+		++num_rows;
+		printf("   \033[32m%d\033[0m\r", num_rows);
+		fflush(stdout);
 
-
-		if (in_key.size == 0) {
-			printf("\033[31mzero length key, skipping\033[0m\n");
-		}
-
-		else if (in_data.size == 0) {
-			printf("\033[31mzero length data, skipping\033[0m\n");
+		// If either the key or data are zero length, skip this record
+		if ((in_key.size == 0) || (in_data.size == 0)) {
+			printf("\033[31minput keylen=%d , datalen=%d , skipping record\033[0m\n", in_key.size, in_data.size);
 		}
 
 		else {	// Both key and data are >0 length so we're good to go
@@ -698,11 +703,9 @@ void convert_table(int which_cdb, DB_ENV *src_dbenv, DB_ENV *dst_dbenv) {
 					printf("db: cdb_put(%d): %s", which_cdb, db_strerror(ret));
 					exit(CTDLEXIT_DB);
 				}
-	
-				// Knowing the total number of rows isn't critical to the program.  It's just for the user to know.
-				++num_rows;
-				printf("   \033[32m%d\033[0m\r", num_rows);
-				fflush(stdout);
+			}
+			else {
+				printf("\033[31moutput keylen=%d , skipping record\033[0m\n", out_key.size);
 			}
 		}
 	}
