@@ -328,7 +328,7 @@ void convert_visits(int which_cdb, DBT *in_key, DBT *in_data, DBT *out_key, DBT 
 	strcpy(visit64->v_answered,			visit32->v_answered);
 	visit64->v_view			= (int)		visit32->v_view;
 
-	// printf("\033[32m\033[1mVisit: room %ld, gen %ld, user %ld\033[0m\n", visit64->v_roomnum, visit64->v_roomgen, visit64->v_usernum);
+	// printf("\033[32m\033[1mVisit: room %10ld, gen %10ld, user %10ld\033[0m\n", visit64->v_roomnum, visit64->v_roomgen, visit64->v_usernum);
 
 	// create the key (which is based on the data, so there is no need to convert the old key)
 	out_key->size = sizeof(struct visit_index);
@@ -380,6 +380,8 @@ void convert_usetable(int which_cdb, DBT *in_key, DBT *in_data, DBT *out_key, DB
 	//  the data
 	strcpy(use64->ut_msgid,				use32->ut_msgid);
 	use64->ut_timestamp		= (time_t)	use32->ut_timestamp;
+
+	printf("\033[32m\033[1muse table: %s , %s\033[0m\n", use64->ut_msgid, asctime(localtime(&use64->ut_timestamp)));
 }
 
 
@@ -799,9 +801,10 @@ int main(int argc, char **argv) {
 
 	src_dbenv = open_dbenv(src_dir);
 	dst_dbenv = open_dbenv(dst_dir);
-	for (int i = 0; i < MAXCDB; ++i) {
-		convert_table(i, src_dbenv, dst_dbenv);
-	}
+	//for (int i = 0; i < MAXCDB; ++i) {
+		//convert_table(i, src_dbenv, dst_dbenv);
+	//}
+	convert_table(7, src_dbenv, dst_dbenv);
 	close_dbenv(src_dbenv);
 	close_dbenv(dst_dbenv);
 
