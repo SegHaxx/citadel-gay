@@ -6,11 +6,17 @@
 # Source our data structures from the real live working code
 SERVER_H=server/server.h
 
+tail_opt=
+tail +1 ${SERVER_H} > /dev/null 2>&1
+if [ $? != 0 ] ; then
+	tail_opt=-n
+fi
+
 # Generate the "32-bit" versions of these structures.
 # Note that this is specifically for converting "32-bit to 64-bit" -- NOT "any-to-any"
 convert_struct() {
 	start_line=$(cat ${SERVER_H} | egrep -n "^struct $1 {" | cut -d: -f1)
-	tail +${start_line} ${SERVER_H} | sed '/};/q' \
+	tail ${tail_opt} +${start_line} ${SERVER_H} | sed '/};/q' \
 	| sed s/"^struct $1 {"/"struct ${1}_32 {"/g \
 	| sed s/"long "/"int32_t "/g \
 	| sed s/"time_t "/"int32_t "/g \

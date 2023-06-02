@@ -871,7 +871,11 @@ int purge_user(char pname[]) {
 	PerformUserHooks(&usbuf, EVT_PURGEUSER);
 
 	// delete any existing user/room relationships
-	cdb_delete(CDB_VISIT, &usbuf.usernum, sizeof(long));
+	// Commenting out since it was assuming the user number was
+	//   at the top of the index.  Room number is actually first.
+	//   Auto-Purge will clean up the records later, so not worth
+	//   scanning all the records here.
+	//cdb_delete(CDB_VISIT, &usbuf.usernum, sizeof(long));
 
 	// delete the users-by-number index record
 	cdb_delete(CDB_USERSBYNUMBER, &usbuf.usernum, sizeof(long));

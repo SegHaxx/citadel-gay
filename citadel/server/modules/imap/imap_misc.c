@@ -384,6 +384,9 @@ void imap_append(int num_parms, ConstStr *Params) {
 			new_msgnum = CtdlSubmitMsg(msg, NULL, "");
 		}
 		if (new_msgnum >= 0L) {
+			if (IsEmptyStr(new_message_flags)) {
+					imap_do_append_flags(new_msgnum, new_message_flags);
+			}
 			IReplyPrintf("OK [APPENDUID %ld %ld] APPEND completed",
 				     GLOBAL_UIDVALIDITY_VALUE, new_msgnum);
 		}
@@ -405,8 +408,4 @@ void imap_append(int num_parms, ConstStr *Params) {
 
 	/* We don't need this buffer anymore */
 	CM_Free(msg);
-
-	if (IsEmptyStr(new_message_flags)) {
-		imap_do_append_flags(new_msgnum, new_message_flags);
-	}
 }
