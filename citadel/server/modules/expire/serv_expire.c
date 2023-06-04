@@ -66,11 +66,6 @@ struct ctdlroomref {
 	long msgnum;
 };
 
-struct UPurgeList {
-	struct UPurgeList *next;
-	char up_key[256];
-};
-
 struct EPurgeList {
 	struct EPurgeList *next;
 	int ep_keylen;
@@ -584,13 +579,13 @@ int PurgeVisits(void) {
 
 
 // Purge the use table of old entries.
+// Holy crap, this is WAY better.  We need to replace most linked lists with arrays.
 int PurgeUseTable(StrBuf *ErrMsg) {
 	int purged = 0;
 	int total = 0;
 	struct cdbdata *cdbut;
 	struct UseTable ut;
-	struct UPurgeList *ul = NULL;
-	struct UPurgeList *uptr; 
+	Array *purge_list = array_new(sizeof(int));
 
 	// Phase 1: traverse through the table, discovering old records...
 
@@ -606,26 +601,20 @@ int PurgeUseTable(StrBuf *ErrMsg) {
 		}
 		cdb_free(cdbut);
 
-		if ( (time(NULL) - ut.ut_timestamp) > USETABLE_RETAIN ) {
-			uptr = (struct UPurgeList *) malloc(sizeof(struct UPurgeList));
-			if (uptr != NULL) {
-				uptr->next = ul;
-				safestrncpy(uptr->up_key, ut.ut_msgid, sizeof uptr->up_key);
-				ul = uptr;
-			}
+		if ( (time(NULL) - ut.timestamp) > USETABLE_RETAIN ) {
+			array_append(purge_list, &ut.hash);
 			++purged;
 		}
-
 	}
 
 	// Phase 2: delete the records
 	syslog(LOG_DEBUG, "Purge use table: phase 2");
-	while (ul != NULL) {
-		cdb_delete(CDB_USETABLE, ul->up_key, strlen(ul->up_key));
-		uptr = ul->next;
-		free(ul);
-		ul = uptr;
+	int i;
+	for (i=0; i<purged; ++i) {
+		struct UseTable *u = (struct UseTable *)array_get_element_at(purge_list, i);
+		cdb_delete(CDB_USETABLE, &u->hash, sizeof(int));
 	}
+	array_free(purge_list);
 
 	syslog(LOG_DEBUG, "Purge use table: finished (purged %d of %d records)", purged, total);
 	return(purged);

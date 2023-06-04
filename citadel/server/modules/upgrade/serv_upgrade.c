@@ -3,7 +3,7 @@
 // guesses about what kind of data format changes need to be applied, and
 // we apply them transparently.
 //
-// Copyright (c) 1987-2022 by the citadel.org team
+// Copyright (c) 1987-2023 by the citadel.org team
 //
 // This program is open source software; you can redistribute it and/or
 // modify it under the terms of the GNU General Public License version 3.
@@ -483,6 +483,9 @@ void pre_startup_upgrades(void) {
 	}
 	if ((oldver > 000) && (oldver < 973)) {				// This was the old extauth table.
 		cdb_trunc(CDB_UNUSED1);					// We will do this better someday.
+	}
+	if ((oldver > 000) && (oldver < 975)) {				// An unrepairable defect was found in this table.
+		cdb_trunc(CDB_USETABLE);				// We have to discard it and start over.
 	}
 
 	CtdlSetConfigInt("MM_hosted_upgrade_level", REV_LEVEL);

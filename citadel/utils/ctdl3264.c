@@ -365,7 +365,7 @@ void convert_dir(int which_cdb, DBT *in_key, DBT *in_data, DBT *out_key, DBT *ou
 // convert function for a use table record
 void convert_usetable(int which_cdb, DBT *in_key, DBT *in_data, DBT *out_key, DBT *out_data) {
 
-	// the key is a string
+	// the key is an int, which is the same size (32 bits) on both 32 and 64 bit systems
 	out_key->size = in_key->size;
 	out_key->data = realloc(out_key->data, out_key->size);
 	memcpy(out_key->data, in_key->data, in_key->size);
@@ -378,10 +378,10 @@ void convert_usetable(int which_cdb, DBT *in_key, DBT *in_data, DBT *out_key, DB
 	struct UseTable *use64 = (struct UseTable *)out_data->data;
 
 	//  the data
-	strcpy(use64->ut_msgid,				use32->ut_msgid);
-	use64->ut_timestamp		= (time_t)	use32->ut_timestamp;
+	use64->hash			=		use32->hash;
+	use64->timestamp		= (time_t)	use32->timestamp;
 
-	printf("\033[32m\033[1muse table: %s , %s\033[0m\n", use64->ut_msgid, asctime(localtime(&use64->ut_timestamp)));
+	printf("\033[32m\033[1muse table: %d , %s\033[0m\n", use64->hash, asctime(localtime(&use64->timestamp)));
 }
 
 

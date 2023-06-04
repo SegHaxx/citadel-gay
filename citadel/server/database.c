@@ -749,19 +749,19 @@ int CheckIfAlreadySeen(StrBuf *guid) {
 	int found = 0;
 	struct UseTable ut;
 	struct cdbdata *cdbut;
+	int hash = HashLittle(ChrPtr(guid), StrLength(guid));
 
-	syslog(LOG_DEBUG, "db: CheckIfAlreadySeen(%s)", ChrPtr(guid));
-	cdbut = cdb_fetch(CDB_USETABLE, SKEY(guid));
+	syslog(LOG_DEBUG, "db: CheckIfAlreadySeen(%d)", hash);
+	cdbut = cdb_fetch(CDB_USETABLE, &hash, sizeof(hash));
 	if (cdbut != NULL) {
 		found = 1;
 		cdb_free(cdbut);
 	}
 
-	// (Re)write the record, to update the timestamp.  Zeroing it out makes it compress better.
-	memset(&ut, 0, sizeof(struct UseTable));
-	memcpy(ut.ut_msgid, SKEY(guid));
-	ut.ut_timestamp = time(NULL);
-	cdb_store(CDB_USETABLE, SKEY(guid), &ut, sizeof(struct UseTable));
+	// (Re)write the record, to update the timestamp.
+	ut.hash = hash;
+	ut.timestamp = time(NULL);
+	cdb_store(CDB_USETABLE, &hash, sizeof(hash), &ut, sizeof(struct UseTable));
 	return (found);
 }
 

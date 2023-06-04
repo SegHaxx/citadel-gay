@@ -33,7 +33,7 @@ echo -e '\033[33m\033[1mwebcit     \033[32m was version     \033[33m'$webcit_ver
 echo -e '\033[33m\033[1mtextclient \033[32m was version     \033[33m'$textclient_version'\033[0m'
 echo -e '\033[33m\033[1mnew release\033[32m will be version \033[33m'$NEW_VERSION'\033[0m'
 echo -e ''
-echo -e '\033[41m\033[37m\033[1m THIS WILL INITIATE THE RELEASE PIPELINE. \033[0m'
+#echo -e '\033[41m\033[37m\033[1m THIS WILL INITIATE THE RELEASE PIPELINE. \033[0m'
 echo -n 'Proceed (y/n) ? '
 read x
 
