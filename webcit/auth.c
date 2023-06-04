@@ -16,7 +16,6 @@
 #include "webserver.h"
 #include <ctype.h>
 
-extern uint32_t hashlittle( const void *key, size_t length, uint32_t initval);
 
 /*
  * Access level definitions.  This is initialized from a function rather than a
