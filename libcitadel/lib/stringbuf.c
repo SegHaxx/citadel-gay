@@ -638,11 +638,8 @@ void HFreeStrBuf (void *VFreeMe) {
  *                      Simple string transformations                          *
  *******************************************************************************/
 
-/*
- *  Wrapper around atol
- */
-long StrTol(const StrBuf *Buf)
-{
+//  Wrapper around atol
+long StrTol(const StrBuf *Buf) {
 	if (Buf == NULL)
 		return 0;
 	if(Buf->BufUsed > 0)
@@ -651,11 +648,9 @@ long StrTol(const StrBuf *Buf)
 		return 0;
 }
 
-/*
- *  Wrapper around atoi
- */
-int StrToi(const StrBuf *Buf)
-{
+
+//  Wrapper around atoi
+int StrToi(const StrBuf *Buf) {
 	if (Buf == NULL)
 		return 0;
 	if (Buf->BufUsed > 0)
@@ -664,11 +659,10 @@ int StrToi(const StrBuf *Buf)
 		return 0;
 }
 
-/*
- *  Checks to see if the string is a pure number 
- *  Buf The buffer to inspect
- * @returns 1 if its a pure number, 0, if not.
- */
+
+// Checks to see if the string is a pure number 
+// Buf The buffer to inspect
+// returns 1 if its a pure number, 0, if not.
 int StrBufIsNumber(const StrBuf *Buf) {
 	char * pEnd;
 	if ((Buf == NULL) || (Buf->BufUsed == 0)) {
@@ -684,16 +678,14 @@ int StrBufIsNumber(const StrBuf *Buf) {
 	return 0;
 } 
 
-/**
- *  modifies a Single char of the Buf
- * You can point to it via char* or a zero-based integer
- *  Buf The buffer to manipulate
- *  ptr char* to zero; use NULL if unused
- *  nThChar zero based pointer into the string; use -1 if unused
- *  PeekValue The Character to place into the position
- */
-long StrBufPeek(StrBuf *Buf, const char* ptr, long nThChar, char PeekValue)
-{
+
+// modifies a Single char of the Buf
+// You can point to it via char* or a zero-based integer
+// Buf The buffer to manipulate
+// ptr char* to zero; use NULL if unused
+// nThChar zero based pointer into the string; use -1 if unused
+// PeekValue The Character to place into the position
+long StrBufPeek(StrBuf *Buf, const char* ptr, long nThChar, char PeekValue) {
 	if (Buf == NULL)
 		return -1;
 	if (ptr != NULL)
@@ -704,17 +696,15 @@ long StrBufPeek(StrBuf *Buf, const char* ptr, long nThChar, char PeekValue)
 	return nThChar;
 }
 
-/**
- *  modifies a range of chars of the Buf
- * You can point to it via char* or a zero-based integer
- *  Buf The buffer to manipulate
- *  ptr char* to zero; use NULL if unused
- *  nThChar zero based pointer into the string; use -1 if unused
- *  nChars how many chars are to be flushed?
- *  PookValue The Character to place into that area
- */
-long StrBufPook(StrBuf *Buf, const char* ptr, long nThChar, long nChars, char PookValue)
-{
+
+// modifies a range of chars of the Buf
+// You can point to it via char* or a zero-based integer
+// Buf The buffer to manipulate
+// ptr char* to zero; use NULL if unused
+// nThChar zero based pointer into the string; use -1 if unused
+// nChars how many chars are to be flushed?
+// PookValue The Character to place into that area
+long StrBufPook(StrBuf *Buf, const char* ptr, long nThChar, long nChars, char PookValue) {
 	if (Buf == NULL)
 		return -1;
 	if (ptr != NULL)
@@ -725,19 +715,17 @@ long StrBufPook(StrBuf *Buf, const char* ptr, long nThChar, long nChars, char Po
 		nChars =  Buf->BufUsed - nThChar;
 
 	memset(Buf->buf + nThChar, PookValue, nChars);
-	/* just to be shure... */
+	// just to be sure...
 	Buf->buf[Buf->BufUsed] = 0;
 	return nChars;
 }
 
-/**
- *  Append a StringBuffer to the buffer
- *  Buf Buffer to modify
- *  AppendBuf Buffer to copy at the end of our buffer
- *  Offset Should we start copying from an offset?
- */
-void StrBufAppendBuf(StrBuf *Buf, const StrBuf *AppendBuf, unsigned long Offset)
-{
+
+// Append a StringBuffer to the buffer
+// Buf Buffer to modify
+// AppendBuf Buffer to copy at the end of our buffer
+// Offset Should we start copying from an offset?
+void StrBufAppendBuf(StrBuf *Buf, const StrBuf *AppendBuf, unsigned long Offset) {
 	if ((AppendBuf == NULL) || (AppendBuf->buf == NULL) ||
 	    (Buf == NULL) || (Buf->buf == NULL))
 		return;
@@ -782,15 +770,13 @@ void StrBufAppendBufPlain(StrBuf *Buf, const char *AppendBuf, long AppendSize, u
 	Buf->buf[Buf->BufUsed] = '\0';
 }
 
-/*
- *  sprintf like function appending the formated string to the buffer
- * vsnprintf version to wrap into own calls
- *  Buf Buffer to extend by format and Params
- *  format printf alike format to add
- *  ap va_list containing the items for format
- */
-void StrBufVAppendPrintf(StrBuf *Buf, const char *format, va_list ap)
-{
+
+//  sprintf like function appending the formated string to the buffer
+// vsnprintf version to wrap into own calls
+//  Buf Buffer to extend by format and Params
+//  format printf alike format to add
+//  ap va_list containing the items for format
+void StrBufVAppendPrintf(StrBuf *Buf, const char *format, va_list ap) {
 	va_list apl;
 	size_t BufSize;
 	size_t nWritten;
@@ -807,14 +793,12 @@ void StrBufVAppendPrintf(StrBuf *Buf, const char *format, va_list ap)
 	
 	while (newused >= BufSize) {
 		va_copy(apl, ap);
-		nWritten = vsnprintf(Buf->buf + Offset, 
-				     Buf->BufSize - Offset, 
-				     format, apl);
+		nWritten = vsnprintf(Buf->buf + Offset, Buf->BufSize - Offset, format, apl);
 		va_end(apl);
 		newused = Offset + nWritten;
 		if (newused >= Buf->BufSize) {
 			if (IncreaseBuf(Buf, 1, newused) == -1)
-				return; /* TODO: error handling? */
+				return; // TODO: error handling?
 			newused = Buf->BufSize + 1;
 		}
 		else {
@@ -825,13 +809,11 @@ void StrBufVAppendPrintf(StrBuf *Buf, const char *format, va_list ap)
 	}
 }
 
-/**
- *  sprintf like function appending the formated string to the buffer
- *  Buf Buffer to extend by format and Params
- *  format printf alike format to add
- */
-void StrBufAppendPrintf(StrBuf *Buf, const char *format, ...)
-{
+
+// sprintf like function appending the formated string to the buffer
+// Buf Buffer to extend by format and Params
+// format printf alike format to add
+void StrBufAppendPrintf(StrBuf *Buf, const char *format, ...) {
 	size_t BufSize;
 	size_t nWritten;
 	size_t Offset;
@@ -848,14 +830,12 @@ void StrBufAppendPrintf(StrBuf *Buf, const char *format, ...)
 
 	while (newused >= BufSize) {
 		va_start(arg_ptr, format);
-		nWritten = vsnprintf(Buf->buf + Buf->BufUsed, 
-				     Buf->BufSize - Buf->BufUsed, 
-				     format, arg_ptr);
+		nWritten = vsnprintf(Buf->buf + Buf->BufUsed, Buf->BufSize - Buf->BufUsed, format, arg_ptr);
 		va_end(arg_ptr);
 		newused = Buf->BufUsed + nWritten;
 		if (newused >= Buf->BufSize) {
 			if (IncreaseBuf(Buf, 1, newused) == -1)
-				return; /* TODO: error handling? */
+				return; // TODO: error handling?
 			newused = Buf->BufSize + 1;
 		}
 		else {
@@ -866,13 +846,11 @@ void StrBufAppendPrintf(StrBuf *Buf, const char *format, ...)
 	}
 }
 
-/**
- *  sprintf like function putting the formated string into the buffer
- *  Buf Buffer to extend by format and Parameters
- *  format printf alike format to add
- */
-void StrBufPrintf(StrBuf *Buf, const char *format, ...)
-{
+
+//  sprintf like function putting the formated string into the buffer
+//  Buf Buffer to extend by format and Parameters
+//  format printf alike format to add
+void StrBufPrintf(StrBuf *Buf, const char *format, ...) {
 	size_t nWritten;
 	va_list arg_ptr;
 	
@@ -886,7 +864,7 @@ void StrBufPrintf(StrBuf *Buf, const char *format, ...)
 		va_end(arg_ptr);
 		if (nWritten >= Buf->BufSize) {
 			if (IncreaseBuf(Buf, 0, 0) == -1)
-				return; /* TODO: error handling? */
+				return; // TODO: error handling?
 			nWritten = Buf->BufSize + 1;
 			continue;
 		}
@@ -894,15 +872,10 @@ void StrBufPrintf(StrBuf *Buf, const char *format, ...)
 	}
 }
 
-/**
- *  Callback for cURL to append the webserver reply to a buffer
- *  ptr pre-defined by the cURL API; see man 3 curl for mre info
- *  size pre-defined by the cURL API; see man 3 curl for mre info
- *  nmemb pre-defined by the cURL API; see man 3 curl for mre info
- *  stream pre-defined by the cURL API; see man 3 curl for mre info
- */
-size_t CurlFillStrBuf_callback(void *ptr, size_t size, size_t nmemb, void *stream)
-{
+
+//  Callback for cURL to append the webserver reply to a buffer
+//  ptr, size, nmemb, and stream are pre-defined by the cURL API; see man 3 curl for more info
+size_t CurlFillStrBuf_callback(void *ptr, size_t size, size_t nmemb, void *stream) {
 
 	StrBuf *Target;
 
@@ -915,25 +888,20 @@ size_t CurlFillStrBuf_callback(void *ptr, size_t size, size_t nmemb, void *strea
 }
 
 
-/**
- *  extracts a substring from Source into dest
- *  dest buffer to place substring into
- *  Source string to copy substring from
- *  Offset chars to skip from start
- *  nChars number of chars to copy
- * @returns the number of chars copied; may be different from nChars due to the size of Source
- */
-int StrBufSub(StrBuf *dest, const StrBuf *Source, unsigned long Offset, size_t nChars)
-{
+// extracts a substring from Source into dest
+// dest buffer to place substring into
+// Source string to copy substring from
+// Offset chars to skip from start
+// nChars number of chars to copy
+// returns the number of chars copied; may be different from nChars due to the size of Source
+int StrBufSub(StrBuf *dest, const StrBuf *Source, unsigned long Offset, size_t nChars) {
 	size_t NCharsRemain;
-	if (Offset > Source->BufUsed)
-	{
+	if (Offset > Source->BufUsed) {
 		if (dest != NULL)
 			FlushStrBuf(dest);
 		return 0;
 	}
-	if (Offset + nChars < Source->BufUsed)
-	{
+	if (Offset + nChars < Source->BufUsed) {
 		if ((nChars >= dest->BufSize) && 
 		    (IncreaseBuf(dest, 0, nChars + 1) == -1))
 			return 0;
@@ -4685,11 +4653,7 @@ int StrBufReadBLOBBuffered(StrBuf *Blob,
 	int nSuccessLess = 0;
 	int MaxTries;
 
-	if ((Blob == NULL)  ||
-	    (*fd == -1)     ||
-	    (IOBuf == NULL) ||
-	    (Pos == NULL))
-	{
+	if ((Blob == NULL) || (*fd == -1) || (IOBuf == NULL) || (Pos == NULL)) {
 		if (Pos != NULL)
 			*Pos = NULL;
 		*Error = ErrRBB_BLOBFPreConditionFailed;
@@ -4709,8 +4673,7 @@ int StrBufReadBLOBBuffered(StrBuf *Blob,
 	rlen = IOBuf->BufUsed - rlen;
 
 
-	if ((IOBuf->BufUsed > 0) && (pos != NULL) && (pos < IOBuf->buf + IOBuf->BufUsed)) 
-	{
+	if ((IOBuf->BufUsed > 0) && (pos != NULL) && (pos < IOBuf->buf + IOBuf->BufUsed)) {
 		if (rlen < nBytes) {
 			memcpy(Blob->buf + Blob->BufUsed, pos, rlen);
 			Blob->BufUsed += rlen;
@@ -4770,8 +4733,7 @@ int StrBufReadBLOBBuffered(StrBuf *Blob,
 			}
 		}
 		rlen = read(*fd, ptr, IOBuf->BufSize - (ptr - IOBuf->buf));
-		// if (rlen == -1) {		2021feb27 ajc changed this, apparently we will always get at least 1 byte unless the connection is broken
-		if (rlen < 1) {
+		if (rlen < 1) {			// We will always get at least 1 byte unless the connection is broken
 			close(*fd);
 			*fd = -1;
 			*Error = strerror(errno);
@@ -4815,24 +4777,18 @@ int StrBufReadBLOBBuffered(StrBuf *Blob,
 	return nRead + nAlreadyRead;
 }
 
-/**
- *  extract a "next line" from Buf; Ptr to persist across several iterations
- *  LineBuf your line will be copied here.
- *  Buf BLOB with lines of text...
- *  Ptr moved arround to keep the next-line across several iterations
- *        has to be &NULL on start; will be &NotNULL on end of buffer
- * @returns size of remaining buffer
- */
-int StrBufSipLine(StrBuf *LineBuf, const StrBuf *Buf, const char **Ptr)
-{
+
+// extract a "next line" from Buf; Ptr to persist across several iterations
+// LineBuf your line will be copied here.
+// Buf BLOB with lines of text...
+// Ptr moved arround to keep the next-line across several iterations
+//     has to be &NULL on start; will be &NotNULL on end of buffer
+// returns size of remaining buffer
+int StrBufSipLine(StrBuf *LineBuf, const StrBuf *Buf, const char **Ptr) {
 	const char *aptr, *ptr, *eptr;
 	char *optr, *xptr;
 
-	if ((Buf == NULL) ||
-	    (*Ptr == StrBufNOTNULL) ||
-	    (LineBuf == NULL)||
-	    (LineBuf->buf == NULL))
-	{
+	if ((Buf == NULL) || (*Ptr == StrBufNOTNULL) || (LineBuf == NULL)|| (LineBuf->buf == NULL)) {
 		*Ptr = StrBufNOTNULL;
 		return 0;
 	}
@@ -4847,10 +4803,7 @@ int StrBufSipLine(StrBuf *LineBuf, const StrBuf *Buf, const char **Ptr)
 	eptr = Buf->buf + Buf->BufUsed;
 	xptr = LineBuf->buf + LineBuf->BufSize - 1;
 
-	while ((ptr <= eptr) && 
-	       (*ptr != '\n') &&
-	       (*ptr != '\r') )
-	{
+	while ((ptr <= eptr) && (*ptr != '\n') && (*ptr != '\r') ) {
 		*optr = *ptr;
 		optr++; ptr++;
 		if (optr == xptr) {
@@ -4881,13 +4834,10 @@ int StrBufSipLine(StrBuf *LineBuf, const StrBuf *Buf, const char **Ptr)
 }
 
 
-/**
- *  removes double slashes from pathnames
- *  Dir directory string to filter
- *  RemoveTrailingSlash allows / disallows trailing slashes
- */
-void StrBufStripSlashes(StrBuf *Dir, int RemoveTrailingSlash)
-{
+// removes double slashes from pathnames
+// Dir directory string to filter
+// RemoveTrailingSlash allows / disallows trailing slashes
+void StrBufStripSlashes(StrBuf *Dir, int RemoveTrailingSlash) {
 	char *a, *b;
 
 	a = b = Dir->buf;
@@ -4914,13 +4864,10 @@ void StrBufStripSlashes(StrBuf *Dir, int RemoveTrailingSlash)
 }
 
 
-/*
- * Decode a quoted-printable encoded StrBuf buffer "in place"
- * This is possible because the decoded will always be shorter than the encoded
- * so we don't have to worry about the buffer being to small.
- */
-void StrBufDecodeQP(StrBuf *Buf)
-{
+// Decode a quoted-printable encoded StrBuf buffer "in place"
+// This is possible because the decoded will always be shorter than the encoded
+// so we don't have to worry about the buffer being to small.
+void StrBufDecodeQP(StrBuf *Buf) {
 	if (!Buf) {				// sanity check #1
 		return;
 	}
