@@ -65,18 +65,16 @@ const char HexList[256][3] = {
 	"F0","F1","F2","F3","F4","F5","F6","F7","F8","F9","FA","FB","FC","FD","FE","FF"};
 
 
-/*
- * Private Structure for the Stringbuffer
- */
+// Private Structure for the Stringbuffer
 struct StrBuf {
-	char *buf;         /**< the pointer to the dynamic buffer */
-	long BufSize;      /**< how many spcae do we optain */
-	long BufUsed;      /**< StNumber of Chars used excluding the trailing \\0 */
-	int ConstBuf;      /**< are we just a wrapper arround a static buffer and musn't we be changed? */
+	char *buf;		// the pointer to the dynamic buffer
+	long BufSize;		// how many spcae do we optain
+	long BufUsed;		// Number of Chars used excluding the trailing \\0
+	int ConstBuf;		// are we just a wrapper arround a static buffer and musn't we be changed?
 #ifdef SIZE_DEBUG
-	long nIncreases;   /**< for profiling; cound how many times we needed more */
-	char bt [SIZ];     /**< Stacktrace of last increase */
-	char bt_lastinc [SIZ]; /**< How much did we increase last time? */
+	long nIncreases;	// for profiling; cound how many times we needed more
+	char bt [SIZ];		// Stacktrace of last increase
+	char bt_lastinc[SIZ];	// How much did we increase last time?
 #endif
 };
 
@@ -93,22 +91,24 @@ static void StrBufBacktrace(StrBuf *Buf, int which) {
 	size_t size, i;
 	char **strings;
 
-	if (which)
+	if (which) {
 		pstart = pch = Buf->bt;
-	else
+	}
+	else {
 		pstart = pch = Buf->bt_lastinc;
+	}
 	size = backtrace(stack_frames, sizeof(stack_frames) / sizeof(void*));
 	strings = backtrace_symbols(stack_frames, size);
 	for (i = 0; i < size; i++) {
-		if (strings != NULL)
+		if (strings != NULL) {
 			n = snprintf(pch, SIZ - (pch - pstart), "%s\\n", strings[i]);
-		else
+		}
+		else {
 			n = snprintf(pch, SIZ - (pch - pstart), "%p\\n", stack_frames[i]);
+		}
 		pch += n;
 	}
 	free(strings);
-
-
 }
 #endif
 

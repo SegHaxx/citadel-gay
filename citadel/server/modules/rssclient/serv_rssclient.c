@@ -33,28 +33,22 @@
 #include "../../context.h"
 #include "../../internet_addressing.h"
 
-struct rssroom {
-	struct rssroom *next;
-	char *room;
-};
-
-struct rssurl {
-	struct rssurl *next;
-	char *url;
-	struct rssroom *rooms;
+struct rssfeed {
+	char url[SIZ];			// string containing the URL of an RSS or Atom feed
+	char room[ROOMNAMELEN];		// the name of a room which is pulling this feed
 };
 
 struct rssparser {
+	char url[SIZ];
 	StrBuf *CData;
 	struct CtdlMessage *msg;
 	char *link;
 	char *description;
 	char *item_id;
-	struct rssroom *rooms;
 };
 
+Array *feeds = NULL;
 time_t last_run = 0L;
-struct rssurl *rsstodo = NULL;
 
 
 // This handler is called whenever an XML tag opens.
@@ -99,6 +93,7 @@ void rss_start_element(void *data, const char *el, const char **attribute) {
 void rss_end_element(void *data, const char *el) {
 	struct rssparser *r = (struct rssparser *)data;
 	StrBuf *encoded_field;
+	long msgnum;
 
 	if (server_shutting_down) return;			// shunt the whole operation if we're exiting
 
@@ -169,17 +164,19 @@ void rss_end_element(void *data, const char *el) {
 					CM_SetFieldLONG(r->msg, eTimestamp, time(NULL));
 				}
 
-				// Save it to the room(s)
-				struct rssroom *rr = NULL;
-				long msgnum = (-1);
-				for (rr=r->rooms; rr!=NULL; rr=rr->next) {
-					if (rr == r->rooms) {
-						msgnum = CtdlSubmitMsg(r->msg, NULL, rr->room);		// in first room, save msg
+				msgnum = -1 ;
+				for (int i=0; i<array_len(feeds); ++i) {
+					struct rssfeed *rf = (struct rssfeed *) array_get_element_at(feeds, i);
+					if (!strcmp(rf->url, r->url)) {
+						if (msgnum < 0) {
+							// Save the item in a room
+							msgnum = CtdlSubmitMsg(r->msg, NULL, rf->room);
+						}
+						else {
+							// If the same item goes to multiple rooms, just save a pointer
+							CtdlSaveMsgPointerInRoom(rf->room, msgnum, 0, NULL);
+						}
 					}
-					else {
-						CtdlSaveMsgPointerInRoom(rr->room, msgnum, 0, NULL);	// elsewhere, save a pointer
-					}
-					syslog(LOG_DEBUG, "rssclient: saved message %ld to %s", msgnum, rr->room);
 				}
 			}
 			else {
@@ -289,11 +286,13 @@ void rss_handle_data(void *data, const char *content, int length) {
 
 
 // Feed has been downloaded, now parse it.
-void rss_parse_feed(StrBuf *Feed, struct rssroom *rooms) {
+// `Feed` is the actual RSS downloaded from the site.
+// `url` is a string containing the feed URL
+void rss_parse_feed(StrBuf *Feed, char *url) {
 	struct rssparser r;
 
 	memset(&r, 0, sizeof r);
-	r.rooms = rooms;
+	strcpy(r.url, url);
 	XML_Parser p = XML_ParserCreate("UTF-8");
 	XML_SetElementHandler(p, rss_start_element, rss_end_element);
 	XML_SetCharacterDataHandler(p, rss_handle_data);
@@ -303,42 +302,11 @@ void rss_parse_feed(StrBuf *Feed, struct rssroom *rooms) {
 }
 
 
-// Add a feed/room pair into the todo list
-void rssclient_push_todo(char *rssurl, char *roomname) {
-	struct rssurl *r = NULL;
-	struct rssurl *thisone = NULL;
-	struct rssroom *newroom = NULL;
-
-	syslog(LOG_DEBUG, "rssclient: will fetch %s to %s", rssurl, roomname);
-
-	for (r=rsstodo; r!=NULL; r=r->next) {
-		if (!strcasecmp(r->url, rssurl)) {
-			thisone = r;
-		}
-	}
-
-	if (thisone == NULL) {
-		thisone = malloc(sizeof(struct rssurl));
-		thisone->url = strdup(rssurl);
-		thisone->rooms = NULL;
-		thisone->next = rsstodo;
-		rsstodo = thisone;
-	}
-
-	newroom = malloc(sizeof(struct rssroom));
-	newroom->room = strdup(roomname);
-	newroom->next = thisone->rooms;
-	thisone->rooms = newroom;
-}
-
-
-// pull one feed (possibly multiple rooms)
-void rss_pull_one_feed(struct rssurl *url) {
+// pull the first feed in the list
+void rss_pull_one_feed(char *url) {
 	CURL *curl;
 	CURLcode res;
 	StrBuf *Downloaded = NULL;
-
-	syslog(LOG_DEBUG, "rssclient: fetching %s", url->url);
 
 	curl = curl_easy_init();
 	if (!curl) {
@@ -347,7 +315,8 @@ void rss_pull_one_feed(struct rssurl *url) {
 
 	Downloaded = NewStrBuf();
 
-	curl_easy_setopt(curl, CURLOPT_URL, url->url);
+	syslog(LOG_DEBUG, "rssclient: fetching %s", url);
+	curl_easy_setopt(curl, CURLOPT_URL, url);
 	curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0L);
 	curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 0L);
 	curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);			// Follow redirects
@@ -360,29 +329,24 @@ void rss_pull_one_feed(struct rssurl *url) {
 	}
 	curl_easy_cleanup(curl);
 
-	rss_parse_feed(Downloaded, url->rooms);					// parse the feed
+	rss_parse_feed(Downloaded, url);
 	FreeStrBuf(&Downloaded);						// free the downloaded feed data
 }
 
 
 // We have a list, now download the feeds
 void rss_pull_feeds(void) {
-	struct rssurl *r;
-	struct rssroom *rr;
+	char url[SIZ];
 
-	while ((rsstodo != NULL) && (!server_shutting_down)) {
-		rss_pull_one_feed(rsstodo);
-		r = rsstodo;
-		rsstodo = rsstodo->next;
-		while (r->rooms != NULL) {
-			rr = r->rooms;
-			r->rooms = r->rooms->next;
-			free(rr->room);
-			free(rr);
+	while (array_len(feeds) > 0) {
+		struct rssfeed *r = (struct rssfeed *) array_get_element_at(feeds, 0);
+		strcpy(url, r->url);
+		rss_pull_one_feed(url);
+		while (r = array_get_element_at(feeds, 0), !strcmp(r->url, url)) {
+			array_delete_element_at(feeds, 0);
 		}
-		free(r->url);
-		free(r);
 	}
+
 }
 
 
@@ -391,6 +355,7 @@ void rssclient_scan_room(struct ctdlroom *qrbuf, void *data) {
 	char *serialized_config = NULL;
 	int num_configs = 0;
 	char cfgline[SIZ];
+	struct rssfeed one_feed;
 	int i = 0;
 
 	if (server_shutting_down) return;
@@ -409,7 +374,9 @@ void rssclient_scan_room(struct ctdlroom *qrbuf, void *data) {
 			if (vbar != NULL) {
 				*vbar = 0;
 			}
-			rssclient_push_todo(cfgline, qrbuf->QRname);
+			safestrncpy(one_feed.url, cfgline, SIZ);
+			safestrncpy(one_feed.room, qrbuf->QRname, ROOMNAMELEN);
+			array_append(feeds, &one_feed);
 		}
 	}
 
@@ -432,8 +399,15 @@ void rssclient_scan(void) {
 	}
 
 	syslog(LOG_DEBUG, "rssclient: started");
+	feeds = array_new(sizeof(struct rssfeed));
+	if (feeds == NULL) {
+		syslog(LOG_DEBUG, "rssclient: cannot allocate memory for feed list");
+		return;
+	}
 	CtdlForEachRoom(rssclient_scan_room, NULL);
+	array_sort(feeds, (int (*)(const void *, const void *))strcmp);
 	rss_pull_feeds();
+	array_free(feeds);
 	syslog(LOG_DEBUG, "rssclient: ended");
 	last_run = time(NULL);
 	return;
