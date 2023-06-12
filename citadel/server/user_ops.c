@@ -1063,43 +1063,30 @@ void ForEachUser(void (*CallBack) (char *, void *out_data), void *in_data) {
 	struct cdbdata *cdbus;
 	struct ctdluser *usptr;
 
-	struct feu {
-		struct feu *next;
-		char username[USERNAME_SIZE];
-	};
-	struct feu *ufirst = NULL;
-	struct feu *ulast = NULL;
-	struct feu *f = NULL;
+	Array *all_users = array_new(USERNAME_SIZE);
+	if (all_users == NULL) {
+		syslog(LOG_ERR, "user_ops: alloc failed, ForEachUser() exiting");
+		return;
+	}
+
 
 	cdb_rewind(CDB_USERS);
 
-	// Phase 1 : build a linked list of all our user account names
+	// Phase 1 : build an array of all our user account names
 	while (cdbus = cdb_next_item(CDB_USERS), cdbus != NULL) {
 		usptr = (struct ctdluser *) cdbus->ptr;
-
 		if (strlen(usptr->fullname) > 0) {
-			f = malloc(sizeof(struct feu));
-			f->next = NULL;
-			strncpy(f->username, usptr->fullname, USERNAME_SIZE);
-
-			if (ufirst == NULL) {
-				ufirst = f;
-				ulast = f;
-			}
-			else {
-				ulast->next = f;
-				ulast = f;
-			}
+			array_append(all_users, usptr->fullname);
 		}
 	}
 
 	// Phase 2 : perform the callback for each user while de-allocating the list
-	while (ufirst != NULL) {
-		(*CallBack) (ufirst->username, in_data);
-		f = ufirst;
-		ufirst = ufirst->next;
-		free(f);
+	for (int i=0; i<array_len(all_users); ++i) {
+		(*CallBack) (array_get_element_at(all_users, i), in_data);
 	}
+
+	// Phase 3 : free the array
+	array_free(all_users);
 }
 
 
