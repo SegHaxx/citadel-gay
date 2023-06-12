@@ -342,7 +342,7 @@ void rss_pull_feeds(void) {
 		struct rssfeed *r = (struct rssfeed *) array_get_element_at(feeds, 0);
 		strcpy(url, r->url);
 		rss_pull_one_feed(url);
-		while (r = array_get_element_at(feeds, 0), !strcmp(r->url, url)) {
+		while (r = array_get_element_at(feeds, 0), (r && !strcmp(r->url, url))) {
 			array_delete_element_at(feeds, 0);
 		}
 	}
