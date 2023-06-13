@@ -393,9 +393,9 @@ int cdb_store(int cdb, const void *ckey, int ckeylen, void *cdata, int cdatalen)
 	ddata.size = cdatalen;
 	ddata.data = cdata;
 
-	// "visit" and "usetable" records are numerous and have big, mostly-empty string buffers in them.
+	// "visit" records are numerous and have big, mostly-empty string buffers in them.
 	// If we compress these we can get them down to 1% of their size most of the time.
-	if ((cdb == CDB_VISIT) || (cdb == CDB_USETABLE)) {
+	if (cdb == CDB_VISIT) {
 		compressing = 1;
 		zheader.magic = COMPRESS_MAGIC;
 		zheader.uncompressed_len = cdatalen;
