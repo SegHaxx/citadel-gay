@@ -25,6 +25,7 @@ uid_t ctdluid = 0;
 const char *CitadelServiceUDS="citadel-UDS";
 const char *CitadelServiceTCP="citadel-TCP";
 int sanity_diag_mode = 0;
+char *rescue_string = NULL;
 
 
 // Create or remove a lock file, so we only have one Citadel Server running at a time.
@@ -85,7 +86,7 @@ int main(int argc, char **argv) {
 
 	// parse command-line arguments
 	int g;
-	while ((g=getopt(argc, argv, "cl:dh:x:t:B:Dru:s:")) != EOF) switch(g) {
+	while ((g=getopt(argc, argv, "cl:dh:x:t:B:Dru:s:R:")) != EOF) switch(g) {
 
 		// test this binary for compatibility and exit
 		case 'c':
@@ -146,6 +147,11 @@ int main(int argc, char **argv) {
 		// -s tells the server to behave differently during sanity checks
 		case 's':
 			sanity_diag_mode = atoi(optarg);
+			break;
+
+		// -R is an undocumented rescue mode that you should never use
+		case 'R':
+			rescue_string = strdup(optarg);
 			break;
 
 		// any other parameter makes it crash and burn
@@ -293,8 +299,14 @@ int main(int argc, char **argv) {
 	// We want to check for idle sessions once per minute
 	CtdlRegisterSessionHook(terminate_idle_sessions, EVT_TIMER, PRIO_CLEANUP + 1);
 
-	// Go into multithreaded mode.  When this call exits, the server is stopping.
-	go_threading();
+	// Are we in the undocumented rescue mode?
+	if (rescue_string) {
+		undocumented_rescue_mode(rescue_string);
+	}
+	else {
+		// Go into multithreaded mode.  When this call exits, the server is stopping.
+		go_threading();
+	}
 	
 	// Get ready to shut down the server.
 	int exit_code = master_cleanup(exit_signal);
