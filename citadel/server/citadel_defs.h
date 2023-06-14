@@ -21,7 +21,7 @@
 #include "typesize.h"
 #include "ipcdef.h"
 
-#define REV_LEVEL 978		// This version
+#define REV_LEVEL 979		// This version
 #define REV_MIN		591	// Oldest compatible database
 #define EXPORT_REV_MIN	931	// Oldest compatible export files
 #define LIBCITADEL_MIN	951	// Minimum required version of libcitadel
