@@ -1139,7 +1139,9 @@ int InitialMailCheck() {
 }
 
 
-// Undocumented rescue mode
+// This is an undocumented rescue mode that can be used to rewrite an admin user account that has been corrupted.
+// To prevent abuse, it can only run as a one-shot when the server is not otherwise operational.
+// Don't use this without asking about it.
 void undocumented_rescue_mode(char *rescue_string) {
 	struct ctdluser usbuf;
 	memset(&usbuf, 0, sizeof(struct ctdluser));
