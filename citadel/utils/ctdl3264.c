@@ -165,7 +165,7 @@ void convert_msgmain(int which_cdb, DBT *in_key, DBT *in_data, DBT *out_key, DBT
 
 	// If the msgnum is 0 it's probably not a valid record.
 	else {
-		printf("\033[31mmsgmain: message number 0 is impossible, skipping this record\033[0m\n");
+		// printf("\033[31mmsgmain: message number 0 is impossible, skipping this record\033[0m\n");
 	}
 }
 
@@ -381,7 +381,7 @@ void convert_usetable(int which_cdb, DBT *in_key, DBT *in_data, DBT *out_key, DB
 	use64->hash			=		use32->hash;
 	use64->timestamp		= (time_t)	use32->timestamp;
 
-	printf("\033[32m\033[1muse table: %d , %s\033[0m\n", use64->hash, asctime(localtime(&use64->timestamp)));
+	// printf("\033[32m\033[1muse table: %d , %s\033[0m\n", use64->hash, asctime(localtime(&use64->timestamp)));
 }
 
 
@@ -569,15 +569,12 @@ void convert_table(int which_cdb, DB_ENV *src_dbenv, DB_ENV *dst_dbenv) {
 	char dbfilename[32];
 	uLongf destLen = 0;
 
-	printf("\033[43m\033[K\033[0m\n");
-	printf("\033[43m\033[30m Converting table %02x \033[K\033[0m\n", which_cdb);
-	printf("\033[43m\033[K\033[0m\n");
-
 	// shamelessly swiped from https://docs.oracle.com/database/bdb181/html/programmer_reference/am_cursor.html
 	DB *src_dbp, *dst_dbp;
 	DBC *src_dbcp;
-	DBT in_key, in_data, out_key, out_data, uncomp_data, recomp_data;
-	int num_rows = 0;
+	DBT in_key, in_data, out_key, out_data, uncomp_data;
+	int num_good_rows = 0;
+	int num_bad_rows = 0;
 
 	snprintf(dbfilename, sizeof dbfilename, "cdb.%02x", which_cdb);
 
@@ -590,7 +587,7 @@ void convert_table(int which_cdb, DB_ENV *src_dbenv, DB_ENV *dst_dbenv) {
 	}
 
 	// open the file containing the source table
-	printf("\033[33m\033[1mdb: opening source %s\033[0m\n", dbfilename);
+	// printf("\033[33m\033[1mdb: opening source %s\033[0m\n", dbfilename);
 	ret = src_dbp->open(src_dbp, NULL, dbfilename, NULL, DB_BTREE, 0, 0600);
 	if (ret) {
 		printf("db: db_open: %s\n", db_strerror(ret));
@@ -607,7 +604,7 @@ void convert_table(int which_cdb, DB_ENV *src_dbenv, DB_ENV *dst_dbenv) {
 	}
 
 	// open the file containing the destination table
-	printf("\033[33m\033[1mdb: opening destination %s\033[0m\n", dbfilename);
+	// printf("\033[33m\033[1mdb: opening destination %s\033[0m\n", dbfilename);
 	ret = dst_dbp->open(dst_dbp, NULL, dbfilename, NULL, DB_BTREE, (DB_CREATE | DB_TRUNCATE), 0600);
 	if (ret) {
 		printf("db: db_open: %s\n", db_strerror(ret));
@@ -616,7 +613,7 @@ void convert_table(int which_cdb, DB_ENV *src_dbenv, DB_ENV *dst_dbenv) {
 	}
 
 	// Acquire a cursor to read the source table
-	printf("\033[33m\033[1mdb: acquiring cursor\033[0m\n");
+	// printf("\033[33m\033[1mdb: acquiring cursor\033[0m\n");
 	if ((ret = src_dbp->cursor(src_dbp, NULL, &src_dbcp, 0)) != 0) {
 		printf("db: db_cursor: %s\n", db_strerror(ret));
 		printf("db: exit code %d\n", ret);
@@ -629,19 +626,14 @@ void convert_table(int which_cdb, DB_ENV *src_dbenv, DB_ENV *dst_dbenv) {
 	memset(&out_key,	0, sizeof(DBT));	// output
 	memset(&out_data,	0, sizeof(DBT));
 	memset(&uncomp_data,	0, sizeof(DBT));	// decompressed input (the key doesn't change)
-	memset(&recomp_data,	0, sizeof(DBT));	// recompressed input (the key doesn't change)
 
 	// Walk through the database, calling convert functions as we go and clearing buffers before each call.
 	while (out_key.size = 0, out_data.size = 0, (ret = src_dbcp->get(src_dbcp, &in_key, &in_data, DB_NEXT)) == 0) {
 	
-		// Knowing the total number of rows isn't critical to the program.  It's just for the user to know.
-		++num_rows;
-		printf("   \033[32m%d\033[0m\r", num_rows);
-		fflush(stdout);
-
 		// If either the key or data are zero length, skip this record
 		if ((in_key.size == 0) || (in_data.size == 0)) {
-			printf("\033[31minput keylen=%d , datalen=%d , skipping record\033[0m\n", in_key.size, in_data.size);
+			++num_bad_rows;
+			// printf("\033[31minput keylen=%d , datalen=%d , skipping record\033[0m\n", in_key.size, in_data.size);
 		}
 
 		else {	// Both key and data are >0 length so we're good to go
@@ -672,43 +664,27 @@ void convert_table(int which_cdb, DB_ENV *src_dbenv, DB_ENV *dst_dbenv) {
 	
 			// Call the convert function registered to this table
 			convert_functions[which_cdb](which_cdb, &in_key, (compressed ? &uncomp_data : &in_data), &out_key, &out_data);
-	
-			// The logic here is that if the source data was compressed, we compress the output too
-			if (compressed) {
-				struct CtdlCompressHeader zheader;
-				memset(&zheader, 0, sizeof(struct CtdlCompressHeader));
-				zheader.magic = COMPRESS_MAGIC;
-				zheader.uncompressed_len = out_data.size;
-				recomp_data.data = realloc(recomp_data.data, ((out_data.size * 101) / 100) + 100 + sizeof(struct CtdlCompressHeader));
-	
-				if (compress2((Bytef *)(recomp_data.data + sizeof(struct CtdlCompressHeader)), &destLen, (Bytef *)out_data.data, (uLongf) out_data.size, 1) != Z_OK) {
-					printf("db: compress() error\n");
-					exit(CTDLEXIT_DB);
-				}
-				recomp_data.size = destLen;
-			}
-	
+
 			// write the converted record to the target database
 			if (out_key.size > 0) {
 	
-				// If we compressed the output, write recomp_data instead of out_data
-				if (compressed) {
-					// printf("DB: %02x , out_keylen: %-3d , out_datalen: %-10d , dataptr: %012lx \033[31m(compressed)\033[0m\n", which_cdb, (int)out_key.size, (int)recomp_data.size, (long unsigned int)recomp_data.data);
-					ret = dst_dbp->put(dst_dbp, NULL, &out_key, &recomp_data, 0);
-				}
-				else {
-					// printf("DB: %02x , out_keylen: %-3d , out_datalen: %-10d , dataptr: %012lx\n", which_cdb, (int)out_key.size, (int)out_data.size, (long unsigned int)out_data.data);
-					ret = dst_dbp->put(dst_dbp, NULL, &out_key, &out_data, 0);
-				}
+				// printf("DB: %02x , out_keylen: %-3d , out_datalen: %-10d , dataptr: %012lx\n", which_cdb, (int)out_key.size, (int)out_data.size, (long unsigned int)out_data.data);
+				ret = dst_dbp->put(dst_dbp, NULL, &out_key, &out_data, 0);
 	
 				if (ret) {
 					printf("db: cdb_put(%d): %s", which_cdb, db_strerror(ret));
 					exit(CTDLEXIT_DB);
 				}
+				++num_good_rows;
 			}
 			else {
-				printf("\033[31moutput keylen=%d , skipping record\033[0m\n", out_key.size);
+				++num_bad_rows;
+				// printf("\033[31moutput keylen=%d , skipping record\033[0m\n", out_key.size);
 			}
+
+		// Knowing the total number of rows isn't critical to the program.  It's just for the user to know.
+		printf("\033[33m%5d\033[37m  \033[32m%9d\033[37m  \033[31m%8d\033[0m\r", which_cdb, num_good_rows, num_bad_rows);
+		fflush(stdout);
 		}
 	}
 
@@ -718,28 +694,27 @@ void convert_table(int which_cdb, DB_ENV *src_dbenv, DB_ENV *dst_dbenv) {
 		exit(CTDLEXIT_DB);
 	}
 
-	printf("%d rows\n", num_rows);
+	printf("\n");
 
 	// free any leftover out_data pointers
 	free(out_key.data);
 	free(out_data.data);
 	free(uncomp_data.data);
-	free(recomp_data.data);
 
 	// ...and close the database (table)
-	printf("\033[33m\033[1mdb: closing source %02x\033[0m\n", which_cdb);
+	// printf("\033[33m\033[1mdb: closing source %02x\033[0m\n", which_cdb);
 	ret = src_dbp->close(src_dbp, 0);
 	if (ret) {
 		printf("db: db_close: %s\n", db_strerror(ret));
 	}
 
-	printf("\033[33m\033[1mdb: closing destination %02x\033[0m\n", which_cdb);
+	// printf("\033[33m\033[1mdb: closing destination %02x\033[0m\n", which_cdb);
 	ret = dst_dbp->close(dst_dbp, 0);
 	if (ret) {
 		printf("db: db_close: %s\n", db_strerror(ret));
 	}
 
-	printf("\n");
+	// printf("\n");
 
 }
 
@@ -799,12 +774,14 @@ int main(int argc, char **argv) {
 		exit(0);
 	}
 
+
 	src_dbenv = open_dbenv(src_dir);
 	dst_dbenv = open_dbenv(dst_dir);
-	//for (int i = 0; i < MAXCDB; ++i) {
-		//convert_table(i, src_dbenv, dst_dbenv);
-	//}
-	convert_table(7, src_dbenv, dst_dbenv);
+	printf("table  good rows  bad rows\n");
+	printf("-----  ---------  --------\n");
+	for (int i = 0; i < MAXCDB; ++i) {
+		convert_table(i, src_dbenv, dst_dbenv);
+	}
 	close_dbenv(src_dbenv);
 	close_dbenv(dst_dbenv);
 

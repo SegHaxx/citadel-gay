@@ -662,10 +662,13 @@ void inbox_do_msg(long msgnum, void *userdata) {
 				int substring_match = 0;
 				int regex_match = 0;
 				int exact_match = 0;
+				int rc = 0;
 
 				regex_t regex;
-				if (regcomp(&regex, ii->rules[i].compared_value, (REG_EXTENDED | REG_ICASE | REG_NOSUB | REG_NEWLINE))) {
-					syslog(LOG_ERR, "inboxrules: regcomp: %m");
+				
+				rc = regcomp(&regex, ii->rules[i].compared_value, (REG_EXTENDED | REG_ICASE | REG_NOSUB | REG_NEWLINE));
+				if (rc) {
+					syslog(LOG_ERR, "inboxrules: regcomp: error %d trying to compile \"%s\"", rc, ii->rules[i].compared_value);
 				}
 
 				if (compare_compound) {					// comparing a compound field such as name+address
@@ -681,7 +684,7 @@ void inbox_do_msg(long msgnum, void *userdata) {
 							(bmstrcasestr(compare_me, ii->rules[i].compared_value) ? 1 : 0)
 							+ (bmstrcasestr(sep, ii->rules[i].compared_value) ? 1 : 0)
 						;
-						regex_match =
+						if (!rc) regex_match =
 							(regexec(&regex, compare_me, 0, 0, 0) ? 0 : 1)
 							+ (regexec(&regex, sep, 0, 0, 0) ? 0 : 1)
 						;
@@ -690,12 +693,13 @@ void inbox_do_msg(long msgnum, void *userdata) {
 				else {							// comparing a single field only
 					exact_match = (strcasecmp(compare_me, ii->rules[i].compared_value) ? 0 : 1);
 					substring_match = (bmstrcasestr(compare_me, ii->rules[i].compared_value) ? 1 : 0);
-					regex_match = (regexec(&regex, compare_me, 0, 0, 0) ? 1 : 0);
+					if (!rc) regex_match = (regexec(&regex, compare_me, 0, 0, 0) ? 0 : 1);
 				}
+
 				regfree(&regex);
-				syslog(LOG_DEBUG, "substring match: %d", substring_match);
-				syslog(LOG_DEBUG, "    regex match: %d", regex_match);
-				syslog(LOG_DEBUG, "    exact match: %d", exact_match);
+				syslog(LOG_DEBUG, "inboxrules: substring match: %d", substring_match);
+				syslog(LOG_DEBUG, "inboxrules:     regex match: %d", regex_match);
+				syslog(LOG_DEBUG, "inboxrules:     exact match: %d", exact_match);
 				switch(ii->rules[i].field_compare_op) {
 					case fcomp_contains:
 						rule_activated = substring_match;
