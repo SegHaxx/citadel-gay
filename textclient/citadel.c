@@ -144,7 +144,7 @@ void formout(CtdlIPC * ipc, char *name) {
 
 void userlist(CtdlIPC * ipc, char *patn) {
 	char buf[SIZ];
-	char fl[26];		// a buffer this small will prevent it overrunning the column
+	char fl[64];		// a buffer this small will prevent it overrunning the column
 	struct tm tmbuf;
 	time_t lc;
 	int r;			// IPC response code
@@ -156,8 +156,8 @@ void userlist(CtdlIPC * ipc, char *patn) {
 		return;
 	}
 
-	scr_printf("       User Name           Num  L Last Visit Logins Messages\n");
-	scr_printf("------------------------- ----- - ---------- ------ --------\n");
+	scr_printf("User Name                                                        Last Visit\n");
+	scr_printf("---------------------------------------------------------------- ----------\n");
 	if (listing != NULL)
 		while (!IsEmptyStr(listing)) {
 			extract_token(buf, listing, 0, '\n', sizeof buf);
@@ -166,12 +166,10 @@ void userlist(CtdlIPC * ipc, char *patn) {
 			if (sigcaught == 0) {
 				extract_token(fl, buf, 0, '|', sizeof fl);
 				if (pattern(fl, patn) >= 0) {
-					scr_printf("%-25s ", fl);
-					scr_printf("%5ld %d ", extract_long(buf, 2), extract_int(buf, 1));
+					scr_printf("%-64s ", fl);
 					lc = extract_long(buf, 3);
 					localtime_r(&lc, &tmbuf);
-					scr_printf("%02d/%02d/%04d ", (tmbuf.tm_mon + 1), tmbuf.tm_mday, (tmbuf.tm_year + 1900));
-					scr_printf("%6ld %8ld\n", extract_long(buf, 4), extract_long(buf, 5));
+					scr_printf("%02d/%02d/%04d\n", (tmbuf.tm_mon + 1), tmbuf.tm_mday, (tmbuf.tm_year + 1900));
 				}
 
 			}
