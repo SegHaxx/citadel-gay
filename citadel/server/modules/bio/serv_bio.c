@@ -65,9 +65,8 @@ void cmd_rbio(char *cmdbuf) {
 		return;
 	}
 
-	cprintf("%d OK|%s|%ld|%d|%ld|%ld|%ld\n", LISTING_FOLLOWS,
-		ruser.fullname, ruser.usernum, ruser.axlevel,
-		(long)ruser.lastcall, ruser.timescalled, ruser.posted);
+	cprintf("%d OK|%s|%ld|%d|%ld|0|0\n", LISTING_FOLLOWS,
+		ruser.fullname, ruser.usernum, ruser.axlevel, (long)ruser.lastcall);
 
 	struct CtdlMessage *msg = CtdlFetchMessage(ruser.msgnum_bio, 1);
 	if (msg != NULL) {

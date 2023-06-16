@@ -52,7 +52,6 @@ void initialize_modules(int is_threading) {
 	syslog(LOG_DEBUG, "extensions: init %s", ctdl_module_init_listdeliver());
 	syslog(LOG_DEBUG, "extensions: init %s", ctdl_module_init_listsub());
 	syslog(LOG_DEBUG, "extensions: init %s", ctdl_module_init_migrate());
-	syslog(LOG_DEBUG, "extensions: init %s", ctdl_module_init_newuser());
 	syslog(LOG_DEBUG, "extensions: init %s", ctdl_module_init_nntp());
 	syslog(LOG_DEBUG, "extensions: init %s", ctdl_module_init_notes());
 	syslog(LOG_DEBUG, "extensions: init %s", ctdl_module_init_pop3());

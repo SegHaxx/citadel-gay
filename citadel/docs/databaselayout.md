@@ -26,8 +26,6 @@ this file look something like this:
         uid_t uid;                      // Associate with a unix account?
         char password[32];              // Account password (unless using external authentication)
         unsigned flags;                 // See US_ flags below
-        long timescalled;               // Total number of logins
-        long posted;                    // Number of messages posted (ever)
         CIT_UBYTE axlevel;              // Access level
         long usernum;                   // User number (never recycled)
         time_t lastcall;                // Last time the user called

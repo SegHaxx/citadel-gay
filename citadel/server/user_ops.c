@@ -566,7 +566,6 @@ void do_login(void) {
 	syslog(LOG_NOTICE, "user_ops: <%s> logged in", CC->curr_user);
 
 	CtdlGetUserLock(&CC->user, CC->curr_user);
-	++(CC->user.timescalled);
 	CC->previous_login = CC->user.lastcall;
 	time(&CC->user.lastcall);
 
@@ -632,9 +631,8 @@ void do_login(void) {
 
 
 void logged_in_response(void) {
-	cprintf("%d %s|%d|%ld|%ld|%u|%ld|%ld\n",
+	cprintf("%d %s|%d|0|0|%u|%ld|%ld\n",
 		CIT_OK, CC->user.fullname, CC->user.axlevel,
-		CC->user.timescalled, CC->user.posted,
 		CC->user.flags, CC->user.usernum,
 		CC->previous_login
 	);
@@ -901,9 +899,6 @@ int internal_create_user(char *username, struct ctdluser *usbuf, uid_t uid) {
 
 	// These are the default flags on new accounts
 	usbuf->flags = US_LASTOLD | US_DISAPPEAR | US_PAGINATOR | US_FLOORS;
-
-	usbuf->timescalled = 0;
-	usbuf->posted = 0;
 	usbuf->axlevel = CtdlGetConfigInt("c_initax");
 	usbuf->lastcall = time(NULL);
 

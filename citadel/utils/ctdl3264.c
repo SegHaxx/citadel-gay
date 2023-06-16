@@ -188,8 +188,6 @@ void convert_users(int which_cdb, DBT *in_key, DBT *in_data, DBT *out_key, DBT *
 	user64->uid			= (uid_t)	user32->uid;
 	strcpy(user64->password,			user32->password);
 	user64->flags			= (unsigned)	user32->flags;
-	user64->timescalled		= (long)	user32->timescalled;
-	user64->posted			= (long)	user32->posted;
 	user64->axlevel			= (cit_uint8_t)	user32->axlevel;
 	user64->usernum			= (long)	user32->usernum;
 	user64->lastcall		= (time_t)	user32->lastcall;

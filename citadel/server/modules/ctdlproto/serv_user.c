@@ -1,6 +1,6 @@
 // Server functions which perform operations on user objects.
 //
-// Copyright (c) 1987-2022 by the citadel.org team
+// Copyright (c) 1987-2023 by the citadel.org team
 //
 // This program is open source software; you can redistribute it and/or
 // modify it under the terms of the GNU General Public License, version 3.
@@ -469,13 +469,11 @@ void ListThisUser(char *username, void *data) {
 		if ((CC->user.axlevel >= AxAideU)
 		    || ((usbuf.flags & US_UNLISTED) == 0)
 		    || ((CC->internal_pgm))) {
-			cprintf("%s|%d|%ld|%ld|%ld|%ld||\n",
+			cprintf("%s|%d|%ld|%ld|0|0||\n",
 				usbuf.fullname,
 				usbuf.axlevel,
 				usbuf.usernum,
-				(long)usbuf.lastcall,
-				usbuf.timescalled,
-				usbuf.posted);
+				(long)usbuf.lastcall);
 		}
 	}
 }
@@ -545,13 +543,11 @@ void cmd_agup(char *cmdbuf) {
 		cprintf("%d No such user.\n", ERROR + NO_SUCH_USER);
 		return;
 	}
-	cprintf("%d %s|%s|%u|%ld|%ld|%d|%ld|%ld|%d\n",
+	cprintf("%d %s|%s|%u|0|0|%d|%ld|%ld|%d\n",
 		CIT_OK,
 		usbuf.fullname,
 		usbuf.password,
 		usbuf.flags,
-		usbuf.timescalled,
-		usbuf.posted,
 		(int) usbuf.axlevel,
 		usbuf.usernum,
 		(long)usbuf.lastcall,
@@ -581,10 +577,6 @@ void cmd_asup(char *cmdbuf) {
 		extract_token(usbuf.password, cmdbuf, 1, '|', sizeof usbuf.password);
 	if (np > 2)
 		usbuf.flags = extract_int(cmdbuf, 2);
-	if (np > 3)
-		usbuf.timescalled = extract_int(cmdbuf, 3);
-	if (np > 4)
-		usbuf.posted = extract_int(cmdbuf, 4);
 	if (np > 5) {
 		newax = extract_int(cmdbuf, 5);
 		if ((newax >= AxDeleted) && (newax <= AxAideU)) {

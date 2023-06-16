@@ -370,9 +370,6 @@ void do_user_purge(char *username, void *data) {
 	// Moved this lower down so that aides and permanent users get purged if they ask to be.
 	if (!strcasecmp(us.password, "deleteme")) purge = 1;
 	
-	// Fewer than zero calls is impossible, indicating a corrupted record.
-	if (us.timescalled < 0) purge = 1;
-
 	// any negative user number, is also impossible.
 	if (us.usernum < 0L) purge = 1;
 	

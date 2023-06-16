@@ -108,8 +108,6 @@ void migr_export_users_backend(char *username, void *data) {
 	cprintf("<u_uid>%ld</u_uid>\n", (long)u.uid);
 	client_write(HKEY("<u_password>"));	xml_strout(u.password);		client_write(HKEY("</u_password>\n"));
 	cprintf("<u_flags>%u</u_flags>\n", u.flags);
-	cprintf("<u_timescalled>%ld</u_timescalled>\n", u.timescalled);
-	cprintf("<u_posted>%ld</u_posted>\n", u.posted);
 	cprintf("<u_axlevel>%d</u_axlevel>\n", u.axlevel);
 	cprintf("<u_usernum>%ld</u_usernum>\n", u.usernum);
 	cprintf("<u_lastcall>%ld</u_lastcall>\n", (long)u.lastcall);
@@ -547,8 +545,6 @@ int migr_userrecord(void *data, const char *el) {
 	else if (!strcasecmp(el, "u_uid"))			usbuf.uid = atol(ChrPtr(migr_chardata));
 	else if (!strcasecmp(el, "u_password"))			safestrncpy(usbuf.password, ChrPtr(migr_chardata), sizeof usbuf.password);
 	else if (!strcasecmp(el, "u_flags"))			usbuf.flags = atoi(ChrPtr(migr_chardata));
-	else if (!strcasecmp(el, "u_timescalled"))		usbuf.timescalled = atol(ChrPtr(migr_chardata));
-	else if (!strcasecmp(el, "u_posted"))			usbuf.posted = atol(ChrPtr(migr_chardata));
 	else if (!strcasecmp(el, "u_axlevel"))			usbuf.axlevel = atoi(ChrPtr(migr_chardata));
 	else if (!strcasecmp(el, "u_usernum"))			usbuf.usernum = atol(ChrPtr(migr_chardata));
 	else if (!strcasecmp(el, "u_lastcall"))			usbuf.lastcall = atol(ChrPtr(migr_chardata));

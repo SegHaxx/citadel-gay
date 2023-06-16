@@ -2786,12 +2786,6 @@ long CtdlSubmitMsg(struct CtdlMessage *msg,	/* message to save */
 		}
 	}
 
-	/* Bump this user's messages posted counter. */
-	syslog(LOG_DEBUG, "msgbase: updating user");
-	CtdlLockGetCurrentUser();
-	CC->user.posted = CC->user.posted + 1;
-	CtdlPutCurrentUserLock();
-
 	/* Decide where bounces need to be delivered */
 	if ((recps != NULL) && (recps->bounce_to == NULL)) {
 		if (CC->logged_in) {
