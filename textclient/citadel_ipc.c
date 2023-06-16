@@ -1903,8 +1903,6 @@ int CtdlIPCAideGetUserParameters(CtdlIPC * ipc, const char *who, struct ctdluser
 		extract_token(uret[0]->fullname, cret, 0, '|', sizeof uret[0]->fullname);
 		extract_token(uret[0]->password, cret, 1, '|', sizeof uret[0]->password);
 		uret[0]->flags = extract_int(cret, 2);
-		uret[0]->timescalled = extract_long(cret, 3);
-		uret[0]->posted = extract_long(cret, 4);
 		uret[0]->axlevel = extract_int(cret, 5);
 		uret[0]->usernum = extract_long(cret, 6);
 		uret[0]->lastcall = extract_long(cret, 7);
@@ -1928,9 +1926,9 @@ int CtdlIPCAideSetUserParameters(CtdlIPC * ipc, const struct ctdluser *uret, cha
 	if (!aaa)
 		return -1;
 
-	sprintf(aaa, "ASUP %s|%s|%d|%ld|%ld|%d|%ld|%ld|%d",
-		uret->fullname, uret->password, uret->flags, uret->timescalled,
-		uret->posted, uret->axlevel, uret->usernum, uret->lastcall, uret->USuserpurge);
+	sprintf(aaa, "ASUP %s|%s|%d|0|0|%d|%ld|%ld|%d",
+		uret->fullname, uret->password, uret->flags,
+		uret->axlevel, uret->usernum, uret->lastcall, uret->USuserpurge);
 	ret = CtdlIPCGenericCommand(ipc, aaa, NULL, 0, NULL, NULL, cret);
 	free(aaa);
 	return ret;

@@ -38,8 +38,6 @@ int uglistsize = 0;
 char is_mail = 0;		/* nonzero when we're in a mail room */
 char axlevel = AxDeleted;	/* access level */
 char is_room_aide = 0;		/* boolean flag, 1 if room admin */
-int timescalled;
-int posted;
 unsigned userflags;
 long usernum = 0L;		/* user number */
 time_t lastcall = 0L;		/* Date/time of previous login */
@@ -156,7 +154,7 @@ void userlist(CtdlIPC * ipc, char *patn) {
 		return;
 	}
 
-	scr_printf("User Name                                                        Last Visit\n");
+	scr_printf("User Name                                                        Last Login\n");
 	scr_printf("---------------------------------------------------------------- ----------\n");
 	if (listing != NULL)
 		while (!IsEmptyStr(listing)) {
@@ -183,8 +181,6 @@ void userlist(CtdlIPC * ipc, char *patn) {
 void load_user_info(char *params) {
 	extract_token(fullname, params, 0, '|', sizeof fullname);
 	axlevel = extract_int(params, 1);
-	timescalled = extract_int(params, 2);
-	posted = extract_int(params, 3);
 	userflags = extract_int(params, 4);
 	usernum = extract_long(params, 5);
 	lastcall = extract_long(params, 6);
@@ -826,7 +822,7 @@ void read_config(CtdlIPC * ipc) {
 	int r;			/* IPC response code */
 	char _fullname[USERNAME_SIZE];
 	long _usernum;
-	int _axlevel, _timescalled, _posted;
+	int _axlevel;
 	time_t _lastcall;
 	struct ctdluser *user = NULL;
 
@@ -840,8 +836,6 @@ void read_config(CtdlIPC * ipc) {
 	_usernum = extract_long(buf, 2);
 	_axlevel = extract_int(buf, 3);
 	_lastcall = extract_long(buf, 4);
-	_timescalled = extract_int(buf, 5);
-	_posted = extract_int(buf, 6);
 	free(resp);
 	resp = NULL;
 
@@ -854,10 +848,8 @@ void read_config(CtdlIPC * ipc) {
 	}
 
 	/* show misc user info */
-	scr_printf("%s\nAccess level: %d (%s)\n"
-		   "User #%ld / %d Calls / %d Posts", _fullname, _axlevel, axdefs[(int) _axlevel], _usernum, _timescalled, _posted);
 	if (_lastcall > 0L) {
-		scr_printf(" / Curr login: %s", asctime(localtime(&_lastcall)));
+		scr_printf("Last login: %s", asctime(localtime(&_lastcall)));
 	}
 	scr_printf("\n");
 
@@ -1559,10 +1551,8 @@ int main(int argc, char **argv) {
 	}
 
 	color(BRIGHT_WHITE);
-	scr_printf("\n%s\nAccess level: %d (%s)\n"
-		   "User #%ld / Login #%d", fullname, axlevel, axdefs[(int) axlevel], usernum, timescalled);
 	if (lastcall > 0L) {
-		scr_printf(" / Last login: %s", asctime(localtime(&lastcall)));
+		scr_printf("Last login: %s", asctime(localtime(&lastcall)));
 	}
 	scr_printf("\n");
 

@@ -218,8 +218,6 @@ void edituser(CtdlIPC * ipc, int cmd) {
 		else {
 			user->flags |= US_REGIS;
 		}
-		user->timescalled = intprompt("Times called", user->timescalled, 0, INT_MAX);
-		user->posted = intprompt("Messages posted", user->posted, 0, INT_MAX);
 		user->lastcall = boolprompt("Set last login to now", 0) ? time(NULL) : user->lastcall;
 		user->USuserpurge = intprompt("Purge time (in days, 0 for system default", user->USuserpurge, 0, INT_MAX);
 	}

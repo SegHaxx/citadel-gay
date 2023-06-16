@@ -232,8 +232,6 @@ struct ctdluser {			// User record
 	uid_t uid;			// Associate with a unix account?
 	char password[32];		// password
 	unsigned flags;			// See US_ flags below
-	long timescalled;		// Total number of logins
-	long posted;			// Number of messages ever submitted
 	uint8_t axlevel;		// Access level
 	long usernum;			// User number (never recycled)
 	time_t lastcall;		// Date/time of most recent login
