@@ -1,3 +1,6 @@
+// This doesn't belong in the build but WebCit-classic depends on it.
+// When we move to WebCit-NG we will axe this.
+
 /*@{*/
 
 #include "sysdep.h"
@@ -27,17 +30,11 @@ ConstStr WF_MsgStrs[] = {
 	{HKEY("EXCEPTION")}
 };
 
-static JsonValue *WFInfo(const char *Filename, long fnlen,
-			 long LineNo, 
-			 WF_MessageType Type)
-{
+static JsonValue *WFInfo(const char *Filename, long fnlen, long LineNo, WF_MessageType Type) {
 	JsonValue *Val;
 
 	Val = NewJsonObject(NULL, 0);
-	JsonObjectAppend(Val, 
-			 NewJsonPlainString(HKEY("Type"),
-					    WF_MsgStrs[Type].Key, 
-					    WF_MsgStrs[Type].len));
+	JsonObjectAppend(Val, NewJsonPlainString(HKEY("Type"), WF_MsgStrs[Type].Key, WF_MsgStrs[Type].len));
 	JsonObjectAppend(Val, 
 			 NewJsonPlainString(HKEY("File"), 
 					    Filename, fnlen));
@@ -47,11 +44,7 @@ static JsonValue *WFInfo(const char *Filename, long fnlen,
 }
 			    
 
-JsonValue *WildFireMessage(const char *Filename, long fnlen,
-			   long LineNo,
-			   StrBuf *Msg, 
-			   WF_MessageType Type)
-{
+JsonValue *WildFireMessage(const char *Filename, long fnlen, long LineNo, StrBuf *Msg, WF_MessageType Type) {
 	JsonValue *Ret;
 
 	Ret = NewJsonArray(NULL, 0);
@@ -62,30 +55,19 @@ JsonValue *WildFireMessage(const char *Filename, long fnlen,
 	return Ret;
 }
 
-JsonValue *WildFireMessagePlain(const char *Filename, long fnlen,
-				long LineNo,
-				const char *Message, long len, 
-				WF_MessageType Type)
-{
+JsonValue *WildFireMessagePlain(const char *Filename, long fnlen, long LineNo, const char *Message, long len, WF_MessageType Type) {
 	JsonValue *Val;
 	Val = NewJsonArray(NULL, 0);
 
-	JsonArrayAppend(Val, WFInfo(Filename, fnlen,
-				    LineNo, Type));
-	JsonArrayAppend(Val, 
-			NewJsonPlainString(NULL, 0, Message, len));
+	JsonArrayAppend(Val, WFInfo(Filename, fnlen, LineNo, Type));
+	JsonArrayAppend(Val, NewJsonPlainString(NULL, 0, Message, len));
 	return Val;
 }
 
-void WildFireAddArray(JsonValue *ReportBase, JsonValue *Array, WF_MessageType Type)
-{
+void WildFireAddArray(JsonValue *ReportBase, JsonValue *Array, WF_MessageType Type) {
 	JsonValue *Val;
 	Val = NewJsonArray(NULL, 0);
-	JsonArrayAppend(Val, 
-			NewJsonPlainString(NULL, 0, 
-					   WF_MsgStrs[Type].Key, 
-					   WF_MsgStrs[Type].len));
-
+	JsonArrayAppend(Val, NewJsonPlainString(NULL, 0, WF_MsgStrs[Type].Key, WF_MsgStrs[Type].len));
 	JsonArrayAppend(Val, Array);
 }
 
@@ -136,19 +118,12 @@ static void start_addr2line_daemon(const char *binary)
 	}
 }
 
-static int addr2lineBacktrace(StrBuf *Function, 
-			      StrBuf *FileName, 
-			      StrBuf *Pointer, 
-			      StrBuf *Buf,
-			      unsigned int *FunctionLine)
-
-{
+static int addr2lineBacktrace(StrBuf *Function, StrBuf *FileName, StrBuf *Pointer, StrBuf *Buf, unsigned int *FunctionLine) {
 	const char *err;
 	const char *pch, *pche;
 
 	write(addr2line_write_pipe[1], SKEY(Pointer));
-	if (StrBufTCP_read_line(Buf, &addr2line_read_pipe[0], 0, &err) <= 0)
-	{
+	if (StrBufTCP_read_line(Buf, &addr2line_read_pipe[0], 0, &err) <= 0) {
 		StrBufAppendBufPlain(Buf, err, -1, 0);
 		return 0;
 	}
@@ -156,8 +131,7 @@ static int addr2lineBacktrace(StrBuf *Function,
 	pche = strchr(pch, ':');
 	FlushStrBuf(FileName);
 	StrBufAppendBufPlain(FileName, pch, pche - pch, 0);
-	if (pche != NULL)
-	{
+	if (pche != NULL) {
 		pche++;
 		*FunctionLine = atoi(pche);
 	}
@@ -166,11 +140,7 @@ static int addr2lineBacktrace(StrBuf *Function,
 	return 1;
 }
 
-static int ParseBacktrace(char *Line, 
-			  StrBuf *Function, 
-			  StrBuf *FileName, 
-			  unsigned int *FunctionLine)
-{
+static int ParseBacktrace(char *Line, StrBuf *Function, StrBuf *FileName, unsigned int *FunctionLine) {
 	char *pch, *pche;
 
 	pch = Line;
@@ -193,16 +163,14 @@ static int ParseBacktrace(char *Line,
 long BaseFrames = 0;
 StrBuf *FullBinaryName = NULL;
 
-void WildFireShutdown(void)
-{
+void WildFireShutdown(void) {
 	close(addr2line_write_pipe[0]);
 	close(addr2line_read_pipe[0]);
 
 	FreeStrBuf(&FullBinaryName);
 }
 
-void WildFireInitBacktrace(const char *argvNull, int AddBaseFrameSkip)
-{
+void WildFireInitBacktrace(const char *argvNull, int AddBaseFrameSkip) {
 
 #ifdef HAVE_BACKTRACE
 	void *stack_frames[100];
@@ -242,12 +210,10 @@ void WildFireInitBacktrace(const char *argvNull, int AddBaseFrameSkip)
 			i = size;
 		 }
 	}
-	if ((stat(ChrPtr(FullBinaryName), &filestats)==-1) ||
-	    (filestats.st_size==0)){
+	if ((stat(ChrPtr(FullBinaryName), &filestats)==-1) || (filestats.st_size==0)) {
 		FlushStrBuf(FullBinaryName);
 		StrBufAppendBufPlain(FullBinaryName, argvNull, -1, 0);
-		if ((stat(ChrPtr(FullBinaryName), &filestats)==-1) ||
-		    (filestats.st_size==0)){
+		if ((stat(ChrPtr(FullBinaryName), &filestats)==-1) || (filestats.st_size==0)) {
 			FlushStrBuf(FullBinaryName);
 			fprintf(stderr, "unable to open my binary for addr2line checking, verbose backtraces won't work.\n");
 		}
@@ -260,16 +226,10 @@ void WildFireInitBacktrace(const char *argvNull, int AddBaseFrameSkip)
 	if (StrLength(FullBinaryName) > 0)
 		start_addr2line_daemon(ChrPtr(FullBinaryName));
 #endif
-
-
 }
 
 
-JsonValue *WildFireException(const char *Filename, long FileLen,
-			     long LineNo,
-			     StrBuf *Message,
-			     int StackOffset)
-{
+JsonValue *WildFireException(const char *Filename, long FileLen, long LineNo, StrBuf *Message, int StackOffset) {
 	JsonValue *ExcClass;
 	JsonValue *Val;
 	Val = NewJsonArray(NULL, 0);
@@ -345,8 +305,7 @@ JsonValue *WildFireException(const char *Filename, long FileLen,
 	return Val;
 }
 
-void WildFireSerializePayload(StrBuf *JsonBuffer, StrBuf *OutBuf, int *MsgCount, AddHeaderFunc AddHdr)
-{
+void WildFireSerializePayload(StrBuf *JsonBuffer, StrBuf *OutBuf, int *MsgCount, AddHeaderFunc AddHdr) {
 	int n = *MsgCount;
 	StrBuf *Buf;
 	StrBuf *HeaderName;

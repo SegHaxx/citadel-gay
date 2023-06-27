@@ -1,11 +1,10 @@
-/*
- * Main stuff for libcitadel
- *
- * Copyright (c) 1987-2013 by the citadel.org team
- *
+//
+// Main stuff for libcitadel
+//
+// Copyright (c) 1987-2013 by the citadel.org team
+//
 // This program is open source software.  Use, duplication, or disclosure
 // is subject to the terms of the GNU General Public License, version 3.
- */
 
 #include <stdlib.h>
 #include <unistd.h>
@@ -33,8 +32,6 @@ ConstStr RoomNetCfgStrs[maxRoomNetCfg] = {
 // No, not one of..	{HKEY(strof(maxRoomNetCfg))}
 };
 
-
-
 extern int EnableSplice;
 extern int ZLibCompressionRatio;
 
@@ -46,8 +43,7 @@ int libcitadel_version_number(void) {
 	return LIBCITADEL_VERSION_NUMBER;
 }
 
-void ShutDownLibCitadel(void)
-{
+void ShutDownLibCitadel(void) {
 	ShutDownLibCitadelMime();
 	WildFireShutdown();
 	xdg_mime_shutdown();

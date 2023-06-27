@@ -1,11 +1,9 @@
-/*
- * vNote implementation for Citadel
- *
- * Copyright (C) 1999-2007 by the citadel.org development team.
- *
+// vNote implementation for Citadel
+//
+// Copyright (C) 1999-2007 by the citadel.org development team.
+//
 // This program is open source software.  Use, duplication, or disclosure
 // is subject to the terms of the GNU General Public License, version 3.
- */
 
 
 #include <stdlib.h>
@@ -160,10 +158,9 @@ struct vnote *vnote_new_from_str(char *s) {
 					free(decoded_value);	// throw it away
 				}
 
-				/* FIXME still need to handle these:
-				 * X-OUTLOOK-CREATE-TIME:20070611T204615Z
-				 * REV:20070611T204621Z
-				 */
+				// FIXME still need to handle these:
+				// X-OUTLOOK-CREATE-TIME:20070611T204615Z
+				// REV:20070611T204621Z
 			}
 			free(thisline);
 		}
@@ -185,7 +182,7 @@ void vnote_free(struct vnote *v) {
 }
 
 
-/* helper function for vnote_serialize() */
+// helper function for vnote_serialize()
 void vnote_serialize_output_field(char *append_to, char *field, char *label) {
 
 	char *mydup;
@@ -253,8 +250,7 @@ char *vnote_serialize(struct vnote *v) {
 	vnote_serialize_output_field(s, v->summary, "SUMMARY");
 	vnote_serialize_output_field(s, v->body, "BODY");
 	vnote_serialize_output_field(s, v->body, "NOTE");
-	sprintf(&s[strlen(s)], "X-OUTLOOK-COLOR:#%02X%02X%02X\r\n",
-		v->color_red, v->color_green, v->color_blue);
+	sprintf(&s[strlen(s)], "X-OUTLOOK-COLOR:#%02X%02X%02X\r\n", v->color_red, v->color_green, v->color_blue);
 	sprintf(&s[strlen(s)], "X-OUTLOOK-LEFT:%d\r\n", v->pos_left);
 	sprintf(&s[strlen(s)], "X-OUTLOOK-TOP:%d\r\n", v->pos_top);
 	sprintf(&s[strlen(s)], "X-OUTLOOK-WIDTH:%d\r\n", v->pos_width);
