@@ -44,7 +44,7 @@ void cdb_abort(void) {
 
 
 // Verbose logging callback
-void cdb_verbose_log(const DB_ENV *dbenv, const char *msg, const char *what_is_this) {
+void cdb_verbose_log(const DB_ENV *dbenv, const char *msg) {
 	if (!IsEmptyStr(msg)) {
 		syslog(LOG_DEBUG, "db: %s", msg);
 	}
