@@ -207,6 +207,18 @@ function mail_display_message(msgnum, target_div, include_controls) {
 }
 
 
+// after select or de-select 
+function enable_or_disable_draggable(row) {
+	if (row.classList.contains("ctdl-mail-selected")) {
+		console.log(row.id + " selected");
+	}
+	else {
+		console.log(row.id + " deselected");
+	}
+}
+
+
+
 // A message has been selected...
 function click_message(event, msgnum) {
 	var table = document.getElementById("ctdl-onscreen-mailbox");
@@ -215,11 +227,12 @@ function click_message(event, msgnum) {
 	// ctrl + click = toggle an individual message without changing existing selection
 	if (event.ctrlKey) {
 		document.getElementById("ctdl-msgsum-" + msgnum).classList.toggle("ctdl-mail-selected");
+		enable_or_disable_draggable(document.getElementById("ctdl-msgsum-" + msgnum));
 	}
 
-	// shift + click = select a range of messages
+	// shift + click = select a range of messages (start with row 1 because row 0 is the header)
 	else if (event.shiftKey) {
-		for (i=0; row=table.rows[i]; ++i) {
+		for (i=1; row=table.rows[i]; ++i) {
 			m = parseInt(row["id"].substring(12));				// derive msgnum from row id
 			if (
 				((msgnum >= displayed_message) && (m >= displayed_message) && (m <= msgnum))
@@ -230,18 +243,20 @@ function click_message(event, msgnum) {
 			else {
 				row.classList.remove("ctdl-mail-selected");
 			}
+			enable_or_disable_draggable(row);
 		}
 	}
 
-	// click + no modifiers = select one message and unselect all others
+	// click + no modifiers = select one message and unselect all others (start with row 1 because row 0 is the header)
 	else {
-		for (i=0; row=table.rows[i]; ++i) {
+		for (i=1; row=table.rows[i]; ++i) {
 			if (row["id"] == "ctdl-msgsum-" + msgnum) {
 				row.classList.add("ctdl-mail-selected");
 			}
 			else {
 				row.classList.remove("ctdl-mail-selected");
 			}
+			enable_or_disable_draggable(row);
 		}
 	}
 
@@ -258,7 +273,7 @@ function mail_render_row(msg, is_selected) {
 	row	= "<tr "
 		+ "id=\"ctdl-msgsum-" + msg["msgnum"] + "\" "
 		+ (is_selected ? "class=\"ctdl-mail-selected\" " : "")
-		+ "onClick=\"click_message(event," + msg["msgnum"] + ");\""
+		+ "onMouseDown=\"click_message(event," + msg["msgnum"] + ");\""
 		+ "onselectstart=\"return false;\""
 		+ ">"
 		+ "<td class=\"ctdl-mail-subject\">" + msg["subject"] + "</td>"
