@@ -207,14 +207,17 @@ function mail_display_message(msgnum, target_div, include_controls) {
 }
 
 
-// after select or de-select 
+// after a message is selected or deselected, we call this to set or clear the drag handler.
 function enable_or_disable_draggable(row) {
 	if (row.classList.contains("ctdl-mail-selected")) {
 		console.log(row.id + " selected");
+		row.draggable = "true"
 	}
 	else {
 		console.log(row.id + " deselected");
+		row.draggable = "false"
 	}
+	console.log(row.dragstart);
 }
 
 
@@ -273,7 +276,7 @@ function mail_render_row(msg, is_selected) {
 	row	= "<tr "
 		+ "id=\"ctdl-msgsum-" + msg["msgnum"] + "\" "
 		+ (is_selected ? "class=\"ctdl-mail-selected\" " : "")
-		+ "onMouseDown=\"click_message(event," + msg["msgnum"] + ");\""
+		+ "onClick=\"click_message(event," + msg["msgnum"] + ");\""
 		+ "onselectstart=\"return false;\""
 		+ ">"
 		+ "<td class=\"ctdl-mail-subject\">" + msg["subject"] + "</td>"
