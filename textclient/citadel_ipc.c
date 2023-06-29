@@ -2956,7 +2956,7 @@ static void CtdlIPC_init_OpenSSL(void) {
 		return;
 	}
 
-	if (!(DH_generate_parameters_ex(dh, 128, DH_GENERATOR_2, 0))) {
+	if (!(DH_generate_parameters_ex(dh, 512, DH_GENERATOR_2, 0))) {
 		error_printf("Can't generate DH parameters: %s\n", ERR_reason_error_string(ERR_get_error()));
 		DH_free(dh);
 		return;
